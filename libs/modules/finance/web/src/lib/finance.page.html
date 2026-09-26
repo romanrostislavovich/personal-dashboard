@@ -1,0 +1,139 @@
+<header class="page-header">
+  <h1 class="page-title">{{ 'finance.title' | transloco }}</h1>
+
+  <div class="filters">
+    <div class="month">
+      <button matIconButton (click)="shiftMonth(-1)"><mat-icon>chevron_left</mat-icon></button>
+      <span class="month-label">{{ monthDate() | date: 'LLLL yyyy' }}</span>
+      <button matIconButton (click)="shiftMonth(1)"><mat-icon>chevron_right</mat-icon></button>
+    </div>
+
+    <mat-form-field subscriptSizing="dynamic" class="scope">
+      <mat-label>{{ 'finance.wallet' | transloco }}</mat-label>
+      <mat-select [value]="scope()" (valueChange)="scope.set($event)">
+        <mat-option value="">{{ 'finance.scope.all' | transloco }}</mat-option>
+        <mat-option value="personal">{{ 'finance.scope.personal' | transloco }}</mat-option>
+        @for (project of projects.value(); track project.id) {
+          <mat-option [value]="project.id">{{ project.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+</header>
+
+<div class="summary">
+  <mat-card appearance="outlined">
+    <mat-card-content>
+      <pd-finance-totals [totals]="summary.value()?.totals ?? []" />
+    </mat-card-content>
+  </mat-card>
+
+  @if (summary.value()?.topExpenseCategories?.length) {
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-subtitle>{{ 'finance.topCategories' | transloco }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @for (item of summary.value()!.topExpenseCategories; track item.category + item.currency) {
+          <div class="category-row">
+            <span>{{ item.category }}</span>
+            <span class="expense">{{ item.expense | currency: item.currency }}</span>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>
+
+<mat-tab-group mat-stretch-tabs="false" animationDuration="0ms">
+  <!-- Операции за выбранный месяц -->
+  <mat-tab [label]="'finance.tabs.transactions' | transloco">
+    <div class="tab-actions">
+      <button matButton="filled" (click)="openTransactionForm()">
+        <mat-icon>add</mat-icon> {{ 'finance.transaction.add' | transloco }}
+      </button>
+    </div>
+    <mat-card appearance="outlined">
+      <mat-list>
+        @for (t of transactions.value(); track t.id) {
+          <mat-list-item>
+            <mat-icon matListItemIcon>{{
+              t.recurringPaymentId ? 'autorenew' : t.kind === 'income' ? 'south_west' : 'north_east'
+            }}</mat-icon>
+            <span matListItemTitle
+              >{{ t.category }}
+              @if (t.note) {
+                · {{ t.note }}
+              }
+            </span>
+            <span matListItemLine>
+              {{ t.occurredOn | date: 'd MMMM' }} ·
+              {{
+                t.projectId
+                  ? projectNames().get(t.projectId)
+                  : ('finance.scope.personal' | transloco)
+              }}
+            </span>
+            <div matListItemMeta class="meta">
+              <span
+                class="amount"
+                [class.income]="t.kind === 'income'"
+                [class.expense]="t.kind === 'expense'"
+              >
+                {{ t.kind === 'expense' ? '−' : '+' }}{{ t.amount | currency: t.currency }}
+              </span>
+              <button matIconButton (click)="openTransactionForm(t)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button matIconButton (click)="removeTransaction(t)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </mat-list-item>
+        } @empty {
+          <p class="empty padded">{{ 'finance.transaction.empty' | transloco }}</p>
+        }
+      </mat-list>
+    </mat-card>
+  </mat-tab>
+
+  <!-- Регулярные платежи: серверы, домены, подписки -->
+  <mat-tab [label]="'finance.tabs.recurring' | transloco">
+    <div class="tab-actions">
+      <p class="hint">{{ 'finance.recurring.hint' | transloco }}</p>
+      <button matButton="filled" (click)="openRecurringForm()">
+        <mat-icon>add</mat-icon> {{ 'finance.recurring.add' | transloco }}
+      </button>
+    </div>
+    <mat-card appearance="outlined">
+      <mat-list>
+        @for (p of recurringPayments.value(); track p.id) {
+          <mat-list-item [class.inactive]="!p.isActive">
+            <mat-icon matListItemIcon>{{ p.isActive ? 'event_repeat' : 'pause_circle' }}</mat-icon>
+            <span matListItemTitle>{{ p.name }}</span>
+            <span matListItemLine>
+              {{ 'finance.recurring.everyMonth' | transloco: { day: p.dayOfMonth } }} ·
+              {{
+                p.projectId
+                  ? projectNames().get(p.projectId)
+                  : ('finance.scope.personal' | transloco)
+              }}
+              · {{ p.category }}
+            </span>
+            <div matListItemMeta class="meta">
+              <span class="amount">{{ p.amount | currency: p.currency }}</span>
+              <button matIconButton (click)="openRecurringForm(p)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button matIconButton (click)="removeRecurring(p)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </mat-list-item>
+        } @empty {
+          <p class="empty padded">{{ 'finance.recurring.empty' | transloco }}</p>
+        }
+      </mat-list>
+    </mat-card>
+  </mat-tab>
+</mat-tab-group>

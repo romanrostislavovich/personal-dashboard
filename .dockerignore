@@ -1,0 +1,11 @@
+node_modules
+dist
+tmp
+coverage
+.git
+.idea
+.vscode
+.nx/cache
+.nx/workspace-data
+.angular
+.env

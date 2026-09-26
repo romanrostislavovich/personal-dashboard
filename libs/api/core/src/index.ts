@@ -1,0 +1,16 @@
+// Публичный API ядра для модулей. Всё, что не экспортировано здесь, — внутренняя кухня.
+export * from './lib/core.module';
+export * from './lib/config/env';
+export { DB, type Database } from './lib/database/database.module';
+export * from './lib/database/pg-errors';
+export * from './lib/auth/current-user.decorator';
+export * from './lib/auth/public.decorator';
+export * from './lib/validation/zod-validation.pipe';
+export * from './lib/users/users.schema';
+export * from './lib/users/users.service';
+export * from './lib/projects/projects.schema';
+export * from './lib/projects/projects.service';
+export * from './lib/scheduler/scheduler.service';
+export * from './lib/secrets/secrets.service';
+export * from './lib/notifications/notification-channel';
+export * from './lib/notifications/notifications.service';

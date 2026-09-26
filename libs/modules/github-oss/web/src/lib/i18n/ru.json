@@ -1,0 +1,39 @@
+{
+  "title": "Open Source",
+  "syncNow": "Обновить",
+  "totalStars": "Всего звёзд",
+  "stars": "Звёзды",
+  "forks": "Форки",
+  "issues": "Issues",
+  "pulls": "PR",
+  "npmWeekly": "npm за неделю",
+  "perWeek": "за неделю",
+  "starsHistory": "Звёзды за 30 дней",
+  "historyCollecting": "История собирается: график появится со второго дня.",
+  "lastPush": "Последний push",
+  "syncError": "Ошибка синхронизации",
+  "addTitle": "Отслеживать репозиторий",
+  "repo": "Репозиторий (owner/name или ссылка)",
+  "npmPackage": "npm-пакет (необязательно)",
+  "empty": "Пока нет репозиториев — добавь первый выше.",
+  "confirmDelete": "Перестать отслеживать {{name}}? История будет удалена.",
+  "token": {
+    "title": "Токен GitHub",
+    "hint": "Необязательно. Без токена GitHub даёт 60 запросов в час — хватит на несколько репозиториев. Создай fine-grained token с доступом только на чтение публичных репозиториев.",
+    "label": "Personal access token",
+    "configured": "Токен сохранён (зашифрован на сервере)",
+    "remove": "Удалить токен"
+  },
+  "errors": {
+    "notFound": "Репозиторий не найден на GitHub",
+    "duplicate": "Этот репозиторий уже отслеживается",
+    "invalidToken": "GitHub не принял токен",
+    "generic": "Что-то пошло не так. Попробуй ещё раз."
+  },
+  "widget": {
+    "title": "Open Source",
+    "week": "за 7 дн.",
+    "empty": "Добавь репозитории в разделе Open Source",
+    "open": "Подробнее"
+  }
+}

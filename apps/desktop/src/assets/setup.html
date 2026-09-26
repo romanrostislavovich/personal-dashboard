@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
+    />
+    <title>Personal Dashboard — подключение</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: min(460px, 100%);
+      }
+      h1 {
+        font-size: 22px;
+        margin: 0 0 4px;
+      }
+      p {
+        margin: 0;
+        opacity: 0.75;
+        line-height: 1.4;
+      }
+      input {
+        font: inherit;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #8888;
+      }
+      button {
+        font: inherit;
+        padding: 10px;
+        border: 0;
+        border-radius: 8px;
+        background: #005cbb;
+        color: white;
+        cursor: pointer;
+      }
+      .error {
+        color: #d32f2f;
+        opacity: 1;
+      }
+      .examples button {
+        background: transparent;
+        color: inherit;
+        border: 1px solid #8888;
+        padding: 4px 10px;
+        margin-right: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <form id="form">
+      <h1>Подключение к дашборду</h1>
+      <p>
+        Укажи адрес сервера, где запущен Personal Dashboard: свой сервер или локальный API на этом
+        компьютере.
+      </p>
+      <p id="error" class="error" hidden></p>
+      <input id="url" type="url" required placeholder="https://dashboard.example.com" />
+      <p class="examples">
+        <button type="button" data-url="http://localhost:3300">Локально (Docker)</button>
+        <button type="button" data-url="http://localhost:4200">Разработка</button>
+      </p>
+      <button type="submit">Подключиться</button>
+    </form>
+
+    <script>
+      const input = document.getElementById('url');
+      const error = new URLSearchParams(location.search).get('error');
+      if (error) {
+        const el = document.getElementById('error');
+        el.textContent =
+          'Не удалось открыть ' + error + '. Проверь, что сервер запущен и адрес верный.';
+        el.hidden = false;
+      }
+
+      window.desktop.getServerUrl().then((url) => (input.value = url ?? ''));
+
+      document
+        .querySelectorAll('[data-url]')
+        .forEach((button) =>
+          button.addEventListener('click', () => (input.value = button.dataset.url)),
+        );
+
+      document.getElementById('form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        window.desktop.saveServerUrl(input.value.trim().replace(/\/+$/, ''));
+      });
+    </script>
+  </body>
+</html>

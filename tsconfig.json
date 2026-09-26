@@ -1,0 +1,5 @@
+{
+  "//": "Нужен инструментам вне Nx (drizzle-kit) для алиасов @pd/*. Настройки — в tsconfig.base.json.",
+  "extends": "./tsconfig.base.json",
+  "files": []
+}

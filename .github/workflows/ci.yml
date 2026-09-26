@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    env:
+      NX_NO_CLOUD: true
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      # --ignore-scripts: Electron-бинарник для проверок не нужен.
+      - run: npm ci --ignore-scripts
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: npx nx affected -t lint test build
+
+      # Миграции должны соответствовать схемам: если кто-то поменял *.schema.ts
+      # и забыл `npm run db:generate`, drizzle-kit создаст новый файл и проверка упадёт.
+      - name: Check migrations are up to date
+        run: |
+          npx drizzle-kit generate --name ci-check
+          git diff --exit-code --quiet -- apps/api/migrations && test -z "$(git status --porcelain apps/api/migrations)"

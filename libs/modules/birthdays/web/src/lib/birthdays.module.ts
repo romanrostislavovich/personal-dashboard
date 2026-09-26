@@ -1,0 +1,21 @@
+import { WebDashboardModule } from '@pd/web-core';
+
+/** Web-часть модуля «Дни рождения». Подключается в apps/web/src/app/modules.ts. */
+export const birthdaysModule: WebDashboardModule = {
+  id: 'birthdays',
+  nav: { labelKey: 'birthdays.title', icon: 'cake' },
+  loadRoutes: async () => [
+    { path: '', loadComponent: () => import('./birthdays.page').then((m) => m.BirthdaysPage) },
+  ],
+  translations: {
+    ru: () => import('./i18n/ru.json'),
+  },
+  widgets: [
+    {
+      id: 'birthdays.upcoming',
+      size: 'small',
+      loadComponent: () =>
+        import('./upcoming-birthdays.widget').then((m) => m.UpcomingBirthdaysWidget),
+    },
+  ],
+};

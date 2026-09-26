@@ -1,0 +1,20 @@
+# Сборка установщика: npx nx package desktop  →  dist/desktop-installers
+appId: com.romanrostislavovich.personal-dashboard
+productName: Personal Dashboard
+directories:
+  app: dist/apps/desktop
+  output: dist/desktop-installers
+files:
+  - '**/*'
+win:
+  target: nsis
+  icon: apps/desktop/src/assets/icon.png
+mac:
+  target: dmg
+  icon: apps/desktop/src/assets/icon.png
+linux:
+  target: AppImage
+  icon: apps/desktop/src/assets/icon.png
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

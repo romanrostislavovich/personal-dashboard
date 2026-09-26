@@ -1,0 +1,68 @@
+.filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.month {
+  display: flex;
+  align-items: center;
+}
+
+.month-label {
+  min-width: 140px;
+  text-align: center;
+  font: var(--mat-sys-title-medium);
+  text-transform: capitalize;
+}
+
+.scope {
+  width: 220px;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.category-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.tab-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.hint {
+  margin: 0 auto 0 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.amount {
+  font: var(--mat-sys-title-small);
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.inactive {
+  opacity: 0.55;
+}
+
+.padded {
+  padding: 16px;
+}

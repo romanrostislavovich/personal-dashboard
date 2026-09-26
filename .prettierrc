@@ -1,0 +1,5 @@
+{
+  "singleQuote": true,
+  "printWidth": 100,
+  "overrides": [{ "files": "*.html", "excludeFiles": "apps/desktop/**", "options": { "parser": "angular" } }]
+}

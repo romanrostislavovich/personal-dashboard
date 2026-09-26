@@ -1,0 +1,9 @@
+{
+  "name": "personal-dashboard-desktop",
+  "productName": "Personal Dashboard",
+  "version": "0.1.0",
+  "description": "Desktop app for Personal Dashboard",
+  "author": "Roman",
+  "license": "MIT",
+  "main": "main.js"
+}

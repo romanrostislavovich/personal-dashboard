@@ -1,0 +1,59 @@
+<mat-sidenav-container class="container">
+  <mat-sidenav
+    #sidenav
+    [mode]="isMobile() ? 'over' : 'side'"
+    [opened]="!isMobile()"
+    class="sidenav"
+  >
+    <div class="brand">
+      <mat-icon>space_dashboard</mat-icon>
+      <span>{{ 'core.appName' | transloco }}</span>
+    </div>
+
+    <mat-nav-list>
+      @for (item of mainNav; track item.path) {
+        <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
+      }
+    </mat-nav-list>
+
+    <mat-nav-list class="bottom-nav">
+      @for (item of bottomNav; track item.path) {
+        <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
+      }
+    </mat-nav-list>
+
+    <ng-template #navLink let-item>
+      <a
+        mat-list-item
+        [routerLink]="item.path"
+        routerLinkActive
+        #active="routerLinkActive"
+        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+        [activated]="active.isActive"
+        (click)="isMobile() && sidenav.close()"
+      >
+        <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+        <span matListItemTitle>{{ item.labelKey | transloco }}</span>
+      </a>
+    </ng-template>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar class="toolbar">
+      @if (isMobile()) {
+        <button matIconButton (click)="sidenav.toggle()">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
+      <span class="spacer"></span>
+      <span class="user">{{ auth.user()?.displayName }}</span>
+      <button matIconButton [matTooltip]="'core.nav.logout' | transloco" (click)="auth.logout()">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

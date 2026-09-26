@@ -1,0 +1,32 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2022",
+    "module": "esnext",
+    "lib": ["es2022", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "paths": {
+      "@pd/contracts": ["./libs/shared/contracts/src/index.ts"],
+      "@pd/api-core": ["./libs/api/core/src/index.ts"],
+      "@pd/web-core": ["./libs/web/core/src/index.ts"],
+      "@pd/birthdays-api": ["./libs/modules/birthdays/api/src/index.ts"],
+      "@pd/birthdays-web": ["./libs/modules/birthdays/web/src/index.ts"],
+      "@pd/finance-api": ["./libs/modules/finance/api/src/index.ts"],
+      "@pd/finance-web": ["./libs/modules/finance/web/src/index.ts"],
+      "@pd/api-core/schema": ["./libs/api/core/src/schema.ts"],
+      "@pd/github-oss-api": ["./libs/modules/github-oss/api/src/index.ts"],
+      "@pd/github-oss-web": ["./libs/modules/github-oss/web/src/index.ts"]
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  },
+  "exclude": ["node_modules", "tmp"]
+}

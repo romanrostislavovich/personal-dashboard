@@ -1,0 +1,27 @@
+{
+  "name": "api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api/src",
+  "projectType": "application",
+  "tags": ["scope:api", "type:app"],
+  "targets": {
+    "serve": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "commands": [
+          "cd apps/api && webpack-cli build --watch",
+          "node --watch-path=dist/apps/api dist/apps/api/main.js"
+        ],
+        "parallel": true,
+        "env": {
+          "NODE_ENV": "development"
+        }
+      },
+      "metadata": {
+        "description": "Dev-режим: webpack пересобирает API при изменениях, node --watch перезапускает процесс"
+      }
+    }
+  }
+}

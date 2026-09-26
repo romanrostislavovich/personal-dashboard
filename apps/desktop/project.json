@@ -1,0 +1,35 @@
+{
+  "name": "desktop",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/desktop/src",
+  "projectType": "application",
+  "tags": ["scope:desktop", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/desktop"],
+      "options": {
+        "commands": [
+          "tsc -p apps/desktop/tsconfig.json",
+          "node -e \"const fs=require('fs');fs.cpSync('apps/desktop/src/assets','dist/apps/desktop/assets',{recursive:true});fs.copyFileSync('apps/desktop/package.json','dist/apps/desktop/package.json')\""
+        ],
+        "parallel": false
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "continuous": true,
+      "options": {
+        "command": "electron dist/apps/desktop"
+      }
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "electron-builder --config apps/desktop/electron-builder.yml"
+      }
+    }
+  }
+}

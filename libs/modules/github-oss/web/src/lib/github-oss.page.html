@@ -1,0 +1,97 @@
+<header class="page-header">
+  <h1 class="page-title">{{ 'github-oss.title' | transloco }}</h1>
+  <button matButton (click)="syncAll()" [disabled]="busy() || repos.value().length === 0">
+    <mat-icon>sync</mat-icon> {{ 'github-oss.syncNow' | transloco }}
+  </button>
+</header>
+
+@if (busy()) {
+  <mat-progress-bar mode="indeterminate" class="progress" />
+}
+
+<!-- Общие итоги по всем репозиториям -->
+@if (repos.value().length > 0) {
+  <mat-card appearance="outlined" class="totals">
+    <mat-card-content class="totals-grid">
+      <div class="stat">
+        <span class="label">{{ 'github-oss.totalStars' | transloco }}</span>
+        <span class="value">{{ totals().stars | number }}</span>
+        <span class="sub"
+          >+{{ totals().starsWeek | number }} {{ 'github-oss.perWeek' | transloco }}</span
+        >
+      </div>
+      <div class="stat">
+        <span class="label">{{ 'github-oss.issues' | transloco }}</span>
+        <span class="value">{{ totals().issues | number }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">{{ 'github-oss.pulls' | transloco }}</span>
+        <span class="value">{{ totals().pulls | number }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">{{ 'github-oss.npmWeekly' | transloco }}</span>
+        <span class="value">{{ totals().npmWeekly | number }}</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+}
+
+<div class="setup">
+  <!-- Добавление репозитория -->
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>{{ 'github-oss.addTitle' | transloco }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form class="add-form" [formGroup]="addForm" (ngSubmit)="addRepo()">
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ 'github-oss.repo' | transloco }}</mat-label>
+          <input matInput formControlName="repo" placeholder="owner/name" />
+        </mat-form-field>
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ 'github-oss.npmPackage' | transloco }}</mat-label>
+          <input matInput formControlName="npmPackage" />
+        </mat-form-field>
+        <button matButton="filled" type="submit" [disabled]="addForm.invalid || busy()">
+          {{ 'core.actions.add' | transloco }}
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Токен GitHub -->
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>{{ 'github-oss.token.title' | transloco }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (settings.value()?.tokenConfigured) {
+        <p class="ok">
+          <mat-icon>check_circle</mat-icon> {{ 'github-oss.token.configured' | transloco }}
+        </p>
+        <button matButton (click)="removeToken()">
+          {{ 'github-oss.token.remove' | transloco }}
+        </button>
+      } @else {
+        <p class="hint">{{ 'github-oss.token.hint' | transloco }}</p>
+        <form class="add-form" [formGroup]="tokenForm" (ngSubmit)="saveToken()">
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>{{ 'github-oss.token.label' | transloco }}</mat-label>
+            <input matInput type="password" formControlName="token" autocomplete="off" />
+          </mat-form-field>
+          <button matButton="filled" type="submit" [disabled]="tokenForm.invalid || busy()">
+            {{ 'core.actions.save' | transloco }}
+          </button>
+        </form>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<div class="repos">
+  @for (repo of repos.value(); track repo.id) {
+    <pd-repo-card [repo]="repo" (remove)="removeRepo($event)" />
+  } @empty {
+    <p class="empty">{{ 'github-oss.empty' | transloco }}</p>
+  }
+</div>

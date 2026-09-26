@@ -1,0 +1,13 @@
+{
+  "name": "github-oss-web",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/modules/github-oss/web/src",
+  "prefix": "pd",
+  "projectType": "library",
+  "tags": ["scope:web", "type:module"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
