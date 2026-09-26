@@ -78,7 +78,8 @@ export interface RecurringPaymentFormData {
         <mat-form-field>
           <mat-label>{{ 'finance.wallet' | transloco }}</mat-label>
           <mat-select formControlName="projectId">
-            <mat-option [value]="null">{{ 'finance.scope.personal' | transloco }}</mat-option>
+            <!-- "Личное" = пустая строка: null mat-select считает отсутствием выбора. -->
+            <mat-option value="">{{ 'finance.scope.personal' | transloco }}</mat-option>
             @for (project of data.projects; track project.id) {
               <mat-option [value]="project.id">{{ project.name }}</mat-option>
             }
@@ -138,7 +139,7 @@ export class RecurringPaymentFormDialog {
       this.initial?.dayOfMonth ?? 1,
       [Validators.required, Validators.min(1), Validators.max(31)],
     ],
-    projectId: [this.initial ? this.initial.projectId : this.data.defaults.projectId],
+    projectId: [(this.initial ? this.initial.projectId : this.data.defaults.projectId) ?? ''],
     isActive: [this.initial?.isActive ?? true],
   });
 
@@ -148,6 +149,7 @@ export class RecurringPaymentFormDialog {
       ...value,
       amount: Number(value.amount),
       currency: value.currency.toUpperCase(),
+      projectId: value.projectId || null,
     });
   }
 }

@@ -57,9 +57,7 @@
       <mat-list>
         @for (t of transactions.value(); track t.id) {
           <mat-list-item>
-            <mat-icon matListItemIcon>{{
-              t.recurringPaymentId ? 'autorenew' : t.kind === 'income' ? 'south_west' : 'north_east'
-            }}</mat-icon>
+            <mat-icon matListItemIcon>{{ transactionIcon(t) }}</mat-icon>
             <span matListItemTitle
               >{{ t.category }}
               @if (t.note) {
@@ -82,9 +80,16 @@
               >
                 {{ t.kind === 'expense' ? '−' : '+' }}{{ t.amount | currency: t.currency }}
               </span>
-              <button matIconButton (click)="openTransactionForm(t)">
-                <mat-icon>edit</mat-icon>
-              </button>
+              <!-- Сумму автоимпорта пересчитывает синхронизация, вручную её не правим. -->
+              @if (t.costSourceId) {
+                <mat-icon class="auto" [matTooltip]="'finance.costSources.autoTooltip' | transloco">
+                  lock
+                </mat-icon>
+              } @else {
+                <button matIconButton (click)="openTransactionForm(t)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              }
               <button matIconButton (click)="removeTransaction(t)">
                 <mat-icon>delete</mat-icon>
               </button>
@@ -135,5 +140,14 @@
         }
       </mat-list>
     </mat-card>
+  </mat-tab>
+
+  <!-- Автоимпорт затрат из сервисов: Hetzner, DeepSeek… -->
+  <mat-tab [label]="'finance.tabs.costSources' | transloco">
+    <pd-cost-sources-tab
+      [projects]="projects.value()"
+      [defaultProjectId]="scope() && scope() !== 'personal' ? scope() : null"
+      (changed)="reloadTransactions()"
+    />
   </mat-tab>
 </mat-tab-group>

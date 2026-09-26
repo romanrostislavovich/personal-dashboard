@@ -42,6 +42,10 @@
   padding: 16px 0;
 }
 
+.tab-actions button {
+  flex-shrink: 0;
+}
+
 .hint {
   margin: 0 auto 0 0;
   color: var(--mat-sys-on-surface-variant);
@@ -57,6 +61,11 @@
   font: var(--mat-sys-title-small);
   margin-right: 8px;
   white-space: nowrap;
+}
+
+.auto {
+  margin: 0 12px;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .inactive {

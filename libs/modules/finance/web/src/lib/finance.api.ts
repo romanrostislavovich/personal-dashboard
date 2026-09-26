@@ -1,6 +1,8 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
+  CostSource,
+  CostSourceInput,
   FinanceSummary,
   RecurringPayment,
   RecurringPaymentInput,
@@ -59,6 +61,24 @@ export class FinanceApi {
 
   removeRecurringPayment(id: string) {
     return this.http.delete<void>(`${BASE}/recurring-payments/${id}`);
+  }
+
+  // --- Автоимпорт затрат ---
+
+  costSources() {
+    return httpResource<CostSource[]>(() => `${BASE}/cost-sources`, { defaultValue: [] });
+  }
+
+  addCostSource(input: CostSourceInput) {
+    return this.http.post<void>(`${BASE}/cost-sources`, input);
+  }
+
+  syncCostSource(id: string) {
+    return this.http.post<void>(`${BASE}/cost-sources/${id}/sync`, {});
+  }
+
+  removeCostSource(id: string) {
+    return this.http.delete<void>(`${BASE}/cost-sources/${id}`);
   }
 }
 

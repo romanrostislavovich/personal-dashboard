@@ -32,6 +32,8 @@ export interface Transaction {
   projectId: string | null;
   /** Если операция создана автоматически из регулярного платежа. */
   recurringPaymentId: string | null;
+  /** Если операция — месячная сумма, импортированная из источника затрат (Hetzner, DeepSeek…). */
+  costSourceId: string | null;
 }
 
 export const transactionQuerySchema = z.object({
@@ -91,4 +93,34 @@ export interface FinanceSummary {
   /** Суммы не конвертируются между валютами — по строке на каждую валюту. */
   totals: CurrencyTotals[];
   topExpenseCategories: CategoryTotal[];
+}
+
+/**
+ * Источники автоматического импорта затрат. Каждый раз в день обновляет
+ * одну операцию-расход за текущий месяц.
+ */
+export const COST_PROVIDERS = ['hetzner', 'deepseek'] as const;
+export type CostProvider = (typeof COST_PROVIDERS)[number];
+
+export const costSourceInputSchema = z.object({
+  provider: z.enum(COST_PROVIDERS),
+  name: z.string().trim().min(1).max(100),
+  category: z.string().trim().min(1).max(50),
+  /** Кошелёк проекта; null — личные затраты. */
+  projectId: z.uuid().nullish(),
+  /** API-токен сервиса; хранится зашифрованным и обратно не отдаётся. */
+  apiToken: z.string().trim().min(10),
+});
+export type CostSourceInput = z.infer<typeof costSourceInputSchema>;
+
+export interface CostSource {
+  id: string;
+  provider: CostProvider;
+  name: string;
+  category: string;
+  projectId: string | null;
+  lastSyncedAt: string | null;
+  lastError: string | null;
+  /** Импортировано за текущий месяц. */
+  currentMonth: { amount: number; currency: string } | null;
 }

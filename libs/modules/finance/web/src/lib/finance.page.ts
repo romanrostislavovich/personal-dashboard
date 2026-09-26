@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
   RecurringPayment,
@@ -18,6 +19,7 @@ import {
 } from '@pd/contracts';
 import { ProjectsApi } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
+import { CostSourcesTabComponent } from './cost-sources-tab.component';
 import { FinanceApi } from './finance.api';
 import { FinanceTotalsComponent } from './finance-totals.component';
 import { currentMonth, monthAsDate, monthRange, shiftMonth } from './month';
@@ -46,8 +48,10 @@ const DEFAULT_CURRENCY = 'EUR';
     MatSelectModule,
     MatTabsModule,
     MatListModule,
+    MatTooltipModule,
     TranslocoPipe,
     FinanceTotalsComponent,
+    CostSourcesTabComponent,
   ],
   templateUrl: './finance.page.html',
   styleUrl: './finance.page.scss',
@@ -143,7 +147,17 @@ export class FinancePage {
     };
   }
 
-  private reloadTransactions(): void {
+  protected transactionIcon(t: Transaction): string {
+    if (t.costSourceId) {
+      return 'cloud_sync';
+    }
+    if (t.recurringPaymentId) {
+      return 'autorenew';
+    }
+    return t.kind === 'income' ? 'south_west' : 'north_east';
+  }
+
+  protected reloadTransactions(): void {
     this.transactions.reload();
     this.summary.reload();
   }

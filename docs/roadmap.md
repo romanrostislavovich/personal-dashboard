@@ -25,8 +25,9 @@
   (после 2 неудачных проверок подряд), напоминания об истечении SSL
 - Ошибки: Sentry API
 - Пользователи и трафик: Plausible / Umami / Google Analytics
-- Автоматический импорт затрат в финансы: Hetzner / DigitalOcean / AWS Cost Explorer / Vercel,
-  usage API OpenAI и Anthropic, Stripe-выплаты как доход проекта
+- ✅ Автоимпорт затрат в финансы: Hetzner Cloud (стоимость ресурсов по прайсу), DeepSeek (расход по балансу)
+- Следующие провайдеры затрат: DigitalOcean / AWS Cost Explorer / Vercel, usage API OpenAI и Anthropic
+- Stripe-выплаты как доход проекта
 - Ежемесячный отчёт по проекту: доходы − расходы, пользователи, ошибки
 
 ## Этап 4: личное

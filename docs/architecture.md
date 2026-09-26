@@ -85,6 +85,20 @@ libs/modules/birthdays/
 `SecretsService` ядра: `secrets.set(userId, 'lastfm.token', value)`. Значения шифруются AES-256-GCM
 ключом `ENCRYPTION_KEY` и никогда не отдаются на фронтенд. Пример — `GithubTokenService` в модуле `github-oss`.
 
+## Как добавить провайдера затрат
+
+Автоимпорт затрат — часть модуля `finance` (`libs/modules/finance/api/src/lib/cost-sources`).
+Чтобы подключить новый сервис (например, DigitalOcean):
+
+1. Добавь id в `COST_PROVIDERS` в `libs/shared/contracts/src/lib/finance.ts`.
+2. Реализуй `CostProviderAdapter` в `cost-sources/providers/<name>.provider.ts`:
+   `verify(token)` проверяет токен, `measure(token, state)` возвращает либо полную сумму
+   за месяц (`monthTotal`), либо расход с прошлой синхронизации (`increment`).
+   Расчёты держи в чистых функциях рядом и покрывай тестами (пример — `hetzner-cost.ts`).
+3. Зарегистрируй класс в `FinanceModule` и в `CostSourcesService`.
+4. Добавь название и подсказку по токену в `finance/web/src/lib/i18n/ru.json` → `costSources.providers`.
+5. `npm run db:generate` — в enum `finance_cost_provider` появится новое значение.
+
 ## Сквозные механизмы ядра
 
 - **Секреты интеграций:** `SecretsService` — зашифрованное key-value хранилище на пользователя.

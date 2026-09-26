@@ -111,6 +111,7 @@ function toTransaction(row: TransactionRow): Transaction {
     occurredOn: row.occurredOn,
     projectId: row.projectId,
     recurringPaymentId: row.recurringPaymentId,
+    costSourceId: row.costSourceId,
   };
 }
 

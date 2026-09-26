@@ -84,7 +84,8 @@ export interface TransactionFormData {
           <mat-form-field>
             <mat-label>{{ 'finance.wallet' | transloco }}</mat-label>
             <mat-select formControlName="projectId">
-              <mat-option [value]="null">{{ 'finance.scope.personal' | transloco }}</mat-option>
+              <!-- "Личное" = пустая строка: null mat-select считает отсутствием выбора. -->
+              <mat-option value="">{{ 'finance.scope.personal' | transloco }}</mat-option>
               @for (project of data.projects; track project.id) {
                 <mat-option [value]="project.id">{{ project.name }}</mat-option>
               }
@@ -142,7 +143,7 @@ export class TransactionFormDialog {
     ],
     category: [this.initial?.category ?? '', Validators.required],
     occurredOn: [this.initial?.occurredOn ?? todayLocalDate(), Validators.required],
-    projectId: [this.initial ? this.initial.projectId : this.data.defaults.projectId],
+    projectId: [(this.initial ? this.initial.projectId : this.data.defaults.projectId) ?? ''],
     note: [this.initial?.note ?? ''],
   });
 
@@ -153,6 +154,7 @@ export class TransactionFormDialog {
       amount: Number(value.amount),
       currency: value.currency.toUpperCase(),
       note: value.note || null,
+      projectId: value.projectId || null,
     });
   }
 }

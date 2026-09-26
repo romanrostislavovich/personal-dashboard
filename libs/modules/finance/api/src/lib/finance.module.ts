@@ -1,15 +1,29 @@
 import { Module } from '@nestjs/common';
+import { CostSourcesController } from './cost-sources/cost-sources.controller';
+import { CostSourcesJob } from './cost-sources/cost-sources.job';
+import { CostSourcesService } from './cost-sources/cost-sources.service';
+import { DeepseekCostProvider } from './cost-sources/providers/deepseek.provider';
+import { HetznerCostProvider } from './cost-sources/providers/hetzner.provider';
 import { FinanceController } from './finance.controller';
 import { RecurringPaymentsJob } from './recurring/recurring-payments.job';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
 import { TransactionsService } from './transactions/transactions.service';
 
 /**
- * Финансы: личные и проектные доходы/расходы + регулярные платежи.
- * API: `/api/finance/*`.
+ * Финансы: личные и проектные доходы/расходы, регулярные платежи
+ * и автоимпорт затрат из сервисов (Hetzner, DeepSeek). API: `/api/finance/*`.
  */
 @Module({
-  controllers: [FinanceController],
-  providers: [TransactionsService, RecurringPaymentsService, RecurringPaymentsJob],
+  controllers: [FinanceController, CostSourcesController],
+  providers: [
+    TransactionsService,
+    RecurringPaymentsService,
+    RecurringPaymentsJob,
+    CostSourcesService,
+    CostSourcesJob,
+    // Провайдеры затрат: новый сервис = новый класс здесь + id в COST_PROVIDERS.
+    HetznerCostProvider,
+    DeepseekCostProvider,
+  ],
 })
 export class FinanceModule {}
