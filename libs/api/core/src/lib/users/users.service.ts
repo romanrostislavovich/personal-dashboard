@@ -17,6 +17,11 @@ export class UsersService {
     return user;
   }
 
+  async findByTelegramChatId(chatId: string): Promise<UserRow | undefined> {
+    const [user] = await this.db.select().from(users).where(eq(users.telegramChatId, chatId));
+    return user;
+  }
+
   /** Используется фоновыми задачами, которые обходят всех пользователей. */
   findAll(): Promise<UserRow[]> {
     return this.db.select().from(users);

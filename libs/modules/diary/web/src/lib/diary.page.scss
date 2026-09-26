@@ -1,0 +1,115 @@
+.stats {
+  margin-bottom: 16px;
+}
+
+.stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  padding-top: 16px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat.tags {
+  flex: 1 1 300px;
+}
+
+.label {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.value {
+  font: var(--mat-sys-headline-small);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+// На узком экране список — над редактором.
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.month-label {
+  font: var(--mat-sys-title-medium);
+  text-transform: capitalize;
+}
+
+.today {
+  margin: 4px 0 8px;
+}
+
+.clear-tag {
+  align-self: flex-start;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--mat-sys-surface-container);
+  }
+
+  &.active {
+    background: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+  }
+}
+
+.entry-head {
+  display: flex;
+  justify-content: space-between;
+  font: var(--mat-sys-title-small);
+}
+
+.entry-date::first-letter {
+  text-transform: uppercase;
+}
+
+.entry-preview {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.active .entry-preview {
+  color: inherit;
+}

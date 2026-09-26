@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { FinanceApi } from './finance.api';
 import { FinanceTotalsComponent } from './finance-totals.component';
-import { currentMonth, monthAsDate, monthRange } from './month';
+import { currentMonth, monthAsDate, monthRange } from '@pd/web-core';
 
 /** Виджет главной: итоги текущего месяца по всем кошелькам. */
 @Component({

@@ -64,6 +64,14 @@ class HealthController {
       useFactory: (...channels: NotificationChannel[]) => channels,
     },
   ],
-  exports: [UsersService, ProjectsService, SchedulerService, SecretsService, NotificationsService],
+  exports: [
+    UsersService,
+    ProjectsService,
+    SchedulerService,
+    SecretsService,
+    NotificationsService,
+    // Для команд бота: модули регистрируют их через registerCommand().
+    TelegramBotService,
+  ],
 })
 export class CoreModule {}

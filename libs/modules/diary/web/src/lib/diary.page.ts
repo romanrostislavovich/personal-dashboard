@@ -1,0 +1,101 @@
+import { DatePipe } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { DiaryEntry, LocalDate } from '@pd/contracts';
+import { currentMonth, monthAsDate, monthRange, shiftMonth, todayLocalDate } from '@pd/web-core';
+import { firstValueFrom } from 'rxjs';
+import { DiaryApi } from './diary.api';
+import { DiaryEditorComponent } from './diary-editor.component';
+import { MOOD_EMOJI } from './mood';
+
+const PREVIEW_LENGTH = 120;
+
+@Component({
+  selector: 'pd-diary-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    DatePipe,
+    MatCardModule,
+    MatButtonModule,
+    MatChipsModule,
+    MatIconModule,
+    MatSlideToggleModule,
+    TranslocoPipe,
+    DiaryEditorComponent,
+  ],
+  templateUrl: './diary.page.html',
+  styleUrl: './diary.page.scss',
+})
+export class DiaryPage {
+  private readonly api = inject(DiaryApi);
+  private readonly transloco = inject(TranslocoService);
+  private readonly editor = viewChild(DiaryEditorComponent);
+
+  protected readonly moodEmoji = MOOD_EMOJI;
+  protected readonly today = todayLocalDate();
+
+  // --- Фильтры списка ---
+  protected readonly month = signal(currentMonth());
+  protected readonly tag = signal<string | null>(null);
+  protected readonly monthDate = computed(() => monthAsDate(this.month()));
+
+  // --- Данные ---
+  protected readonly entries = this.api.entries(() => ({
+    ...monthRange(this.month()),
+    tag: this.tag() ?? undefined,
+  }));
+  protected readonly stats = this.api.stats();
+  protected readonly settings = this.api.settings();
+
+  protected readonly selectedDay = signal<LocalDate>(this.today);
+
+  shiftMonth(delta: number): void {
+    this.month.update((month) => shiftMonth(month, delta));
+  }
+
+  toggleTag(tag: string): void {
+    this.tag.update((current) => (current === tag ? null : tag));
+  }
+
+  /** Переключение дня; несохранённые правки не теряем молча. */
+  selectDay(day: LocalDate): void {
+    if (day === this.selectedDay()) {
+      return;
+    }
+    if (this.editor()?.dirty() && !confirm(this.transloco.translate('diary.unsavedConfirm'))) {
+      return;
+    }
+    this.selectedDay.set(day);
+  }
+
+  onSaved(): void {
+    this.entries.reload();
+    this.stats.reload();
+  }
+
+  async setReminder(eveningReminder: boolean): Promise<void> {
+    await firstValueFrom(this.api.saveSettings({ eveningReminder }));
+    this.settings.reload();
+  }
+
+  protected preview(entry: DiaryEntry): string {
+    // Убираем разметку markdown, чтобы в списке был просто текст.
+    const plain = entry.content
+      .replace(/[#*_`>[\]()-]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return plain.length > PREVIEW_LENGTH ? `${plain.slice(0, PREVIEW_LENGTH)}…` : plain;
+  }
+}

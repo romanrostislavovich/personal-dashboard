@@ -11,6 +11,7 @@ import { Bot } from 'grammy';
 import { randomBytes } from 'node:crypto';
 import { AppConfig } from '../../config/env';
 import { UsersService } from '../../users/users.service';
+import { BotCommand } from './bot-command';
 
 const LINK_CODE_TTL_MS = 10 * 60 * 1000;
 
@@ -34,6 +35,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   private readonly bot: Bot | null;
   // Коды живут в памяти 10 минут — для одного инстанса API этого достаточно.
   private readonly pendingLinks = new Map<string, PendingLink>();
+  private readonly commands: BotCommand[] = [];
 
   constructor(
     @Inject(ConfigService) config: AppConfig,
@@ -45,6 +47,11 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
 
   get isAvailable(): boolean {
     return this.bot !== null;
+  }
+
+  /** Модули добавляют свои команды в `onModuleInit` (см. BotCommand). */
+  registerCommand(command: BotCommand): void {
+    this.commands.push(command);
   }
 
   async onApplicationBootstrap(): Promise<void> {
@@ -62,9 +69,23 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       await this.users.setTelegramChatId(userId, String(ctx.chat.id));
       await ctx.reply('✅ Готово! Теперь уведомления дашборда будут приходить сюда.');
     });
+    for (const command of this.commands) {
+      this.bot.command(command.command, async (ctx) => {
+        const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
+        if (!user) {
+          await ctx.reply('Сначала подключи Telegram в настройках дашборда.');
+          return;
+        }
+        await ctx.reply(await command.handler(user, ctx.match.trim()));
+      });
+    }
     this.bot.catch((error) => this.logger.error(error.message));
 
     await this.bot.init();
+    // Меню команд в Telegram (кнопка «/» рядом с полем ввода).
+    await this.bot.api.setMyCommands(
+      this.commands.map(({ command, description }) => ({ command, description })),
+    );
     // start() резолвится только при остановке бота, поэтому не ждём его.
     void this.bot.start({ drop_pending_updates: true });
     this.logger.log(`Telegram bot @${this.bot.botInfo.username} started`);

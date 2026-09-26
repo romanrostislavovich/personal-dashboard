@@ -1,0 +1,89 @@
+<header class="page-header">
+  <h1 class="page-title">{{ 'diary.title' | transloco }}</h1>
+  <mat-slide-toggle
+    [checked]="settings.value()?.eveningReminder ?? false"
+    (change)="setReminder($event.checked)"
+  >
+    {{ 'diary.eveningReminder' | transloco }}
+  </mat-slide-toggle>
+</header>
+
+<!-- Статистика: серии, количество записей, частые теги -->
+@if (stats.value(); as s) {
+  <mat-card appearance="outlined" class="stats">
+    <mat-card-content class="stats-grid">
+      <div class="stat">
+        <span class="label">{{ 'diary.stats.streak' | transloco }}</span>
+        <span class="value">🔥 {{ s.currentStreak }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">{{ 'diary.stats.longest' | transloco }}</span>
+        <span class="value">{{ s.longestStreak }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">{{ 'diary.stats.total' | transloco }}</span>
+        <span class="value">{{ s.totalEntries }}</span>
+      </div>
+      @if (s.topTags.length) {
+        <div class="stat tags">
+          <span class="label">{{ 'diary.stats.tags' | transloco }}</span>
+          <mat-chip-listbox [attr.aria-label]="'diary.stats.tags' | transloco">
+            @for (t of s.topTags; track t.tag) {
+              <mat-chip-option [selected]="tag() === t.tag" (click)="toggleTag(t.tag)">
+                #{{ t.tag }} · {{ t.count }}
+              </mat-chip-option>
+            }
+          </mat-chip-listbox>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+}
+
+<div class="layout">
+  <!-- Список записей месяца -->
+  <section class="list">
+    <div class="month">
+      <button matIconButton (click)="shiftMonth(-1)"><mat-icon>chevron_left</mat-icon></button>
+      <span class="month-label">{{ monthDate() | date: 'LLLL yyyy' }}</span>
+      <button matIconButton (click)="shiftMonth(1)"><mat-icon>chevron_right</mat-icon></button>
+    </div>
+
+    @if (tag(); as activeTag) {
+      <button matButton class="clear-tag" (click)="tag.set(null)">
+        <mat-icon>close</mat-icon> #{{ activeTag }}
+      </button>
+    }
+
+    <button
+      matButton="tonal"
+      class="today"
+      [class.active]="selectedDay() === today"
+      (click)="selectDay(today)"
+    >
+      <mat-icon>edit_note</mat-icon> {{ 'diary.today' | transloco }}
+    </button>
+
+    @for (entry of entries.value(); track entry.day) {
+      <button
+        type="button"
+        class="entry"
+        [class.active]="entry.day === selectedDay()"
+        (click)="selectDay(entry.day)"
+      >
+        <span class="entry-head">
+          <span class="entry-date">{{ entry.day | date: 'd MMMM, EEE' }}</span>
+          @if (entry.mood) {
+            <span>{{ moodEmoji[entry.mood] }}</span>
+          }
+        </span>
+        <span class="entry-preview">{{ preview(entry) }}</span>
+      </button>
+    } @empty {
+      <p class="empty">{{ 'diary.emptyMonth' | transloco }}</p>
+    }
+  </section>
+
+  <!-- Редактор выбранного дня -->
+  <pd-diary-editor [day]="selectedDay()" (saved)="onSaved()" />
+</div>

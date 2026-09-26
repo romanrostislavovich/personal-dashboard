@@ -108,6 +108,12 @@ export class SparklineComponent {
   readonly dateFormat = input('d MMM');
   /** Единица после значения в подсказке, например ` мс`. */
   readonly unit = input('');
+  /**
+   * Фиксированные границы шкалы (например, настроение 1–5).
+   * По умолчанию шкала подстраивается под данные.
+   */
+  readonly min = input<number>();
+  readonly max = input<number>();
 
   protected readonly width = WIDTH;
   protected readonly height = HEIGHT;
@@ -120,8 +126,8 @@ export class SparklineComponent {
       return null;
     }
     const values = points.map((p) => p.value);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+    const min = this.min() ?? Math.min(...values);
+    const max = this.max() ?? Math.max(...values);
     const range = max - min || 1;
     const coords = points.map((p, i) => ({
       ...p,

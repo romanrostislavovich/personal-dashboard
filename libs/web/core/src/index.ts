@@ -4,3 +4,4 @@ export * from './lib/dashboard-module';
 export * from './lib/auth/auth.service';
 export * from './lib/projects/projects.api';
 export * from './lib/ui/sparkline.component';
+export * from './lib/utils/month';

@@ -6,3 +6,4 @@ export * from './lib/birthdays';
 export * from './lib/finance';
 export * from './lib/github-oss';
 export * from './lib/monitoring';
+export * from './lib/diary';

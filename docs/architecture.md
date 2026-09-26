@@ -76,10 +76,13 @@ libs/modules/birthdays/
    - таблицы в `lastfm.schema.ts` (ссылки на ядро — через `@pd/api-core/schema`);
    - сервис и контроллер; `@CurrentUser()` даёт текущего пользователя, `ZodValidationPipe` валидирует вход;
    - фоновые задачи регистрируй в `onModuleInit` через `SchedulerService.register({ name: 'lastfm.sync', cron, handler })`;
-   - уведомления — через `NotificationsService.send(userId, { title, body, source: 'lastfm' })`.
+   - уведомления — через `NotificationsService.send(userId, { title, body, source: 'lastfm' })`;
+   - команды Telegram-бота — через `TelegramBotService.registerCommand({ command, description, handler })`
+     в `onModuleInit` (пример — `/d` в `libs/modules/diary/api/src/lib/diary.jobs.ts`).
 4. **Миграция:** `npm run db:generate` → проверь SQL в `apps/api/migrations`.
 5. **Фронтенд:** экспортируй объект `WebDashboardModule` с `id`, пунктом меню, маршрутами, переводами и виджетами.
 6. **Подключи** модуль в `apps/api/src/modules.ts` и `apps/web/src/app/modules.ts`.
+7. **Перезапусти `npm run dev`**: сборщики читают алиасы `@pd/*` из `tsconfig.base.json` только при старте.
 
 Токены внешних сервисов пользователь вводит в UI модуля, а модуль сохраняет их через
 `SecretsService` ядра: `secrets.set(userId, 'lastfm.token', value)`. Значения шифруются AES-256-GCM

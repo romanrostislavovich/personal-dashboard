@@ -17,12 +17,11 @@ import {
   TransactionInput,
   TransactionQuery,
 } from '@pd/contracts';
-import { ProjectsApi } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { CostSourcesTabComponent } from './cost-sources-tab.component';
 import { FinanceApi } from './finance.api';
 import { FinanceTotalsComponent } from './finance-totals.component';
-import { currentMonth, monthAsDate, monthRange, shiftMonth } from './month';
+import { currentMonth, monthAsDate, monthRange, ProjectsApi, shiftMonth } from '@pd/web-core';
 import {
   RecurringPaymentFormData,
   RecurringPaymentFormDialog,

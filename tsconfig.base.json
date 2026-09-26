@@ -25,7 +25,9 @@
       "@pd/github-oss-api": ["./libs/modules/github-oss/api/src/index.ts"],
       "@pd/github-oss-web": ["./libs/modules/github-oss/web/src/index.ts"],
       "@pd/monitoring-api": ["./libs/modules/monitoring/api/src/index.ts"],
-      "@pd/monitoring-web": ["./libs/modules/monitoring/web/src/index.ts"]
+      "@pd/monitoring-web": ["./libs/modules/monitoring/web/src/index.ts"],
+      "@pd/diary-api": ["./libs/modules/diary/api/src/index.ts"],
+      "@pd/diary-web": ["./libs/modules/diary/web/src/index.ts"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true

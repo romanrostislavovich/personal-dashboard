@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Project, Transaction, TransactionInput, TransactionKind } from '@pd/contracts';
-import { todayLocalDate } from './month';
+import { todayLocalDate } from '@pd/web-core';
 
 export interface TransactionFormData {
   transaction: Transaction | null;
