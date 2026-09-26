@@ -2,8 +2,8 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
 export interface SparklinePoint {
-  /** `YYYY-MM-DD` */
-  day: string;
+  /** Дата (`YYYY-MM-DD`) или момент времени (ISO). */
+  at: string;
   value: number;
 }
 
@@ -35,7 +35,8 @@ const PADDING = 5;
         @if (hoveredPoint(); as p) {
           <span class="marker" [style.left.%]="p.xPercent" [style.top.%]="p.yPercent"></span>
           <span class="tooltip" [class.right]="p.xPercent > 60" [style.left.%]="p.xPercent">
-            {{ p.day | date: 'd MMM' }}: <b>{{ p.value | number }}</b>
+            {{ p.at | date: dateFormat() }}: <b>{{ p.value | number }}</b
+            >{{ unit() }}
           </span>
         }
       </div>
@@ -103,6 +104,10 @@ export class SparklineComponent {
   readonly points = input.required<SparklinePoint[]>();
   /** Описание для скринридеров, например «Звёзды за 30 дней». */
   readonly label = input('');
+  /** Формат даты в подсказке (DatePipe): `d MMM` для дней, `HH:mm` для часов. */
+  readonly dateFormat = input('d MMM');
+  /** Единица после значения в подсказке, например ` мс`. */
+  readonly unit = input('');
 
   protected readonly width = WIDTH;
   protected readonly height = HEIGHT;

@@ -172,6 +172,6 @@ export class RepoCardComponent {
   readonly remove = output<TrackedRepo>();
 
   protected readonly starsHistory = computed(() =>
-    this.repo().history.map((point) => ({ day: point.day, value: point.stars })),
+    this.repo().history.map((point) => ({ at: point.day, value: point.stars })),
   );
 }

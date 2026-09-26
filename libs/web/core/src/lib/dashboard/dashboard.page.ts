@@ -27,6 +27,8 @@ interface LoadedWidget extends DashboardWidget {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
       gap: 16px;
+      /* Узкие виджеты заполняют пустоты, оставшиеся после широких. */
+      grid-auto-flow: dense;
     }
     .widget.large {
       grid-column: 1 / -1;

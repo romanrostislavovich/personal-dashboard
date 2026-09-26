@@ -15,6 +15,13 @@
       "when": 1790455790317,
       "tag": "0001_github_oss_and_secrets",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790459419467,
+      "tag": "0002_monitoring",
+      "breakpoints": true
     }
   ]
 }

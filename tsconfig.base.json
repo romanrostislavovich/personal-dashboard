@@ -23,7 +23,9 @@
       "@pd/finance-web": ["./libs/modules/finance/web/src/index.ts"],
       "@pd/api-core/schema": ["./libs/api/core/src/schema.ts"],
       "@pd/github-oss-api": ["./libs/modules/github-oss/api/src/index.ts"],
-      "@pd/github-oss-web": ["./libs/modules/github-oss/web/src/index.ts"]
+      "@pd/github-oss-web": ["./libs/modules/github-oss/web/src/index.ts"],
+      "@pd/monitoring-api": ["./libs/modules/monitoring/api/src/index.ts"],
+      "@pd/monitoring-web": ["./libs/modules/monitoring/web/src/index.ts"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true

@@ -5,3 +5,4 @@ export * from './lib/notifications';
 export * from './lib/birthdays';
 export * from './lib/finance';
 export * from './lib/github-oss';
+export * from './lib/monitoring';
