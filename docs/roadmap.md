@@ -5,7 +5,7 @@
 - Nx monorepo: Angular + NestJS + Electron, zod contracts, module boundaries enforced by ESLint
 - PostgreSQL + Drizzle with automatic migrations, pg-boss for background jobs
 - JWT auth, optional registration, profile and password change
-- Telegram notifications and bot commands
+- Telegram notifications and bot commands, live events (SSE): web toasts and native desktop notifications
 - Desktop app (tray, autostart, server selection), a single Docker image, CI
 - English and Russian for the UI, notifications, achievements and AI answers
 
@@ -16,21 +16,35 @@
   Hetzner Cloud and DeepSeek
 - **Open Source:** GitHub stars history, issues, PRs, releases, npm downloads, alerts
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
-- **Diary:** markdown, mood, hashtags, streaks, `/d` from Telegram, evening reminder
+- **Diary:** markdown with autosave, mood, hashtags, emoji marks on phrases, photos, search, year
+  heatmap, “on this day”, mood insights, templates; `/d`, `/mood`, `/today` and photos from Telegram
 - **Music:** Last.fm history and tops, Spotify “now playing”
-- **Games:** Dota 2 (OpenDota) and World of Warcraft (Battle.net)
-- **Achievements:** 42 achievements across all modules
+- **Games:** Dota 2 (full match history of every mode, via OpenDota) and World of Warcraft (Battle.net)
+- **Achievements:** 110+ achievements across all modules, rarities, XP and player level
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
   `/ask` in Telegram, morning digest, weekly diary summary
 
 ## Next
+
+### Planned
+
+- **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
+- **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
+  (bank notifications / SMS → transactions), then everything else the phone knows
+- **Shared client core** for web, desktop and mobile: API client, auth, realtime events, i18n and
+  contracts in one library, so every client behaves the same
+- **Telegram assistant** — the bot answers free-form messages (not only commands) and does things
+  on request: add a transaction, a birthday or a diary note, change settings (AI with write tools
+  and a confirmation step)
+
+### Ideas
 
 - Production projects: errors (Sentry), traffic (Plausible / Umami / Google Analytics),
   Stripe payouts as project income, a monthly report per project
 - More cost providers: DigitalOcean, AWS Cost Explorer, Vercel, OpenAI and Anthropic usage
 - GitHub repository traffic (views / clones), npm downloads history
 - Notification settings: which module sends what and where
-- Channels: Discord, e-mail, web push, native desktop notifications
+- Channels: Discord, e-mail, web push (browser notifications when the tab is closed)
 - AI: native Anthropic API, streaming answers, saved conversations
 - Roles and sharing for multi-user setups
 - A module generator and more language translations
