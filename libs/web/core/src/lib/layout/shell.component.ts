@@ -10,6 +10,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { RealtimeNotifier } from '../realtime/realtime-notifier';
+import { ToastHostComponent } from '../toast/toast-host.component';
 import { DASHBOARD_MODULES } from '../dashboard-module';
 
 interface NavItem {
@@ -31,12 +33,18 @@ interface NavItem {
     MatButtonModule,
     MatTooltipModule,
     TranslocoPipe,
+    ToastHostComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })
 export class ShellComponent {
   protected readonly auth = inject(AuthService);
+
+  constructor() {
+    // Live events (new achievements, notifications) while the dashboard is open.
+    inject(RealtimeNotifier).start();
+  }
 
   /** "Roman Rostislavovich" → "RR"; a single word gives its first two letters. */
   protected readonly initials = computed(() => {

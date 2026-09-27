@@ -1,8 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Achievement, ACHIEVEMENT_RARITIES, AchievementRarity } from '@pd/contracts';
-import { LevelCardComponent } from '@pd/web-core';
+import { LevelCardComponent, RealtimeClient } from '@pd/web-core';
 import { AchievementCardComponent } from './achievement-card.component';
 import { AchievementsApi } from './achievements.api';
 
@@ -211,6 +219,16 @@ export class AchievementsPage {
         unlocked: group.all.filter((a) => a.unlockedAt).length,
       }));
   });
+
+  constructor() {
+    // Unlocked while the page is open — show it without a reload.
+    const unlocks = inject(RealtimeClient).achievementUnlocks;
+    effect(() => {
+      if (unlocks() > 0) {
+        untracked(() => this.achievements.reload());
+      }
+    });
+  }
 
   protected toggleRarity(rarity: AchievementRarity): void {
     this.rarity.update((current) => (current === rarity ? null : rarity));

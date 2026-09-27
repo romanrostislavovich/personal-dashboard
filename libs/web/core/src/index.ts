@@ -8,3 +8,5 @@ export * from './lib/utils/month';
 export * from './lib/ui/markdown.pipe';
 export * from './lib/i18n/language';
 export * from './lib/dashboard/level-card.component';
+export * from './lib/realtime/realtime.client';
+export * from './lib/toast/toast.service';

@@ -89,5 +89,15 @@
       "changed": "Password changed",
       "wrong": "The current password is incorrect"
     }
+  },
+  "toast": {
+    "achievement": "New achievement!",
+    "close": "Close",
+    "rarity": {
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
+    }
   }
 }

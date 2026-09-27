@@ -1,6 +1,6 @@
 import { Controller, Get, Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { AchievementsController } from './achievements/achievements.controller';
 import { AchievementsService } from './achievements/achievements.service';
@@ -23,6 +23,11 @@ import { ProjectsService } from './projects/projects.service';
 import { SchedulerService } from './scheduler/scheduler.service';
 import { SecretsService } from './secrets/secrets.service';
 import { UsersService } from './users/users.service';
+import { InAppChannel } from './realtime/in-app.channel';
+import { RealtimeController } from './realtime/realtime.controller';
+import { RealtimeService } from './realtime/realtime.service';
+import { UserActivityInterceptor } from './realtime/user-activity.interceptor';
+import { UserActivityService } from './realtime/user-activity.service';
 
 @Controller('health')
 class HealthController {
@@ -34,7 +39,8 @@ class HealthController {
 }
 
 /**
- * Core: config, database, auth, projects, scheduler, integration secrets, notifications, achievements, AI.
+ * Core: config, database, auth, projects, scheduler, integration secrets, notifications,
+ * realtime events for open dashboards, achievements, AI.
  * The module is global — feature modules simply inject the services they need
  * (DB, SchedulerService, SecretsService, NotificationsService, UsersService).
  */
@@ -58,9 +64,11 @@ class HealthController {
     NotificationsController,
     AchievementsController,
     AiController,
+    RealtimeController,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_INTERCEPTOR, useClass: UserActivityInterceptor },
     AuthService,
     UsersService,
     ProjectsService,
@@ -69,13 +77,16 @@ class HealthController {
     NotificationsService,
     TelegramBotService,
     TelegramChannel,
+    RealtimeService,
+    UserActivityService,
+    InAppChannel,
     AchievementsService,
     AiService,
     AiIntegrations,
     // New channels (Discord, e-mail…) are added to this list.
     {
       provide: NOTIFICATION_CHANNELS,
-      inject: [TelegramChannel],
+      inject: [TelegramChannel, InAppChannel],
       useFactory: (...channels: NotificationChannel[]) => channels,
     },
   ],

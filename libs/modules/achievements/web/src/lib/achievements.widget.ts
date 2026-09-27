@@ -1,8 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  untracked,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { RealtimeClient } from '@pd/web-core';
 import { AchievementCardComponent } from './achievement-card.component';
 import { AchievementsApi } from './achievements.api';
 
@@ -51,6 +59,15 @@ const LATEST_COUNT = 2;
 })
 export class AchievementsWidget {
   private readonly achievements = inject(AchievementsApi).list();
+
+  constructor() {
+    const unlocks = inject(RealtimeClient).achievementUnlocks;
+    effect(() => {
+      if (unlocks() > 0) {
+        untracked(() => this.achievements.reload());
+      }
+    });
+  }
 
   protected readonly total = computed(() => this.achievements.value().length);
   protected readonly unlocked = computed(() =>

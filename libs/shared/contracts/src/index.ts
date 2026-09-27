@@ -12,3 +12,4 @@ export * from './lib/games';
 export * from './lib/achievements';
 export * from './lib/ai';
 export * from './lib/diary-marks';
+export * from './lib/realtime';

@@ -1,8 +1,16 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  untracked,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Achievement, levelFromXp } from '@pd/contracts';
+import { RealtimeClient } from '../realtime/realtime.client';
 
 /**
  * Player level from unlocked achievements: every achievement gives XP by rarity.
@@ -113,6 +121,16 @@ export class LevelCardComponent {
   protected readonly progress = computed(() =>
     levelFromXp(this.unlockedList().reduce((sum, a) => sum + a.xp, 0)),
   );
+  constructor() {
+    // A new achievement changes the level right away.
+    const unlocks = inject(RealtimeClient).achievementUnlocks;
+    effect(() => {
+      if (unlocks() > 0) {
+        untracked(() => this.achievements.reload());
+      }
+    });
+  }
+
   protected readonly percent = computed(() => {
     const { xpInLevel, xpForNext } = this.progress();
     return Math.round((xpInLevel / xpForNext) * 100);

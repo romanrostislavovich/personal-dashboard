@@ -12,6 +12,7 @@ import { randomBytes } from 'node:crypto';
 import { AppConfig } from '../../config/env';
 import { coreMessages } from '../../i18n/core.messages';
 import { FALLBACK_LOCALE, localize } from '../../i18n/locale';
+import { UserActivityService } from '../../realtime/user-activity.service';
 import { UsersService } from '../../users/users.service';
 import { BotCommand, BotPhotoHandler } from './bot-command';
 
@@ -44,6 +45,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   constructor(
     @Inject(ConfigService) config: AppConfig,
     private readonly users: UsersService,
+    private readonly activity: UserActivityService,
   ) {
     this.token = config.get('TELEGRAM_BOT_TOKEN', { infer: true });
     this.bot = this.token ? new Bot(this.token) : null;
@@ -88,6 +90,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
           return;
         }
         await ctx.reply(await command.handler(user, ctx.match.trim()));
+        this.activity.touched(user.id);
       });
     }
     this.bot.on('message:photo', async (ctx) => {
@@ -103,6 +106,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
         download: () => this.downloadFile(largest.file_id),
       });
       await ctx.reply(reply);
+      this.activity.touched(user.id);
     });
     this.bot.catch((error) => this.logger.error(error.message));
 
