@@ -5,3 +5,8 @@
 	encode zstd gzip
 	reverse_proxy app:3300
 }
+
+# www.<domain> → <domain> (needs its own DNS record; without one Caddy just keeps retrying).
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
