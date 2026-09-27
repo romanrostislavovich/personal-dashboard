@@ -37,6 +37,11 @@ export interface AchievementMetric {
   module: string;
   measure: (userId: string) => Promise<number>;
   tiers: AchievementTier[];
+  /**
+   * The metric counts other achievements (meta achievements): it is measured after the others
+   * are saved, so an achievement that is, say, the 25th unlocks in the same check.
+   */
+  countsAchievements?: boolean;
 }
 
 /**

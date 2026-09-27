@@ -22,6 +22,12 @@ import { unlockedAchievements } from './achievements.schema';
 import { metaAchievementMetrics } from './meta.achievements';
 import { achievementId, newlyUnlockedTiers } from './newly-unlocked';
 
+interface UnlockedTier {
+  metric: AchievementMetric;
+  tier: AchievementTier;
+  index: number;
+}
+
 /** A burst of changes (typing with autosave, several saves) triggers one check. */
 const ACTIVITY_DEBOUNCE_MS = 3_000;
 
@@ -111,9 +117,43 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
       .where(eq(unlockedAchievements.userId, userId));
     const unlocked = new Map(rows.map((row) => [row.achievementId, row.unlockedAt]));
     const values = new Map<string, number>();
-    const candidates: { metric: AchievementMetric; tier: AchievementTier; index: number }[] = [];
+    const now = new Date();
 
-    for (const metric of this.metrics) {
+    // Meta achievements go second: they count what the first pass has just unlocked.
+    const fresh = [
+      ...(await this.unlockPass(
+        userId,
+        this.metrics.filter((m) => !m.countsAchievements),
+        unlocked,
+        values,
+        now,
+      )),
+      ...(await this.unlockPass(
+        userId,
+        this.metrics.filter((m) => m.countsAchievements),
+        unlocked,
+        values,
+        now,
+      )),
+    ];
+    if (fresh.length > 0) {
+      await this.announce(userId, fresh, values, now);
+    }
+
+    return { values, unlocked };
+  }
+
+  /** Measures the metrics and saves reached tiers; returns the ones this call inserted. */
+  private async unlockPass(
+    userId: string,
+    metrics: AchievementMetric[],
+    unlocked: Map<string, Date>,
+    values: Map<string, number>,
+    now: Date,
+  ): Promise<UnlockedTier[]> {
+    const candidates: UnlockedTier[] = [];
+
+    for (const metric of metrics) {
       let value: number;
       try {
         value = await metric.measure(userId);
@@ -127,38 +167,30 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
       }
     }
 
-    if (candidates.length > 0) {
-      const now = new Date();
-      // Two checks may run at once (page open + activity): only rows this check inserted count.
-      const inserted = await this.db
-        .insert(unlockedAchievements)
-        .values(
-          candidates.map(({ metric, tier }) => ({
-            userId,
-            achievementId: achievementId(metric, tier),
-            unlockedAt: now,
-          })),
-        )
-        .onConflictDoNothing()
-        .returning({ id: unlockedAchievements.achievementId });
-      const insertedIds = new Set(inserted.map((row) => row.id));
-      candidates.forEach(({ metric, tier }) => unlocked.set(achievementId(metric, tier), now));
-
-      const fresh = candidates.filter(({ metric, tier }) =>
-        insertedIds.has(achievementId(metric, tier)),
-      );
-      if (fresh.length > 0) {
-        await this.announce(userId, fresh, values, now);
-      }
+    if (candidates.length === 0) {
+      return [];
     }
-
-    return { values, unlocked };
+    // Two checks may run at once (page open + activity): only rows this check inserted count.
+    const inserted = await this.db
+      .insert(unlockedAchievements)
+      .values(
+        candidates.map(({ metric, tier }) => ({
+          userId,
+          achievementId: achievementId(metric, tier),
+          unlockedAt: now,
+        })),
+      )
+      .onConflictDoNothing()
+      .returning({ id: unlockedAchievements.achievementId });
+    const insertedIds = new Set(inserted.map((row) => row.id));
+    candidates.forEach(({ metric, tier }) => unlocked.set(achievementId(metric, tier), now));
+    return candidates.filter(({ metric, tier }) => insertedIds.has(achievementId(metric, tier)));
   }
 
   /** Live event for open dashboards and one message for Telegram. */
   private async announce(
     userId: string,
-    fresh: { metric: AchievementMetric; tier: AchievementTier; index: number }[],
+    fresh: UnlockedTier[],
     values: Map<string, number>,
     unlockedAt: Date,
   ): Promise<void> {

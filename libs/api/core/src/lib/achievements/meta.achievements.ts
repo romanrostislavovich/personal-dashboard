@@ -29,6 +29,7 @@ export function metaAchievementMetrics(
     {
       id: 'achievements.unlocked',
       module: MODULE,
+      countsAchievements: true,
       measure: async (userId) => (await unlockedIds(userId)).length,
       tiers: [
         achievementTier(
@@ -60,6 +61,7 @@ export function metaAchievementMetrics(
     {
       id: 'achievements.sections',
       module: MODULE,
+      countsAchievements: true,
       measure: async (userId) => {
         const modules = new Set((await unlockedIds(userId)).map(moduleOf));
         modules.delete(MODULE);
