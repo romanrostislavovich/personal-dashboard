@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AiChatMessage } from '@pd/contracts';
+import { AiChatMessage, projectInputSchema } from '@pd/contracts';
 import { AchievementsService } from '../achievements/achievements.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TelegramBotService } from '../notifications/telegram/telegram-bot.service';
@@ -7,7 +7,7 @@ import { ProjectsService } from '../projects/projects.service';
 import { SchedulerService } from '../scheduler/scheduler.service';
 import { coreMessages } from '../i18n/core.messages';
 import { UsersService } from '../users/users.service';
-import { NO_PARAMETERS } from './ai-tool';
+import { changedFields, findById, idParameters, NO_PARAMETERS } from './ai-tool';
 import { AiService } from './ai.service';
 
 /** Telegram limits a message to 4096 characters. */
@@ -29,9 +29,15 @@ const MORNING_DIGEST_PROMPT = [
   'Short bullet points with emoji, only what matters; skip empty sections.',
 ].join(' ');
 
+const PROJECT_FIELDS = {
+  name: { type: 'string' },
+  url: { type: 'string', description: 'https://…' },
+  description: { type: 'string' },
+} as const;
+
 /**
  * Wires the AI into the rest of the core:
- * - core tools (projects, achievements);
+ * - core tools (projects and their changes, achievements);
  * - the bot command `/ask question`;
  * - the Telegram assistant: plain messages go to the AI, which can also change data
  *   (tools with `writes`); `/new` forgets the conversation;
@@ -61,6 +67,7 @@ export class AiIntegrations implements OnModuleInit {
       parameters: NO_PARAMETERS,
       handler: (userId) => this.projects.list(userId),
     });
+    this.registerProjectWriteTools();
     this.ai.registerTool({
       name: 'core_achievements',
       module: 'achievements',
@@ -111,6 +118,53 @@ export class AiIntegrations implements OnModuleInit {
       name: 'ai.morning-digest',
       cron: '30 8 * * *',
       handler: () => this.sendMorningDigests(),
+    });
+  }
+
+  private registerProjectWriteTools(): void {
+    this.ai.registerTool({
+      name: 'core_add_project',
+      module: 'projects',
+      writes: true,
+      description:
+        'Creates a project — a site or service the user runs. Finance wallets and site ' +
+        'monitoring are tied to projects.',
+      parameters: { type: 'object', properties: PROJECT_FIELDS, required: ['name'] },
+      handler: (userId, args) => this.projects.create(userId, projectInputSchema.parse(args)),
+    });
+
+    this.ai.registerTool({
+      name: 'core_update_project',
+      module: 'projects',
+      writes: true,
+      description: 'Changes a project: pass its id and only the fields to change (null clears).',
+      parameters: {
+        type: 'object',
+        properties: { id: { type: 'string' }, ...PROJECT_FIELDS },
+        required: ['id'],
+      },
+      handler: async (userId, args) => {
+        const project = findById(await this.projects.list(userId), args['id'], 'Project');
+        const { name, url, description } = project;
+        const input = projectInputSchema.parse({ name, url, description, ...changedFields(args) });
+        return this.projects.update(userId, project.id, input);
+      },
+    });
+
+    const findProject = async (userId: string, args: Record<string, unknown>) =>
+      findById(await this.projects.list(userId), args['id'], 'Project');
+    this.ai.registerTool({
+      name: 'core_delete_project',
+      module: 'projects',
+      writes: true,
+      confirm: findProject,
+      description:
+        'Deletes a project. Fails while it still has transactions or monitors — ' +
+        'those have to be deleted or moved first.',
+      parameters: idParameters('Project id from core_projects'),
+      handler: async (userId, args) => {
+        await this.projects.remove(userId, (await findProject(userId, args)).id);
+      },
     });
   }
 

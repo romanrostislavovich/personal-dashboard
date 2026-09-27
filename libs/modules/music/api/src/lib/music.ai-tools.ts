@@ -3,7 +3,7 @@ import { AiService, NO_PARAMETERS } from '@pd/api-core';
 import { MUSIC_TOP_PERIODS, MusicTopPeriod } from '@pd/contracts';
 import { LastfmService } from './lastfm.service';
 
-/** AI access to music: Last.fm statistics and tops. */
+/** AI access to music: Last.fm statistics and tops; refreshing them (assistant). */
 @Injectable()
 export class MusicAiTools implements OnModuleInit {
   constructor(
@@ -34,6 +34,18 @@ export class MusicAiTools implements OnModuleInit {
           ? (args['period'] as MusicTopPeriod)
           : '7day';
         return this.lastfm.tops(userId, period);
+      },
+    });
+
+    this.ai.registerTool({
+      name: 'music_sync',
+      module: 'music',
+      writes: true,
+      description: 'Loads the latest plays from Last.fm now instead of waiting for the sync.',
+      parameters: NO_PARAMETERS,
+      handler: async (userId) => {
+        await this.lastfm.sync(userId);
+        return this.lastfm.stats(userId);
       },
     });
   }

@@ -92,7 +92,11 @@ Say it is `strava`.
 parameters (JSON Schema), handler })`. Write the description for the model: what it returns and
      when it is useful (example — `libs/modules/finance/api/src/lib/finance.ai-tools.ts`).
      A tool that changes data sets `writes: true` and validates its arguments with the contracts
-     schema; such tools are offered only to the assistant (Telegram and the AI chat). No delete tools.
+     schema; such tools are offered only to the assistant (Telegram and the AI chat). A tool that
+     deletes or overwrites data also sets `confirm` (returns what will be affected): the first call
+     changes nothing and the model asks the user; the call runs when repeated after the user's reply.
+     Edits take the record id and only the fields to change (`changedFields`, `findById`).
+     Never expose secrets (API keys, tokens) through tools — they are set up in the dashboard.
 4. **Migration:** `npm run db:generate` → review the SQL in `apps/api/migrations`.
 5. **Frontend:** export a `WebDashboardModule` with `id`, menu item, routes, translations
    (`en` and `ru`) and widgets.

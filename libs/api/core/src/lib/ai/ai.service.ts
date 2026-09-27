@@ -25,22 +25,31 @@ import {
   chatCompletion,
   ChatMessage,
 } from './openai-compatible.client';
+import { callKey, PendingConfirmations } from './pending-confirmations';
 import { runToolLoop } from './tool-loop';
 
 const API_KEY_SECRET = 'ai.api-key';
-/** How many times in a row the model may request data before answering. */
-const MAX_TOOL_ROUNDS = 6;
+/** How many times in a row the model may call tools before answering (look up → change → check). */
+const MAX_TOOL_ROUNDS = 8;
 /** Tool output is truncated so it does not bloat the context (and the token bill). */
 const MAX_TOOL_RESULT_CHARS = 12_000;
 
 /** How the model should behave when it can change data. */
 const WRITE_RULES = [
-  'You can also change data with tools (add birthdays, diary notes, transactions and so on).',
+  'You can also change data with tools: add, edit and delete birthdays, diary entries,',
+  'transactions, recurring payments, projects, monitored sites, repositories, game accounts,',
+  'and refresh data from external services.',
   'Change data only when the user clearly asks for it, never on your own initiative.',
   'If something required is missing or ambiguous (a date, an amount, a currency), ask one short',
   'question instead of guessing. Resolve relative dates ("yesterday", "on Friday") from today.',
-  'After a change, confirm exactly what was saved (values, dates). You cannot delete anything:',
-  'if asked to, explain that deleting is done in the dashboard.',
+  'To edit or delete a record, first find its id with a listing tool; if several records match,',
+  'ask which one. After a change, confirm exactly what was saved (values, dates).',
+  "Deleting and overwriting need the user's confirmation: such a tool first answers",
+  '"confirmationRequired" and changes nothing — then describe exactly what will be affected and',
+  'ask. Only after the user agrees in their next message call the same tool with the same',
+  'arguments again. Never say something was deleted before that second call succeeded.',
+  'API keys, tokens, passwords and connecting accounts are set up only in the dashboard settings:',
+  'if asked, explain that.',
   'Every request to change data needs its own tool call in this turn, even if similar changes',
   'were made earlier in the conversation. Never say that something was saved, added or recorded',
   'unless a tool call in this turn returned success; if a tool returned an error, say so.',
@@ -63,6 +72,9 @@ export interface AskOptions {
 export class AiService {
   private readonly logger = new Logger(AiService.name);
   private readonly tools: AiTool[] = [];
+  private readonly confirmations = new PendingConfirmations();
+  /** Numbers `ask()` calls: a confirmation must come from a later turn than the request. */
+  private turns = 0;
 
   constructor(
     @Inject(DB) private readonly db: Database,
@@ -72,6 +84,10 @@ export class AiService {
   ) {}
 
   registerTool(tool: AiTool): void {
+    if (tool.confirm && !tool.writes) {
+      // Otherwise it would be offered where the user cannot confirm anything.
+      throw new Error(`AI tool ${tool.name}: \`confirm\` requires \`writes: true\``);
+    }
     this.tools.push(tool);
   }
 
@@ -153,7 +169,8 @@ export class AiService {
       ...history,
     ];
     const tools = options.allowWrites ? this.tools : this.tools.filter((tool) => !tool.writes);
-    /** Write tools that succeeded in this turn. */
+    const turn = ++this.turns;
+    /** Write tools that changed data in this turn. */
     const changes: string[] = [];
     const run = (conversation: ChatMessage[]) =>
       runToolLoop({
@@ -161,11 +178,11 @@ export class AiService {
         tools,
         complete: (current, definitions) => chatCompletion(connection, current, definitions),
         runTool: async (tool, rawArgs) => {
-          const result = await this.runTool(userId, tool, rawArgs);
-          if (tool?.writes && !result.startsWith('{"error"')) {
+          const { output, changed } = await this.runTool(userId, tool, rawArgs, turn);
+          if (changed && tool) {
             changes.push(tool.name);
           }
-          return result;
+          return output;
         },
         maxRounds: MAX_TOOL_ROUNDS,
       });
@@ -211,23 +228,36 @@ export class AiService {
     }
   }
 
+  /** Runs a tool call; `changed` — a write tool actually changed data. */
   private async runTool(
     userId: string,
     tool: AiTool | undefined,
     rawArgs: string,
-  ): Promise<string> {
+    turn: number,
+  ): Promise<{ output: string; changed: boolean }> {
     if (!tool) {
-      return JSON.stringify({ error: 'Unknown tool' });
+      return { output: JSON.stringify({ error: 'Unknown tool' }), changed: false };
     }
     try {
       const args = rawArgs ? (JSON.parse(rawArgs) as Record<string, unknown>) : {};
-      const result = JSON.stringify(await tool.handler(userId, args));
-      return result.length > MAX_TOOL_RESULT_CHARS
-        ? `${result.slice(0, MAX_TOOL_RESULT_CHARS)}… (truncated)`
-        : result;
+      if (
+        tool.confirm &&
+        !this.confirmations.confirmOrRequest(userId, callKey(tool.name, args), turn)
+      ) {
+        const willAffect = await tool.confirm(userId, args);
+        return { output: JSON.stringify(confirmationRequest(willAffect)), changed: false };
+      }
+      const value = await tool.handler(userId, args);
+      const result = value === undefined ? '{"done":true}' : JSON.stringify(value);
+      const output =
+        result.length > MAX_TOOL_RESULT_CHARS
+          ? `${result.slice(0, MAX_TOOL_RESULT_CHARS)}… (truncated)`
+          : result;
+      return { output, changed: Boolean(tool.writes) };
     } catch (error) {
       this.logger.warn(`AI tool ${tool.name} failed: ${error}`);
-      return JSON.stringify({ error: error instanceof Error ? error.message : String(error) });
+      const message = error instanceof Error ? error.message : String(error);
+      return { output: JSON.stringify({ error: message }), changed: false };
     }
   }
 
@@ -270,4 +300,16 @@ export class AiService {
       apiKey: await this.secrets.get(userId, API_KEY_SECRET),
     };
   }
+}
+
+/** What a tool with `confirm` returns to the model on the first call. */
+function confirmationRequest(willAffect: unknown) {
+  return {
+    confirmationRequired: true,
+    nothingChangedYet: true,
+    willAffect,
+    next:
+      'Tell the user exactly what will be deleted or overwritten and ask to confirm. ' +
+      'If they agree in their next message, call this tool again with the same arguments.',
+  };
 }

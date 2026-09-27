@@ -22,6 +22,17 @@ export class TransactionsService {
     return rows.map(toTransaction);
   }
 
+  async get(userId: string, id: string): Promise<Transaction> {
+    const [row] = await this.db
+      .select()
+      .from(transactions)
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
+    if (!row) {
+      throw new NotFoundException('Transaction not found');
+    }
+    return toTransaction(row);
+  }
+
   async create(userId: string, input: TransactionInput): Promise<Transaction> {
     if (input.projectId) {
       await this.projects.assertOwned(userId, input.projectId);
