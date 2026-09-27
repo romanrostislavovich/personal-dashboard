@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { GamesAchievements } from './games.achievements';
 import { DotaService } from './dota/dota.service';
 import { GameAccountsService } from './game-accounts.service';
 import { GamesSyncJob } from './games-sync.job';
@@ -11,6 +12,6 @@ import { WowService } from './wow/wow.service';
  */
 @Module({
   controllers: [GamesController],
-  providers: [GameAccountsService, DotaService, WowService, GamesSyncJob],
+  providers: [GameAccountsService, DotaService, WowService, GamesSyncJob, GamesAchievements],
 })
 export class GamesModule {}

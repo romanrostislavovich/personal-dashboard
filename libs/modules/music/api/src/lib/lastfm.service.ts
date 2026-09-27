@@ -148,13 +148,8 @@ export class LastfmService {
       .orderBy(desc(scrobbles.playedAt))
       .limit(RECENT_LIMIT);
 
-    const client = await this.clientFor(userId);
-    const totalScrobbles = client
-      ? await this.cached(userId, 'total', () => client.getTotalScrobbles()).catch(() => null)
-      : null;
-
     return {
-      totalScrobbles,
+      totalScrobbles: await this.totalScrobbles(userId).catch(() => null),
       today: playsByDay.at(-1)?.plays ?? 0,
       playsByDay,
       recent: recent.map((r) => ({
@@ -164,6 +159,26 @@ export class LastfmService {
         playedAt: r.playedAt.toISOString(),
       })),
     };
+  }
+
+  /** Всего скробблов в Last.fm за всё время; `null`, если Last.fm не подключён. */
+  async totalScrobbles(userId: string): Promise<number | null> {
+    const client = await this.clientFor(userId);
+    return client ? this.cached(userId, 'total', () => client.getTotalScrobbles()) : null;
+  }
+
+  /** Рекорд прослушиваний за один день (по локальной истории). */
+  async maxPlaysInDay(userId: string): Promise<number> {
+    const timeZone = this.config.get('APP_TIMEZONE', { infer: true });
+    const result = await this.db.execute<{ plays: number | null }>(sql`
+      SELECT max(plays)::int AS plays FROM (
+        SELECT count(*) AS plays
+        FROM ${scrobbles}
+        WHERE ${scrobbles.userId} = ${userId}
+        GROUP BY (${scrobbles.playedAt} AT TIME ZONE ${timeZone})::date
+      ) per_day
+    `);
+    return result.rows[0]?.plays ?? 0;
   }
 
   async tops(userId: string, period: MusicTopPeriod): Promise<MusicTops | null> {

@@ -50,6 +50,13 @@
       "when": 1790501401695,
       "tag": "0006_games",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790501996127,
+      "tag": "0007_achievements",
+      "breakpoints": true
     }
   ]
 }

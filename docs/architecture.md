@@ -78,7 +78,11 @@ libs/modules/birthdays/
    - фоновые задачи регистрируй в `onModuleInit` через `SchedulerService.register({ name: 'lastfm.sync', cron, handler })`;
    - уведомления — через `NotificationsService.send(userId, { title, body, source: 'lastfm' })`;
    - команды Telegram-бота — через `TelegramBotService.registerCommand({ command, description, handler })`
-     в `onModuleInit` (пример — `/d` в `libs/modules/diary/api/src/lib/diary.jobs.ts`).
+     в `onModuleInit` (пример — `/d` в `libs/modules/diary/api/src/lib/diary.jobs.ts`);
+   - ачивки — в файле `<модуль>.achievements.ts`: метрика (`measure(userId) → число`) и уровни
+     через `achievementTier(порог, иконка, название, описание)`, регистрация через
+     `AchievementsService.register()` (пример — `libs/modules/diary/api/src/lib/diary.achievements.ts`).
+     Страница ачивок подхватит их автоматически и сгруппирует по `module`.
 4. **Миграция:** `npm run db:generate` → проверь SQL в `apps/api/migrations`.
 5. **Фронтенд:** экспортируй объект `WebDashboardModule` с `id`, пунктом меню, маршрутами, переводами и виджетами.
 6. **Подключи** модуль в `apps/api/src/modules.ts` и `apps/web/src/app/modules.ts`.
@@ -105,7 +109,8 @@ libs/modules/birthdays/
 ## Сквозные механизмы ядра
 
 - **Секреты интеграций:** `SecretsService` — зашифрованное key-value хранилище на пользователя.
-- **Секреты интеграций:** `SecretsService` — зашифрованное key-value хранилище на пользователя.
+- **Ачивки:** `AchievementsService` — модули регистрируют метрики с уровнями, движок раз в час
+  фиксирует открытые ачивки и присылает одно уведомление со всеми новыми.
 - **Авторизация:** глобальный `AuthGuard` (JWT); публичные эндпоинты помечаются `@Public()`.
 - **Конфигурация:** все переменные окружения описаны zod-схемой в `libs/api/core/src/lib/config/env.ts`;
   при ошибке приложение не стартует и пишет, что не так.

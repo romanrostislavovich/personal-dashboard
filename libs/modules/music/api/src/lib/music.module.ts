@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MusicAchievements } from './music.achievements';
 import { LastfmSyncJob } from './lastfm-sync.job';
 import { LastfmService } from './lastfm.service';
 import { MusicController } from './music.controller';
@@ -10,6 +11,6 @@ import { SpotifyService } from './spotify.service';
  */
 @Module({
   controllers: [MusicController],
-  providers: [LastfmService, SpotifyService, LastfmSyncJob],
+  providers: [LastfmService, SpotifyService, LastfmSyncJob, MusicAchievements],
 })
 export class MusicModule {}

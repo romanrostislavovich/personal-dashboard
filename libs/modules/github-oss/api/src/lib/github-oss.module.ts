@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { GithubOssAchievements } from './github-oss.achievements';
 import { GithubOssController } from './github-oss.controller';
 import { GithubTokenService } from './github-token.service';
 import { ReposService } from './repos.service';
@@ -11,6 +12,12 @@ import { RepoSyncService } from './sync/repo-sync.service';
  */
 @Module({
   controllers: [GithubOssController],
-  providers: [GithubTokenService, ReposService, RepoSyncService, GithubSyncJob],
+  providers: [
+    GithubTokenService,
+    ReposService,
+    RepoSyncService,
+    GithubSyncJob,
+    GithubOssAchievements,
+  ],
 })
 export class GithubOssModule {}

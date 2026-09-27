@@ -2,6 +2,8 @@ import { Controller, Get, Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { AchievementsController } from './achievements/achievements.controller';
+import { AchievementsService } from './achievements/achievements.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthService } from './auth/auth.service';
@@ -29,7 +31,7 @@ class HealthController {
 }
 
 /**
- * Ядро: конфиг, БД, авторизация, проекты, планировщик, секреты интеграций, уведомления.
+ * Ядро: конфиг, БД, авторизация, проекты, планировщик, секреты интеграций, уведомления, ачивки.
  * Модуль глобальный — модули-фичи просто инжектят нужные сервисы
  * (DB, SchedulerService, SecretsService, NotificationsService, UsersService).
  */
@@ -46,7 +48,13 @@ class HealthController {
       }),
     }),
   ],
-  controllers: [HealthController, AuthController, ProjectsController, NotificationsController],
+  controllers: [
+    HealthController,
+    AuthController,
+    ProjectsController,
+    NotificationsController,
+    AchievementsController,
+  ],
   providers: [
     { provide: APP_GUARD, useClass: AuthGuard },
     AuthService,
@@ -57,6 +65,7 @@ class HealthController {
     NotificationsService,
     TelegramBotService,
     TelegramChannel,
+    AchievementsService,
     // Новые каналы (Discord, e-mail…) добавляются в этот список.
     {
       provide: NOTIFICATION_CHANNELS,
@@ -72,6 +81,8 @@ class HealthController {
     NotificationsService,
     // Для команд бота: модули регистрируют их через registerCommand().
     TelegramBotService,
+    // Для ачивок: модули регистрируют свои метрики через register().
+    AchievementsService,
   ],
 })
 export class CoreModule {}

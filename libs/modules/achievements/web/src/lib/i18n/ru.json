@@ -1,0 +1,15 @@
+{
+  "title": "Ачивки",
+  "summary": "Открыто {{unlocked}} из {{total}}",
+  "unlockedAt": "Открыта",
+  "empty": "Ачивок пока нет",
+  "filter": {
+    "all": "Все",
+    "unlocked": "Открытые",
+    "locked": "В процессе"
+  },
+  "widget": {
+    "next": "Ближе всего",
+    "all": "Все ачивки"
+  }
+}

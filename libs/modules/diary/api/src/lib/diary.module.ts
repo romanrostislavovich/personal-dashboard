@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DiaryAchievements } from './diary.achievements';
 import { DiaryController } from './diary.controller';
 import { DiaryJobs } from './diary.jobs';
 import { DiaryService } from './diary.service';
@@ -9,6 +10,6 @@ import { DiaryService } from './diary.service';
  */
 @Module({
   controllers: [DiaryController],
-  providers: [DiaryService, DiaryJobs],
+  providers: [DiaryService, DiaryJobs, DiaryAchievements],
 })
 export class DiaryModule {}

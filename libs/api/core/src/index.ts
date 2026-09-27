@@ -16,3 +16,5 @@ export * from './lib/notifications/notification-channel';
 export * from './lib/notifications/notifications.service';
 export * from './lib/notifications/telegram/bot-command';
 export { TelegramBotService } from './lib/notifications/telegram/telegram-bot.service';
+export * from './lib/achievements/achievement-metric';
+export { AchievementsService } from './lib/achievements/achievements.service';

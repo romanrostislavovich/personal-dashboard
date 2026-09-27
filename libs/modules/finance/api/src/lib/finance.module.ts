@@ -4,6 +4,7 @@ import { CostSourcesJob } from './cost-sources/cost-sources.job';
 import { CostSourcesService } from './cost-sources/cost-sources.service';
 import { DeepseekCostProvider } from './cost-sources/providers/deepseek.provider';
 import { HetznerCostProvider } from './cost-sources/providers/hetzner.provider';
+import { FinanceAchievements } from './finance.achievements';
 import { FinanceController } from './finance.controller';
 import { RecurringPaymentsJob } from './recurring/recurring-payments.job';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
@@ -24,6 +25,7 @@ import { TransactionsService } from './transactions/transactions.service';
     // Провайдеры затрат: новый сервис = новый класс здесь + id в COST_PROVIDERS.
     HetznerCostProvider,
     DeepseekCostProvider,
+    FinanceAchievements,
   ],
 })
 export class FinanceModule {}
