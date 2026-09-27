@@ -13,7 +13,7 @@ import { AppConfig } from '../../config/env';
 import { coreMessages } from '../../i18n/core.messages';
 import { FALLBACK_LOCALE, localize } from '../../i18n/locale';
 import { UsersService } from '../../users/users.service';
-import { BotCommand } from './bot-command';
+import { BotCommand, BotPhotoHandler } from './bot-command';
 
 const LINK_CODE_TTL_MS = 10 * 60 * 1000;
 
@@ -38,13 +38,15 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   // Codes live in memory for 10 minutes — enough for a single API instance.
   private readonly pendingLinks = new Map<string, PendingLink>();
   private readonly commands: BotCommand[] = [];
+  private photoHandler: BotPhotoHandler | null = null;
+  private readonly token: string | undefined;
 
   constructor(
     @Inject(ConfigService) config: AppConfig,
     private readonly users: UsersService,
   ) {
-    const token = config.get('TELEGRAM_BOT_TOKEN', { infer: true });
-    this.bot = token ? new Bot(token) : null;
+    this.token = config.get('TELEGRAM_BOT_TOKEN', { infer: true });
+    this.bot = this.token ? new Bot(this.token) : null;
   }
 
   get isAvailable(): boolean {
@@ -54,6 +56,11 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   /** Modules add their commands in `onModuleInit` (see BotCommand). */
   registerCommand(command: BotCommand): void {
     this.commands.push(command);
+  }
+
+  /** A module that accepts photos from the chat (see BotPhotoHandler). */
+  registerPhotoHandler(handler: BotPhotoHandler): void {
+    this.photoHandler ??= handler;
   }
 
   async onApplicationBootstrap(): Promise<void> {
@@ -83,6 +90,20 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
         await ctx.reply(await command.handler(user, ctx.match.trim()));
       });
     }
+    this.bot.on('message:photo', async (ctx) => {
+      const handler = this.photoHandler;
+      const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
+      if (!handler || !user) {
+        return;
+      }
+      const largest = ctx.message.photo[ctx.message.photo.length - 1];
+      const reply = await handler(user, {
+        caption: ctx.message.caption ?? '',
+        mimeType: 'image/jpeg',
+        download: () => this.downloadFile(largest.file_id),
+      });
+      await ctx.reply(reply);
+    });
     this.bot.catch((error) => this.logger.error(error.message));
 
     await this.bot.init();
@@ -120,6 +141,21 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
 
   async sendMessage(chatId: string, html: string): Promise<void> {
     await this.bot?.api.sendMessage(chatId, html, { parse_mode: 'HTML' });
+  }
+
+  /** Files are downloaded from the Bot API file server by their path. */
+  private async downloadFile(fileId: string): Promise<Buffer> {
+    const file = await this.bot?.api.getFile(fileId);
+    if (!file?.file_path) {
+      throw new Error('Telegram did not return a file path');
+    }
+    const response = await fetch(
+      `https://api.telegram.org/file/bot${this.token}/${file.file_path}`,
+    );
+    if (!response.ok) {
+      throw new Error(`Telegram file download failed: ${response.status}`);
+    }
+    return Buffer.from(await response.arrayBuffer());
   }
 
   private consumeLinkCode(code: string): string | null {

@@ -1,4 +1,4 @@
-import { appendNote, extractTags } from './diary-text';
+import { appendNote, extractTags, searchSnippet, toPlainText } from './diary-text';
 import { computeStreaks } from './streaks';
 
 describe('extractTags', () => {
@@ -49,5 +49,27 @@ describe('computeStreaks', () => {
 
   it('handles no entries', () => {
     expect(computeStreaks([], today)).toEqual({ current: 0, longest: 0 });
+  });
+});
+
+describe('toPlainText', () => {
+  it('drops markdown markup but keeps text and mark emoji', () => {
+    expect(toPlainText('# Day\n**Bold** [link](https://x.y) ==🔥 hot==')).toBe(
+      'Day Bold link 🔥 hot',
+    );
+  });
+});
+
+describe('searchSnippet', () => {
+  it('cuts the text around the match', () => {
+    const text = `${'a '.repeat(100)}needle ${'b '.repeat(100)}`;
+    const snippet = searchSnippet(text, 'NEEDLE', 10);
+    expect(snippet.startsWith('…')).toBe(true);
+    expect(snippet.endsWith('…')).toBe(true);
+    expect(snippet).toContain('needle');
+  });
+
+  it('falls back to the beginning without a match', () => {
+    expect(searchSnippet('short text', 'zzz')).toBe('short text');
   });
 });

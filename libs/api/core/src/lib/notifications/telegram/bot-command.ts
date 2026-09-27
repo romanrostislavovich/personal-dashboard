@@ -25,3 +25,17 @@ export interface BotCommand {
    */
   handler: (user: UserRow, args: string) => Promise<string>;
 }
+
+/** A photo sent to the bot by a user who has linked Telegram. */
+export interface BotPhoto {
+  caption: string;
+  /** Telegram photos are JPEG; the largest available size is downloaded. */
+  mimeType: string;
+  download: () => Promise<Buffer>;
+}
+
+/**
+ * Handles photos sent to the bot (the diary saves them to today's entry).
+ * Returns the bot reply. Only one module can own photos — the first registered handler.
+ */
+export type BotPhotoHandler = (user: UserRow, photo: BotPhoto) => Promise<string>;

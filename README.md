@@ -13,18 +13,18 @@ single Docker image on your server. Every feature is a module: enable, disable o
 
 ## Features
 
-| Module          | What it does                                                                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ✨ AI           | Chat about your own data (DeepSeek, OpenAI, Ollama or any OpenAI-compatible API), `/ask` in Telegram, a morning digest, weekly diary summaries                    |
-| 📔 Diary        | One markdown entry per day, mood, tags from #hashtags, streaks; write from Telegram with `/d text`, evening reminder                                              |
-| 💰 Finance      | Income and expenses per wallet (personal or a project), multi-currency, top categories, recurring payments, automatic cost import from Hetzner Cloud and DeepSeek |
-| 🎂 Birthdays    | Countdown and age, reminders N days ahead                                                                                                                         |
-| 🐙 Open Source  | GitHub repositories: star history and growth, forks, issues, PRs, releases, npm downloads; alerts on new issues/PRs, releases and star milestones                 |
-| 📡 Monitoring   | Uptime checks every 5 minutes, uptime for 24 h / 7 / 30 days, response time chart, SSL expiry; “down / back up” alerts and SSL reminders                          |
-| 🎧 Music        | Last.fm listening history, plays per day, top artists / tracks / albums; Spotify “now playing”                                                                    |
-| 🎮 Games        | Dota 2 via OpenDota (medal, win rate, matches, heroes) and World of Warcraft via Battle.net (character, item level, achievements)                                 |
-| 🏆 Achievements | 42 personal achievements across all modules, with tiers and progress                                                                                              |
-| 🚀 Projects     | Your websites and services — finance, monitoring and AI refer to them                                                                                             |
+| Module          | What it does                                                                                                                                                                                        |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✨ AI           | Chat about your own data (DeepSeek, OpenAI, Ollama or any OpenAI-compatible API), `/ask` in Telegram, a morning digest, weekly diary summaries                                                      |
+| 📔 Diary        | One markdown entry per day with autosave, mood, #tags, emoji marks on phrases (`==🔥 text==`), photos, search, year heatmap, “on this day”, mood insights; Telegram `/d`, `/mood`, `/today`, photos |
+| 💰 Finance      | Income and expenses per wallet (personal or a project), multi-currency, top categories, recurring payments, automatic cost import from Hetzner Cloud and DeepSeek                                   |
+| 🎂 Birthdays    | Countdown and age, reminders N days ahead                                                                                                                                                           |
+| 🐙 Open Source  | GitHub repositories: star history and growth, forks, issues, PRs, releases, npm downloads; alerts on new issues/PRs, releases and star milestones                                                   |
+| 📡 Monitoring   | Uptime checks every 5 minutes, uptime for 24 h / 7 / 30 days, response time chart, SSL expiry; “down / back up” alerts and SSL reminders                                                            |
+| 🎧 Music        | Last.fm listening history, plays per day, top artists / tracks / albums; Spotify “now playing”                                                                                                      |
+| 🎮 Games        | Dota 2 via OpenDota (medal, win rate, matches, heroes) and World of Warcraft via Battle.net (character, item level, achievements)                                                                   |
+| 🏆 Achievements | 42 personal achievements across all modules, with tiers and progress                                                                                                                                |
+| 🚀 Projects     | Your websites and services — finance, monitoring and AI refer to them                                                                                                                               |
 
 The UI, notifications and AI answers are available in **English** and **Russian**.
 
@@ -88,7 +88,7 @@ sent back to the browser.
 | Dota 2            | Games → Steam ID or profile link; enable “Expose Public Match Data” in Dota                                                         |
 | World of Warcraft | Games → Battle.net client ID and secret from develop.battle.net, then region / realm / character                                    |
 
-Telegram bot commands: `/d text` — add to today’s diary entry, `/ask question` — ask the AI.
+Telegram bot commands: `/d text` — add to today’s diary entry, `/mood 1–5` — rate the day, `/today` — show today’s entry, `/ask question` — ask the AI. A photo sent to the bot goes into today’s entry.
 
 ## Configuration
 

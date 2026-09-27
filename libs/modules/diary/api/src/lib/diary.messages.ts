@@ -9,6 +9,12 @@ const messages = {
     reminderTitle: '📔 Diary',
     reminderBody: 'How was your day? Reply here with /d and a couple of sentences.',
     weeklyTitle: '📔 Your week in the diary',
+    moodDescription: 'Rate today: /mood 1–5',
+    moodUsage: 'Send a number from 1 (bad) to 5 (great), e.g. /mood 4',
+    moodSaved: (emoji: string) => `${emoji} Mood for today is saved`,
+    todayDescription: 'Show today’s entry',
+    todayEmpty: 'Nothing written today yet. Add a note with /d',
+    photoSaved: '📷 Photo added to today’s entry',
   },
   ru: {
     commandDescription: 'Запись в дневник: /d текст',
@@ -17,6 +23,12 @@ const messages = {
     reminderTitle: '📔 Дневник',
     reminderBody: 'Как прошёл день? Ответь сюда командой /d и парой предложений.',
     weeklyTitle: '📔 Неделя в дневнике',
+    moodDescription: 'Оценить день: /mood 1–5',
+    moodUsage: 'Отправь число от 1 (плохо) до 5 (отлично), например /mood 4',
+    moodSaved: (emoji: string) => `${emoji} Настроение дня сохранено`,
+    todayDescription: 'Показать сегодняшнюю запись',
+    todayEmpty: 'Сегодня ещё ничего не записано. Добавь заметку командой /d',
+    photoSaved: '📷 Фото добавлено в сегодняшнюю запись',
   },
 };
 

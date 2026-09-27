@@ -2,6 +2,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { eq, SQL, sql } from 'drizzle-orm';
 import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
 import { diaryEntries } from './diary.schema';
+import { DiaryPhotosService } from './diary-photos.service';
 import { DiaryService } from './diary.service';
 
 /** Diary achievements: the longest streak of days in a row and the number of entries. */
@@ -11,6 +12,7 @@ export class DiaryAchievements implements OnModuleInit {
     @Inject(DB) private readonly db: Database,
     private readonly achievements: AchievementsService,
     private readonly diary: DiaryService,
+    private readonly photos: DiaryPhotosService,
   ) {}
 
   onModuleInit(): void {
@@ -149,6 +151,47 @@ export class DiaryAchievements implements OnModuleInit {
           '📖',
           { en: 'Novelist', ru: 'Романист' },
           { en: '100,000 words in the diary', ru: '100 000 слов в дневнике' },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'diary.marks',
+      module: 'diary',
+      measure: (userId) =>
+        this.aggregate(userId, sql`coalesce(sum(jsonb_array_length(${diaryEntries.marks})), 0)`),
+      tiers: achievementTiers(
+        [
+          10,
+          '🖍️',
+          { en: 'Highlighter', ru: 'Маркер' },
+          { en: '10 marked fragments', ru: '10 отмеченных фрагментов' },
+        ],
+        [
+          100,
+          '🌈',
+          { en: 'Colourful memories', ru: 'Яркие воспоминания' },
+          { en: '100 marked fragments', ru: '100 отмеченных фрагментов' },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'diary.photos',
+      module: 'diary',
+      measure: (userId) => this.photos.count(userId),
+      tiers: achievementTiers(
+        [
+          10,
+          '📷',
+          { en: 'Photo album', ru: 'Фотоальбом' },
+          { en: '10 photos in the diary', ru: '10 фото в дневнике' },
+        ],
+        [
+          100,
+          '🎞️',
+          { en: 'Photo chronicle', ru: 'Фотолетопись' },
+          { en: '100 photos in the diary', ru: '100 фото в дневнике' },
         ],
       ),
     });

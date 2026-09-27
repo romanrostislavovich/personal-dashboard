@@ -7,11 +7,17 @@ import {
 } from '@pd/api-core';
 import { diaryMessages } from './diary.messages';
 import { DiarySummaryService } from './diary-summary.service';
+import { DiaryPhotosService } from './diary-photos.service';
 import { DiaryService } from './diary.service';
+
+const MOOD_EMOJI = ['', '😞', '😕', '😐', '🙂', '😄'];
+/** Telegram rejects messages longer than 4096 characters. */
+const TELEGRAM_MAX_LENGTH = 4000;
 
 /**
  * Connects the diary to the outside world:
- * - the bot command `/d text` appends a note to today's entry;
+ * - bot commands: `/d text` appends a note to today's entry, `/mood 4` rates the day,
+ *   `/today` shows today's entry; a photo sent to the bot is added to today's entry;
  * - at 21:00, a reminder for those who enabled it and have not written today;
  * - on Sundays at 20:00, an AI summary of the week (for those who enabled it).
  */
@@ -26,6 +32,7 @@ export class DiaryJobs implements OnModuleInit {
     private readonly diary: DiaryService,
     private readonly notifications: NotificationsService,
     private readonly summaries: DiarySummaryService,
+    private readonly photos: DiaryPhotosService,
   ) {}
 
   onModuleInit(): void {
@@ -43,6 +50,54 @@ export class DiaryJobs implements OnModuleInit {
         await this.diary.appendToToday(user.id, note);
         return replies.saved;
       },
+    });
+
+    this.telegram.registerCommand({
+      command: 'mood',
+      description: {
+        en: diaryMessages('en').moodDescription,
+        ru: diaryMessages('ru').moodDescription,
+      },
+      handler: async (user, args) => {
+        const replies = diaryMessages(user.locale);
+        const mood = Number(args);
+        if (!Number.isInteger(mood) || mood < 1 || mood > 5) {
+          return replies.moodUsage;
+        }
+        await this.diary.setTodayMood(user.id, mood);
+        return replies.moodSaved(MOOD_EMOJI[mood]);
+      },
+    });
+
+    this.telegram.registerCommand({
+      command: 'today',
+      description: {
+        en: diaryMessages('en').todayDescription,
+        ru: diaryMessages('ru').todayDescription,
+      },
+      handler: async (user) => {
+        const entry = await this.diary.todayEntry(user.id);
+        if (!entry?.content.trim() && !entry?.mood) {
+          return diaryMessages(user.locale).todayEmpty;
+        }
+        const text = [entry.mood ? MOOD_EMOJI[entry.mood] : '', entry.content.trim()]
+          .filter(Boolean)
+          .join('\n\n');
+        return text.length > TELEGRAM_MAX_LENGTH ? `${text.slice(0, TELEGRAM_MAX_LENGTH)}…` : text;
+      },
+    });
+
+    this.telegram.registerPhotoHandler(async (user, photo) => {
+      const day = this.diary.todayDate();
+      await this.photos.add(user.id, day, {
+        data: await photo.download(),
+        mimeType: photo.mimeType,
+        caption: photo.caption,
+      });
+      if (photo.caption.trim()) {
+        await this.diary.appendToToday(user.id, `📷 ${photo.caption}`);
+      }
+      return diaryMessages(user.locale).photoSaved;
     });
 
     this.scheduler.register({

@@ -11,3 +11,4 @@ export * from './lib/music';
 export * from './lib/games';
 export * from './lib/achievements';
 export * from './lib/ai';
+export * from './lib/diary-marks';

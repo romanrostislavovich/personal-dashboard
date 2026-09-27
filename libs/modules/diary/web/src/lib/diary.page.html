@@ -13,6 +13,9 @@
     >
       {{ 'diary.weeklySummary' | transloco }}
     </mat-slide-toggle>
+    <button matButton="outlined" (click)="editTemplate()">
+      <mat-icon>article</mat-icon> {{ 'diary.template.button' | transloco }}
+    </button>
     <button matButton="tonal" (click)="summarizeWeek()" [disabled]="summary()?.loading">
       <mat-icon>auto_awesome</mat-icon> {{ 'diary.summary.button' | transloco }}
     </button>
@@ -38,82 +41,214 @@
   </mat-card>
 }
 
-<!-- Statistics: streaks, number of entries, frequent tags -->
+<!-- Statistics: streaks, number of entries, frequent tags and marks -->
 @if (stats.value(); as s) {
-  <mat-card appearance="outlined" class="stats">
-    <mat-card-content class="stats-grid">
-      <div class="stat">
-        <span class="label">{{ 'diary.stats.streak' | transloco }}</span>
-        <span class="value">🔥 {{ s.currentStreak }}</span>
+  <div class="stats">
+    <div class="tile">
+      <span class="label">{{ 'diary.stats.streak' | transloco }}</span>
+      <span class="value">🔥 {{ s.currentStreak }}</span>
+    </div>
+    <div class="tile">
+      <span class="label">{{ 'diary.stats.longest' | transloco }}</span>
+      <span class="value">{{ s.longestStreak }}</span>
+    </div>
+    <div class="tile">
+      <span class="label">{{ 'diary.stats.total' | transloco }}</span>
+      <span class="value">{{ s.totalEntries }}</span>
+    </div>
+    @if (s.topTags.length) {
+      <div class="tile wide">
+        <span class="label">{{ 'diary.stats.tags' | transloco }}</span>
+        <mat-chip-listbox [attr.aria-label]="'diary.stats.tags' | transloco">
+          @for (t of s.topTags; track t.tag) {
+            <mat-chip-option [selected]="tag() === t.tag" (click)="toggleTag(t.tag)">
+              #{{ t.tag }} · {{ t.count }}
+            </mat-chip-option>
+          }
+        </mat-chip-listbox>
       </div>
-      <div class="stat">
-        <span class="label">{{ 'diary.stats.longest' | transloco }}</span>
-        <span class="value">{{ s.longestStreak }}</span>
+    }
+    @if (s.topMarks.length) {
+      <div class="tile wide">
+        <span class="label">{{ 'diary.marks.title' | transloco }}</span>
+        <mat-chip-listbox [attr.aria-label]="'diary.marks.title' | transloco">
+          @for (m of s.topMarks; track m.emoji) {
+            <mat-chip-option [selected]="markEmoji() === m.emoji" (click)="toggleMark(m.emoji)">
+              {{ m.emoji }} · {{ m.count }}
+            </mat-chip-option>
+          }
+        </mat-chip-listbox>
       </div>
-      <div class="stat">
-        <span class="label">{{ 'diary.stats.total' | transloco }}</span>
-        <span class="value">{{ s.totalEntries }}</span>
-      </div>
-      @if (s.topTags.length) {
-        <div class="stat tags">
-          <span class="label">{{ 'diary.stats.tags' | transloco }}</span>
-          <mat-chip-listbox [attr.aria-label]="'diary.stats.tags' | transloco">
-            @for (t of s.topTags; track t.tag) {
-              <mat-chip-option [selected]="tag() === t.tag" (click)="toggleTag(t.tag)">
-                #{{ t.tag }} · {{ t.count }}
-              </mat-chip-option>
-            }
-          </mat-chip-listbox>
-        </div>
-      }
-    </mat-card-content>
-  </mat-card>
+    }
+  </div>
 }
 
+<!-- The year as a heatmap -->
+<mat-card appearance="outlined" class="calendar">
+  <mat-card-header>
+    <mat-card-title>{{ 'diary.calendar.title' | transloco }}</mat-card-title>
+    <span class="year-nav">
+      <button matIconButton (click)="year.set(year() - 1)">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="year">{{ year() }}</span>
+      <button matIconButton (click)="year.set(year() + 1)">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </span>
+  </mat-card-header>
+  <mat-card-content>
+    <pd-diary-heatmap
+      [year]="year()"
+      [days]="calendar.value()"
+      [selected]="selectedDay()"
+      [today]="today"
+      (daySelect)="selectDay($event)"
+    />
+  </mat-card-content>
+</mat-card>
+
 <div class="layout">
-  <!-- List of the month's entries -->
   <section class="list">
-    <div class="month">
-      <button matIconButton (click)="shiftMonth(-1)"><mat-icon>chevron_left</mat-icon></button>
-      <span class="month-label">{{ monthDate() | date: 'LLLL yyyy' }}</span>
-      <button matIconButton (click)="shiftMonth(1)"><mat-icon>chevron_right</mat-icon></button>
-    </div>
+    <label class="search">
+      <mat-icon>search</mat-icon>
+      <input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        [placeholder]="'diary.search.placeholder' | transloco"
+      />
+    </label>
 
-    @if (tag(); as activeTag) {
-      <button matButton class="clear-tag" (click)="tag.set(null)">
-        <mat-icon>close</mat-icon> #{{ activeTag }}
-      </button>
-    }
-
-    <button
-      matButton="tonal"
-      class="today"
-      [class.active]="selectedDay() === today"
-      (click)="selectDay(today)"
-    >
-      <mat-icon>edit_note</mat-icon> {{ 'diary.today' | transloco }}
-    </button>
-
-    @for (entry of entries.value(); track entry.day) {
-      <button
-        type="button"
-        class="entry"
-        [class.active]="entry.day === selectedDay()"
-        (click)="selectDay(entry.day)"
-      >
-        <span class="entry-head">
-          <span class="entry-date">{{ entry.day | date: 'd MMMM, EEE' }}</span>
-          @if (entry.mood) {
-            <span>{{ moodEmoji[entry.mood] }}</span>
-          }
+    @switch (panel()) {
+      @case ('search') {
+        <!-- Search results over all entries -->
+        <span class="panel-title">
+          {{ 'diary.search.results' | transloco: { count: searchResults.value().length } }}
         </span>
-        <span class="entry-preview">{{ preview(entry) }}</span>
-      </button>
-    } @empty {
-      <p class="empty">{{ 'diary.emptyMonth' | transloco }}</p>
+        @for (hit of searchResults.value(); track hit.day) {
+          <button
+            type="button"
+            class="entry"
+            [class.active]="hit.day === selectedDay()"
+            (click)="selectDay(hit.day)"
+          >
+            <span class="entry-head">
+              <span class="entry-date">{{ hit.day | date: 'd MMMM y' }}</span>
+              @if (hit.mood) {
+                <span>{{ moodEmoji[hit.mood] }}</span>
+              }
+            </span>
+            <span class="entry-preview">
+              @for (part of highlight(hit.snippet); track $index) {
+                @if (part.match) {
+                  <mark>{{ part.text }}</mark>
+                } @else {
+                  {{ part.text }}
+                }
+              }
+            </span>
+          </button>
+        } @empty {
+          @if (!searchResults.isLoading()) {
+            <p class="empty">{{ 'diary.search.empty' | transloco }}</p>
+          }
+        }
+      }
+
+      @case ('marks') {
+        <!-- Fragments with one mark across all entries -->
+        <div class="panel-head">
+          <span class="panel-title">
+            {{ 'diary.marks.fragments' | transloco: { emoji: markEmoji() } }}
+          </span>
+          <button matButton (click)="markEmoji.set(null)">
+            <mat-icon>close</mat-icon> {{ 'diary.marks.close' | transloco }}
+          </button>
+        </div>
+        @for (hit of markHits.value(); track $index) {
+          <button
+            type="button"
+            class="entry fragment"
+            [class.active]="hit.day === selectedDay()"
+            (click)="selectDay(hit.day)"
+          >
+            <span class="entry-date small">{{ hit.day | date: 'd MMMM y' }}</span>
+            <span class="fragment-text">{{ hit.emoji }} {{ hit.text }}</span>
+          </button>
+        } @empty {
+          @if (!markHits.isLoading()) {
+            <p class="empty">{{ 'diary.marks.empty' | transloco }}</p>
+          }
+        }
+      }
+
+      @default {
+        <!-- Entries of the month -->
+        <div class="month">
+          <button matIconButton (click)="shiftMonth(-1)"><mat-icon>chevron_left</mat-icon></button>
+          <span class="month-label">{{ monthDate() | date: 'LLLL yyyy' }}</span>
+          <button matIconButton (click)="shiftMonth(1)"><mat-icon>chevron_right</mat-icon></button>
+        </div>
+
+        @if (tag(); as activeTag) {
+          <button matButton class="clear-tag" (click)="tag.set(null)">
+            <mat-icon>close</mat-icon> #{{ activeTag }}
+          </button>
+        }
+
+        <button
+          matButton="tonal"
+          class="today"
+          [class.active]="selectedDay() === today"
+          (click)="selectDay(today)"
+        >
+          <mat-icon>edit_note</mat-icon> {{ 'diary.today' | transloco }}
+        </button>
+
+        @for (entry of entries.value(); track entry.day) {
+          <button
+            type="button"
+            class="entry"
+            [class.active]="entry.day === selectedDay()"
+            (click)="selectDay(entry.day)"
+          >
+            <span class="entry-head">
+              <span class="entry-date">{{ entry.day | date: 'd MMMM, EEE' }}</span>
+              <span class="entry-icons">
+                @for (mark of entry.marks.slice(0, 3); track $index) {
+                  <span>{{ mark.emoji }}</span>
+                }
+                @if (entry.mood) {
+                  <span>{{ moodEmoji[entry.mood] }}</span>
+                }
+              </span>
+            </span>
+            <span class="entry-preview">{{ preview(entry) }}</span>
+          </button>
+        } @empty {
+          <p class="empty">{{ 'diary.emptyMonth' | transloco }}</p>
+        }
+      }
     }
   </section>
 
-  <!-- Editor for the selected day -->
-  <pd-diary-editor [day]="selectedDay()" (saved)="onSaved()" />
+  <div class="main">
+    <pd-diary-editor
+      [day]="selectedDay()"
+      [template]="settings.value()?.template ?? null"
+      (saved)="onSaved()"
+    />
+    <pd-diary-memories [day]="selectedDay()" (dayOpen)="selectDay($event)" />
+    @if (insights.value(); as data) {
+      <mat-card appearance="outlined" class="insights">
+        <mat-card-header>
+          <mat-card-title>{{ 'diary.insights.title' | transloco }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <pd-diary-insights [insights]="data" (tagSelect)="toggleTag($event)" />
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
 </div>
