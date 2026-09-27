@@ -91,6 +91,8 @@ Say it is `strava`.
    - AI access: `strava.ai-tools.ts` — `AiService.registerTool({ name, module, description,
 parameters (JSON Schema), handler })`. Write the description for the model: what it returns and
      when it is useful (example — `libs/modules/finance/api/src/lib/finance.ai-tools.ts`).
+     A tool that changes data sets `writes: true` and validates its arguments with the contracts
+     schema; such tools are offered only to the assistant (Telegram and the AI chat). No delete tools.
 4. **Migration:** `npm run db:generate` → review the SQL in `apps/api/migrations`.
 5. **Frontend:** export a `WebDashboardModule` with `id`, menu item, routes, translations
    (`en` and `ru`) and widgets.

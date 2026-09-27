@@ -34,12 +34,15 @@ export class AiController {
     return this.ai.removeSettings(user.id);
   }
 
-  /** Chat: the client sends the whole history, the server stores nothing. */
+  /**
+   * Chat: the client sends the whole history, the server stores nothing.
+   * Like the Telegram assistant, it can also add data when asked.
+   */
   @Post('chat')
   chat(
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(aiChatRequestSchema)) request: AiChatRequest,
   ): Promise<AiChatResponse> {
-    return this.ai.ask(user.id, request.messages);
+    return this.ai.ask(user.id, request.messages, { allowWrites: true });
   }
 }

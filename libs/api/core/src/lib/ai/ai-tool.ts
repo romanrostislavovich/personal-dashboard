@@ -13,6 +13,10 @@
  * ```
  *
  * The model decides which tools to call to answer the question.
+ *
+ * A tool that changes data sets `writes: true`: it is offered only where the user can ask
+ * for actions (the Telegram assistant). Validate its arguments with the contracts schema —
+ * a validation error goes back to the model, which then asks the user for what is missing.
  */
 export interface AiTool {
   /** Latin letters, digits, `_` and `-` only; prefixed with the module id. */
@@ -24,6 +28,8 @@ export interface AiTool {
   /** JSON Schema of the arguments. */
   parameters: Record<string, unknown>;
   handler: (userId: string, args: Record<string, unknown>) => Promise<unknown>;
+  /** Changes data (adds a birthday, a transaction…). Never delete through tools. */
+  writes?: boolean;
 }
 
 /** JSON Schema for a tool without arguments. */

@@ -39,3 +39,9 @@ export interface BotPhoto {
  * Returns the bot reply. Only one module can own photos — the first registered handler.
  */
 export type BotPhotoHandler = (user: UserRow, photo: BotPhoto) => Promise<string>;
+
+/**
+ * Handles plain text messages (not commands) — the AI assistant.
+ * Returns the bot reply. Only one handler owns free text — the first registered.
+ */
+export type BotTextHandler = (user: UserRow, text: string) => Promise<string>;

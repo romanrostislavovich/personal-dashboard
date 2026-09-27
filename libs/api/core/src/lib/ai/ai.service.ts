@@ -17,6 +17,7 @@ import { SecretsService } from '../secrets/secrets.service';
 import { coreMessages } from '../i18n/core.messages';
 import { UsersService } from '../users/users.service';
 import { AiTool } from './ai-tool';
+import { claimsChange, FAKE_CHANGE_CORRECTION } from './claims-change';
 import { aiSettings } from './ai.schema';
 import {
   AiRequestError,
@@ -32,9 +33,24 @@ const MAX_TOOL_ROUNDS = 6;
 /** Tool output is truncated so it does not bloat the context (and the token bill). */
 const MAX_TOOL_RESULT_CHARS = 12_000;
 
+/** How the model should behave when it can change data. */
+const WRITE_RULES = [
+  'You can also change data with tools (add birthdays, diary notes, transactions and so on).',
+  'Change data only when the user clearly asks for it, never on your own initiative.',
+  'If something required is missing or ambiguous (a date, an amount, a currency), ask one short',
+  'question instead of guessing. Resolve relative dates ("yesterday", "on Friday") from today.',
+  'After a change, confirm exactly what was saved (values, dates). You cannot delete anything:',
+  'if asked to, explain that deleting is done in the dashboard.',
+  'Every request to change data needs its own tool call in this turn, even if similar changes',
+  'were made earlier in the conversation. Never say that something was saved, added or recorded',
+  'unless a tool call in this turn returned success; if a tool returned an error, say so.',
+];
+
 export interface AskOptions {
   /** For Telegram and notifications: no markdown markup. */
   plainText?: boolean;
+  /** Offer tools that change data (see AiTool.writes). */
+  allowWrites?: boolean;
 }
 
 /**
@@ -136,14 +152,39 @@ export class AiService {
       { role: 'system', content: await this.systemPrompt(userId, options) },
       ...history,
     ];
-    try {
-      return await runToolLoop({
-        messages,
-        tools: this.tools,
-        complete: (conversation, tools) => chatCompletion(connection, conversation, tools),
-        runTool: (tool, rawArgs) => this.runTool(userId, tool, rawArgs),
+    const tools = options.allowWrites ? this.tools : this.tools.filter((tool) => !tool.writes);
+    /** Write tools that succeeded in this turn. */
+    const changes: string[] = [];
+    const run = (conversation: ChatMessage[]) =>
+      runToolLoop({
+        messages: conversation,
+        tools,
+        complete: (current, definitions) => chatCompletion(connection, current, definitions),
+        runTool: async (tool, rawArgs) => {
+          const result = await this.runTool(userId, tool, rawArgs);
+          if (tool?.writes && !result.startsWith('{"error"')) {
+            changes.push(tool.name);
+          }
+          return result;
+        },
         maxRounds: MAX_TOOL_ROUNDS,
       });
+    try {
+      const first = await run(messages);
+      // "Recorded!" without a write tool call means nothing was saved: make the model fix it.
+      if (!options.allowWrites || changes.length > 0 || !claimsChange(first.reply)) {
+        return first;
+      }
+      this.logger.warn(`AI claimed a change without a tool call; asking again`);
+      const second = await run([
+        ...messages,
+        { role: 'assistant', content: first.reply },
+        { role: 'user', content: FAKE_CHANGE_CORRECTION },
+      ]);
+      return {
+        reply: second.reply,
+        toolsUsed: [...new Set([...first.toolsUsed, ...second.toolsUsed])],
+      };
     } catch (error) {
       if (error instanceof AiRequestError) {
         throw new BadRequestException(`AI API error (${error.status})`);
@@ -190,7 +231,10 @@ export class AiService {
     }
   }
 
-  private async systemPrompt(userId: string, { plainText }: AskOptions): Promise<string> {
+  private async systemPrompt(
+    userId: string,
+    { plainText, allowWrites }: AskOptions,
+  ): Promise<string> {
     const user = await this.users.findById(userId);
     const timeZone = this.config.get('APP_TIMEZONE', { infer: true });
     // The prompt is in English — models understand it better; the answer language comes from the user profile.
@@ -203,6 +247,7 @@ export class AiService {
       plainText
         ? 'Write plain text without markdown formatting; emoji are fine.'
         : 'You may use markdown (lists, bold).',
+      ...(allowWrites ? WRITE_RULES : []),
     ].join(' ');
   }
 

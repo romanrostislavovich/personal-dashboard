@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, NO_PARAMETERS, PERIOD_PARAMETERS } from '@pd/api-core';
-import { TransactionQuery } from '@pd/contracts';
+import { TRANSACTION_KINDS, transactionInputSchema, TransactionQuery } from '@pd/contracts';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
 import { TransactionsService } from './transactions/transactions.service';
 
@@ -17,7 +17,7 @@ const QUERY_PARAMETERS = {
   required: ['from', 'to'],
 };
 
-/** AI access to finance: totals, transactions, recurring payments. */
+/** AI access to finance: totals, transactions, recurring payments; adding transactions (assistant). */
 @Injectable()
 export class FinanceAiTools implements OnModuleInit {
   constructor(
@@ -53,6 +53,32 @@ export class FinanceAiTools implements OnModuleInit {
         'Recurring payments (servers, domains, subscriptions): amount, charge day, whether active.',
       parameters: NO_PARAMETERS,
       handler: (userId) => this.recurring.list(userId),
+    });
+
+    this.ai.registerTool({
+      name: 'finance_add_transaction',
+      module: 'finance',
+      writes: true,
+      description:
+        "Records an income or an expense. Reuse the user's existing categories when one fits " +
+        '(see finance_transactions). Only when the user names a project, put it into that ' +
+        "project's wallet (projectId from core_projects); otherwise it is personal — do not ask. " +
+        'Ask for the currency only if it is unclear.',
+      parameters: {
+        type: 'object',
+        properties: {
+          kind: { type: 'string', enum: [...TRANSACTION_KINDS] },
+          amount: { type: 'number', description: 'Positive number' },
+          currency: { type: 'string', description: 'ISO 4217: EUR, USD, PLN…' },
+          category: { type: 'string', description: 'E.g. Food, Hosting, Salary' },
+          note: { type: 'string' },
+          occurredOn: { type: 'string', description: 'YYYY-MM-DD' },
+          projectId: { type: 'string', description: 'Project id; omit for personal' },
+        },
+        required: ['kind', 'amount', 'currency', 'category', 'occurredOn'],
+      },
+      handler: (userId, args) =>
+        this.transactions.create(userId, transactionInputSchema.parse(args)),
     });
   }
 }

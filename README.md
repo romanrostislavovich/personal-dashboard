@@ -88,7 +88,7 @@ sent back to the browser.
 | Dota 2            | Games → Steam ID or profile link; enable “Expose Public Match Data” in Dota                                                         |
 | World of Warcraft | Games → Battle.net client ID and secret from develop.battle.net, then region / realm / character                                    |
 
-Telegram bot commands: `/d text` — add to today’s diary entry, `/mood 1–5` — rate the day, `/today` — show today’s entry, `/ask question` — ask the AI. A photo sent to the bot goes into today’s entry.
+Telegram bot: just write to it — the AI assistant answers and can do things on request (add a birthday, a diary note, an expense, track a repository or a site; it never deletes). Commands: `/d text` — add to today’s diary entry, `/mood 1–5` — rate the day, `/today` — show today’s entry, `/ask question` — a one-off question, `/new` — start a new conversation. A photo sent to the bot goes into today’s entry.
 
 ## Configuration
 

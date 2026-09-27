@@ -1,4 +1,5 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { AiChatMessage } from '@pd/contracts';
 import { AchievementsService } from '../achievements/achievements.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TelegramBotService } from '../notifications/telegram/telegram-bot.service';
@@ -11,6 +12,15 @@ import { AiService } from './ai.service';
 
 /** Telegram limits a message to 4096 characters. */
 const TELEGRAM_LIMIT = 4000;
+/** The assistant remembers this many recent messages… */
+const CONVERSATION_MESSAGES = 16;
+/** …for this long after the last one; then a new conversation starts. */
+const CONVERSATION_TTL_MS = 30 * 60 * 1000;
+
+interface Conversation {
+  messages: AiChatMessage[];
+  updatedAt: number;
+}
 
 const MORNING_DIGEST_PROMPT = [
   'Make my morning digest for today. Collect data with the tools:',
@@ -23,10 +33,16 @@ const MORNING_DIGEST_PROMPT = [
  * Wires the AI into the rest of the core:
  * - core tools (projects, achievements);
  * - the bot command `/ask question`;
+ * - the Telegram assistant: plain messages go to the AI, which can also change data
+ *   (tools with `writes`); `/new` forgets the conversation;
  * - the morning digest at 08:30 for users who enabled it.
  */
 @Injectable()
 export class AiIntegrations implements OnModuleInit {
+  private readonly logger = new Logger(AiIntegrations.name);
+  // In memory: a restart simply starts new conversations.
+  private readonly conversations = new Map<string, Conversation>();
+
   constructor(
     private readonly ai: AiService,
     private readonly telegram: TelegramBotService,
@@ -77,11 +93,53 @@ export class AiIntegrations implements OnModuleInit {
       },
     });
 
+    this.telegram.registerCommand({
+      command: 'new',
+      description: {
+        en: coreMessages('en').newChatDescription,
+        ru: coreMessages('ru').newChatDescription,
+      },
+      handler: async (user) => {
+        this.conversations.delete(user.id);
+        return coreMessages(user.locale).newChatDone;
+      },
+    });
+
+    this.telegram.registerTextHandler((user, text) => this.assist(user.id, user.locale, text));
+
     this.scheduler.register({
       name: 'ai.morning-digest',
       cron: '30 8 * * *',
       handler: () => this.sendMorningDigests(),
     });
+  }
+
+  /** One turn of the Telegram assistant, with the recent conversation as context. */
+  private async assist(userId: string, locale: string, text: string): Promise<string> {
+    const messages = coreMessages(locale);
+    if (!(await this.ai.isConfigured(userId))) {
+      return messages.askNotConfigured;
+    }
+    const previous = this.conversations.get(userId);
+    const history =
+      previous && Date.now() - previous.updatedAt < CONVERSATION_TTL_MS ? previous.messages : [];
+    const conversation: AiChatMessage[] = [...history, { role: 'user', content: text }];
+    try {
+      const { reply } = await this.ai.ask(userId, conversation, {
+        plainText: true,
+        allowWrites: true,
+      });
+      this.conversations.set(userId, {
+        messages: [...conversation, { role: 'assistant' as const, content: reply }].slice(
+          -CONVERSATION_MESSAGES,
+        ),
+        updatedAt: Date.now(),
+      });
+      return reply.slice(0, TELEGRAM_LIMIT) || '🤷';
+    } catch (error) {
+      this.logger.warn(`Telegram assistant failed for ${userId}: ${error}`);
+      return messages.assistantFailed;
+    }
   }
 
   private async sendMorningDigests(): Promise<void> {

@@ -7,9 +7,12 @@ export function extractTags(content: string): string[] {
   return [...new Set([...matches].map((match) => match[1].toLowerCase()))];
 }
 
-/** Appends a note (for example, from Telegram) to the end of the entry with a timestamp. */
-export function appendNote(content: string, note: string, time: string): string {
-  const line = `**${time}** ${note.trim()}`;
+/**
+ * Appends a note (for example, from Telegram) to the end of the entry, with a timestamp
+ * when it is written today (`time = null` for notes added to past days).
+ */
+export function appendNote(content: string, note: string, time: string | null): string {
+  const line = time ? `**${time}** ${note.trim()}` : note.trim();
   return content.trim() ? `${content.trimEnd()}\n\n${line}` : line;
 }
 

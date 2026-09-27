@@ -23,6 +23,8 @@
 - **Achievements:** 110+ achievements across all modules, rarities, XP and player level
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
   `/ask` in Telegram, morning digest, weekly diary summary
+- **Telegram assistant:** free-form messages go to the AI, which remembers the conversation and
+  can add birthdays, diary notes and mood, transactions, repositories and monitors (never deletes)
 
 ## Next
 
@@ -35,9 +37,6 @@
   (bank notifications / SMS → transactions), then everything else the phone knows
 - **Shared client core** for web, desktop and mobile: API client, auth, realtime events, i18n and
   contracts in one library, so every client behaves the same
-- **Telegram assistant** — the bot answers free-form messages (not only commands) and does things
-  on request: add a transaction, a birthday or a diary note, change settings (AI with write tools
-  and a confirmation step)
 
 ### Ideas
 

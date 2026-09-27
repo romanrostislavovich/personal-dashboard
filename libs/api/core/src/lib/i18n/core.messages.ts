@@ -14,6 +14,9 @@ const messages = {
     askUsage: 'Write a question after the command, e.g. /ask what birthdays are this week?',
     askNotConfigured: 'AI is not configured: open the “AI” section of the dashboard and add a key.',
     askDescription: 'Ask AI about your data: /ask how much did I spend in September?',
+    newChatDescription: 'Start a new conversation with the assistant',
+    newChatDone: '🧹 Started a new conversation.',
+    assistantFailed: 'The AI request failed. Check the AI settings in the dashboard and try again.',
   },
   ru: {
     telegramLinked: '✅ Готово! Теперь уведомления дашборда будут приходить сюда.',
@@ -27,6 +30,9 @@ const messages = {
     askUsage: 'Напиши вопрос после команды, например: /ask какие дни рождения на этой неделе?',
     askNotConfigured: 'AI не настроен: открой раздел «AI» в дашборде и укажи ключ.',
     askDescription: 'Вопрос AI по твоим данным: /ask сколько я потратил в сентябре?',
+    newChatDescription: 'Начать новый разговор с ассистентом',
+    newChatDone: '🧹 Начали новый разговор.',
+    assistantFailed: 'Запрос к AI не удался. Проверь настройки AI в дашборде и попробуй ещё раз.',
   },
 };
 

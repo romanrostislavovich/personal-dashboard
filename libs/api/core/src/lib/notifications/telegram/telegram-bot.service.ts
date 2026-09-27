@@ -14,7 +14,10 @@ import { coreMessages } from '../../i18n/core.messages';
 import { FALLBACK_LOCALE, localize } from '../../i18n/locale';
 import { UserActivityService } from '../../realtime/user-activity.service';
 import { UsersService } from '../../users/users.service';
-import { BotCommand, BotPhotoHandler } from './bot-command';
+import { BotCommand, BotPhotoHandler, BotTextHandler } from './bot-command';
+
+/** Telegram hides "typing…" after 5 seconds; AI answers can take longer. */
+const TYPING_REFRESH_MS = 4_000;
 
 const LINK_CODE_TTL_MS = 10 * 60 * 1000;
 
@@ -40,6 +43,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   private readonly pendingLinks = new Map<string, PendingLink>();
   private readonly commands: BotCommand[] = [];
   private photoHandler: BotPhotoHandler | null = null;
+  private textHandler: BotTextHandler | null = null;
   private readonly token: string | undefined;
 
   constructor(
@@ -58,6 +62,11 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   /** Modules add their commands in `onModuleInit` (see BotCommand). */
   registerCommand(command: BotCommand): void {
     this.commands.push(command);
+  }
+
+  /** Who answers plain text messages (see BotTextHandler). */
+  registerTextHandler(handler: BotTextHandler): void {
+    this.textHandler ??= handler;
   }
 
   /** A module that accepts photos from the chat (see BotPhotoHandler). */
@@ -106,6 +115,29 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
         download: () => this.downloadFile(largest.file_id),
       });
       await ctx.reply(reply);
+      this.activity.touched(user.id);
+    });
+    // Plain text (commands are handled above and never reach this point).
+    this.bot.on('message:text', async (ctx) => {
+      const handler = this.textHandler;
+      if (!handler || ctx.message.text.startsWith('/')) {
+        return;
+      }
+      const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
+      if (!user) {
+        await ctx.reply(coreMessages(ctx.from?.language_code).telegramNotLinked);
+        return;
+      }
+      await ctx.replyWithChatAction('typing');
+      const typing = setInterval(
+        () => void ctx.replyWithChatAction('typing').catch(() => undefined),
+        TYPING_REFRESH_MS,
+      );
+      try {
+        await ctx.reply(await handler(user, ctx.message.text));
+      } finally {
+        clearInterval(typing);
+      }
       this.activity.touched(user.id);
     });
     this.bot.catch((error) => this.logger.error(error.message));

@@ -73,3 +73,9 @@ describe('searchSnippet', () => {
     expect(searchSnippet('short text', 'zzz')).toBe('short text');
   });
 });
+
+describe('appendNote without time', () => {
+  it('adds a plain paragraph for past days', () => {
+    expect(appendNote('Morning.', 'Evening walk', null)).toBe('Morning.\n\nEvening walk');
+  });
+});

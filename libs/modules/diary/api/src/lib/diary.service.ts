@@ -97,11 +97,18 @@ export class DiaryService {
 
   /** Appends a note to today's entry (used by the Telegram commands). */
   async appendToToday(userId: string, note: string): Promise<void> {
+    await this.appendNote(userId, this.todayDate(), note);
+  }
+
+  /** Appends a note to a day's entry; today's notes get the current time. */
+  async appendNote(userId: string, day: LocalDate, note: string): Promise<DiaryEntry | null> {
     const timeZone = this.timeZone();
-    const day = this.todayDate();
-    const time = new Intl.DateTimeFormat('ru', { timeZone, timeStyle: 'short' }).format(new Date());
+    const time =
+      day === this.todayDate()
+        ? new Intl.DateTimeFormat('ru', { timeZone, timeStyle: 'short' }).format(new Date())
+        : null;
     const existing = await this.findRow(userId, day);
-    await this.save(userId, day, {
+    return this.save(userId, day, {
       content: appendNote(existing?.content ?? '', note, time),
       mood: existing?.mood ?? null,
     });
@@ -109,9 +116,12 @@ export class DiaryService {
 
   /** Sets today's mood, keeping the text (Telegram `/mood`). */
   async setTodayMood(userId: string, mood: number): Promise<void> {
-    const day = this.todayDate();
+    await this.setMood(userId, this.todayDate(), mood);
+  }
+
+  async setMood(userId: string, day: LocalDate, mood: number): Promise<DiaryEntry | null> {
     const existing = await this.findRow(userId, day);
-    await this.save(userId, day, { content: existing?.content ?? '', mood });
+    return this.save(userId, day, { content: existing?.content ?? '', mood });
   }
 
   async todayEntry(userId: string): Promise<DiaryEntry | null> {
