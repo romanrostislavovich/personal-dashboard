@@ -1,0 +1,9 @@
+{
+  "name": "games-api",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/modules/games/api/src",
+  "projectType": "library",
+  "tags": ["scope:api", "type:module"],
+  "// targets": "to see all targets run: nx show project games-api --web",
+  "targets": {}
+}

@@ -1,6 +1,7 @@
 import { BirthdaysModule } from '@pd/birthdays-api';
 import { DiaryModule } from '@pd/diary-api';
 import { FinanceModule } from '@pd/finance-api';
+import { GamesModule } from '@pd/games-api';
 import { GithubOssModule } from '@pd/github-oss-api';
 import { MonitoringModule } from '@pd/monitoring-api';
 import { MusicModule } from '@pd/music-api';
@@ -16,4 +17,5 @@ export const enabledModules = [
   MonitoringModule,
   DiaryModule,
   MusicModule,
+  GamesModule,
 ];

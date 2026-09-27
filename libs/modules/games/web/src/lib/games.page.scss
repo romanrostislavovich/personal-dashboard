@@ -1,0 +1,52 @@
+.progress {
+  margin-bottom: 16px;
+}
+
+.accounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(520px, 100%), 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.content {
+  padding-top: 16px;
+}
+
+.synced {
+  margin-right: auto;
+  padding-left: 8px;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  color: var(--mat-sys-error);
+}
+
+.credentials {
+  max-width: 640px;
+}
+
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  mat-form-field {
+    flex: 1 1 200px;
+  }
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.ok {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mat-sys-primary);
+}

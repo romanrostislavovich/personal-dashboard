@@ -43,6 +43,13 @@
       "when": 1790500671147,
       "tag": "0005_music",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790501401695,
+      "tag": "0006_games",
+      "breakpoints": true
     }
   ]
 }

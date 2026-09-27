@@ -1,0 +1,57 @@
+{
+  "title": "Игры",
+  "add": "Добавить аккаунт",
+  "empty": "Аккаунтов пока нет. Добавь Dota 2 (нужен только Steam ID) или персонажа WoW.",
+  "synced": "Обновлено",
+  "syncNow": "Обновить",
+  "minutes": "мин",
+  "confirmDelete": "Удалить {{name}}? Сохранённая история матчей и ачивок тоже удалится.",
+  "dota": {
+    "steamId": "Steam ID или ссылка на профиль",
+    "steamIdHint": "Число из OpenDota/Dotabuff или ссылка steamcommunity.com/profiles/… В Dota должна быть включена опция «Открыть публичную статистику матчей».",
+    "leaderboard": "в рейтинге",
+    "last30": "Победы – поражения, 30 дней",
+    "winrate": "Винрейт, 30 дней",
+    "recentMatches": "Последние матчи",
+    "topHeroes": "Любимые герои",
+    "noMatches": "Матчей нет — возможно, статистика матчей скрыта в настройках Dota",
+    "win": "Победа",
+    "loss": "Поражение",
+    "medals": {
+      "0": "Без ранга",
+      "1": "Рекрут",
+      "2": "Страж",
+      "3": "Рыцарь",
+      "4": "Герой",
+      "5": "Легенда",
+      "6": "Властелин",
+      "7": "Божество",
+      "8": "Титан"
+    }
+  },
+  "wow": {
+    "region": "Регион",
+    "realm": "Реалм (slug)",
+    "character": "Имя персонажа",
+    "realmHint": "Slug реалма — как в адресе armory: «Гордунни» → gordunni, «Howling Fjord» → howling-fjord",
+    "itemLevel": "Уровень предметов",
+    "achievementPoints": "Очки достижений",
+    "achievements": "Достижений",
+    "recentAchievements": "Последние достижения",
+    "lastLogin": "Последний вход",
+    "credentialsTitle": "Ключи Battle.net (для WoW)",
+    "credentialsHint": "Создай клиента на develop.battle.net → API Access (Redirect URL можно любой, он не используется). Ключи хранятся на сервере зашифрованными.",
+    "credentialsSaved": "Ключи сохранены"
+  },
+  "errors": {
+    "notFound": "Аккаунт не найден. Для Dota проверь, что статистика матчей открыта; для WoW — регион, реалм и имя.",
+    "duplicate": "Этот аккаунт уже добавлен",
+    "invalidCredentials": "Battle.net не принял ключи",
+    "generic": "Что-то пошло не так. Если добавляешь WoW — сначала сохрани ключи Battle.net."
+  },
+  "widget": {
+    "dota30": "30 дней: {{wins}}–{{losses}}",
+    "empty": "Добавь аккаунты в разделе Игры",
+    "open": "Подробнее"
+  }
+}
