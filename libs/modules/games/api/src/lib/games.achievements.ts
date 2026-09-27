@@ -1,10 +1,9 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { achievementTier, AchievementsService, DB, Database } from '@pd/api-core';
-import { and, asc, eq, sql } from 'drizzle-orm';
-import { longestWinStreak } from './dota/win-streak';
-import { dotaMatches, gameAccounts } from './games.schema';
+import { and, eq, sql } from 'drizzle-orm';
+import { gameAccounts } from './games.schema';
 
-/** Game achievements: wins and streaks in Dota 2, medal, achievement points in WoW. */
+/** Account-based game achievements: Dota 2 medal and WoW achievement points (match-based Dota ones are in DotaAchievements). */
 @Injectable()
 export class GamesAchievements implements OnModuleInit {
   constructor(
@@ -13,55 +12,6 @@ export class GamesAchievements implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.achievements.register({
-      id: 'games.dota-wins',
-      module: 'games',
-      measure: (userId) => this.dotaWins(userId),
-      tiers: [
-        achievementTier(
-          10,
-          '⚔️',
-          { en: 'First blood', ru: 'Первая кровь' },
-          {
-            en: '10 wins in Dota 2 (saved matches)',
-            ru: '10 побед в Dota 2 (по сохранённым матчам)',
-          },
-        ),
-        achievementTier(
-          100,
-          '🗡️',
-          { en: 'Veteran', ru: 'Ветеран' },
-          { en: '100 wins in Dota 2', ru: '100 побед в Dota 2' },
-        ),
-        achievementTier(
-          500,
-          '🐉',
-          { en: 'Arena legend', ru: 'Легенда арены' },
-          { en: '500 wins in Dota 2', ru: '500 побед в Dota 2' },
-        ),
-      ],
-    });
-
-    this.achievements.register({
-      id: 'games.dota-win-streak',
-      module: 'games',
-      measure: (userId) => this.dotaWinStreak(userId),
-      tiers: [
-        achievementTier(
-          5,
-          '🔥',
-          { en: 'Streak', ru: 'Серия' },
-          { en: '5 wins in a row in Dota 2', ru: '5 побед подряд в Dota 2' },
-        ),
-        achievementTier(
-          10,
-          '☄️',
-          { en: 'Unstoppable', ru: 'Неудержимый' },
-          { en: '10 wins in a row in Dota 2', ru: '10 побед подряд в Dota 2' },
-        ),
-      ],
-    });
-
     this.achievements.register({
       id: 'games.dota-medal',
       module: 'games',
@@ -121,32 +71,6 @@ export class GamesAchievements implements OnModuleInit {
         ),
       ],
     });
-  }
-
-  private async dotaWins(userId: string): Promise<number> {
-    const [row] = await this.db
-      .select({ wins: sql<number>`count(*)::int` })
-      .from(dotaMatches)
-      .innerJoin(gameAccounts, eq(gameAccounts.id, dotaMatches.accountId))
-      .where(and(eq(gameAccounts.userId, userId), eq(dotaMatches.won, true)));
-    return row?.wins ?? 0;
-  }
-
-  /** The best streak across all of the user's Dota accounts. */
-  private async dotaWinStreak(userId: string): Promise<number> {
-    const rows = await this.db
-      .select({ accountId: dotaMatches.accountId, won: dotaMatches.won })
-      .from(dotaMatches)
-      .innerJoin(gameAccounts, eq(gameAccounts.id, dotaMatches.accountId))
-      .where(eq(gameAccounts.userId, userId))
-      .orderBy(asc(dotaMatches.startedAt));
-    const resultsByAccount = new Map<string, boolean[]>();
-    for (const row of rows) {
-      const results = resultsByAccount.get(row.accountId) ?? [];
-      results.push(row.won);
-      resultsByAccount.set(row.accountId, results);
-    }
-    return Math.max(0, ...[...resultsByAccount.values()].map(longestWinStreak));
   }
 
   /** Maximum of a numeric profile field across the game's accounts (the profile is stored in jsonb). */

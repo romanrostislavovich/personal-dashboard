@@ -33,7 +33,16 @@
     "passwordHint": "At least 8 characters"
   },
   "dashboard": {
-    "title": "Home"
+    "title": "Home",
+    "greeting": {
+      "night": "Good night, {{name}}",
+      "morning": "Good morning, {{name}}",
+      "day": "Good afternoon, {{name}}",
+      "evening": "Good evening, {{name}}"
+    },
+    "level": "Level {{level}}",
+    "xp": "{{current}} / {{next}} XP to the next level",
+    "unlocked": "{{unlocked}} of {{total}} achievements"
   },
   "projects": {
     "title": "Projects",

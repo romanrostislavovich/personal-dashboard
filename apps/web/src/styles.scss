@@ -1,13 +1,49 @@
 @use '@angular/material' as mat;
 
-// Material 3 theme. Light/dark follows the system setting.
+// Material 3 theme: violet + cyan accents, Inter for text, Manrope for headings.
+// Light/dark follows the system setting.
 html {
   color-scheme: light dark;
   @include mat.theme(
     (
-      color: mat.$azure-palette,
-      typography: Roboto,
+      color: (
+        primary: mat.$violet-palette,
+        tertiary: mat.$cyan-palette,
+      ),
+      typography: (
+        plain-family: 'Inter, Roboto, sans-serif',
+        brand-family: 'Manrope, Inter, sans-serif',
+      ),
       density: 0,
+    )
+  );
+
+  // --- Design tokens shared by the shell and modules ---
+  --pd-font: Inter, Roboto, sans-serif;
+  --pd-font-heading: Manrope, Inter, sans-serif;
+  --pd-radius: 20px;
+  --pd-radius-small: 12px;
+  --pd-border: color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
+  --pd-card: color-mix(in srgb, var(--mat-sys-surface-container-low) 88%, transparent);
+  --pd-card-hover: var(--mat-sys-surface-container);
+  --pd-gradient: linear-gradient(135deg, var(--mat-sys-primary), var(--mat-sys-tertiary));
+  --pd-glow: color-mix(in srgb, var(--mat-sys-primary) 22%, transparent);
+  --pd-success: light-dark(#1b8a4b, #6fdc9a);
+  --pd-danger: var(--mat-sys-error);
+
+  // Achievement rarities: the same colors in both themes, tuned for contrast on cards.
+  --pd-rarity-common: light-dark(#667085, #a4adbb);
+  --pd-rarity-rare: light-dark(#1d6fe0, #5aa9ff);
+  --pd-rarity-epic: light-dark(#8a3ffc, #c08bff);
+  --pd-rarity-legendary: light-dark(#c27c00, #ffc247);
+
+  @include mat.card-overrides(
+    (
+      outlined-container-color: var(--pd-card),
+      outlined-container-shape: var(--pd-radius),
+      outlined-outline-color: var(--pd-border),
+      title-text-font: var(--mat-sys-title-large-font),
+      title-text-weight: 700,
     )
   );
 }
@@ -19,13 +55,51 @@ body {
 
 body {
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
-  background: var(--mat-sys-surface);
+  font-family: var(--pd-font);
   color: var(--mat-sys-on-surface);
+  background:
+    radial-gradient(
+      1100px 520px at 12% -8%,
+      color-mix(in srgb, var(--mat-sys-primary) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      900px 480px at 100% 0%,
+      color-mix(in srgb, var(--mat-sys-tertiary) 11%, transparent),
+      transparent 70%
+    ),
+    var(--mat-sys-surface);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
   color: var(--mat-sys-primary);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--pd-font-heading);
+  letter-spacing: -0.01em;
+}
+
+// Cards lift slightly on hover — the page feels alive without being noisy.
+.mat-mdc-card-outlined {
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+  backdrop-filter: blur(6px);
+}
+
+.mat-mdc-card-outlined:hover {
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 35%, var(--pd-border));
+  box-shadow: 0 10px 30px -18px var(--pd-glow);
+}
+
+.mat-mdc-card-header {
+  padding-top: 20px;
 }
 
 // --- Shared page classes used by modules ---
@@ -36,12 +110,13 @@ a {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .page-title {
-  font: var(--mat-sys-headline-small);
-  margin: 0 0 16px;
+  font: 800 1.75rem / 1.2 var(--pd-font-heading);
+  letter-spacing: -0.02em;
+  margin: 4px 0 20px;
 }
 
 .page-header .page-title {
@@ -53,9 +128,18 @@ a {
 }
 
 .income {
-  color: light-dark(#2e7d32, #81c784);
+  color: var(--pd-success);
 }
 
 .expense {
-  color: var(--mat-sys-error);
+  color: var(--pd-danger);
+}
+
+// Rounded Material Symbols instead of the classic icon font (see provideDashboard).
+.material-symbols-rounded {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 450,
+    'GRAD' 0,
+    'opsz' 24;
 }

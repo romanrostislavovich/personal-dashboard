@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { achievementTier, AchievementsService, DB, Database } from '@pd/api-core';
-import { eq, sum } from 'drizzle-orm';
+import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
+import { count, eq, sum } from 'drizzle-orm';
 import { trackedRepos } from './github-oss.schema';
 
 /** Open source achievements: stars and npm downloads across all tracked repositories. */
@@ -78,13 +78,63 @@ export class GithubOssAchievements implements OnModuleInit {
         ),
       ],
     });
+
+    this.achievements.register({
+      id: 'github-oss.forks',
+      module: 'github-oss',
+      measure: (userId) => this.total(userId, 'forks'),
+      tiers: achievementTiers(
+        [
+          10,
+          '🍴',
+          { en: 'Forked', ru: 'Форкнули' },
+          { en: '10 forks in total', ru: '10 форков суммарно' },
+        ],
+        [
+          50,
+          '🌳',
+          { en: 'Family tree', ru: 'Родословная' },
+          { en: '50 forks in total', ru: '50 форков суммарно' },
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'github-oss.repos',
+      module: 'github-oss',
+      measure: (userId) => this.repoCount(userId),
+      tiers: achievementTiers(
+        [
+          5,
+          '📦',
+          { en: 'Portfolio', ru: 'Портфолио' },
+          { en: '5 tracked repositories', ru: '5 отслеживаемых репозиториев' },
+        ],
+        [
+          15,
+          '🗂️',
+          { en: 'Maintainer', ru: 'Мейнтейнер' },
+          { en: '15 tracked repositories', ru: '15 отслеживаемых репозиториев' },
+        ],
+      ),
+    });
   }
 
-  private async total(userId: string, column: 'stars' | 'npmWeeklyDownloads'): Promise<number> {
+  private async total(
+    userId: string,
+    column: 'stars' | 'forks' | 'npmWeeklyDownloads',
+  ): Promise<number> {
     const [row] = await this.db
       .select({ total: sum(trackedRepos[column]).mapWith(Number) })
       .from(trackedRepos)
       .where(eq(trackedRepos.userId, userId));
     return row?.total ?? 0;
+  }
+
+  private async repoCount(userId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ value: count() })
+      .from(trackedRepos)
+      .where(eq(trackedRepos.userId, userId));
+    return row?.value ?? 0;
   }
 }

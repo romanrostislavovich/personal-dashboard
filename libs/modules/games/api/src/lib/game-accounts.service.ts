@@ -83,7 +83,8 @@ export class GameAccountsService {
     if (!row) {
       throw new NotFoundException();
     }
-    await this.syncAccount(row);
+    // A manual refresh re-downloads the whole history (e.g. after enabling public match data).
+    await this.syncAccount(row, { fullHistory: true });
   }
 
   /** Background sync of all accounts; news goes to notifications. */
@@ -93,9 +94,13 @@ export class GameAccountsService {
     }
   }
 
-  private async syncAccount(row: GameAccountRow, { throwErrors = false } = {}): Promise<void> {
+  private async syncAccount(
+    row: GameAccountRow,
+    { throwErrors = false, fullHistory = false } = {},
+  ): Promise<void> {
     try {
-      const news = row.game === 'dota2' ? await this.syncDota(row) : await this.syncWow(row);
+      const news =
+        row.game === 'dota2' ? await this.syncDota(row, fullHistory) : await this.syncWow(row);
       if (news.length > 0) {
         await this.notify(row.userId, news);
       }
@@ -111,8 +116,8 @@ export class GameAccountsService {
     }
   }
 
-  private async syncDota(row: GameAccountRow): Promise<string[]> {
-    const { profile, rankChange } = await this.dota.sync(row);
+  private async syncDota(row: GameAccountRow, fullHistory: boolean): Promise<string[]> {
+    const { profile, rankChange } = await this.dota.sync(row, { fullHistory });
     await this.saveProfile(row, profile.personaName, { ...profile });
     const text = gamesMessages(await this.localeOf(row.userId));
     return rankChange ? [text.dotaRank(profile.personaName, rankChange.from, rankChange.to)] : [];

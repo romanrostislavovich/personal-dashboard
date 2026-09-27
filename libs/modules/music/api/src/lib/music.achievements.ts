@@ -1,11 +1,14 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { achievementTier, AchievementsService } from '@pd/api-core';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { eq, SQL, sql } from 'drizzle-orm';
+import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
 import { LastfmService } from './lastfm.service';
+import { scrobbles } from './music.schema';
 
 /** Music achievements: all-time Last.fm scrobbles and the record number of plays in a day. */
 @Injectable()
 export class MusicAchievements implements OnModuleInit {
   constructor(
+    @Inject(DB) private readonly db: Database,
     private readonly achievements: AchievementsService,
     private readonly lastfm: LastfmService,
   ) {}
@@ -62,5 +65,60 @@ export class MusicAchievements implements OnModuleInit {
         ),
       ],
     });
+
+    this.achievements.register({
+      id: 'music.artists',
+      module: 'music',
+      measure: (userId) => this.distinct(userId, sql`count(DISTINCT ${scrobbles.artist})`),
+      tiers: achievementTiers(
+        [
+          100,
+          '🎤',
+          { en: 'Explorer', ru: 'Исследователь' },
+          { en: '100 different artists', ru: '100 разных исполнителей' },
+        ],
+        [
+          500,
+          '🗺️',
+          { en: 'Globetrotter', ru: 'Путешественник' },
+          { en: '500 different artists', ru: '500 разных исполнителей' },
+        ],
+        [
+          2000,
+          '🌌',
+          { en: 'Music universe', ru: 'Музыкальная вселенная' },
+          { en: '2,000 different artists', ru: '2 000 разных исполнителей' },
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'music.listening-days',
+      module: 'music',
+      measure: (userId) =>
+        this.distinct(userId, sql`count(DISTINCT date_trunc('day', ${scrobbles.playedAt}))`),
+      tiers: achievementTiers(
+        [
+          30,
+          '📅',
+          { en: 'Daily soundtrack', ru: 'Саундтрек каждого дня' },
+          { en: 'Music on 30 different days', ru: 'Музыка в 30 разных дней' },
+        ],
+        [
+          365,
+          '🎧',
+          { en: 'Year of music', ru: 'Год с музыкой' },
+          { en: 'Music on 365 different days', ru: 'Музыка в 365 разных дней' },
+        ],
+      ),
+    });
+  }
+
+  /** Counts over the local play history (only what has been synced from Last.fm). */
+  private async distinct(userId: string, expression: SQL): Promise<number> {
+    const [row] = await this.db
+      .select({ value: sql<number>`(${expression})::int` })
+      .from(scrobbles)
+      .where(eq(scrobbles.userId, userId));
+    return row?.value ?? 0;
   }
 }

@@ -29,6 +29,12 @@ export class BirthdaysAchievements implements OnModuleInit {
           { en: 'Life of the party', ru: 'Душа компании' },
           { en: '20 birthdays saved', ru: '20 дней рождения в списке' },
         ),
+        achievementTier(
+          50,
+          '🏡',
+          { en: 'Big family', ru: 'Большая семья' },
+          { en: '50 birthdays saved', ru: '50 дней рождения в списке' },
+        ),
       ],
     });
   }

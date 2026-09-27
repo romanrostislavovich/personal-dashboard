@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { achievementTier, AchievementsService, DB, Database } from '@pd/api-core';
-import { sql } from 'drizzle-orm';
+import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
+import { count, eq, sql } from 'drizzle-orm';
 import { checkResults, monitors } from './monitoring.schema';
 
 /** Monitoring achievements: how many days all sites have run without a single failure. */
@@ -35,7 +35,45 @@ export class MonitoringAchievements implements OnModuleInit {
             ru: 'Все сайты отвечают без ошибок 30 дней подряд',
           },
         ),
+        achievementTier(
+          100,
+          '🪨',
+          { en: 'Rock solid', ru: 'Скала' },
+          {
+            en: 'All sites respond without errors for 100 days',
+            ru: 'Все сайты отвечают без ошибок 100 дней подряд',
+          },
+        ),
+        achievementTier(
+          365,
+          '🛡️',
+          { en: 'Year of uptime', ru: 'Год без падений' },
+          {
+            en: 'All sites respond without errors for 365 days',
+            ru: 'Все сайты отвечают без ошибок 365 дней подряд',
+          },
+        ),
       ],
+    });
+
+    this.achievements.register({
+      id: 'monitoring.monitors',
+      module: 'monitoring',
+      measure: (userId) => this.monitorCount(userId),
+      tiers: achievementTiers(
+        [
+          3,
+          '🛰️',
+          { en: 'Watchtower', ru: 'Дозорный' },
+          { en: '3 monitored addresses', ru: '3 адреса под мониторингом' },
+        ],
+        [
+          10,
+          '📡',
+          { en: 'Mission control', ru: 'Центр управления' },
+          { en: '10 monitored addresses', ru: '10 адресов под мониторингом' },
+        ],
+      ),
     });
   }
 
@@ -55,5 +93,13 @@ export class MonitoringAchievements implements OnModuleInit {
       WHERE m.user_id = ${userId}
     `);
     return result.rows[0]?.days ?? 0;
+  }
+
+  private async monitorCount(userId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ value: count() })
+      .from(monitors)
+      .where(eq(monitors.userId, userId));
+    return row?.value ?? 0;
   }
 }

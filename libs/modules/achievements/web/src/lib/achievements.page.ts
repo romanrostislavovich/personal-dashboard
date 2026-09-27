@@ -1,24 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Achievement } from '@pd/contracts';
+import { Achievement, ACHIEVEMENT_RARITIES, AchievementRarity } from '@pd/contracts';
+import { LevelCardComponent } from '@pd/web-core';
 import { AchievementCardComponent } from './achievement-card.component';
 import { AchievementsApi } from './achievements.api';
 
 type Filter = 'all' | 'unlocked' | 'locked';
 
+const RECENT_COUNT = 4;
+
 @Component({
   selector: 'pd-achievements-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    MatCardModule,
-    MatButtonToggleModule,
-    MatProgressBarModule,
-    TranslocoPipe,
-    AchievementCardComponent,
-  ],
+  imports: [MatButtonToggleModule, TranslocoPipe, AchievementCardComponent, LevelCardComponent],
   template: `
     <header class="page-header">
       <h1 class="page-title">{{ 'achievements.title' | transloco }}</h1>
@@ -39,19 +34,44 @@ type Filter = 'all' | 'unlocked' | 'locked';
       </mat-button-toggle-group>
     </header>
 
-    <mat-card appearance="outlined" class="summary">
-      <mat-card-content>
-        <p class="count">
-          {{ 'achievements.summary' | transloco: { unlocked: unlockedCount(), total: total() } }}
-        </p>
-        <mat-progress-bar mode="determinate" [value]="(unlockedCount() / (total() || 1)) * 100" />
-      </mat-card-content>
-    </mat-card>
+    <div class="overview">
+      <pd-level-card />
+      <!-- Rarity counters double as a filter: click again to reset. -->
+      @for (stat of rarityStats(); track stat.rarity) {
+        <button
+          type="button"
+          class="rarity-stat"
+          [class]="'rarity-stat rarity-' + stat.rarity"
+          [class.selected]="rarity() === stat.rarity"
+          [attr.aria-pressed]="rarity() === stat.rarity"
+          (click)="toggleRarity(stat.rarity)"
+        >
+          <span class="rarity-name">{{ 'achievements.rarity.' + stat.rarity | transloco }}</span>
+          <span class="rarity-count">
+            {{ stat.unlocked }}<span class="of">/{{ stat.total }}</span>
+          </span>
+        </button>
+      }
+    </div>
+
+    @if (recent().length && filter() !== 'locked' && !rarity()) {
+      <section class="group">
+        <h2 class="group-title">{{ 'achievements.recent' | transloco }}</h2>
+        <div class="grid">
+          @for (achievement of recent(); track achievement.id) {
+            <pd-achievement-card [achievement]="achievement" />
+          }
+        </div>
+      </section>
+    }
 
     @for (group of groups(); track group.module) {
       <section class="group">
         <!-- A section is named like the module in the menu: translation key '<module>.title'. -->
-        <h2 class="group-title">{{ group.module + '.title' | transloco }}</h2>
+        <h2 class="group-title">
+          {{ group.module + '.title' | transloco }}
+          <span class="group-count">{{ group.unlocked }} / {{ group.total }}</span>
+        </h2>
         <div class="grid">
           @for (achievement of group.items; track achievement.id) {
             <pd-achievement-card [achievement]="achievement" />
@@ -63,23 +83,85 @@ type Filter = 'all' | 'unlocked' | 'locked';
     }
   `,
   styles: `
-    .summary {
-      margin-bottom: 24px;
+    .overview {
+      display: grid;
+      grid-template-columns: minmax(300px, 1.6fr) repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
     }
-    .count {
-      font: var(--mat-sys-title-medium);
-      margin: 8px 0 12px;
+    @media (max-width: 900px) {
+      .overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .overview pd-level-card {
+        grid-column: 1 / -1;
+      }
+    }
+    .rarity-stat {
+      --rarity: var(--pd-rarity-common);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      padding: 14px 16px;
+      border: 1px solid color-mix(in srgb, var(--rarity) 35%, var(--pd-border));
+      border-radius: var(--pd-radius);
+      background:
+        radial-gradient(
+          120px 80px at 100% 0%,
+          color-mix(in srgb, var(--rarity) 18%, transparent),
+          transparent 70%
+        ),
+        var(--pd-card);
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+    }
+    .rarity-stat.selected {
+      border-color: var(--rarity);
+      box-shadow: 0 0 0 1px var(--rarity);
+    }
+    .rarity-rare {
+      --rarity: var(--pd-rarity-rare);
+    }
+    .rarity-epic {
+      --rarity: var(--pd-rarity-epic);
+    }
+    .rarity-legendary {
+      --rarity: var(--pd-rarity-legendary);
+    }
+    .rarity-name {
+      font: 700 0.7rem / 1 var(--pd-font);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--rarity);
+    }
+    .rarity-count {
+      font: 800 1.6rem / 1 var(--pd-font-heading);
+    }
+    .of {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface-variant);
     }
     .group {
-      margin-bottom: 24px;
+      margin-bottom: 28px;
     }
     .group-title {
-      font: var(--mat-sys-title-medium);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      font: 700 1.1rem / 1.3 var(--pd-font-heading);
       margin: 0 0 12px;
+    }
+    .group-count {
+      font: 600 0.8rem / 1 var(--pd-font);
+      color: var(--mat-sys-on-surface-variant);
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
       gap: 12px;
     }
   `,
@@ -88,21 +170,49 @@ export class AchievementsPage {
   private readonly achievements = inject(AchievementsApi).list();
 
   protected readonly filter = signal<Filter>('all');
-  protected readonly total = computed(() => this.achievements.value().length);
-  protected readonly unlockedCount = computed(
-    () => this.achievements.value().filter((a) => a.unlockedAt).length,
+  protected readonly rarity = signal<AchievementRarity | null>(null);
+
+  protected readonly rarityStats = computed(() =>
+    ACHIEVEMENT_RARITIES.map((rarity) => {
+      const items = this.achievements.value().filter((a) => a.rarity === rarity);
+      return { rarity, total: items.length, unlocked: items.filter((a) => a.unlockedAt).length };
+    }),
   );
 
-  /** Groups by module in metric registration order, with the filter applied. */
+  protected readonly recent = computed(() =>
+    this.achievements
+      .value()
+      .filter((a) => a.unlockedAt)
+      .sort((a, b) => (b.unlockedAt ?? '').localeCompare(a.unlockedAt ?? ''))
+      .slice(0, RECENT_COUNT),
+  );
+
+  /** Groups by module in metric registration order, with the filters applied. */
   protected readonly groups = computed(() => {
     const filter = this.filter();
-    const visible = this.achievements
-      .value()
-      .filter((a) => filter === 'all' || (filter === 'unlocked') === Boolean(a.unlockedAt));
-    const groups = new Map<string, Achievement[]>();
-    for (const achievement of visible) {
-      groups.set(achievement.module, [...(groups.get(achievement.module) ?? []), achievement]);
+    const rarity = this.rarity();
+    const groups = new Map<string, { all: Achievement[]; visible: Achievement[] }>();
+    for (const achievement of this.achievements.value()) {
+      const group = groups.get(achievement.module) ?? { all: [], visible: [] };
+      group.all.push(achievement);
+      const statusMatches =
+        filter === 'all' || (filter === 'unlocked') === Boolean(achievement.unlockedAt);
+      if (statusMatches && (!rarity || achievement.rarity === rarity)) {
+        group.visible.push(achievement);
+      }
+      groups.set(achievement.module, group);
     }
-    return [...groups].map(([module, items]) => ({ module, items }));
+    return [...groups]
+      .filter(([, group]) => group.visible.length > 0)
+      .map(([module, group]) => ({
+        module,
+        items: group.visible,
+        total: group.all.length,
+        unlocked: group.all.filter((a) => a.unlockedAt).length,
+      }));
   });
+
+  protected toggleRarity(rarity: AchievementRarity): void {
+    this.rarity.update((current) => (current === rarity ? null : rarity));
+  }
 }

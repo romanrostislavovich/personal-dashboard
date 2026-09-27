@@ -34,13 +34,19 @@ export const gameAccounts = pgTable(
     /** The latest profile snapshot (different for each game, see DotaProfile / WowProfile). */
     profile: jsonb().$type<Record<string, unknown>>(),
     lastSyncedAt: timestamp({ withTimezone: true }),
+    /** When the full match history was last downloaded (Dota; refreshed once a day). */
+    historySyncedAt: timestamp({ withTimezone: true }),
     lastError: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [unique().on(table.userId, table.game, table.externalId)],
 );
 
-/** Dota 2 matches — accumulated locally for statistics (and future achievements). */
+/**
+ * All Dota 2 matches of the account, every mode (ranked, turbo, unranked, custom…).
+ * This is the user's own copy of the history: statistics and achievements are computed from it.
+ * Detailed stats are nullable: OpenDota does not have them for every match.
+ */
 export const dotaMatches = pgTable(
   'games_dota_matches',
   {
@@ -55,6 +61,20 @@ export const dotaMatches = pgTable(
     assists: integer().notNull(),
     durationSec: integer().notNull(),
     startedAt: timestamp({ withTimezone: true }).notNull(),
+    /** https://github.com/odota/dotaconstants — game_mode.json (23 = Turbo). */
+    gameMode: integer(),
+    /** lobby_type.json: 0 = unranked matchmaking, 7 = ranked. */
+    lobbyType: integer(),
+    partySize: integer(),
+    goldPerMin: integer(),
+    xpPerMin: integer(),
+    lastHits: integer(),
+    denies: integer(),
+    heroDamage: integer(),
+    towerDamage: integer(),
+    heroHealing: integer(),
+    /** 0 — stayed until the end. */
+    leaverStatus: integer(),
   },
   (table) => [
     primaryKey({ columns: [table.accountId, table.matchId] }),

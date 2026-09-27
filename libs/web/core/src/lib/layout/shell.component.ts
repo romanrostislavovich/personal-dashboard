@@ -1,12 +1,10 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -29,8 +27,6 @@ interface NavItem {
     RouterLink,
     RouterLinkActive,
     MatSidenavModule,
-    MatToolbarModule,
-    MatListModule,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
@@ -41,6 +37,13 @@ interface NavItem {
 })
 export class ShellComponent {
   protected readonly auth = inject(AuthService);
+
+  /** "Roman Rostislavovich" → "RR"; a single word gives its first two letters. */
+  protected readonly initials = computed(() => {
+    const words = (this.auth.user()?.displayName ?? '').trim().split(/\s+/).filter(Boolean);
+    const letters = words.length > 1 ? words[0][0] + words[1][0] : (words[0] ?? '?').slice(0, 2);
+    return letters.toUpperCase();
+  });
 
   protected readonly isMobile = toSignal(
     inject(BreakpointObserver)

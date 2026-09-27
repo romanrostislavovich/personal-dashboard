@@ -4,7 +4,7 @@
 
 .accounts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(520px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(640px, 100%), 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }

@@ -5,52 +5,65 @@
     [opened]="!isMobile()"
     class="sidenav"
   >
-    <div class="brand">
-      <mat-icon>space_dashboard</mat-icon>
-      <span>{{ 'core.appName' | transloco }}</span>
-    </div>
+    <a class="brand" routerLink="/" (click)="isMobile() && sidenav.close()">
+      <span class="logo"><mat-icon>bolt</mat-icon></span>
+      <span class="brand-name">{{ 'core.appName' | transloco }}</span>
+    </a>
 
-    <mat-nav-list>
+    <nav class="nav">
       @for (item of mainNav; track item.path) {
         <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
       }
-    </mat-nav-list>
+    </nav>
 
-    <mat-nav-list class="bottom-nav">
+    <nav class="nav bottom-nav">
       @for (item of bottomNav; track item.path) {
         <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
       }
-    </mat-nav-list>
+    </nav>
+
+    @if (auth.user(); as user) {
+      <div class="user">
+        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+        <span class="user-text">
+          <span class="user-name">{{ user.displayName }}</span>
+          <span class="user-email">{{ user.email }}</span>
+        </span>
+        <button
+          matIconButton
+          [matTooltip]="'core.nav.logout' | transloco"
+          [attr.aria-label]="'core.nav.logout' | transloco"
+          (click)="auth.logout()"
+        >
+          <mat-icon>logout</mat-icon>
+        </button>
+      </div>
+    }
 
     <ng-template #navLink let-item>
       <a
-        mat-list-item
+        class="nav-item"
         [routerLink]="item.path"
-        routerLinkActive
-        #active="routerLinkActive"
+        routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: item.path === '/' }"
-        [activated]="active.isActive"
         (click)="isMobile() && sidenav.close()"
       >
-        <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-        <span matListItemTitle>{{ item.labelKey | transloco }}</span>
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span>{{ item.labelKey | transloco }}</span>
       </a>
     </ng-template>
   </mat-sidenav>
 
   <mat-sidenav-content>
-    <mat-toolbar class="toolbar">
-      @if (isMobile()) {
-        <button matIconButton (click)="sidenav.toggle()">
+    @if (isMobile()) {
+      <header class="mobile-bar">
+        <button matIconButton aria-label="Menu" (click)="sidenav.toggle()">
           <mat-icon>menu</mat-icon>
         </button>
-      }
-      <span class="spacer"></span>
-      <span class="user">{{ auth.user()?.displayName }}</span>
-      <button matIconButton [matTooltip]="'core.nav.logout' | transloco" (click)="auth.logout()">
-        <mat-icon>logout</mat-icon>
-      </button>
-    </mat-toolbar>
+        <span class="logo small"><mat-icon>bolt</mat-icon></span>
+        <span class="brand-name">{{ 'core.appName' | transloco }}</span>
+      </header>
+    }
 
     <main class="content">
       <router-outlet />

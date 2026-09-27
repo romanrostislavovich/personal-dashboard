@@ -23,7 +23,16 @@
     "register": "Зарегистрироваться"
   },
   "dashboard": {
-    "title": "Главная"
+    "title": "Главная",
+    "greeting": {
+      "night": "Доброй ночи, {{name}}",
+      "morning": "Доброе утро, {{name}}",
+      "day": "Добрый день, {{name}}",
+      "evening": "Добрый вечер, {{name}}"
+    },
+    "level": "Уровень {{level}}",
+    "xp": "{{current}} / {{next}} XP до следующего уровня",
+    "unlocked": "{{unlocked}} из {{total}} ачивок"
   },
   "projects": {
     "title": "Проекты",

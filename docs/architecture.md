@@ -83,9 +83,11 @@ Say it is `strava`.
    - Telegram commands: `TelegramBotService.registerCommand({ command, description, handler })`
      (example — `/d` in `libs/modules/diary/api/src/lib/diary.jobs.ts`);
    - achievements: `strava.achievements.ts` — a metric (`measure(userId) → number`) and tiers via
-     `achievementTier(goal, icon, title, description)`, registered with `AchievementsService.register()`
-     (example — `libs/modules/diary/api/src/lib/diary.achievements.ts`). The achievements page picks
-     them up automatically and groups them by `module`;
+     `achievementTiers([goal, icon, title, description], ...)`, registered with
+     `AchievementsService.register()` (example — `libs/modules/games/api/src/lib/dota/dota.achievements.ts`).
+     Rarity (common → legendary) follows the tier position unless set explicitly; it gives XP, and
+     XP gives the player level shown on the home page. The achievements page picks them up
+     automatically and groups them by `module`;
    - AI access: `strava.ai-tools.ts` — `AiService.registerTool({ name, module, description,
 parameters (JSON Schema), handler })`. Write the description for the model: what it returns and
      when it is useful (example — `libs/modules/finance/api/src/lib/finance.ai-tools.ts`).

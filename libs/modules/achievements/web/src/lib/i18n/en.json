@@ -11,5 +11,12 @@
   "widget": {
     "next": "Closest to unlock",
     "all": "All achievements"
+  },
+  "recent": "Recently unlocked",
+  "rarity": {
+    "common": "Common",
+    "rare": "Rare",
+    "epic": "Epic",
+    "legendary": "Legendary"
   }
 }

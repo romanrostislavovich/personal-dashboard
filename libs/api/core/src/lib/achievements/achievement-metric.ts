@@ -1,3 +1,4 @@
+import { AchievementRarity } from '@pd/contracts';
 import { LocalizedText } from '../i18n/locale';
 
 export type { LocalizedText };
@@ -8,6 +9,8 @@ export interface AchievementTier {
   icon: string;
   title: LocalizedText;
   description: LocalizedText;
+  /** By default it follows the tier's position in the metric (see `tierRarity`). */
+  rarity?: AchievementRarity;
 }
 
 /**
@@ -44,6 +47,39 @@ export function achievementTier(
   icon: string,
   title: LocalizedText,
   description: LocalizedText,
+  rarity?: AchievementRarity,
 ): AchievementTier {
-  return { goal, icon, title, description };
+  return { goal, icon, title, description, rarity };
+}
+
+export type AchievementTierTuple = [
+  goal: number,
+  icon: string,
+  title: LocalizedText,
+  description: LocalizedText,
+  rarity?: AchievementRarity,
+];
+
+/** Many tiers in one line each: `achievementTiers([10, '🎮', {...}, {...}], [100, ...])`. */
+export function achievementTiers(...tiers: AchievementTierTuple[]): AchievementTier[] {
+  return tiers.map((tier) => achievementTier(...tier));
+}
+
+/**
+ * Rarity by position, counted from the hardest tier: the last one is legendary
+ * (only when a metric has 4+ tiers), then epic, then rare; the rest are common.
+ * A single-tier metric is rare.
+ */
+export function tierRarity(metric: AchievementMetric, index: number): AchievementRarity {
+  const explicit = metric.tiers[index]?.rarity;
+  if (explicit) {
+    return explicit;
+  }
+  const fromTop = metric.tiers.length - 1 - index;
+  const ladder: AchievementRarity[] =
+    metric.tiers.length >= 4 ? ['legendary', 'epic', 'rare'] : ['epic', 'rare'];
+  if (metric.tiers.length === 1) {
+    return 'rare';
+  }
+  return ladder[fromTop] ?? 'common';
 }

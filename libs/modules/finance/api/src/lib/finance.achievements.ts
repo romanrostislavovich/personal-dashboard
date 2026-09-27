@@ -1,7 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { achievementTier, AchievementsService, DB, Database } from '@pd/api-core';
-import { eq, sql } from 'drizzle-orm';
-import { transactions } from './finance.schema';
+import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
+import { and, count, eq, SQL, sql } from 'drizzle-orm';
+import { costSources, recurringPayments, transactions } from './finance.schema';
 
 /** Finance achievements: for how many months the records have been kept. */
 @Injectable()
@@ -37,6 +37,66 @@ export class FinanceAchievements implements OnModuleInit {
         ),
       ],
     });
+
+    this.achievements.register({
+      id: 'finance.transactions',
+      module: 'finance',
+      measure: (userId) => this.count(transactions, eq(transactions.userId, userId)),
+      tiers: achievementTiers(
+        [
+          50,
+          '📒',
+          { en: 'Bookkeeper', ru: 'Бухгалтер' },
+          { en: '50 transactions recorded', ru: '50 записанных операций' },
+        ],
+        [
+          500,
+          '🧾',
+          { en: 'Accountant', ru: 'Счетовод' },
+          { en: '500 transactions recorded', ru: '500 записанных операций' },
+        ],
+        [
+          2000,
+          '📚',
+          { en: 'Chief accountant', ru: 'Главбух' },
+          { en: '2,000 transactions recorded', ru: '2 000 записанных операций' },
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'finance.recurring',
+      module: 'finance',
+      measure: (userId) =>
+        this.count(
+          recurringPayments,
+          and(eq(recurringPayments.userId, userId), eq(recurringPayments.isActive, true)),
+        ),
+      tiers: achievementTiers([
+        3,
+        '🔁',
+        { en: 'On autopilot', ru: 'На автопилоте' },
+        { en: '3 active recurring payments', ru: '3 активных регулярных платежа' },
+      ]),
+    });
+    this.achievements.register({
+      id: 'finance.cost-sources',
+      module: 'finance',
+      measure: (userId) => this.count(costSources, eq(costSources.userId, userId)),
+      tiers: achievementTiers(
+        [
+          1,
+          '🤖',
+          { en: 'Automation', ru: 'Автоматизация' },
+          { en: 'Connect automatic cost import', ru: 'Подключить автоимпорт затрат' },
+        ],
+        [
+          3,
+          '🏭',
+          { en: 'Cost control', ru: 'Контроль затрат' },
+          { en: '3 connected cost sources', ru: '3 подключённых источника затрат' },
+        ],
+      ),
+    });
   }
 
   private async monthsWithTransactions(userId: string): Promise<number> {
@@ -47,5 +107,13 @@ export class FinanceAchievements implements OnModuleInit {
       .from(transactions)
       .where(eq(transactions.userId, userId));
     return row?.months ?? 0;
+  }
+
+  private async count(
+    table: typeof transactions | typeof recurringPayments | typeof costSources,
+    where: SQL | undefined,
+  ): Promise<number> {
+    const [row] = await this.db.select({ value: count() }).from(table).where(where);
+    return row?.value ?? 0;
   }
 }

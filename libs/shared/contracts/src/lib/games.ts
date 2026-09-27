@@ -45,14 +45,51 @@ export interface DotaHero {
   imageUrl: string;
 }
 
+export const DOTA_MATCH_MODES = ['ranked', 'unranked', 'turbo', 'other'] as const;
+export type DotaMatchMode = (typeof DOTA_MATCH_MODES)[number];
+
+/**
+ * Groups OpenDota game modes and lobby types into what a player thinks of:
+ * Turbo, ranked, unranked matchmaking, everything else (custom games, bots, events…).
+ */
+export function dotaMatchMode(gameMode: number | null, lobbyType: number | null): DotaMatchMode {
+  if (gameMode === 23) {
+    return 'turbo';
+  }
+  if (lobbyType === 7) {
+    return 'ranked';
+  }
+  return lobbyType === 0 ? 'unranked' : 'other';
+}
+
 export interface DotaMatch {
   matchId: number;
   hero: DotaHero;
+  mode: DotaMatchMode;
   won: boolean;
   kills: number;
   deaths: number;
   assists: number;
   durationSec: number;
+  startedAt: string;
+}
+
+export const DOTA_RECORDS = [
+  'kills',
+  'assists',
+  'goldPerMin',
+  'heroDamage',
+  'lastHits',
+  'durationSec',
+] as const;
+export type DotaRecordKind = (typeof DOTA_RECORDS)[number];
+
+/** Personal best over the whole saved history. */
+export interface DotaRecord {
+  kind: DotaRecordKind;
+  value: number;
+  matchId: number;
+  hero: DotaHero;
   startedAt: string;
 }
 
@@ -64,6 +101,18 @@ export interface DotaSummary {
   /** Two digits: medal (1 Herald … 8 Immortal) and stars. */
   rankTier: number | null;
   leaderboardRank: number | null;
+  /** OpenDota cannot see the history — the player has to enable "Expose Public Match Data". */
+  historyHidden: boolean;
+  /** Over all saved matches. */
+  totals: {
+    matches: number;
+    wins: number;
+    heroesPlayed: number;
+    hoursPlayed: number;
+    firstMatchAt: string | null;
+  };
+  modes: { mode: DotaMatchMode; matches: number; wins: number }[];
+  records: DotaRecord[];
   last30Days: { wins: number; losses: number };
   recentMatches: DotaMatch[];
   topHeroes: { hero: DotaHero; games: number; wins: number }[];

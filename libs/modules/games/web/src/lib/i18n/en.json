@@ -27,6 +27,33 @@
       "6": "Ancient",
       "7": "Divine",
       "8": "Immortal"
+    },
+    "totals": {
+      "matches": "Matches",
+      "winrate": "Win rate",
+      "hours": "Hours played",
+      "heroes": "Heroes played",
+      "since": "Playing since {{date}}"
+    },
+    "modesTitle": "Game modes",
+    "modes": {
+      "ranked": "Ranked",
+      "unranked": "Unranked",
+      "turbo": "Turbo",
+      "other": "Other"
+    },
+    "recordsTitle": "Personal records",
+    "records": {
+      "kills": "Kills",
+      "assists": "Assists",
+      "goldPerMin": "Gold per minute",
+      "heroDamage": "Hero damage",
+      "lastHits": "Last hits",
+      "durationSec": "Longest match"
+    },
+    "hidden": {
+      "title": "Match history is hidden",
+      "text": "OpenDota can’t see your matches. In Dota 2 open Settings → Options → Social, enable “Expose Public Match Data” and press refresh here. Downloading the history takes from a few minutes to a few hours."
     }
   },
   "wow": {

@@ -1,11 +1,14 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { achievementTier, AchievementsService } from '@pd/api-core';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { eq, SQL, sql } from 'drizzle-orm';
+import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
+import { diaryEntries } from './diary.schema';
 import { DiaryService } from './diary.service';
 
 /** Diary achievements: the longest streak of days in a row and the number of entries. */
 @Injectable()
 export class DiaryAchievements implements OnModuleInit {
   constructor(
+    @Inject(DB) private readonly db: Database,
     private readonly achievements: AchievementsService,
     private readonly diary: DiaryService,
   ) {}
@@ -86,5 +89,84 @@ export class DiaryAchievements implements OnModuleInit {
         ),
       ],
     });
+
+    this.achievements.register({
+      id: 'diary.great-days',
+      module: 'diary',
+      measure: (userId) =>
+        this.aggregate(userId, sql`count(*) FILTER (WHERE ${diaryEntries.mood} = 5)`),
+      tiers: achievementTiers(
+        [
+          10,
+          '😄',
+          { en: 'Good days', ru: 'Хорошие дни' },
+          { en: '10 days rated 5 out of 5', ru: '10 дней с оценкой 5 из 5' },
+        ],
+        [
+          50,
+          '🌞',
+          { en: 'Sunny side', ru: 'Солнечная сторона' },
+          { en: '50 days rated 5 out of 5', ru: '50 дней с оценкой 5 из 5' },
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'diary.tags',
+      module: 'diary',
+      measure: (userId) => this.distinctTags(userId),
+      tiers: achievementTiers(
+        [
+          10,
+          '🏷️',
+          { en: 'Organizer', ru: 'Систематизатор' },
+          { en: '10 different tags', ru: '10 разных тегов' },
+        ],
+        [
+          50,
+          '🗃️',
+          { en: 'Archivist', ru: 'Архивариус' },
+          { en: '50 different tags', ru: '50 разных тегов' },
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'diary.words',
+      module: 'diary',
+      measure: (userId) =>
+        this.aggregate(
+          userId,
+          sql`coalesce(sum(array_length(regexp_split_to_array(trim(${diaryEntries.content}), '\\s+'), 1)), 0)`,
+        ),
+      tiers: achievementTiers(
+        [
+          10_000,
+          '✍️',
+          { en: 'Writer', ru: 'Писатель' },
+          { en: '10,000 words in the diary', ru: '10 000 слов в дневнике' },
+        ],
+        [
+          100_000,
+          '📖',
+          { en: 'Novelist', ru: 'Романист' },
+          { en: '100,000 words in the diary', ru: '100 000 слов в дневнике' },
+        ],
+      ),
+    });
+  }
+
+  private async distinctTags(userId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ value: sql<number>`count(DISTINCT tag)::int` })
+      .from(sql`${diaryEntries}, unnest(${diaryEntries.tags}) AS tag`)
+      .where(eq(diaryEntries.userId, userId));
+    return row?.value ?? 0;
+  }
+
+  private async aggregate(userId: string, expression: SQL): Promise<number> {
+    const [row] = await this.db
+      .select({ value: sql<number>`(${expression})::int` })
+      .from(diaryEntries)
+      .where(eq(diaryEntries.userId, userId));
+    return row?.value ?? 0;
   }
 }

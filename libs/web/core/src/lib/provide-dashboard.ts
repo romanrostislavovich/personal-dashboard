@@ -9,6 +9,7 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
+import { MatIconRegistry } from '@angular/material/icon';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { buildAppRoutes } from './app-routes';
 import { authInterceptor } from './auth/auth.interceptor';
@@ -33,5 +34,9 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
     // Date, number and currency formats follow the UI language (changes with a reload).
     { provide: LOCALE_ID, useFactory: initialLanguage },
     provideAppInitializer(() => inject(AuthService).restoreSession()),
+    // <mat-icon> uses rounded Material Symbols (loaded in index.html).
+    provideAppInitializer(() => {
+      inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-rounded');
+    }),
   ]);
 }
