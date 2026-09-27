@@ -1,0 +1,73 @@
+{
+  "title": "Finance",
+  "wallet": "Wallet",
+  "balance": "Balance",
+  "amount": "Amount",
+  "currency": "Currency",
+  "category": "Category",
+  "date": "Date",
+  "note": "Comment",
+  "noData": "No transactions in this period",
+  "topCategories": "Top expense categories",
+  "kind": {
+    "income": "Income",
+    "expense": "Expense"
+  },
+  "scope": {
+    "all": "All",
+    "personal": "Personal"
+  },
+  "tabs": {
+    "transactions": "Transactions",
+    "recurring": "Recurring payments",
+    "costSources": "Auto-import"
+  },
+  "transaction": {
+    "add": "Add transaction",
+    "edit": "Edit transaction",
+    "empty": "No transactions this month",
+    "confirmDelete": "Delete the transaction?"
+  },
+  "recurring": {
+    "add": "Add payment",
+    "edit": "Edit payment",
+    "name": "Name",
+    "namePlaceholder": "Hetzner, domain, ChatGPT…",
+    "dayOfMonth": "Charge day",
+    "dayHint": "31 = last day of the month",
+    "active": "Active",
+    "everyMonth": "on day {{day}} monthly",
+    "hint": "Once a month on the charge day an expense is created automatically and you get a notification.",
+    "empty": "No recurring payments",
+    "confirmDelete": "Delete payment “{{name}}”? Transactions it created will stay."
+  },
+  "widget": {
+    "title": "Finance",
+    "open": "Details"
+  },
+  "costSources": {
+    "add": "Connect a service",
+    "connect": "Connect",
+    "provider": "Service",
+    "token": "API token",
+    "tokenHint": "Stored encrypted on the server",
+    "hint": "Costs of connected services are updated daily: one transaction per service per month. If the service is already in recurring payments, remove it there to avoid counting twice.",
+    "empty": "No services connected",
+    "synced": "updated",
+    "syncNow": "Update now",
+    "confirmDelete": "Disconnect {{name}}? Imported transactions will stay.",
+    "invalidToken": "The service rejected the token",
+    "error": "Sync failed. Please try later.",
+    "autoTooltip": "Imported automatically and updated daily",
+    "providers": {
+      "hetzner": {
+        "title": "Hetzner Cloud",
+        "hint": "Monthly cost of current servers (with backups), IPv4 and volumes by Hetzner pricing, VAT included. Token: Hetzner Console → project → Security → API tokens, Read access is enough. Connect each Hetzner project separately."
+      },
+      "deepseek": {
+        "title": "DeepSeek",
+        "hint": "DeepSeek has no spending history in the API, so spending is derived from balance decreases between daily checks; top-ups are not counted. Key: platform.deepseek.com → API keys."
+      }
+    }
+  }
+}

@@ -17,8 +17,18 @@ export class BirthdaysAchievements implements OnModuleInit {
       module: 'birthdays',
       measure: (userId) => this.db.$count(birthdays, eq(birthdays.userId, userId)),
       tiers: [
-        achievementTier(5, '🎂', 'Не забуду', '5 дней рождения в списке'),
-        achievementTier(20, '🎉', 'Душа компании', '20 дней рождения в списке'),
+        achievementTier(
+          5,
+          '🎂',
+          { en: 'Won’t forget', ru: 'Не забуду' },
+          { en: '5 birthdays saved', ru: '5 дней рождения в списке' },
+        ),
+        achievementTier(
+          20,
+          '🎉',
+          { en: 'Life of the party', ru: 'Душа компании' },
+          { en: '20 birthdays saved', ru: '20 дней рождения в списке' },
+        ),
       ],
     });
   }

@@ -1,0 +1,44 @@
+{
+  "title": "AI",
+  "intro": "Connect AI to ask about your data in plain language: diary, finance, birthdays, websites, music, games. It also enables the morning digest in Telegram, the /ask bot command and diary summaries.",
+  "clear": "New chat",
+  "placeholder": "Ask anything about your data… (Enter to send, Shift+Enter for a new line)",
+  "thinking": "Thinking and checking your data…",
+  "sources": "Looked at:",
+  "emptyHint": "For example:",
+  "suggestions": {
+    "birthdays": "Which birthdays are this week and what could I give?",
+    "spending": "How much did I spend this month and on what?",
+    "sites": "How are my websites doing?",
+    "diary": "What did I write in my diary last week?",
+    "music": "My top artists this month"
+  },
+  "settings": {
+    "title": "AI settings",
+    "privacy": "Data needed for an answer is sent to the selected provider. For full privacy, use a local model via Ollama.",
+    "provider": "Provider",
+    "providers": {
+      "deepseek": "DeepSeek",
+      "openai": "OpenAI",
+      "ollama": "Ollama (local)",
+      "custom": "Other (OpenAI-compatible)"
+    },
+    "model": "Model",
+    "baseUrl": "API URL",
+    "apiKey": "API key",
+    "apiKeySaved": "saved — leave empty to keep it",
+    "apiKeyHint": "Stored encrypted on the server. Not needed for Ollama.",
+    "morningDigest": "Morning digest at 08:30 (birthdays, websites, spending, news)",
+    "save": "Save and verify",
+    "saved": "Connected",
+    "disconnect": "Disconnect",
+    "connectionFailed": "Could not connect: check the URL, model and key"
+  },
+  "errors": {
+    "api": "The AI provider returned an error. Check the key and balance in the settings.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "widget": {
+    "subtitle": "Ask about your data"
+  }
+}

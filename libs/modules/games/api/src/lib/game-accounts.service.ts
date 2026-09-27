@@ -146,7 +146,7 @@ export class GameAccountsService {
   }
 
   private async localeOf(userId: string): Promise<string> {
-    return (await this.users.findById(userId))?.locale ?? 'ru';
+    return (await this.users.findById(userId))?.locale ?? 'en';
   }
 
   /** Внешний id и имя до первой синхронизации. */

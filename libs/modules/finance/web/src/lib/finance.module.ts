@@ -8,6 +8,7 @@ export const financeModule: WebDashboardModule = {
     { path: '', loadComponent: () => import('./finance.page').then((m) => m.FinancePage) },
   ],
   translations: {
+    en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
   widgets: [

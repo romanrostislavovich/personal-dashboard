@@ -6,10 +6,12 @@ import {
   OnApplicationShutdown,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TelegramLinkResponse } from '@pd/contracts';
+import { Locale, SUPPORTED_LOCALES, TelegramLinkResponse } from '@pd/contracts';
 import { Bot } from 'grammy';
 import { randomBytes } from 'node:crypto';
 import { AppConfig } from '../../config/env';
+import { coreMessages } from '../../i18n/core.messages';
+import { FALLBACK_LOCALE, localize } from '../../i18n/locale';
 import { UsersService } from '../../users/users.service';
 import { BotCommand } from './bot-command';
 
@@ -60,20 +62,22 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       return;
     }
 
+    // Пока чат не привязан, язык берём из настроек Telegram, потом — из профиля дашборда.
     this.bot.command('start', async (ctx) => {
       const userId = this.consumeLinkCode(ctx.match);
       if (!userId) {
-        await ctx.reply('Ссылка устарела. Создай новую в настройках дашборда.');
+        await ctx.reply(coreMessages(ctx.from?.language_code).telegramLinkExpired);
         return;
       }
       await this.users.setTelegramChatId(userId, String(ctx.chat.id));
-      await ctx.reply('✅ Готово! Теперь уведомления дашборда будут приходить сюда.');
+      const user = await this.users.findById(userId);
+      await ctx.reply(coreMessages(user?.locale).telegramLinked);
     });
     for (const command of this.commands) {
       this.bot.command(command.command, async (ctx) => {
         const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
         if (!user) {
-          await ctx.reply('Сначала подключи Telegram в настройках дашборда.');
+          await ctx.reply(coreMessages(ctx.from?.language_code).telegramNotLinked);
           return;
         }
         await ctx.reply(await command.handler(user, ctx.match.trim()));
@@ -82,10 +86,16 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     this.bot.catch((error) => this.logger.error(error.message));
 
     await this.bot.init();
-    // Меню команд в Telegram (кнопка «/» рядом с полем ввода).
-    await this.bot.api.setMyCommands(
-      this.commands.map(({ command, description }) => ({ command, description })),
-    );
+    // Меню команд в Telegram (кнопка «/»): по умолчанию на английском + отдельно для каждого языка.
+    const commandsFor = (locale: Locale) =>
+      this.commands.map(({ command, description }) => ({
+        command,
+        description: localize(description, locale),
+      }));
+    await this.bot.api.setMyCommands(commandsFor(FALLBACK_LOCALE));
+    for (const locale of SUPPORTED_LOCALES) {
+      await this.bot.api.setMyCommands(commandsFor(locale), { language_code: locale });
+    }
     // start() резолвится только при остановке бота, поэтому не ждём его.
     void this.bot.start({ drop_pending_updates: true });
     this.logger.log(`Telegram bot @${this.bot.botInfo.username} started`);

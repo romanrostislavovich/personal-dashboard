@@ -1,0 +1,15 @@
+{
+  "title": "Achievements",
+  "summary": "{{unlocked}} of {{total}} unlocked",
+  "unlockedAt": "Unlocked",
+  "empty": "No achievements yet",
+  "filter": {
+    "all": "All",
+    "unlocked": "Unlocked",
+    "locked": "In progress"
+  },
+  "widget": {
+    "next": "Closest to unlock",
+    "all": "All achievements"
+  }
+}

@@ -1,3 +1,4 @@
+import { LocalizedText } from '../../i18n/locale';
 import { UserRow } from '../../users/users.schema';
 
 /**
@@ -6,7 +7,7 @@ import { UserRow } from '../../users/users.schema';
  * ```ts
  * telegram.registerCommand({
  *   command: 'd',
- *   description: 'Запись в дневник',
+ *   description: { en: 'Diary entry', ru: 'Запись в дневник' },
  *   handler: (user, text) => this.diary.append(user.id, text),
  * });
  * ```
@@ -16,8 +17,8 @@ import { UserRow } from '../../users/users.schema';
 export interface BotCommand {
   /** Без слэша, латиницей: `d` → `/d`. */
   command: string;
-  /** Подсказка в меню команд Telegram. */
-  description: string;
+  /** Подсказка в меню команд Telegram — на каждом языке. */
+  description: LocalizedText;
   /**
    * Вызывается только для пользователей, которые привязали Telegram.
    * `args` — текст после команды. Возвращает ответ бота (обычный текст).

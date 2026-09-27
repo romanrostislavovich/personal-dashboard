@@ -4,6 +4,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { TelegramBotService } from '../notifications/telegram/telegram-bot.service';
 import { ProjectsService } from '../projects/projects.service';
 import { SchedulerService } from '../scheduler/scheduler.service';
+import { coreMessages } from '../i18n/core.messages';
+import { UsersService } from '../users/users.service';
 import { NO_PARAMETERS } from './ai-tool';
 import { AiService } from './ai.service';
 
@@ -11,10 +13,10 @@ import { AiService } from './ai.service';
 const TELEGRAM_LIMIT = 4000;
 
 const MORNING_DIGEST_PROMPT = [
-  'Составь мой утренний дайджест на сегодня. Собери данные инструментами:',
-  'ближайшие дни рождения (сегодня и на неделе), статус сайтов и сбои,',
-  'регулярные платежи и расходы за текущий месяц, новое в open source,',
-  'серию в дневнике. Коротко, по пунктам с эмодзи, только важное; пустые разделы пропусти.',
+  'Make my morning digest for today. Collect data with the tools:',
+  'upcoming birthdays (today and this week), website status and failures,',
+  'recurring payments and spending this month, open source news, diary streak.',
+  'Short bullet points with emoji, only what matters; skip empty sections.',
 ].join(' ');
 
 /**
@@ -32,6 +34,7 @@ export class AiIntegrations implements OnModuleInit {
     private readonly notifications: NotificationsService,
     private readonly projects: ProjectsService,
     private readonly achievements: AchievementsService,
+    private readonly users: UsersService,
   ) {}
 
   onModuleInit(): void {
@@ -58,13 +61,14 @@ export class AiIntegrations implements OnModuleInit {
 
     this.telegram.registerCommand({
       command: 'ask',
-      description: 'Вопрос AI по твоим данным: /ask сколько я потратил в сентябре?',
+      description: { en: coreMessages('en').askDescription, ru: coreMessages('ru').askDescription },
       handler: async (user, question) => {
+        const text = coreMessages(user.locale);
         if (!question) {
-          return 'Напиши вопрос после команды, например: /ask какие дни рождения на этой неделе?';
+          return text.askUsage;
         }
         if (!(await this.ai.isConfigured(user.id))) {
-          return 'AI не настроен: открой раздел «AI» в дашборде и укажи ключ.';
+          return text.askNotConfigured;
         }
         const { reply } = await this.ai.ask(user.id, [{ role: 'user', content: question }], {
           plainText: true,
@@ -90,7 +94,7 @@ export class AiIntegrations implements OnModuleInit {
         },
       );
       await this.notifications.send(userId, {
-        title: '☀️ Доброе утро',
+        title: coreMessages((await this.users.findById(userId))?.locale).morningDigestTitle,
         body: reply.slice(0, TELEGRAM_LIMIT),
         source: 'ai',
       });

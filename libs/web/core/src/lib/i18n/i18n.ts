@@ -6,12 +6,12 @@ import {
   TranslocoService,
 } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
+import { SUPPORTED_LOCALES } from '@pd/contracts';
 import { DASHBOARD_MODULES } from '../dashboard-module';
-
-export const DEFAULT_LANG = 'ru';
-export const AVAILABLE_LANGS = ['ru'];
+import { initialLanguage } from './language';
 
 const coreTranslations: Record<string, () => Promise<{ default: Translation }>> = {
+  en: () => import('./en.json'),
   ru: () => import('./ru.json'),
 };
 
@@ -39,18 +39,21 @@ async function loadOrEmpty(load?: () => Promise<{ default: Translation }>): Prom
 }
 
 export function provideI18n() {
+  const lang = initialLanguage();
+  document.documentElement.lang = lang;
   return [
     provideTransloco({
       config: {
-        availableLangs: AVAILABLE_LANGS,
-        defaultLang: DEFAULT_LANG,
-        fallbackLang: DEFAULT_LANG,
+        availableLangs: [...SUPPORTED_LOCALES],
+        defaultLang: lang,
+        // Если в каком-то модуле нет перевода — показываем английский.
+        fallbackLang: 'en',
         reRenderOnLangChange: true,
         missingHandler: { logMissingKey: true },
       },
       loader: DashboardTranslationLoader,
     }),
     // Грузим словарь до первого рендера, чтобы не мигали ключи вместо текста.
-    provideAppInitializer(() => firstValueFrom(inject(TranslocoService).load(DEFAULT_LANG))),
+    provideAppInitializer(() => firstValueFrom(inject(TranslocoService).load(lang))),
   ];
 }

@@ -11,6 +11,7 @@ export const aiModule: WebDashboardModule = {
     { path: '', loadComponent: () => import('./ai.page').then((m) => m.AiPage) },
   ],
   translations: {
+    en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
   widgets: [

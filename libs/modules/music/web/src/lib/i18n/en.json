@@ -1,0 +1,56 @@
+{
+  "title": "Music",
+  "recent": "Recently played",
+  "plays": "plays",
+  "now": {
+    "playing": "Now playing",
+    "paused": "Paused",
+    "last": "Last track",
+    "nothing": "Nothing is playing"
+  },
+  "stats": {
+    "today": "Today",
+    "total": "Total scrobbles",
+    "byDay": "Plays over 30 days"
+  },
+  "periods": {
+    "7day": "Week",
+    "1month": "Month",
+    "12month": "Year",
+    "overall": "All time"
+  },
+  "tops": {
+    "title": "Top",
+    "artists": "Artists",
+    "tracks": "Tracks",
+    "albums": "Albums",
+    "empty": "No data for this period"
+  },
+  "connect": {
+    "title": "Sources",
+    "lastfmDescription": "Listening history, stats and tops",
+    "lastfmHint": "Enter your Last.fm username and an API key: create one at last.fm/api/account/create (any app name, callback can be empty). The key is stored encrypted on the server.",
+    "username": "Last.fm username",
+    "connect": "Connect",
+    "connectedAs": "Connected as",
+    "synced": "History updated",
+    "syncNow": "Update",
+    "disconnect": "Disconnect",
+    "confirmDisconnect": "Disconnect Last.fm? Already loaded history will stay.",
+    "spotifyDescription": "“Now playing” with cover art and progress",
+    "spotifyNotConfigured": "Not configured on the server: create an app at developer.spotify.com, add Redirect URI = PUBLIC_URL + /api/music/spotify/callback and set SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET in .env.",
+    "spotifyHint": "The Spotify sign-in page will open. Only access to the current track is requested.",
+    "spotifyConnected": "Spotify is connected",
+    "invalid": "The service rejected the data — check the username and key",
+    "error": "Something went wrong. Please try later.",
+    "spotify": {
+      "connected": "Spotify is connected",
+      "error": "Could not connect Spotify"
+    }
+  },
+  "widget": {
+    "today": "Today: {{count}}",
+    "empty": "Connect Last.fm or Spotify in the Music section",
+    "open": "Details"
+  }
+}

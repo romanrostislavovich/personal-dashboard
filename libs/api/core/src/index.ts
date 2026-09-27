@@ -20,3 +20,10 @@ export * from './lib/achievements/achievement-metric';
 export { AchievementsService } from './lib/achievements/achievements.service';
 export * from './lib/ai/ai-tool';
 export { AiService } from './lib/ai/ai.service';
+export {
+  pickMessages,
+  toLocale,
+  localize,
+  FALLBACK_LOCALE,
+  type LocalizedText,
+} from './lib/i18n/locale';

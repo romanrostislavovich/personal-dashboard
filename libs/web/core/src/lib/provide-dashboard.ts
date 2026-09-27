@@ -15,6 +15,7 @@ import { authInterceptor } from './auth/auth.interceptor';
 import { AuthService } from './auth/auth.service';
 import { provideDashboardModules, WebDashboardModule } from './dashboard-module';
 import { provideI18n } from './i18n/i18n';
+import { initialLanguage } from './i18n/language';
 
 registerLocaleData(localeRu);
 
@@ -29,8 +30,8 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
     provideHttpClient(withInterceptors([authInterceptor])),
     provideDashboardModules(modules),
     provideI18n(),
-    // Формат дат/чисел/валют. Когда появится выбор языка, это станет динамическим.
-    { provide: LOCALE_ID, useValue: 'ru' },
+    // Формат дат, чисел и валют — по языку интерфейса (меняется с перезагрузкой).
+    { provide: LOCALE_ID, useFactory: initialLanguage },
     provideAppInitializer(() => inject(AuthService).restoreSession()),
   ]);
 }

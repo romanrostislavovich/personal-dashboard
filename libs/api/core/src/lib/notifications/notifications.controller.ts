@@ -2,6 +2,7 @@ import { BadRequestException, Controller, Delete, Get, HttpCode, Post } from '@n
 import { NotificationSettings, TelegramLinkResponse } from '@pd/contracts';
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
 import { UsersService } from '../users/users.service';
+import { coreMessages } from '../i18n/core.messages';
 import { NotificationsService } from './notifications.service';
 import { TelegramBotService } from './telegram/telegram-bot.service';
 
@@ -37,10 +38,10 @@ export class NotificationsController {
 
   @Post('test')
   @HttpCode(204)
-  test(@CurrentUser() user: AuthUser) {
+  async test(@CurrentUser() user: AuthUser) {
     return this.notifications.send(user.id, {
       title: 'Personal Dashboard',
-      body: 'Тестовое уведомление: всё работает 🎉',
+      body: coreMessages((await this.users.findById(user.id))?.locale).testNotification,
       source: 'core',
     });
   }

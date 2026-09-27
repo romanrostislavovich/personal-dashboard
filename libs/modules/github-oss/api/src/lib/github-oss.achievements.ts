@@ -17,11 +17,39 @@ export class GithubOssAchievements implements OnModuleInit {
       module: 'github-oss',
       measure: (userId) => this.total(userId, 'stars'),
       tiers: [
-        achievementTier(10, '⭐', 'Первые звёзды', '10 звёзд суммарно на твоих репозиториях'),
-        achievementTier(50, '🌟', 'Замечен', '50 звёзд суммарно'),
-        achievementTier(100, '✨', 'Сотня звёзд', '100 звёзд суммарно'),
-        achievementTier(500, '🌠', 'Созвездие', '500 звёзд суммарно'),
-        achievementTier(1000, '🌌', 'Галактика', '1000 звёзд суммарно'),
+        achievementTier(
+          10,
+          '⭐',
+          { en: 'First stars', ru: 'Первые звёзды' },
+          {
+            en: '10 stars across your repositories',
+            ru: '10 звёзд суммарно на твоих репозиториях',
+          },
+        ),
+        achievementTier(
+          50,
+          '🌟',
+          { en: 'Noticed', ru: 'Замечен' },
+          { en: '50 stars in total', ru: '50 звёзд суммарно' },
+        ),
+        achievementTier(
+          100,
+          '✨',
+          { en: 'A hundred stars', ru: 'Сотня звёзд' },
+          { en: '100 stars in total', ru: '100 звёзд суммарно' },
+        ),
+        achievementTier(
+          500,
+          '🌠',
+          { en: 'Constellation', ru: 'Созвездие' },
+          { en: '500 stars in total', ru: '500 звёзд суммарно' },
+        ),
+        achievementTier(
+          1000,
+          '🌌',
+          { en: 'Galaxy', ru: 'Галактика' },
+          { en: '1000 stars in total', ru: '1000 звёзд суммарно' },
+        ),
       ],
     });
 
@@ -30,9 +58,24 @@ export class GithubOssAchievements implements OnModuleInit {
       module: 'github-oss',
       measure: (userId) => this.total(userId, 'npmWeeklyDownloads'),
       tiers: [
-        achievementTier(1_000, '📦', 'Тысяча установок', '1 000 загрузок npm за неделю'),
-        achievementTier(10_000, '🚚', 'Поток', '10 000 загрузок npm за неделю'),
-        achievementTier(100_000, '🏭', 'Инфраструктура', '100 000 загрузок npm за неделю'),
+        achievementTier(
+          1_000,
+          '📦',
+          { en: 'A thousand installs', ru: 'Тысяча установок' },
+          { en: '1,000 npm downloads a week', ru: '1 000 загрузок npm за неделю' },
+        ),
+        achievementTier(
+          10_000,
+          '🚚',
+          { en: 'Flow', ru: 'Поток' },
+          { en: '10,000 npm downloads a week', ru: '10 000 загрузок npm за неделю' },
+        ),
+        achievementTier(
+          100_000,
+          '🏭',
+          { en: 'Infrastructure', ru: 'Инфраструктура' },
+          { en: '100,000 npm downloads a week', ru: '100 000 загрузок npm за неделю' },
+        ),
       ],
     });
   }

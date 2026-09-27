@@ -8,6 +8,7 @@ export const monitoringModule: WebDashboardModule = {
     { path: '', loadComponent: () => import('./monitoring.page').then((m) => m.MonitoringPage) },
   ],
   translations: {
+    en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
   widgets: [

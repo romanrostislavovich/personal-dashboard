@@ -35,11 +35,20 @@ export class UsersService {
     email: string;
     passwordHash: string;
     displayName: string;
+    locale: string;
   }): Promise<UserRow> {
     const [user] = await this.db
       .insert(users)
       .values({ ...data, email: data.email.toLowerCase() })
       .returning();
+    return user;
+  }
+
+  async update(
+    userId: string,
+    changes: Partial<Pick<UserRow, 'displayName' | 'locale' | 'passwordHash'>>,
+  ): Promise<UserRow> {
+    const [user] = await this.db.update(users).set(changes).where(eq(users.id, userId)).returning();
     return user;
   }
 

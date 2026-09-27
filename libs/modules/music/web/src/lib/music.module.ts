@@ -8,6 +8,7 @@ export const musicModule: WebDashboardModule = {
     { path: '', loadComponent: () => import('./music.page').then((m) => m.MusicPage) },
   ],
   translations: {
+    en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
   widgets: [

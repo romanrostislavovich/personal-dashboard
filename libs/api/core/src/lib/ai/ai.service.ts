@@ -14,6 +14,7 @@ import { eq } from 'drizzle-orm';
 import { AppConfig } from '../config/env';
 import { DB, Database } from '../database/database.module';
 import { SecretsService } from '../secrets/secrets.service';
+import { coreMessages } from '../i18n/core.messages';
 import { UsersService } from '../users/users.service';
 import { AiTool } from './ai-tool';
 import { aiSettings } from './ai.schema';
@@ -154,9 +155,10 @@ export class AiService {
   /** Одиночный запрос без инструментов (саммари, переформулировки). */
   async complete(userId: string, instruction: string, content: string): Promise<string> {
     const connection = await this.requireConnection(userId);
+    const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
     try {
       const reply = await chatCompletion(connection, [
-        { role: 'system', content: instruction },
+        { role: 'system', content: `${instruction} Always answer in ${language}.` },
         { role: 'user', content },
       ]);
       return reply.content ?? '';
@@ -191,14 +193,16 @@ export class AiService {
   private async systemPrompt(userId: string, { plainText }: AskOptions): Promise<string> {
     const user = await this.users.findById(userId);
     const timeZone = this.config.get('APP_TIMEZONE', { infer: true });
+    // Промпт на английском — модели понимают его лучше; язык ответа — из профиля пользователя.
     return [
-      `Ты — ассистент личного дашборда пользователя ${user?.displayName ?? ''}.`,
-      `Сегодня ${toLocalDate(todayIn(timeZone))}, часовой пояс ${timeZone}.`,
-      'Отвечай по-русски, кратко и по делу. Данные о пользователе получай только через инструменты,',
-      'ничего не выдумывай; если данных нет — так и скажи. Суммы указывай с валютой.',
+      `You are the assistant of ${user?.displayName ?? 'the user'}'s personal dashboard.`,
+      `Today is ${toLocalDate(todayIn(timeZone))}, time zone ${timeZone}.`,
+      `Always answer in ${coreMessages(user?.locale).aiLanguage}, briefly and to the point.`,
+      'Get any data about the user only through the tools and never make things up;',
+      'if there is no data, say so. Always state currencies for amounts.',
       plainText
-        ? 'Пиши обычным текстом без markdown-разметки; эмодзи можно.'
-        : 'Можно использовать markdown (списки, жирный).',
+        ? 'Write plain text without markdown formatting; emoji are fine.'
+        : 'You may use markdown (lists, bold).',
     ].join(' ');
   }
 

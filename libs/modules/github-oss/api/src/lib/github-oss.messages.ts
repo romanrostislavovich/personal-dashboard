@@ -1,27 +1,57 @@
+import { pickMessages } from '@pd/api-core';
 import { RepoSyncEvents } from './sync/repo-sync.service';
+
+interface Labels {
+  stars: (n: number) => string;
+  release: string;
+  issue: string;
+  pull: string;
+  by: string;
+}
+
+/** Одно сообщение на все события всех репозиториев за синхронизацию. */
+function body(events: RepoSyncEvents[], t: Labels): string {
+  return events
+    .map((repo) => {
+      const lines = [
+        repo.starMilestone && `⭐ ${t.stars(repo.starMilestone)}`,
+        repo.newRelease && `🚀 ${t.release} ${repo.newRelease.tag}: ${repo.newRelease.htmlUrl}`,
+        ...repo.newIssues.map((i) => `📥 ${t.issue} ${t.by} ${i.author}: ${i.title}\n${i.htmlUrl}`),
+        ...repo.newPulls.map((p) => `🔀 ${t.pull} ${t.by} ${p.author}: ${p.title}\n${p.htmlUrl}`),
+      ].filter(Boolean);
+      return `${repo.fullName}\n${lines.join('\n')}`;
+    })
+    .join('\n\n');
+}
 
 /** Тексты уведомлений модуля; язык выбирается по `user.locale`. */
 const messages = {
+  en: {
+    title: '🐙 GitHub',
+    body: (events: RepoSyncEvents[]) =>
+      body(events, {
+        stars: (n) => `${n} stars!`,
+        release: 'Release',
+        issue: 'Issue',
+        pull: 'PR',
+        by: 'from',
+      }),
+  },
   ru: {
     title: '🐙 GitHub',
-    /** Одно сообщение на все события всех репозиториев за синхронизацию. */
     body: (events: RepoSyncEvents[]) =>
-      events
-        .map((repo) => {
-          const lines = [
-            repo.starMilestone && `⭐ ${repo.starMilestone} звёзд!`,
-            repo.newRelease && `🚀 Релиз ${repo.newRelease.tag}: ${repo.newRelease.htmlUrl}`,
-            ...repo.newIssues.map((i) => `📥 Issue от ${i.author}: ${i.title}\n${i.htmlUrl}`),
-            ...repo.newPulls.map((p) => `🔀 PR от ${p.author}: ${p.title}\n${p.htmlUrl}`),
-          ].filter(Boolean);
-          return `${repo.fullName}\n${lines.join('\n')}`;
-        })
-        .join('\n\n'),
+      body(events, {
+        stars: (n) => `${n} звёзд!`,
+        release: 'Релиз',
+        issue: 'Issue',
+        pull: 'PR',
+        by: 'от',
+      }),
   },
 };
 
 export function githubOssMessages(locale: string) {
-  return messages[locale as keyof typeof messages] ?? messages.ru;
+  return pickMessages(messages, locale);
 }
 
 export function hasNews(events: RepoSyncEvents): boolean {

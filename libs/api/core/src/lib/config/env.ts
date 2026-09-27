@@ -1,4 +1,5 @@
 import { ConfigService } from '@nestjs/config';
+import { SUPPORTED_LOCALES } from '@pd/contracts';
 import { z } from 'zod';
 
 /**
@@ -18,6 +19,14 @@ export const envSchema = z.object({
   ENCRYPTION_KEY: z.string().min(32, 'ENCRYPTION_KEY must be at least 32 characters'),
   /** Часовой пояс, в котором срабатывают ежедневные задачи (напоминания, списания). */
   APP_TIMEZONE: z.string().default('Europe/Warsaw'),
+
+  /**
+   * Разрешить регистрацию новых пользователей со страницы входа.
+   * По умолчанию выключено: self-hosted дашборд обычно личный.
+   */
+  ALLOW_REGISTRATION: z.stringbool().default(false),
+  /** Язык первого пользователя (ADMIN_EMAIL): en или ru. */
+  DEFAULT_LOCALE: z.enum(SUPPORTED_LOCALES).default('en'),
 
   /** Первый пользователь создаётся автоматически, если в базе ещё никого нет. */
   ADMIN_EMAIL: z.email().optional(),

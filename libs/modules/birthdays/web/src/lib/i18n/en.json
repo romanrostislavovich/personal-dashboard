@@ -1,0 +1,46 @@
+{
+  "title": "Birthdays",
+  "add": "Add",
+  "edit": "Edit",
+  "name": "Name",
+  "day": "Day",
+  "month": "Month",
+  "year": "Year",
+  "yearHint": "Optional",
+  "remind": "Remind",
+  "note": "Note",
+  "notePlaceholder": "Gift ideas, wishes…",
+  "empty": "Nobody here yet — add the first birthday",
+  "confirmDelete": "Delete “{{name}}”?",
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "inDays": "in {{days}} d",
+  "turning": "turning {{age}}",
+  "remindOption": {
+    "0": "On the day",
+    "1": "1 day before",
+    "3": "3 days before",
+    "7": "A week before",
+    "14": "2 weeks before",
+    "30": "A month before"
+  },
+  "months": {
+    "1": "January",
+    "2": "February",
+    "3": "March",
+    "4": "April",
+    "5": "May",
+    "6": "June",
+    "7": "July",
+    "8": "August",
+    "9": "September",
+    "10": "October",
+    "11": "November",
+    "12": "December"
+  },
+  "widget": {
+    "title": "Upcoming birthdays",
+    "empty": "Nobody in the next month",
+    "all": "All"
+  }
+}

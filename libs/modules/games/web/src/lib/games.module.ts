@@ -8,6 +8,7 @@ export const gamesModule: WebDashboardModule = {
     { path: '', loadComponent: () => import('./games.page').then((m) => m.GamesPage) },
   ],
   translations: {
+    en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
   widgets: [

@@ -8,6 +8,7 @@ export const birthdaysModule: WebDashboardModule = {
     { path: '', loadComponent: () => import('./birthdays.page').then((m) => m.BirthdaysPage) },
   ],
   translations: {
+    en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
   widgets: [

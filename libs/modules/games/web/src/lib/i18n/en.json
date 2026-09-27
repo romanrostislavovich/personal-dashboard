@@ -1,0 +1,57 @@
+{
+  "title": "Games",
+  "add": "Add account",
+  "empty": "No accounts yet. Add Dota 2 (only a Steam ID is needed) or a WoW character.",
+  "synced": "Updated",
+  "syncNow": "Update",
+  "minutes": "min",
+  "confirmDelete": "Delete {{name}}? Saved matches and achievements will be deleted too.",
+  "dota": {
+    "steamId": "Steam ID or profile link",
+    "steamIdHint": "A number from OpenDota/Dotabuff or a steamcommunity.com/profiles/… link. “Expose Public Match Data” must be enabled in Dota.",
+    "leaderboard": "on the leaderboard",
+    "last30": "Wins – losses, 30 days",
+    "winrate": "Win rate, 30 days",
+    "recentMatches": "Recent matches",
+    "topHeroes": "Favourite heroes",
+    "noMatches": "No matches — match data may be hidden in Dota settings",
+    "win": "Win",
+    "loss": "Loss",
+    "medals": {
+      "0": "Unranked",
+      "1": "Herald",
+      "2": "Guardian",
+      "3": "Crusader",
+      "4": "Archon",
+      "5": "Legend",
+      "6": "Ancient",
+      "7": "Divine",
+      "8": "Immortal"
+    }
+  },
+  "wow": {
+    "region": "Region",
+    "realm": "Realm (slug)",
+    "character": "Character name",
+    "realmHint": "Realm slug as in the armory URL: “Howling Fjord” → howling-fjord",
+    "itemLevel": "Item level",
+    "achievementPoints": "Achievement points",
+    "achievements": "Achievements",
+    "recentAchievements": "Recent achievements",
+    "lastLogin": "Last login",
+    "credentialsTitle": "Battle.net keys (for WoW)",
+    "credentialsHint": "Create a client at develop.battle.net → API Access (any redirect URL, it is not used). Keys are stored encrypted on the server.",
+    "credentialsSaved": "Keys saved"
+  },
+  "errors": {
+    "notFound": "Account not found. For Dota, check that match data is public; for WoW, check region, realm and name.",
+    "duplicate": "This account is already added",
+    "invalidCredentials": "Battle.net rejected the keys",
+    "generic": "Something went wrong. If you are adding WoW, save the Battle.net keys first."
+  },
+  "widget": {
+    "dota30": "30 days: {{wins}}–{{losses}}",
+    "empty": "Add accounts in the Games section",
+    "open": "Details"
+  }
+}

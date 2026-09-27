@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from './auth.service';
 
@@ -17,6 +17,7 @@ import { AuthService } from './auth.service';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    RouterLink,
     TranslocoPipe,
   ],
   template: `
@@ -46,6 +47,12 @@ import { AuthService } from './auth.service';
             {{ 'core.login.submit' | transloco }}
           </button>
         </form>
+        @if (registrationEnabled()) {
+          <p class="switch">
+            {{ 'core.login.noAccount' | transloco }}
+            <a routerLink="/register">{{ 'core.login.register' | transloco }}</a>
+          </p>
+        }
       </mat-card-content>
     </mat-card>
   `,
@@ -66,6 +73,11 @@ import { AuthService } from './auth.service';
       gap: 8px;
       margin-top: 16px;
     }
+    .switch {
+      margin: 16px 0 0;
+      text-align: center;
+      color: var(--mat-sys-on-surface-variant);
+    }
     .error {
       color: var(--mat-sys-error);
       margin: 0 0 8px;
@@ -77,11 +89,19 @@ export class LoginPage {
   private readonly router = inject(Router);
 
   readonly loading = signal(false);
+  readonly registrationEnabled = signal(false);
   readonly error = signal(false);
   readonly form = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
   });
+
+  constructor() {
+    this.auth.config().then(
+      (config) => this.registrationEnabled.set(config.registrationEnabled),
+      () => this.registrationEnabled.set(false),
+    );
+  }
 
   async submit(): Promise<void> {
     this.loading.set(true);

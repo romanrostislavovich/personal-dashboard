@@ -9,7 +9,7 @@ export const users = pgTable('users', {
   email: text().notNull().unique(),
   passwordHash: text().notNull(),
   displayName: text().notNull(),
-  locale: text().notNull().default('ru'),
+  locale: text().notNull().default('en'),
   telegramChatId: text(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

@@ -1,5 +1,6 @@
-/** Текст на нескольких языках: `{ ru: 'Неделя подряд' }`. Язык выбирается по `user.locale`. */
-export type LocalizedText = Record<string, string>;
+import { LocalizedText } from '../i18n/locale';
+
+export type { LocalizedText };
 
 export interface AchievementTier {
   /** Порог метрики, с которого ачивка открывается. */
@@ -36,20 +37,13 @@ export interface AchievementMetric {
 }
 
 /**
- * Короткая запись уровня. Строка = русский текст; для нескольких языков передай объект.
- * `achievementTier(7, '🔥', 'Неделя подряд', '7 дней подряд с записью')`
+ * Короткая запись уровня: `achievementTier(7, '🔥', { en: 'Week in a row', ru: 'Неделя подряд' }, {...})`
  */
 export function achievementTier(
   goal: number,
   icon: string,
-  title: LocalizedText | string,
-  description: LocalizedText | string,
+  title: LocalizedText,
+  description: LocalizedText,
 ): AchievementTier {
-  const text = (value: LocalizedText | string) =>
-    typeof value === 'string' ? { ru: value } : value;
-  return { goal, icon, title: text(title), description: text(description) };
-}
-
-export function localize(text: LocalizedText, locale: string): string {
-  return text[locale] ?? text['ru'] ?? Object.values(text)[0] ?? '';
+  return { goal, icon, title, description };
 }

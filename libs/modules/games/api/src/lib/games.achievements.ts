@@ -18,9 +18,27 @@ export class GamesAchievements implements OnModuleInit {
       module: 'games',
       measure: (userId) => this.dotaWins(userId),
       tiers: [
-        achievementTier(10, '⚔️', 'Первая кровь', '10 побед в Dota 2 (по сохранённым матчам)'),
-        achievementTier(100, '🗡️', 'Ветеран', '100 побед в Dota 2'),
-        achievementTier(500, '🐉', 'Легенда арены', '500 побед в Dota 2'),
+        achievementTier(
+          10,
+          '⚔️',
+          { en: 'First blood', ru: 'Первая кровь' },
+          {
+            en: '10 wins in Dota 2 (saved matches)',
+            ru: '10 побед в Dota 2 (по сохранённым матчам)',
+          },
+        ),
+        achievementTier(
+          100,
+          '🗡️',
+          { en: 'Veteran', ru: 'Ветеран' },
+          { en: '100 wins in Dota 2', ru: '100 побед в Dota 2' },
+        ),
+        achievementTier(
+          500,
+          '🐉',
+          { en: 'Arena legend', ru: 'Легенда арены' },
+          { en: '500 wins in Dota 2', ru: '500 побед в Dota 2' },
+        ),
       ],
     });
 
@@ -29,8 +47,18 @@ export class GamesAchievements implements OnModuleInit {
       module: 'games',
       measure: (userId) => this.dotaWinStreak(userId),
       tiers: [
-        achievementTier(5, '🔥', 'Серия', '5 побед подряд в Dota 2'),
-        achievementTier(10, '☄️', 'Неудержимый', '10 побед подряд в Dota 2'),
+        achievementTier(
+          5,
+          '🔥',
+          { en: 'Streak', ru: 'Серия' },
+          { en: '5 wins in a row in Dota 2', ru: '5 побед подряд в Dota 2' },
+        ),
+        achievementTier(
+          10,
+          '☄️',
+          { en: 'Unstoppable', ru: 'Неудержимый' },
+          { en: '10 wins in a row in Dota 2', ru: '10 побед подряд в Dota 2' },
+        ),
       ],
     });
 
@@ -41,10 +69,30 @@ export class GamesAchievements implements OnModuleInit {
       measure: async (userId) =>
         Math.floor((await this.maxProfileNumber(userId, 'dota2', 'rankTier')) / 10),
       tiers: [
-        achievementTier(5, '🎖️', 'Легенда', 'Медаль «Легенда» в Dota 2'),
-        achievementTier(6, '🏅', 'Властелин', 'Медаль «Властелин» в Dota 2'),
-        achievementTier(7, '💎', 'Божество', 'Медаль «Божество» в Dota 2'),
-        achievementTier(8, '👑', 'Титан', 'Медаль «Титан» в Dota 2'),
+        achievementTier(
+          5,
+          '🎖️',
+          { en: 'Legend', ru: 'Легенда' },
+          { en: 'Legend medal in Dota 2', ru: 'Медаль «Легенда» в Dota 2' },
+        ),
+        achievementTier(
+          6,
+          '🏅',
+          { en: 'Ancient', ru: 'Властелин' },
+          { en: 'Ancient medal in Dota 2', ru: 'Медаль «Властелин» в Dota 2' },
+        ),
+        achievementTier(
+          7,
+          '💎',
+          { en: 'Divine', ru: 'Божество' },
+          { en: 'Divine medal in Dota 2', ru: 'Медаль «Божество» в Dota 2' },
+        ),
+        achievementTier(
+          8,
+          '👑',
+          { en: 'Immortal', ru: 'Титан' },
+          { en: 'Immortal medal in Dota 2', ru: 'Медаль «Титан» в Dota 2' },
+        ),
       ],
     });
 
@@ -53,9 +101,24 @@ export class GamesAchievements implements OnModuleInit {
       module: 'games',
       measure: (userId) => this.maxProfileNumber(userId, 'wow', 'achievementPoints'),
       tiers: [
-        achievementTier(5_000, '🏆', 'Охотник за достижениями', '5 000 очков достижений в WoW'),
-        achievementTier(10_000, '🥇', 'Коллекционер Азерота', '10 000 очков достижений в WoW'),
-        achievementTier(20_000, '🌍', 'Покоритель Азерота', '20 000 очков достижений в WoW'),
+        achievementTier(
+          5_000,
+          '🏆',
+          { en: 'Achievement hunter', ru: 'Охотник за достижениями' },
+          { en: '5,000 achievement points in WoW', ru: '5 000 очков достижений в WoW' },
+        ),
+        achievementTier(
+          10_000,
+          '🥇',
+          { en: 'Collector of Azeroth', ru: 'Коллекционер Азерота' },
+          { en: '10,000 achievement points in WoW', ru: '10 000 очков достижений в WoW' },
+        ),
+        achievementTier(
+          20_000,
+          '🌍',
+          { en: 'Conqueror of Azeroth', ru: 'Покоритель Азерота' },
+          { en: '20,000 achievement points in WoW', ru: '20 000 очков достижений в WoW' },
+        ),
       ],
     });
   }

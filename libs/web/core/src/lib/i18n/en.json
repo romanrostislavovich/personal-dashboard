@@ -1,0 +1,84 @@
+{
+  "appName": "Personal Dashboard",
+  "nav": {
+    "dashboard": "Home",
+    "projects": "Projects",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "actions": {
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "login": {
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "error": "Wrong email or password",
+    "noAccount": "No account?",
+    "register": "Sign up"
+  },
+  "register": {
+    "title": "Sign up",
+    "name": "Name",
+    "submit": "Create account",
+    "haveAccount": "Already have an account?",
+    "login": "Sign in",
+    "errorExists": "This email is already registered",
+    "errorDisabled": "Registration is disabled on this server",
+    "passwordHint": "At least 8 characters"
+  },
+  "dashboard": {
+    "title": "Home"
+  },
+  "projects": {
+    "title": "Projects",
+    "hint": "Your websites and services. Income and expenses are linked to them, as well as monitoring.",
+    "add": "Add project",
+    "edit": "Edit project",
+    "name": "Name",
+    "url": "Website URL",
+    "description": "Description",
+    "empty": "No projects yet",
+    "confirmDelete": "Delete project “{{name}}”?",
+    "inUse": "Cannot delete: finance records are linked to this project"
+  },
+  "settings": {
+    "title": "Settings",
+    "telegram": {
+      "description": "Notifications about birthdays, payments and projects",
+      "notConfigured": "The bot is not configured on the server: set TELEGRAM_BOT_TOKEN in .env and restart the API.",
+      "notConnected": "Telegram is not connected.",
+      "afterStart": "Press “Start” in the bot chat that opened, then “Check”.",
+      "connected": "Telegram is connected",
+      "connect": "Connect Telegram",
+      "check": "Check",
+      "test": "Send a test",
+      "testSent": "Test notification sent",
+      "disconnect": "Disconnect"
+    },
+    "profile": {
+      "title": "Profile",
+      "displayName": "Name",
+      "language": "Language",
+      "save": "Save",
+      "saved": "Profile saved"
+    },
+    "languages": {
+      "en": "English",
+      "ru": "Русский"
+    },
+    "password": {
+      "title": "Password",
+      "current": "Current password",
+      "new": "New password",
+      "submit": "Change password",
+      "changed": "Password changed",
+      "wrong": "The current password is incorrect"
+    }
+  }
+}

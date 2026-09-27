@@ -17,9 +17,24 @@ export class FinanceAchievements implements OnModuleInit {
       module: 'finance',
       measure: (userId) => this.monthsWithTransactions(userId),
       tiers: [
-        achievementTier(1, '🧾', 'Первый месяц учёта', 'Операции хотя бы за 1 месяц'),
-        achievementTier(3, '📊', 'Привычка считать', 'Операции за 3 разных месяца'),
-        achievementTier(12, '🗓️', 'Год учёта', 'Операции за 12 разных месяцев'),
+        achievementTier(
+          1,
+          '🧾',
+          { en: 'First month tracked', ru: 'Первый месяц учёта' },
+          { en: 'Transactions in at least 1 month', ru: 'Операции хотя бы за 1 месяц' },
+        ),
+        achievementTier(
+          3,
+          '📊',
+          { en: 'Counting habit', ru: 'Привычка считать' },
+          { en: 'Transactions in 3 different months', ru: 'Операции за 3 разных месяца' },
+        ),
+        achievementTier(
+          12,
+          '🗓️',
+          { en: 'A year of tracking', ru: 'Год учёта' },
+          { en: 'Transactions in 12 different months', ru: 'Операции за 12 разных месяцев' },
+        ),
       ],
     });
   }

@@ -17,12 +17,23 @@ export class MonitoringAchievements implements OnModuleInit {
       module: 'monitoring',
       measure: (userId) => this.daysWithoutFailures(userId),
       tiers: [
-        achievementTier(7, '🛡️', 'Неделя без сбоев', 'Все сайты отвечают без ошибок 7 дней подряд'),
+        achievementTier(
+          7,
+          '🛡️',
+          { en: 'A week without failures', ru: 'Неделя без сбоев' },
+          {
+            en: 'All sites respond without errors for 7 days',
+            ru: 'Все сайты отвечают без ошибок 7 дней подряд',
+          },
+        ),
         achievementTier(
           30,
           '🏰',
-          'Месяц без сбоев',
-          'Все сайты отвечают без ошибок 30 дней подряд',
+          { en: 'A month without failures', ru: 'Месяц без сбоев' },
+          {
+            en: 'All sites respond without errors for 30 days',
+            ru: 'Все сайты отвечают без ошибок 30 дней подряд',
+          },
         ),
       ],
     });

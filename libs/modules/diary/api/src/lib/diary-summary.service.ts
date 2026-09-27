@@ -3,11 +3,12 @@ import { AiService } from '@pd/api-core';
 import { DiaryQuery } from '@pd/contracts';
 import { DiaryService } from './diary.service';
 
+/** Язык ответа AiService.complete() добавляет сам — по профилю пользователя. */
 const INSTRUCTION = [
-  'Ты помогаешь вести личный дневник. Сделай короткое тёплое саммари записей за период:',
-  'главные события, как менялось настроение, повторяющиеся темы (по тегам), что получилось.',
-  'В конце — одно мягкое наблюдение или вопрос для размышления. Пиши по-русски, на «ты»,',
-  'до 150 слов, обычным текстом без markdown-разметки, без выдумок — только то, что есть в записях.',
+  'You help the user keep a personal diary. Write a short, warm summary of the entries:',
+  'main events, how the mood changed, recurring topics (by tags), what went well.',
+  'End with one gentle observation or question to reflect on. Address the user informally,',
+  'up to 150 words, plain text without markdown, no inventions — only what is in the entries.',
 ].join(' ');
 
 /** AI-саммари дневника за период. */

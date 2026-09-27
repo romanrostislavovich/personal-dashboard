@@ -7,63 +7,81 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { NotificationSettings, TelegramLinkResponse } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
+import { PasswordSettingsComponent } from './password-settings.component';
+import { ProfileSettingsComponent } from './profile-settings.component';
 
 @Component({
   selector: 'pd-settings-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatCardModule, MatButtonModule, MatIconModule, TranslocoPipe],
+  imports: [
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    TranslocoPipe,
+    ProfileSettingsComponent,
+    PasswordSettingsComponent,
+  ],
   template: `
     <h1 class="page-title">{{ 'core.settings.title' | transloco }}</h1>
 
-    <mat-card appearance="outlined">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>send</mat-icon>
-        <mat-card-title>Telegram</mat-card-title>
-        <mat-card-subtitle>{{
-          'core.settings.telegram.description' | transloco
-        }}</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        @if (settings.value(); as s) {
-          @if (!s.telegram.available) {
-            <p>{{ 'core.settings.telegram.notConfigured' | transloco }}</p>
-          } @else if (s.telegram.connected) {
-            <p class="ok">
-              <mat-icon>check_circle</mat-icon> {{ 'core.settings.telegram.connected' | transloco }}
-            </p>
-          } @else {
-            <p>{{ 'core.settings.telegram.notConnected' | transloco }}</p>
-            @if (linkOpened()) {
-              <p class="hint">{{ 'core.settings.telegram.afterStart' | transloco }}</p>
+    <div class="grid">
+      <pd-profile-settings />
+      <pd-password-settings />
+
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>send</mat-icon>
+          <mat-card-title>Telegram</mat-card-title>
+          <mat-card-subtitle>{{
+            'core.settings.telegram.description' | transloco
+          }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (settings.value(); as s) {
+            @if (!s.telegram.available) {
+              <p>{{ 'core.settings.telegram.notConfigured' | transloco }}</p>
+            } @else if (s.telegram.connected) {
+              <p class="ok">
+                <mat-icon>check_circle</mat-icon>
+                {{ 'core.settings.telegram.connected' | transloco }}
+              </p>
+            } @else {
+              <p>{{ 'core.settings.telegram.notConnected' | transloco }}</p>
+              @if (linkOpened()) {
+                <p class="hint">{{ 'core.settings.telegram.afterStart' | transloco }}</p>
+              }
             }
           }
+        </mat-card-content>
+        @if (settings.value()?.telegram; as telegram) {
+          <mat-card-actions>
+            @if (telegram.available && !telegram.connected) {
+              <button matButton="filled" (click)="connect()">
+                {{ 'core.settings.telegram.connect' | transloco }}
+              </button>
+              <button matButton (click)="settings.reload()">
+                {{ 'core.settings.telegram.check' | transloco }}
+              </button>
+            }
+            @if (telegram.connected) {
+              <button matButton="filled" (click)="sendTest()">
+                {{ 'core.settings.telegram.test' | transloco }}
+              </button>
+              <button matButton (click)="disconnect()">
+                {{ 'core.settings.telegram.disconnect' | transloco }}
+              </button>
+            }
+          </mat-card-actions>
         }
-      </mat-card-content>
-      @if (settings.value()?.telegram; as telegram) {
-        <mat-card-actions>
-          @if (telegram.available && !telegram.connected) {
-            <button matButton="filled" (click)="connect()">
-              {{ 'core.settings.telegram.connect' | transloco }}
-            </button>
-            <button matButton (click)="settings.reload()">
-              {{ 'core.settings.telegram.check' | transloco }}
-            </button>
-          }
-          @if (telegram.connected) {
-            <button matButton="filled" (click)="sendTest()">
-              {{ 'core.settings.telegram.test' | transloco }}
-            </button>
-            <button matButton (click)="disconnect()">
-              {{ 'core.settings.telegram.disconnect' | transloco }}
-            </button>
-          }
-        </mat-card-actions>
-      }
-    </mat-card>
+      </mat-card>
+    </div>
   `,
   styles: `
-    mat-card {
-      max-width: 640px;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
+      gap: 16px;
+      align-items: start;
     }
     .ok {
       display: flex;

@@ -11,6 +11,10 @@ export function buildAppRoutes(modules: WebDashboardModule[]): Routes {
       loadComponent: () => import('./auth/login.page').then((m) => m.LoginPage),
     },
     {
+      path: 'register',
+      loadComponent: () => import('./auth/register.page').then((m) => m.RegisterPage),
+    },
+    {
       path: '',
       component: ShellComponent,
       canActivate: [authGuard],

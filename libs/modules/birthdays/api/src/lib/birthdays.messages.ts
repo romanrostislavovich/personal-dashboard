@@ -1,25 +1,32 @@
+import { pickMessages } from '@pd/api-core';
 import { UpcomingBirthday } from '@pd/contracts';
 
-/**
- * Тексты уведомлений. Чтобы добавить язык — добавь ключ (`en: {...}`);
- * язык выбирается по `user.locale`, по умолчанию `ru`.
- */
+/** Тексты уведомлений; язык выбирается по `user.locale`. */
 const messages = {
+  en: {
+    title: '🎂 Birthday',
+    today: (b: UpcomingBirthday) =>
+      `Today is ${b.name}'s birthday${b.turningAge ? ` — turning ${b.turningAge}` : ''}!`,
+    soon: (b: UpcomingBirthday) =>
+      `${b.name}'s birthday is in ${b.daysUntil} ${b.daysUntil === 1 ? 'day' : 'days'} ` +
+      `(${formatDate(b.nextDate)})` +
+      (b.turningAge ? `, turning ${b.turningAge}` : ''),
+  },
   ru: {
     title: '🎂 День рождения',
     today: (b: UpcomingBirthday) =>
       `Сегодня день рождения у ${b.name}${b.turningAge ? ` — исполняется ${b.turningAge}` : ''}!`,
     soon: (b: UpcomingBirthday) =>
-      `Через ${b.daysUntil} ${pluralDays(b.daysUntil)} (${formatDate(b.nextDate)}) день рождения у ${b.name}` +
+      `Через ${b.daysUntil} ${pluralDaysRu(b.daysUntil)} (${formatDate(b.nextDate)}) день рождения у ${b.name}` +
       (b.turningAge ? `, исполнится ${b.turningAge}` : ''),
   },
 };
 
 export function birthdayMessages(locale: string) {
-  return messages[locale as keyof typeof messages] ?? messages.ru;
+  return pickMessages(messages, locale);
 }
 
-function pluralDays(n: number): string {
+function pluralDaysRu(n: number): string {
   const mod10 = n % 10;
   const mod100 = n % 100;
   if (mod10 === 1 && mod100 !== 11) return 'день';
@@ -27,6 +34,7 @@ function pluralDays(n: number): string {
   return 'дней';
 }
 
+/** `2026-10-03` → `03.10`. */
 function formatDate(localDate: string): string {
   const [, month, day] = localDate.split('-');
   return `${day}.${month}`;

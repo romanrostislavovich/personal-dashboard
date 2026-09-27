@@ -29,10 +29,12 @@ export class DiaryJobs implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    const text = diaryMessages('ru');
     this.telegram.registerCommand({
       command: 'd',
-      description: text.commandDescription,
+      description: {
+        en: diaryMessages('en').commandDescription,
+        ru: diaryMessages('ru').commandDescription,
+      },
       handler: async (user, note) => {
         const replies = diaryMessages(user.locale);
         if (!note) {
@@ -65,7 +67,7 @@ export class DiaryJobs implements OnModuleInit {
         }
         const user = await this.users.findById(userId);
         await this.notifications.send(userId, {
-          title: diaryMessages(user?.locale ?? 'ru').weeklyTitle,
+          title: diaryMessages(user?.locale ?? 'en').weeklyTitle,
           body: summary,
           source: 'diary',
         });
@@ -79,7 +81,7 @@ export class DiaryJobs implements OnModuleInit {
   async remind(): Promise<void> {
     for (const userId of await this.diary.usersToRemind()) {
       const user = await this.users.findById(userId);
-      const text = diaryMessages(user?.locale ?? 'ru');
+      const text = diaryMessages(user?.locale ?? 'en');
       await this.notifications.send(userId, {
         title: text.reminderTitle,
         body: text.reminderBody,

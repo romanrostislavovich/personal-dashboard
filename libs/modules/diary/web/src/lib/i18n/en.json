@@ -1,0 +1,47 @@
+{
+  "title": "Diary",
+  "today": "Today",
+  "eveningReminder": "Remind at 21:00",
+  "emptyMonth": "No entries this month",
+  "unsavedConfirm": "You have unsaved changes. Leave without saving?",
+  "stats": {
+    "streak": "Days in a row",
+    "longest": "Record",
+    "total": "Total entries",
+    "tags": "Top tags"
+  },
+  "moods": {
+    "1": "Awful",
+    "2": "Meh",
+    "3": "Okay",
+    "4": "Good",
+    "5": "Great"
+  },
+  "editor": {
+    "mood": "Mood",
+    "edit": "Text",
+    "preview": "Preview",
+    "placeholder": "How was your day? Markdown is supported, tags start with #, e.g. #work",
+    "hint": "Ctrl+S to save. From Telegram: /d text — appends to today’s entry.",
+    "unsaved": "Unsaved changes",
+    "savedAt": "Saved",
+    "empty": "No entry yet",
+    "confirmDelete": "Delete the entry for this day?"
+  },
+  "widget": {
+    "daysInRow": "days in a row",
+    "written": "Today’s entry is written",
+    "notWritten": "Nothing written today yet",
+    "mood": "Mood over 30 days",
+    "open": "Open"
+  },
+  "weeklySummary": "AI weekly summary on Sundays",
+  "summary": {
+    "button": "Weekly summary",
+    "title": "Your week in the diary",
+    "loading": "AI is reading the last 7 days…",
+    "noEntries": "No entries in the last 7 days.",
+    "error": "Failed: check the AI settings in the “AI” section.",
+    "close": "Close"
+  }
+}

@@ -65,6 +65,6 @@ export class MonitoringJobs implements OnModuleInit {
   }
 
   private async localeOf(userId: string): Promise<string> {
-    return (await this.users.findById(userId))?.locale ?? 'ru';
+    return (await this.users.findById(userId))?.locale ?? 'en';
   }
 }

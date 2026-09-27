@@ -1,0 +1,33 @@
+{
+  "title": "Monitoring",
+  "addTitle": "Watch a URL",
+  "project": "Project",
+  "url": "URL (website or API health endpoint)",
+  "noProjects": "First add a project in",
+  "empty": "Nothing is monitored yet. Checks run every 5 minutes; you get a Telegram alert when a site goes down.",
+  "confirmDelete": "Stop watching {{url}}? Check history will be deleted.",
+  "status": {
+    "up": "Up",
+    "down": "Down",
+    "pending": "Pending"
+  },
+  "downSince": "since",
+  "uptime24h": "Uptime 24 h",
+  "uptime7d": "7 days",
+  "uptime30d": "30 days",
+  "response": "Response",
+  "ms": "ms",
+  "responseChart": "Response time over 24 hours",
+  "chartCollecting": "The chart appears after more than an hour of checks.",
+  "sslExpires": "SSL expires in {{days}} d",
+  "lastCheck": "Checked at",
+  "errors": {
+    "duplicate": "This URL is already monitored",
+    "generic": "Could not add. Check the URL."
+  },
+  "widget": {
+    "title": "Monitoring",
+    "empty": "Add websites in the Monitoring section",
+    "open": "Details"
+  }
+}

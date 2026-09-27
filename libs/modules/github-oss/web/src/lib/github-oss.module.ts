@@ -8,6 +8,7 @@ export const githubOssModule: WebDashboardModule = {
     { path: '', loadComponent: () => import('./github-oss.page').then((m) => m.GithubOssPage) },
   ],
   translations: {
+    en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
   widgets: [

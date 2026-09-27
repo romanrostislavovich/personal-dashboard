@@ -5,11 +5,11 @@ import { DB, Database } from '../database/database.module';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SchedulerService } from '../scheduler/scheduler.service';
 import { UsersService } from '../users/users.service';
-import { AchievementMetric, localize } from './achievement-metric';
+import { coreMessages } from '../i18n/core.messages';
+import { localize } from '../i18n/locale';
+import { AchievementMetric } from './achievement-metric';
 import { unlockedAchievements } from './achievements.schema';
 import { achievementId, newlyUnlockedTiers } from './newly-unlocked';
-
-const TITLE: Record<string, string> = { ru: '🏆 Новые ачивки' };
 
 /**
  * Движок ачивок. Метрики регистрируют модули (см. AchievementMetric),
@@ -47,7 +47,7 @@ export class AchievementsService implements OnModuleInit {
   /** Все ачивки пользователя с прогрессом (заодно открывает новые). */
   async list(userId: string): Promise<Achievement[]> {
     const { values, unlocked } = await this.evaluate(userId);
-    const locale = (await this.users.findById(userId))?.locale ?? 'ru';
+    const locale = (await this.users.findById(userId))?.locale;
 
     return this.metrics.flatMap((metric) =>
       metric.tiers.map((tier) => {
@@ -78,7 +78,7 @@ export class AchievementsService implements OnModuleInit {
     const unlocked = new Map(rows.map((row) => [row.achievementId, row.unlockedAt]));
     const values = new Map<string, number>();
     const fresh: { id: string; title: string }[] = [];
-    const locale = (await this.users.findById(userId))?.locale ?? 'ru';
+    const locale = (await this.users.findById(userId))?.locale;
 
     for (const metric of this.metrics) {
       let value: number;
@@ -103,7 +103,7 @@ export class AchievementsService implements OnModuleInit {
         .onConflictDoNothing();
       fresh.forEach(({ id }) => unlocked.set(id, now));
       await this.notifications.send(userId, {
-        title: TITLE[locale] ?? TITLE['ru'],
+        title: coreMessages(locale).achievementsTitle,
         body: fresh.map((a) => a.title).join('\n'),
         source: 'achievements',
       });
