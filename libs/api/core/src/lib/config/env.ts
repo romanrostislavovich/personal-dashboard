@@ -26,6 +26,16 @@ export const envSchema = z.object({
   /** Без токена Telegram-канал просто выключен. */
   TELEGRAM_BOT_TOKEN: z.string().optional(),
 
+  /**
+   * Адрес, по которому открывается дашборд. Нужен OAuth-интеграциям (Spotify),
+   * чтобы вернуть пользователя обратно. Spotify не принимает `localhost` — только 127.0.0.1.
+   */
+  PUBLIC_URL: z.url().default('http://127.0.0.1:4200'),
+
+  /** Приложение Spotify (developer.spotify.com). Без них подключение Spotify выключено. */
+  SPOTIFY_CLIENT_ID: z.string().optional(),
+  SPOTIFY_CLIENT_SECRET: z.string().optional(),
+
   /** Путь к собранному Angular-приложению; если задан, API раздаёт и фронтенд. */
   WEB_DIST_PATH: z.string().optional(),
 });

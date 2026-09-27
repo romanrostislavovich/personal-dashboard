@@ -3,6 +3,7 @@ import { diaryModule } from '@pd/diary-web';
 import { financeModule } from '@pd/finance-web';
 import { githubOssModule } from '@pd/github-oss-web';
 import { monitoringModule } from '@pd/monitoring-web';
+import { musicModule } from '@pd/music-web';
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
@@ -16,4 +17,5 @@ export const enabledModules: WebDashboardModule[] = [
   birthdaysModule,
   githubOssModule,
   monitoringModule,
+  musicModule,
 ];

@@ -1,0 +1,103 @@
+<header class="page-header">
+  <h1 class="page-title">{{ 'music.title' | transloco }}</h1>
+</header>
+
+@if (hasSource()) {
+  <div class="top-row">
+    <!-- Сейчас играет -->
+    <mat-card appearance="outlined">
+      <mat-card-content class="padded">
+        @if (nowPlaying.value(); as track) {
+          <pd-now-playing [track]="track" />
+        } @else if (stats.value()?.recent?.[0]; as last) {
+          <span class="label">{{ 'music.now.last' | transloco }}</span>
+          <p class="last">
+            <b>{{ last.track }}</b> — {{ last.artist }}
+            <span class="muted">· {{ last.playedAt | date: 'd MMM, HH:mm' }}</span>
+          </p>
+        } @else {
+          <p class="muted">{{ 'music.now.nothing' | transloco }}</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Статистика прослушиваний -->
+    @if (stats.value(); as s) {
+      <mat-card appearance="outlined">
+        <mat-card-content class="padded stats">
+          <div class="stat">
+            <span class="label">{{ 'music.stats.today' | transloco }}</span>
+            <span class="value">{{ s.today | number }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ 'music.stats.total' | transloco }}</span>
+            <span class="value">{{
+              s.totalScrobbles === null ? '—' : (s.totalScrobbles | number)
+            }}</span>
+          </div>
+          <div class="stat chart">
+            <span class="label">{{ 'music.stats.byDay' | transloco }}</span>
+            <pd-sparkline
+              [points]="playsPoints()"
+              [min]="0"
+              [label]="'music.stats.byDay' | transloco"
+            />
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+
+  <!-- Топы за период (из Last.fm) -->
+  @if (settings.value()?.lastfm?.username) {
+    <mat-card appearance="outlined" class="tops">
+      <mat-card-header class="tops-header">
+        <mat-card-title>{{ 'music.tops.title' | transloco }}</mat-card-title>
+        <mat-button-toggle-group
+          [value]="period()"
+          (change)="period.set($event.value)"
+          hideSingleSelectionIndicator
+        >
+          @for (p of periods; track p) {
+            <mat-button-toggle [value]="p">{{
+              'music.periods.' + p | transloco
+            }}</mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+      </mat-card-header>
+      <mat-card-content class="tops-grid">
+        @if (tops.value(); as t) {
+          <pd-top-list titleKey="music.tops.artists" [items]="t.artists" />
+          <pd-top-list titleKey="music.tops.tracks" [items]="t.tracks" />
+          <pd-top-list titleKey="music.tops.albums" [items]="t.albums" />
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Недавние прослушивания -->
+  @if (stats.value()?.recent?.length) {
+    <mat-card appearance="outlined" class="recent">
+      <mat-card-header>
+        <mat-card-title>{{ 'music.recent' | transloco }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <ul class="recent-list">
+          @for (r of stats.value()!.recent; track r.playedAt + r.track) {
+            <li>
+              <span
+                ><b>{{ r.track }}</b> — {{ r.artist }}</span
+              >
+              <span class="muted">{{ r.playedAt | date: 'd MMM, HH:mm' }}</span>
+            </li>
+          }
+        </ul>
+      </mat-card-content>
+    </mat-card>
+  }
+}
+
+<h2 class="section-title">{{ 'music.connect.title' | transloco }}</h2>
+@if (settings.value(); as s) {
+  <pd-music-connect [settings]="s" (changed)="onSourcesChanged()" />
+}

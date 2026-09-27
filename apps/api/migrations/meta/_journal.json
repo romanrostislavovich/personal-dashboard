@@ -36,6 +36,13 @@
       "when": 1790465217952,
       "tag": "0004_diary",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790500671147,
+      "tag": "0005_music",
+      "breakpoints": true
     }
   ]
 }

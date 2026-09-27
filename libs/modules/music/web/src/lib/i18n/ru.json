@@ -1,0 +1,56 @@
+{
+  "title": "Музыка",
+  "recent": "Недавно слушал",
+  "plays": "прослушиваний",
+  "now": {
+    "playing": "Сейчас играет",
+    "paused": "На паузе",
+    "last": "Последний трек",
+    "nothing": "Сейчас ничего не играет"
+  },
+  "stats": {
+    "today": "Сегодня",
+    "total": "Всего скробблов",
+    "byDay": "Прослушивания за 30 дней"
+  },
+  "periods": {
+    "7day": "Неделя",
+    "1month": "Месяц",
+    "12month": "Год",
+    "overall": "Всё время"
+  },
+  "tops": {
+    "title": "Топ",
+    "artists": "Артисты",
+    "tracks": "Треки",
+    "albums": "Альбомы",
+    "empty": "Нет данных за период"
+  },
+  "connect": {
+    "title": "Источники",
+    "lastfmDescription": "История прослушиваний, статистика и топы",
+    "lastfmHint": "Укажи логин Last.fm и ключ API: создай его на last.fm/api/account/create (название приложения — любое, callback можно оставить пустым). Ключ хранится на сервере зашифрованным.",
+    "username": "Логин Last.fm",
+    "connect": "Подключить",
+    "connectedAs": "Подключён как",
+    "synced": "История обновлена",
+    "syncNow": "Обновить",
+    "disconnect": "Отключить",
+    "confirmDisconnect": "Отключить Last.fm? Уже загруженная история останется.",
+    "spotifyDescription": "«Сейчас играет» с обложкой и прогрессом",
+    "spotifyNotConfigured": "Не настроено на сервере: создай приложение на developer.spotify.com, добавь в нём Redirect URI = PUBLIC_URL + /api/music/spotify/callback и задай SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET в .env.",
+    "spotifyHint": "Откроется страница входа Spotify. Нужен только доступ к текущему треку.",
+    "spotifyConnected": "Spotify подключён",
+    "invalid": "Сервис не принял данные — проверь логин и ключ",
+    "error": "Что-то пошло не так. Попробуй позже.",
+    "spotify": {
+      "connected": "Spotify подключён",
+      "error": "Не удалось подключить Spotify"
+    }
+  },
+  "widget": {
+    "today": "Сегодня: {{count}}",
+    "empty": "Подключи Last.fm или Spotify в разделе Музыка",
+    "open": "Подробнее"
+  }
+}

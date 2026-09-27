@@ -27,7 +27,9 @@
       "@pd/monitoring-api": ["./libs/modules/monitoring/api/src/index.ts"],
       "@pd/monitoring-web": ["./libs/modules/monitoring/web/src/index.ts"],
       "@pd/diary-api": ["./libs/modules/diary/api/src/index.ts"],
-      "@pd/diary-web": ["./libs/modules/diary/web/src/index.ts"]
+      "@pd/diary-web": ["./libs/modules/diary/web/src/index.ts"],
+      "@pd/music-api": ["./libs/modules/music/api/src/index.ts"],
+      "@pd/music-web": ["./libs/modules/music/web/src/index.ts"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true

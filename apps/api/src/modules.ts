@@ -3,6 +3,7 @@ import { DiaryModule } from '@pd/diary-api';
 import { FinanceModule } from '@pd/finance-api';
 import { GithubOssModule } from '@pd/github-oss-api';
 import { MonitoringModule } from '@pd/monitoring-api';
+import { MusicModule } from '@pd/music-api';
 
 /**
  * Включённые модули дашборда (бэкенд-часть).
@@ -14,4 +15,5 @@ export const enabledModules = [
   GithubOssModule,
   MonitoringModule,
   DiaryModule,
+  MusicModule,
 ];
