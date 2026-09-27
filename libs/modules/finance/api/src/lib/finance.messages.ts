@@ -4,7 +4,7 @@ import { RecurringPayment } from '@pd/contracts';
 const list = (payments: RecurringPayment[]) =>
   payments.map((p) => `• ${p.name}: ${p.amount.toFixed(2)} ${p.currency}`).join('\n');
 
-/** Тексты уведомлений модуля; язык выбирается по `user.locale`. */
+/** Module notification texts; the language is picked by `user.locale`. */
 const messages = {
   en: {
     chargedTitle: '💸 Recurring payments',

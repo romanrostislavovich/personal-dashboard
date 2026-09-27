@@ -3,7 +3,7 @@ import { authGuard } from './auth/auth.guard';
 import { WebDashboardModule } from './dashboard-module';
 import { ShellComponent } from './layout/shell.component';
 
-/** Маршруты приложения: страницы ядра + по разделу на каждый подключённый модуль. */
+/** App routes: core pages + one section per enabled module. */
 export function buildAppRoutes(modules: WebDashboardModule[]): Routes {
   return [
     {

@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthUser } from './current-user.decorator';
 import { IS_PUBLIC } from './public.decorator';
 
-/** Глобальный guard: проверяет `Authorization: Bearer <jwt>` на каждом запросе. */
+/** Global guard: checks `Authorization: Bearer <jwt>` on every request. */
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(

@@ -12,7 +12,7 @@ import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
 import { CostSourceInput, costSourceInputSchema } from '@pd/contracts';
 import { CostSourcesService } from './cost-sources.service';
 
-/** Автоимпорт затрат из внешних сервисов: `/api/finance/cost-sources`. */
+/** Automatic cost import from external services: `/api/finance/cost-sources`. */
 @Controller('finance/cost-sources')
 export class CostSourcesController {
   constructor(private readonly costSources: CostSourcesService) {}

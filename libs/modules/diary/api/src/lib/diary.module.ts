@@ -7,8 +7,8 @@ import { DiaryJobs } from './diary.jobs';
 import { DiaryService } from './diary.service';
 
 /**
- * Личный дневник: запись на день (markdown), настроение, теги из хэштегов,
- * запись через Telegram (`/d`), вечерние напоминания. API: `/api/diary/*`.
+ * Personal diary: one entry per day (markdown), mood, tags from hashtags,
+ * entries via Telegram (`/d`), evening reminders. API: `/api/diary/*`.
  */
 @Module({
   controllers: [DiaryController],

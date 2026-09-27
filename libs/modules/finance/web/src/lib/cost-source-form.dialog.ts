@@ -14,7 +14,7 @@ export interface CostSourceFormData {
   defaultProjectId: string | null;
 }
 
-/** Значения по умолчанию для каждого сервиса — пользователь может поменять. */
+/** Defaults for each service — the user can change them. */
 const PROVIDER_DEFAULTS: Record<CostProvider, { name: string; category: string }> = {
   hetzner: { name: 'Hetzner Cloud', category: 'Хостинг' },
   deepseek: { name: 'DeepSeek API', category: 'AI API' },
@@ -71,7 +71,7 @@ const PROVIDER_DEFAULTS: Record<CostProvider, { name: string; category: string }
         <mat-form-field>
           <mat-label>{{ 'finance.wallet' | transloco }}</mat-label>
           <mat-select formControlName="projectId">
-            <!-- "Личное" = пустая строка: null mat-select считает отсутствием выбора. -->
+            <!-- "Personal" = empty string: mat-select treats null as no selection. -->
             <mat-option value="">{{ 'finance.scope.personal' | transloco }}</mat-option>
             @for (project of data.projects; track project.id) {
               <mat-option [value]="project.id">{{ project.name }}</mat-option>
@@ -127,7 +127,7 @@ export class CostSourceFormDialog {
   });
 
   constructor() {
-    // При смене сервиса подставляем его название и категорию.
+    // When the service changes, fill in its name and category.
     this.form.controls.provider.valueChanges.subscribe((provider) =>
       this.form.patchValue(PROVIDER_DEFAULTS[provider]),
     );

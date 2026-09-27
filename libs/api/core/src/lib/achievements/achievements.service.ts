@@ -12,9 +12,9 @@ import { unlockedAchievements } from './achievements.schema';
 import { achievementId, newlyUnlockedTiers } from './newly-unlocked';
 
 /**
- * Движок ачивок. Метрики регистрируют модули (см. AchievementMetric),
- * движок раз в час и при открытии страницы проверяет их и фиксирует открытые уровни.
- * Про все новые ачивки за проверку приходит одно уведомление.
+ * Achievements engine. Modules register metrics (see AchievementMetric);
+ * the engine checks them hourly and when the page is opened, and records unlocked tiers.
+ * All new achievements from one check come in a single notification.
  */
 @Injectable()
 export class AchievementsService implements OnModuleInit {
@@ -44,7 +44,7 @@ export class AchievementsService implements OnModuleInit {
     });
   }
 
-  /** Все ачивки пользователя с прогрессом (заодно открывает новые). */
+  /** All user achievements with progress (also unlocks new ones). */
   async list(userId: string): Promise<Achievement[]> {
     const { values, unlocked } = await this.evaluate(userId);
     const locale = (await this.users.findById(userId))?.locale;
@@ -67,8 +67,8 @@ export class AchievementsService implements OnModuleInit {
   }
 
   /**
-   * Считает метрики и сохраняет новые ачивки. Ошибка одной метрики
-   * (например, недоступен Last.fm) не мешает остальным.
+   * Evaluates metrics and saves new achievements. A failure in one metric
+   * (for example, Last.fm is down) does not affect the others.
    */
   async evaluate(userId: string) {
     const rows = await this.db

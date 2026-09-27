@@ -8,7 +8,7 @@ import { ProjectsApi } from '@pd/web-core';
 import { MonitoringApi } from './monitoring.api';
 import { StatusBadgeComponent } from './status-badge.component';
 
-/** Виджет главной: статус всех мониторов; упавшие — первыми. */
+/** Home widget: status of all monitors; down ones first. */
 @Component({
   selector: 'pd-monitoring-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,

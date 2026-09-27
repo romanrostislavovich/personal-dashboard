@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { WowSummary } from '@pd/contracts';
 
-/** World of Warcraft: персонаж, экипировка, очки достижений и последние ачивки. */
+/** World of Warcraft: character, gear, achievement points and recent achievements. */
 @Component({
   selector: 'pd-wow-card',
   changeDetection: ChangeDetectionStrategy.OnPush,

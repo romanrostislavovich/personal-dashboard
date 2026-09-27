@@ -9,7 +9,7 @@
   <mat-progress-bar mode="indeterminate" class="progress" />
 }
 
-<!-- Общие итоги по всем репозиториям -->
+<!-- Totals across all repositories -->
 @if (repos.value().length > 0) {
   <mat-card appearance="outlined" class="totals">
     <mat-card-content class="totals-grid">
@@ -37,7 +37,7 @@
 }
 
 <div class="setup">
-  <!-- Добавление репозитория -->
+  <!-- Adding a repository -->
   <mat-card appearance="outlined">
     <mat-card-header>
       <mat-card-title>{{ 'github-oss.addTitle' | transloco }}</mat-card-title>
@@ -59,7 +59,7 @@
     </mat-card-content>
   </mat-card>
 
-  <!-- Токен GitHub -->
+  <!-- GitHub token -->
   <mat-card appearance="outlined">
     <mat-card-header>
       <mat-card-title>{{ 'github-oss.token.title' | transloco }}</mat-card-title>

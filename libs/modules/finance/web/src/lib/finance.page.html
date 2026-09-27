@@ -46,7 +46,7 @@
 </div>
 
 <mat-tab-group mat-stretch-tabs="false" animationDuration="0ms">
-  <!-- Операции за выбранный месяц -->
+  <!-- Transactions for the selected month -->
   <mat-tab [label]="'finance.tabs.transactions' | transloco">
     <div class="tab-actions">
       <button matButton="filled" (click)="openTransactionForm()">
@@ -80,7 +80,7 @@
               >
                 {{ t.kind === 'expense' ? '−' : '+' }}{{ t.amount | currency: t.currency }}
               </span>
-              <!-- Сумму автоимпорта пересчитывает синхронизация, вручную её не правим. -->
+              <!-- The auto-import amount is recalculated by the sync, it is not edited by hand. -->
               @if (t.costSourceId) {
                 <mat-icon class="auto" [matTooltip]="'finance.costSources.autoTooltip' | transloco">
                   lock
@@ -102,7 +102,7 @@
     </mat-card>
   </mat-tab>
 
-  <!-- Регулярные платежи: серверы, домены, подписки -->
+  <!-- Recurring payments: servers, domains, subscriptions -->
   <mat-tab [label]="'finance.tabs.recurring' | transloco">
     <div class="tab-actions">
       <p class="hint">{{ 'finance.recurring.hint' | transloco }}</p>
@@ -142,7 +142,7 @@
     </mat-card>
   </mat-tab>
 
-  <!-- Автоимпорт затрат из сервисов: Hetzner, DeepSeek… -->
+  <!-- Automatic cost import from services: Hetzner, DeepSeek… -->
   <mat-tab [label]="'finance.tabs.costSources' | transloco">
     <pd-cost-sources-tab
       [projects]="projects.value()"

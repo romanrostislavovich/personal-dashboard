@@ -1,20 +1,20 @@
-# Один образ на всё: NestJS API + собранный Angular-фронтенд (API раздаёт его как статику).
-# Сборка и запуск вместе с базой: docker compose up -d --build
+# One image for everything: NestJS API + the built Angular frontend (the API serves it as static files).
+# Build and run together with the database: docker compose up -d --build
 
-# --- 1. Сборка ---
+# --- 1. Build ---
 FROM node:24-alpine AS build
 WORKDIR /repo
 ENV NX_DAEMON=false NX_NO_CLOUD=true
 
 COPY package.json package-lock.json ./
-# --ignore-scripts: не качаем Electron и прочее, что нужно только для desktop.
+# --ignore-scripts: skip Electron and everything else that only the desktop app needs.
 RUN npm ci --ignore-scripts
 
 COPY . .
-# Сборка API кладёт рядом package.json и package-lock.json только с его зависимостями.
+# The API build writes package.json and package-lock.json with only its own dependencies next to it.
 RUN npx nx run-many -t build -p api,web
 
-# --- 2. Рантайм ---
+# --- 2. Runtime ---
 FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production \

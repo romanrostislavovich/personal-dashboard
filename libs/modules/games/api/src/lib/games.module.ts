@@ -8,7 +8,7 @@ import { GamesController } from './games.controller';
 import { WowService } from './wow/wow.service';
 
 /**
- * Игры: Dota 2 (OpenDota) и World of Warcraft (Battle.net API).
+ * Games: Dota 2 (OpenDota) and World of Warcraft (Battle.net API).
  * API: `/api/games/*`.
  */
 @Module({

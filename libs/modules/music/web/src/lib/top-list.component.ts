@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { TranslocoPipe } from '@jsverse/transloco';
 import { MusicTopItem } from '@pd/contracts';
 
-/** Топ-10: место, название, число прослушиваний и полоска относительно лидера. */
+/** Top 10: position, title, play count and a bar relative to the leader. */
 @Component({
   selector: 'pd-top-list',
   changeDetection: ChangeDetectionStrategy.OnPush,

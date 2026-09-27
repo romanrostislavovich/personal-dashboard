@@ -28,7 +28,7 @@ describe('starsDelta', () => {
   ];
 
   it('uses the latest point at least N days old as the baseline', () => {
-    // 7 дней назад = 23 сентября → 95 звёзд
+    // 7 days ago = September 23 → 95 stars
     expect(starsDelta(history, 100, today, 7)).toBe(5);
   });
 

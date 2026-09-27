@@ -54,7 +54,7 @@ export class TransactionsService {
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
   }
 
-  /** Доходы/расходы по валютам и топ категорий расходов за период. */
+  /** Income/expenses by currency and top expense categories for a period. */
   async summary(userId: string, query: TransactionQuery): Promise<FinanceSummary> {
     const where = this.filter(userId, query);
     const total = sum(transactions.amount).mapWith(Number);

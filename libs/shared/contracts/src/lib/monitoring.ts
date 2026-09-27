@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const monitorInputSchema = z.object({
   projectId: z.uuid(),
-  /** Проверяемый адрес: главная страница или health-эндпоинт API. */
+  /** The checked address: the home page or an API health endpoint. */
   url: z.url({ protocol: /^https?$/ }),
 });
 export type MonitorInput = z.infer<typeof monitorInputSchema>;
@@ -10,9 +10,9 @@ export type MonitorInput = z.infer<typeof monitorInputSchema>;
 export type MonitorStatus = 'up' | 'down' | 'pending';
 
 export interface ResponseTimePoint {
-  /** Начало часа, ISO. */
+  /** Start of the hour, ISO. */
   at: string;
-  /** Среднее время ответа за час, мс. */
+  /** Average response time for the hour, ms. */
   avgMs: number;
 }
 
@@ -25,12 +25,12 @@ export interface Monitor {
   lastStatusCode: number | null;
   lastResponseMs: number | null;
   lastError: string | null;
-  /** С какого момента недоступен (если сейчас down). */
+  /** Since when it has been unavailable (if it is down now). */
   downSince: string | null;
-  /** Когда истекает SSL-сертификат (для https). */
+  /** When the SSL certificate expires (for https). */
   sslExpiresAt: string | null;
-  /** Доля успешных проверок, 0–100; `null`, если проверок ещё не было. */
+  /** Share of successful checks, 0–100; `null` if there have been no checks yet. */
   uptime: { day: number | null; week: number | null; month: number | null };
-  /** Средний ответ по часам за последние 24 часа. */
+  /** Average response per hour over the last 24 hours. */
   responseTimes: ResponseTimePoint[];
 }

@@ -24,7 +24,7 @@ export class AuthService {
   readonly user = signal<CurrentUser | null>(null);
   readonly isLoggedIn = computed(() => this.token() !== null);
 
-  /** Публичные настройки сервера: доступна ли регистрация. */
+  /** Public server settings: whether sign-up is available. */
   config(): Promise<AuthConfig> {
     return firstValueFrom(this.http.get<AuthConfig>('/api/auth/config'));
   }
@@ -41,7 +41,7 @@ export class AuthService {
     );
   }
 
-  /** Подтягивает профиль по сохранённому токену (при старте приложения). */
+  /** Loads the profile using the saved token (on app start). */
   async restoreSession(): Promise<void> {
     if (!this.token()) {
       return;
@@ -74,7 +74,7 @@ export class AuthService {
   private startSession(response: LoginResponse): void {
     this.setToken(response.accessToken);
     this.user.set(response.user);
-    // Язык из профиля: если отличается от текущего, страница перезагрузится.
+    // Language from the profile: if it differs from the current one, the page reloads.
     applyLanguage(response.user.locale);
   }
 

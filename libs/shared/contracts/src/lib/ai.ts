@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 /**
- * Любой OpenAI-совместимый API. Пресеты подставляют адрес и модель по умолчанию,
- * `custom` — свой адрес (OpenRouter, LM Studio, прокси…).
+ * Any OpenAI-compatible API. Presets fill in the default address and model,
+ * `custom` — your own address (OpenRouter, LM Studio, a proxy…).
  */
 export const AI_PROVIDERS = ['deepseek', 'openai', 'ollama', 'custom'] as const;
 export type AiProvider = (typeof AI_PROVIDERS)[number];
@@ -18,9 +18,9 @@ export const aiSettingsInputSchema = z.object({
   provider: z.enum(AI_PROVIDERS),
   baseUrl: z.url(),
   model: z.string().trim().min(1).max(100),
-  /** Пусто — оставить сохранённый ключ (у Ollama ключа нет вовсе). */
+  /** Empty — keep the saved key (Ollama has no key at all). */
   apiKey: z.string().trim().max(500).optional(),
-  /** Утренний дайджест в 08:30 через уведомления. */
+  /** Morning digest at 08:30 via notifications. */
   morningDigest: z.boolean(),
 });
 export type AiSettingsInput = z.infer<typeof aiSettingsInputSchema>;
@@ -50,6 +50,6 @@ export type AiChatMessage = AiChatRequest['messages'][number];
 
 export interface AiChatResponse {
   reply: string;
-  /** Какие данные модель запрашивала — показываем под ответом. */
+  /** Which data the model requested — shown under the answer. */
   toolsUsed: string[];
 }

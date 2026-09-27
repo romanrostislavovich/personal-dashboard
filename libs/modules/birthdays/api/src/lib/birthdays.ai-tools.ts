@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService } from '@pd/api-core';
 import { BirthdaysService } from './birthdays.service';
 
-/** Доступ AI к дням рождения. */
+/** AI access to birthdays. */
 @Injectable()
 export class BirthdaysAiTools implements OnModuleInit {
   constructor(
@@ -15,11 +15,11 @@ export class BirthdaysAiTools implements OnModuleInit {
       name: 'birthdays_upcoming',
       module: 'birthdays',
       description:
-        'Дни рождения в ближайшие N дней (0 — сегодня): имя, дата, через сколько дней, ' +
-        'сколько исполнится, заметка (там бывают идеи подарков).',
+        'Birthdays in the next N days (0 — today): name, date, days until, ' +
+        'age they are turning, note (often contains gift ideas).',
       parameters: {
         type: 'object',
-        properties: { days: { type: 'number', description: 'Горизонт в днях, по умолчанию 30' } },
+        properties: { days: { type: 'number', description: 'Horizon in days, 30 by default' } },
       },
       handler: async (userId, args) => {
         const days = typeof args['days'] === 'number' ? args['days'] : 30;

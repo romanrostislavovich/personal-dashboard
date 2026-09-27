@@ -22,7 +22,7 @@ export class GithubOssController {
     private readonly tokens: GithubTokenService,
   ) {}
 
-  // --- Репозитории ---
+  // --- Repositories ---
 
   @Get('repos')
   list(@CurrentUser() user: AuthUser) {
@@ -45,7 +45,7 @@ export class GithubOssController {
     return this.repos.remove(user.id, id);
   }
 
-  /** Обновить данные сейчас, не дожидаясь ежечасной синхронизации. */
+  /** Refresh the data now without waiting for the hourly sync. */
   @Post('sync')
   @HttpCode(204)
   async syncAll(@CurrentUser() user: AuthUser) {
@@ -58,7 +58,7 @@ export class GithubOssController {
     return this.repos.syncOne(user.id, id);
   }
 
-  // --- Токен ---
+  // --- Token ---
 
   @Get('settings')
   settings(@CurrentUser() user: AuthUser) {

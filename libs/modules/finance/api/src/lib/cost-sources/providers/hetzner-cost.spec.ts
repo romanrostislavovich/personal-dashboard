@@ -38,7 +38,7 @@ describe('estimateHetznerMonthlyCost', () => {
     // 4.51 + 0.90 (backups) + 4.99 + 0.60 + 0.52 = 11.52
     expect(estimate.total).toBe(11.52);
     expect(estimate.currency).toBe('EUR');
-    // Бесплатный IPv6 не показываем отдельной строкой.
+    // Free IPv6 is not shown as a separate line.
     expect(estimate.items.map((item) => item.label)).toEqual([
       'web (cx22)',
       'web: backups',

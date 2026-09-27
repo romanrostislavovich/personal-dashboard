@@ -1,14 +1,14 @@
 export interface NotificationSettings {
   telegram: {
-    /** Бот настроен на сервере (задан TELEGRAM_BOT_TOKEN). */
+    /** The bot is configured on the server (TELEGRAM_BOT_TOKEN is set). */
     available: boolean;
-    /** Пользователь привязал свой Telegram-чат. */
+    /** The user has linked their Telegram chat. */
     connected: boolean;
   };
 }
 
 export interface TelegramLinkResponse {
-  /** Ссылка вида https://t.me/<bot>?start=<code>; открыть её и нажать «Start». */
+  /** A link like https://t.me/<bot>?start=<code>; open it and press "Start". */
   deepLink: string;
   expiresAt: string;
 }

@@ -7,7 +7,7 @@ import { MusicController } from './music.controller';
 import { SpotifyService } from './spotify.service';
 
 /**
- * Музыка: история и топы из Last.fm, «сейчас играет» из Spotify.
+ * Music: history and tops from Last.fm, "now playing" from Spotify.
  * API: `/api/music/*`.
  */
 @Module({

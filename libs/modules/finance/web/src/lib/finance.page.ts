@@ -31,8 +31,8 @@ import { TransactionFormData, TransactionFormDialog } from './transaction-form.d
 const DEFAULT_CURRENCY = 'EUR';
 
 /**
- * Финансы за месяц. «Кошелёк» (scope) переключает между всеми операциями,
- * личными и операциями конкретного проекта.
+ * Finance for a month. The "wallet" (scope) switches between all transactions,
+ * personal ones and those of a specific project.
  */
 @Component({
   selector: 'pd-finance-page',
@@ -60,16 +60,16 @@ export class FinancePage {
   private readonly dialog = inject(MatDialog);
   private readonly transloco = inject(TranslocoService);
 
-  // --- Фильтры ---
+  // --- Filters ---
   protected readonly month = signal(currentMonth());
-  /** '' — все, 'personal' — личные, иначе id проекта. */
+  /** '' — all, 'personal' — personal, otherwise a project id. */
   protected readonly scope = signal<string>('');
   private readonly query = computed<TransactionQuery>(() => ({
     ...monthRange(this.month()),
     scope: this.scope() || undefined,
   }));
 
-  // --- Данные ---
+  // --- Data ---
   protected readonly projects = inject(ProjectsApi).list();
   protected readonly transactions = this.api.transactions(this.query);
   protected readonly summary = this.api.summary(this.query);
@@ -132,7 +132,7 @@ export class FinancePage {
     }
   }
 
-  /** Общие данные для форм: проекты, категории и значения по умолчанию. */
+  /** Shared data for the forms: projects, categories and defaults. */
   private formContext() {
     const scope = this.scope();
     return {
@@ -140,7 +140,7 @@ export class FinancePage {
       categories: this.categories(),
       defaults: {
         currency: this.transactions.value()[0]?.currency ?? DEFAULT_CURRENCY,
-        // Если открыт кошелёк проекта — новая запись сразу в него.
+        // If a project wallet is open, a new record goes straight into it.
         projectId: scope && scope !== 'personal' ? scope : null,
       },
     };

@@ -39,7 +39,7 @@ export class MonitorsService {
       sql`, `,
     );
 
-    // Процент успешных проверок за сутки / неделю / 30 дней одним запросом.
+    // Percentage of successful checks for a day / week / 30 days in one query.
     const uptime = await this.db.execute<UptimeRow>(sql`
       SELECT monitor_id,
         ${uptimeFor('1 day')} AS day,
@@ -50,7 +50,7 @@ export class MonitorsService {
       GROUP BY monitor_id
     `);
 
-    // Среднее время ответа по часам за последние сутки (только успешные проверки).
+    // Average response time per hour over the last day (successful checks only).
     const responses = await this.db.execute<ResponseRow>(sql`
       SELECT monitor_id, date_trunc('hour', checked_at) AS hour, round(avg(response_ms))::int AS avg_ms
       FROM ${checkResults}
@@ -89,7 +89,7 @@ export class MonitorsService {
   }
 }
 
-/** Доля успешных проверок за период, 0–100 с одним знаком после запятой. */
+/** Share of successful checks for a period, 0–100 with one decimal place. */
 function uptimeFor(period: string) {
   const window = sql.raw(`checked_at > now() - interval '${period}'`);
   return sql`round(100.0 * count(*) FILTER (WHERE is_up AND ${window}) / NULLIF(count(*) FILTER (WHERE ${window}), 0), 1)::float`;

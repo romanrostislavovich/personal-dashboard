@@ -9,13 +9,13 @@ export type WowRegion = (typeof WOW_REGIONS)[number];
 export const gameAccountInputSchema = z.discriminatedUnion('game', [
   z.object({
     game: z.literal('dota2'),
-    /** Steam ID32, Steam ID64 или ссылка на профиль OpenDota/Dotabuff/Steam с числовым id. */
+    /** Steam ID32, Steam ID64 or an OpenDota/Dotabuff/Steam profile link with a numeric id. */
     steamId: z.string().trim().min(1).max(200),
   }),
   z.object({
     game: z.literal('wow'),
     region: z.enum(WOW_REGIONS),
-    /** Slug реалма: «Гордунни» → `gordunni`, «Howling Fjord» → `howling-fjord`. */
+    /** Realm slug: "Гордунни" → `gordunni`, "Howling Fjord" → `howling-fjord`. */
     realm: z
       .string()
       .trim()
@@ -33,7 +33,7 @@ export const wowCredentialsInputSchema = z.object({
 export type WowCredentialsInput = z.infer<typeof wowCredentialsInputSchema>;
 
 export interface GamesSettings {
-  /** Заданы ли ключи приложения Battle.net (нужны для WoW). */
+  /** Whether the Battle.net app keys are set (needed for WoW). */
   wowCredentials: boolean;
 }
 
@@ -61,7 +61,7 @@ export interface DotaSummary {
   personaName: string;
   avatarUrl: string | null;
   profileUrl: string;
-  /** Две цифры: медаль (1 Herald … 8 Immortal) и звёзды. */
+  /** Two digits: medal (1 Herald … 8 Immortal) and stars. */
   rankTier: number | null;
   leaderboardRank: number | null;
   last30Days: { wins: number; losses: number };
@@ -101,6 +101,6 @@ export interface GameAccount {
   displayName: string;
   lastSyncedAt: string | null;
   lastError: string | null;
-  /** `null`, пока не прошла первая синхронизация. */
+  /** `null` until the first sync has run. */
   summary: DotaSummary | WowSummary | null;
 }

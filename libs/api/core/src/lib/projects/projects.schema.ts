@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../users/users.schema';
 
-/** Твои сайты/сервисы. Модули (финансы, аналитика…) ссылаются на `projects.id`. */
+/** Your sites/services. Modules (finance, analytics…) reference `projects.id`. */
 export const projects = pgTable('projects', {
   id: uuid().primaryKey().defaultRandom(),
   userId: uuid()

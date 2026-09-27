@@ -3,7 +3,7 @@ import { AiService } from '@pd/api-core';
 import { DiaryQuery } from '@pd/contracts';
 import { DiaryService } from './diary.service';
 
-/** Язык ответа AiService.complete() добавляет сам — по профилю пользователя. */
+/** AiService.complete() adds the answer language itself — from the user profile. */
 const INSTRUCTION = [
   'You help the user keep a personal diary. Write a short, warm summary of the entries:',
   'main events, how the mood changed, recurring topics (by tags), what went well.',
@@ -11,7 +11,7 @@ const INSTRUCTION = [
   'up to 150 words, plain text without markdown, no inventions — only what is in the entries.',
 ].join(' ');
 
-/** AI-саммари дневника за период. */
+/** AI summary of the diary for a period. */
 @Injectable()
 export class DiarySummaryService {
   constructor(
@@ -19,7 +19,7 @@ export class DiarySummaryService {
     private readonly ai: AiService,
   ) {}
 
-  /** `null`, если за период нет записей — пересказывать нечего. */
+  /** `null` if there are no entries for the period — nothing to summarize. */
   async summarize(
     userId: string,
     { from, to }: Pick<DiaryQuery, 'from' | 'to'>,
@@ -30,7 +30,7 @@ export class DiarySummaryService {
     }
     const text = [...entries]
       .reverse()
-      .map((e) => `### ${e.day}${e.mood ? ` (настроение ${e.mood}/5)` : ''}\n${e.content}`)
+      .map((e) => `### ${e.day}${e.mood ? ` (mood ${e.mood}/5)` : ''}\n${e.content}`)
       .join('\n\n');
     return this.ai.complete(userId, INSTRUCTION, text);
   }

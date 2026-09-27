@@ -1,5 +1,5 @@
-# Локальная разработка:  docker compose up -d db      (только база)
-# Сервер / всё в Docker: docker compose up -d --build  (база + приложение на :3000)
+# Local development:     docker compose up -d db      (database only)
+# Server / all in Docker: docker compose up -d --build  (database + app on :3000)
 services:
   db:
     image: postgres:17-alpine
@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: dashboard
       POSTGRES_DB: dashboard
     ports:
-      # Порт на хосте; поменяй DB_PORT в .env, если 5432 уже занят.
+      # Host port; change DB_PORT in .env if 5432 is already taken.
       - '${DB_PORT:-5432}:5432'
     volumes:
       - db-data:/var/lib/postgresql/data

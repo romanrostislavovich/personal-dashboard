@@ -7,21 +7,21 @@ import { SpotifyAuthError, SpotifyClient, SpotifyTokens } from './clients/spotif
 
 const REFRESH_TOKEN_SECRET = 'music.spotify.refresh-token';
 const STATE_TTL_MS = 10 * 60 * 1000;
-/** Обновляем access-токен заранее, чтобы он не истёк посреди запроса. */
+/** Refresh the access token ahead of time so it does not expire mid-request. */
 const TOKEN_EXPIRY_MARGIN_MS = 60 * 1000;
 
 /**
- * Spotify: подключение через OAuth и «сейчас играет».
+ * Spotify: OAuth connection and "now playing".
  *
- * 1. `connectUrl()` — адрес страницы входа Spotify (с одноразовым `state`).
- * 2. Spotify возвращает пользователя на `/api/music/spotify/callback?code&state`.
- * 3. `handleCallback()` меняет code на токены; refresh-токен хранится зашифрованным.
+ * 1. `connectUrl()` — the Spotify sign-in page URL (with a one-time `state`).
+ * 2. Spotify sends the user back to `/api/music/spotify/callback?code&state`.
+ * 3. `handleCallback()` exchanges the code for tokens; the refresh token is stored encrypted.
  */
 @Injectable()
 export class SpotifyService {
   private readonly client: SpotifyClient | null;
   private readonly publicUrl: string;
-  // Одноразовые state и access-токены живут в памяти — для одного инстанса API достаточно.
+  // One-time states and access tokens live in memory — enough for a single API instance.
   private readonly pendingStates = new Map<string, { userId: string; expiresAt: number }>();
   private readonly accessTokens = new Map<string, SpotifyTokens>();
 
@@ -55,7 +55,7 @@ export class SpotifyService {
     return this.client.authorizeUrl(state);
   }
 
-  /** Возвращает адрес, куда перенаправить браузер после входа в Spotify. */
+  /** Returns the URL to redirect the browser to after Spotify sign-in. */
   async handleCallback(code: string | undefined, state: string | undefined): Promise<string> {
     const pending = state ? this.pendingStates.get(state) : undefined;
     if (state) {
@@ -86,7 +86,7 @@ export class SpotifyService {
       return await this.client.currentlyPlaying(accessToken);
     } catch (error) {
       if (error instanceof SpotifyAuthError) {
-        // Токен отозвали или он истёк раньше срока — в следующий раз получим новый.
+        // The token was revoked or expired early — a new one will be obtained next time.
         this.accessTokens.delete(userId);
         return null;
       }
@@ -109,7 +109,7 @@ export class SpotifyService {
       return tokens.accessToken;
     } catch (error) {
       if (error instanceof SpotifyAuthError) {
-        // Пользователь отозвал доступ в Spotify — считаем, что Spotify отключён.
+        // The user revoked access in Spotify — treat Spotify as disconnected.
         await this.disconnect(userId);
         return null;
       }

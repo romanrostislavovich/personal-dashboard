@@ -7,7 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Project, ProjectInput } from '@pd/contracts';
 
-/** Диалог создания/редактирования. Возвращает `ProjectInput` или `undefined` при отмене. */
+/** Create/edit dialog. Returns a `ProjectInput`, or `undefined` if cancelled. */
 @Component({
   selector: 'pd-project-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,

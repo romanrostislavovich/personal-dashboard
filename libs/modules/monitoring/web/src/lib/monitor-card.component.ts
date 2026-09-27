@@ -10,7 +10,7 @@ import { SparklineComponent } from '@pd/web-core';
 import { StatusBadgeComponent } from './status-badge.component';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-/** За сколько дней до истечения SSL подсвечивать предупреждение. */
+/** How many days before SSL expiry to highlight a warning. */
 const SSL_WARNING_DAYS = 14;
 
 @Component({
@@ -96,7 +96,7 @@ const SSL_WARNING_DAYS = 14;
 
         <p class="meta">
           @let days = sslDaysLeft();
-          <!-- Сравниваем с null явно: 0 дней — тоже важная информация. -->
+          <!-- Compare with null explicitly: 0 days is important information too. -->
           @if (days !== null) {
             <span [class.warning]="days <= sslWarningDays">
               🔒 {{ 'monitoring.sslExpires' | transloco: { days } }}

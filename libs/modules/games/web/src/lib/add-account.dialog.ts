@@ -10,7 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Game, GameAccountInput, WOW_REGIONS, WowRegion } from '@pd/contracts';
 
-/** Добавление игрового аккаунта: Steam ID для Dota или регион/реалм/имя для WoW. */
+/** Adding a game account: a Steam ID for Dota or region/realm/name for WoW. */
 @Component({
   selector: 'pd-add-game-account-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -104,7 +104,7 @@ export class AddGameAccountDialog {
     initialValue: this.form.controls.game.value,
   });
 
-  /** Проверяем только поля выбранной игры. */
+  /** Validate only the fields of the selected game. */
   protected isValid(): boolean {
     const c = this.form.controls;
     return this.game() === 'dota2' ? c.steamId.valid : c.realm.valid && c.name.valid;

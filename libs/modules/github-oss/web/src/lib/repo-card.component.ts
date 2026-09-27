@@ -8,7 +8,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { TrackedRepo } from '@pd/contracts';
 import { SparklineComponent } from '@pd/web-core';
 
-/** Карточка репозитория: ключевые цифры, прирост звёзд и график за 30 дней. */
+/** Repository card: key figures, star growth and a 30-day chart. */
 @Component({
   selector: 'pd-repo-card',
   changeDetection: ChangeDetectionStrategy.OnPush,

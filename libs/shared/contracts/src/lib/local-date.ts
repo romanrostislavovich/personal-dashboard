@@ -1,7 +1,7 @@
 /**
- * Календарная дата без времени и часового пояса в формате `YYYY-MM-DD`.
- * Используется везде, где важен именно «день» (дни рождения, дата операции),
- * чтобы не ловить сдвиги из-за часовых поясов.
+ * A calendar date without time or time zone in `YYYY-MM-DD` format.
+ * Used wherever the "day" itself matters (birthdays, transaction date)
+ * to avoid shifts caused by time zones.
  */
 export type LocalDate = string;
 
@@ -22,7 +22,7 @@ export function parseLocalDate(value: LocalDate): DateParts {
   return { year, month, day };
 }
 
-/** Сегодняшняя дата в указанном часовом поясе (например, `Europe/Warsaw`). */
+/** Today's date in the given time zone (for example, `Europe/Warsaw`). */
 export function todayIn(timeZone: string, now: Date = new Date()): DateParts {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone,
@@ -42,13 +42,13 @@ export function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-/** Дата на `days` дней позже (или раньше при отрицательном значении). */
+/** The date `days` days later (or earlier for a negative value). */
 export function addDays({ year, month, day }: DateParts, days: number): DateParts {
   const date = new Date(Date.UTC(year, month - 1, day + days));
   return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate() };
 }
 
-/** Количество дней между двумя датами (b − a). */
+/** Number of days between two dates (b − a). */
 export function daysBetween(a: DateParts, b: DateParts): number {
   const msPerDay = 24 * 60 * 60 * 1000;
   return Math.round((toUtc(b) - toUtc(a)) / msPerDay);

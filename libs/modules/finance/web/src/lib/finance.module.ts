@@ -1,6 +1,6 @@
 import { WebDashboardModule } from '@pd/web-core';
 
-/** Web-часть модуля «Финансы». Подключается в apps/web/src/app/modules.ts. */
+/** Web part of the Finance module. Plugged in at apps/web/src/app/modules.ts. */
 export const financeModule: WebDashboardModule = {
   id: 'finance',
   nav: { labelKey: 'finance.title', icon: 'account_balance_wallet' },

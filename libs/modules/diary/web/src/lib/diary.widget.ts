@@ -7,7 +7,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { SparklineComponent } from '@pd/web-core';
 import { DiaryApi } from './diary.api';
 
-/** Виджет главной: серия дней, запись за сегодня и настроение за месяц. */
+/** Home widget: day streak, today's entry and the month's mood. */
 @Component({
   selector: 'pd-diary-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,

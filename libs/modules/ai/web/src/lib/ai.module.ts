@@ -1,8 +1,8 @@
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
- * Web-часть AI. Бэкенд — в ядре (AiService); доступ к данным модели дают
- * сами модули через свои `*.ai-tools.ts`.
+ * Web part of the AI. The backend is in the core (AiService); modules give the model
+ * access to their data through their `*.ai-tools.ts`.
  */
 export const aiModule: WebDashboardModule = {
   id: 'ai',

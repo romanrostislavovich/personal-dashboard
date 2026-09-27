@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { SchedulerService } from '@pd/api-core';
 import { LastfmService } from './lastfm.service';
 
-/** Каждые 15 минут докачивает новые прослушивания из Last.fm. */
+/** Fetches new plays from Last.fm every 15 minutes. */
 @Injectable()
 export class LastfmSyncJob implements OnModuleInit {
   constructor(

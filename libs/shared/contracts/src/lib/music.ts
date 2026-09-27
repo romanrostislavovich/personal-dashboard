@@ -3,7 +3,7 @@ import { LocalDate } from './local-date';
 
 export const lastfmSettingsInputSchema = z.object({
   username: z.string().trim().min(2).max(50),
-  /** Ключ приложения Last.fm: https://www.last.fm/api/account/create */
+  /** Last.fm application key: https://www.last.fm/api/account/create */
   apiKey: z
     .string()
     .trim()
@@ -14,7 +14,7 @@ export type LastfmSettingsInput = z.infer<typeof lastfmSettingsInputSchema>;
 export interface MusicSettings {
   lastfm: { username: string | null; lastSyncedAt: string | null; lastError: string | null };
   spotify: {
-    /** На сервере заданы SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET. */
+    /** SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET are set on the server. */
     available: boolean;
     connected: boolean;
   };
@@ -28,7 +28,7 @@ export interface NowPlaying {
   imageUrl: string | null;
   url: string | null;
   isPlaying: boolean;
-  /** Только у Spotify. */
+  /** Spotify only. */
   progressMs: number | null;
   durationMs: number | null;
 }
@@ -38,7 +38,7 @@ export type MusicTopPeriod = (typeof MUSIC_TOP_PERIODS)[number];
 
 export interface MusicTopItem {
   name: string;
-  /** Для треков и альбомов. */
+  /** For tracks and albums. */
   artist: string | null;
   playcount: number;
   url: string;
@@ -60,10 +60,10 @@ export interface RecentTrack {
 }
 
 export interface MusicStats {
-  /** Всего скробблов в Last.fm за всё время. */
+  /** Total Last.fm scrobbles of all time. */
   totalScrobbles: number | null;
   today: number;
-  /** Прослушиваний по дням за последние 30 дней (из локальной истории). */
+  /** Plays per day for the last 30 days (from the local history). */
   playsByDay: { day: LocalDate; plays: number }[];
   recent: RecentTrack[];
 }

@@ -1,7 +1,7 @@
 import { boolean, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../users/users.schema';
 
-/** Настройки AI пользователя. Ключ API хранится отдельно в SecretsService (`ai.api-key`). */
+/** User AI settings. The API key is stored separately in SecretsService (`ai.api-key`). */
 export const aiSettings = pgTable('ai_settings', {
   userId: uuid()
     .primaryKey()

@@ -3,8 +3,8 @@ import { Locale, SUPPORTED_LOCALES } from '@pd/contracts';
 const STORAGE_KEY = 'pd.lang';
 
 /**
- * Язык интерфейса при старте: сохранённый выбор → язык браузера → английский.
- * Язык из профиля применяется после входа (см. AuthService) через `applyLanguage`.
+ * UI language at startup: saved choice → browser language → English.
+ * The profile language is applied after sign-in (see AuthService) via `applyLanguage`.
  */
 export function initialLanguage(): Locale {
   return (
@@ -15,8 +15,8 @@ export function initialLanguage(): Locale {
 }
 
 /**
- * Переключает язык. Форматы дат и чисел (LOCALE_ID) задаются при старте Angular,
- * поэтому после смены языка страница перезагружается.
+ * Switches the language. Date and number formats (LOCALE_ID) are set when Angular starts,
+ * so the page reloads after a language change.
  */
 export function applyLanguage(locale: string): void {
   const next = toSupported(locale);
@@ -26,7 +26,7 @@ export function applyLanguage(locale: string): void {
   try {
     localStorage.setItem(STORAGE_KEY, next);
   } catch {
-    // Хранилище недоступно — язык продержится до перезагрузки.
+    // Storage is unavailable — the language lasts until a reload.
   }
   location.reload();
 }

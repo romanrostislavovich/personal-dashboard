@@ -53,7 +53,7 @@
 .assistant .bubble {
   background: var(--mat-sys-surface-container-high);
   border-bottom-left-radius: 4px;
-  // Markdown рендерится в HTML — переносы строк уже есть.
+  // Markdown is rendered to HTML — line breaks are already there.
   white-space: normal;
 
   ::ng-deep p:first-child {

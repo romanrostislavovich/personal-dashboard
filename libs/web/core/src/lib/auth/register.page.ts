@@ -10,7 +10,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { initialLanguage } from '../i18n/language';
 import { AuthService } from './auth.service';
 
-/** Регистрация — доступна, только если сервер разрешает (ALLOW_REGISTRATION=true). */
+/** Sign-up — available only if the server allows it (ALLOW_REGISTRATION=true). */
 @Component({
   selector: 'pd-register-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -106,7 +106,7 @@ export class RegisterPage {
     this.loading.set(true);
     this.errorKey.set(null);
     try {
-      // Язык нового аккаунта — тот, на котором он сейчас видит интерфейс.
+      // The new account's language is the one the UI is currently shown in.
       await this.auth.register({ ...this.form.getRawValue(), locale: initialLanguage() });
       await this.router.navigateByUrl('/');
     } catch (error) {

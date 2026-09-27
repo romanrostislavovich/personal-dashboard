@@ -1,6 +1,6 @@
 import { SecretsService } from './secrets.service';
 
-/** Проверяем только шифрование; работа с БД здесь не нужна. */
+/** Only encryption is tested here; no database needed. */
 function createService(encryptionKey: string) {
   const config = { get: () => encryptionKey };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

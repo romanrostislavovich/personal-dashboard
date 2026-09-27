@@ -8,7 +8,7 @@ import { enabledModules } from './modules';
   imports: [
     CoreModule,
     ...enabledModules,
-    // В продакшене (Docker) API раздаёт и собранный фронтенд — один контейнер на всё.
+    // In production (Docker) the API also serves the built frontend — one container for everything.
     ServeStaticModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: AppConfig) => {

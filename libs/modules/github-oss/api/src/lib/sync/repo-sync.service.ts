@@ -8,7 +8,7 @@ import { fetchNpmWeeklyDownloads } from '../clients/npm.client';
 import { repoDailyStats, TrackedRepoRow, trackedRepos } from '../github-oss.schema';
 import { crossedStarMilestone } from '../stats/star-stats';
 
-/** Что нового произошло с репозиторием с прошлой синхронизации — для уведомлений. */
+/** What happened to the repository since the last sync — for notifications. */
 export interface RepoSyncEvents {
   fullName: string;
   newIssues: GithubIssue[];
@@ -18,8 +18,8 @@ export interface RepoSyncEvents {
 }
 
 /**
- * Синхронизация одного репозитория: тянет свежие данные из GitHub и npm,
- * обновляет текущие показатели и дневную историю, возвращает события.
+ * Syncs one repository: fetches fresh data from GitHub and npm,
+ * updates the current figures and daily history, returns events.
  */
 @Injectable()
 export class RepoSyncService {
@@ -35,7 +35,7 @@ export class RepoSyncService {
       github.getLatestRelease(repo.fullName),
       repo.npmPackage ? fetchNpmWeeklyDownloads(repo.npmPackage) : Promise.resolve(null),
     ]);
-    // При первой синхронизации не засыпаем уведомлениями про старые issues.
+    // On the first sync, do not flood notifications about old issues.
     const created = repo.lastSyncedAt
       ? await github.listCreatedSince(repo.fullName, repo.lastSyncedAt)
       : [];

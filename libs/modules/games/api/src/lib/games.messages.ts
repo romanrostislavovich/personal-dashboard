@@ -5,7 +5,7 @@ const MEDALS = {
   ru: ['', 'Рекрут', 'Страж', 'Рыцарь', 'Герой', 'Легенда', 'Властелин', 'Божество', 'Титан'],
 };
 
-/** Тексты уведомлений модуля; язык выбирается по `user.locale`. */
+/** Module notification texts; the language is picked by `user.locale`. */
 const messages = {
   en: {
     title: '🎮 Games',
@@ -29,7 +29,7 @@ export function gamesMessages(locale: string) {
   return pickMessages(messages, locale);
 }
 
-/** rank_tier = медаль × 10 + звёзды. */
+/** rank_tier = medal × 10 + stars. */
 function medal(rankTier: number, names: string[]): string {
   const name = names[Math.floor(rankTier / 10)] ?? '?';
   const stars = rankTier % 10;

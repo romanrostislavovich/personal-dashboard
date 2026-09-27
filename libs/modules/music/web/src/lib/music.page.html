@@ -4,7 +4,7 @@
 
 @if (hasSource()) {
   <div class="top-row">
-    <!-- Сейчас играет -->
+    <!-- Now playing -->
     <mat-card appearance="outlined">
       <mat-card-content class="padded">
         @if (nowPlaying.value(); as track) {
@@ -21,7 +21,7 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Статистика прослушиваний -->
+    <!-- Listening statistics -->
     @if (stats.value(); as s) {
       <mat-card appearance="outlined">
         <mat-card-content class="padded stats">
@@ -48,7 +48,7 @@
     }
   </div>
 
-  <!-- Топы за период (из Last.fm) -->
+  <!-- Tops for a period (from Last.fm) -->
   @if (settings.value()?.lastfm?.username) {
     <mat-card appearance="outlined" class="tops">
       <mat-card-header class="tops-header">
@@ -75,7 +75,7 @@
     </mat-card>
   }
 
-  <!-- Недавние прослушивания -->
+  <!-- Recent plays -->
   @if (stats.value()?.recent?.length) {
     <mat-card appearance="outlined" class="recent">
       <mat-card-header>

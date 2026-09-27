@@ -4,8 +4,8 @@ import { githubOssMessages, hasNews } from '../github-oss.messages';
 import { ReposService } from '../repos.service';
 
 /**
- * Каждый час обновляет статистику репозиториев и присылает новости:
- * новые issues/PR, релизы, круглые отметки по звёздам.
+ * Updates repository statistics hourly and sends news:
+ * new issues/PRs, releases, round star milestones.
  */
 @Injectable()
 export class GithubSyncJob implements OnModuleInit {

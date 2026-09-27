@@ -35,7 +35,7 @@
   align-items: start;
 }
 
-// На узком экране список — над редактором.
+// On a narrow screen the list goes above the editor.
 @media (max-width: 800px) {
   .layout {
     grid-template-columns: 1fr;

@@ -15,7 +15,7 @@ import { z } from 'zod';
 import { DiarySummaryService } from './diary-summary.service';
 import { DiaryService } from './diary.service';
 
-/** `:day` — дата записи `YYYY-MM-DD`. */
+/** `:day` is the entry date `YYYY-MM-DD`. */
 const dayPipe = new ZodValidationPipe(z.iso.date());
 
 @Controller('diary')
@@ -33,7 +33,7 @@ export class DiaryController {
     return this.diary.list(user.id, query);
   }
 
-  /** Запись дня или `null`, если её нет. */
+  /** The day's entry, or `null` if there is none. */
   @Get('entries/:day')
   get(@CurrentUser() user: AuthUser, @Param('day', dayPipe) day: string) {
     return this.diary.get(user.id, day);
@@ -54,7 +54,7 @@ export class DiaryController {
     return this.diary.remove(user.id, day);
   }
 
-  /** AI-саммари записей за период (нужен настроенный AI). */
+  /** AI summary of entries for a period (requires a configured AI). */
   @Post('summary')
   async summary(
     @CurrentUser() user: AuthUser,

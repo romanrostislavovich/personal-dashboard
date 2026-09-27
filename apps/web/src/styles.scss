@@ -1,6 +1,6 @@
 @use '@angular/material' as mat;
 
-// Тема Material 3. Светлая/тёмная выбирается по настройкам системы.
+// Material 3 theme. Light/dark follows the system setting.
 html {
   color-scheme: light dark;
   @include mat.theme(
@@ -28,7 +28,7 @@ a {
   color: var(--mat-sys-primary);
 }
 
-// --- Общие классы страниц, используются модулями ---
+// --- Shared page classes used by modules ---
 
 .page-header {
   display: flex;

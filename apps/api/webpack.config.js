@@ -17,7 +17,7 @@ module.exports = {
       tsConfig: './tsconfig.app.json',
       assets: [
         './src/assets',
-        // SQL-миграции Drizzle применяются при старте API (см. DatabaseModule).
+        // Drizzle SQL migrations are applied when the API starts (see DatabaseModule).
         { input: './migrations', glob: '**/*', output: 'migrations' },
       ],
       optimization: false,

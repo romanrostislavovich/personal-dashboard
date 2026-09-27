@@ -37,7 +37,7 @@ export class AuthService implements OnApplicationBootstrap {
     @Inject(ConfigService) private readonly config: AppConfig,
   ) {}
 
-  /** При первом запуске создаём администратора из ADMIN_EMAIL / ADMIN_PASSWORD. */
+  /** On first start, create the administrator from ADMIN_EMAIL / ADMIN_PASSWORD. */
   async onApplicationBootstrap(): Promise<void> {
     if ((await this.users.count()) > 0) {
       return;
@@ -69,7 +69,7 @@ export class AuthService implements OnApplicationBootstrap {
     return this.issueToken(user);
   }
 
-  /** Регистрация — только если сервер разрешает (ALLOW_REGISTRATION=true). */
+  /** Sign-up works only if the server allows it (ALLOW_REGISTRATION=true). */
   async register(input: z.output<typeof registerSchema>): Promise<LoginResponse> {
     if (!this.publicConfig().registrationEnabled) {
       throw new ForbiddenException('Registration is disabled');

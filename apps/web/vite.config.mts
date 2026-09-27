@@ -19,7 +19,7 @@ export default defineConfig(() => ({
     environment: 'jsdom',
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     setupFiles: ['src/test-setup.ts'],
-    // apps/web — тонкий хост без своей логики; тесты живут в библиотеках.
+    // apps/web is a thin host without its own logic; tests live in the libraries.
     passWithNoTests: true,
     reporters: ['default'],
     coverage: {

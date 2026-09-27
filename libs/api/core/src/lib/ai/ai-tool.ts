@@ -1,40 +1,40 @@
 /**
- * Инструмент, через который AI получает данные модуля. Модуль регистрирует
- * инструменты в `onModuleInit` (файл `<модуль>.ai-tools.ts`):
+ * A tool through which the AI gets a module's data. A module registers
+ * tools in `onModuleInit` (file `<module>.ai-tools.ts`):
  *
  * ```ts
  * ai.registerTool({
  *   name: 'diary_get_entries',
  *   module: 'diary',
- *   description: 'Записи дневника за период',
+ *   description: 'Diary entries for a period',
  *   parameters: { type: 'object', properties: { from: { type: 'string' } }, required: ['from'] },
  *   handler: (userId, args) => this.diary.list(userId, args),
  * });
  * ```
  *
- * Модель сама решает, какие инструменты вызвать, чтобы ответить на вопрос.
+ * The model decides which tools to call to answer the question.
  */
 export interface AiTool {
-  /** Только латиница, цифры, `_` и `-`; с префиксом модуля. */
+  /** Latin letters, digits, `_` and `-` only; prefixed with the module id. */
   name: string;
-  /** id модуля — для подписи «посмотрел: дневник, финансы». */
+  /** Module id — for the "looked at: diary, finance" caption. */
   module: string;
-  /** Описание для модели: что возвращает и когда полезно. */
+  /** Description for the model: what it returns and when it is useful. */
   description: string;
-  /** JSON Schema аргументов. */
+  /** JSON Schema of the arguments. */
   parameters: Record<string, unknown>;
   handler: (userId: string, args: Record<string, unknown>) => Promise<unknown>;
 }
 
-/** JSON Schema для инструмента без аргументов. */
+/** JSON Schema for a tool without arguments. */
 export const NO_PARAMETERS = { type: 'object', properties: {} } as const;
 
-/** Частый случай: период `from`–`to` в формате YYYY-MM-DD. */
+/** Common case: a `from`–`to` period in YYYY-MM-DD format. */
 export const PERIOD_PARAMETERS = {
   type: 'object',
   properties: {
-    from: { type: 'string', description: 'Начало периода, YYYY-MM-DD' },
-    to: { type: 'string', description: 'Конец периода включительно, YYYY-MM-DD' },
+    from: { type: 'string', description: 'Start of the period, YYYY-MM-DD' },
+    to: { type: 'string', description: 'End of the period, inclusive, YYYY-MM-DD' },
   },
   required: ['from', 'to'],
 } as const;

@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { achievementTier, AchievementsService } from '@pd/api-core';
 import { LastfmService } from './lastfm.service';
 
-/** Ачивки музыки: скробблы в Last.fm за всё время и рекорд прослушиваний за день. */
+/** Music achievements: all-time Last.fm scrobbles and the record number of plays in a day. */
 @Injectable()
 export class MusicAchievements implements OnModuleInit {
   constructor(

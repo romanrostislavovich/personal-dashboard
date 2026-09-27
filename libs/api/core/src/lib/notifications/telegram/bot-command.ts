@@ -2,7 +2,7 @@ import { LocalizedText } from '../../i18n/locale';
 import { UserRow } from '../../users/users.schema';
 
 /**
- * Команда Telegram-бота, которую добавляет модуль. Пример из дневника:
+ * A Telegram bot command added by a module. Example from the diary:
  *
  * ```ts
  * telegram.registerCommand({
@@ -12,16 +12,16 @@ import { UserRow } from '../../users/users.schema';
  * });
  * ```
  *
- * Регистрировать нужно в `onModuleInit` — бот подключает команды при старте приложения.
+ * Register it in `onModuleInit` — the bot attaches commands when the app starts.
  */
 export interface BotCommand {
-  /** Без слэша, латиницей: `d` → `/d`. */
+  /** Without the slash, Latin letters: `d` → `/d`. */
   command: string;
-  /** Подсказка в меню команд Telegram — на каждом языке. */
+  /** Hint in the Telegram command menu — one per language. */
   description: LocalizedText;
   /**
-   * Вызывается только для пользователей, которые привязали Telegram.
-   * `args` — текст после команды. Возвращает ответ бота (обычный текст).
+   * Called only for users who have linked Telegram.
+   * `args` is the text after the command. Returns the bot reply (plain text).
    */
   handler: (user: UserRow, args: string) => Promise<string>;
 }

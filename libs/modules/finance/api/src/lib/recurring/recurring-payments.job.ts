@@ -3,7 +3,7 @@ import { NotificationsService, SchedulerService, UsersService } from '@pd/api-co
 import { financeMessages } from '../finance.messages';
 import { RecurringPaymentsService } from './recurring-payments.service';
 
-/** Каждое утро проводит регулярные платежи, у которых наступил день списания. */
+/** Every morning makes the recurring payments whose charge day has come. */
 @Injectable()
 export class RecurringPaymentsJob implements OnModuleInit {
   constructor(

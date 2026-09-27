@@ -11,7 +11,7 @@ import { BirthdaysApi } from './birthdays.api';
 const WIDGET_DAYS_AHEAD = 30;
 const WIDGET_MAX_ITEMS = 5;
 
-/** Виджет главной: ближайшие дни рождения на месяц вперёд. */
+/** Home widget: birthdays in the coming month. */
 @Component({
   selector: 'pd-upcoming-birthdays-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,

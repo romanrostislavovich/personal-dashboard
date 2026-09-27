@@ -6,7 +6,7 @@ import { fetchSslExpiry } from './checks/ssl-check';
 import { checkResults, MonitorRow, monitors } from './monitoring.schema';
 import { applyCheck, MonitorEvent } from './state/monitor-state';
 
-/** Событие для уведомления вместе с тем, кому и про что его отправлять. */
+/** A notification event together with whom and what to send it about. */
 export interface MonitorNotice {
   userId: string;
   projectName: string;
@@ -24,12 +24,12 @@ export interface SslNotice {
 
 const RESULTS_RETENTION_DAYS = 35;
 
-/** Выполняет проверки и обновляет состояние мониторов. */
+/** Runs checks and updates monitor state. */
 @Injectable()
 export class CheckerService {
   constructor(@Inject(DB) private readonly db: Database) {}
 
-  /** Проверяет все мониторы всех пользователей; возвращает события «упал/поднялся». */
+  /** Checks all monitors of all users; returns "down/up" events. */
   async checkAll(): Promise<MonitorNotice[]> {
     const rows = await this.monitorsWithProjects();
     const notices = await Promise.all(
@@ -66,7 +66,7 @@ export class CheckerService {
       : null;
   }
 
-  /** Обновляет даты SSL-сертификатов; возвращает все https-мониторы с известной датой. */
+  /** Updates SSL certificate dates; returns all https monitors with a known date. */
   async refreshSsl(): Promise<SslNotice[]> {
     const rows = await this.monitorsWithProjects();
     const notices: SslNotice[] = [];
@@ -79,7 +79,7 @@ export class CheckerService {
     return notices;
   }
 
-  /** Первая проверка сразу после добавления, чтобы не ждать 5 минут до появления статуса. */
+  /** The first check right after adding, so the status shows up without waiting 5 minutes. */
   async checkNew(monitor: MonitorRow): Promise<void> {
     await Promise.all([this.checkOne(monitor, ''), this.updateSsl(monitor)]);
   }
@@ -95,7 +95,7 @@ export class CheckerService {
     return expiresAt;
   }
 
-  /** Старые результаты проверок больше не нужны: статистика считается максимум за 30 дней. */
+  /** Old check results are not needed anymore: statistics cover at most 30 days. */
   async deleteOldResults(): Promise<void> {
     await this.db
       .delete(checkResults)

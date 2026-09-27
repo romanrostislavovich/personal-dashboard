@@ -7,7 +7,7 @@ import { MonitoringJobs } from './monitoring.jobs';
 import { MonitorsService } from './monitors.service';
 
 /**
- * Мониторинг продакшн-проектов: доступность, время ответа, SSL-сертификаты.
+ * Production project monitoring: availability, response time, SSL certificates.
  * API: `/api/monitoring/*`.
  */
 @Module({

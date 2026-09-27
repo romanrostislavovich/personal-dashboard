@@ -30,13 +30,13 @@ export interface WowCompletedAchievement {
   completedAt: Date;
 }
 
-/** Язык ответов: для европейского региона — русский. */
+/** Response language: Russian for the European region. */
 const LOCALES: Record<WowRegion, string> = { eu: 'ru_RU', us: 'en_US', kr: 'ko_KR', tw: 'zh_TW' };
 
 /**
- * Battle.net API (Profile API World of Warcraft). Доступ по ключам приложения
- * с develop.battle.net (client credentials) — входить под аккаунтом Blizzard не нужно,
- * данные персонажа публичные.
+ * Battle.net API (World of Warcraft Profile API). Access with app keys
+ * from develop.battle.net (client credentials) — no need to sign in with a Blizzard account,
+ * character data is public.
  */
 export class BattlenetClient {
   private token: { value: string; expiresAt: number } | null = null;
@@ -46,7 +46,7 @@ export class BattlenetClient {
     private readonly clientSecret: string,
   ) {}
 
-  /** Проверка ключей: просто получаем токен. */
+  /** Key check: just obtain a token. */
   async verify(): Promise<void> {
     await this.accessToken();
   }
@@ -74,7 +74,7 @@ export class BattlenetClient {
     };
   }
 
-  /** Только завершённые ачивки (у незавершённых нет completed_timestamp). */
+  /** Completed achievements only (incomplete ones have no completed_timestamp). */
   async getCompletedAchievements(ref: WowCharacterRef): Promise<WowCompletedAchievement[]> {
     const data = await this.get<RawAchievements>(ref, '/achievements');
     return data.achievements
@@ -124,7 +124,7 @@ export class BattlenetClient {
       throw new Error(`Battle.net OAuth ${response.status}`);
     }
     const data = (await response.json()) as { access_token: string; expires_in: number };
-    // Обновляем токен за минуту до истечения.
+    // Refresh the token a minute before it expires.
     this.token = {
       value: data.access_token,
       expiresAt: Date.now() + (data.expires_in - 60) * 1000,
@@ -133,7 +133,7 @@ export class BattlenetClient {
   }
 }
 
-// --- Сырые ответы Battle.net (только используемые поля) ---
+// --- Raw Battle.net responses (only the fields we use) ---
 
 interface RawCharacter {
   name: string;

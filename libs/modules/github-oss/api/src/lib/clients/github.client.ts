@@ -6,7 +6,7 @@ export interface GithubRepo {
   description: string | null;
   stars: number;
   forks: number;
-  /** GitHub считает PR тоже issue, поэтому здесь issues + PR. */
+  /** GitHub counts PRs as issues too, so this is issues + PRs. */
   openIssuesAndPulls: number;
   pushedAt: string | null;
 }
@@ -29,8 +29,8 @@ export class GithubNotFoundError extends Error {}
 export class GithubAuthError extends Error {}
 
 /**
- * Минимальный клиент GitHub REST API — только то, что нужно модулю.
- * Без токена лимит — 60 запросов в час на IP, с токеном — 5000.
+ * Minimal GitHub REST API client — only what the module needs.
+ * Without a token the limit is 60 requests per hour per IP, with a token — 5000.
  */
 export class GithubClient {
   constructor(private readonly token: string | null) {}
@@ -49,8 +49,8 @@ export class GithubClient {
   }
 
   /**
-   * Количество открытых PR одним запросом: просим по 1 PR на страницу
-   * и берём номер последней страницы из заголовка Link.
+   * Number of open PRs in one request: ask for 1 PR per page
+   * and take the last page number from the Link header.
    */
   async countOpenPulls(fullName: string): Promise<number> {
     const response = await this.request(`/repos/${fullName}/pulls?state=open&per_page=1`);
@@ -71,15 +71,15 @@ export class GithubClient {
       };
     } catch (error) {
       if (error instanceof GithubNotFoundError) {
-        return null; // релизов ещё нет
+        return null; // no releases yet
       }
       throw error;
     }
   }
 
-  /** Issues и PR, созданные после `since`. */
+  /** Issues and PRs created after `since`. */
   async listCreatedSince(fullName: string, since: Date): Promise<GithubIssue[]> {
-    // Параметр `since` у GitHub фильтрует по дате обновления, поэтому дофильтровываем по created_at.
+    // GitHub's `since` parameter filters by update date, so we also filter by created_at.
     const issues = await this.get<RawIssue[]>(
       `/repos/${fullName}/issues?state=all&sort=created&direction=desc&per_page=30&since=${since.toISOString()}`,
     );
@@ -94,7 +94,7 @@ export class GithubClient {
       }));
   }
 
-  /** Проверка токена: вернёт логин владельца. */
+  /** Token check: returns the owner's login. */
   async getViewerLogin(): Promise<string> {
     return (await this.get<{ login: string }>('/user')).login;
   }
@@ -126,7 +126,7 @@ export class GithubClient {
   }
 }
 
-// --- Сырые ответы GitHub API (только используемые поля) ---
+// --- Raw GitHub API responses (only the fields we use) ---
 
 interface RawRepo {
   full_name: string;

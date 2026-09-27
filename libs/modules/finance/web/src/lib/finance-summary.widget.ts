@@ -8,7 +8,7 @@ import { FinanceApi } from './finance.api';
 import { FinanceTotalsComponent } from './finance-totals.component';
 import { currentMonth, monthAsDate, monthRange } from '@pd/web-core';
 
-/** Виджет главной: итоги текущего месяца по всем кошелькам. */
+/** Home widget: current month totals across all wallets. */
 @Component({
   selector: 'pd-finance-summary-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,

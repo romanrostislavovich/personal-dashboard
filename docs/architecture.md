@@ -133,5 +133,4 @@ To add a service (e.g. DigitalOcean):
 - **Dates:** calendar dates (birthday, transaction date) are stored as `YYYY-MM-DD` without a time zone;
   “today” is computed in `APP_TIMEZONE` (`todayIn()` in contracts).
 - **Money:** `numeric(14,2)`; amounts in different currencies are not converted and are summed separately.
-
-> Code comments are currently written in Russian. English comments in new code are welcome.
+- **Language:** code, comments and docs are in English; user-facing texts go through i18n (`en` + `ru`).

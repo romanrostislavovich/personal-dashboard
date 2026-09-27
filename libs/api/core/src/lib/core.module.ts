@@ -34,8 +34,8 @@ class HealthController {
 }
 
 /**
- * Ядро: конфиг, БД, авторизация, проекты, планировщик, секреты интеграций, уведомления, ачивки, AI.
- * Модуль глобальный — модули-фичи просто инжектят нужные сервисы
+ * Core: config, database, auth, projects, scheduler, integration secrets, notifications, achievements, AI.
+ * The module is global — feature modules simply inject the services they need
  * (DB, SchedulerService, SecretsService, NotificationsService, UsersService).
  */
 @Global()
@@ -72,7 +72,7 @@ class HealthController {
     AchievementsService,
     AiService,
     AiIntegrations,
-    // Новые каналы (Discord, e-mail…) добавляются в этот список.
+    // New channels (Discord, e-mail…) are added to this list.
     {
       provide: NOTIFICATION_CHANNELS,
       inject: [TelegramChannel],
@@ -85,11 +85,11 @@ class HealthController {
     SchedulerService,
     SecretsService,
     NotificationsService,
-    // Для команд бота: модули регистрируют их через registerCommand().
+    // For bot commands: modules register them via registerCommand().
     TelegramBotService,
-    // Для ачивок: модули регистрируют свои метрики через register().
+    // For achievements: modules register their metrics via register().
     AchievementsService,
-    // Для AI: модули дают доступ к своим данным через registerTool().
+    // For AI: modules expose their data via registerTool().
     AiService,
   ],
 })

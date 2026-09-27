@@ -12,8 +12,8 @@ import { RecurringPaymentsService } from './recurring/recurring-payments.service
 import { TransactionsService } from './transactions/transactions.service';
 
 /**
- * Финансы: личные и проектные доходы/расходы, регулярные платежи
- * и автоимпорт затрат из сервисов (Hetzner, DeepSeek). API: `/api/finance/*`.
+ * Finance: personal and project income/expenses, recurring payments
+ * and automatic cost import from services (Hetzner, DeepSeek). API: `/api/finance/*`.
  */
 @Module({
   controllers: [FinanceController, CostSourcesController],
@@ -23,7 +23,7 @@ import { TransactionsService } from './transactions/transactions.service';
     RecurringPaymentsJob,
     CostSourcesService,
     CostSourcesJob,
-    // Провайдеры затрат: новый сервис = новый класс здесь + id в COST_PROVIDERS.
+    // Cost providers: a new service = a new class here + an id in COST_PROVIDERS.
     HetznerCostProvider,
     DeepseekCostProvider,
     FinanceAchievements,

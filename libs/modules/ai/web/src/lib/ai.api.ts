@@ -2,7 +2,7 @@ import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { AiChatMessage, AiChatResponse, AiSettings, AiSettingsInput } from '@pd/contracts';
 
-/** AI-шлюз живёт в ядре (`/api/ai`); модули добавляют ему инструменты. */
+/** The AI gateway lives in the core (`/api/ai`); modules add tools to it. */
 @Injectable({ providedIn: 'root' })
 export class AiApi {
   private readonly http = inject(HttpClient);

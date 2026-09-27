@@ -20,7 +20,7 @@ import { Public } from './public.decorator';
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
-  /** Что показывать на странице входа (например, ссылку на регистрацию). */
+  /** What to show on the login page (for example, a sign-up link). */
   @Public()
   @Get('config')
   config(): AuthConfig {

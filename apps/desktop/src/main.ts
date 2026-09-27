@@ -4,12 +4,12 @@ import { loadSettings, saveSettings } from './settings-store';
 import { createTray } from './tray';
 
 /**
- * Desktop-оболочка дашборда. Сам дашборд — это web-приложение с сервера,
- * а оболочка добавляет то, чего нет у вкладки браузера:
- * иконку в трее, автозапуск вместе с системой и работу «в фоне».
+ * Desktop shell for the dashboard. The dashboard itself is the web app from the server;
+ * the shell adds what a browser tab lacks:
+ * a tray icon, start with the system and running "in the background".
  *
- * Адрес сервера: переменная DASHBOARD_URL (удобно для разработки)
- * или сохранённый в настройках; если его нет — показываем экран подключения.
+ * Server address: the DASHBOARD_URL variable (handy for development)
+ * or the one saved in settings; if there is none, the connection screen is shown.
  */
 
 let mainWindow: BrowserWindow | null = null;
@@ -18,7 +18,7 @@ let isQuitting = false;
 const startHidden = process.argv.includes('--hidden');
 
 if (!app.requestSingleInstanceLock()) {
-  // Уже запущено — второй экземпляр просто выходит, а первый разворачивает окно.
+  // Already running — the second instance just exits and the first one restores its window.
   app.quit();
 } else {
   app.on('second-instance', showWindow);
@@ -48,7 +48,7 @@ function createWindow(): BrowserWindow {
     },
   });
 
-  // Закрытие окна прячет его в трей; выход — через меню трея.
+  // Closing the window hides it to the tray; quitting is done from the tray menu.
   window.on('close', (event) => {
     if (!isQuitting) {
       event.preventDefault();
@@ -56,13 +56,13 @@ function createWindow(): BrowserWindow {
     }
   });
 
-  // Внешние ссылки (сайты проектов, t.me/…) открываем в системном браузере.
+  // External links (project sites, t.me/…) open in the system browser.
   window.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
   });
 
-  // Сервер недоступен — предлагаем проверить адрес.
+  // The server is unreachable — suggest checking the address.
   window.webContents.on('did-fail-load', (_event, _code, _description, url, isMainFrame) => {
     if (isMainFrame && !url.startsWith('file:')) {
       openSetup(url);
@@ -112,5 +112,5 @@ function quitApp(): void {
   app.quit();
 }
 
-// Приложение живёт в трее, поэтому закрытие всех окон не завершает его.
+// The app lives in the tray, so closing all windows does not quit it.
 app.on('window-all-closed', () => undefined);

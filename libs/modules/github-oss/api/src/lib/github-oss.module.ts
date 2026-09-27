@@ -8,7 +8,7 @@ import { GithubSyncJob } from './sync/github-sync.job';
 import { RepoSyncService } from './sync/repo-sync.service';
 
 /**
- * Аналитика open-source проектов: GitHub (stars, forks, issues, PR, релизы) + загрузки npm.
+ * Open source project analytics: GitHub (stars, forks, issues, PRs, releases) + npm downloads.
  * API: `/api/github-oss/*`.
  */
 @Module({

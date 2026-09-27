@@ -3,7 +3,7 @@ import { LocalizedText } from '../i18n/locale';
 export type { LocalizedText };
 
 export interface AchievementTier {
-  /** Порог метрики, с которого ачивка открывается. */
+  /** Metric threshold at which the achievement unlocks. */
   goal: number;
   icon: string;
   title: LocalizedText;
@@ -11,7 +11,7 @@ export interface AchievementTier {
 }
 
 /**
- * Метрика и её уровни. Модуль регистрирует метрики в `onModuleInit`:
+ * A metric and its tiers. A module registers metrics in `onModuleInit`:
  *
  * ```ts
  * achievements.register({
@@ -24,20 +24,20 @@ export interface AchievementTier {
  * });
  * ```
  *
- * Открытая ачивка не пропадает, даже если значение метрики потом уменьшится
- * (например, звёзды на репозитории), поэтому метрика может быть и текущей величиной.
+ * An unlocked achievement never disappears, even if the metric value later drops
+ * (for example, repository stars), so a metric may also be a current value.
  */
 export interface AchievementMetric {
-  /** Уникальный id с префиксом модуля. */
+  /** Unique id prefixed with the module id. */
   id: string;
-  /** id web-модуля — по нему группируются ачивки на странице. */
+  /** Web module id — achievements are grouped by it on the page. */
   module: string;
   measure: (userId: string) => Promise<number>;
   tiers: AchievementTier[];
 }
 
 /**
- * Короткая запись уровня: `achievementTier(7, '🔥', { en: 'Week in a row', ru: 'Неделя подряд' }, {...})`
+ * Short tier notation: `achievementTier(7, '🔥', { en: 'Week in a row', ru: 'Неделя подряд' }, {...})`
  */
 export function achievementTier(
   goal: number,

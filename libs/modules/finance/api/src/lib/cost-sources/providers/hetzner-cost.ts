@@ -1,9 +1,9 @@
 import { roundMoney } from '../cost-provider';
 
-// Минимальные типы ответов Hetzner Cloud API (https://docs.hetzner.cloud) — только нужные поля.
+// Minimal Hetzner Cloud API response types (https://docs.hetzner.cloud) — only the fields we need.
 
 interface HetznerPrice {
-  /** Цена строкой, например `"4.5100000000"`. */
+  /** Price as a string, for example `"4.5100000000"`. */
   net: string;
   gross: string;
 }
@@ -24,7 +24,7 @@ export interface HetznerServer {
   name: string;
   server_type: { name: string; prices: LocationPrice[] };
   location: { name: string };
-  /** Не null, если включены бэкапы. */
+  /** Not null if backups are enabled. */
   backup_window: string | null;
 }
 
@@ -46,9 +46,9 @@ export interface HetznerCostEstimate {
 }
 
 /**
- * Месячная стоимость текущих ресурсов проекта Hetzner Cloud (цены с НДС).
- * Hetzner берёт почасовую оплату, но не больше месячной цены — поэтому для ресурсов,
- * которые работают весь месяц, месячная цена и есть итоговая сумма.
+ * Monthly cost of the current resources of a Hetzner Cloud project (prices incl. VAT).
+ * Hetzner bills hourly but never more than the monthly price — so for resources
+ * running all month, the monthly price is the final amount.
  */
 export function estimateHetznerMonthlyCost(input: {
   pricing: HetznerPricing;

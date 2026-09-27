@@ -3,19 +3,19 @@ import { NowPlaying } from '@pd/contracts';
 const ACCOUNTS = 'https://accounts.spotify.com';
 const API = 'https://api.spotify.com/v1';
 
-/** Только чтение: что играет сейчас. */
+/** Read-only: what is playing now. */
 export const SPOTIFY_SCOPES = 'user-read-currently-playing';
 
 export interface SpotifyTokens {
   accessToken: string;
-  /** Spotify может прислать новый refresh-токен — тогда старый больше не нужен. */
+  /** Spotify may send a new refresh token — then the old one is no longer needed. */
   refreshToken: string | null;
   expiresAt: Date;
 }
 
 export class SpotifyAuthError extends Error {}
 
-/** OAuth (Authorization Code flow) и чтение текущего трека. */
+/** OAuth (Authorization Code flow) and reading the current track. */
 export class SpotifyClient {
   constructor(
     private readonly clientId: string,
@@ -46,7 +46,7 @@ export class SpotifyClient {
     return this.requestToken({ grant_type: 'refresh_token', refresh_token: refreshToken });
   }
 
-  /** Текущий трек или `null`, если ничего не играет. */
+  /** The current track, or `null` if nothing is playing. */
   async currentlyPlaying(accessToken: string): Promise<NowPlaying | null> {
     const response = await fetch(`${API}/me/player/currently-playing`, {
       headers: { Authorization: `Bearer ${accessToken}` },
@@ -61,7 +61,7 @@ export class SpotifyClient {
       throw new Error(`Spotify API ${response.status}`);
     }
     const data = (await response.json()) as RawCurrentlyPlaying;
-    // Подкасты и реклама приходят без item — их не показываем.
+    // Podcasts and ads come without an item — they are not shown.
     if (!data.item) {
       return null;
     }

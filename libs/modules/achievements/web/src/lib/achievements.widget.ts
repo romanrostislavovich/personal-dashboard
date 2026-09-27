@@ -8,7 +8,7 @@ import { AchievementsApi } from './achievements.api';
 
 const LATEST_COUNT = 2;
 
-/** Виджет главной: сколько открыто, последние ачивки и ближайшая к открытию. */
+/** Home widget: how many are unlocked, the latest achievements and the closest one to unlock. */
 @Component({
   selector: 'pd-achievements-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,7 +63,7 @@ export class AchievementsWidget {
       .slice(0, LATEST_COUNT),
   );
 
-  /** Закрытая ачивка с наибольшим процентом прогресса — «ещё чуть-чуть». */
+  /** The locked achievement with the highest progress — "almost there". */
   protected readonly next = computed(() => {
     const locked = this.achievements.value().filter((a) => !a.unlockedAt && a.progress > 0);
     return locked.sort((a, b) => b.progress / b.goal - a.progress / a.goal)[0] ?? null;

@@ -1,4 +1,4 @@
-/** Самая длинная серия побед подряд; результаты матчей — в хронологическом порядке. */
+/** The longest win streak; match results are in chronological order. */
 export function longestWinStreak(results: boolean[]): number {
   let longest = 0;
   let current = 0;

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 /**
- * Проект — сайт или сервис, который ты запускаешь (например, ai-text-guard.com).
- * Это общая сущность ядра: на неё ссылаются финансы, а позже аналитика, uptime и т.д.
+ * A project is a site or service you run (for example, ai-text-guard.com).
+ * It is a shared core entity: finance references it, and later analytics, uptime, etc.
  */
 export const projectInputSchema = z.object({
   name: z.string().trim().min(1).max(100),

@@ -17,15 +17,15 @@ import {
 export const transactionKind = pgEnum('finance_transaction_kind', TRANSACTION_KINDS);
 
 /**
- * Регулярные платежи: серверы, домены, подписки.
- * Раз в месяц превращаются в операции (см. RecurringPaymentsJob).
+ * Recurring payments: servers, domains, subscriptions.
+ * Once a month they turn into transactions (see RecurringPaymentsJob).
  */
 export const recurringPayments = pgTable('finance_recurring_payments', {
   id: uuid().primaryKey().defaultRandom(),
   userId: uuid()
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  // restrict: нельзя удалить проект, пока у него есть финансовые записи.
+  // restrict: a project cannot be deleted while it has financial records.
   projectId: uuid().references(() => projects.id, { onDelete: 'restrict' }),
   name: text().notNull(),
   amount: numeric({ precision: 14, scale: 2, mode: 'number' }).notNull(),
@@ -40,8 +40,8 @@ export const recurringPayments = pgTable('finance_recurring_payments', {
 export const costProvider = pgEnum('finance_cost_provider', COST_PROVIDERS);
 
 /**
- * Источники автоимпорта затрат (Hetzner, DeepSeek…). API-токен хранится
- * в SecretsService ядра под ключом `finance.cost-source.<id>`.
+ * Sources of automatic cost import (Hetzner, DeepSeek…). The API token is stored
+ * in the core SecretsService under the key `finance.cost-source.<id>`.
  */
 export const costSources = pgTable('finance_cost_sources', {
   id: uuid().primaryKey().defaultRandom(),
@@ -52,14 +52,14 @@ export const costSources = pgTable('finance_cost_sources', {
   provider: costProvider().notNull(),
   name: text().notNull(),
   category: text().notNull(),
-  /** Данные провайдера между синхронизациями (например, прошлый баланс DeepSeek). */
+  /** Provider data between syncs (for example, the previous DeepSeek balance). */
   state: jsonb().$type<Record<string, unknown>>().notNull().default({}),
   lastSyncedAt: timestamp({ withTimezone: true }),
   lastError: text(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-/** Доходы и расходы. Без projectId — личные, с projectId — расходы/доходы проекта. */
+/** Income and expenses. Without projectId — personal, with projectId — the project's. */
 export const transactions = pgTable(
   'finance_transactions',
   {
@@ -70,7 +70,7 @@ export const transactions = pgTable(
     projectId: uuid().references(() => projects.id, { onDelete: 'restrict' }),
     recurringPaymentId: uuid().references(() => recurringPayments.id, { onDelete: 'set null' }),
     costSourceId: uuid().references(() => costSources.id, { onDelete: 'set null' }),
-    /** Месяц `YYYY-MM`, за который импортирована сумма из источника затрат. */
+    /** Month `YYYY-MM` for which the amount was imported from a cost source. */
     costPeriod: text(),
     kind: transactionKind().notNull(),
     amount: numeric({ precision: 14, scale: 2, mode: 'number' }).notNull(),
@@ -80,7 +80,7 @@ export const transactions = pgTable(
     occurredOn: date({ mode: 'string' }).notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  // Одна операция на источник и месяц — синхронизация обновляет её, а не плодит новые.
+  // One transaction per source and month — the sync updates it instead of creating new ones.
   (table) => [unique().on(table.costSourceId, table.costPeriod)],
 );
 

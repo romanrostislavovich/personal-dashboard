@@ -3,7 +3,7 @@ import { AiService, NO_PARAMETERS } from '@pd/api-core';
 import { MUSIC_TOP_PERIODS, MusicTopPeriod } from '@pd/contracts';
 import { LastfmService } from './lastfm.service';
 
-/** Доступ AI к музыке: статистика и топы Last.fm. */
+/** AI access to music: Last.fm statistics and tops. */
 @Injectable()
 export class MusicAiTools implements OnModuleInit {
   constructor(
@@ -15,8 +15,7 @@ export class MusicAiTools implements OnModuleInit {
     this.ai.registerTool({
       name: 'music_stats',
       module: 'music',
-      description:
-        'Прослушивания: сегодня, по дням за 30 дней, всего скробблов, 10 последних треков.',
+      description: 'Plays: today, per day over 30 days, total scrobbles, the last 10 tracks.',
       parameters: NO_PARAMETERS,
       handler: (userId) => this.lastfm.stats(userId),
     });
@@ -24,7 +23,7 @@ export class MusicAiTools implements OnModuleInit {
     this.ai.registerTool({
       name: 'music_tops',
       module: 'music',
-      description: 'Топ артистов, треков и альбомов за период (из Last.fm).',
+      description: 'Top artists, tracks and albums for a period (from Last.fm).',
       parameters: {
         type: 'object',
         properties: { period: { type: 'string', enum: [...MUSIC_TOP_PERIODS] } },

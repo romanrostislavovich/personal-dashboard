@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { SchedulerService } from '@pd/api-core';
 import { GameAccountsService } from './game-accounts.service';
 
-/** Раз в час обновляет игровые аккаунты: новые матчи Dota, ачивки WoW. */
+/** Updates game accounts hourly: new Dota matches, WoW achievements. */
 @Injectable()
 export class GamesSyncJob implements OnModuleInit {
   constructor(

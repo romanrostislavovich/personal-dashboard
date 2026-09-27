@@ -8,7 +8,7 @@ import { GithubOssApi } from './github-oss.api';
 
 const WIDGET_MAX_REPOS = 5;
 
-/** Виджет главной: звёзды, прирост за неделю, открытые issues/PR по топ-репозиториям. */
+/** Home widget: stars, weekly growth, open issues/PRs for the top repositories. */
 @Component({
   selector: 'pd-github-oss-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,

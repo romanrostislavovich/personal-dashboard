@@ -27,7 +27,7 @@ export class DiaryApi {
     );
   }
 
-  /** Запись выбранного дня; `null`, если её ещё нет. */
+  /** The selected day's entry; `null` if it does not exist yet. */
   entry(day: () => LocalDate) {
     return httpResource<DiaryEntry | null>(() => `${BASE}/entries/${day()}`);
   }

@@ -22,7 +22,7 @@ import { DiaryApi } from './diary.api';
 import { MarkdownPipe } from '@pd/web-core';
 import { MOOD_EMOJI } from './mood';
 
-/** Редактор записи одного дня: markdown + настроение. */
+/** Editor for one day's entry: markdown + mood. */
 @Component({
   selector: 'pd-diary-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -188,7 +188,7 @@ export class DiaryEditorComponent {
   protected readonly mode = signal<'edit' | 'preview'>('edit');
   protected readonly saving = signal(false);
 
-  /** Последняя сохранённая версия — чтобы понимать, есть ли несохранённые правки. */
+  /** The last saved version — to know whether there are unsaved changes. */
   private readonly savedContent = signal('');
   private readonly savedMood = signal<number | null>(null);
 
@@ -197,9 +197,9 @@ export class DiaryEditorComponent {
   );
 
   constructor() {
-    // Загрузилась запись другого дня — показываем её в редакторе.
+    // Another day's entry loaded — show it in the editor.
     effect(() => {
-      // Только когда ответ получен: во время загрузки и при ошибке не трогаем редактор.
+      // Only once the response arrives: while loading or on error, leave the editor alone.
       if (this.entry.status() !== 'resolved') {
         return;
       }

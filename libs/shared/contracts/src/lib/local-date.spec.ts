@@ -39,7 +39,7 @@ describe('local-date', () => {
   });
 
   it('resolves "today" in the given time zone', () => {
-    // 23:30 UTC 31 декабря — в Варшаве уже 1 января.
+    // 23:30 UTC on December 31 — already January 1 in Warsaw.
     const now = new Date('2026-12-31T23:30:00Z');
     expect(todayIn('UTC', now)).toEqual({ year: 2026, month: 12, day: 31 });
     expect(todayIn('Europe/Warsaw', now)).toEqual({ year: 2027, month: 1, day: 1 });

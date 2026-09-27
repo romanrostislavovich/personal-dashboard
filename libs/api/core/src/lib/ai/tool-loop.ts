@@ -6,17 +6,17 @@ type AssistantMessage = Extract<ChatMessage, { role: 'assistant' }>;
 export interface ToolLoopOptions {
   messages: ChatMessage[];
   tools: AiTool[];
-  /** Запрос к модели (в проде — chatCompletion). */
+  /** A request to the model (chatCompletion in production). */
   complete: (messages: ChatMessage[], tools: ToolDefinition[]) => Promise<AssistantMessage>;
-  /** Выполнение инструмента; возвращает JSON-строку для модели. */
+  /** Runs a tool; returns a JSON string for the model. */
   runTool: (tool: AiTool | undefined, rawArgs: string) => Promise<string>;
   maxRounds: number;
 }
 
 /**
- * Цикл function calling: пока модель просит инструменты — выполняем их и отдаём
- * результаты обратно. Если за `maxRounds` она так и не ответила, просим ответить
- * без инструментов с тем, что уже собрано.
+ * Function calling loop: while the model asks for tools, run them and send
+ * the results back. If it still has not answered after `maxRounds`, ask it to answer
+ * without tools using what has been collected so far.
  */
 export async function runToolLoop({
   messages,

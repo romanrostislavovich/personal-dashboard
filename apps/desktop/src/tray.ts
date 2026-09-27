@@ -7,7 +7,7 @@ export interface TrayActions {
   quit: () => void;
 }
 
-/** Иконка в трее: приложение продолжает работать, когда окно закрыто. */
+/** Tray icon: the app keeps running when the window is closed. */
 export function createTray(actions: TrayActions): Tray {
   const icon = nativeImage
     .createFromPath(join(__dirname, 'assets', 'icon.png'))
@@ -24,7 +24,7 @@ export function createTray(actions: TrayActions): Tray {
         type: 'checkbox',
         checked: app.getLoginItemSettings().openAtLogin,
         click: (item) => {
-          // --hidden: при автозапуске сразу сворачиваемся в трей, без окна.
+          // --hidden: on autostart go straight to the tray, without a window.
           app.setLoginItemSettings({ openAtLogin: item.checked, args: ['--hidden'] });
         },
       },

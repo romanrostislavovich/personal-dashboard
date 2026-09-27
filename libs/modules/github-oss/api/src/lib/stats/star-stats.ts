@@ -3,8 +3,8 @@ import { DateParts, LocalDate, parseLocalDate, daysBetween } from '@pd/contracts
 const STAR_MILESTONES = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
 
 /**
- * Максимальная «круглая» отметка, которую репозиторий перешёл между двумя замерами.
- * 48 → 103 звезды = 100 (про 50 отдельно не пишем — достаточно самой большой).
+ * The highest "round" milestone the repository crossed between two readings.
+ * 48 → 103 stars = 100 (50 is not reported separately — the largest is enough).
  */
 export function crossedStarMilestone(previous: number, current: number): number | null {
   const crossed = STAR_MILESTONES.filter(
@@ -14,8 +14,8 @@ export function crossedStarMilestone(previous: number, current: number): number 
 }
 
 /**
- * Прирост звёзд за последние `days` дней по дневной истории.
- * Если истории меньше, считаем от самой ранней точки.
+ * Star growth over the last `days` days from the daily history.
+ * If the history is shorter, count from the earliest point.
  */
 export function starsDelta(
   history: { day: LocalDate; stars: number }[],

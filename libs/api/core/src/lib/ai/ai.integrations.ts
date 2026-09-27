@@ -9,7 +9,7 @@ import { UsersService } from '../users/users.service';
 import { NO_PARAMETERS } from './ai-tool';
 import { AiService } from './ai.service';
 
-/** Telegram ограничивает сообщение 4096 символами. */
+/** Telegram limits a message to 4096 characters. */
 const TELEGRAM_LIMIT = 4000;
 
 const MORNING_DIGEST_PROMPT = [
@@ -20,10 +20,10 @@ const MORNING_DIGEST_PROMPT = [
 ].join(' ');
 
 /**
- * Связь AI с остальным ядром:
- * - инструменты ядра (проекты, ачивки);
- * - команда бота `/ask вопрос`;
- * - утренний дайджест в 08:30 для тех, кто его включил.
+ * Wires the AI into the rest of the core:
+ * - core tools (projects, achievements);
+ * - the bot command `/ask question`;
+ * - the morning digest at 08:30 for users who enabled it.
  */
 @Injectable()
 export class AiIntegrations implements OnModuleInit {
@@ -41,14 +41,14 @@ export class AiIntegrations implements OnModuleInit {
     this.ai.registerTool({
       name: 'core_projects',
       module: 'projects',
-      description: 'Проекты пользователя (сайты и сервисы): название, адрес, описание.',
+      description: "The user's projects (sites and services): name, URL, description.",
       parameters: NO_PARAMETERS,
       handler: (userId) => this.projects.list(userId),
     });
     this.ai.registerTool({
       name: 'core_achievements',
       module: 'achievements',
-      description: 'Личные ачивки: открытые (unlockedAt) и прогресс по остальным.',
+      description: 'Personal achievements: unlocked ones (unlockedAt) and progress on the rest.',
       parameters: NO_PARAMETERS,
       handler: async (userId) =>
         (await this.achievements.list(userId)).map(({ title, progress, goal, unlockedAt }) => ({

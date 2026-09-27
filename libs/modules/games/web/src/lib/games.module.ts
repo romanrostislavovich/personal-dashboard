@@ -1,6 +1,6 @@
 import { WebDashboardModule } from '@pd/web-core';
 
-/** Web-часть модуля «Игры». Подключается в apps/web/src/app/modules.ts. */
+/** Web part of the Games module. Plugged in at apps/web/src/app/modules.ts. */
 export const gamesModule: WebDashboardModule = {
   id: 'games',
   nav: { labelKey: 'games.title', icon: 'sports_esports' },

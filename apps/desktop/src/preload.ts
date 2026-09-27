@@ -1,8 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 /**
- * Мост между страницей настройки (setup.html) и main-процессом.
- * Самому дашборду он не нужен: это обычный сайт, загруженный с сервера.
+ * Bridge between the setup page (setup.html) and the main process.
+ * The dashboard itself does not need it: it is a regular website loaded from the server.
  */
 contextBridge.exposeInMainWorld('desktop', {
   getServerUrl: (): Promise<string | null> => ipcRenderer.invoke('settings:get-server-url'),

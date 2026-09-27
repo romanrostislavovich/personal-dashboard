@@ -2,7 +2,7 @@ import { MusicTopItem, MusicTopPeriod } from '@pd/contracts';
 
 const API = 'https://ws.audioscrobbler.com/2.0/';
 
-/** Коды ошибок Last.fm: https://www.last.fm/api/errorcodes */
+/** Last.fm error codes: https://www.last.fm/api/errorcodes */
 const INVALID_API_KEY = 10;
 const USER_NOT_FOUND = 6;
 
@@ -22,7 +22,7 @@ export interface LastfmTrack {
   album: string | null;
   imageUrl: string | null;
   url: string;
-  /** `null` у трека, который играет прямо сейчас. */
+  /** `null` for the track that is playing right now. */
   playedAt: Date | null;
 }
 
@@ -31,7 +31,7 @@ export interface LastfmRecentPage {
   totalPages: number;
 }
 
-/** Минимальный клиент Last.fm API — только нужные модулю методы. */
+/** Minimal Last.fm API client — only the methods the module needs. */
 export class LastfmClient {
   constructor(
     private readonly apiKey: string,
@@ -43,7 +43,7 @@ export class LastfmClient {
     return Number(data.user.playcount);
   }
 
-  /** Прослушивания после `from` (новые — первыми); максимум 200 на страницу. */
+  /** Plays after `from` (newest first); at most 200 per page. */
   async getRecentTracks(
     options: { from?: Date; page?: number; limit?: number } = {},
   ): Promise<LastfmRecentPage> {
@@ -68,7 +68,7 @@ export class LastfmClient {
         limit: String(limit),
       },
     );
-    // Ответ вида { topartists: { artist: [...] } }.
+    // A response like { topartists: { artist: [...] } }.
     return asArray(data[listKey]?.[itemKey]).map((item): MusicTopItem => ({
       name: item.name,
       artist: item.artist
@@ -78,7 +78,7 @@ export class LastfmClient {
         : null,
       playcount: Number(item.playcount),
       url: item.url,
-      // У артистов Last.fm давно отдаёт заглушку вместо фото — картинку показываем только для треков/альбомов.
+      // Last.fm has long returned a placeholder instead of artist photos — images are shown only for tracks/albums.
       imageUrl: kind === 'artists' ? null : pickImage(item.image),
     }));
   }
@@ -105,7 +105,7 @@ export class LastfmClient {
   }
 }
 
-// --- Сырые ответы Last.fm (только используемые поля) ---
+// --- Raw Last.fm responses (only the fields we use) ---
 
 interface RawImage {
   size: string;
@@ -151,7 +151,7 @@ function toTrack(raw: RawRecentTrack): LastfmTrack {
   };
 }
 
-/** Last.fm возвращает объект вместо массива, если элемент один. */
+/** Last.fm returns an object instead of an array when there is a single item. */
 function asArray<T>(value: T[] | T | undefined): T[] {
   if (!value) {
     return [];

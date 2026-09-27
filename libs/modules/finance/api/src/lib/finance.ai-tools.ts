@@ -4,20 +4,20 @@ import { TransactionQuery } from '@pd/contracts';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
 import { TransactionsService } from './transactions/transactions.service';
 
-/** Схема периода + необязательный «кошелёк». */
+/** Period schema + an optional "wallet". */
 const QUERY_PARAMETERS = {
   type: 'object',
   properties: {
     ...PERIOD_PARAMETERS.properties,
     scope: {
       type: 'string',
-      description: '«personal» — только личные, id проекта — только проект, пусто — все',
+      description: '"personal" — personal only, a project id — that project only, empty — all',
     },
   },
   required: ['from', 'to'],
 };
 
-/** Доступ AI к финансам: итоги, операции, регулярные платежи. */
+/** AI access to finance: totals, transactions, recurring payments. */
 @Injectable()
 export class FinanceAiTools implements OnModuleInit {
   constructor(
@@ -31,8 +31,8 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_summary',
       module: 'finance',
       description:
-        'Доходы, расходы и баланс по валютам за период и главные статьи расходов. ' +
-        'Id проектов можно узнать через core_projects.',
+        'Income, expenses and balance by currency for a period, and the main expense categories. ' +
+        'Project ids are available via core_projects.',
       parameters: QUERY_PARAMETERS,
       handler: (userId, args) => this.transactions.summary(userId, toQuery(args)),
     });
@@ -41,7 +41,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_transactions',
       module: 'finance',
       description:
-        'Список операций за период: дата, доход/расход, сумма, валюта, категория, проект.',
+        'Transactions for a period: date, income/expense, amount, currency, category, project.',
       parameters: QUERY_PARAMETERS,
       handler: (userId, args) => this.transactions.list(userId, toQuery(args)),
     });
@@ -50,7 +50,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_recurring_payments',
       module: 'finance',
       description:
-        'Регулярные платежи (серверы, домены, подписки): сумма, день списания, активность.',
+        'Recurring payments (servers, domains, subscriptions): amount, charge day, whether active.',
       parameters: NO_PARAMETERS,
       handler: (userId) => this.recurring.list(userId),
     });

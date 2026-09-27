@@ -53,7 +53,7 @@ export class CostSourcesService {
     }));
   }
 
-  /** Подключает источник: проверяет токен, сохраняет его зашифрованным и сразу синхронизирует. */
+  /** Connects a source: checks the token, saves it encrypted and syncs right away. */
   async create(userId: string, input: CostSourceInput): Promise<void> {
     if (input.projectId) {
       await this.projects.assertOwned(userId, input.projectId);
@@ -76,7 +76,7 @@ export class CostSourcesService {
     await this.sync(source);
   }
 
-  /** Отключает источник. Уже импортированные операции остаются в истории. */
+  /** Disconnects a source. Already imported transactions stay in the history. */
   async remove(userId: string, id: string): Promise<void> {
     const [source] = await this.db
       .delete(costSources)
@@ -98,14 +98,14 @@ export class CostSourcesService {
     await this.sync(source);
   }
 
-  /** Синхронизирует все источники всех пользователей (ежедневная задача). */
+  /** Syncs all sources of all users (daily job). */
   async syncAll(): Promise<void> {
     for (const source of await this.db.select().from(costSources)) {
       await this.sync(source);
     }
   }
 
-  /** Ошибка одного источника записывается в lastError и не мешает остальным. */
+  /** An error in one source is written to lastError and does not affect the others. */
   private async sync(source: CostSourceRow): Promise<void> {
     try {
       const token = await this.secrets.get(source.userId, secretKey(source.id));
@@ -124,8 +124,8 @@ export class CostSourcesService {
   }
 
   /**
-   * Одна операция-расход на источник и месяц: для `monthTotal` сумма заменяется,
-   * для `increment` — увеличивается. Всё в одной транзакции, чтобы не посчитать дважды.
+   * One expense transaction per source and month: for `monthTotal` the amount is replaced,
+   * for `increment` it is increased. All in one transaction so nothing is counted twice.
    */
   private async applyMeasurement(source: CostSourceRow, measurement: CostMeasurement) {
     const period = this.currentPeriod();
@@ -171,7 +171,7 @@ export class CostSourcesService {
     });
   }
 
-  /** Текущий месяц `YYYY-MM` в часовом поясе приложения. */
+  /** Current month `YYYY-MM` in the app time zone. */
   private currentPeriod(): string {
     const { year, month } = todayIn(this.config.get('APP_TIMEZONE', { infer: true }));
     return `${year}-${String(month).padStart(2, '0')}`;

@@ -1,6 +1,6 @@
 import { WebDashboardModule } from '@pd/web-core';
 
-/** Web-часть модуля «Open Source» (GitHub + npm). Подключается в apps/web/src/app/modules.ts. */
+/** Web part of the Open Source module (GitHub + npm). Plugged in at apps/web/src/app/modules.ts. */
 export const githubOssModule: WebDashboardModule = {
   id: 'github-oss',
   nav: { labelKey: 'github-oss.title', icon: 'code' },

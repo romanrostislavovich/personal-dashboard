@@ -34,7 +34,7 @@ export class AiController {
     return this.ai.removeSettings(user.id);
   }
 
-  /** Диалог: клиент присылает всю историю, сервер ничего не хранит. */
+  /** Chat: the client sends the whole history, the server stores nothing. */
   @Post('chat')
   chat(
     @CurrentUser() user: AuthUser,

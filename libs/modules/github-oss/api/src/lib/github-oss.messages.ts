@@ -9,7 +9,7 @@ interface Labels {
   by: string;
 }
 
-/** Одно сообщение на все события всех репозиториев за синхронизацию. */
+/** One message for all events of all repositories per sync. */
 function body(events: RepoSyncEvents[], t: Labels): string {
   return events
     .map((repo) => {
@@ -24,7 +24,7 @@ function body(events: RepoSyncEvents[], t: Labels): string {
     .join('\n\n');
 }
 
-/** Тексты уведомлений модуля; язык выбирается по `user.locale`. */
+/** Module notification texts; the language is picked by `user.locale`. */
 const messages = {
   en: {
     title: '🐙 GitHub',

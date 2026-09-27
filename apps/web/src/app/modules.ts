@@ -10,10 +10,10 @@ import { musicModule } from '@pd/music-web';
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
- * Включённые модули дашборда (web-часть). Порядок = порядок в меню и на главной.
- * Чтобы отключить модуль — убери его отсюда и из apps/api/src/modules.ts.
+ * Enabled dashboard modules (web part). Order = order in the menu and on the home page.
+ * To disable a module, remove it from here and from apps/api/src/modules.ts.
  */
-// Узкие и широкие виджеты чередуются, чтобы сетка главной заполнялась без пустот.
+// Narrow and wide widgets alternate so the home grid fills without gaps.
 export const enabledModules: WebDashboardModule[] = [
   aiModule,
   diaryModule,

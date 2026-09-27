@@ -13,22 +13,22 @@ import {
 
 export const monitorStatus = pgEnum('monitoring_status', ['up', 'down', 'pending']);
 
-/** Проверяемые адреса. У проекта может быть несколько: сайт, API, админка. */
+/** Checked addresses. A project may have several: site, API, admin panel. */
 export const monitors = pgTable('monitoring_monitors', {
   id: uuid().primaryKey().defaultRandom(),
   userId: uuid()
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  // Мониторинг — часть проекта: удалили проект — удалились и его мониторы.
+  // Monitoring is part of a project: deleting the project deletes its monitors.
   projectId: uuid()
     .notNull()
     .references(() => projects.id, { onDelete: 'cascade' }),
   url: text().notNull(),
 
   status: monitorStatus().notNull().default('pending'),
-  /** Подряд неудачных проверок — «упал» объявляем только после нескольких. */
+  /** Consecutive failed checks — "down" is declared only after several. */
   consecutiveFailures: smallint().notNull().default(0),
-  /** Время первой неудачной проверки в текущей серии. */
+  /** Time of the first failed check in the current series. */
   failingSince: timestamp({ withTimezone: true }),
   lastCheckedAt: timestamp({ withTimezone: true }),
   lastStatusCode: smallint(),
@@ -38,7 +38,7 @@ export const monitors = pgTable('monitoring_monitors', {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-/** История проверок — для процента доступности и графика времени ответа. */
+/** Check history — for the availability percentage and the response time chart. */
 export const checkResults = pgTable(
   'monitoring_check_results',
   {

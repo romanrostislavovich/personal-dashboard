@@ -53,12 +53,12 @@ export class DiaryPage {
   protected readonly moodEmoji = MOOD_EMOJI;
   protected readonly today = todayLocalDate();
 
-  // --- Фильтры списка ---
+  // --- List filters ---
   protected readonly month = signal(currentMonth());
   protected readonly tag = signal<string | null>(null);
   protected readonly monthDate = computed(() => monthAsDate(this.month()));
 
-  // --- Данные ---
+  // --- Data ---
   protected readonly entries = this.api.entries(() => ({
     ...monthRange(this.month()),
     tag: this.tag() ?? undefined,
@@ -81,7 +81,7 @@ export class DiaryPage {
     this.tag.update((current) => (current === tag ? null : tag));
   }
 
-  /** Переключение дня; несохранённые правки не теряем молча. */
+  /** Switches the day; unsaved changes are not lost silently. */
   selectDay(day: LocalDate): void {
     if (day === this.selectedDay()) {
       return;
@@ -97,14 +97,14 @@ export class DiaryPage {
     this.stats.reload();
   }
 
-  /** Меняет одну настройку, остальные оставляет как есть. */
+  /** Changes one setting and keeps the others as they are. */
   async updateSettings(change: Partial<DiarySettings>): Promise<void> {
     const current = this.settings.value() ?? { eveningReminder: false, weeklySummary: false };
     await firstValueFrom(this.api.saveSettings({ ...current, ...change }));
     this.settings.reload();
   }
 
-  /** AI-саммари последних 7 дней (нужен настроенный AI). */
+  /** AI summary of the last 7 days (requires a configured AI). */
   async summarizeWeek(): Promise<void> {
     this.summary.set({ loading: true, text: null, error: false });
     try {
@@ -124,7 +124,7 @@ export class DiaryPage {
   }
 
   protected preview(entry: DiaryEntry): string {
-    // Убираем разметку markdown, чтобы в списке был просто текст.
+    // Strip markdown so the list shows plain text.
     const plain = entry.content
       .replace(/[#*_`>[\]()-]/g, ' ')
       .replace(/\s+/g, ' ')

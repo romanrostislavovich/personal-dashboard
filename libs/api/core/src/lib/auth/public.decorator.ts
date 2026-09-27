@@ -2,5 +2,5 @@ import { SetMetadata } from '@nestjs/common';
 
 export const IS_PUBLIC = 'isPublic';
 
-/** По умолчанию все эндпоинты требуют авторизации; `@Public()` снимает это требование. */
+/** By default every endpoint requires authentication; `@Public()` lifts that requirement. */
 export const Public = () => SetMetadata(IS_PUBLIC, true);

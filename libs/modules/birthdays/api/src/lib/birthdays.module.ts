@@ -5,7 +5,7 @@ import { BirthdayRemindersJob } from './birthday-reminders.job';
 import { BirthdaysController } from './birthdays.controller';
 import { BirthdaysService } from './birthdays.service';
 
-/** Дни рождения: CRUD + ежедневные напоминания. API: `/api/birthdays`. */
+/** Birthdays: CRUD + daily reminders. API: `/api/birthdays`. */
 @Module({
   controllers: [BirthdaysController],
   providers: [BirthdaysService, BirthdayRemindersJob, BirthdaysAchievements, BirthdaysAiTools],

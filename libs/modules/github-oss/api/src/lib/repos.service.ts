@@ -34,7 +34,7 @@ export class ReposService {
     private readonly repoSync: RepoSyncService,
   ) {}
 
-  /** Репозитории пользователя (по звёздам) с историей за 30 дней. */
+  /** The user's repositories (by stars) with 30-day history. */
   async list(userId: string): Promise<TrackedRepo[]> {
     const repos = await this.db
       .select()
@@ -70,7 +70,7 @@ export class ReposService {
     );
   }
 
-  /** Добавляет репозиторий и сразу синхронизирует его, чтобы показать данные. */
+  /** Adds a repository and syncs it right away to show data. */
   async add(userId: string, fullName: string, npmPackage: string | null): Promise<void> {
     const github = await this.tokens.clientFor(userId);
     let canonical: { fullName: string; htmlUrl: string };
@@ -100,7 +100,7 @@ export class ReposService {
       .where(and(eq(trackedRepos.id, id), eq(trackedRepos.userId, userId)));
   }
 
-  /** Синхронизирует все репозитории пользователя; ошибки одного не мешают остальным. */
+  /** Syncs all of the user's repositories; an error in one does not affect the others. */
   async syncAll(userId: string): Promise<RepoSyncEvents[]> {
     const repos = await this.db.select().from(trackedRepos).where(eq(trackedRepos.userId, userId));
     const events: RepoSyncEvents[] = [];

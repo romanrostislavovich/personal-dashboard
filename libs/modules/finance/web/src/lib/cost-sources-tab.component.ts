@@ -22,7 +22,7 @@ import { firstValueFrom } from 'rxjs';
 import { CostSourceFormData, CostSourceFormDialog } from './cost-source-form.dialog';
 import { FinanceApi } from './finance.api';
 
-/** Вкладка «Автоимпорт»: подключённые сервисы и их затраты за текущий месяц. */
+/** "Auto import" tab: connected services and their costs for the current month. */
 @Component({
   selector: 'pd-cost-sources-tab',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -133,9 +133,9 @@ import { FinanceApi } from './finance.api';
 })
 export class CostSourcesTabComponent {
   readonly projects = input.required<Project[]>();
-  /** Текущий кошелёк страницы: новый источник по умолчанию привязывается к нему. */
+  /** The page's current wallet: a new source is linked to it by default. */
   readonly defaultProjectId = input<string | null>(null);
-  /** Затраты изменились — странице пора обновить операции и итоги. */
+  /** Costs changed — time for the page to reload transactions and totals. */
   readonly changed = output<void>();
 
   private readonly api = inject(FinanceApi);

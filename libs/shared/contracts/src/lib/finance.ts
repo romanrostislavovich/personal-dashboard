@@ -16,7 +16,7 @@ export const transactionInputSchema = z.object({
   category: z.string().trim().min(1).max(50),
   note: z.string().max(500).nullish(),
   occurredOn: z.iso.date(),
-  /** null — личная операция. */
+  /** null — a personal transaction. */
   projectId: z.uuid().nullish(),
 });
 export type TransactionInput = z.infer<typeof transactionInputSchema>;
@@ -30,9 +30,9 @@ export interface Transaction {
   note: string | null;
   occurredOn: LocalDate;
   projectId: string | null;
-  /** Если операция создана автоматически из регулярного платежа. */
+  /** Set if the transaction was created automatically from a recurring payment. */
   recurringPaymentId: string | null;
-  /** Если операция — месячная сумма, импортированная из источника затрат (Hetzner, DeepSeek…). */
+  /** Set if the transaction is a monthly amount imported from a cost source (Hetzner, DeepSeek…). */
   costSourceId: string | null;
 }
 
@@ -40,22 +40,22 @@ export const transactionQuerySchema = z.object({
   from: z.iso.date(),
   to: z.iso.date(),
   /**
-   * «Кошелёк»: `personal` — только личные операции (без проекта),
-   * uuid — операции конкретного проекта, пусто — все.
+   * "Wallet": `personal` — only personal transactions (without a project),
+   * uuid — transactions of a specific project, empty — all.
    */
   scope: z.union([z.literal('personal'), z.uuid()]).optional(),
 });
 export type TransactionQuery = z.infer<typeof transactionQuerySchema>;
 
 /**
- * Регулярный платёж: сервер, домен, подписка. Раз в месяц в указанный день
- * автоматически превращается в операцию-расход и присылает уведомление.
+ * A recurring payment: a server, a domain, a subscription. Once a month on the given day
+ * it automatically turns into an expense transaction and sends a notification.
  */
 export const recurringPaymentInputSchema = z.object({
   name: z.string().trim().min(1).max(100),
   ...money,
   category: z.string().trim().min(1).max(50),
-  /** День месяца списания; 31 в коротком месяце = последний день. */
+  /** Day of the month to charge; 31 in a short month = the last day. */
   dayOfMonth: z.number().int().min(1).max(31),
   projectId: z.uuid().nullish(),
   isActive: z.boolean().default(true),
@@ -90,14 +90,14 @@ export interface CategoryTotal {
 export interface FinanceSummary {
   from: LocalDate;
   to: LocalDate;
-  /** Суммы не конвертируются между валютами — по строке на каждую валюту. */
+  /** Amounts are not converted between currencies — one row per currency. */
   totals: CurrencyTotals[];
   topExpenseCategories: CategoryTotal[];
 }
 
 /**
- * Источники автоматического импорта затрат. Каждый раз в день обновляет
- * одну операцию-расход за текущий месяц.
+ * Sources of automatic cost import. Each one updates, once a day,
+ * a single expense transaction for the current month.
  */
 export const COST_PROVIDERS = ['hetzner', 'deepseek'] as const;
 export type CostProvider = (typeof COST_PROVIDERS)[number];
@@ -106,9 +106,9 @@ export const costSourceInputSchema = z.object({
   provider: z.enum(COST_PROVIDERS),
   name: z.string().trim().min(1).max(100),
   category: z.string().trim().min(1).max(50),
-  /** Кошелёк проекта; null — личные затраты. */
+  /** Project wallet; null — personal costs. */
   projectId: z.uuid().nullish(),
-  /** API-токен сервиса; хранится зашифрованным и обратно не отдаётся. */
+  /** The service API token; stored encrypted and never returned. */
   apiToken: z.string().trim().min(10),
 });
 export type CostSourceInput = z.infer<typeof costSourceInputSchema>;
@@ -121,6 +121,6 @@ export interface CostSource {
   projectId: string | null;
   lastSyncedAt: string | null;
   lastError: string | null;
-  /** Импортировано за текущий месяц. */
+  /** Imported for the current month. */
   currentMonth: { amount: number; currency: string } | null;
 }

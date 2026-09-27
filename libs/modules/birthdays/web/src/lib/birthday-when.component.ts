@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 
-/** «Сегодня» / «Завтра» / «через 5 дн.» — с подсветкой, если скоро. */
+/** "Today" / "Tomorrow" / "in 5 days" — highlighted when it is soon. */
 @Component({
   selector: 'pd-birthday-when',
   changeDetection: ChangeDetectionStrategy.OnPush,

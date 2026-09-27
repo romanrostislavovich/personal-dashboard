@@ -1,7 +1,7 @@
 import { pickMessages } from '@pd/api-core';
 import { MonitorNotice, SslNotice } from './checker.service';
 
-/** Тексты уведомлений модуля; язык выбирается по `user.locale`. */
+/** Module notification texts; the language is picked by `user.locale`. */
 const messages = {
   en: {
     downTitle: (n: MonitorNotice) => `🔴 ${n.projectName} is down`,
@@ -35,7 +35,7 @@ export function monitoringMessages(locale: string) {
   return pickMessages(messages, locale);
 }
 
-/** Сетевые коды ошибок Node.js → понятный текст. */
+/** Node.js network error codes → readable text. */
 const NETWORK_ERRORS_EN: Record<string, string> = {
   ENOTFOUND: 'domain not found (DNS)',
   ECONNREFUSED: 'connection refused',

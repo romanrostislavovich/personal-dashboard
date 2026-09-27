@@ -3,7 +3,7 @@ import { achievementTier, AchievementsService, DB, Database } from '@pd/api-core
 import { eq } from 'drizzle-orm';
 import { birthdays } from './birthdays.schema';
 
-/** Ачивки дней рождения: сколько людей ты не забудешь поздравить. */
+/** Birthday achievements: how many people you won't forget to congratulate. */
 @Injectable()
 export class BirthdaysAchievements implements OnModuleInit {
   constructor(

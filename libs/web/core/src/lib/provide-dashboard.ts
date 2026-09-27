@@ -20,7 +20,7 @@ import { initialLanguage } from './i18n/language';
 registerLocaleData(localeRu);
 
 /**
- * Всё, что нужно приложению дашборда, одним вызовом:
+ * Everything the dashboard app needs, in one call:
  * `bootstrapApplication(App, { providers: [provideDashboard(enabledModules)] })`.
  */
 export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProviders {
@@ -30,7 +30,7 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
     provideHttpClient(withInterceptors([authInterceptor])),
     provideDashboardModules(modules),
     provideI18n(),
-    // Формат дат, чисел и валют — по языку интерфейса (меняется с перезагрузкой).
+    // Date, number and currency formats follow the UI language (changes with a reload).
     { provide: LOCALE_ID, useFactory: initialLanguage },
     provideAppInitializer(() => inject(AuthService).restoreSession()),
   ]);

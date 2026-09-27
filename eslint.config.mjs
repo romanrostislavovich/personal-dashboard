@@ -15,9 +15,9 @@ export default [
         {
           enforceBuildableLibDependency: true,
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
-          // Архитектурные правила (подробнее — docs/architecture.md):
-          // - бэкенд и фронтенд не импортируют друг друга, общее — только через contracts;
-          // - модули зависят только от ядра и контрактов, но НЕ друг от друга.
+          // Architecture rules (details in docs/architecture.md):
+          // - backend and frontend do not import each other; shared code goes only through contracts;
+          // - modules depend only on the core and contracts, NEVER on each other.
           depConstraints: [
             {
               sourceTag: 'scope:shared',

@@ -1,7 +1,7 @@
 import { pickMessages } from '@pd/api-core';
 import { UpcomingBirthday } from '@pd/contracts';
 
-/** Тексты уведомлений; язык выбирается по `user.locale`. */
+/** Notification texts; the language is picked by `user.locale`. */
 const messages = {
   en: {
     title: '🎂 Birthday',

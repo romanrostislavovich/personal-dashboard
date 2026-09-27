@@ -78,7 +78,7 @@ export interface RecurringPaymentFormData {
         <mat-form-field>
           <mat-label>{{ 'finance.wallet' | transloco }}</mat-label>
           <mat-select formControlName="projectId">
-            <!-- "Личное" = пустая строка: null mat-select считает отсутствием выбора. -->
+            <!-- "Personal" = empty string: mat-select treats null as no selection. -->
             <mat-option value="">{{ 'finance.scope.personal' | transloco }}</mat-option>
             @for (project of data.projects; track project.id) {
               <mat-option [value]="project.id">{{ project.name }}</mat-option>

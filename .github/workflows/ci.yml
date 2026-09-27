@@ -24,15 +24,15 @@ jobs:
           node-version: 24
           cache: 'npm'
 
-      # --ignore-scripts: Electron-бинарник для проверок не нужен.
+      # --ignore-scripts: the Electron binary is not needed for checks.
       - run: npm ci --ignore-scripts
 
       - uses: nrwl/nx-set-shas@v4
 
       - run: npx nx affected -t lint test build
 
-      # Миграции должны соответствовать схемам: если кто-то поменял *.schema.ts
-      # и забыл `npm run db:generate`, drizzle-kit создаст новый файл и проверка упадёт.
+      # Migrations must match the schemas: if someone changed *.schema.ts
+      # and forgot `npm run db:generate`, drizzle-kit creates a new file and the check fails.
       - name: Check migrations are up to date
         run: |
           npx drizzle-kit generate --name ci-check

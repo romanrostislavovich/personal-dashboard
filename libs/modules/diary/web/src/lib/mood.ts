@@ -1,4 +1,4 @@
-/** Настроение 1–5 как эмодзи; подписи — в переводах (`diary.moods.<n>`). */
+/** Mood 1–5 as emoji; labels are in the translations (`diary.moods.<n>`). */
 export const MOOD_EMOJI: Record<number, string> = {
   1: '😞',
   2: '😕',

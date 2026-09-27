@@ -5,7 +5,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { DotaSummary } from '@pd/contracts';
 import { DotaRankComponent } from './dota-rank.component';
 
-/** Dota 2: профиль, медаль, винрейт за 30 дней, последние матчи и любимые герои. */
+/** Dota 2: profile, medal, 30-day win rate, recent matches and favourite heroes. */
 @Component({
   selector: 'pd-dota-card',
   changeDetection: ChangeDetectionStrategy.OnPush,

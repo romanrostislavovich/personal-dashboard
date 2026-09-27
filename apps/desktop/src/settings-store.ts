@@ -3,13 +3,13 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export interface DesktopSettings {
-  /** Адрес дашборда: сервер (https://dashboard.example.com) или локальный (http://localhost:3300). */
+  /** Dashboard address: a server (https://dashboard.example.com) or local (http://localhost:3300). */
   serverUrl: string | null;
 }
 
 const DEFAULTS: DesktopSettings = { serverUrl: null };
 
-/** Настройки хранятся в JSON в папке пользователя (%APPDATA%/Personal Dashboard). */
+/** Settings are stored as JSON in the user folder (%APPDATA%/Personal Dashboard). */
 function settingsPath(): string {
   return join(app.getPath('userData'), 'settings.json');
 }

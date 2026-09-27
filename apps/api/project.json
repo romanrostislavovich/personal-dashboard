@@ -20,7 +20,7 @@
         }
       },
       "metadata": {
-        "description": "Dev-режим: webpack пересобирает API при изменениях, node --watch перезапускает процесс"
+        "description": "Dev mode: webpack rebuilds the API on changes, node --watch restarts the process"
       }
     }
   }

@@ -97,7 +97,7 @@ export class GamesPage {
     );
   }
 
-  /** Индикатор загрузки, обновление списка и понятная ошибка по HTTP-статусу. */
+  /** Loading indicator, list refresh and a clear error by HTTP status. */
   private async run(action: () => Promise<unknown>, errorKeys: Record<number, string> = {}) {
     this.busy.set(true);
     try {

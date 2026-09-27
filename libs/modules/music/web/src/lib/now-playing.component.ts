@@ -4,7 +4,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { NowPlaying } from '@pd/contracts';
 
-/** Карточка текущего трека: обложка, название, исполнитель и (у Spotify) прогресс. */
+/** Current track card: cover, title, artist and (for Spotify) progress. */
 @Component({
   selector: 'pd-now-playing',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -96,7 +96,7 @@ import { NowPlaying } from '@pd/contracts';
 export class NowPlayingComponent {
   readonly track = input.required<NowPlaying>();
 
-  /** Процент прослушанного — только если источник знает прогресс (Spotify). */
+  /** Percentage played — only if the source knows the progress (Spotify). */
   protected readonly progress = computed(() => {
     const { progressMs, durationMs } = this.track();
     return progressMs !== null && durationMs ? (progressMs / durationMs) * 100 : null;

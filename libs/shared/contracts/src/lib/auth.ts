@@ -18,7 +18,7 @@ export interface CurrentUser {
   locale: string;
 }
 
-/** Языки интерфейса, уведомлений и ответов AI. Новый язык = переводы во всех модулях. */
+/** Languages of the UI, notifications and AI answers. A new language = translations in every module. */
 export const SUPPORTED_LOCALES = ['en', 'ru'] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
@@ -42,7 +42,7 @@ export const passwordChangeSchema = z.object({
 });
 export type PasswordChange = z.infer<typeof passwordChangeSchema>;
 
-/** Публичные настройки сервера — нужны странице входа. */
+/** Public server settings — needed by the login page. */
 export interface AuthConfig {
   registrationEnabled: boolean;
 }

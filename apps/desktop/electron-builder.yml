@@ -2,7 +2,7 @@
 # Releases are built by .github/workflows/release.yml on v* tags.
 appId: com.romanrostislavovich.personal-dashboard
 productName: Personal Dashboard
-# Без пробелов — удобнее скачивать и ссылаться из README.
+# No spaces — easier to download and to link from the README.
 artifactName: personal-dashboard-${version}-${os}-${arch}.${ext}
 directories:
   app: dist/apps/desktop

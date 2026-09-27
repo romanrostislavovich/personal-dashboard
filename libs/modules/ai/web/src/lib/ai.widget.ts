@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 
-/** Виджет главной: быстрый вопрос AI — открывает чат и сразу отправляет его. */
+/** Home widget: a quick AI question — opens the chat and sends it right away. */
 @Component({
   selector: 'pd-ai-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,

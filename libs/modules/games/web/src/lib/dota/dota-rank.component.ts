@@ -3,7 +3,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 
 const ICONS = 'https://www.opendota.com/assets/images/dota2/rank_icons';
 
-/** Медаль Dota 2 со звёздами (картинки — с OpenDota) и подписью. */
+/** Dota 2 medal with stars (images from OpenDota) and a caption. */
 @Component({
   selector: 'pd-dota-rank',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -62,7 +62,7 @@ const ICONS = 'https://www.opendota.com/assets/images/dota2/rank_icons';
   `,
 })
 export class DotaRankComponent {
-  /** `rank_tier`: медаль × 10 + звёзды; null — без ранга. */
+  /** `rank_tier`: medal × 10 + stars; null — unranked. */
   readonly rankTier = input.required<number | null>();
   readonly leaderboardRank = input<number | null>(null);
 

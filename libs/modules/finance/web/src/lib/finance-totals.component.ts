@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencyTotals } from '@pd/contracts';
 
-/** Доходы / расходы / баланс — по строке на каждую валюту. */
+/** Income / expenses / balance — one row per currency. */
 @Component({
   selector: 'pd-finance-totals',
   changeDetection: ChangeDetectionStrategy.OnPush,

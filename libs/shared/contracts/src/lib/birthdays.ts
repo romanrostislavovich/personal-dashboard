@@ -8,10 +8,10 @@ export const birthdayInputSchema = z
     name: z.string().trim().min(1).max(100),
     month: z.number().int().min(1).max(12),
     day: z.number().int().min(1).max(31),
-    /** Год рождения необязателен: без него просто не показываем возраст. */
+    /** The birth year is optional: without it the age is simply not shown. */
     year: z.number().int().min(1900).max(2100).nullish(),
     note: z.string().max(1000).nullish(),
-    /** За сколько дней напоминать: 0 — в сам день рождения. */
+    /** How many days in advance to remind: 0 — on the birthday itself. */
     remindDaysBefore: z.array(z.number().int().min(0).max(365)).max(10).default([0, 1, 7]),
   })
   .refine(({ month, day }) => day <= maxDayInMonth(month), {
@@ -33,11 +33,11 @@ export interface Birthday {
 export interface UpcomingBirthday extends Birthday {
   nextDate: LocalDate;
   daysUntil: number;
-  /** Сколько исполнится; `null`, если год рождения неизвестен. */
+  /** The age they are turning; `null` if the birth year is unknown. */
   turningAge: number | null;
 }
 
-/** 29 февраля допустимо: в невисокосный год отмечаем 28-го. */
+/** February 29 is allowed: in non-leap years it is celebrated on the 28th. */
 function maxDayInMonth(month: number): number {
   return [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
 }

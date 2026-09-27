@@ -7,9 +7,9 @@ import { isSslReminderDay } from './state/monitor-state';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Две фоновые задачи:
- * - каждые 5 минут — проверка доступности и алерты «упал/поднялся»;
- * - раз в день — сроки SSL-сертификатов и чистка старой истории.
+ * Two background jobs:
+ * - every 5 minutes — availability check and "down/up" alerts;
+ * - once a day — SSL certificate expiry and cleanup of old history.
  */
 @Injectable()
 export class MonitoringJobs implements OnModuleInit {

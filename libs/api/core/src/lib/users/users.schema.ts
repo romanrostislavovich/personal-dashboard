@@ -1,8 +1,8 @@
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
- * Пользователи. Даже если сейчас пользователь один, все данные модулей
- * привязаны к `userId` — так проект сразу готов к публичной многопользовательской версии.
+ * Users. Even with a single user, all module data is
+ * tied to `userId` — so the project is ready for a public multi-user setup.
  */
 export const users = pgTable('users', {
   id: uuid().primaryKey().defaultRandom(),

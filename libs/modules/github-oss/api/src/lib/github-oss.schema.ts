@@ -10,7 +10,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-/** Отслеживаемые репозитории и их текущие показатели (обновляются синхронизацией). */
+/** Tracked repositories and their current figures (updated by the sync). */
 export const trackedRepos = pgTable(
   'github_tracked_repos',
   {
@@ -18,7 +18,7 @@ export const trackedRepos = pgTable(
     userId: uuid()
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    /** Каноничное имя из GitHub API: `owner/name`. */
+    /** Canonical name from the GitHub API: `owner/name`. */
     fullName: text().notNull(),
     npmPackage: text(),
 
@@ -40,7 +40,7 @@ export const trackedRepos = pgTable(
   (table) => [unique().on(table.userId, table.fullName)],
 );
 
-/** История по дням: одна строка на репозиторий в день (последнее значение за день). */
+/** Daily history: one row per repository per day (the last value of the day). */
 export const repoDailyStats = pgTable(
   'github_repo_daily_stats',
   {

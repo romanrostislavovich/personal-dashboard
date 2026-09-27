@@ -1,4 +1,4 @@
-// Публичный API web-ядра для приложения и модулей.
+// Public API of the web core for the app and modules.
 export * from './lib/provide-dashboard';
 export * from './lib/dashboard-module';
 export * from './lib/auth/auth.service';

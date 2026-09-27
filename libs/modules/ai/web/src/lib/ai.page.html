@@ -15,7 +15,7 @@
 </header>
 
 @if (settings.value(); as s) {
-  <!-- Пока AI не настроен — сразу показываем настройки вместо чата. -->
+  <!-- While the AI is not configured, show the settings instead of the chat. -->
   @if (!s.configured || showSettings()) {
     <div class="settings">
       @if (!s.configured) {

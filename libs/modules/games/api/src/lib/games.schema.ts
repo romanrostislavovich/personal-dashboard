@@ -18,8 +18,8 @@ import {
 export const gameEnum = pgEnum('games_game', GAMES);
 
 /**
- * Игровые аккаунты пользователя.
- * `externalId`: для Dota — Steam account id (32-bit), для WoW — `region/realm/name`.
+ * The user's game accounts.
+ * `externalId`: for Dota — the Steam account id (32-bit), for WoW — `region/realm/name`.
  */
 export const gameAccounts = pgTable(
   'games_accounts',
@@ -31,7 +31,7 @@ export const gameAccounts = pgTable(
     game: gameEnum().notNull(),
     externalId: text().notNull(),
     displayName: text().notNull(),
-    /** Последний снимок профиля (разный для каждой игры, см. DotaProfile / WowProfile). */
+    /** The latest profile snapshot (different for each game, see DotaProfile / WowProfile). */
     profile: jsonb().$type<Record<string, unknown>>(),
     lastSyncedAt: timestamp({ withTimezone: true }),
     lastError: text(),
@@ -40,7 +40,7 @@ export const gameAccounts = pgTable(
   (table) => [unique().on(table.userId, table.game, table.externalId)],
 );
 
-/** Матчи Dota 2 — копятся локально для статистики (и будущих ачивок). */
+/** Dota 2 matches — accumulated locally for statistics (and future achievements). */
 export const dotaMatches = pgTable(
   'games_dota_matches',
   {
@@ -62,7 +62,7 @@ export const dotaMatches = pgTable(
   ],
 );
 
-/** Полученные ачивки WoW — чтобы замечать новые и присылать уведомление. */
+/** Earned WoW achievements — to notice new ones and send a notification. */
 export const wowAchievements = pgTable(
   'games_wow_achievements',
   {

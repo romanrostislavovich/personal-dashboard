@@ -7,8 +7,8 @@ import { MonitoringModule } from '@pd/monitoring-api';
 import { MusicModule } from '@pd/music-api';
 
 /**
- * Включённые модули дашборда (бэкенд-часть).
- * Чтобы отключить модуль — убери его из списка (и из apps/web/src/app/modules.ts).
+ * Enabled dashboard modules (backend part).
+ * To disable a module, remove it from this list (and from apps/web/src/app/modules.ts).
  */
 export const enabledModules = [
   BirthdaysModule,

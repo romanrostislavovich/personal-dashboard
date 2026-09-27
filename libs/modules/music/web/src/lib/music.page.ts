@@ -14,7 +14,7 @@ import { MusicConnectComponent } from './music-connect.component';
 import { NowPlayingComponent } from './now-playing.component';
 import { TopListComponent } from './top-list.component';
 
-/** «Сейчас играет» меняется часто — обновляем раз в 30 секунд, пока страница открыта. */
+/** "Now playing" changes often — refresh every 30 seconds while the page is open. */
 const NOW_PLAYING_REFRESH_MS = 30_000;
 
 @Component({
@@ -68,7 +68,7 @@ export class MusicPage {
     this.nowPlaying.reload();
   }
 
-  /** После входа в Spotify нас возвращают на /music?spotify=connected|error. */
+  /** After Spotify sign-in we are sent back to /music?spotify=connected|error. */
   private showSpotifyResult(): void {
     const route = inject(ActivatedRoute);
     const router = inject(Router);
@@ -79,7 +79,7 @@ export class MusicPage {
       snackBar.open(transloco.translate(`music.connect.spotify.${result}`), 'OK', {
         duration: 5000,
       });
-      // Убираем параметр из адреса, чтобы сообщение не повторялось при обновлении.
+      // Remove the parameter from the URL so the message does not repeat on reload.
       router.navigate([], { queryParams: {}, replaceUrl: true });
     }
   }

@@ -1,6 +1,6 @@
 import { WebDashboardModule } from '@pd/web-core';
 
-/** Web-часть модуля «Дни рождения». Подключается в apps/web/src/app/modules.ts. */
+/** Web part of the Birthdays module. Plugged in at apps/web/src/app/modules.ts. */
 export const birthdaysModule: WebDashboardModule = {
   id: 'birthdays',
   nav: { labelKey: 'birthdays.title', icon: 'cake' },

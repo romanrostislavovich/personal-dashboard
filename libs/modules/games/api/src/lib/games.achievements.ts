@@ -4,7 +4,7 @@ import { and, asc, eq, sql } from 'drizzle-orm';
 import { longestWinStreak } from './dota/win-streak';
 import { dotaMatches, gameAccounts } from './games.schema';
 
-/** Ачивки игр: победы и серии в Dota 2, медаль, очки достижений в WoW. */
+/** Game achievements: wins and streaks in Dota 2, medal, achievement points in WoW. */
 @Injectable()
 export class GamesAchievements implements OnModuleInit {
   constructor(
@@ -65,7 +65,7 @@ export class GamesAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'games.dota-medal',
       module: 'games',
-      // rank_tier = медаль × 10 + звёзды; берём медаль лучшего аккаунта.
+      // rank_tier = medal × 10 + stars; take the medal of the best account.
       measure: async (userId) =>
         Math.floor((await this.maxProfileNumber(userId, 'dota2', 'rankTier')) / 10),
       tiers: [
@@ -132,7 +132,7 @@ export class GamesAchievements implements OnModuleInit {
     return row?.wins ?? 0;
   }
 
-  /** Лучшая серия среди всех Dota-аккаунтов пользователя. */
+  /** The best streak across all of the user's Dota accounts. */
   private async dotaWinStreak(userId: string): Promise<number> {
     const rows = await this.db
       .select({ accountId: dotaMatches.accountId, won: dotaMatches.won })
@@ -149,7 +149,7 @@ export class GamesAchievements implements OnModuleInit {
     return Math.max(0, ...[...resultsByAccount.values()].map(longestWinStreak));
   }
 
-  /** Максимум числового поля профиля среди аккаунтов игры (профиль хранится в jsonb). */
+  /** Maximum of a numeric profile field across the game's accounts (the profile is stored in jsonb). */
   private async maxProfileNumber(
     userId: string,
     game: 'dota2' | 'wow',

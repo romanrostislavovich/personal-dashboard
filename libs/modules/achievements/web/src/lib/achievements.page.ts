@@ -50,7 +50,7 @@ type Filter = 'all' | 'unlocked' | 'locked';
 
     @for (group of groups(); track group.module) {
       <section class="group">
-        <!-- Раздел называется так же, как модуль в меню: ключ перевода '<модуль>.title'. -->
+        <!-- A section is named like the module in the menu: translation key '<module>.title'. -->
         <h2 class="group-title">{{ group.module + '.title' | transloco }}</h2>
         <div class="grid">
           @for (achievement of group.items; track achievement.id) {
@@ -93,7 +93,7 @@ export class AchievementsPage {
     () => this.achievements.value().filter((a) => a.unlockedAt).length,
   );
 
-  /** Группы по модулям в порядке регистрации метрик, с учётом фильтра. */
+  /** Groups by module in metric registration order, with the filter applied. */
   protected readonly groups = computed(() => {
     const filter = this.filter();
     const visible = this.achievements

@@ -1,6 +1,6 @@
 import { pickMessages } from '@pd/api-core';
 
-/** Тексты модуля (уведомления и ответы бота); язык выбирается по `user.locale`. */
+/** Module texts (notifications and bot replies); the language is picked by `user.locale`. */
 const messages = {
   en: {
     commandDescription: 'Diary entry: /d text',

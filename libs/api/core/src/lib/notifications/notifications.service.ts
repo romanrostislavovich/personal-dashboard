@@ -3,8 +3,8 @@ import { UsersService } from '../users/users.service';
 import { Notification, NOTIFICATION_CHANNELS, NotificationChannel } from './notification-channel';
 
 /**
- * Единая точка отправки уведомлений для всех модулей.
- * Модуль не знает, куда уйдёт сообщение, — он просто вызывает `send`.
+ * Single entry point for sending notifications from all modules.
+ * A module does not know where the message goes — it just calls `send`.
  */
 @Injectable()
 export class NotificationsService {
@@ -27,7 +27,7 @@ export class NotificationsService {
       return;
     }
 
-    // Падение одного канала не должно мешать остальным.
+    // A failure in one channel must not affect the others.
     await Promise.all(
       channels.map((channel) =>
         channel

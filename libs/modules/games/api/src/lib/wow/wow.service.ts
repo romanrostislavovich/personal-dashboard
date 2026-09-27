@@ -16,7 +16,7 @@ const RECENT_ACHIEVEMENTS = 10;
 
 export interface WowSyncResult {
   profile: WowProfile;
-  /** Ачивки, полученные с прошлой синхронизации (при первой — пусто). */
+  /** Achievements earned since the last sync (empty on the first one). */
   newAchievements: WowCompletedAchievement[];
 }
 
@@ -52,7 +52,7 @@ export class WowService {
     return new BattlenetClient(clientId, clientSecret);
   }
 
-  /** Обновляет профиль и сохраняет полученные ачивки. */
+  /** Updates the profile and saves earned achievements. */
   async sync(account: GameAccountRow): Promise<WowSyncResult> {
     const client = await this.clientFor(account.userId);
     const ref = parseRef(account.externalId);
@@ -77,7 +77,7 @@ export class WowService {
             .returning({ achievementId: wowAchievements.achievementId })
         : [];
 
-    // При первой синхронизации «новые» — вообще все ачивки; про них не уведомляем.
+    // On the first sync every achievement is "new"; no notification for those.
     const isFirstSync = account.lastSyncedAt === null;
     const insertedIds = new Set(inserted.map((row) => row.achievementId));
     return {
@@ -115,7 +115,7 @@ export class WowService {
   }
 }
 
-/** `externalId` WoW-аккаунта хранится как `region/realm/name`. */
+/** A WoW account's `externalId` is stored as `region/realm/name`. */
 export function toWowExternalId(ref: WowCharacterRef): string {
   return `${ref.region}/${ref.realm}/${ref.name.toLowerCase()}`;
 }

@@ -3,18 +3,18 @@ import { UserRow } from '../users/users.schema';
 export interface Notification {
   title: string;
   body: string;
-  /** Модуль-источник, например `birthdays`. Пригодится для настроек «что куда слать». */
+  /** Source module, for example `birthdays`. Useful for "what goes where" settings. */
   source: string;
 }
 
 /**
- * Канал доставки уведомлений: Telegram, позже Discord, e-mail, push.
- * Чтобы добавить канал, реализуй интерфейс и зарегистрируй его в NotificationsModule
- * под токеном NOTIFICATION_CHANNELS.
+ * A notification delivery channel: Telegram, later Discord, e-mail, push.
+ * To add a channel, implement the interface and register it in NotificationsModule
+ * under the NOTIFICATION_CHANNELS token.
  */
 export interface NotificationChannel {
   readonly name: string;
-  /** Может ли канал доставить сообщение этому пользователю (например, привязан ли Telegram). */
+  /** Whether the channel can deliver to this user (for example, whether Telegram is linked). */
   isEnabledFor(user: UserRow): boolean;
   send(user: UserRow, notification: Notification): Promise<void>;
 }

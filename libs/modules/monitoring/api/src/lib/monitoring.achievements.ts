@@ -3,7 +3,7 @@ import { achievementTier, AchievementsService, DB, Database } from '@pd/api-core
 import { sql } from 'drizzle-orm';
 import { checkResults, monitors } from './monitoring.schema';
 
-/** Ачивки мониторинга: сколько дней все сайты работают без единого сбоя. */
+/** Monitoring achievements: how many days all sites have run without a single failure. */
 @Injectable()
 export class MonitoringAchievements implements OnModuleInit {
   constructor(
@@ -40,8 +40,8 @@ export class MonitoringAchievements implements OnModuleInit {
   }
 
   /**
-   * Для каждого монитора — дни с последней неудачной проверки (или с момента добавления),
-   * а результат — худший из мониторов. Нет мониторов — 0.
+   * For each monitor — days since the last failed check (or since it was added),
+   * and the result is the worst of the monitors. No monitors — 0.
    */
   private async daysWithoutFailures(userId: string): Promise<number> {
     const result = await this.db.execute<{ days: number | null }>(sql`

@@ -7,7 +7,7 @@ import { AchievementsService } from './achievements.service';
 export class AchievementsController {
   constructor(private readonly achievements: AchievementsService) {}
 
-  /** Список с прогрессом. Заодно проверяет, не открылось ли что-то новое. */
+  /** List with progress. Also checks whether anything new has unlocked. */
   @Get()
   list(@CurrentUser() user: AuthUser): Promise<Achievement[]> {
     return this.achievements.list(user.id);

@@ -2,8 +2,8 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { marked } from 'marked';
 
 /**
- * Markdown → HTML. Результат вставляется через `[innerHTML]`, а Angular сам
- * вычищает из него опасное (скрипты, обработчики событий).
+ * Markdown → HTML. The result is inserted via `[innerHTML]`, and Angular itself
+ * strips anything dangerous from it (scripts, event handlers).
  */
 @Pipe({ name: 'markdown' })
 export class MarkdownPipe implements PipeTransform {

@@ -4,7 +4,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Achievement } from '@pd/contracts';
 
-/** Одна ачивка: иконка, название, описание и прогресс либо дата открытия. */
+/** One achievement: icon, title, description and either progress or the unlock date. */
 @Component({
   selector: 'pd-achievement-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,7 +42,7 @@ import { Achievement } from '@pd/contracts';
       font-size: 36px;
       line-height: 1;
     }
-    /* Закрытые ачивки — серые, чтобы открытые сразу бросались в глаза. */
+    /* Locked achievements are grey so unlocked ones stand out. */
     .locked .icon {
       filter: grayscale(1);
       opacity: 0.45;

@@ -47,7 +47,7 @@ export class GameAccountsService {
     );
   }
 
-  /** Добавляет аккаунт и сразу синхронизирует; несуществующий аккаунт не сохраняем. */
+  /** Adds an account and syncs it right away; a non-existent account is not saved. */
   async add(userId: string, input: GameAccountInput): Promise<void> {
     const { externalId, displayName } = this.identify(input);
     const [row] = await this.db
@@ -86,7 +86,7 @@ export class GameAccountsService {
     await this.syncAccount(row);
   }
 
-  /** Фоновая синхронизация всех аккаунтов; новости уходят в уведомления. */
+  /** Background sync of all accounts; news goes to notifications. */
   async syncAll(): Promise<void> {
     for (const row of await this.db.select().from(gameAccounts)) {
       await this.syncAccount(row);
@@ -149,7 +149,7 @@ export class GameAccountsService {
     return (await this.users.findById(userId))?.locale ?? 'en';
   }
 
-  /** Внешний id и имя до первой синхронизации. */
+  /** External id and name before the first sync. */
   private identify(input: GameAccountInput): { externalId: string; displayName: string } {
     if (input.game === 'dota2') {
       const accountId = parseDotaAccountId(input.steamId);

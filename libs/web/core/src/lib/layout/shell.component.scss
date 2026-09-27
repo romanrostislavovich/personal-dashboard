@@ -8,7 +8,7 @@
   flex-direction: column;
 }
 
-// Растягиваем внутренний контейнер сайднава, чтобы нижнее меню прижалось к низу.
+// Stretch the sidenav's inner container so the bottom menu sticks to the bottom.
 .sidenav ::ng-deep .mat-drawer-inner-container {
   display: flex;
   flex-direction: column;

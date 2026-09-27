@@ -30,8 +30,8 @@ export class RecurringPaymentsService {
     if (input.projectId) {
       await this.projects.assertOwned(userId, input.projectId);
     }
-    // Не списываем задним числом: если день списания в этом месяце уже прошёл,
-    // считаем этот месяц оплаченным, первое автосписание будет в следующем.
+    // No backdated charges: if this month's charge day has already passed,
+    // this month counts as paid; the first automatic charge will be next month.
     const lastChargedOn = dueChargeDate({ ...input, lastChargedOn: null }, this.today());
     const [row] = await this.db
       .insert(recurringPayments)
@@ -65,7 +65,7 @@ export class RecurringPaymentsService {
       .where(and(eq(recurringPayments.id, id), eq(recurringPayments.userId, userId)));
   }
 
-  /** Проводит все платежи пользователя, которым пора, и возвращает проведённые. */
+  /** Makes all of the user's due payments and returns the ones made. */
   async chargeDue(userId: string): Promise<RecurringPayment[]> {
     const today = this.today();
     const charged: RecurringPayment[] = [];
@@ -75,7 +75,7 @@ export class RecurringPaymentsService {
       if (!chargeDate) {
         continue;
       }
-      // Операция и отметка о списании — атомарно, чтобы не получить дубль.
+      // The transaction and the charge mark are written atomically to avoid duplicates.
       await this.db.transaction(async (tx) => {
         await tx.insert(transactions).values({
           userId,

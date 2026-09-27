@@ -2,11 +2,11 @@ import { roundMoney } from '../cost-provider';
 
 export interface DeepseekBalanceInfo {
   currency: string;
-  /** Строкой, например `"110.00"`. */
+  /** As a string, for example `"110.00"`. */
   total_balance: string;
 }
 
-/** Выбираем баланс в USD, если он есть (аккаунт может иметь и CNY). */
+/** Pick the USD balance if there is one (an account may also have CNY). */
 export function pickBalance(infos: DeepseekBalanceInfo[]): { currency: string; balance: number } {
   const info = infos.find((i) => i.currency === 'USD') ?? infos[0];
   if (!info) {
@@ -16,9 +16,9 @@ export function pickBalance(infos: DeepseekBalanceInfo[]): { currency: string; b
 }
 
 /**
- * Расход между двумя замерами баланса.
- * Рост баланса — это пополнение, а не расход (0). Если между замерами было и пополнение,
- * и расход, расход будет занижен — поэтому синхронизация идёт каждый день.
+ * Spending between two balance readings.
+ * A balance increase is a top-up, not spending (0). If there was both a top-up and spending
+ * between readings, spending is underestimated — that is why the sync runs daily.
  */
 export function consumptionBetween(previous: number | null, current: number): number {
   if (previous === null || current >= previous) {

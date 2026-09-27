@@ -7,7 +7,7 @@ import { DotaSummary, GameAccount, WowSummary } from '@pd/contracts';
 import { DotaRankComponent } from './dota/dota-rank.component';
 import { GamesApi } from './games.api';
 
-/** Виджет главной: медаль и винрейт в Dota, ilvl и последняя ачивка в WoW. */
+/** Home widget: medal and win rate in Dota, ilvl and the latest achievement in WoW. */
 @Component({
   selector: 'pd-games-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,21 +1,21 @@
 import { CostProvider } from '@pd/contracts';
 
 /**
- * Что провайдер узнал о затратах при синхронизации:
- * - `monthTotal` — полная сумма за текущий месяц (заменяет прежнее значение), как у Hetzner;
- * - `increment` — сколько потрачено с прошлой синхронизации (прибавляется), как у DeepSeek.
+ * What the provider learned about costs during a sync:
+ * - `monthTotal` — the full amount for the current month (replaces the previous value), as with Hetzner;
+ * - `increment` — how much was spent since the last sync (added up), as with DeepSeek.
  */
 export type CostMeasurement =
   | { kind: 'monthTotal'; amount: number; currency: string }
   | { kind: 'increment'; amount: number; currency: string; state: Record<string, unknown> };
 
 /**
- * Адаптер внешнего сервиса. Чтобы добавить новый (DigitalOcean, OpenAI…),
- * реализуй интерфейс, зарегистрируй класс в FinanceModule и добавь id в COST_PROVIDERS.
+ * Adapter for an external service. To add a new one (DigitalOcean, OpenAI…),
+ * implement the interface, register the class in FinanceModule and add the id to COST_PROVIDERS.
  */
 export interface CostProviderAdapter {
   readonly id: CostProvider;
-  /** Проверяет токен при подключении; бросает CostProviderAuthError, если он не подходит. */
+  /** Checks the token on connect; throws CostProviderAuthError if it is not valid. */
   verify(token: string): Promise<void>;
   measure(token: string, state: Record<string, unknown>): Promise<CostMeasurement>;
 }

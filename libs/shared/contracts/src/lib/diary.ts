@@ -4,9 +4,9 @@ import { LocalDate } from './local-date';
 export const MOODS = [1, 2, 3, 4, 5] as const;
 
 export const diaryEntryInputSchema = z.object({
-  /** Markdown. Теги (#работа, #спорт) извлекаются из текста автоматически. */
+  /** Markdown. Tags (#work, #sport) are extracted from the text automatically. */
   content: z.string().max(50_000),
-  /** 1 — очень плохо … 5 — отлично; null — не указано. */
+  /** 1 — very bad … 5 — great; null — not set. */
   mood: z.number().int().min(1).max(5).nullish(),
 });
 export type DiaryEntryInput = z.infer<typeof diaryEntryInputSchema>;
@@ -27,21 +27,21 @@ export interface DiaryEntry {
 }
 
 export interface DiaryStats {
-  /** Дней подряд с записью, включая сегодня (или вчера, если сегодня ещё не писал). */
+  /** Consecutive days with an entry, including today (or yesterday if nothing was written today yet). */
   currentStreak: number;
   longestStreak: number;
   totalEntries: number;
   hasEntryToday: boolean;
-  /** Настроение по дням за последние 30 дней (только дни с оценкой). */
+  /** Mood per day for the last 30 days (only days with a rating). */
   moodHistory: { day: LocalDate; mood: number }[];
-  /** Самые частые теги. */
+  /** Most frequent tags. */
   topTags: { tag: string; count: number }[];
 }
 
 export const diarySettingsSchema = z.object({
-  /** Напоминание в 21:00, если за день нет записи. */
+  /** Reminder at 21:00 if there is no entry for the day. */
   eveningReminder: z.boolean(),
-  /** Саммари недели от AI по воскресеньям в 20:00 (если AI настроен). */
+  /** AI summary of the week on Sundays at 20:00 (if the AI is configured). */
   weeklySummary: z.boolean(),
 });
 export type DiarySettings = z.infer<typeof diarySettingsSchema>;
@@ -50,6 +50,6 @@ export const diarySummaryRequestSchema = z.object({ from: z.iso.date(), to: z.is
 export type DiarySummaryRequest = z.infer<typeof diarySummaryRequestSchema>;
 
 export interface DiarySummary {
-  /** `null` — за период нет записей. */
+  /** `null` — no entries for the period. */
   summary: string | null;
 }

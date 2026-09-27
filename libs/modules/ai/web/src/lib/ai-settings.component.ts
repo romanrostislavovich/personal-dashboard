@@ -22,7 +22,7 @@ import { AI_PROVIDER_PRESETS, AI_PROVIDERS, AiProvider, AiSettings } from '@pd/c
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
 
-/** Подключение AI: провайдер, адрес, модель, ключ и утренний дайджест. */
+/** AI connection: provider, address, model, key and the morning digest. */
 @Component({
   selector: 'pd-ai-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -131,14 +131,14 @@ export class AiSettingsComponent {
   });
 
   constructor() {
-    // Сохранённые настройки → в форму (ключ не показываем, только признак «сохранён»).
+    // Saved settings → into the form (the key is not shown, only a "saved" flag).
     effect(() => {
       const { provider, baseUrl, model, morningDigest } = this.settings();
       this.form.patchValue({ provider, baseUrl, model, morningDigest, apiKey: '' });
     });
   }
 
-  /** Выбрали провайдера — подставляем его адрес и модель по умолчанию. */
+  /** A provider was selected — fill in its default address and model. */
   applyPreset(provider: AiProvider): void {
     const preset = AI_PROVIDER_PRESETS[provider];
     this.form.patchValue({ baseUrl: preset.baseUrl, model: preset.model });

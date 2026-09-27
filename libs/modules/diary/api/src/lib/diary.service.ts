@@ -49,7 +49,7 @@ export class DiaryService {
     return row ? toEntry(row) : null;
   }
 
-  /** Сохраняет запись дня. Пустая запись без настроения удаляется. */
+  /** Saves the day's entry. An empty entry without a mood is deleted. */
   async save(userId: string, day: LocalDate, input: DiaryEntryInput): Promise<DiaryEntry | null> {
     const content = input.content;
     const mood = input.mood ?? null;
@@ -72,7 +72,7 @@ export class DiaryService {
       .where(and(eq(diaryEntries.userId, userId), eq(diaryEntries.day, day)));
   }
 
-  /** Дописывает заметку в сегодняшнюю запись (используется Telegram-командой). */
+  /** Appends a note to today's entry (used by the Telegram command). */
   async appendToToday(userId: string, note: string): Promise<void> {
     const timeZone = this.timeZone();
     const day = toLocalDate(todayIn(timeZone));
@@ -107,7 +107,7 @@ export class DiaryService {
       )
       .orderBy(asc(diaryEntries.day));
 
-    // unnest разворачивает массив тегов в строки, чтобы их можно было посчитать.
+    // unnest expands the tag array into rows so they can be counted.
     const topTags = await this.db.execute<{ tag: string; count: number }>(sql`
       SELECT tag, count(*)::int AS count
       FROM ${diaryEntries}, unnest(${diaryEntries.tags}) AS tag
@@ -146,7 +146,7 @@ export class DiaryService {
     return settings;
   }
 
-  /** Пользователи, которым пора напомнить: напоминание включено, а записи за сегодня нет. */
+  /** Users due a reminder: reminder enabled and no entry for today. */
   async usersToRemind(): Promise<string[]> {
     const today = toLocalDate(this.today());
     const rows = await this.db
@@ -168,7 +168,7 @@ export class DiaryService {
     return rows.map((row) => row.userId);
   }
 
-  /** Последние 7 дней, включая сегодня. */
+  /** The last 7 days, including today. */
   lastWeek(): { from: LocalDate; to: LocalDate } {
     const today = this.today();
     return { from: toLocalDate(addDays(today, -6)), to: toLocalDate(today) };

@@ -2,7 +2,7 @@ import { connect } from 'node:tls';
 
 const TIMEOUT_MS = 10_000;
 
-/** Дата окончания SSL-сертификата сайта. `null` для http:// или если узнать не удалось. */
+/** The site's SSL certificate expiry date. `null` for http:// or if it could not be determined. */
 export function fetchSslExpiry(url: string): Promise<Date | null> {
   const { protocol, hostname, port } = new URL(url);
   if (protocol !== 'https:') {
@@ -14,7 +14,7 @@ export function fetchSslExpiry(url: string): Promise<Date | null> {
       host: hostname,
       port: Number(port) || 443,
       servername: hostname,
-      // Нам нужна только дата сертификата, даже если он уже невалиден.
+      // We only need the certificate date, even if it is already invalid.
       rejectUnauthorized: false,
     });
     const finish = (value: Date | null) => {

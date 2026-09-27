@@ -11,9 +11,9 @@ import {
 const API = 'https://api.hetzner.cloud/v1';
 
 /**
- * Hetzner Cloud. API не отдаёт счета, поэтому считаем месячную стоимость
- * текущих ресурсов по официальному прайсу (эндпоинт /pricing).
- * Токен: Hetzner Console → проект → Security → API tokens (достаточно Read).
+ * Hetzner Cloud. The API does not return invoices, so we compute the monthly cost
+ * of the current resources from the official price list (the /pricing endpoint).
+ * Token: Hetzner Console → project → Security → API tokens (Read is enough).
  */
 @Injectable()
 export class HetznerCostProvider implements CostProviderAdapter {
@@ -39,7 +39,7 @@ export class HetznerCostProvider implements CostProviderAdapter {
     return { kind: 'monthTotal', amount: estimate.total, currency: estimate.currency };
   }
 
-  /** Списки в Hetzner API постраничные; для небольшого проекта хватает одной страницы на 50. */
+  /** Hetzner API lists are paginated; one page of 50 is enough for a small project. */
   private async getAll<T>(token: string, path: string, key: string): Promise<T[]> {
     const response = await this.get<Record<string, T[]>>(token, `${path}?per_page=50`);
     return response[key] ?? [];

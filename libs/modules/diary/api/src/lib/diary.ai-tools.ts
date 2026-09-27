@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, NO_PARAMETERS, PERIOD_PARAMETERS } from '@pd/api-core';
 import { DiaryService } from './diary.service';
 
-/** Доступ AI к дневнику: записи за период и статистика. */
+/** AI access to the diary: entries for a period and statistics. */
 @Injectable()
 export class DiaryAiTools implements OnModuleInit {
   constructor(
@@ -15,8 +15,8 @@ export class DiaryAiTools implements OnModuleInit {
       name: 'diary_entries',
       module: 'diary',
       description:
-        'Записи дневника за период: дата, настроение 1–5, теги и текст (markdown). ' +
-        'Для вопросов о прошедших днях, событиях, настроении.',
+        'Diary entries for a period: date, mood 1–5, tags and text (markdown). ' +
+        'For questions about past days, events, mood.',
       parameters: PERIOD_PARAMETERS,
       handler: (userId, args) =>
         this.diary.list(userId, { from: String(args['from']), to: String(args['to']) }),
@@ -26,8 +26,8 @@ export class DiaryAiTools implements OnModuleInit {
       name: 'diary_stats',
       module: 'diary',
       description:
-        'Статистика дневника: текущая и рекордная серия дней, число записей, есть ли запись сегодня, ' +
-        'настроение за 30 дней, частые теги.',
+        'Diary statistics: current and longest day streak, number of entries, whether there is an entry today, ' +
+        'mood over 30 days, frequent tags.',
       parameters: NO_PARAMETERS,
       handler: (userId) => this.diary.stats(userId),
     });

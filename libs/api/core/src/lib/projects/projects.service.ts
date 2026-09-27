@@ -18,7 +18,7 @@ export class ProjectsService {
     return rows.map(toProject);
   }
 
-  /** Для модулей: убедиться, что проект существует и принадлежит пользователю. */
+  /** For modules: make sure the project exists and belongs to the user. */
   async assertOwned(userId: string, projectId: string): Promise<void> {
     const count = await this.db.$count(
       projects,
@@ -53,7 +53,7 @@ export class ProjectsService {
     try {
       await this.db.delete(projects).where(and(eq(projects.id, id), eq(projects.userId, userId)));
     } catch (error) {
-      // Модули защищают свои данные внешними ключами (например, финансовые операции проекта).
+      // Modules protect their data with foreign keys (for example, a project's financial transactions).
       if (isForeignKeyViolation(error)) {
         throw new ConflictException('Project is used by other records');
       }

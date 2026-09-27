@@ -3,7 +3,7 @@ import { achievementTier, AchievementsService, DB, Database } from '@pd/api-core
 import { eq, sql } from 'drizzle-orm';
 import { transactions } from './finance.schema';
 
-/** Ачивки финансов: сколько месяцев ведётся учёт. */
+/** Finance achievements: for how many months the records have been kept. */
 @Injectable()
 export class FinanceAchievements implements OnModuleInit {
   constructor(

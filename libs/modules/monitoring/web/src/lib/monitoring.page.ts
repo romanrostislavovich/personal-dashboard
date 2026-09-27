@@ -17,7 +17,7 @@ import { firstValueFrom, interval } from 'rxjs';
 import { MonitorCardComponent } from './monitor-card.component';
 import { MonitoringApi } from './monitoring.api';
 
-/** Проверки идут раз в 5 минут — обновляем страницу раз в минуту, этого достаточно. */
+/** Checks run every 5 minutes — refreshing the page once a minute is enough. */
 const REFRESH_MS = 60_000;
 
 @Component({
@@ -130,7 +130,7 @@ export class MonitoringPage {
   });
 
   constructor() {
-    // При выборе проекта подставляем его адрес — обычно мониторят именно его.
+    // When a project is selected, fill in its address — that is usually what gets monitored.
     this.form.controls.projectId.valueChanges.pipe(takeUntilDestroyed()).subscribe((id) => {
       const project = this.projects.value().find((p) => p.id === id);
       if (project?.url && !this.form.controls.url.dirty) {

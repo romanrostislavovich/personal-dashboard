@@ -15,13 +15,13 @@ import { musicSettings, MusicSettingsRow, scrobbles } from './music.schema';
 import { fillPlaysByDay } from './plays-by-day';
 
 const API_KEY_SECRET = 'music.lastfm.api-key';
-/** При подключении подтягиваем историю за последние 30 дней, а не всю. */
+/** On connect, pull the last 30 days of history, not all of it. */
 const INITIAL_HISTORY_DAYS = 30;
-/** Ограничение на одну синхронизацию: 25 страниц × 200 = 5000 прослушиваний. */
+/** Limit per sync: 25 pages × 200 = 5000 plays. */
 const MAX_PAGES_PER_SYNC = 25;
 const STATS_DAYS = 30;
 const RECENT_LIMIT = 10;
-/** Топы и общий счётчик меняются медленно — кэшируем, чтобы не упираться в лимиты Last.fm. */
+/** Tops and the total count change slowly — cache them to stay within Last.fm limits. */
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
 @Injectable()
@@ -43,7 +43,7 @@ export class LastfmService {
     return row;
   }
 
-  /** Подключение: проверяем пару «пользователь + ключ» и сразу подтягиваем историю. */
+  /** Connect: check the "user + key" pair and pull the history right away. */
   async connect(userId: string, { username, apiKey }: LastfmSettingsInput): Promise<void> {
     try {
       await new LastfmClient(apiKey, username).getTotalScrobbles();
@@ -65,7 +65,7 @@ export class LastfmService {
     await this.sync(userId);
   }
 
-  /** Отключение. Уже загруженная история остаётся — она нужна статистике. */
+  /** Disconnect. Already loaded history stays — statistics need it. */
   async disconnect(userId: string): Promise<void> {
     await this.secrets.delete(userId, API_KEY_SECRET);
     await this.db
@@ -75,7 +75,7 @@ export class LastfmService {
     this.clearCache(userId);
   }
 
-  /** Докачивает новые прослушивания в локальную историю. */
+  /** Fetches new plays into the local history. */
   async sync(userId: string): Promise<void> {
     const client = await this.clientFor(userId);
     if (!client) {
@@ -116,7 +116,7 @@ export class LastfmService {
     }
   }
 
-  /** Все пользователи с подключённым Last.fm (для фоновой задачи). */
+  /** All users with Last.fm connected (for the background job). */
   async connectedUserIds(): Promise<string[]> {
     const rows = await this.db
       .select({ userId: musicSettings.userId })
@@ -130,7 +130,7 @@ export class LastfmService {
     const today = todayIn(timeZone);
     const since = new Date(Date.now() - (STATS_DAYS + 1) * 24 * 60 * 60 * 1000);
 
-    // День прослушивания считаем в часовом поясе пользователя, а не в UTC.
+    // The play day is computed in the user's time zone, not in UTC.
     const counts = await this.db
       .select({
         day: sql<string>`to_char(${scrobbles.playedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`,
@@ -161,13 +161,13 @@ export class LastfmService {
     };
   }
 
-  /** Всего скробблов в Last.fm за всё время; `null`, если Last.fm не подключён. */
+  /** Total Last.fm scrobbles of all time; `null` if Last.fm is not connected. */
   async totalScrobbles(userId: string): Promise<number | null> {
     const client = await this.clientFor(userId);
     return client ? this.cached(userId, 'total', () => client.getTotalScrobbles()) : null;
   }
 
-  /** Рекорд прослушиваний за один день (по локальной истории). */
+  /** Record number of plays in one day (from the local history). */
   async maxPlaysInDay(userId: string): Promise<number> {
     const timeZone = this.config.get('APP_TIMEZONE', { infer: true });
     const result = await this.db.execute<{ plays: number | null }>(sql`
@@ -196,7 +196,7 @@ export class LastfmService {
     });
   }
 
-  /** «Сейчас играет» по данным Last.fm (если плеер скробблит). */
+  /** "Now playing" according to Last.fm (if the player scrobbles). */
   async nowPlaying(userId: string): Promise<NowPlaying | null> {
     const client = await this.clientFor(userId);
     if (!client) {

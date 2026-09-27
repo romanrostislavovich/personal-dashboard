@@ -1,6 +1,6 @@
-/** Загрузки npm-пакета за последние 7 дней. `null`, если пакет не найден. */
+/** npm package downloads for the last 7 days. `null` if the package is not found. */
 export async function fetchNpmWeeklyDownloads(packageName: string): Promise<number | null> {
-  // Scoped-пакеты (@scope/name) передаются в URL как есть.
+  // Scoped packages (@scope/name) are passed in the URL as is.
   const response = await fetch(`https://api.npmjs.org/downloads/point/last-week/${packageName}`);
   if (response.status === 404) {
     return null;

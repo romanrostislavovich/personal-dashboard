@@ -7,8 +7,8 @@ export interface NextBirthday {
 }
 
 /**
- * Ближайший день рождения начиная с `today` (сегодняшний тоже считается).
- * Родившиеся 29 февраля в невисокосный год празднуют 28-го.
+ * The next birthday starting from `today` (today counts too).
+ * People born on February 29 celebrate on the 28th in non-leap years.
  */
 export function nextBirthday(
   birthday: { month: number; day: number; year: number | null },

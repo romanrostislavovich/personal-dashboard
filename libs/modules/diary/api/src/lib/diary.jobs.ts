@@ -10,10 +10,10 @@ import { DiarySummaryService } from './diary-summary.service';
 import { DiaryService } from './diary.service';
 
 /**
- * Связь дневника с внешним миром:
- * - команда бота `/d текст` дописывает заметку в сегодняшнюю запись;
- * - в 21:00 напоминание тем, кто включил его и ещё не писал сегодня;
- * - по воскресеньям в 20:00 — AI-саммари недели (для тех, кто включил).
+ * Connects the diary to the outside world:
+ * - the bot command `/d text` appends a note to today's entry;
+ * - at 21:00, a reminder for those who enabled it and have not written today;
+ * - on Sundays at 20:00, an AI summary of the week (for those who enabled it).
  */
 @Injectable()
 export class DiaryJobs implements OnModuleInit {
@@ -72,7 +72,7 @@ export class DiaryJobs implements OnModuleInit {
           source: 'diary',
         });
       } catch (error) {
-        // Например, AI не настроен — пропускаем пользователя, остальным отправляем.
+        // For example, the AI is not configured — skip this user, send to the rest.
         this.logger.warn(`Weekly diary summary failed for ${userId}: ${error}`);
       }
     }

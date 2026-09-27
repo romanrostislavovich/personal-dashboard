@@ -1,4 +1,4 @@
-/** Сообщение в формате Chat Completions (OpenAI, DeepSeek, Ollama и др.). */
+/** A message in Chat Completions format (OpenAI, DeepSeek, Ollama, etc.). */
 export type ChatMessage =
   | { role: 'system' | 'user'; content: string }
   | { role: 'assistant'; content: string | null; tool_calls?: ToolCall[] }
@@ -32,7 +32,7 @@ export class AiRequestError extends Error {
 
 const TIMEOUT_MS = 120_000;
 
-/** Один запрос `POST {baseUrl}/chat/completions`; возвращает сообщение ассистента. */
+/** A single `POST {baseUrl}/chat/completions` request; returns the assistant message. */
 export async function chatCompletion(
   connection: ChatConnection,
   messages: ChatMessage[],

@@ -1,6 +1,6 @@
 import { WebDashboardModule } from '@pd/web-core';
 
-/** Web-часть модуля «Музыка». Подключается в apps/web/src/app/modules.ts. */
+/** Web part of the Music module. Plugged in at apps/web/src/app/modules.ts. */
 export const musicModule: WebDashboardModule = {
   id: 'music',
   nav: { labelKey: 'music.title', icon: 'headphones' },

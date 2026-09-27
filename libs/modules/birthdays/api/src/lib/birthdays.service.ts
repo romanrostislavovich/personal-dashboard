@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { BirthdayRow, birthdays } from './birthdays.schema';
 import { nextBirthday } from './next-birthday';
 
-/** Данные после валидации (с подставленными значениями по умолчанию). */
+/** Data after validation (with defaults filled in). */
 export type ValidBirthdayInput = z.output<typeof birthdayInputSchema>;
 
 @Injectable()
@@ -17,7 +17,7 @@ export class BirthdaysService {
     @Inject(ConfigService) private readonly config: AppConfig,
   ) {}
 
-  /** Все дни рождения пользователя, ближайшие — первыми. */
+  /** All of the user's birthdays, upcoming ones first. */
   async list(userId: string): Promise<UpcomingBirthday[]> {
     const rows = await this.db.select().from(birthdays).where(eq(birthdays.userId, userId));
     const today = this.today();

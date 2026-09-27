@@ -9,10 +9,10 @@ import { userSecrets } from './secrets.schema';
 const ALGORITHM = 'aes-256-gcm';
 
 /**
- * Зашифрованное хранилище токенов интеграций.
- * Пример: `await secrets.set(userId, 'github-oss.token', token)`.
+ * Encrypted storage for integration tokens.
+ * Example: `await secrets.set(userId, 'github-oss.token', token)`.
  *
- * Значения никогда не отдаются на фронтенд — только признак «настроено / нет».
+ * Values are never sent to the frontend — only a "configured / not" flag.
  */
 @Injectable()
 export class SecretsService {
@@ -22,7 +22,7 @@ export class SecretsService {
     @Inject(DB) private readonly db: Database,
     @Inject(ConfigService) config: AppConfig,
   ) {
-    // sha256 приводит ключ любой длины к ровно 32 байтам для AES-256.
+    // sha256 turns a key of any length into exactly 32 bytes for AES-256.
     this.key = createHash('sha256')
       .update(config.get('ENCRYPTION_KEY', { infer: true }))
       .digest();
@@ -61,7 +61,7 @@ export class SecretsService {
       .where(and(eq(userSecrets.userId, userId), eq(userSecrets.key, key)));
   }
 
-  /** Формат: `iv.authTag.ciphertext` в base64. */
+  /** Format: `iv.authTag.ciphertext` in base64. */
   private encrypt(plain: string): string {
     const iv = randomBytes(12);
     const cipher = createCipheriv(ALGORITHM, this.key, iv);

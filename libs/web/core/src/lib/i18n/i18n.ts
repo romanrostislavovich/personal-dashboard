@@ -16,9 +16,9 @@ const coreTranslations: Record<string, () => Promise<{ default: Translation }>> 
 };
 
 /**
- * Собирает один словарь из переводов ядра и всех подключённых модулей:
+ * Builds one dictionary from the translations of the core and all enabled modules:
  * `{ core: {...}, birthdays: {...}, finance: {...} }`.
- * Так каждый модуль хранит свои переводы у себя, а в шаблонах работает обычный
+ * This way each module keeps its translations to itself, and templates use the usual
  * `{{ 'birthdays.title' | transloco }}`.
  */
 @Injectable({ providedIn: 'root' })
@@ -46,14 +46,14 @@ export function provideI18n() {
       config: {
         availableLangs: [...SUPPORTED_LOCALES],
         defaultLang: lang,
-        // Если в каком-то модуле нет перевода — показываем английский.
+        // If a module lacks a translation, English is shown.
         fallbackLang: 'en',
         reRenderOnLangChange: true,
         missingHandler: { logMissingKey: true },
       },
       loader: DashboardTranslationLoader,
     }),
-    // Грузим словарь до первого рендера, чтобы не мигали ключи вместо текста.
+    // Load the dictionary before the first render so keys don't flash instead of text.
     provideAppInitializer(() => firstValueFrom(inject(TranslocoService).load(lang))),
   ];
 }

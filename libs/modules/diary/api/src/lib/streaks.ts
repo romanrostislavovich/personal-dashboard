@@ -1,9 +1,9 @@
 import { addDays, DateParts, LocalDate, toLocalDate } from '@pd/contracts';
 
 /**
- * Серии дней подряд с записью.
- * Текущая серия не обрывается, если сегодня ещё не писал: считаем от вчера —
- * день ещё не закончился.
+ * Streaks of consecutive days with an entry.
+ * The current streak does not break if nothing was written today yet: count from yesterday —
+ * the day is not over.
  */
 export function computeStreaks(
   days: LocalDate[],
@@ -18,7 +18,7 @@ export function computeStreaks(
     cursor = addDays(cursor, -1);
   }
 
-  // Самая длинная серия: идём по отсортированным датам и считаем соседние дни.
+  // Longest streak: walk the sorted dates and count adjacent days.
   let longest = 0;
   let run = 0;
   let previous: LocalDate | null = null;

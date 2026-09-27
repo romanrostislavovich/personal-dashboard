@@ -5,12 +5,12 @@ import { GithubAuthError, GithubClient } from './clients/github.client';
 
 const TOKEN_KEY = 'github-oss.token';
 
-/** Персональный токен GitHub пользователя (хранится зашифрованным в ядре). */
+/** The user's personal GitHub token (stored encrypted in the core). */
 @Injectable()
 export class GithubTokenService {
   constructor(private readonly secrets: SecretsService) {}
 
-  /** Клиент с токеном пользователя, а если токена нет — анонимный. */
+  /** A client with the user's token, or an anonymous one if there is no token. */
   async clientFor(userId: string): Promise<GithubClient> {
     return new GithubClient(await this.secrets.get(userId, TOKEN_KEY));
   }

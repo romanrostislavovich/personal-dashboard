@@ -1,4 +1,4 @@
-// Публичный API ядра для модулей. Всё, что не экспортировано здесь, — внутренняя кухня.
+// Public API of the core for modules. Anything not exported here is an internal detail.
 export * from './lib/core.module';
 export * from './lib/config/env';
 export { DB, type Database } from './lib/database/database.module';

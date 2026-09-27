@@ -27,21 +27,21 @@ import {
 import { runToolLoop } from './tool-loop';
 
 const API_KEY_SECRET = 'ai.api-key';
-/** Сколько раз подряд модель может запросить данные, прежде чем ответить. */
+/** How many times in a row the model may request data before answering. */
 const MAX_TOOL_ROUNDS = 6;
-/** Ответ инструмента обрезаем, чтобы не раздувать контекст (и счёт за токены). */
+/** Tool output is truncated so it does not bloat the context (and the token bill). */
 const MAX_TOOL_RESULT_CHARS = 12_000;
 
 export interface AskOptions {
-  /** Для Telegram и уведомлений: без markdown-разметки. */
+  /** For Telegram and notifications: no markdown markup. */
   plainText?: boolean;
 }
 
 /**
- * AI-шлюз: любой OpenAI-совместимый API (DeepSeek, OpenAI, Ollama…).
- * Модули дают модели доступ к своим данным через инструменты (см. AiTool).
+ * AI gateway: any OpenAI-compatible API (DeepSeek, OpenAI, Ollama…).
+ * Modules give the model access to their data through tools (see AiTool).
  *
- * Важно: при вопросе данные, которые запросит модель, уходят провайдеру AI.
+ * Important: when a question is asked, the data the model requests is sent to the AI provider.
  */
 @Injectable()
 export class AiService {
@@ -59,7 +59,7 @@ export class AiService {
     this.tools.push(tool);
   }
 
-  // --- Настройки ---
+  // --- Settings ---
 
   async getSettings(userId: string): Promise<AiSettings> {
     const [row] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
@@ -74,7 +74,7 @@ export class AiService {
     };
   }
 
-  /** Сохраняет настройки и проверяет подключение коротким запросом. */
+  /** Saves the settings and tests the connection with a short request. */
   async saveSettings(userId: string, input: AiSettingsInput): Promise<AiSettings> {
     const apiKey = input.apiKey || (await this.secrets.get(userId, API_KEY_SECRET));
     const connection = { baseUrl: input.baseUrl, model: input.model, apiKey };
@@ -120,11 +120,11 @@ export class AiService {
     return rows.map((row) => row.userId);
   }
 
-  // --- Запросы к модели ---
+  // --- Model requests ---
 
   /**
-   * Диалог с доступом к данным модулей: модель запрашивает инструменты,
-   * мы их выполняем и возвращаем результат, пока она не даст ответ.
+   * Chat with access to module data: the model requests tools,
+   * we run them and return the results until it gives an answer.
    */
   async ask(
     userId: string,
@@ -152,7 +152,7 @@ export class AiService {
     }
   }
 
-  /** Одиночный запрос без инструментов (саммари, переформулировки). */
+  /** A single request without tools (summaries, rewording). */
   async complete(userId: string, instruction: string, content: string): Promise<string> {
     const connection = await this.requireConnection(userId);
     const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
@@ -182,7 +182,7 @@ export class AiService {
       const args = rawArgs ? (JSON.parse(rawArgs) as Record<string, unknown>) : {};
       const result = JSON.stringify(await tool.handler(userId, args));
       return result.length > MAX_TOOL_RESULT_CHARS
-        ? `${result.slice(0, MAX_TOOL_RESULT_CHARS)}… (обрезано)`
+        ? `${result.slice(0, MAX_TOOL_RESULT_CHARS)}… (truncated)`
         : result;
     } catch (error) {
       this.logger.warn(`AI tool ${tool.name} failed: ${error}`);
@@ -193,7 +193,7 @@ export class AiService {
   private async systemPrompt(userId: string, { plainText }: AskOptions): Promise<string> {
     const user = await this.users.findById(userId);
     const timeZone = this.config.get('APP_TIMEZONE', { infer: true });
-    // Промпт на английском — модели понимают его лучше; язык ответа — из профиля пользователя.
+    // The prompt is in English — models understand it better; the answer language comes from the user profile.
     return [
       `You are the assistant of ${user?.displayName ?? 'the user'}'s personal dashboard.`,
       `Today is ${toLocalDate(todayIn(timeZone))}, time zone ${timeZone}.`,

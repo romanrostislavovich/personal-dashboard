@@ -1,11 +1,11 @@
-/** Разница между Steam ID64 и 32-битным account id, который использует Dota/OpenDota. */
+/** Difference between a Steam ID64 and the 32-bit account id used by Dota/OpenDota. */
 const STEAM_ID64_BASE = 76561197960265728n;
 
 /**
- * Достаёт Dota account id из того, что вставил пользователь:
+ * Extracts the Dota account id from whatever the user pasted:
  * `105248644`, `76561198065514372`, `https://www.opendota.com/players/105248644`,
  * `https://www.dotabuff.com/players/105248644`, `https://steamcommunity.com/profiles/7656…`.
- * Короткие ссылки Steam вида /id/nickname без Steam Web API не разрешить — вернём null.
+ * Short Steam links like /id/nickname cannot be resolved without the Steam Web API — returns null.
  */
 export function parseDotaAccountId(input: string): number | null {
   const digits = input.trim().match(/(\d{5,20})(?!.*\d)/)?.[1];
@@ -18,7 +18,7 @@ export function parseDotaAccountId(input: string): number | null {
 }
 
 /**
- * Медаль ранга: `rank_tier` = медаль × 10 + звёзды.
+ * Rank medal: `rank_tier` = medal × 10 + stars.
  * 1 Herald, 2 Guardian, 3 Crusader, 4 Archon, 5 Legend, 6 Ancient, 7 Divine, 8 Immortal.
  */
 export function splitRankTier(rankTier: number | null): { medal: number; stars: number } | null {

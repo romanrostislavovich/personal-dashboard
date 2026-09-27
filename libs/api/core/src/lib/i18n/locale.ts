@@ -1,10 +1,10 @@
 import { Locale, SUPPORTED_LOCALES } from '@pd/contracts';
 
-/** Язык по умолчанию для текстов сервера, если у пользователя не задан поддерживаемый. */
+/** Default language for server texts if the user has no supported one set. */
 export const FALLBACK_LOCALE: Locale = 'en';
 
 /**
- * Выбирает набор текстов по языку пользователя. Используется во всех `*.messages.ts`:
+ * Picks the set of texts for the user's language. Used in every `*.messages.ts`:
  *
  * ```ts
  * const messages = { en: { title: 'Birthday' }, ru: { title: 'День рождения' } };
@@ -15,7 +15,7 @@ export function pickMessages<T>(messages: Record<Locale, T>, locale: string | nu
   return messages[toLocale(locale)];
 }
 
-/** Любая строка языка (`ru-RU`, `en`, `de`) → поддерживаемый Locale. */
+/** Any language string (`ru-RU`, `en`, `de`) → a supported Locale. */
 export function toLocale(value: string | null | undefined): Locale {
   const short = value?.slice(0, 2).toLowerCase();
   return (SUPPORTED_LOCALES as readonly string[]).includes(short ?? '')

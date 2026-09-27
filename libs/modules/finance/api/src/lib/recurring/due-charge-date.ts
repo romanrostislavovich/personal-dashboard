@@ -7,12 +7,12 @@ interface ChargeablePayment {
 }
 
 /**
- * Дата списания в текущем месяце, если платёж пора провести, иначе `null`.
+ * The charge date in the current month if the payment is due, otherwise `null`.
  *
- * - День 31 в коротком месяце означает последний день месяца.
- * - Если сервер был выключен в день списания, платёж проведётся в ближайший запуск
- *   (но всё равно датой списания, а не датой запуска).
- * - Повторно в том же месяце платёж не проводится.
+ * - Day 31 in a short month means the last day of the month.
+ * - If the server was off on the charge day, the payment is made on the next run
+ *   (but still with the charge date, not the run date).
+ * - A payment is not made twice in the same month.
  */
 export function dueChargeDate(payment: ChargeablePayment, today: DateParts): LocalDate | null {
   if (!payment.isActive) {
@@ -23,7 +23,7 @@ export function dueChargeDate(payment: ChargeablePayment, today: DateParts): Loc
     return null;
   }
   const chargeDate = toLocalDate({ year: today.year, month: today.month, day: chargeDay });
-  // ISO-даты `YYYY-MM-DD` корректно сравниваются как строки.
+  // ISO dates `YYYY-MM-DD` compare correctly as strings.
   if (payment.lastChargedOn && payment.lastChargedOn >= chargeDate) {
     return null;
   }

@@ -18,7 +18,7 @@ const callDiary = {
   ],
 };
 
-/** Модель-заглушка: отдаёт заранее заготовленные ответы по очереди. */
+/** Stub model: returns prepared answers one by one. */
 function scripted(...replies: Extract<ChatMessage, { role: 'assistant' }>[]) {
   return async () => {
     const next = replies.shift();
@@ -45,7 +45,7 @@ describe('runToolLoop', () => {
     });
 
     expect(result).toEqual({ reply: 'Серия — 5 дней', toolsUsed: ['diary'] });
-    // Во втором запросе модель видит свой вызов и результат инструмента.
+    // In the second request the model sees its own call and the tool result.
     expect(seen[1].at(-1)).toEqual({
       role: 'tool',
       tool_call_id: 'call_1',

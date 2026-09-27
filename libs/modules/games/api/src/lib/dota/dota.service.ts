@@ -6,7 +6,7 @@ import { dotaMatches, GameAccountRow } from '../games.schema';
 import { DotaProfile, HeroInfo, openDota } from './opendota.client';
 import { splitRankTier } from './steam-id';
 
-/** Первая синхронизация берёт последние 100 матчей, дальше — последние 20. */
+/** The first sync takes the last 100 matches, after that — the last 20. */
 const INITIAL_MATCHES = 100;
 const SYNC_MATCHES = 20;
 const RECENT_MATCHES = 10;
@@ -15,7 +15,7 @@ const HEROES_CACHE_MS = 24 * 60 * 60 * 1000;
 
 export interface DotaSyncResult {
   profile: DotaProfile;
-  /** Медаль изменилась (только если была известна раньше). */
+  /** The medal changed (only if it was known before). */
   rankChange: { from: number; to: number } | null;
 }
 
@@ -25,7 +25,7 @@ export class DotaService {
 
   constructor(@Inject(DB) private readonly db: Database) {}
 
-  /** Обновляет профиль и докачивает новые матчи. */
+  /** Updates the profile and fetches new matches. */
   async sync(account: GameAccountRow): Promise<DotaSyncResult> {
     const accountId = Number(account.externalId);
     const isFirstSync = account.lastSyncedAt === null;
@@ -41,7 +41,7 @@ export class DotaService {
         .onConflictDoNothing();
     }
 
-    // Сообщаем только о смене медали (звёзды внутри медали меняются слишком часто).
+    // Notify only about a medal change (stars within a medal change too often).
     const previousTier = (account.profile as DotaProfile | null)?.rankTier ?? null;
     const before = splitRankTier(previousTier)?.medal;
     const after = splitRankTier(profile.rankTier)?.medal;
@@ -111,7 +111,7 @@ export class DotaService {
     };
   }
 
-  /** Справочник героев меняется редко (патчи) — кэшируем на сутки. */
+  /** The hero list rarely changes (patches) — cache it for a day. */
   private async heroMap(): Promise<Map<number, HeroInfo>> {
     if (!this.heroes || Date.now() - this.heroes.loadedAt > HEROES_CACHE_MS) {
       this.heroes = { loadedAt: Date.now(), map: await openDota.getHeroes() };

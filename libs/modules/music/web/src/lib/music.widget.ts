@@ -7,7 +7,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { MusicApi } from './music.api';
 import { NowPlayingComponent } from './now-playing.component';
 
-/** Виджет главной: что играет сейчас (или что играло последним) и сколько прослушиваний сегодня. */
+/** Home widget: what is playing now (or what played last) and how many plays today. */
 @Component({
   selector: 'pd-music-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,

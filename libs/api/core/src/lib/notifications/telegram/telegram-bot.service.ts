@@ -23,19 +23,19 @@ interface PendingLink {
 }
 
 /**
- * Telegram-бот. Работает через long polling, поэтому ему не нужен публичный адрес:
- * одинаково запускается и на сервере, и локально.
+ * Telegram bot. Uses long polling, so it does not need a public address:
+ * it runs the same way on a server and locally.
  *
- * Привязка чата:
- * 1. В настройках дашборда пользователь жмёт «Подключить Telegram» → `createLink()`.
- * 2. Открывает ссылку `t.me/<bot>?start=<code>` и нажимает Start.
- * 3. Бот получает `/start <code>` и сохраняет chat id пользователю.
+ * Linking a chat:
+ * 1. In the dashboard settings the user clicks "Connect Telegram" → `createLink()`.
+ * 2. Opens the `t.me/<bot>?start=<code>` link and presses Start.
+ * 3. The bot receives `/start <code>` and saves the chat id for the user.
  */
 @Injectable()
 export class TelegramBotService implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly logger = new Logger(TelegramBotService.name);
   private readonly bot: Bot | null;
-  // Коды живут в памяти 10 минут — для одного инстанса API этого достаточно.
+  // Codes live in memory for 10 minutes — enough for a single API instance.
   private readonly pendingLinks = new Map<string, PendingLink>();
   private readonly commands: BotCommand[] = [];
 
@@ -51,7 +51,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     return this.bot !== null;
   }
 
-  /** Модули добавляют свои команды в `onModuleInit` (см. BotCommand). */
+  /** Modules add their commands in `onModuleInit` (see BotCommand). */
   registerCommand(command: BotCommand): void {
     this.commands.push(command);
   }
@@ -62,7 +62,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       return;
     }
 
-    // Пока чат не привязан, язык берём из настроек Telegram, потом — из профиля дашборда.
+    // Until the chat is linked, the language comes from Telegram settings, then from the dashboard profile.
     this.bot.command('start', async (ctx) => {
       const userId = this.consumeLinkCode(ctx.match);
       if (!userId) {
@@ -86,7 +86,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     this.bot.catch((error) => this.logger.error(error.message));
 
     await this.bot.init();
-    // Меню команд в Telegram (кнопка «/»): по умолчанию на английском + отдельно для каждого языка.
+    // Telegram command menu (the "/" button): English by default plus one per language.
     const commandsFor = (locale: Locale) =>
       this.commands.map(({ command, description }) => ({
         command,
@@ -96,7 +96,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     for (const locale of SUPPORTED_LOCALES) {
       await this.bot.api.setMyCommands(commandsFor(locale), { language_code: locale });
     }
-    // start() резолвится только при остановке бота, поэтому не ждём его.
+    // start() resolves only when the bot stops, so we do not await it.
     void this.bot.start({ drop_pending_updates: true });
     this.logger.log(`Telegram bot @${this.bot.botInfo.username} started`);
   }

@@ -103,8 +103,8 @@ export class GithubOssPage {
   }
 
   /**
-   * Индикатор загрузки + понятное сообщение об ошибке.
-   * `errorKeys` — ключи переводов для ожидаемых HTTP-статусов.
+   * Loading indicator + a clear error message.
+   * `errorKeys` — translation keys for expected HTTP statuses.
    */
   private async run(
     action: () => Promise<void>,

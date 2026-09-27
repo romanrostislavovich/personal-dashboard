@@ -59,7 +59,7 @@ export class MusicController {
     return this.lastfm.tops(user.id, period);
   }
 
-  /** Сначала Spotify (точнее, с прогрессом), если не подключён — Last.fm. */
+  /** Spotify first (more precise, with progress); if it is not connected — Last.fm. */
   @Get('now-playing')
   async nowPlaying(@CurrentUser() user: AuthUser): Promise<NowPlaying | null> {
     return (await this.spotify.nowPlaying(user.id)) ?? (await this.lastfm.nowPlaying(user.id));
@@ -95,7 +95,7 @@ export class MusicController {
     return { url: this.spotify.connectUrl(user.id) };
   }
 
-  /** Сюда Spotify возвращает браузер после входа; пользователя узнаём по `state`. */
+  /** Spotify returns the browser here after sign-in; the user is identified by `state`. */
   @Public()
   @Get('spotify/callback')
   @Redirect()

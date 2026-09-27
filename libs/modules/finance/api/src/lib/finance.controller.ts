@@ -31,7 +31,7 @@ export class FinanceController {
     private readonly recurring: RecurringPaymentsService,
   ) {}
 
-  // --- Операции ---
+  // --- Transactions ---
 
   @Get('transactions')
   listTransactions(
@@ -72,7 +72,7 @@ export class FinanceController {
     return this.transactions.remove(user.id, id);
   }
 
-  // --- Регулярные платежи ---
+  // --- Recurring payments ---
 
   @Get('recurring-payments')
   listRecurring(@CurrentUser() user: AuthUser) {

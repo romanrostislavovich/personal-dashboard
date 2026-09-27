@@ -1,4 +1,4 @@
-# Единые концы строк (LF) для всех платформ; бинарные файлы не трогаем.
+# Same line endings (LF) on every platform; binary files are left alone.
 * text=auto eol=lf
 *.png binary
 *.ico binary

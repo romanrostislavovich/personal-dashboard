@@ -3,30 +3,30 @@ import { Routes } from '@angular/router';
 import { Translation } from '@jsverse/transloco';
 
 /**
- * Контракт web-части модуля дашборда. Каждый модуль (birthdays, finance, …)
- * экспортирует один такой объект, а приложение подключает его в apps/web/src/app/modules.ts.
+ * Contract of a dashboard module's web part. Each module (birthdays, finance, …)
+ * exports one such object, and the app plugs it in at apps/web/src/app/modules.ts.
  *
- * Пример — libs/modules/birthdays/web/src/lib/birthdays.module.ts.
+ * Example — libs/modules/birthdays/web/src/lib/birthdays.module.ts.
  */
 export interface WebDashboardModule {
   /**
-   * Уникальный id: он же сегмент URL (`/birthdays`) и неймспейс переводов
+   * Unique id: also the URL segment (`/birthdays`) and the translation namespace
    * (`'birthdays.title' | transloco`).
    */
   id: string;
-  /** Пункт бокового меню. `labelKey` — ключ перевода, `icon` — имя Material Icon. */
+  /** Side menu item. `labelKey` is a translation key, `icon` is a Material Icon name. */
   nav: { labelKey: string; icon: string };
-  /** Страницы модуля, загружаются лениво. */
+  /** Module pages, loaded lazily. */
   loadRoutes: () => Promise<Routes>;
-  /** Переводы модуля по языкам: `{ ru: () => import('./i18n/ru.json') }`. */
+  /** Module translations per language: `{ ru: () => import('./i18n/ru.json') }`. */
   translations: Record<string, () => Promise<{ default: Translation }>>;
-  /** Виджеты для главной страницы. */
+  /** Widgets for the home page. */
   widgets?: DashboardWidget[];
 }
 
 export interface DashboardWidget {
   id: string;
-  /** Сколько колонок сетки занимает виджет. */
+  /** How many grid columns the widget spans. */
   size?: 'small' | 'medium' | 'large';
   loadComponent: () => Promise<Type<unknown>>;
 }

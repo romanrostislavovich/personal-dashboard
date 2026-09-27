@@ -17,7 +17,7 @@ const BASE = '/api/finance';
 export class FinanceApi {
   private readonly http = inject(HttpClient);
 
-  // --- Реактивные чтения: перезапрашиваются сами, когда меняется query() ---
+  // --- Reactive reads: re-fetched automatically when query() changes ---
 
   transactions(query: () => TransactionQuery) {
     return httpResource<Transaction[]>(
@@ -41,7 +41,7 @@ export class FinanceApi {
     });
   }
 
-  // --- Изменения ---
+  // --- Mutations ---
 
   saveTransaction(input: TransactionInput, id?: string) {
     return id
@@ -63,7 +63,7 @@ export class FinanceApi {
     return this.http.delete<void>(`${BASE}/recurring-payments/${id}`);
   }
 
-  // --- Автоимпорт затрат ---
+  // --- Automatic cost import ---
 
   costSources() {
     return httpResource<CostSource[]>(() => `${BASE}/cost-sources`, { defaultValue: [] });

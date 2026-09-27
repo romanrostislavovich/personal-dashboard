@@ -46,7 +46,7 @@ export class MusicApi {
     return this.http.post<void>(`${BASE}/lastfm/sync`, {});
   }
 
-  /** Адрес страницы входа Spotify — на него нужно перейти браузером. */
+  /** Spotify sign-in page URL — the browser has to navigate to it. */
   spotifyConnectUrl() {
     return this.http.post<{ url: string }>(`${BASE}/spotify/connect`, {});
   }

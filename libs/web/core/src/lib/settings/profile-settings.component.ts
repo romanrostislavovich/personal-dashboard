@@ -10,7 +10,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Locale, SUPPORTED_LOCALES } from '@pd/contracts';
 import { AuthService } from '../auth/auth.service';
 
-/** Имя и язык. Язык меняет интерфейс, уведомления и ответы AI (страница перезагрузится). */
+/** Name and language. The language changes the UI, notifications and AI answers (the page reloads). */
 @Component({
   selector: 'pd-profile-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,

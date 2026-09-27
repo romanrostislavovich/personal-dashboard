@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
-/** Добавляет JWT к запросам в API и разлогинивает, если токен протух. */
+/** Adds the JWT to API requests and logs out if the token has expired. */
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AuthService);
   const token = auth.token();

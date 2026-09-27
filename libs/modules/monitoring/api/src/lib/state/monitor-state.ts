@@ -1,8 +1,8 @@
 import { MonitorStatus } from '@pd/contracts';
 
 /**
- * Сколько неудачных проверок подряд нужно, чтобы объявить сайт упавшим.
- * Одна ошибка — часто сетевой «чих», поэтому не будим из-за неё.
+ * How many consecutive failed checks are needed to declare a site down.
+ * A single error is often a network hiccup, so we don't wake anyone up over it.
  */
 export const FAILURES_TO_GO_DOWN = 2;
 
@@ -15,7 +15,7 @@ export interface MonitorState {
 export type MonitorEvent =
   { type: 'down'; since: Date } | { type: 'recovered'; downtimeMs: number };
 
-/** Новое состояние монитора после проверки и событие для уведомления (если есть). */
+/** The monitor's new state after a check and the notification event (if any). */
 export function applyCheck(
   state: MonitorState,
   isUp: boolean,
@@ -44,7 +44,7 @@ export function applyCheck(
 
 const SSL_REMINDER_DAYS = [14, 7, 3, 1];
 
-/** Напоминать ли сегодня про сертификат: за 14/7/3/1 день и каждый день после истечения. */
+/** Whether to remind about the certificate today: 14/7/3/1 days before and every day after expiry. */
 export function isSslReminderDay(daysLeft: number): boolean {
   return daysLeft <= 0 || SSL_REMINDER_DAYS.includes(daysLeft);
 }

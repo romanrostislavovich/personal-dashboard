@@ -3,8 +3,8 @@ import { SchedulerService } from '@pd/api-core';
 import { CostSourcesService } from './cost-sources.service';
 
 /**
- * Раз в день обновляет затраты из подключённых сервисов.
- * В 07:00 — до регулярных платежей (08:00) и утренних напоминаний (09:00).
+ * Updates costs from connected services once a day.
+ * At 07:00 — before recurring payments (08:00) and morning reminders (09:00).
  */
 @Injectable()
 export class CostSourcesJob implements OnModuleInit {

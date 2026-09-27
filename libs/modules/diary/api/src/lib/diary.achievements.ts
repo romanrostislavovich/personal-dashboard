@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { achievementTier, AchievementsService } from '@pd/api-core';
 import { DiaryService } from './diary.service';
 
-/** Ачивки дневника: рекордная серия дней подряд и количество записей. */
+/** Diary achievements: the longest streak of days in a row and the number of entries. */
 @Injectable()
 export class DiaryAchievements implements OnModuleInit {
   constructor(

@@ -15,7 +15,7 @@ export function shiftMonth({ year, month }: Month, delta: number): Month {
   return { year: Math.floor(index / 12), month: (index % 12) + 1 };
 }
 
-/** Первый и последний день месяца — для фильтра операций. */
+/** First and last day of the month — for the transactions filter. */
 export function monthRange({ year, month }: Month): { from: LocalDate; to: LocalDate } {
   return {
     from: toLocalDate({ year, month, day: 1 }),
@@ -23,7 +23,7 @@ export function monthRange({ year, month }: Month): { from: LocalDate; to: Local
   };
 }
 
-/** Дата для `DatePipe`: середина месяца, чтобы не зависеть от часового пояса. */
+/** A date for `DatePipe`: the middle of the month, so it does not depend on the time zone. */
 export function monthAsDate({ year, month }: Month): Date {
   return new Date(year, month - 1, 15);
 }

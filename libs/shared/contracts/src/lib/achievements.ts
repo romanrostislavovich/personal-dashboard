@@ -1,14 +1,14 @@
 export interface Achievement {
-  /** `<метрика>.<порог>`, например `diary.longest-streak.30`. */
+  /** `<metric>.<threshold>`, for example `diary.longest-streak.30`. */
   id: string;
-  /** Модуль-источник (для группировки и названия раздела). */
+  /** Source module (for grouping and the section title). */
   module: string;
   icon: string;
   title: string;
   description: string;
   goal: number;
-  /** Текущее значение метрики, не больше `goal`. */
+  /** Current metric value, no more than `goal`. */
   progress: number;
-  /** `null` — ещё не открыта. */
+  /** `null` — not unlocked yet. */
   unlockedAt: string | null;
 }

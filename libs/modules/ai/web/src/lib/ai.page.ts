@@ -21,12 +21,12 @@ import { AiApi } from './ai.api';
 import { AiSettingsComponent } from './ai-settings.component';
 
 interface ChatEntry extends AiChatMessage {
-  /** Из каких модулей модель брала данные (только у ответов). */
+  /** Which modules the model took data from (answers only). */
   toolsUsed?: string[];
   isError?: boolean;
 }
 
-/** История живёт, пока открыта вкладка; сервер ничего не хранит. */
+/** History lives while the tab is open; the server stores nothing. */
 const HISTORY_KEY = 'pd.ai.history';
 const SUGGESTION_KEYS = ['birthdays', 'spending', 'sites', 'diary', 'music'];
 
@@ -59,16 +59,16 @@ export class AiPage {
   protected readonly showSettings = signal(false);
 
   constructor() {
-    // Вопрос из виджета на главной: /ai?q=...
+    // A question from the home widget: /ai?q=...
     const question = inject(ActivatedRoute).snapshot.queryParamMap.get('q');
     if (question) {
-      // Убираем вопрос из адреса, чтобы обновление страницы не отправило его повторно.
+      // Remove the question from the URL so a page reload does not send it again.
       inject(Router).navigate([], { queryParams: {}, replaceUrl: true });
       void this.send(question);
     }
   }
 
-  /** Подпись источника: «Дневник», «Финансы»… — названия модулей из их переводов. */
+  /** Source caption: "Diary", "Finance"… — module names from their translations. */
   protected sourceKey(module: string): string {
     return module === 'projects' ? 'core.nav.projects' : `${module}.title`;
   }
@@ -82,7 +82,7 @@ export class AiPage {
     this.update([...this.history(), { role: 'user', content: question }]);
     this.thinking.set(true);
     try {
-      // Модели отправляем только роль и текст, без служебных полей.
+      // Only the role and text are sent to the model, no internal fields.
       const messages = this.history()
         .filter((m) => !m.isError)
         .map(({ role, content }) => ({ role, content }));
@@ -106,7 +106,7 @@ export class AiPage {
     return this.send(this.transloco.translate(`ai.suggestions.${key}`));
   }
 
-  /** Enter — отправить, Shift+Enter — новая строка. */
+  /** Enter sends, Shift+Enter adds a new line. */
   onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -123,7 +123,7 @@ export class AiPage {
     try {
       sessionStorage.setItem(HISTORY_KEY, JSON.stringify(history));
     } catch {
-      // Хранилище недоступно (приватный режим) — история просто не переживёт перезагрузку.
+      // Storage is unavailable (private mode) — the history just won't survive a reload.
     }
     setTimeout(() => this.messagesEnd()?.nativeElement.scrollIntoView({ behavior: 'smooth' }));
   }

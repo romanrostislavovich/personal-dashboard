@@ -22,7 +22,7 @@ export class UsersService {
     return user;
   }
 
-  /** Используется фоновыми задачами, которые обходят всех пользователей. */
+  /** Used by background jobs that iterate over all users. */
   findAll(): Promise<UserRow[]> {
     return this.db.select().from(users);
   }

@@ -4,7 +4,7 @@ export function achievementId(metric: AchievementMetric, tier: AchievementTier):
   return `${metric.id}.${tier.goal}`;
 }
 
-/** Уровни метрики, которые открылись сейчас: порог достигнут, но ачивки ещё нет. */
+/** Metric tiers unlocked right now: threshold reached, but no achievement yet. */
 export function newlyUnlockedTiers(
   metric: AchievementMetric,
   value: number,

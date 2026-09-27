@@ -19,7 +19,7 @@
   </div>
 </header>
 
-<!-- AI-саммари недели -->
+<!-- AI summary of the week -->
 @if (summary(); as s) {
   <mat-card appearance="outlined" class="summary" [class.error]="s.error">
     <mat-card-header>
@@ -38,7 +38,7 @@
   </mat-card>
 }
 
-<!-- Статистика: серии, количество записей, частые теги -->
+<!-- Statistics: streaks, number of entries, frequent tags -->
 @if (stats.value(); as s) {
   <mat-card appearance="outlined" class="stats">
     <mat-card-content class="stats-grid">
@@ -71,7 +71,7 @@
 }
 
 <div class="layout">
-  <!-- Список записей месяца -->
+  <!-- List of the month's entries -->
   <section class="list">
     <div class="month">
       <button matIconButton (click)="shiftMonth(-1)"><mat-icon>chevron_left</mat-icon></button>
@@ -114,6 +114,6 @@
     }
   </section>
 
-  <!-- Редактор выбранного дня -->
+  <!-- Editor for the selected day -->
   <pd-diary-editor [day]="selectedDay()" (saved)="onSaved()" />
 </div>

@@ -10,7 +10,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-/** Одна запись на день. Записи из Telegram дописываются в запись текущего дня. */
+/** One entry per day. Notes from Telegram are appended to the current day's entry. */
 export const diaryEntries = pgTable(
   'diary_entries',
   {
@@ -21,7 +21,7 @@ export const diaryEntries = pgTable(
     day: date({ mode: 'string' }).notNull(),
     content: text().notNull().default(''),
     mood: smallint(),
-    /** Хэштеги из текста — хранятся отдельно, чтобы быстро фильтровать. */
+    /** Hashtags from the text — stored separately for fast filtering. */
     tags: text().array().notNull().default([]),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

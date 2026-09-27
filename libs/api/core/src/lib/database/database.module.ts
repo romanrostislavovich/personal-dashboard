@@ -13,16 +13,16 @@ import { join } from 'node:path';
 import { Pool } from 'pg';
 import { AppConfig } from '../config/env';
 
-/** Токен для инъекции: `constructor(@Inject(DB) private readonly db: Database)`. */
+/** Injection token: `constructor(@Inject(DB) private readonly db: Database)`. */
 export const DB = Symbol('DB');
 export type Database = NodePgDatabase;
 
 const PG_POOL = Symbol('PG_POOL');
 
 /**
- * Подключение к PostgreSQL через Drizzle.
- * Таблицы каждый модуль описывает сам в своих `*.schema.ts`,
- * а миграции генерируются одним `npm run db:generate` для всего проекта.
+ * PostgreSQL connection through Drizzle.
+ * Each module describes its own tables in its `*.schema.ts`,
+ * and migrations are generated for the whole project by one `npm run db:generate`.
  */
 @Global()
 @Module({
@@ -36,7 +36,7 @@ const PG_POOL = Symbol('PG_POOL');
     {
       provide: DB,
       inject: [PG_POOL],
-      // snake_case: поле `passwordHash` в коде = колонка `password_hash` в БД.
+      // snake_case: the `passwordHash` field in code = the `password_hash` column in the database.
       useFactory: (pool: Pool) => drizzle({ client: pool, casing: 'snake_case' }),
     },
   ],
@@ -51,7 +51,7 @@ export class DatabaseModule implements OnModuleInit, OnApplicationShutdown {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    // Папка migrations копируется рядом с main.js при сборке (см. apps/api/webpack.config.js).
+    // The migrations folder is copied next to main.js during the build (see apps/api/webpack.config.js).
     await migrate(this.db, { migrationsFolder: join(__dirname, 'migrations') });
     this.logger.log('Database migrations applied');
   }

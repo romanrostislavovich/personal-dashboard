@@ -3,7 +3,7 @@ import { achievementTier, AchievementsService, DB, Database } from '@pd/api-core
 import { eq, sum } from 'drizzle-orm';
 import { trackedRepos } from './github-oss.schema';
 
-/** Ачивки open source: звёзды и загрузки npm по всем отслеживаемым репозиториям. */
+/** Open source achievements: stars and npm downloads across all tracked repositories. */
 @Injectable()
 export class GithubOssAchievements implements OnModuleInit {
   constructor(

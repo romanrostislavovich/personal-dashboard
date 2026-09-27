@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, NO_PARAMETERS } from '@pd/api-core';
 import { MonitorsService } from './monitors.service';
 
-/** Доступ AI к мониторингу сайтов. */
+/** AI access to site monitoring. */
 @Injectable()
 export class MonitoringAiTools implements OnModuleInit {
   constructor(
@@ -15,10 +15,10 @@ export class MonitoringAiTools implements OnModuleInit {
       name: 'monitoring_status',
       module: 'monitoring',
       description:
-        'Статус сайтов: работает/упал (и с какого момента), последняя ошибка, время ответа, ' +
-        'доступность за 24 ч / 7 / 30 дней, срок SSL-сертификата.',
+        'Site status: up/down (and since when), last error, response time, ' +
+        'availability over 24 h / 7 / 30 days, SSL certificate expiry.',
       parameters: NO_PARAMETERS,
-      // График по часам модели не нужен — экономим контекст.
+      // The model does not need the hourly chart — save context.
       handler: async (userId) =>
         (await this.monitors.list(userId)).map((monitor) => ({
           ...monitor,

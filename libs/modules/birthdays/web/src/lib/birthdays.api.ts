@@ -6,7 +6,7 @@ import { BirthdayInput, UpcomingBirthday } from '@pd/contracts';
 export class BirthdaysApi {
   private readonly http = inject(HttpClient);
 
-  /** Реактивный список (ближайшие — первыми); вызывать в поле компонента. */
+  /** Reactive list (upcoming first); call it in a component field. */
   list() {
     return httpResource<UpcomingBirthday[]>(() => '/api/birthdays', { defaultValue: [] });
   }

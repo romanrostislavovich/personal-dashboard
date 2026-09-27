@@ -27,11 +27,11 @@ export interface HeroInfo {
   imageUrl: string;
 }
 
-/** OpenDota — открытый API без ключа (лимит ~60 запросов в минуту). */
+/** OpenDota is an open API without a key (limit ~60 requests per minute). */
 export const openDota = {
   async getProfile(accountId: number): Promise<DotaProfile> {
     const data = await get<RawPlayer>(`/players/${accountId}`);
-    // Для несуществующего или скрытого аккаунта OpenDota отвечает без profile.
+    // For a non-existent or private account OpenDota responds without a profile.
     if (!data.profile) {
       throw new DotaProfileNotFoundError(`Dota account ${accountId} not found`);
     }
@@ -49,7 +49,7 @@ export const openDota = {
     return matches.map((m) => ({
       matchId: m.match_id,
       heroId: m.hero_id,
-      // player_slot < 128 — игрок за Radiant.
+      // player_slot < 128 means the player is on Radiant.
       won: m.player_slot < 128 === m.radiant_win,
       kills: m.kills,
       deaths: m.deaths,

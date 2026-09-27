@@ -1,6 +1,6 @@
 import { pickMessages } from './locale';
 
-/** Тексты ядра: ответы бота, служебные уведомления, AI. */
+/** Core texts: bot replies, service notifications, AI. */
 const messages = {
   en: {
     telegramLinked: '✅ Done! Dashboard notifications will now arrive here.',

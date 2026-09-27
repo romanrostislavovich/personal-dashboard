@@ -13,7 +13,7 @@ import { MusicSettings } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { MusicApi } from './music.api';
 
-/** Подключение источников: Last.fm (логин + ключ API) и Spotify (OAuth). */
+/** Connecting sources: Last.fm (username + API key) and Spotify (OAuth). */
 @Component({
   selector: 'pd-music-connect',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -146,7 +146,7 @@ import { MusicApi } from './music.api';
 })
 export class MusicConnectComponent {
   readonly settings = input.required<MusicSettings>();
-  /** Что-то подключили/отключили/обновили — странице пора перезагрузить данные. */
+  /** Something was connected/disconnected/refreshed — time for the page to reload data. */
   readonly changed = output<void>();
 
   private readonly api = inject(MusicApi);
@@ -173,7 +173,7 @@ export class MusicConnectComponent {
     }
   }
 
-  /** Уходим на страницу входа Spotify; обратно он вернёт на /music?spotify=connected. */
+  /** Go to the Spotify sign-in page; it sends us back to /music?spotify=connected. */
   async connectSpotify(): Promise<void> {
     const { url } = await firstValueFrom(this.api.spotifyConnectUrl());
     window.location.href = url;

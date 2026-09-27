@@ -2,7 +2,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
 export interface SparklinePoint {
-  /** Дата (`YYYY-MM-DD`) или момент времени (ISO). */
+  /** A date (`YYYY-MM-DD`) or a point in time (ISO). */
   at: string;
   value: number;
 }
@@ -12,8 +12,8 @@ const HEIGHT = 48;
 const PADDING = 5;
 
 /**
- * Мини-график одного ряда (без осей и легенды — ряд называет подпись рядом).
- * Линия 2px в основном цвете темы; при наведении — маркер и подсказка «дата: значение».
+ * A mini chart of one series (no axes or legend — the caption next to it names the series).
+ * A 2px line in the theme's primary color; on hover — a marker and a "date: value" tooltip.
  */
 @Component({
   selector: 'pd-sparkline',
@@ -102,15 +102,15 @@ const PADDING = 5;
 })
 export class SparklineComponent {
   readonly points = input.required<SparklinePoint[]>();
-  /** Описание для скринридеров, например «Звёзды за 30 дней». */
+  /** Description for screen readers, for example "Stars over 30 days". */
   readonly label = input('');
-  /** Формат даты в подсказке (DatePipe): `d MMM` для дней, `HH:mm` для часов. */
+  /** Date format in the tooltip (DatePipe): `d MMM` for days, `HH:mm` for hours. */
   readonly dateFormat = input('d MMM');
-  /** Единица после значения в подсказке, например ` мс`. */
+  /** Unit after the value in the tooltip, for example ` ms`. */
   readonly unit = input('');
   /**
-   * Фиксированные границы шкалы (например, настроение 1–5).
-   * По умолчанию шкала подстраивается под данные.
+   * Fixed scale bounds (for example, mood 1–5).
+   * By default the scale adapts to the data.
    */
   readonly min = input<number>();
   readonly max = input<number>();
@@ -119,7 +119,7 @@ export class SparklineComponent {
   protected readonly height = HEIGHT;
   protected readonly hovered = signal<number | null>(null);
 
-  /** Для графика нужно хотя бы две точки. */
+  /** A chart needs at least two points. */
   protected readonly geometry = computed(() => {
     const points = this.points();
     if (points.length < 2) {
@@ -152,7 +152,7 @@ export class SparklineComponent {
     return last ? `${this.label()}: ${points[0].value} → ${last.value}` : this.label();
   });
 
-  /** Подсвечиваем ближайшую по горизонтали точку — попасть курсором в линию не нужно. */
+  /** Highlight the horizontally nearest point — no need to hit the line with the cursor. */
   protected onPointerMove(event: PointerEvent): void {
     const count = this.points().length;
     const rect = (event.currentTarget as SVGElement).getBoundingClientRect();

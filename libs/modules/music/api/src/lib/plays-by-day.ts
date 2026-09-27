@@ -1,8 +1,8 @@
 import { addDays, DateParts, LocalDate, toLocalDate } from '@pd/contracts';
 
 /**
- * Ряд «прослушиваний по дням» за последние `days` дней, включая сегодня.
- * Дни без прослушиваний попадают в ряд с нулём — иначе график врёт.
+ * A "plays per day" series for the last `days` days, including today.
+ * Days without plays are included with zero — otherwise the chart lies.
  */
 export function fillPlaysByDay(
   counts: { day: LocalDate; plays: number }[],

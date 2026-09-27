@@ -3,9 +3,9 @@ import { CostMeasurement, CostProviderAdapter, CostProviderAuthError } from '../
 import { consumptionBetween, DeepseekBalanceInfo, pickBalance } from './deepseek-balance';
 
 /**
- * DeepSeek. У API нет истории расходов — только текущий баланс (GET /user/balance),
- * поэтому расход считаем по его уменьшению между синхронизациями.
- * Токен: platform.deepseek.com → API keys.
+ * DeepSeek. The API has no spending history — only the current balance (GET /user/balance),
+ * so spending is computed from its decrease between syncs.
+ * Token: platform.deepseek.com → API keys.
  */
 @Injectable()
 export class DeepseekCostProvider implements CostProviderAdapter {
@@ -20,7 +20,7 @@ export class DeepseekCostProvider implements CostProviderAdapter {
     const previous = typeof state['lastBalance'] === 'number' ? state['lastBalance'] : null;
     return {
       kind: 'increment',
-      // При смене валюты аккаунта начинаем отсчёт заново.
+      // If the account currency changes, start counting again.
       amount: state['currency'] === currency ? consumptionBetween(previous, balance) : 0,
       currency,
       state: { lastBalance: balance, currency },

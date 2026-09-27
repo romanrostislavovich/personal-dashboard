@@ -9,7 +9,7 @@ const ICONS: Record<MonitorStatus, string> = {
   pending: 'schedule',
 };
 
-/** Статус монитора: иконка + текст (не только цвет). */
+/** Monitor status: icon + text (not color alone). */
 @Component({
   selector: 'pd-status-badge',
   changeDetection: ChangeDetectionStrategy.OnPush,

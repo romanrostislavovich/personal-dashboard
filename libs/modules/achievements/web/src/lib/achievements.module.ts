@@ -1,8 +1,8 @@
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
- * Web-часть ачивок. Бэкенд — в ядре (AchievementsService), а сами ачивки
- * описывает каждый модуль в своём `*.achievements.ts`.
+ * Web part of achievements. The backend is in the core (AchievementsService), and the achievements
+ * themselves are described by each module in its `*.achievements.ts`.
  */
 export const achievementsModule: WebDashboardModule = {
   id: 'achievements',

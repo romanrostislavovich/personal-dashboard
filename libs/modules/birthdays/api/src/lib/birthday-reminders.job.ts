@@ -3,7 +3,7 @@ import { NotificationsService, SchedulerService, UsersService } from '@pd/api-co
 import { birthdayMessages } from './birthdays.messages';
 import { BirthdaysService } from './birthdays.service';
 
-/** Каждое утро присылает напоминания о ближайших днях рождения. */
+/** Every morning sends reminders about upcoming birthdays. */
 @Injectable()
 export class BirthdayRemindersJob implements OnModuleInit {
   constructor(
