@@ -4,6 +4,9 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { AchievementsController } from './achievements/achievements.controller';
 import { AchievementsService } from './achievements/achievements.service';
+import { AiController } from './ai/ai.controller';
+import { AiIntegrations } from './ai/ai.integrations';
+import { AiService } from './ai/ai.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthService } from './auth/auth.service';
@@ -31,7 +34,7 @@ class HealthController {
 }
 
 /**
- * Ядро: конфиг, БД, авторизация, проекты, планировщик, секреты интеграций, уведомления, ачивки.
+ * Ядро: конфиг, БД, авторизация, проекты, планировщик, секреты интеграций, уведомления, ачивки, AI.
  * Модуль глобальный — модули-фичи просто инжектят нужные сервисы
  * (DB, SchedulerService, SecretsService, NotificationsService, UsersService).
  */
@@ -54,6 +57,7 @@ class HealthController {
     ProjectsController,
     NotificationsController,
     AchievementsController,
+    AiController,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AuthGuard },
@@ -66,6 +70,8 @@ class HealthController {
     TelegramBotService,
     TelegramChannel,
     AchievementsService,
+    AiService,
+    AiIntegrations,
     // Новые каналы (Discord, e-mail…) добавляются в этот список.
     {
       provide: NOTIFICATION_CHANNELS,
@@ -83,6 +89,8 @@ class HealthController {
     TelegramBotService,
     // Для ачивок: модули регистрируют свои метрики через register().
     AchievementsService,
+    // Для AI: модули дают доступ к своим данным через registerTool().
+    AiService,
   ],
 })
 export class CoreModule {}

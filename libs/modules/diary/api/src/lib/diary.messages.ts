@@ -6,6 +6,7 @@ const messages = {
     saved: '📔 Записал в дневник',
     reminderTitle: '📔 Дневник',
     reminderBody: 'Как прошёл день? Ответь сюда командой /d и парой предложений.',
+    weeklyTitle: '📔 Неделя в дневнике',
   },
 };
 

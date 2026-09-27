@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from '@nestjs/common';
 import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
 import {
   DiaryEntryInput,
@@ -6,9 +6,13 @@ import {
   DiaryQuery,
   diaryQuerySchema,
   DiarySettings,
+  DiarySummary,
+  DiarySummaryRequest,
+  diarySummaryRequestSchema,
   diarySettingsSchema,
 } from '@pd/contracts';
 import { z } from 'zod';
+import { DiarySummaryService } from './diary-summary.service';
 import { DiaryService } from './diary.service';
 
 /** `:day` — дата записи `YYYY-MM-DD`. */
@@ -16,7 +20,10 @@ const dayPipe = new ZodValidationPipe(z.iso.date());
 
 @Controller('diary')
 export class DiaryController {
-  constructor(private readonly diary: DiaryService) {}
+  constructor(
+    private readonly diary: DiaryService,
+    private readonly summaries: DiarySummaryService,
+  ) {}
 
   @Get('entries')
   list(
@@ -45,6 +52,15 @@ export class DiaryController {
   @HttpCode(204)
   remove(@CurrentUser() user: AuthUser, @Param('day', dayPipe) day: string) {
     return this.diary.remove(user.id, day);
+  }
+
+  /** AI-саммари записей за период (нужен настроенный AI). */
+  @Post('summary')
+  async summary(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(diarySummaryRequestSchema)) period: DiarySummaryRequest,
+  ): Promise<DiarySummary> {
+    return { summary: await this.summaries.summarize(user.id, period) };
   }
 
   @Get('stats')

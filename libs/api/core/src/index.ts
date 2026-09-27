@@ -18,3 +18,5 @@ export * from './lib/notifications/telegram/bot-command';
 export { TelegramBotService } from './lib/notifications/telegram/telegram-bot.service';
 export * from './lib/achievements/achievement-metric';
 export { AchievementsService } from './lib/achievements/achievements.service';
+export * from './lib/ai/ai-tool';
+export { AiService } from './lib/ai/ai.service';

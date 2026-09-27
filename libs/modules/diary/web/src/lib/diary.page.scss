@@ -113,3 +113,28 @@
 .active .entry-preview {
   color: inherit;
 }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.summary {
+  margin-bottom: 16px;
+
+  &.error {
+    border-color: var(--mat-sys-error);
+  }
+}
+
+.summary-text {
+  white-space: pre-wrap;
+  font: var(--mat-sys-body-large);
+  line-height: 1.6;
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -82,7 +82,10 @@ libs/modules/birthdays/
    - ачивки — в файле `<модуль>.achievements.ts`: метрика (`measure(userId) → число`) и уровни
      через `achievementTier(порог, иконка, название, описание)`, регистрация через
      `AchievementsService.register()` (пример — `libs/modules/diary/api/src/lib/diary.achievements.ts`).
-     Страница ачивок подхватит их автоматически и сгруппирует по `module`.
+     Страница ачивок подхватит их автоматически и сгруппирует по `module`;
+   - доступ AI к данным — в файле `<модуль>.ai-tools.ts`: `AiService.registerTool({ name, module,
+description, parameters (JSON Schema), handler })`. Описание пиши для модели: что возвращает
+     и когда полезно (пример — `libs/modules/finance/api/src/lib/finance.ai-tools.ts`).
 4. **Миграция:** `npm run db:generate` → проверь SQL в `apps/api/migrations`.
 5. **Фронтенд:** экспортируй объект `WebDashboardModule` с `id`, пунктом меню, маршрутами, переводами и виджетами.
 6. **Подключи** модуль в `apps/api/src/modules.ts` и `apps/web/src/app/modules.ts`.
@@ -111,6 +114,8 @@ libs/modules/birthdays/
 - **Секреты интеграций:** `SecretsService` — зашифрованное key-value хранилище на пользователя.
 - **Ачивки:** `AchievementsService` — модули регистрируют метрики с уровнями, движок раз в час
   фиксирует открытые ачивки и присылает одно уведомление со всеми новыми.
+- **AI:** `AiService` — любой OpenAI-совместимый API; `ask()` — диалог с инструментами модулей
+  (цикл function calling — `tool-loop.ts`), `complete()` — одиночный запрос без инструментов.
 - **Авторизация:** глобальный `AuthGuard` (JWT); публичные эндпоинты помечаются `@Public()`.
 - **Конфигурация:** все переменные окружения описаны zod-схемой в `libs/api/core/src/lib/config/env.ts`;
   при ошибке приложение не стартует и пишет, что не так.

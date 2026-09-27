@@ -34,6 +34,7 @@ export const diarySettings = pgTable('diary_settings', {
     .primaryKey()
     .references(() => users.id, { onDelete: 'cascade' }),
   eveningReminder: boolean().notNull().default(false),
+  weeklySummary: boolean().notNull().default(false),
 });
 
 export type DiaryEntryRow = typeof diaryEntries.$inferSelect;

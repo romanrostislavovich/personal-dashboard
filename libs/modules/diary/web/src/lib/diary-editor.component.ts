@@ -19,7 +19,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocalDate, MOODS } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { DiaryApi } from './diary.api';
-import { MarkdownPipe } from './markdown.pipe';
+import { MarkdownPipe } from '@pd/web-core';
 import { MOOD_EMOJI } from './mood';
 
 /** Редактор записи одного дня: markdown + настроение. */

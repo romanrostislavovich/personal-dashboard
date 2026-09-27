@@ -41,5 +41,15 @@ export interface DiaryStats {
 export const diarySettingsSchema = z.object({
   /** Напоминание в 21:00, если за день нет записи. */
   eveningReminder: z.boolean(),
+  /** Саммари недели от AI по воскресеньям в 20:00 (если AI настроен). */
+  weeklySummary: z.boolean(),
 });
 export type DiarySettings = z.infer<typeof diarySettingsSchema>;
+
+export const diarySummaryRequestSchema = z.object({ from: z.iso.date(), to: z.iso.date() });
+export type DiarySummaryRequest = z.infer<typeof diarySummaryRequestSchema>;
+
+export interface DiarySummary {
+  /** `null` — за период нет записей. */
+  summary: string | null;
+}

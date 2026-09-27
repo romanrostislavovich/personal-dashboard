@@ -1,12 +1,42 @@
 <header class="page-header">
   <h1 class="page-title">{{ 'diary.title' | transloco }}</h1>
-  <mat-slide-toggle
-    [checked]="settings.value()?.eveningReminder ?? false"
-    (change)="setReminder($event.checked)"
-  >
-    {{ 'diary.eveningReminder' | transloco }}
-  </mat-slide-toggle>
+  <div class="header-actions">
+    <mat-slide-toggle
+      [checked]="settings.value()?.eveningReminder ?? false"
+      (change)="updateSettings({ eveningReminder: $event.checked })"
+    >
+      {{ 'diary.eveningReminder' | transloco }}
+    </mat-slide-toggle>
+    <mat-slide-toggle
+      [checked]="settings.value()?.weeklySummary ?? false"
+      (change)="updateSettings({ weeklySummary: $event.checked })"
+    >
+      {{ 'diary.weeklySummary' | transloco }}
+    </mat-slide-toggle>
+    <button matButton="tonal" (click)="summarizeWeek()" [disabled]="summary()?.loading">
+      <mat-icon>auto_awesome</mat-icon> {{ 'diary.summary.button' | transloco }}
+    </button>
+  </div>
 </header>
+
+<!-- AI-саммари недели -->
+@if (summary(); as s) {
+  <mat-card appearance="outlined" class="summary" [class.error]="s.error">
+    <mat-card-header>
+      <mat-card-title>✨ {{ 'diary.summary.title' | transloco }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (s.loading) {
+        <p class="muted">{{ 'diary.summary.loading' | transloco }}</p>
+      } @else {
+        <p class="summary-text">{{ s.text }}</p>
+      }
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button matButton (click)="summary.set(null)">{{ 'diary.summary.close' | transloco }}</button>
+    </mat-card-actions>
+  </mat-card>
+}
 
 <!-- Статистика: серии, количество записей, частые теги -->
 @if (stats.value(); as s) {

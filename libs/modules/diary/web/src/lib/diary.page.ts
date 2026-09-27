@@ -13,7 +13,14 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { DiaryEntry, LocalDate } from '@pd/contracts';
+import {
+  addDays,
+  DiaryEntry,
+  DiarySettings,
+  LocalDate,
+  parseLocalDate,
+  toLocalDate,
+} from '@pd/contracts';
 import { currentMonth, monthAsDate, monthRange, shiftMonth, todayLocalDate } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { DiaryApi } from './diary.api';
@@ -60,6 +67,11 @@ export class DiaryPage {
   protected readonly settings = this.api.settings();
 
   protected readonly selectedDay = signal<LocalDate>(this.today);
+  protected readonly summary = signal<{
+    loading: boolean;
+    text: string | null;
+    error: boolean;
+  } | null>(null);
 
   shiftMonth(delta: number): void {
     this.month.update((month) => shiftMonth(month, delta));
@@ -85,9 +97,30 @@ export class DiaryPage {
     this.stats.reload();
   }
 
-  async setReminder(eveningReminder: boolean): Promise<void> {
-    await firstValueFrom(this.api.saveSettings({ eveningReminder }));
+  /** Меняет одну настройку, остальные оставляет как есть. */
+  async updateSettings(change: Partial<DiarySettings>): Promise<void> {
+    const current = this.settings.value() ?? { eveningReminder: false, weeklySummary: false };
+    await firstValueFrom(this.api.saveSettings({ ...current, ...change }));
     this.settings.reload();
+  }
+
+  /** AI-саммари последних 7 дней (нужен настроенный AI). */
+  async summarizeWeek(): Promise<void> {
+    this.summary.set({ loading: true, text: null, error: false });
+    try {
+      const { summary } = await firstValueFrom(this.api.summarize(lastWeek(this.today)));
+      this.summary.set({
+        loading: false,
+        text: summary ?? this.transloco.translate('diary.summary.noEntries'),
+        error: false,
+      });
+    } catch {
+      this.summary.set({
+        loading: false,
+        text: this.transloco.translate('diary.summary.error'),
+        error: true,
+      });
+    }
   }
 
   protected preview(entry: DiaryEntry): string {
@@ -98,4 +131,8 @@ export class DiaryPage {
       .trim();
     return plain.length > PREVIEW_LENGTH ? `${plain.slice(0, PREVIEW_LENGTH)}…` : plain;
   }
+}
+
+function lastWeek(today: LocalDate): { from: LocalDate; to: LocalDate } {
+  return { from: toLocalDate(addDays(parseLocalDate(today), -6)), to: today };
 }

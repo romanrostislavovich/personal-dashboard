@@ -1,4 +1,5 @@
 import { achievementsModule } from '@pd/achievements-web';
+import { aiModule } from '@pd/ai-web';
 import { birthdaysModule } from '@pd/birthdays-web';
 import { diaryModule } from '@pd/diary-web';
 import { financeModule } from '@pd/finance-web';
@@ -14,6 +15,7 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 // Узкие и широкие виджеты чередуются, чтобы сетка главной заполнялась без пустот.
 export const enabledModules: WebDashboardModule[] = [
+  aiModule,
   diaryModule,
   financeModule,
   birthdaysModule,

@@ -6,6 +6,7 @@ import {
   DiaryQuery,
   DiarySettings,
   DiaryStats,
+  DiarySummary,
   LocalDate,
 } from '@pd/contracts';
 
@@ -45,6 +46,10 @@ export class DiaryApi {
 
   remove(day: LocalDate) {
     return this.http.delete<void>(`${BASE}/entries/${day}`);
+  }
+
+  summarize(period: { from: LocalDate; to: LocalDate }) {
+    return this.http.post<DiarySummary>(`${BASE}/summary`, period);
   }
 
   saveSettings(settings: DiarySettings) {

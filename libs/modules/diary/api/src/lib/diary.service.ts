@@ -132,7 +132,10 @@ export class DiaryService {
       .select()
       .from(diarySettings)
       .where(eq(diarySettings.userId, userId));
-    return { eveningReminder: row?.eveningReminder ?? false };
+    return {
+      eveningReminder: row?.eveningReminder ?? false,
+      weeklySummary: row?.weeklySummary ?? false,
+    };
   }
 
   async saveSettings(userId: string, settings: DiarySettings): Promise<DiarySettings> {
@@ -155,6 +158,20 @@ export class DiaryService {
       )
       .where(and(eq(diarySettings.eveningReminder, true), sql`${diaryEntries.id} IS NULL`));
     return rows.map((row) => row.userId);
+  }
+
+  async usersWithWeeklySummary(): Promise<string[]> {
+    const rows = await this.db
+      .select({ userId: diarySettings.userId })
+      .from(diarySettings)
+      .where(eq(diarySettings.weeklySummary, true));
+    return rows.map((row) => row.userId);
+  }
+
+  /** Последние 7 дней, включая сегодня. */
+  lastWeek(): { from: LocalDate; to: LocalDate } {
+    const today = this.today();
+    return { from: toLocalDate(addDays(today, -6)), to: toLocalDate(today) };
   }
 
   private async findRow(userId: string, day: LocalDate): Promise<DiaryEntryRow | undefined> {

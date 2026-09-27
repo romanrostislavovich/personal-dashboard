@@ -32,7 +32,8 @@
       "@pd/music-web": ["./libs/modules/music/web/src/index.ts"],
       "@pd/games-api": ["./libs/modules/games/api/src/index.ts"],
       "@pd/games-web": ["./libs/modules/games/web/src/index.ts"],
-      "@pd/achievements-web": ["./libs/modules/achievements/web/src/index.ts"]
+      "@pd/achievements-web": ["./libs/modules/achievements/web/src/index.ts"],
+      "@pd/ai-web": ["./libs/modules/ai/web/src/index.ts"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true

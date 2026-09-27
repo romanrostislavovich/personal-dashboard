@@ -1,0 +1,88 @@
+<header class="page-header">
+  <h1 class="page-title">{{ 'ai.title' | transloco }}</h1>
+  <div class="header-actions">
+    @if (history().length) {
+      <button matButton (click)="clear()">
+        <mat-icon>delete_sweep</mat-icon> {{ 'ai.clear' | transloco }}
+      </button>
+    }
+    @if (settings.value()?.configured) {
+      <button matButton (click)="showSettings.set(!showSettings())">
+        <mat-icon>tune</mat-icon> {{ 'ai.settings.title' | transloco }}
+      </button>
+    }
+  </div>
+</header>
+
+@if (settings.value(); as s) {
+  <!-- Пока AI не настроен — сразу показываем настройки вместо чата. -->
+  @if (!s.configured || showSettings()) {
+    <div class="settings">
+      @if (!s.configured) {
+        <p class="intro">{{ 'ai.intro' | transloco }}</p>
+      }
+      <pd-ai-settings [settings]="s" (changed)="settings.reload(); showSettings.set(false)" />
+    </div>
+  }
+
+  @if (s.configured) {
+    <div class="chat">
+      @for (message of history(); track $index) {
+        <div class="message" [class]="message.role" [class.error]="message.isError">
+          @if (message.role === 'assistant') {
+            <div class="bubble" [innerHTML]="message.content | markdown"></div>
+            @if (message.toolsUsed?.length) {
+              <span class="sources">
+                <mat-icon inline>data_object</mat-icon>
+                {{ 'ai.sources' | transloco }}
+                @for (m of message.toolsUsed; track m; let last = $last) {
+                  {{ sourceKey(m) | transloco }}{{ last ? '' : ', ' }}
+                }
+              </span>
+            }
+          } @else {
+            <div class="bubble">{{ message.content }}</div>
+          }
+        </div>
+      } @empty {
+        <div class="empty-chat">
+          <p>{{ 'ai.emptyHint' | transloco }}</p>
+          <mat-chip-set>
+            @for (key of suggestions; track key) {
+              <mat-chip (click)="askSuggestion(key)">
+                {{ 'ai.suggestions.' + key | transloco }}
+              </mat-chip>
+            }
+          </mat-chip-set>
+        </div>
+      }
+      @if (thinking()) {
+        <div class="message assistant">
+          <div class="bubble thinking">
+            {{ 'ai.thinking' | transloco }}
+            <mat-progress-bar mode="indeterminate" />
+          </div>
+        </div>
+      }
+      <span #messagesEnd></span>
+    </div>
+
+    <div class="composer">
+      <textarea
+        [ngModel]="draft()"
+        (ngModelChange)="draft.set($event)"
+        (keydown)="onKeydown($event)"
+        [placeholder]="'ai.placeholder' | transloco"
+        rows="2"
+      ></textarea>
+      <button
+        matIconButton
+        class="send"
+        [disabled]="!draft().trim() || thinking()"
+        (click)="send()"
+      >
+        <mat-icon>send</mat-icon>
+      </button>
+    </div>
+  }
+}
