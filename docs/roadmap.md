@@ -1,56 +1,36 @@
-# Роадмап
+# Roadmap
 
-## ✅ Этап 0–1: фундамент и MVP
+## ✅ Foundation
 
-- Nx-монорепо: Angular + NestJS + Electron, контракты на zod, границы модулей в ESLint
-- PostgreSQL + Drizzle, автоприменение миграций, pg-boss для фоновых задач
-- Авторизация (JWT), первый пользователь из `.env`
-- Уведомления: Telegram-бот с привязкой чата
-- Проекты (ядро), модули «Дни рождения» и «Финансы» (кошельки, регулярные платежи)
-- Desktop: трей, автозапуск, выбор сервера; Docker-образ для сервера; CI
+- Nx monorepo: Angular + NestJS + Electron, zod contracts, module boundaries enforced by ESLint
+- PostgreSQL + Drizzle with automatic migrations, pg-boss for background jobs
+- JWT auth, optional registration, profile and password change
+- Telegram notifications and bot commands
+- Desktop app (tray, autostart, server selection), a single Docker image, CI
+- English and Russian for the UI, notifications, achievements and AI answers
 
-## ✅ Этап 2: open-source аналитика
+## ✅ Modules
 
-- Модуль `github-oss`: звёзды (дневная история, прирост за 7/30 дней, график), форки, issues, PR, релизы
-- Загрузки npm за неделю
-- Уведомления: новый issue/PR, новый релиз, круглые отметки по звёздам (10, 25, 50, 100…)
-- Хранение пользовательских токенов интеграций в БД (AES-256-GCM)
-- Дальше: трафик репозиториев (views/clones — нужен токен с push-доступом), история загрузок npm по дням
+- **Birthdays** with reminders
+- **Finance:** wallets (personal / per project), recurring payments, automatic cost import from
+  Hetzner Cloud and DeepSeek
+- **Open Source:** GitHub stars history, issues, PRs, releases, npm downloads, alerts
+- **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
+- **Diary:** markdown, mood, hashtags, streaks, `/d` from Telegram, evening reminder
+- **Music:** Last.fm history and tops, Spotify “now playing”
+- **Games:** Dota 2 (OpenDota) and World of Warcraft (Battle.net)
+- **Achievements:** 42 achievements across all modules
+- **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
+  `/ask` in Telegram, morning digest, weekly diary summary
 
-## Этап 3: продакшн-проекты (в работе)
+## Next
 
-Для проектов вроде ai-text-guard.com:
-
-- ✅ Uptime-мониторинг: проверка каждые 5 минут, uptime %, время ответа, алерты «упал / поднялся»
-  (после 2 неудачных проверок подряд), напоминания об истечении SSL
-- Ошибки: Sentry API
-- Пользователи и трафик: Plausible / Umami / Google Analytics
-- ✅ Автоимпорт затрат в финансы: Hetzner Cloud (стоимость ресурсов по прайсу), DeepSeek (расход по балансу)
-- Следующие провайдеры затрат: DigitalOcean / AWS Cost Explorer / Vercel, usage API OpenAI и Anthropic
-- Stripe-выплаты как доход проекта
-- Ежемесячный отчёт по проекту: доходы − расходы, пользователи, ошибки
-
-## Этап 4: личное
-
-- ✅ Дневник: markdown-записи, настроение, теги из хэштегов, серии дней; запись через Telegram (`/d`),
-  вечернее напоминание
-- ✅ Музыка: Last.fm (локальная история за 30+ дней, график по дням, топы) и Spotify («сейчас играет»)
-- ✅ Игры: Dota 2 (OpenDota: медаль, винрейт, матчи, герои) и WoW (Battle.net API: персонаж, ачивки)
-- ✅ Движок ачивок: 42 ачивки по всем модулям (серии дневника, звёзды, загрузки npm, скробблы,
-  победы и медаль в Dota, очки достижений WoW, дни без сбоев, месяцы учёта финансов)
-- Событийная шина между ядром и модулями — если понадобятся ачивки «в момент события», а не раз в час
-
-## ✅ Этап 5: AI
-
-- AI-шлюз для любого OpenAI-совместимого API: DeepSeek (по умолчанию), OpenAI, Ollama, свой адрес
-- Чат по своим данным: 13 инструментов от модулей (`*.ai-tools.ts`), подпись «посмотрел: …»
-- `/ask` в Telegram, утренний дайджест в 08:30, AI-саммари дневника (по кнопке и по воскресеньям)
-- Дальше: нативный Anthropic API (Claude), стриминг ответов, сохранение диалогов
-
-## Этап 6: публичный open-source
-
-- Настройки уведомлений «что и куда слать» по модулям
-- Выбор языка в UI + английский перевод
-- Регистрация / несколько пользователей, роли
-- Каналы Discord / e-mail / web push, нативные уведомления в desktop
-- Документация по написанию модулей, шаблон модуля-генератор, публикация Docker-образа, релизы desktop в GitHub Releases
+- Production projects: errors (Sentry), traffic (Plausible / Umami / Google Analytics),
+  Stripe payouts as project income, a monthly report per project
+- More cost providers: DigitalOcean, AWS Cost Explorer, Vercel, OpenAI and Anthropic usage
+- GitHub repository traffic (views / clones), npm downloads history
+- Notification settings: which module sends what and where
+- Channels: Discord, e-mail, web push, native desktop notifications
+- AI: native Anthropic API, streaming answers, saved conversations
+- Roles and sharing for multi-user setups
+- A module generator and more language translations

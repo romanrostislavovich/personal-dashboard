@@ -3,7 +3,8 @@
   "productName": "Personal Dashboard",
   "version": "0.1.0",
   "description": "Desktop app for Personal Dashboard",
-  "author": "Roman",
+  "author": "romanrostislavovich",
   "license": "MIT",
-  "main": "main.js"
+  "main": "main.js",
+  "homepage": "https://github.com/romanrostislavovich/personal-dashboard"
 }

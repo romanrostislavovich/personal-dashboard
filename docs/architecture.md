@@ -1,124 +1,137 @@
-# Архитектура
+# Architecture
 
-## Главная идея: ядро + модули
+## Core + modules
 
 ```
-                ┌──────────────────── ядро ────────────────────┐
-  apps/api ───► │ libs/api/core: БД · auth · проекты ·           │
-                │   планировщик · уведомления (каналы)           │
-  apps/web ───► │ libs/web/core: layout · auth · i18n ·          │ ◄── libs/shared/contracts
-                │   главная с виджетами · SDK модулей            │     (типы + zod-схемы)
-                └───────────▲───────────────────▲───────────────┘
-                            │                   │
-                 libs/modules/birthdays   libs/modules/finance   … (dota, lastfm, github-oss)
-                      api/ + web/              api/ + web/
+                ┌───────────────────── core ─────────────────────┐
+  apps/api ───► │ libs/api/core: DB · auth · projects · scheduler │
+                │   notifications · secrets · achievements · AI   │
+  apps/web ───► │ libs/web/core: layout · auth · i18n ·           │ ◄── libs/shared/contracts
+                │   home page with widgets · module SDK           │     (types + zod schemas)
+                └────────────▲────────────────────▲───────────────┘
+                             │                    │
+                 libs/modules/birthdays    libs/modules/finance    … (diary, music, games, …)
+                      api/ + web/               api/ + web/
 ```
 
-Каждая фича — это **модуль** из двух библиотек (`api` и `web`). Модуль зависит только от ядра
-и контрактов, а **от других модулей — никогда**. Это правило проверяет ESLint
-(`@nx/enforce-module-boundaries`, теги `type:module` / `type:core` / `type:contracts`),
-поэтому любой модуль можно удалить или отключить, и ничего не сломается.
+Every feature is a **module** made of two libraries (`api` and `web`). A module depends only on the
+core and the contracts and **never on another module**. ESLint enforces this
+(`@nx/enforce-module-boundaries`, tags `type:module` / `type:core` / `type:contracts`), so any module
+can be removed or disabled without breaking anything.
 
-Приложения (`apps/*`) — тонкие хосты: в них нет бизнес-логики, только список включённых модулей:
+Apps (`apps/*`) are thin hosts with no business logic — only the list of enabled modules:
 
 - `apps/api/src/modules.ts`
 - `apps/web/src/app/modules.ts`
 
-## Ключевые решения
+## Key decisions
 
-| Решение                                | Почему                                                                                                                                                |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Nx-монорепо**                        | Angular и Nest в одном репозитории, общие типы, граница между модулями проверяется линтером                                                           |
-| **Контракты на zod** (`@pd/contracts`) | одна схема задаёт и TS-тип для фронта, и валидацию на бэке (`ZodValidationPipe`)                                                                      |
-| **Drizzle ORM**                        | таблицы описываются в TS рядом с модулем (`*.schema.ts`), а не в одном общем файле; SQL-миграции читаются глазами                                     |
-| **pg-boss** для фоновых задач          | очередь и cron живут в той же PostgreSQL, отдельный Redis не нужен; пропущенные запуски догоняются                                                    |
-| **Уведомления через каналы**           | модуль вызывает `notifications.send()` и не знает, куда уйдёт сообщение; Telegram — первый `NotificationChannel`, Discord/e-mail/push добавятся рядом |
-| **Все данные привязаны к `userId`**    | сейчас пользователь один, но публичная многопользовательская версия не потребует переделки схемы                                                      |
-| **Один Docker-образ**                  | API раздаёт собранный фронтенд — self-hosting одной командой                                                                                          |
-| **Electron — тонкая оболочка**         | desktop грузит тот же web с сервера (или с localhost) и добавляет трей, автозапуск и работу в фоне                                                    |
-| **i18n через Transloco**               | каждый модуль хранит переводы у себя (`i18n/ru.json`), ядро собирает их в один словарь                                                                |
+| Decision                             | Why                                                                                                                         |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| **Nx monorepo**                      | Angular and Nest in one repository, shared types, module boundaries checked by the linter                                   |
+| **zod contracts** (`@pd/contracts`)  | one schema gives both the TS type for the frontend and validation on the backend (`ZodValidationPipe`)                      |
+| **Drizzle ORM**                      | tables are defined in TS next to the module (`*.schema.ts`), not in one big file; SQL migrations are human-readable         |
+| **pg-boss** for background jobs      | the queue and cron live in the same PostgreSQL — no Redis; missed runs are caught up                                        |
+| **Notifications through channels**   | a module calls `notifications.send()` and does not know where the message goes; Telegram is the first `NotificationChannel` |
+| **Everything is scoped by `userId`** | multiple users are supported without any schema changes                                                                     |
+| **One Docker image**                 | the API serves the built frontend — self-hosting with one command                                                           |
+| **Electron as a thin shell**         | the desktop app loads the same web app from the server (or localhost) and adds tray, autostart and background running       |
+| **i18n via Transloco**               | each module keeps its translations (`i18n/en.json`, `i18n/ru.json`); the core merges them into one dictionary               |
 
-## Как устроен модуль
+## Anatomy of a module
 
-На примере `birthdays`:
+Using `birthdays` as an example:
 
 ```
 libs/modules/birthdays/
   api/src/lib/
-    birthdays.schema.ts        таблица Drizzle
-    birthdays.service.ts       бизнес-логика
-    birthdays.controller.ts    REST: /api/birthdays
-    birthday-reminders.job.ts  фоновая задача (регистрируется в планировщике)
-    birthdays.messages.ts      тексты уведомлений по языкам
-    next-birthday.ts (+ .spec) чистая логика — легко тестировать
-    birthdays.module.ts        Nest-модуль
+    birthdays.schema.ts          Drizzle table
+    birthdays.service.ts         business logic
+    birthdays.controller.ts      REST: /api/birthdays
+    birthday-reminders.job.ts    background job (registered in the scheduler)
+    birthdays.messages.ts        notification texts per language
+    birthdays.achievements.ts    achievements of the module
+    birthdays.ai-tools.ts        data the AI assistant can request
+    next-birthday.ts (+ .spec)   pure logic — easy to test
+    birthdays.module.ts          Nest module
   web/src/lib/
-    birthdays.api.ts           HTTP-клиент
-    birthdays.page.ts          страница модуля
-    upcoming-birthdays.widget.ts  виджет для главной
-    i18n/ru.json               переводы
-    birthdays.module.ts        описание модуля для web-ядра (WebDashboardModule)
+    birthdays.api.ts             HTTP client
+    birthdays.page.ts            module page
+    upcoming-birthdays.widget.ts home page widget
+    i18n/en.json, i18n/ru.json   translations
+    birthdays.module.ts          module description for the web core (WebDashboardModule)
 ```
 
-Типы запросов и ответов живут в `libs/shared/contracts/src/lib/birthdays.ts`.
+Request and response types live in `libs/shared/contracts/src/lib/birthdays.ts`.
 
-## Как добавить новый модуль
+## Writing a new module
 
-Пусть это будет `lastfm`.
+Say it is `strava`.
 
-1. **Сгенерируй библиотеки:**
+1. **Generate the libraries:**
    ```bash
-   npx nx g @nx/nest:library libs/modules/lastfm/api --name=lastfm-api --importPath=@pd/lastfm-api --tags=scope:api,type:module
-   npx nx g @nx/angular:library libs/modules/lastfm/web --name=lastfm-web --importPath=@pd/lastfm-web --prefix=pd --tags=scope:web,type:module --skipModule
+   npx nx g @nx/nest:library libs/modules/strava/api --name=strava-api --importPath=@pd/strava-api --tags=scope:api,type:module
+   npx nx g @nx/angular:library libs/modules/strava/web --name=strava-web --importPath=@pd/strava-web --prefix=pd --tags=scope:web,type:module --skipModule
    ```
-2. **Контракты:** добавь `libs/shared/contracts/src/lib/lastfm.ts` (zod-схемы и интерфейсы), экспортируй из `index.ts`.
-3. **Бэкенд:**
-   - таблицы в `lastfm.schema.ts` (ссылки на ядро — через `@pd/api-core/schema`);
-   - сервис и контроллер; `@CurrentUser()` даёт текущего пользователя, `ZodValidationPipe` валидирует вход;
-   - фоновые задачи регистрируй в `onModuleInit` через `SchedulerService.register({ name: 'lastfm.sync', cron, handler })`;
-   - уведомления — через `NotificationsService.send(userId, { title, body, source: 'lastfm' })`;
-   - команды Telegram-бота — через `TelegramBotService.registerCommand({ command, description, handler })`
-     в `onModuleInit` (пример — `/d` в `libs/modules/diary/api/src/lib/diary.jobs.ts`);
-   - ачивки — в файле `<модуль>.achievements.ts`: метрика (`measure(userId) → число`) и уровни
-     через `achievementTier(порог, иконка, название, описание)`, регистрация через
-     `AchievementsService.register()` (пример — `libs/modules/diary/api/src/lib/diary.achievements.ts`).
-     Страница ачивок подхватит их автоматически и сгруппирует по `module`;
-   - доступ AI к данным — в файле `<модуль>.ai-tools.ts`: `AiService.registerTool({ name, module,
-description, parameters (JSON Schema), handler })`. Описание пиши для модели: что возвращает
-     и когда полезно (пример — `libs/modules/finance/api/src/lib/finance.ai-tools.ts`).
-4. **Миграция:** `npm run db:generate` → проверь SQL в `apps/api/migrations`.
-5. **Фронтенд:** экспортируй объект `WebDashboardModule` с `id`, пунктом меню, маршрутами, переводами и виджетами.
-6. **Подключи** модуль в `apps/api/src/modules.ts` и `apps/web/src/app/modules.ts`.
-7. **Перезапусти `npm run dev`**: сборщики читают алиасы `@pd/*` из `tsconfig.base.json` только при старте.
+2. **Contracts:** add `libs/shared/contracts/src/lib/strava.ts` (zod schemas and interfaces) and export it from `index.ts`.
+3. **Backend:**
+   - tables in `strava.schema.ts` (reference core tables via `@pd/api-core/schema`);
+   - a service and a controller; `@CurrentUser()` gives the current user, `ZodValidationPipe` validates input;
+   - background jobs: `SchedulerService.register({ name: 'strava.sync', cron, handler })` in `onModuleInit`;
+   - notifications: `NotificationsService.send(userId, { title, body, source: 'strava' })`, texts in
+     `strava.messages.ts` via `pickMessages({ en: {...}, ru: {...} }, user.locale)`;
+   - Telegram commands: `TelegramBotService.registerCommand({ command, description, handler })`
+     (example — `/d` in `libs/modules/diary/api/src/lib/diary.jobs.ts`);
+   - achievements: `strava.achievements.ts` — a metric (`measure(userId) → number`) and tiers via
+     `achievementTier(goal, icon, title, description)`, registered with `AchievementsService.register()`
+     (example — `libs/modules/diary/api/src/lib/diary.achievements.ts`). The achievements page picks
+     them up automatically and groups them by `module`;
+   - AI access: `strava.ai-tools.ts` — `AiService.registerTool({ name, module, description,
+parameters (JSON Schema), handler })`. Write the description for the model: what it returns and
+     when it is useful (example — `libs/modules/finance/api/src/lib/finance.ai-tools.ts`).
+4. **Migration:** `npm run db:generate` → review the SQL in `apps/api/migrations`.
+5. **Frontend:** export a `WebDashboardModule` with `id`, menu item, routes, translations
+   (`en` and `ru`) and widgets.
+6. **Enable** the module in `apps/api/src/modules.ts` and `apps/web/src/app/modules.ts`.
+7. **Restart `npm run dev`**: the bundlers read the `@pd/*` aliases from `tsconfig.base.json` only on start.
 
-Токены внешних сервисов пользователь вводит в UI модуля, а модуль сохраняет их через
-`SecretsService` ядра: `secrets.set(userId, 'lastfm.token', value)`. Значения шифруются AES-256-GCM
-ключом `ENCRYPTION_KEY` и никогда не отдаются на фронтенд. Пример — `GithubTokenService` в модуле `github-oss`.
+Tokens of external services are entered by the user in the module UI and stored with the core
+`SecretsService`: `secrets.set(userId, 'strava.token', value)`. Values are encrypted with AES-256-GCM
+using `ENCRYPTION_KEY` and are never sent to the frontend. Example — `GithubTokenService` in `github-oss`.
 
-## Как добавить провайдера затрат
+## Adding a cost provider
 
-Автоимпорт затрат — часть модуля `finance` (`libs/modules/finance/api/src/lib/cost-sources`).
-Чтобы подключить новый сервис (например, DigitalOcean):
+Automatic cost import is part of the `finance` module (`libs/modules/finance/api/src/lib/cost-sources`).
+To add a service (e.g. DigitalOcean):
 
-1. Добавь id в `COST_PROVIDERS` в `libs/shared/contracts/src/lib/finance.ts`.
-2. Реализуй `CostProviderAdapter` в `cost-sources/providers/<name>.provider.ts`:
-   `verify(token)` проверяет токен, `measure(token, state)` возвращает либо полную сумму
-   за месяц (`monthTotal`), либо расход с прошлой синхронизации (`increment`).
-   Расчёты держи в чистых функциях рядом и покрывай тестами (пример — `hetzner-cost.ts`).
-3. Зарегистрируй класс в `FinanceModule` и в `CostSourcesService`.
-4. Добавь название и подсказку по токену в `finance/web/src/lib/i18n/ru.json` → `costSources.providers`.
-5. `npm run db:generate` — в enum `finance_cost_provider` появится новое значение.
+1. Add its id to `COST_PROVIDERS` in `libs/shared/contracts/src/lib/finance.ts`.
+2. Implement `CostProviderAdapter` in `cost-sources/providers/<name>.provider.ts`:
+   `verify(token)` checks the token, `measure(token, state)` returns either the full amount for the
+   month (`monthTotal`) or the spending since the last sync (`increment`). Keep calculations in pure,
+   tested functions next to it (example — `hetzner-cost.ts`).
+3. Register the class in `FinanceModule` and `CostSourcesService`.
+4. Add a name and token hint to `finance/web/src/lib/i18n/*.json` → `costSources.providers`.
+5. `npm run db:generate` — the `finance_cost_provider` enum gets the new value.
 
-## Сквозные механизмы ядра
+## Adding a language
 
-- **Секреты интеграций:** `SecretsService` — зашифрованное key-value хранилище на пользователя.
-- **Ачивки:** `AchievementsService` — модули регистрируют метрики с уровнями, движок раз в час
-  фиксирует открытые ачивки и присылает одно уведомление со всеми новыми.
-- **AI:** `AiService` — любой OpenAI-совместимый API; `ask()` — диалог с инструментами модулей
-  (цикл function calling — `tool-loop.ts`), `complete()` — одиночный запрос без инструментов.
-- **Авторизация:** глобальный `AuthGuard` (JWT); публичные эндпоинты помечаются `@Public()`.
-- **Конфигурация:** все переменные окружения описаны zod-схемой в `libs/api/core/src/lib/config/env.ts`;
-  при ошибке приложение не стартует и пишет, что не так.
-- **Даты:** «календарные» даты (день рождения, дата операции) хранятся как `YYYY-MM-DD` без часового пояса;
-  «сегодня» считается в `APP_TIMEZONE` (`todayIn()` в контрактах).
-- **Деньги:** `numeric(14,2)`, суммы в разных валютах не конвертируются, а считаются отдельно.
+1. Add the code to `SUPPORTED_LOCALES` in `libs/shared/contracts/src/lib/auth.ts`.
+2. Add `i18n/<code>.json` to the web core and every module, and register it in `translations`.
+3. Add the language to every `*.messages.ts`, to `core.messages.ts` and to achievement tiers.
+4. Register Angular locale data in `libs/web/core/src/lib/provide-dashboard.ts`.
+
+## Core services
+
+- **Secrets:** `SecretsService` — an encrypted per-user key-value store.
+- **Achievements:** `AchievementsService` — modules register metrics with tiers; the engine evaluates
+  them hourly and on page load, and sends one notification with all new achievements.
+- **AI:** `AiService` — any OpenAI-compatible API; `ask()` is a dialogue with module tools
+  (function-calling loop in `tool-loop.ts`), `complete()` is a single request without tools.
+- **Auth:** a global `AuthGuard` (JWT); public endpoints are marked with `@Public()`.
+- **Configuration:** all environment variables are described by a zod schema in
+  `libs/api/core/src/lib/config/env.ts`; on errors the app does not start and explains what is wrong.
+- **Dates:** calendar dates (birthday, transaction date) are stored as `YYYY-MM-DD` without a time zone;
+  “today” is computed in `APP_TIMEZONE` (`todayIn()` in contracts).
+- **Money:** `numeric(14,2)`; amounts in different currencies are not converted and are summed separately.
+
+> Code comments are currently written in Russian. English comments in new code are welcome.

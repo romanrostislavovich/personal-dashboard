@@ -1,6 +1,9 @@
-# Сборка установщика: npx nx package desktop  →  dist/desktop-installers
+# Build an installer: npx nx package desktop  →  dist/desktop-installers
+# Releases are built by .github/workflows/release.yml on v* tags.
 appId: com.romanrostislavovich.personal-dashboard
 productName: Personal Dashboard
+# Без пробелов — удобнее скачивать и ссылаться из README.
+artifactName: personal-dashboard-${version}-${os}-${arch}.${ext}
 directories:
   app: dist/apps/desktop
   output: dist/desktop-installers
@@ -14,6 +17,7 @@ mac:
   icon: apps/desktop/src/assets/icon.png
 linux:
   target: AppImage
+  category: Utility
   icon: apps/desktop/src/assets/icon.png
 nsis:
   oneClick: false

@@ -1,113 +1,147 @@
 # Personal Dashboard
 
-Личный дашборд на каждый день: дни рождения, финансы (личные и по проектам), а дальше — аналитика
-open-source и продакшн-проектов, дневник, ачивки, музыка, игры и AI. Уведомления приходят в Telegram.
+A self-hosted dashboard for your daily life: birthdays, personal and project finances, website
+monitoring, open source stats, a diary, music, games, personal achievements — and an AI assistant
+that can answer questions about all of it. Notifications arrive in Telegram.
 
-Работает как сайт, как desktop-приложение (Windows / macOS / Linux, с треем и автозапуском) и как
-self-hosted сервер в Docker. Проект модульный: каждую фичу можно включить, выключить или написать свою.
+It runs as a website, as a desktop app (Windows / macOS / Linux, with tray and autostart) and as a
+single Docker image on your server. Every feature is a module: enable, disable or write your own.
 
-**Стек:** Nx · Angular 22 + Angular Material · NestJS 11 · PostgreSQL + Drizzle ORM · pg-boss · grammY · Electron
+![Dashboard](docs/images/dashboard.png)
 
-## Что уже есть
+**Stack:** Nx · Angular 22 + Angular Material · NestJS 11 · PostgreSQL + Drizzle ORM · pg-boss · grammY · Electron
 
-| Модуль                | Что умеет                                                                                                                                                                                       |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🎂 Дни рождения       | список с обратным отсчётом и возрастом, напоминания в Telegram за N дней                                                                                                                        |
-| 💰 Финансы            | доходы/расходы по «кошелькам» (личное или конкретный проект), мультивалютность, топ категорий, регулярные платежи с автосписанием и уведомлением, автоимпорт затрат из Hetzner Cloud и DeepSeek |
-| 🚀 Проекты (ядро)     | твои сайты/сервисы; к ним привязываются финансы, а позже аналитика                                                                                                                              |
-| 🔔 Уведомления (ядро) | Telegram-бот, привязка чата в один клик                                                                                                                                                         |
-| 🐙 Open Source        | GitHub-репозитории: звёзды (история, прирост, график), форки, issues, PR, релизы, загрузки npm; уведомления о новых issues/PR, релизах и круглых отметках по звёздам                            |
-| ✨ AI                 | чат по своим данным (DeepSeek, OpenAI, Ollama или любой OpenAI-совместимый API), `/ask` в Telegram, утренний дайджест, AI-саммари дневника за неделю                                            |
-| 🏆 Ачивки             | 42 личные ачивки по всем модулям с уровнями и прогрессом; уведомление о новых; каждый модуль описывает свои в `*.achievements.ts`                                                               |
-| 🎮 Игры               | Dota 2 (OpenDota, нужен только Steam ID): медаль, винрейт, матчи, любимые герои; WoW (Battle.net API): персонаж, ilvl, достижения; уведомления о смене медали и новых ачивках                   |
-| 🎧 Музыка             | Last.fm: история прослушиваний, график по дням, топ артистов/треков/альбомов за неделю…всё время; Spotify: «сейчас играет» с обложкой и прогрессом                                              |
-| 📔 Дневник            | запись на день в markdown, настроение, теги из #хэштегов, серии дней подряд; запись из Telegram командой `/d текст`, вечернее напоминание                                                       |
-| 📡 Мониторинг         | доступность сайтов/API каждые 5 минут, uptime за 24 ч / 7 / 30 дней, график времени ответа, срок SSL-сертификата; алерты «упал / поднялся» и напоминания о SSL                                  |
-| 🔐 Секреты (ядро)     | токены интеграций (GitHub и др.) хранятся в БД зашифрованными (AES-256-GCM)                                                                                                                     |
+## Features
 
-Что дальше — в [docs/roadmap.md](docs/roadmap.md).
+| Module          | What it does                                                                                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✨ AI           | Chat about your own data (DeepSeek, OpenAI, Ollama or any OpenAI-compatible API), `/ask` in Telegram, a morning digest, weekly diary summaries                    |
+| 📔 Diary        | One markdown entry per day, mood, tags from #hashtags, streaks; write from Telegram with `/d text`, evening reminder                                              |
+| 💰 Finance      | Income and expenses per wallet (personal or a project), multi-currency, top categories, recurring payments, automatic cost import from Hetzner Cloud and DeepSeek |
+| 🎂 Birthdays    | Countdown and age, reminders N days ahead                                                                                                                         |
+| 🐙 Open Source  | GitHub repositories: star history and growth, forks, issues, PRs, releases, npm downloads; alerts on new issues/PRs, releases and star milestones                 |
+| 📡 Monitoring   | Uptime checks every 5 minutes, uptime for 24 h / 7 / 30 days, response time chart, SSL expiry; “down / back up” alerts and SSL reminders                          |
+| 🎧 Music        | Last.fm listening history, plays per day, top artists / tracks / albums; Spotify “now playing”                                                                    |
+| 🎮 Games        | Dota 2 via OpenDota (medal, win rate, matches, heroes) and World of Warcraft via Battle.net (character, item level, achievements)                                 |
+| 🏆 Achievements | 42 personal achievements across all modules, with tiers and progress                                                                                              |
+| 🚀 Projects     | Your websites and services — finance, monitoring and AI refer to them                                                                                             |
 
-## Быстрый старт (разработка)
+The UI, notifications and AI answers are available in **English** and **Russian**.
 
-Нужны Node.js 24+ и Docker.
+## Quick start (development)
+
+Requirements: Node.js 24+ and Docker.
 
 ```bash
 npm install
-cp .env.example .env          # заполни JWT_SECRET, ENCRYPTION_KEY, ADMIN_EMAIL, ADMIN_PASSWORD
-npm run db:up                 # PostgreSQL в Docker
-npm run dev                   # API на :3300 + web на http://localhost:4200
+cp .env.example .env          # set JWT_SECRET, ENCRYPTION_KEY, ADMIN_EMAIL, ADMIN_PASSWORD
+npm run db:up                 # PostgreSQL in Docker
+npm run dev                   # API on :3300 + web on http://localhost:4200
 ```
 
-Вход — с `ADMIN_EMAIL` / `ADMIN_PASSWORD` из `.env` (пользователь создаётся при первом запуске).
-Миграции БД применяются автоматически при старте API.
+Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` — the user is created on the first start. Database
+migrations are applied automatically when the API starts.
 
-> Если порт 5432 уже занят другим Postgres, поставь в `.env` `DB_PORT=5433` и поправь порт в `DATABASE_URL`.
+> If port 5432 is taken by another PostgreSQL, set `DB_PORT=5433` in `.env` and update the port in `DATABASE_URL`.
 
-### Desktop-приложение
+## Self-hosting
+
+The whole app is one Docker image: the API also serves the built frontend.
 
 ```bash
-npm run dev:desktop           # Electron, открывает http://localhost:4200
-npm run desktop:package       # установщик → dist/desktop-installers
+cp .env.example .env          # fill in the values
+docker compose up -d --build  # database + app on :3300
 ```
 
-Установленное приложение при первом запуске спрашивает адрес сервера: это может быть твой сервер
-(`https://dashboard.example.com`) или локальный Docker (`http://localhost:3300`). В трее — автозапуск
-с системой и смена сервера.
+Put a reverse proxy with HTTPS in front of it (Caddy, Traefik, nginx) and set `PUBLIC_URL` to the
+public address. Background jobs (reminders, uptime checks, syncs) run in the same container; if the
+server was down when a job was due, it runs once after start.
 
-### Spotify (необязательно)
+Prebuilt images are published to GitHub Container Registry on every release:
+`ghcr.io/romanrostislavovich/personal-dashboard`.
 
-1. Создай приложение на [developer.spotify.com](https://developer.spotify.com/dashboard).
-2. В его настройках добавь Redirect URI: `PUBLIC_URL` + `/api/music/spotify/callback`
-   (в разработке — `http://127.0.0.1:4200/api/music/spotify/callback`; Spotify не принимает `localhost`).
-3. Заполни `SPOTIFY_CLIENT_ID` и `SPOTIFY_CLIENT_SECRET` в `.env`, перезапусти API.
-4. «Музыка» → «Источники» → Spotify → «Подключить». Открывай дашборд по адресу из `PUBLIC_URL`.
+## Desktop app
 
-Last.fm подключается прямо в интерфейсе: нужен логин и ключ API с [last.fm/api/account/create](https://www.last.fm/api/account/create).
-
-### Telegram
-
-1. Создай бота у [@BotFather](https://t.me/BotFather) и положи токен в `TELEGRAM_BOT_TOKEN`.
-2. Перезапусти API → «Настройки» → «Подключить Telegram» → нажми Start в чате с ботом.
-3. Кнопка «Отправить тестовое» проверит, что всё работает.
-
-## Деплой на сервер
-
-Всё приложение — один Docker-образ: API раздаёт и собранный фронтенд.
+Installers for Windows, macOS and Linux are attached to [GitHub Releases](../../releases). On the
+first start the app asks for the server URL — your server or a local Docker (`http://localhost:3300`).
+The tray menu has “Start with the system” and “Change server”.
 
 ```bash
-cp .env.example .env          # заполни значения
-docker compose up -d --build  # база + приложение на :3300
+npm run dev:desktop           # Electron on top of the dev server
+npm run desktop:package       # build an installer → dist/desktop-installers
 ```
 
-Дальше поставь перед ним reverse-proxy с HTTPS (Caddy, Traefik, nginx). Фоновые задачи
-(напоминания в 09:00, списания в 08:00 по `APP_TIMEZONE`) выполняются внутри того же контейнера;
-если сервер был выключен в момент запуска, задача выполнится после старта.
+## Integrations
 
-## Команды
+All tokens entered in the UI are stored encrypted (AES-256-GCM with `ENCRYPTION_KEY`) and are never
+sent back to the browser.
 
-| Команда                     | Что делает                                         |
-| --------------------------- | -------------------------------------------------- |
-| `npm run dev`               | API + web в режиме разработки                      |
-| `npm run dev:desktop`       | desktop-оболочка поверх dev-сервера                |
-| `npm run db:up`             | поднять PostgreSQL в Docker                        |
-| `npm run db:generate`       | создать SQL-миграцию после изменения `*.schema.ts` |
-| `npm test` / `npm run lint` | тесты / линтер всех проектов                       |
-| `npm run build`             | продакшн-сборка API и web                          |
-| `npm run desktop:package`   | собрать установщик desktop-приложения              |
+| Integration       | How to connect                                                                                                                      |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Telegram          | Create a bot with [@BotFather](https://t.me/BotFather), set `TELEGRAM_BOT_TOKEN`, then Settings → “Connect Telegram”                |
+| AI                | AI → pick a provider (DeepSeek by default), paste the API key. For full privacy use a local model via Ollama                        |
+| GitHub            | Optional fine-grained token (read-only) in Open Source — without it GitHub allows 60 requests per hour                              |
+| Hetzner Cloud     | Finance → Auto-import → a project API token with Read access                                                                        |
+| DeepSeek costs    | Finance → Auto-import → an API key; spending is derived from balance changes                                                        |
+| Last.fm           | Music → username + API key from [last.fm/api/account/create](https://www.last.fm/api/account/create)                                |
+| Spotify           | Create an app at developer.spotify.com, Redirect URI = `PUBLIC_URL` + `/api/music/spotify/callback`, set `SPOTIFY_CLIENT_ID/SECRET` |
+| Dota 2            | Games → Steam ID or profile link; enable “Expose Public Match Data” in Dota                                                         |
+| World of Warcraft | Games → Battle.net client ID and secret from develop.battle.net, then region / realm / character                                    |
 
-## Структура
+Telegram bot commands: `/d text` — add to today’s diary entry, `/ask question` — ask the AI.
+
+## Configuration
+
+See [`.env.example`](.env.example). The most important variables:
+
+| Variable             | Description                                           |
+| -------------------- | ----------------------------------------------------- |
+| `DATABASE_URL`       | PostgreSQL connection string                          |
+| `JWT_SECRET`         | Secret for sign-in tokens, at least 32 characters     |
+| `ENCRYPTION_KEY`     | Key for integration tokens in the DB — do not lose it |
+| `APP_TIMEZONE`       | Time zone of daily jobs, e.g. `Europe/Berlin`         |
+| `ALLOW_REGISTRATION` | `true` to let other people sign up (off by default)   |
+| `DEFAULT_LOCALE`     | Language of the first user: `en` or `ru`              |
+| `PUBLIC_URL`         | Public address of the dashboard (OAuth callbacks)     |
+
+## Commands
+
+| Command                     | What it does                                         |
+| --------------------------- | ---------------------------------------------------- |
+| `npm run dev`               | API + web in development mode                        |
+| `npm run dev:desktop`       | Desktop shell on top of the dev server               |
+| `npm run db:up`             | Start PostgreSQL in Docker                           |
+| `npm run db:generate`       | Create an SQL migration after changing `*.schema.ts` |
+| `npm test` / `npm run lint` | Tests / linter for all projects                      |
+| `npm run build`             | Production build of API and web                      |
+| `npm run desktop:package`   | Build a desktop installer                            |
+
+## Architecture
 
 ```
 apps/
-  api/        NestJS: только подключает ядро и модули (src/modules.ts)
-  web/        Angular: только подключает ядро и модули (src/app/modules.ts)
-  desktop/    Electron-оболочка: трей, автозапуск, выбор сервера
+  api/        NestJS host: only wires the core and the enabled modules (src/modules.ts)
+  web/        Angular host: only wires the core and the enabled modules (src/app/modules.ts)
+  desktop/    Electron shell: tray, autostart, server selection
 libs/
-  shared/contracts/   общие типы и zod-схемы для API и web
-  api/core/           ядро бэкенда: БД, auth, проекты, планировщик, уведомления
-  web/core/           ядро фронтенда: layout, auth, i18n, главная с виджетами, SDK модулей
-  modules/<name>/api  бэкенд модуля
-  modules/<name>/web  фронтенд модуля
+  shared/contracts/   shared types and zod schemas for API and web
+  api/core/           backend core: DB, auth, projects, scheduler, notifications, secrets,
+                      achievements engine, AI gateway
+  web/core/           frontend core: layout, auth, i18n, home page with widgets, module SDK
+  modules/<name>/api  backend of a module
+  modules/<name>/web  frontend of a module
 ```
 
-Как это устроено и как добавить свой модуль — [docs/architecture.md](docs/architecture.md).
+Modules depend only on the core and contracts — never on each other (enforced by ESLint). A module
+can add its own pages, widgets, background jobs, notifications, Telegram commands, achievements and
+AI tools. See [docs/architecture.md](docs/architecture.md) for details and a step-by-step guide to
+writing a module, and [docs/roadmap.md](docs/roadmap.md) for what is next.
+
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues
+privately as described in [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE)

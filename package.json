@@ -1,7 +1,25 @@
 {
   "name": "personal-dashboard",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Self-hosted personal dashboard: birthdays, finance, website monitoring, open source stats, diary, music, games, achievements and an AI assistant over your own data.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/romanrostislavovich/personal-dashboard.git"
+  },
+  "homepage": "https://github.com/romanrostislavovich/personal-dashboard#readme",
+  "bugs": {
+    "url": "https://github.com/romanrostislavovich/personal-dashboard/issues"
+  },
+  "keywords": [
+    "dashboard",
+    "self-hosted",
+    "personal",
+    "angular",
+    "nestjs",
+    "electron",
+    "telegram"
+  ],
   "scripts": {
     "dev": "nx serve web",
     "dev:desktop": "cross-env DASHBOARD_URL=http://localhost:4200 nx serve desktop",
