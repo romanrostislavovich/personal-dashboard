@@ -1,0 +1,7 @@
+# HTTPS certificates from Let's Encrypt are issued and renewed automatically:
+# DOMAIN must point to this server (an A/AAAA record) and ports 80 and 443 must be open.
+{$DOMAIN} {
+	# Sync requests are already gzipped and are left as they are.
+	encode zstd gzip
+	reverse_proxy app:3300
+}

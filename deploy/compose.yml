@@ -1,0 +1,84 @@
+# The server: the dashboard behind Caddy (automatic HTTPS) with daily database backups.
+# Setup and updates: docs/deploy.md. Everything is configured in .env next to this file.
+
+# Docker keeps container logs forever by default; a small server would fill its disk.
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: '3'
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dashboard
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      POSTGRES_DB: dashboard
+    # No published port: only the app and the backup job reach the database.
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dashboard']
+      interval: 5s
+      retries: 10
+    <<: *logging
+
+  app:
+    # deploy.sh sets IMAGE to the image it built and uploaded; otherwise the one from GHCR.
+    image: ${IMAGE:-ghcr.io/romanrostislavovich/personal-dashboard:main}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://dashboard:${DB_PASSWORD}@db:5432/dashboard
+      PUBLIC_URL: https://${DOMAIN:?Set DOMAIN in .env}
+      API_PORT: 3300
+    depends_on:
+      db:
+        condition: service_healthy
+    <<: *logging
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates: keep them, or Let's Encrypt rate limits may bite after a few restarts.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    <<: *logging
+
+  # A dump of the database once a day, the last BACKUP_KEEP_DAYS days are kept in ./backups.
+  # Your computer (the sync client) holds a full copy as well — that is the off-site backup.
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: dashboard
+      PGPASSWORD: ${DB_PASSWORD}
+      PGDATABASE: dashboard
+      KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - ./backups:/backups
+    entrypoint: ['sh', '/backup.sh']
+    depends_on:
+      db:
+        condition: service_healthy
+    <<: *logging
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:

@@ -36,6 +36,7 @@ with the same email and password.
    Start it with an **empty database** and without `ADMIN_EMAIL`: your user and all data arrive
    with the first sync. (In sync mode the first user is never created automatically: two users
    with the same email and different ids cannot be merged.)
+   Setting up the server itself: [deploy.md](deploy.md).
 3. **Computer** `.env`:
    ```
    SYNC_MODE=client
@@ -80,6 +81,7 @@ The clocks of both machines should be right (NTP): "newer" is decided by the tim
 - **"ENCRYPTION_KEY differs"** — set the same key on both.
 - **"The server rejected SYNC_TOKEN"** — the token must be the same on both.
 - **The server database was replaced** — the client notices, downloads everything and sends all of
-  its data again.
+  its data again. After restoring the server from a dump, delete its id so the client does the
+  same: `DELETE FROM sync.state WHERE key = 'server-id';` (see [deploy.md](deploy.md)).
 - **Changes waiting for related data** stay in `sync.parked` with the error; usually they resolve
   themselves after the next sync.

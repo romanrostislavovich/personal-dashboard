@@ -59,9 +59,10 @@ server was down when a job was due, it runs once after start.
 
 **Local + server:** run the dashboard on your computer (works offline) and a copy on a server
 (access from anywhere, Telegram bot); the two databases sync both ways — see [docs/sync.md](docs/sync.md).
+Step-by-step server setup (Caddy with HTTPS, daily backups, updates): [docs/deploy.md](docs/deploy.md).
 
-Prebuilt images are published to GitHub Container Registry on every release:
-`ghcr.io/romanrostislavovich/personal-dashboard`.
+Prebuilt images (amd64 and arm64) are published to GitHub Container Registry on every push to
+`main` (tag `main`) and every release (`latest`): `ghcr.io/romanrostislavovich/personal-dashboard`.
 
 ## Desktop app
 

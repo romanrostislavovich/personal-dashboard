@@ -54,5 +54,11 @@ vitest.config.*.timestamp*
 .nx/polygraph
 .nx/self-healing
 .nx/migrate-runs
-# local env
+# local env (and the copy deploy.sh keeps before switching it to sync)
 .env
+.env.before-sync
+
+# server database dumps (deploy/compose.yml)
+deploy/backups/
+# your server's address for deploy.sh
+deploy/deploy.local.env
