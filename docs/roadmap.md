@@ -24,7 +24,9 @@
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
   `/ask` in Telegram, morning digest, weekly diary summary
 - **Telegram assistant:** free-form messages go to the AI, which remembers the conversation and
-  can add birthdays, diary notes and mood, transactions, repositories and monitors (never deletes)
+  can add, edit and delete almost everything the dashboard can (asks before deleting)
+- **Sync:** a local instance (works offline) and a server sync both ways; the newer change wins,
+  the losing version is kept
 
 ## Next
 

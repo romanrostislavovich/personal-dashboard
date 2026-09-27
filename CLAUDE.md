@@ -10,6 +10,7 @@ Architecture and rules: `docs/architecture.md`. Quick start: `README.md`. Contri
 - Request/response types and zod schemas live only in `libs/shared/contracts`; the backend validates
   with `ZodValidationPipe`.
 - Every module table has `userId`; every query filters by it.
+- Every table needs a primary key: sync between two instances (`docs/sync.md`) tracks rows by it.
 - After changing a `*.schema.ts`, run `npm run db:generate` and commit the migration.
 - UI texts go through Transloco (`i18n/en.json` + `i18n/ru.json` of the module, keys must match);
   server texts go to `*.messages.ts` with `en` and `ru` (`pickMessages`).

@@ -42,6 +42,11 @@ export class AuthService implements OnApplicationBootstrap {
     if ((await this.users.count()) > 0) {
       return;
     }
+    if (this.config.get('SYNC_MODE', { infer: true }) !== 'off') {
+      // The user arrives with the first sync; a second admin with a different id would clash.
+      this.logger.warn('No users yet: they will arrive with the first sync (see docs/sync.md)');
+      return;
+    }
     const email = this.config.get('ADMIN_EMAIL', { infer: true });
     const password = this.config.get('ADMIN_PASSWORD', { infer: true });
     if (!email || !password) {

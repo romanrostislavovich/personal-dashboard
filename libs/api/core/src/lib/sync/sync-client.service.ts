@@ -1,0 +1,184 @@
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+  OnApplicationShutdown,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import {
+  SyncPullRequest,
+  SyncPullResponse,
+  SyncPushRequest,
+  SyncPushResponse,
+} from '@pd/contracts';
+import { hostname } from 'node:os';
+import { AppConfig } from '../config/env';
+import { decodeSyncBody, encodeSyncBody, SYNC_CONTENT_TYPE } from './sync-protocol';
+import { SyncStore } from './sync-store';
+import { SERVER_ORIGIN, SYNC_STATE, SyncService } from './sync.service';
+
+/** The first sync runs shortly after startup, not in the middle of it. */
+const FIRST_SYNC_DELAY_MS = 5_000;
+/** A batch with diary photos over a slow connection may take a while. */
+const REQUEST_TIMEOUT_MS = 120_000;
+/** Protection against an endless loop if the server keeps saying "there is more". */
+const MAX_BATCHES = 10_000;
+
+/** A sync error with a message for the settings page. */
+class SyncError extends Error {}
+
+/**
+ * The client side of sync: every SYNC_INTERVAL_SECONDS pulls the server's changes, then pushes
+ * local ones. Without a connection it simply tries again later — the instance keeps working.
+ */
+@Injectable()
+export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown {
+  private readonly logger = new Logger(SyncClient.name);
+  private timers: NodeJS.Timeout[] = [];
+  private running: Promise<void> | null = null;
+  private readonly peer: string;
+
+  constructor(
+    @Inject(ConfigService) private readonly config: AppConfig,
+    private readonly sync: SyncService,
+    private readonly store: SyncStore,
+  ) {
+    this.peer = config.get('SYNC_PEER_NAME', { infer: true }) ?? hostname();
+  }
+
+  onApplicationBootstrap(): void {
+    if (this.sync.mode !== 'client') {
+      return;
+    }
+    const interval = this.config.get('SYNC_INTERVAL_SECONDS', { infer: true }) * 1000;
+    const tick = () => void this.syncNow();
+    this.timers = [setTimeout(tick, FIRST_SYNC_DELAY_MS), setInterval(tick, interval)];
+  }
+
+  onApplicationShutdown(): void {
+    this.timers.forEach(clearTimeout);
+  }
+
+  /** Runs a sync (or waits for the one in progress). Errors end up in the status. */
+  syncNow(): Promise<void> {
+    this.running ??= this.run().finally(() => (this.running = null));
+    return this.running;
+  }
+
+  private async run(): Promise<void> {
+    try {
+      const pulled = await this.pull();
+      const pushed = await this.push();
+      await this.sync.setState(SYNC_STATE.lastSyncedAt, new Date().toISOString());
+      await this.sync.setState(SYNC_STATE.lastError, null);
+      if (pulled || pushed) {
+        this.logger.log(`Synced: ${pulled} received, ${pushed} sent`);
+      }
+    } catch (error) {
+      const message = error instanceof SyncError ? error.message : `Sync failed: ${error}`;
+      if ((await this.sync.getState(SYNC_STATE.lastError)) !== message) {
+        this.logger.warn(message);
+      }
+      await this.sync.setState(SYNC_STATE.lastError, message);
+    }
+  }
+
+  /** Applies the server's changes; returns how many. */
+  private async pull(): Promise<number> {
+    let count = 0;
+    for (let batch = 0; batch < MAX_BATCHES; batch++) {
+      const cursor = await this.sync.getState(SYNC_STATE.pullCursor);
+      const response = await this.request<SyncPullRequest, SyncPullResponse>('pull', {
+        ...(await this.handshake()),
+        cursor,
+      });
+      const known = await this.sync.getState(SYNC_STATE.knownServerId);
+      if (known !== response.serverId) {
+        await this.sync.setState(SYNC_STATE.knownServerId, response.serverId);
+        if (known !== null || cursor !== null) {
+          // A new server database: download everything and send all local data again.
+          this.logger.warn('The server database changed, starting a full sync');
+          await this.sync.setState(SYNC_STATE.pullCursor, null);
+          await this.sync.setState(SYNC_STATE.pushCursor, null);
+          await this.sync.setState(SYNC_STATE.pushAll, 'yes');
+          continue;
+        }
+      }
+      await this.store.apply(response.changes, {
+        origin: SERVER_ORIGIN,
+        unsentAfter: await this.sync.getState(SYNC_STATE.pushCursor),
+      });
+      count += response.changes.length;
+      await this.sync.setState(SYNC_STATE.pullCursor, response.cursor);
+      if (!response.hasMore) {
+        return count;
+      }
+    }
+    return count;
+  }
+
+  /** Sends local changes; returns how many. */
+  private async push(): Promise<number> {
+    let count = 0;
+    // Normally only changes made here: what came from the server does not go back.
+    // A new server database gets everything, including what the old one had sent.
+    const everything = (await this.sync.getState(SYNC_STATE.pushAll)) !== null;
+    for (let batch = 0; batch < MAX_BATCHES; batch++) {
+      const cursor = await this.sync.getState(SYNC_STATE.pushCursor);
+      const local = await this.store.changesSince(
+        cursor,
+        (origin) => everything || origin === null,
+      );
+      if (local.changes.length) {
+        await this.request<SyncPushRequest, SyncPushResponse>('push', {
+          ...(await this.handshake()),
+          changes: local.changes,
+        });
+        count += local.changes.length;
+      }
+      await this.sync.setState(SYNC_STATE.pushCursor, local.cursor);
+      if (!local.hasMore) {
+        await this.sync.setState(SYNC_STATE.pushAll, null);
+        return count;
+      }
+    }
+    return count;
+  }
+
+  private async handshake() {
+    return { peer: this.peer, ...(await this.sync.handshake()) };
+  }
+
+  private async request<Req, Res>(action: 'push' | 'pull', body: Req): Promise<Res> {
+    const url = new URL(`/api/sync/${action}`, this.config.get('SYNC_SERVER_URL', { infer: true }));
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.config.get('SYNC_TOKEN', { infer: true })}`,
+          'Content-Type': SYNC_CONTENT_TYPE,
+        },
+        body: new Uint8Array(await encodeSyncBody(body)),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch {
+      throw new SyncError('The server is unreachable — working offline, will retry');
+    }
+    if (response.status === 401) {
+      throw new SyncError('The server rejected SYNC_TOKEN — it must be the same on both sides');
+    }
+    if (!response.ok) {
+      const text = await response.text();
+      let message = text;
+      try {
+        message = (JSON.parse(text) as { message?: string }).message ?? text;
+      } catch {
+        // Not JSON (a proxy error page) — show the text as is.
+      }
+      throw new SyncError(`The server answered ${response.status}: ${message.slice(0, 300)}`);
+    }
+    return (await decodeSyncBody(Buffer.from(await response.arrayBuffer()))) as Res;
+  }
+}

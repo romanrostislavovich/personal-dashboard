@@ -9,6 +9,7 @@ import { NotificationSettings, TelegramLinkResponse } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { PasswordSettingsComponent } from './password-settings.component';
 import { ProfileSettingsComponent } from './profile-settings.component';
+import { SyncSettingsComponent } from './sync-settings.component';
 
 @Component({
   selector: 'pd-settings-page',
@@ -20,6 +21,7 @@ import { ProfileSettingsComponent } from './profile-settings.component';
     TranslocoPipe,
     ProfileSettingsComponent,
     PasswordSettingsComponent,
+    SyncSettingsComponent,
   ],
   template: `
     <h1 class="page-title">{{ 'core.settings.title' | transloco }}</h1>
@@ -27,6 +29,7 @@ import { ProfileSettingsComponent } from './profile-settings.component';
     <div class="grid">
       <pd-profile-settings />
       <pd-password-settings />
+      <pd-sync-settings />
 
       <mat-card appearance="outlined">
         <mat-card-header>

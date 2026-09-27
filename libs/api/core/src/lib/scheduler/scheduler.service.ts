@@ -26,6 +26,9 @@ export interface ScheduledJob {
  * ```
  *
  * If the server was off when a job was due, it runs once after startup.
+ *
+ * A sync client (SYNC_MODE=client) runs no jobs: the server does, and its results arrive
+ * with the sync — otherwise payments would be charged and reminders sent twice.
  */
 @Injectable()
 export class SchedulerService implements OnApplicationBootstrap, OnApplicationShutdown {
@@ -49,6 +52,10 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
 
   async onApplicationBootstrap(): Promise<void> {
     await this.boss.start();
+    if (this.config.get('SYNC_MODE', { infer: true }) === 'client') {
+      this.logger.log('Sync client: background jobs run on the server');
+      return;
+    }
     const tz = this.config.get('APP_TIMEZONE', { infer: true });
 
     for (const job of this.jobs) {

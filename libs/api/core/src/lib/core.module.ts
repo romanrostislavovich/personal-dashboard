@@ -22,6 +22,10 @@ import { ProjectsController } from './projects/projects.controller';
 import { ProjectsService } from './projects/projects.service';
 import { SchedulerService } from './scheduler/scheduler.service';
 import { SecretsService } from './secrets/secrets.service';
+import { SyncClient } from './sync/sync-client.service';
+import { SyncController } from './sync/sync.controller';
+import { SyncService } from './sync/sync.service';
+import { SyncStore } from './sync/sync-store';
 import { UsersService } from './users/users.service';
 import { InAppChannel } from './realtime/in-app.channel';
 import { RealtimeController } from './realtime/realtime.controller';
@@ -40,7 +44,7 @@ class HealthController {
 
 /**
  * Core: config, database, auth, projects, scheduler, integration secrets, notifications,
- * realtime events for open dashboards, achievements, AI.
+ * realtime events for open dashboards, achievements, AI, sync between two instances.
  * The module is global — feature modules simply inject the services they need
  * (DB, SchedulerService, SecretsService, NotificationsService, UsersService).
  */
@@ -65,6 +69,7 @@ class HealthController {
     AchievementsController,
     AiController,
     RealtimeController,
+    SyncController,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AuthGuard },
@@ -83,6 +88,9 @@ class HealthController {
     AchievementsService,
     AiService,
     AiIntegrations,
+    SyncStore,
+    SyncService,
+    SyncClient,
     // New channels (Discord, e-mail…) are added to this list.
     {
       provide: NOTIFICATION_CHANNELS,

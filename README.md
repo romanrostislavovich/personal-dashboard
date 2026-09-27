@@ -57,6 +57,9 @@ Put a reverse proxy with HTTPS in front of it (Caddy, Traefik, nginx) and set `P
 public address. Background jobs (reminders, uptime checks, syncs) run in the same container; if the
 server was down when a job was due, it runs once after start.
 
+**Local + server:** run the dashboard on your computer (works offline) and a copy on a server
+(access from anywhere, Telegram bot); the two databases sync both ways — see [docs/sync.md](docs/sync.md).
+
 Prebuilt images are published to GitHub Container Registry on every release:
 `ghcr.io/romanrostislavovich/personal-dashboard`.
 

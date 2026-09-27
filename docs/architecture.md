@@ -133,6 +133,10 @@ To add a service (e.g. DigitalOcean):
 - **Secrets:** `SecretsService` — an encrypted per-user key-value store.
 - **Achievements:** `AchievementsService` — modules register metrics with tiers; the engine evaluates
   them hourly and on page load, and sends one notification with all new achievements.
+- **Sync:** `SyncService` / `SyncClient` — two-way sync between a local instance and a server
+  (`SYNC_MODE`, see [sync.md](sync.md)). Every table in `public` is tracked by a trigger — module
+  tables need nothing extra, but every table must have a primary key. Sync works on the whole
+  database, not per user. A client runs no scheduled jobs and does not receive bot messages.
 - **AI:** `AiService` — any OpenAI-compatible API; `ask()` is a dialogue with module tools
   (function-calling loop in `tool-loop.ts`), `complete()` is a single request without tools.
 - **Auth:** a global `AuthGuard` (JWT); public endpoints are marked with `@Public()`.

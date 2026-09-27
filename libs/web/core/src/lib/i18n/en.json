@@ -88,6 +88,21 @@
       "submit": "Change password",
       "changed": "Password changed",
       "wrong": "The current password is incorrect"
+    },
+    "sync": {
+      "title": "Sync",
+      "description": "Two copies of the dashboard: this computer and the server",
+      "off": "Sync is off: this dashboard works on its own. To keep a copy on a server and use it away from this computer, see docs/sync.md.",
+      "server": "This is the server. It runs the Telegram bot and background jobs; your computer syncs with it.",
+      "client": "This computer syncs with {{url}}. Without internet everything keeps working and syncs later.",
+      "lastContact": "Last contact from a computer: {{time}}",
+      "lastSynced": "Last synced: {{time}}",
+      "never": "never",
+      "pending": "Changes waiting to be sent: {{count}}",
+      "parked": "Changes waiting for related data: {{count}}",
+      "conflicts": "Versions that lost a conflict (kept in the database): {{count}}",
+      "syncNow": "Sync now",
+      "synced": "Synced"
     }
   },
   "toast": {

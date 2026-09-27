@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   Logger,
@@ -45,6 +46,8 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   private photoHandler: BotPhotoHandler | null = null;
   private textHandler: BotTextHandler | null = null;
   private readonly token: string | undefined;
+  /** A sync client leaves receiving messages to the server (see docs/sync.md). */
+  private readonly isSyncClient: boolean;
 
   constructor(
     @Inject(ConfigService) config: AppConfig,
@@ -52,6 +55,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     private readonly activity: UserActivityService,
   ) {
     this.token = config.get('TELEGRAM_BOT_TOKEN', { infer: true });
+    this.isSyncClient = config.get('SYNC_MODE', { infer: true }) === 'client';
     this.bot = this.token ? new Bot(this.token) : null;
   }
 
@@ -77,6 +81,12 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   async onApplicationBootstrap(): Promise<void> {
     if (!this.bot) {
       this.logger.warn('TELEGRAM_BOT_TOKEN is not set, Telegram notifications are disabled');
+      return;
+    }
+    if (this.isSyncClient) {
+      // Only one process may receive the bot's messages — the server. Sending still works here.
+      await this.bot.init();
+      this.logger.log('Sync client: the Telegram bot answers from the server');
       return;
     }
 
@@ -165,6 +175,10 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   createLink(userId: string): TelegramLinkResponse {
     if (!this.bot) {
       throw new Error('Telegram bot is not configured');
+    }
+    if (this.isSyncClient) {
+      // The link code is checked by the process that receives /start — the server.
+      throw new BadRequestException('Connect Telegram on the server instance');
     }
     const code = randomBytes(16).toString('hex');
     const expiresAt = new Date(Date.now() + LINK_CODE_TTL_MS);
