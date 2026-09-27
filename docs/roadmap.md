@@ -28,6 +28,8 @@
 
 ### Planned
 
+- **Deploy to a server** (Hetzner): Docker Compose with the app and PostgreSQL, a domain with HTTPS
+  (Caddy), daily database backups, the desktop app and Telegram bot pointed at the server
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
 - **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
   (bank notifications / SMS → transactions), then everything else the phone knows
