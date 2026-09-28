@@ -1,4 +1,4 @@
-import { parseDotaAccountId, splitRankTier } from './steam-id';
+import { medalChange, parseDotaAccountId, splitRankTier } from './steam-id';
 
 describe('parseDotaAccountId', () => {
   it('accepts a plain account id', () => {
@@ -33,5 +33,21 @@ describe('splitRankTier', () => {
 
   it('returns null for unranked players', () => {
     expect(splitRankTier(null)).toBeNull();
+  });
+});
+
+describe('medalChange', () => {
+  it('reports a new medal', () => {
+    expect(medalChange(45, 51)).toEqual({ from: 45, to: 51 });
+    expect(medalChange(51, 45)).toEqual({ from: 51, to: 45 });
+  });
+
+  it('ignores stars within the same medal', () => {
+    expect(medalChange(51, 54)).toBeNull();
+  });
+
+  it('ignores becoming ranked or unranked', () => {
+    expect(medalChange(null, 51)).toBeNull();
+    expect(medalChange(51, null)).toBeNull();
   });
 });

@@ -59,9 +59,6 @@
 Measured with ESLint `complexity` (threshold 8) and friends; most functions are simple — these are
 the ones worth a look:
 
-- Dota: `DotaService.sync` (17) and `summary` (14, five sequential queries → `Promise.all`);
-  `DotaCareerService.load` scores 32 only because of `?? 0` fallbacks — `coalesce` in SQL removes
-  them
 - `SyncStore.applyChange` (12) and `keepLoser` (6 parameters → an object)
 - Diary editor `mark()` (13); `TelegramBotService.onApplicationBootstrap` (92 lines → one method
   per update type)

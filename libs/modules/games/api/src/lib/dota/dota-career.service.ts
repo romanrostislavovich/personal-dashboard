@@ -28,6 +28,7 @@ export interface DotaCareer {
 
 /** Achievement metrics ask for the same numbers one by one — reuse them for a short while. */
 const CACHE_MS = 30_000;
+const YEAR_MS = 365.25 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class DotaCareerService {
@@ -47,10 +48,28 @@ export class DotaCareerService {
   }
 
   private async load(userId: string): Promise<DotaCareer> {
-    const m = dotaMatches;
-    const ofUser = eq(gameAccounts.userId, userId);
-    const notTurbo = sql`${m.gameMode} IS DISTINCT FROM 23`;
+    const [{ firstMatchAt, ...totals }, maxGamesOnHero, longestWinStreak] = await Promise.all([
+      this.totals(userId),
+      this.maxGamesOnHero(userId),
+      this.bestWinStreak(userId),
+    ]);
+    return {
+      ...totals,
+      maxGamesOnHero,
+      longestWinStreak,
+      yearsSinceFirstMatch: firstMatchAt
+        ? Math.floor((Date.now() - firstMatchAt.getTime()) / YEAR_MS)
+        : 0,
+    };
+  }
 
+  /**
+   * An aggregate without GROUP BY always returns exactly one row, even with no matches;
+   * `coalesce` turns the NULLs of an empty history into zeros.
+   */
+  private async totals(userId: string) {
+    const m = dotaMatches;
+    const notTurbo = sql`${m.gameMode} IS DISTINCT FROM 23`;
     const [row] = await this.db
       .select({
         matches: sql<number>`count(*)::int`,
@@ -70,39 +89,21 @@ export class DotaCareerService {
       })
       .from(m)
       .innerJoin(gameAccounts, eq(gameAccounts.id, m.accountId))
-      .where(ofUser);
+      .where(eq(gameAccounts.userId, userId));
+    return { ...row, firstMatchAt: row.firstMatchAt ? new Date(row.firstMatchAt) : null };
+  }
 
-    const [hero] = await this.db
+  private async maxGamesOnHero(userId: string): Promise<number> {
+    const [top] = await this.db
       .select({ games: sql<number>`count(*)::int` })
-      .from(m)
-      .innerJoin(gameAccounts, eq(gameAccounts.id, m.accountId))
-      .where(ofUser)
-      .groupBy(m.heroId)
+      .from(dotaMatches)
+      .innerJoin(gameAccounts, eq(gameAccounts.id, dotaMatches.accountId))
+      .where(eq(gameAccounts.userId, userId))
+      .groupBy(dotaMatches.heroId)
       .orderBy(sql`count(*) DESC`)
       .limit(1);
-
-    const firstMatchAt = row?.firstMatchAt ? new Date(row.firstMatchAt) : null;
-    const yearMs = 365.25 * 24 * 60 * 60 * 1000;
-    return {
-      matches: row?.matches ?? 0,
-      wins: row?.wins ?? 0,
-      turboWins: row?.turboWins ?? 0,
-      rankedWins: row?.rankedWins ?? 0,
-      heroesPlayed: row?.heroesPlayed ?? 0,
-      maxGamesOnHero: hero?.games ?? 0,
-      maxKills: row?.maxKills ?? 0,
-      maxAssists: row?.maxAssists ?? 0,
-      maxGoldPerMin: row?.maxGoldPerMin ?? 0,
-      maxHeroDamage: row?.maxHeroDamage ?? 0,
-      maxLastHits: row?.maxLastHits ?? 0,
-      longestMatchMin: row?.longestMatchMin ?? 0,
-      flawlessWins: row?.flawlessWins ?? 0,
-      fastWins: row?.fastWins ?? 0,
-      longestWinStreak: await this.bestWinStreak(userId),
-      yearsSinceFirstMatch: firstMatchAt
-        ? Math.floor((Date.now() - firstMatchAt.getTime()) / yearMs)
-        : 0,
-    };
+    // Grouped, so there is no row at all when the user has no matches.
+    return top?.games ?? 0;
   }
 
   /** The best streak across all of the user's Dota accounts. */

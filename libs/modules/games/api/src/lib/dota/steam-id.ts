@@ -27,3 +27,18 @@ export function splitRankTier(rankTier: number | null): { medal: number; stars: 
   }
   return { medal: Math.floor(rankTier / 10), stars: rankTier % 10 };
 }
+
+/**
+ * The medal before and after, if it changed. Stars within a medal change too often to notify
+ * about, and becoming ranked or unranked is not a change either.
+ */
+export function medalChange(
+  previousTier: number | null,
+  currentTier: number | null,
+): { from: number; to: number } | null {
+  const before = splitRankTier(previousTier);
+  const after = splitRankTier(currentTier);
+  return before && after && before.medal !== after.medal
+    ? { from: previousTier as number, to: currentTier as number }
+    : null;
+}
