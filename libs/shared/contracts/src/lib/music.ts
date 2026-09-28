@@ -11,8 +11,24 @@ export const lastfmSettingsInputSchema = z.object({
 });
 export type LastfmSettingsInput = z.infer<typeof lastfmSettingsInputSchema>;
 
+/** Importing the whole Last.fm history into the local database. */
+export interface LastfmHistoryStatus {
+  /** Plays stored locally. */
+  imported: number;
+  /** Plays on Last.fm of all time; null if Last.fm did not answer. */
+  total: number | null;
+  complete: boolean;
+  running: boolean;
+}
+
 export interface MusicSettings {
-  lastfm: { username: string | null; lastSyncedAt: string | null; lastError: string | null };
+  lastfm: {
+    username: string | null;
+    lastSyncedAt: string | null;
+    lastError: string | null;
+    /** null — Last.fm is not connected. */
+    history: LastfmHistoryStatus | null;
+  };
   spotify: {
     /** SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET are set on the server. */
     available: boolean;

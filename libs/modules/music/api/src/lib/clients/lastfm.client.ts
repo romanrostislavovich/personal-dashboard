@@ -43,15 +43,19 @@ export class LastfmClient {
     return Number(data.user.playcount);
   }
 
-  /** Plays after `from` (newest first); at most 200 per page. */
+  /**
+   * Plays after `from` and/or before `to` (unix seconds, as Last.fm takes them), newest first;
+   * at most 200 per page.
+   */
   async getRecentTracks(
-    options: { from?: Date; page?: number; limit?: number } = {},
+    options: { from?: Date; to?: number; page?: number; limit?: number } = {},
   ): Promise<LastfmRecentPage> {
-    const { from, page = 1, limit = 200 } = options;
+    const { from, to, page = 1, limit = 200 } = options;
     const data = await this.call<RawRecentTracks>('user.getRecentTracks', {
       limit: String(limit),
       page: String(page),
       ...(from ? { from: String(Math.floor(from.getTime() / 1000) + 1) } : {}),
+      ...(to !== undefined ? { to: String(to) } : {}),
     });
     return {
       tracks: asArray(data.recenttracks.track).map(toTrack),

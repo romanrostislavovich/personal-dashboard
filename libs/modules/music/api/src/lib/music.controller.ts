@@ -19,6 +19,7 @@ import {
   NowPlaying,
 } from '@pd/contracts';
 import { z } from 'zod';
+import { LastfmHistoryImport } from './lastfm-history.import';
 import { LastfmService } from './lastfm.service';
 import { SpotifyService } from './spotify.service';
 
@@ -26,17 +27,25 @@ import { SpotifyService } from './spotify.service';
 export class MusicController {
   constructor(
     private readonly lastfm: LastfmService,
+    private readonly history: LastfmHistoryImport,
     private readonly spotify: SpotifyService,
   ) {}
 
   @Get('settings')
   async settings(@CurrentUser() user: AuthUser): Promise<MusicSettings> {
     const lastfm = await this.lastfm.getSettings(user.id);
+    const username = lastfm?.lastfmUsername ?? null;
     return {
       lastfm: {
-        username: lastfm?.lastfmUsername ?? null,
+        username,
         lastSyncedAt: lastfm?.lastSyncedAt?.toISOString() ?? null,
         lastError: lastfm?.lastError ?? null,
+        history: username
+          ? {
+              ...(await this.history.status(user.id)),
+              total: await this.lastfm.totalScrobbles(user.id).catch(() => null),
+            }
+          : null,
       },
       spotify: {
         available: this.spotify.isAvailable,
@@ -67,13 +76,22 @@ export class MusicController {
 
   // --- Last.fm ---
 
+  /** Connects and starts importing the whole history in the background. */
   @Put('lastfm')
   @HttpCode(204)
-  connectLastfm(
+  async connectLastfm(
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(lastfmSettingsInputSchema)) input: LastfmSettingsInput,
   ) {
-    return this.lastfm.connect(user.id, input);
+    await this.lastfm.connect(user.id, input);
+    this.history.start(user.id);
+  }
+
+  /** Imports the rest of the history now instead of in portions every 15 minutes. */
+  @Post('lastfm/history')
+  @HttpCode(202)
+  importLastfmHistory(@CurrentUser() user: AuthUser): void {
+    this.history.start(user.id);
   }
 
   @Delete('lastfm')

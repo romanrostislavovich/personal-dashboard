@@ -1,0 +1,1 @@
+ALTER TABLE "music_settings" ADD COLUMN "history_imported_at" timestamp with time zone;

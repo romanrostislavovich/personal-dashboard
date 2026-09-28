@@ -9,10 +9,11 @@ import {
   NowPlaying,
   todayIn,
 } from '@pd/contracts';
-import { and, desc, eq, gt, isNotNull, max, sql } from 'drizzle-orm';
-import { LastfmAuthError, LastfmClient } from './clients/lastfm.client';
+import { and, desc, eq, gt, isNotNull, max, min, sql } from 'drizzle-orm';
+import { LastfmAuthError, LastfmClient, LastfmTrack } from './clients/lastfm.client';
 import { musicSettings, MusicSettingsRow, scrobbles } from './music.schema';
 import { fillPlaysByDay } from './plays-by-day';
+import { scrobbleId } from './scrobble-id';
 
 const API_KEY_SECRET = 'music.lastfm.api-key';
 /** On connect, pull the last 30 days of history, not all of it. */
@@ -59,7 +60,8 @@ export class LastfmService {
       .values({ userId, lastfmUsername: username })
       .onConflictDoUpdate({
         target: musicSettings.userId,
-        set: { lastfmUsername: username, lastError: null },
+        // Another account (or a reconnect) — check again that the whole history is here.
+        set: { lastfmUsername: username, lastError: null, historyImportedAt: null },
       });
     this.clearCache(userId);
     await this.sync(userId);
@@ -90,21 +92,7 @@ export class LastfmService {
 
       for (let page = 1; page <= MAX_PAGES_PER_SYNC; page++) {
         const result = await client.getRecentTracks({ from, page });
-        const played = result.tracks.filter((t) => t.playedAt !== null);
-        if (played.length > 0) {
-          await this.db
-            .insert(scrobbles)
-            .values(
-              played.map((t) => ({
-                userId,
-                playedAt: t.playedAt as Date,
-                artist: t.artist,
-                track: t.track,
-                album: t.album,
-              })),
-            )
-            .onConflictDoNothing();
-        }
+        await this.save(userId, result.tracks);
         if (page >= result.totalPages) {
           break;
         }
@@ -219,7 +207,45 @@ export class LastfmService {
       : null;
   }
 
-  private async clientFor(userId: string): Promise<LastfmClient | null> {
+  /**
+   * Stores finished plays (the one playing now has no time yet); already stored ones are skipped.
+   * Returns how many plays the page had.
+   */
+  async save(userId: string, tracks: LastfmTrack[]): Promise<number> {
+    const played = tracks.filter((t): t is LastfmTrack & { playedAt: Date } => t.playedAt !== null);
+    if (played.length > 0) {
+      await this.db
+        .insert(scrobbles)
+        .values(
+          played.map((t) => ({
+            id: scrobbleId(userId, t.playedAt, t.track),
+            userId,
+            playedAt: t.playedAt,
+            artist: t.artist,
+            track: t.track,
+            album: t.album,
+          })),
+        )
+        .onConflictDoNothing();
+    }
+    return played.length;
+  }
+
+  /** How many plays are stored locally — the progress of the history import. */
+  async storedCount(userId: string): Promise<number> {
+    return this.db.$count(scrobbles, eq(scrobbles.userId, userId));
+  }
+
+  /** The oldest stored play: the history import continues from there into the past. */
+  async oldestPlay(userId: string): Promise<Date | null> {
+    const [{ oldest }] = await this.db
+      .select({ oldest: min(scrobbles.playedAt) })
+      .from(scrobbles)
+      .where(eq(scrobbles.userId, userId));
+    return oldest;
+  }
+
+  async clientFor(userId: string): Promise<LastfmClient | null> {
     const settings = await this.getSettings(userId);
     const apiKey = await this.secrets.get(userId, API_KEY_SECRET);
     return settings?.lastfmUsername && apiKey

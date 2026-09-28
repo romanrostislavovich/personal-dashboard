@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MusicSettings } from '@pd/contracts';
@@ -19,6 +20,8 @@ import { MusicApi } from './music.api';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
+    DecimalPipe,
+    MatProgressBarModule,
     ReactiveFormsModule,
     MatCardModule,
     MatButtonModule,
@@ -50,6 +53,34 @@ import { MusicApi } from './music.api';
             @if (s.lastfm.lastError) {
               <p class="error">{{ s.lastfm.lastError }}</p>
             }
+            @if (s.lastfm.history; as h) {
+              <div class="history">
+                @if (h.complete) {
+                  <p class="hint">
+                    <mat-icon inline>history</mat-icon>
+                    {{ 'music.history.complete' | transloco: { count: (h.imported | number) } }}
+                  </p>
+                } @else {
+                  <p class="hint">
+                    {{
+                      'music.history.progress'
+                        | transloco
+                          : {
+                              imported: (h.imported | number),
+                              total: h.total === null ? '?' : (h.total | number),
+                            }
+                    }}
+                  </p>
+                  <mat-progress-bar
+                    [mode]="h.total ? 'determinate' : 'indeterminate'"
+                    [value]="h.total ? (100 * h.imported) / h.total : 0"
+                  />
+                  <p class="hint">
+                    {{ (h.running ? 'music.history.running' : 'music.history.paused') | transloco }}
+                  </p>
+                }
+              </div>
+            }
           } @else {
             <p class="hint">{{ 'music.connect.lastfmHint' | transloco }}</p>
             <form class="form" [formGroup]="form" (ngSubmit)="connectLastfm()">
@@ -69,6 +100,11 @@ import { MusicApi } from './music.api';
         </mat-card-content>
         @if (s.lastfm.username) {
           <mat-card-actions align="end">
+            @if (s.lastfm.history && !s.lastfm.history.complete && !s.lastfm.history.running) {
+              <button matButton (click)="importHistory()" [disabled]="busy()">
+                <mat-icon>history</mat-icon> {{ 'music.history.start' | transloco }}
+              </button>
+            }
             <button matButton (click)="syncLastfm()" [disabled]="busy()">
               <mat-icon>sync</mat-icon> {{ 'music.connect.syncNow' | transloco }}
             </button>
@@ -142,6 +178,15 @@ import { MusicApi } from './music.api';
       color: var(--mat-sys-error);
       font: var(--mat-sys-body-small);
     }
+    .history {
+      margin-top: 12px;
+    }
+    .history .hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0;
+    }
   `,
 })
 export class MusicConnectComponent {
@@ -165,6 +210,10 @@ export class MusicConnectComponent {
 
   async syncLastfm(): Promise<void> {
     await this.run(() => firstValueFrom(this.api.syncLastfm()));
+  }
+
+  async importHistory(): Promise<void> {
+    await this.run(() => firstValueFrom(this.api.importLastfmHistory()));
   }
 
   async disconnectLastfm(): Promise<void> {

@@ -32,6 +32,8 @@ export const musicSettings = pgTable('music_settings', {
   lastfmUsername: text(),
   lastSyncedAt: timestamp({ withTimezone: true }),
   lastError: text(),
+  /** The whole Last.fm history is imported (see LastfmHistoryImport); null — still going. */
+  historyImportedAt: timestamp({ withTimezone: true }),
 });
 
 export type MusicSettingsRow = typeof musicSettings.$inferSelect;

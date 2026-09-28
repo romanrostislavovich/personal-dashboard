@@ -48,6 +48,13 @@
       "error": "Could not connect Spotify"
     }
   },
+  "history": {
+    "progress": "All-time history: {{imported}} of {{total}} plays imported",
+    "complete": "The whole Last.fm history is here: {{count}} plays. New ones are added every 15 minutes.",
+    "running": "Importing — you can close the page, it runs on the server.",
+    "paused": "Imported in portions every 15 minutes. You can import the rest right away.",
+    "start": "Import all history"
+  },
   "widget": {
     "today": "Today: {{count}}",
     "empty": "Connect Last.fm or Spotify in the Music section",

@@ -46,6 +46,11 @@ export class MusicApi {
     return this.http.post<void>(`${BASE}/lastfm/sync`, {});
   }
 
+  /** Starts importing the rest of the history; progress comes with `settings()`. */
+  importLastfmHistory() {
+    return this.http.post<void>(`${BASE}/lastfm/history`, {});
+  }
+
   /** Spotify sign-in page URL — the browser has to navigate to it. */
   spotifyConnectUrl() {
     return this.http.post<{ url: string }>(`${BASE}/spotify/connect`, {});

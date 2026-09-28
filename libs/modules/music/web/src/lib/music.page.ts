@@ -16,6 +16,7 @@ import { TopListComponent } from './top-list.component';
 
 /** "Now playing" changes often — refresh every 30 seconds while the page is open. */
 const NOW_PLAYING_REFRESH_MS = 30_000;
+const HISTORY_REFRESH_MS = 5_000;
 
 @Component({
   selector: 'pd-music-page',
@@ -58,6 +59,14 @@ export class MusicPage {
     interval(NOW_PLAYING_REFRESH_MS)
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.nowPlaying.reload());
+    // While the history import runs, show its progress.
+    interval(HISTORY_REFRESH_MS)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => {
+        if (this.settings.value()?.lastfm.history?.running) {
+          this.settings.reload();
+        }
+      });
     this.showSpotifyResult();
   }
 
