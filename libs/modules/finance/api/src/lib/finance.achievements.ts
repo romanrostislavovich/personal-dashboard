@@ -12,6 +12,12 @@ export class FinanceAchievements implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    this.registerTracking();
+    this.registerAutomation();
+  }
+
+  /** Keeping records: months with transactions and their number. */
+  private registerTracking(): void {
     this.achievements.register({
       id: 'finance.months-tracked',
       module: 'finance',
@@ -63,6 +69,10 @@ export class FinanceAchievements implements OnModuleInit {
         ],
       ),
     });
+  }
+
+  /** Recurring payments and automatic cost import. */
+  private registerAutomation(): void {
     this.achievements.register({
       id: 'finance.recurring',
       module: 'finance',

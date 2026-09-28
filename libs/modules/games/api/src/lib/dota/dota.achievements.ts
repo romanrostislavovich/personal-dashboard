@@ -11,6 +11,16 @@ export class DotaAchievements implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    this.registerMatchCounts();
+    this.registerModeWins();
+    this.registerHeroes();
+    this.registerFightRecords();
+    this.registerFarmRecords();
+    this.registerTimeRecords();
+  }
+
+  /** Matches, wins and the best streak. */
+  private registerMatchCounts(): void {
     this.metric('games.dota-matches', 'matches', [
       [
         10,
@@ -68,6 +78,10 @@ export class DotaAchievements implements OnModuleInit {
         { en: '10 wins in a row', ru: '10 побед подряд' },
       ],
     ]);
+  }
+
+  /** Wins in Turbo and ranked games. */
+  private registerModeWins(): void {
     this.metric('games.dota-turbo-wins', 'turboWins', [
       [10, '⚡', { en: 'Turbo', ru: 'Турбо' }, { en: '10 Turbo wins', ru: '10 побед в Турбо' }],
       [100, '🏎️', { en: 'Nitro', ru: 'Нитро' }, { en: '100 Turbo wins', ru: '100 побед в Турбо' }],
@@ -92,6 +106,10 @@ export class DotaAchievements implements OnModuleInit {
         { en: '100 ranked wins', ru: '100 рейтинговых побед' },
       ],
     ]);
+  }
+
+  /** How many heroes, and how much on one hero. */
+  private registerHeroes(): void {
     this.metric('games.dota-heroes', 'heroesPlayed', [
       [
         10,
@@ -132,6 +150,10 @@ export class DotaAchievements implements OnModuleInit {
         { en: '500 matches on one hero', ru: '500 матчей на одном герое' },
       ],
     ]);
+  }
+
+  /** Best single match: kills, assists, a win without dying. */
+  private registerFightRecords(): void {
     this.metric('games.dota-max-kills', 'maxKills', [
       [
         15,
@@ -180,6 +202,10 @@ export class DotaAchievements implements OnModuleInit {
         { en: '10 wins without dying', ru: '10 побед без смертей' },
       ],
     ]);
+  }
+
+  /** Best single match: gold per minute, hero damage, last hits. */
+  private registerFarmRecords(): void {
     this.metric('games.dota-max-gpm', 'maxGoldPerMin', [
       [
         700,
@@ -222,6 +248,10 @@ export class DotaAchievements implements OnModuleInit {
         { en: '700 last hits in a match', ru: '700 добиваний за матч' },
       ],
     ]);
+  }
+
+  /** Long and fast matches, and years in the game. */
+  private registerTimeRecords(): void {
     this.metric('games.dota-marathon', 'longestMatchMin', [
       [
         60,

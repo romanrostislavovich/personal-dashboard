@@ -79,12 +79,14 @@ export class FinanceAiTools implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.registerTransactionTools();
+    this.registerTransactionReadTools();
+    this.registerTransactionWriteTools();
     this.registerRecurringTools();
     this.registerCostSourceTools();
   }
 
-  private registerTransactionTools(): void {
+  /** The summary and the list of transactions. */
+  private registerTransactionReadTools(): void {
     this.ai.registerTool({
       name: 'finance_summary',
       module: 'finance',
@@ -104,7 +106,10 @@ export class FinanceAiTools implements OnModuleInit {
       parameters: QUERY_PARAMETERS,
       handler: (userId, args) => this.transactions.list(userId, toQuery(args)),
     });
+  }
 
+  /** Adding, correcting and deleting transactions. */
+  private registerTransactionWriteTools(): void {
     this.ai.registerTool({
       name: 'finance_add_transaction',
       module: 'finance',

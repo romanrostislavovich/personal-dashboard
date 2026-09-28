@@ -30,6 +30,13 @@ export class DiaryAiTools implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    this.registerEntryTools();
+    this.registerEditTools();
+    this.registerSettingsTools();
+  }
+
+  /** Reading entries and statistics, adding notes and mood. */
+  private registerEntryTools(): void {
     this.ai.registerTool({
       name: 'diary_entries',
       module: 'diary',
@@ -86,7 +93,10 @@ export class DiaryAiTools implements OnModuleInit {
         return { saved: true, day: entry?.day, mood: entry?.mood };
       },
     });
+  }
 
+  /** Finding text and correcting or deleting it. */
+  private registerEditTools(): void {
     this.ai.registerTool({
       name: 'diary_search',
       module: 'diary',
@@ -154,7 +164,10 @@ export class DiaryAiTools implements OnModuleInit {
       },
       handler: (userId, args) => this.diary.remove(userId, dayArgs.parse(args).day),
     });
+  }
 
+  /** Diary settings. */
+  private registerSettingsTools(): void {
     this.ai.registerTool({
       name: 'diary_settings',
       module: 'diary',

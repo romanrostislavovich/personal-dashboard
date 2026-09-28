@@ -16,6 +16,13 @@ export class DiaryAchievements implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    this.registerHabit();
+    this.registerMoodAndTags();
+    this.registerRichEntries();
+  }
+
+  /** Writing regularly: streaks and the number of entries. */
+  private registerHabit(): void {
     this.achievements.register({
       id: 'diary.longest-streak',
       module: 'diary',
@@ -91,7 +98,10 @@ export class DiaryAchievements implements OnModuleInit {
         ),
       ],
     });
+  }
 
+  /** Great days and the variety of hashtags. */
+  private registerMoodAndTags(): void {
     this.achievements.register({
       id: 'diary.great-days',
       module: 'diary',
@@ -131,6 +141,10 @@ export class DiaryAchievements implements OnModuleInit {
         ],
       ),
     });
+  }
+
+  /** What goes into entries: words, emoji marks, photos. */
+  private registerRichEntries(): void {
     this.achievements.register({
       id: 'diary.words',
       module: 'diary',

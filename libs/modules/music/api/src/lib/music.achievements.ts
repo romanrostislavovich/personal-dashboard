@@ -14,6 +14,12 @@ export class MusicAchievements implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    this.registerVolume();
+    this.registerVarietyAndHabit();
+  }
+
+  /** How much is played: in total and in one day. */
+  private registerVolume(): void {
     this.achievements.register({
       id: 'music.scrobbles',
       module: 'music',
@@ -65,7 +71,10 @@ export class MusicAchievements implements OnModuleInit {
         ),
       ],
     });
+  }
 
+  /** Different artists and days with music. */
+  private registerVarietyAndHabit(): void {
     this.achievements.register({
       id: 'music.artists',
       module: 'music',

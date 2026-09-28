@@ -12,6 +12,12 @@ export class GithubOssAchievements implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    this.registerPopularity();
+    this.registerCommunity();
+  }
+
+  /** Stars and npm downloads. */
+  private registerPopularity(): void {
     this.achievements.register({
       id: 'github-oss.stars',
       module: 'github-oss',
@@ -78,7 +84,10 @@ export class GithubOssAchievements implements OnModuleInit {
         ),
       ],
     });
+  }
 
+  /** Forks and the number of tracked repositories. */
+  private registerCommunity(): void {
     this.achievements.register({
       id: 'github-oss.forks',
       module: 'github-oss',
