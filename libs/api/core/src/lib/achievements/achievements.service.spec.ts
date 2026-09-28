@@ -3,11 +3,10 @@ import { AchievementsService } from './achievements.service';
 
 /** A service with a fake database that has no unlocked achievements yet. */
 function setup(syncMode: 'off' | 'server' | 'client') {
-  const insert = vi.fn(() => ({
-    values: () => ({
-      onConflictDoNothing: () => ({ returning: async () => [{ id: 'test.plays.10' }] }),
-    }),
+  const insertValues = vi.fn((_rows: unknown) => ({
+    onConflictDoNothing: () => ({ returning: async () => [{ id: 'test.plays.10' }] }),
   }));
+  const insert = vi.fn(() => ({ values: insertValues }));
   const db = { select: () => ({ from: () => ({ where: async () => [] }) }), insert };
   const config = { get: (key: string) => (key === 'SYNC_MODE' ? syncMode : undefined) };
   const users = { findById: async () => ({ locale: 'en' }), findAll: async () => [] };
@@ -30,7 +29,7 @@ function setup(syncMode: 'off' | 'server' | 'client') {
     measure: async () => 25,
     tiers: [{ goal: 10, icon: '🎵', title: { en: 'Ten' }, description: { en: '10 plays' } }],
   });
-  return { service, insert, notifications, activity };
+  return { service, insert, insertValues, notifications, activity };
 }
 
 describe('AchievementsService', () => {
@@ -42,6 +41,15 @@ describe('AchievementsService', () => {
     expect(values.get('test.plays')).toBe(25);
     expect(insert).toHaveBeenCalled();
     expect(notifications.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('records a visit day when the list is opened', async () => {
+    const { service, insertValues } = setup('server');
+    await service.list('user');
+    expect(insertValues).toHaveBeenCalledWith({
+      userId: 'user',
+      day: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    });
   });
 
   it('only measures progress on a sync client: unlocking is the server’s job', async () => {

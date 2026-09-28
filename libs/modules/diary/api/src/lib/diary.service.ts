@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { AppConfig, DB, Database } from '@pd/api-core';
 import {
   addDays,
+  computeStreaks,
   DateParts,
   daysInMonth,
   DiaryCalendarDay,
@@ -24,7 +25,6 @@ import {
 import { and, arrayContains, asc, desc, eq, gte, isNotNull, lte, sql } from 'drizzle-orm';
 import { appendNote, extractTags, searchSnippet, shorten, toPlainText } from './diary-text';
 import { DiaryEntryRow, diaryEntries, diarySettings } from './diary.schema';
-import { computeStreaks } from './streaks';
 
 const MOOD_HISTORY_DAYS = 30;
 const TOP_TAGS_LIMIT = 10;

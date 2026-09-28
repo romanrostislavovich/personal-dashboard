@@ -21,6 +21,7 @@ import { SchedulerService } from '../scheduler/scheduler.service';
 import { UsersService } from '../users/users.service';
 import { AchievementMetric, AchievementTier, tierRarity } from './achievement-metric';
 import { unlockedAchievements } from './achievements.schema';
+import { dashboardAchievementMetrics, markActiveDay } from './dashboard.achievements';
 import { metaAchievementMetrics } from './meta.achievements';
 import { achievementId, newlyUnlockedTiers } from './newly-unlocked';
 
@@ -49,6 +50,7 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
   private readonly metrics: AchievementMetric[] = [];
   private activitySubscription: Subscription | null = null;
   private readonly isSyncClient: boolean;
+  private readonly timeZone: string;
 
   constructor(
     @Inject(DB) private readonly db: Database,
@@ -60,6 +62,7 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     private readonly activity: UserActivityService,
   ) {
     this.isSyncClient = config.get('SYNC_MODE', { infer: true }) === 'client';
+    this.timeZone = config.get('APP_TIMEZONE', { infer: true });
   }
 
   register(metric: AchievementMetric): void {
@@ -80,21 +83,27 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     if (this.isSyncClient) {
       return;
     }
-    // One debounced check per user after their changes.
+    // One debounced check per user after their changes (a change also makes the day active).
     this.activitySubscription = this.activity.activity$
       .pipe(
         groupBy((userId) => userId),
         mergeMap((userActivity) => userActivity.pipe(debounceTime(ACTIVITY_DEBOUNCE_MS))),
       )
       .subscribe((userId) => {
-        this.evaluate(userId).catch((error) =>
-          this.logger.warn(`Achievements check for ${userId} failed: ${error}`),
-        );
+        markActiveDay(this.db, userId, this.timeZone)
+          .then(() => this.evaluate(userId))
+          .catch((error) => this.logger.warn(`Achievements check for ${userId} failed: ${error}`));
       });
   }
 
-  /** Meta achievements count other achievements, so they go after all modules have registered. */
+  /**
+   * Dashboard achievements are shown after the modules' ones. Meta achievements count other
+   * achievements, so they go after all modules have registered.
+   */
   onApplicationBootstrap(): void {
+    for (const metric of dashboardAchievementMetrics(this.db, this.timeZone)) {
+      this.register(metric);
+    }
     for (const metric of metaAchievementMetrics(this.db, () => this.metrics)) {
       this.register(metric);
     }
@@ -104,8 +113,12 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     this.activitySubscription?.unsubscribe();
   }
 
-  /** All user achievements with progress (also unlocks new ones). */
+  /**
+   * All user achievements with progress (also unlocks new ones). The dashboard asks for them
+   * on every open, so this is also where a visit day is recorded.
+   */
   async list(userId: string): Promise<Achievement[]> {
+    await markActiveDay(this.db, userId, this.timeZone);
     const { values, unlocked } = await this.evaluate(userId);
     const locale = (await this.users.findById(userId))?.locale;
 

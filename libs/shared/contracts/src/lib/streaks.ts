@@ -1,8 +1,8 @@
-import { addDays, DateParts, LocalDate, toLocalDate } from '@pd/contracts';
+import { addDays, DateParts, LocalDate, toLocalDate } from './local-date';
 
 /**
- * Streaks of consecutive days with an entry.
- * The current streak does not break if nothing was written today yet: count from yesterday —
+ * Streaks of consecutive days (with a diary entry, with a dashboard visit).
+ * The current streak does not break if today has nothing yet: count from yesterday —
  * the day is not over.
  */
 export function computeStreaks(

@@ -113,6 +113,13 @@
       "when": 1790599989958,
       "tag": "0015_music_history_import",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790620761390,
+      "tag": "0016_dashboard_active_days",
+      "breakpoints": true
     }
   ]
 }

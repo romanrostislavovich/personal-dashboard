@@ -141,6 +141,8 @@ To add a service (e.g. DigitalOcean):
 - **Achievements:** `AchievementsService` — modules register metrics with tiers; the engine evaluates
   them hourly, after the user's changes and on page load, and sends one notification with all new
   achievements. With sync on, only the server unlocks achievements; a client shows progress.
+  The core adds its own: achievements about achievements and about the dashboard itself
+  (how long and how often it is used — visit days go to `dashboard_active_days`).
 - **Server actions:** `ServerActions` — calls to outside services made on a user's request; on a
   sync client they are forwarded to the server (see [sync.md](sync.md)).
 - **Sync:** `SyncService` / `SyncClient` — two-way sync between a local instance and a server
