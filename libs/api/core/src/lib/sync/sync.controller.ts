@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Controller,
   Get,
-  Header,
   Headers,
   HttpCode,
   Inject,
@@ -50,31 +49,28 @@ export class SyncController {
   @Public()
   @Post('push')
   @HttpCode(200)
-  @Header('Content-Type', SYNC_CONTENT_TYPE)
   async push(@Req() request: IncomingMessage, @Headers('authorization') auth?: string) {
     const body = await this.readBody(request, auth, syncPushRequestSchema);
-    return new StreamableFile(await encodeSyncBody(await this.sync.receive(body)));
+    return syncBody(await this.sync.receive(body));
   }
 
   @Public()
   @Post('pull')
   @HttpCode(200)
-  @Header('Content-Type', SYNC_CONTENT_TYPE)
   async pull(@Req() request: IncomingMessage, @Headers('authorization') auth?: string) {
     const body = await this.readBody(request, auth, syncPullRequestSchema);
-    return new StreamableFile(await encodeSyncBody(await this.sync.send(body)));
+    return syncBody(await this.sync.send(body));
   }
 
   /** A module action the client asks the server to run (see ServerActions). */
   @Public()
   @Post('action')
   @HttpCode(200)
-  @Header('Content-Type', SYNC_CONTENT_TYPE)
   async action(@Req() request: IncomingMessage, @Headers('authorization') auth?: string) {
     const body = await this.readBody(request, auth, syncActionRequestSchema);
     await this.sync.acceptAction(body);
     const result = await this.actions.execute(body.userId, body.action, body.args);
-    return new StreamableFile(await encodeSyncBody({ result: result ?? null }));
+    return syncBody({ result: result ?? null });
   }
 
   @Get('status')
@@ -119,4 +115,9 @@ export class SyncController {
     }
     return parsed.data;
   }
+}
+
+/** The sync type only for successful answers: errors stay plain JSON. */
+async function syncBody(body: unknown): Promise<StreamableFile> {
+  return new StreamableFile(await encodeSyncBody(body), { type: SYNC_CONTENT_TYPE });
 }
