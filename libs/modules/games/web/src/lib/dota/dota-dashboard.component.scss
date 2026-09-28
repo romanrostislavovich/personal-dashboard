@@ -1,0 +1,264 @@
+:host {
+  --win: var(--pd-success);
+  --loss: var(--pd-danger);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.small {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.label {
+  font: 600 0.7rem / 1.2 var(--pd-font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.win {
+  color: var(--win);
+}
+
+.loss {
+  color: var(--loss);
+}
+
+.dash {
+  margin: 0 4px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  color: var(--mat-sys-error);
+  font: var(--mat-sys-body-small);
+}
+
+// --- Accounts ---
+
+.account-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--pd-border);
+  background: var(--pd-card);
+  color: inherit;
+  font: 600 0.85rem / 1.2 var(--pd-font);
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
+
+  img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  &.active {
+    border-color: var(--mat-sys-primary);
+    background: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+  }
+}
+
+.loading {
+  border-radius: 2px;
+}
+
+// --- Player header ---
+
+.profile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+  padding: 18px 20px;
+  border-radius: var(--pd-radius);
+  border: 1px solid var(--pd-border);
+  background: radial-gradient(circle at 0 0, var(--pd-glow), transparent 55%), var(--pd-card);
+}
+
+.avatars {
+  display: flex;
+
+  img {
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    border: 3px solid var(--mat-sys-surface);
+
+    & + img {
+      margin-left: -28px;
+    }
+  }
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.name {
+  font: 800 1.6rem / 1.2 var(--pd-font-heading);
+  color: inherit;
+  text-decoration: none;
+}
+
+.record {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+
+  .value {
+    font: 800 1.5rem / 1.1 var(--pd-font-heading);
+  }
+}
+
+.notice {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--pd-rarity-legendary) 50%, transparent);
+  background: color-mix(in srgb, var(--pd-rarity-legendary) 10%, transparent);
+
+  mat-icon {
+    color: var(--pd-rarity-legendary);
+    flex: none;
+  }
+
+  p {
+    margin: 4px 0 0;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.views {
+  align-self: flex-start;
+}
+
+// --- Overview ---
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+
+  .value {
+    font: 800 1.35rem / 1.1 var(--pd-font-heading);
+  }
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr));
+  gap: 16px;
+}
+
+.panel {
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border-radius: var(--pd-radius);
+  border: 1px solid var(--pd-border);
+  background: var(--pd-card);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  h3 {
+    margin: 0;
+    font: 700 1rem / 1.3 var(--pd-font-heading);
+  }
+}
+
+// --- Accounts table (all accounts) ---
+
+.account-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.account-row {
+  display: grid;
+  grid-template-columns: 36px minmax(120px, 1.5fr) 1fr 1fr 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+
+  img {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+}
+
+.link {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mat-sys-primary);
+  font: 600 0.95rem / 1.3 var(--pd-font);
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+}
+
+@media (max-width: 700px) {
+  .record {
+    align-items: flex-start;
+  }
+
+  .account-row {
+    grid-template-columns: 36px 1fr auto;
+
+    > :nth-child(3),
+    > :nth-child(4),
+    > :nth-child(5) {
+      display: none;
+    }
+  }
+}

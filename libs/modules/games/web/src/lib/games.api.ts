@@ -1,6 +1,14 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { GameAccount, GameAccountInput, GamesSettings, WowCredentialsInput } from '@pd/contracts';
+import {
+  DotaMatchesPage,
+  DotaMatchesQuery,
+  DotaOverview,
+  GameAccount,
+  GameAccountInput,
+  GamesSettings,
+  WowCredentialsInput,
+} from '@pd/contracts';
 
 const BASE = '/api/games';
 
@@ -10,6 +18,21 @@ export class GamesApi {
 
   accounts() {
     return httpResource<GameAccount[]>(() => `${BASE}/accounts`, { defaultValue: [] });
+  }
+
+  /** `accountId()` → one account; `null` → all Dota accounts together. */
+  dotaOverview(accountId: () => string | null) {
+    return httpResource<DotaOverview>(() => ({
+      url: `${BASE}/dota/overview`,
+      params: withoutEmpty({ accountId: accountId() }),
+    }));
+  }
+
+  dotaMatches(query: () => Partial<DotaMatchesQuery>) {
+    return httpResource<DotaMatchesPage>(() => ({
+      url: `${BASE}/dota/matches`,
+      params: withoutEmpty(query()),
+    }));
   }
 
   settings() {
@@ -31,4 +54,11 @@ export class GamesApi {
   saveWowCredentials(input: WowCredentialsInput) {
     return this.http.put<void>(`${BASE}/wow/credentials`, input);
   }
+}
+
+/** Query parameters without the unset ones. */
+function withoutEmpty(params: Record<string, string | number | null | undefined>) {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== null && value !== undefined),
+  ) as Record<string, string | number>;
 }

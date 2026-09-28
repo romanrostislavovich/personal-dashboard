@@ -1,0 +1,258 @@
+<!-- Accounts: all together or one of them -->
+@if (accounts().length > 1) {
+  <div class="account-bar" role="tablist">
+    <button
+      type="button"
+      class="pill"
+      role="tab"
+      [class.active]="accountId() === null"
+      [attr.aria-selected]="accountId() === null"
+      (click)="select(null)"
+    >
+      <mat-icon>groups</mat-icon>
+      {{ 'games.allAccounts' | transloco }} · {{ accounts().length }}
+    </button>
+    @for (account of accounts(); track account.id) {
+      <button
+        type="button"
+        class="pill"
+        role="tab"
+        [class.active]="accountId() === account.id"
+        [attr.aria-selected]="accountId() === account.id"
+        (click)="select(account.id)"
+      >
+        @if (avatarOf(account); as avatar) {
+          <img [src]="avatar" alt="" />
+        }
+        {{ account.displayName }}
+      </button>
+    }
+  </div>
+}
+
+@if (overview.isLoading()) {
+  <mat-progress-bar mode="indeterminate" class="loading" />
+}
+
+@if (overview.value(); as o) {
+  <!-- Player header, like the top of a Dotabuff profile -->
+  <section class="profile">
+    <div class="avatars">
+      @for (a of o.accounts.slice(0, 3); track a.id) {
+        @if (a.avatarUrl) {
+          <img [src]="a.avatarUrl" alt="" />
+        }
+      }
+    </div>
+    <div class="who">
+      @if (single(); as a) {
+        <a class="name" [href]="a.profileUrl" target="_blank" rel="noopener">{{ a.personaName }}</a>
+      } @else {
+        <span class="name">{{ 'games.allAccounts' | transloco }}</span>
+      }
+      <span class="muted">
+        @if (o.totals.firstMatchAt) {
+          {{
+            'games.dota.totals.since' | transloco: { date: (o.totals.firstMatchAt | date: 'MMM y') }
+          }}
+          ·
+        }
+        {{ 'games.dota.lastMatch' | transloco }} {{ o.totals.lastMatchAt | timeAgo: lang() }}
+      </span>
+      @if (single(); as a) {
+        <span class="muted small">
+          @if (a.lastSyncedAt) {
+            {{ 'games.synced' | transloco }} {{ a.lastSyncedAt | timeAgo: lang() }}
+          }
+          <button
+            matIconButton
+            [matTooltip]="'games.syncNow' | transloco"
+            [disabled]="busy()"
+            (click)="sync.emit(a.id)"
+          >
+            <mat-icon>sync</mat-icon>
+          </button>
+          <button
+            matIconButton
+            [matTooltip]="'core.actions.delete' | transloco"
+            [disabled]="busy()"
+            (click)="remove.emit(a.id)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </span>
+        @if (a.lastError) {
+          <span class="error">{{ a.lastError }}</span>
+        }
+      }
+    </div>
+    <pd-dota-rank [rankTier]="bestRank()" [leaderboardRank]="single()?.leaderboardRank ?? null" />
+    <div class="record">
+      <span class="label">{{ 'games.dota.recordLabel' | transloco }}</span>
+      <span class="value">
+        <span class="win">{{ o.totals.wins | number }}</span>
+        <span class="dash">–</span>
+        <span class="loss">{{ o.totals.matches - o.totals.wins | number }}</span>
+      </span>
+      <span class="muted">{{ winrate() === null ? '—' : (winrate() | percent: '1.2-2') }}</span>
+    </div>
+  </section>
+
+  @if (single()?.historyHidden && !o.totals.matches) {
+    <div class="notice" role="status">
+      <mat-icon>visibility_off</mat-icon>
+      <div>
+        <strong>{{ 'games.dota.hidden.title' | transloco }}</strong>
+        <p>{{ 'games.dota.hidden.text' | transloco }}</p>
+      </div>
+    </div>
+  }
+
+  <mat-button-toggle-group
+    class="views"
+    [value]="view()"
+    (change)="view.set($event.value)"
+    [hideSingleSelectionIndicator]="true"
+  >
+    <mat-button-toggle value="overview">{{
+      'games.dota.views.overview' | transloco
+    }}</mat-button-toggle>
+    <mat-button-toggle value="heroes"
+      >{{ 'games.dota.views.heroes' | transloco }} · {{ o.heroes.length }}</mat-button-toggle
+    >
+    <mat-button-toggle value="matches"
+      >{{ 'games.dota.views.matches' | transloco }} ·
+      {{ o.totals.matches | number }}</mat-button-toggle
+    >
+  </mat-button-toggle-group>
+
+  @switch (view()) {
+    @case ('overview') {
+      <div class="tiles">
+        <div class="tile">
+          <span class="label">{{ 'games.dota.totals.matches' | transloco }}</span>
+          <span class="value">{{ o.totals.matches | number }}</span>
+        </div>
+        <div class="tile">
+          <span class="label">{{ 'games.dota.totals.winrate' | transloco }}</span>
+          <span class="value">{{ winrate() === null ? '—' : (winrate() | percent: '1.1-1') }}</span>
+        </div>
+        <div class="tile">
+          <span class="label">KDA</span>
+          <span class="value">{{ kda() === null ? '—' : (kda() | number: '1.2-2') }}</span>
+        </div>
+        <div class="tile">
+          <span class="label">{{ 'games.dota.totals.hours' | transloco }}</span>
+          <span class="value">{{ o.totals.hoursPlayed | number }}</span>
+        </div>
+        <div class="tile">
+          <span class="label">{{ 'games.dota.totals.heroes' | transloco }}</span>
+          <span class="value">{{ o.totals.heroesPlayed }}</span>
+        </div>
+        <div class="tile">
+          <span class="label">{{ 'games.dota.last30' | transloco }}</span>
+          <span class="value">
+            <span class="win">{{ o.last30Days.wins }}</span>
+            <span class="dash">–</span>
+            <span class="loss">{{ o.last30Days.losses }}</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="columns">
+        <section class="panel">
+          <header class="panel-head">
+            <h3>{{ 'games.dota.mostPlayed' | transloco }}</h3>
+            <button matButton (click)="view.set('heroes')">
+              {{ 'games.dota.seeAll' | transloco }}
+            </button>
+          </header>
+          <pd-dota-heroes-table [heroes]="o.heroes" [limit]="8" [lang]="lang()" />
+        </section>
+        <section class="panel">
+          <header class="panel-head">
+            <h3>{{ 'games.dota.recentMatches' | transloco }}</h3>
+            <button matButton (click)="view.set('matches')">
+              {{ 'games.dota.seeAll' | transloco }}
+            </button>
+          </header>
+          <pd-dota-match-list
+            [matches]="o.recentMatches.slice(0, 10)"
+            [accountNames]="accountNames()"
+            [lang]="lang()"
+          />
+        </section>
+      </div>
+
+      <section class="panel">
+        <header class="panel-head">
+          <h3>{{ 'games.dota.activity.title' | transloco }}</h3>
+        </header>
+        <pd-dota-activity [days]="o.activity" />
+      </section>
+
+      <pd-dota-modes-records [modes]="o.modes" [records]="o.records" />
+
+      @if (o.accounts.length > 1) {
+        <section class="panel">
+          <header class="panel-head">
+            <h3>{{ 'games.accountsTitle' | transloco }}</h3>
+          </header>
+          <div class="account-rows">
+            @for (a of o.accounts; track a.id) {
+              <div class="account-row">
+                @if (a.avatarUrl) {
+                  <img [src]="a.avatarUrl" alt="" />
+                }
+                <button type="button" class="link" (click)="select(a.id)">
+                  {{ a.personaName }}
+                </button>
+                <span class="muted">{{
+                  'games.dota.medals.' + medalOf(a.rankTier) | transloco
+                }}</span>
+                <span
+                  >{{ a.matches | number }} ·
+                  {{ a.matches ? (a.wins / a.matches | percent: '1.0-1') : '—' }}</span
+                >
+                <span class="muted">{{ a.lastMatchAt | timeAgo: lang() }}</span>
+                <span class="actions">
+                  <button
+                    matIconButton
+                    [matTooltip]="'games.syncNow' | transloco"
+                    [disabled]="busy()"
+                    (click)="sync.emit(a.id)"
+                  >
+                    <mat-icon>sync</mat-icon>
+                  </button>
+                  <button
+                    matIconButton
+                    [matTooltip]="'core.actions.delete' | transloco"
+                    [disabled]="busy()"
+                    (click)="remove.emit(a.id)"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </span>
+              </div>
+            }
+          </div>
+        </section>
+      }
+    }
+    @case ('heroes') {
+      <section class="panel">
+        <pd-dota-heroes-table [heroes]="o.heroes" [lang]="lang()" />
+      </section>
+    }
+    @case ('matches') {
+      <section class="panel">
+        <pd-dota-matches
+          [accountId]="accountId()"
+          [heroes]="o.heroes"
+          [accountNames]="accountNames()"
+          [lang]="lang()"
+        />
+      </section>
+    }
+  }
+}

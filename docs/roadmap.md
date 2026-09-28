@@ -19,7 +19,8 @@
 - **Diary:** markdown with autosave, mood, hashtags, emoji marks on phrases, photos, search, year
   heatmap, “on this day”, mood insights, templates; `/d`, `/mood`, `/today` and photos from Telegram
 - **Music:** Last.fm history and tops, Spotify “now playing”
-- **Games:** Dota 2 (full match history of every mode, via OpenDota) and World of Warcraft (Battle.net)
+- **Games:** Dota 2 (full match history of every mode, via OpenDota) and World of Warcraft (Battle.net);
+  several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO
 - **Achievements:** 110+ achievements across all modules, rarities, XP and player level
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
   `/ask` in Telegram, morning digest, weekly diary summary; several saved connections with their
@@ -42,9 +43,7 @@
 - **Faster sync of large amounts of data** — a client applies changes row by row (about 150 rows a
   second), so catching up on 400,000 plays takes most of an hour; apply a batch per table with a
   few statements instead
-- **Games: several accounts per game** — a combined view (totals, records, recent matches from
-  every account) and achievements summed over all of them. Dota achievements already count every
-  Dota account; the page, the AI tools and WoW still work per account
+
 - **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
   (bank notifications / SMS → transactions), then everything else the phone knows:
   - **location tracker** — where you have been, places and trips

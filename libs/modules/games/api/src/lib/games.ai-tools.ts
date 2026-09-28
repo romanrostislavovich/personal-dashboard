@@ -1,7 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, findById, idParameters, NO_PARAMETERS } from '@pd/api-core';
+import { AiService, findById, idParameters, NO_PARAMETERS, ServerActions } from '@pd/api-core';
 import { GAMES, gameAccountInputSchema, WOW_REGIONS } from '@pd/contracts';
+import { DotaOverviewService } from './dota/dota-overview.service';
 import { GameAccountsService } from './game-accounts.service';
+import { GAMES_ACTIONS } from './games.server-actions';
 
 /** AI access to games: Dota 2 and WoW; adding, refreshing and removing accounts (assistant). */
 @Injectable()
@@ -9,6 +11,8 @@ export class GamesAiTools implements OnModuleInit {
   constructor(
     private readonly ai: AiService,
     private readonly accounts: GameAccountsService,
+    private readonly actions: ServerActions,
+    private readonly dota: DotaOverviewService,
   ) {}
 
   onModuleInit(): void {
@@ -21,6 +25,29 @@ export class GamesAiTools implements OnModuleInit {
         'WoW: character, ilvl, achievement points and recent achievements.',
       parameters: NO_PARAMETERS,
       handler: (userId) => this.accounts.list(userId),
+    });
+
+    this.ai.registerTool({
+      name: 'games_dota_stats',
+      module: 'games',
+      description:
+        'Dota 2 statistics over all Dota accounts together (or one, by accountId): totals and KDA, ' +
+        'win rate per game mode, every hero played (matches, wins, average KDA, GPM/XPM), ' +
+        'personal records and recent matches with the account they were played on.',
+      parameters: {
+        type: 'object',
+        properties: {
+          accountId: { type: 'string', description: 'Game account id from games_accounts' },
+        },
+      },
+      handler: async (userId, args) => {
+        const { activity, ...overview } = await this.dota.overview(
+          userId,
+          typeof args['accountId'] === 'string' ? args['accountId'] : undefined,
+        );
+        // The day-by-day calendar is for the page; a count of active days is enough here.
+        return { ...overview, activeDaysLastYear: activity.length };
+      },
     });
 
     this.ai.registerTool({
@@ -48,7 +75,12 @@ export class GamesAiTools implements OnModuleInit {
         required: ['game'],
       },
       handler: async (userId, args) => {
-        await this.accounts.add(userId, gameAccountInputSchema.parse(args));
+        // OpenDota / Battle.net are called on the server (see ServerActions).
+        await this.actions.run(
+          userId,
+          GAMES_ACTIONS.addAccount,
+          gameAccountInputSchema.parse(args),
+        );
         return { added: true };
       },
     });
@@ -64,7 +96,7 @@ export class GamesAiTools implements OnModuleInit {
       parameters: idParameters('Game account id from games_accounts'),
       handler: async (userId, args) => {
         const account = await find(userId, args);
-        await this.accounts.syncOne(userId, account.id);
+        await this.actions.run(userId, GAMES_ACTIONS.syncAccount, { id: account.id });
         return find(userId, args);
       },
     });

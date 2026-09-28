@@ -11,7 +11,8 @@ import {
 } from '@pd/contracts';
 import { and, desc, eq, getTableColumns, gt, isNotNull, sql } from 'drizzle-orm';
 import { dotaMatches, gameAccounts, GameAccountRow } from '../games.schema';
-import { DotaProfile, HeroInfo, openDota, OpenDotaMatch } from './opendota.client';
+import { DotaHeroesService } from './dota-heroes.service';
+import { DotaProfile, openDota, OpenDotaMatch } from './opendota.client';
 import { medalChange } from './steam-id';
 
 /** Between full downloads only the latest matches are fetched. */
@@ -21,7 +22,6 @@ const FULL_HISTORY_EVERY_MS = 24 * 60 * 60 * 1000;
 const INSERT_CHUNK = 1000;
 const RECENT_MATCHES = 10;
 const TOP_HEROES = 5;
-const HEROES_CACHE_MS = 24 * 60 * 60 * 1000;
 
 export interface DotaSyncResult {
   profile: DotaProfile;
@@ -52,9 +52,11 @@ function rankChangeSinceLastSync(
 @Injectable()
 export class DotaService {
   private readonly logger = new Logger(DotaService.name);
-  private heroes: { loadedAt: number; map: Map<number, HeroInfo> } | null = null;
 
-  constructor(@Inject(DB) private readonly db: Database) {}
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    private readonly heroes: DotaHeroesService,
+  ) {}
 
   /**
    * Updates the profile and saves matches. The whole history is downloaded on the first sync,
@@ -81,12 +83,7 @@ export class DotaService {
     if (!profile) {
       return null;
     }
-    const heroes = await this.heroMap();
-    const hero = (id: number): DotaHero => ({
-      id,
-      name: heroes.get(id)?.name ?? `Hero #${id}`,
-      imageUrl: heroes.get(id)?.imageUrl ?? '',
-    });
+    const hero = await this.heroes.resolver();
 
     const [totals, last30Days, recentMatches, topHeroes, modes, records] = await Promise.all([
       this.totals(account.id),
@@ -268,13 +265,5 @@ export class DotaService {
       }),
     );
     return records.filter((record) => record !== null);
-  }
-
-  /** The hero list rarely changes (patches) — cache it for a day. */
-  private async heroMap(): Promise<Map<number, HeroInfo>> {
-    if (!this.heroes || Date.now() - this.heroes.loadedAt > HEROES_CACHE_MS) {
-      this.heroes = { loadedAt: Date.now(), map: await openDota.getHeroes() };
-    }
-    return this.heroes.map;
   }
 }

@@ -1,0 +1,138 @@
+:host {
+  --win: var(--pd-success);
+  --loss: var(--pd-danger);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr));
+  gap: 16px;
+}
+
+.panel {
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border-radius: var(--pd-radius);
+  border: 1px solid var(--pd-border);
+  background: var(--pd-card);
+}
+
+.panel-head h3 {
+  margin: 0 0 8px;
+  font: 700 1rem / 1.3 var(--pd-font-heading);
+}
+
+.label {
+  font: 600 0.7rem / 1.2 var(--pd-font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.modes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mode {
+  display: grid;
+  grid-template-columns: 110px 60px 1fr 60px;
+  align-items: center;
+  gap: 10px;
+}
+
+.rate {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.chip {
+  --mode: var(--mat-sys-primary);
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font: 600 0.75rem / 1.3 var(--pd-font);
+  color: var(--mode);
+  background: color-mix(in srgb, var(--mode) 16%, transparent);
+}
+
+.mode-turbo {
+  --mode: var(--mat-sys-tertiary);
+}
+
+.mode-ranked {
+  --mode: var(--pd-rarity-legendary);
+}
+
+.mode-other {
+  --mode: var(--mat-sys-on-surface-variant);
+}
+
+.bar {
+  height: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--loss) 30%, transparent);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    background: var(--win);
+  }
+}
+
+.records {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.record-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--pd-border);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 140ms ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--mat-sys-primary) 45%, var(--pd-border));
+  }
+
+  mat-icon {
+    color: var(--mat-sys-primary);
+  }
+
+  img {
+    width: 48px;
+    border-radius: 6px;
+  }
+}
+
+.record-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.record-value {
+  font: 800 1.1rem / 1.1 var(--pd-font-heading);
+}
+
+@media (max-width: 700px) {
+  .mode {
+    grid-template-columns: 90px 50px 1fr 50px;
+  }
+}

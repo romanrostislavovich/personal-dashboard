@@ -3,6 +3,8 @@ import { GamesAiTools } from './games.ai-tools';
 import { GamesAchievements } from './games.achievements';
 import { DotaAchievements } from './dota/dota.achievements';
 import { DotaCareerService } from './dota/dota-career.service';
+import { DotaHeroesService } from './dota/dota-heroes.service';
+import { DotaOverviewService } from './dota/dota-overview.service';
 import { DotaService } from './dota/dota.service';
 import { GameAccountsService } from './game-accounts.service';
 import { GamesSyncJob } from './games-sync.job';
@@ -19,6 +21,8 @@ import { WowService } from './wow/wow.service';
   providers: [
     GameAccountsService,
     DotaService,
+    DotaHeroesService,
+    DotaOverviewService,
     DotaCareerService,
     DotaAchievements,
     WowService,

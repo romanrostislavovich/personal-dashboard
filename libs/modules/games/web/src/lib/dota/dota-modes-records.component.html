@@ -1,0 +1,54 @@
+<div class="columns">
+  @if (modes().length) {
+    <section class="panel">
+      <header class="panel-head">
+        <h3>{{ 'games.dota.modesTitle' | transloco }}</h3>
+      </header>
+      <div class="modes">
+        @for (m of modes(); track m.mode) {
+          <div class="mode">
+            <span [class]="'chip mode-' + m.mode">{{
+              'games.dota.modes.' + m.mode | transloco
+            }}</span>
+            <span class="muted">{{ m.matches | number }}</span>
+            <span class="bar" aria-hidden="true">
+              <span [style.width.%]="(m.wins / m.matches) * 100"></span>
+            </span>
+            <span class="rate">{{ m.wins / m.matches | percent: '1.1-1' }}</span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+  @if (records().length) {
+    <section class="panel">
+      <header class="panel-head">
+        <h3>{{ 'games.dota.recordsTitle' | transloco }}</h3>
+      </header>
+      <div class="records">
+        @for (r of records(); track r.kind) {
+          <a
+            class="record-item"
+            [href]="'https://www.dotabuff.com/matches/' + r.matchId"
+            target="_blank"
+            rel="noopener"
+            [title]="r.hero.name + ' · ' + (r.startedAt | date: 'd MMM y')"
+          >
+            <mat-icon>{{ recordIcon[r.kind] }}</mat-icon>
+            <span class="record-text">
+              <span class="label">{{ 'games.dota.records.' + r.kind | transloco }}</span>
+              <span class="record-value">
+                @if (r.kind === 'durationSec') {
+                  {{ r.value / 60 | number: '1.0-0' }} {{ 'games.minutes' | transloco }}
+                } @else {
+                  {{ r.value | number }}
+                }
+              </span>
+            </span>
+            <img [src]="r.hero.imageUrl" [alt]="r.hero.name" />
+          </a>
+        }
+      </div>
+    </section>
+  }
+</div>

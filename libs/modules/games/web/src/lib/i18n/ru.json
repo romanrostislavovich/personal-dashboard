@@ -13,7 +13,6 @@
     "last30": "Победы – поражения, 30 дней",
     "winrate": "Винрейт, 30 дней",
     "recentMatches": "Последние матчи",
-    "topHeroes": "Любимые герои",
     "noMatches": "Матчей нет — возможно, статистика матчей скрыта в настройках Dota",
     "win": "Победа",
     "loss": "Поражение",
@@ -54,6 +53,35 @@
     "hidden": {
       "title": "История матчей скрыта",
       "text": "OpenDota не видит твои матчи. В Dota 2 открой Настройки → Опции → Социальные, включи «Открыть публичный доступ к данным матчей» и нажми обновление здесь. История подтягивается от нескольких минут до нескольких часов."
+    },
+    "empty": "Аккаунтов Dota 2 пока нет. Добавьте — нужен только Steam ID.",
+    "lastMatch": "последний матч",
+    "recordLabel": "Счёт",
+    "views": {
+      "overview": "Обзор",
+      "heroes": "Герои",
+      "matches": "Матчи"
+    },
+    "mostPlayed": "Самые играемые герои",
+    "seeAll": "Все",
+    "wonMatch": "Победа",
+    "lostMatch": "Поражение",
+    "activity": {
+      "title": "Активность",
+      "day": "матчей: {{matches}}, побед: {{wins}}",
+      "summary": "Матчей за последний год: {{matches}}, игровых дней: {{days}}"
+    },
+    "table": {
+      "hero": "Герой",
+      "matches": "Матчи",
+      "winrate": "Победы",
+      "lastPlayed": "Играл"
+    },
+    "filters": {
+      "anyHero": "Любой герой",
+      "mode": "Режим",
+      "anyMode": "Любой режим",
+      "all": "Все"
     }
   },
   "wow": {
@@ -61,14 +89,16 @@
     "realm": "Реалм (slug)",
     "character": "Имя персонажа",
     "realmHint": "Slug реалма — как в адресе armory: «Гордунни» → gordunni, «Howling Fjord» → howling-fjord",
-    "itemLevel": "Уровень предметов",
     "achievementPoints": "Очки достижений",
     "achievements": "Достижений",
     "recentAchievements": "Последние достижения",
     "lastLogin": "Последний вход",
     "credentialsTitle": "Ключи Battle.net (для WoW)",
     "credentialsHint": "Создай клиента на develop.battle.net → API Access (Redirect URL можно любой, он не используется). Ключи хранятся на сервере зашифрованными.",
-    "credentialsSaved": "Ключи сохранены"
+    "credentialsSaved": "Ключи сохранены",
+    "characters": "Персонажи",
+    "bestItemLevel": "Лучший уровень предметов",
+    "empty": "Персонажей пока нет. Сохраните ключи Battle.net ниже и добавьте персонажа."
   },
   "errors": {
     "notFound": "Аккаунт не найден. Для Dota проверь, что статистика матчей открыта; для WoW — регион, реалм и имя.",
@@ -80,5 +110,7 @@
     "dota30": "30 дней: {{wins}}–{{losses}}",
     "empty": "Добавь аккаунты в разделе Игры",
     "open": "Подробнее"
-  }
+  },
+  "allAccounts": "Все аккаунты",
+  "accountsTitle": "Аккаунты"
 }

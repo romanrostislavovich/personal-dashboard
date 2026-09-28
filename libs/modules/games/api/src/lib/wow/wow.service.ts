@@ -105,6 +105,8 @@ export class WowService {
     return {
       game: 'wow',
       ...profile,
+      // Profiles saved before the class id was stored get it with the next sync.
+      classId: profile.classId ?? null,
       totalAchievements: total,
       recentAchievements: recent.map((a) => ({
         id: a.achievementId,

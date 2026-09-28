@@ -118,6 +118,99 @@ export interface DotaSummary {
   topHeroes: { hero: DotaHero; games: number; wins: number }[];
 }
 
+/** One Dota account in the overview: the profile and its share of the matches. */
+export interface DotaAccountSummary {
+  id: string;
+  personaName: string;
+  avatarUrl: string | null;
+  profileUrl: string | null;
+  rankTier: number | null;
+  leaderboardRank: number | null;
+  historyHidden: boolean;
+  matches: number;
+  wins: number;
+  lastMatchAt: string | null;
+  lastSyncedAt: string | null;
+  lastError: string | null;
+}
+
+/** A hero over the selected accounts; kills, deaths and assists are averages per match. */
+export interface DotaHeroStats {
+  hero: DotaHero;
+  matches: number;
+  wins: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+  goldPerMin: number | null;
+  xpPerMin: number | null;
+  lastPlayedAt: string;
+}
+
+/** Matches on a day (in the dashboard time zone), for the activity calendar. */
+export interface DotaActivityDay {
+  day: string;
+  matches: number;
+  wins: number;
+}
+
+/** A match in a list over several accounts. */
+export interface DotaListedMatch extends DotaMatch {
+  accountId: string;
+  goldPerMin: number | null;
+  xpPerMin: number | null;
+  lastHits: number | null;
+  heroDamage: number | null;
+}
+
+/** The Dota page (in the spirit of Dotabuff's player overview) over one account or all of them. */
+export interface DotaOverview {
+  accounts: DotaAccountSummary[];
+  totals: {
+    matches: number;
+    wins: number;
+    heroesPlayed: number;
+    hoursPlayed: number;
+    /** Sums over all matches: KDA = (kills + assists) / deaths. */
+    kills: number;
+    deaths: number;
+    assists: number;
+    firstMatchAt: string | null;
+    lastMatchAt: string | null;
+  };
+  modes: { mode: DotaMatchMode; matches: number; wins: number }[];
+  last30Days: { wins: number; losses: number };
+  records: (DotaRecord & { accountId: string })[];
+  /** Every hero played, most played first. */
+  heroes: DotaHeroStats[];
+  /** The last 365 days, only days with matches. */
+  activity: DotaActivityDay[];
+  recentMatches: DotaListedMatch[];
+}
+
+/** `accountId` missing — all Dota accounts of the user. */
+export const dotaOverviewQuerySchema = z.object({ accountId: z.uuid().optional() });
+export type DotaOverviewQuery = z.infer<typeof dotaOverviewQuerySchema>;
+
+export const DOTA_RESULTS = ['win', 'loss'] as const;
+
+export const dotaMatchesQuerySchema = z.object({
+  accountId: z.uuid().optional(),
+  heroId: z.coerce.number().int().positive().optional(),
+  mode: z.enum(DOTA_MATCH_MODES).optional(),
+  result: z.enum(DOTA_RESULTS).optional(),
+  page: z.coerce.number().int().min(0).default(0),
+  pageSize: z.coerce.number().int().min(10).max(100).default(25),
+});
+export type DotaMatchesQuery = z.infer<typeof dotaMatchesQuerySchema>;
+
+export interface DotaMatchesPage {
+  items: DotaListedMatch[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 // --- World of Warcraft ---
 
 export interface WowAchievement {
@@ -131,6 +224,8 @@ export interface WowSummary {
   name: string;
   realm: string;
   level: number;
+  /** Blizzard class id (1 Warrior … 13 Evoker); `null` until the next sync of an old profile. */
+  classId: number | null;
   className: string;
   raceName: string;
   specName: string | null;

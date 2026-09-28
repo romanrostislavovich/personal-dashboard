@@ -8,15 +8,23 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
 import {
+  DotaMatchesQuery,
+  dotaMatchesQuerySchema,
+  DotaOverview,
+  DotaOverviewQuery,
+  dotaOverviewQuerySchema,
+  DotaMatchesPage,
   GameAccountInput,
   gameAccountInputSchema,
   GamesSettings,
   WowCredentialsInput,
   wowCredentialsInputSchema,
 } from '@pd/contracts';
+import { DotaOverviewService } from './dota/dota-overview.service';
 import { GameAccountsService } from './game-accounts.service';
 import { WowService } from './wow/wow.service';
 import { GAMES_ACTIONS } from './games.server-actions';
@@ -27,6 +35,7 @@ export class GamesController {
     private readonly actions: ServerActions,
     private readonly accounts: GameAccountsService,
     private readonly wow: WowService,
+    private readonly dota: DotaOverviewService,
   ) {}
 
   @Get('accounts')
@@ -53,6 +62,23 @@ export class GamesController {
   @HttpCode(204)
   remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.accounts.remove(user.id, id);
+  }
+
+  /** The Dota page: one account (`?accountId=`) or all Dota accounts together. */
+  @Get('dota/overview')
+  dotaOverview(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(dotaOverviewQuerySchema)) query: DotaOverviewQuery,
+  ): Promise<DotaOverview> {
+    return this.dota.overview(user.id, query.accountId);
+  }
+
+  @Get('dota/matches')
+  dotaMatches(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(dotaMatchesQuerySchema)) query: DotaMatchesQuery,
+  ): Promise<DotaMatchesPage> {
+    return this.dota.matches(user.id, query);
   }
 
   @Get('settings')

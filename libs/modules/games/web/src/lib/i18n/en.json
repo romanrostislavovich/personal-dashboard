@@ -13,7 +13,6 @@
     "last30": "Wins – losses, 30 days",
     "winrate": "Win rate, 30 days",
     "recentMatches": "Recent matches",
-    "topHeroes": "Favourite heroes",
     "noMatches": "No matches — match data may be hidden in Dota settings",
     "win": "Win",
     "loss": "Loss",
@@ -54,6 +53,35 @@
     "hidden": {
       "title": "Match history is hidden",
       "text": "OpenDota can’t see your matches. In Dota 2 open Settings → Options → Social, enable “Expose Public Match Data” and press refresh here. Downloading the history takes from a few minutes to a few hours."
+    },
+    "empty": "No Dota 2 accounts yet. Add one — only a Steam ID is needed.",
+    "lastMatch": "last match",
+    "recordLabel": "Record",
+    "views": {
+      "overview": "Overview",
+      "heroes": "Heroes",
+      "matches": "Matches"
+    },
+    "mostPlayed": "Most played heroes",
+    "seeAll": "See all",
+    "wonMatch": "Won match",
+    "lostMatch": "Lost match",
+    "activity": {
+      "title": "Activity",
+      "day": "{{matches}} matches, {{wins}} won",
+      "summary": "{{matches}} matches on {{days}} days over the last year"
+    },
+    "table": {
+      "hero": "Hero",
+      "matches": "Matches",
+      "winrate": "Win %",
+      "lastPlayed": "Played"
+    },
+    "filters": {
+      "anyHero": "Any hero",
+      "mode": "Mode",
+      "anyMode": "Any mode",
+      "all": "All"
     }
   },
   "wow": {
@@ -61,14 +89,16 @@
     "realm": "Realm (slug)",
     "character": "Character name",
     "realmHint": "Realm slug as in the armory URL: “Howling Fjord” → howling-fjord",
-    "itemLevel": "Item level",
     "achievementPoints": "Achievement points",
     "achievements": "Achievements",
     "recentAchievements": "Recent achievements",
     "lastLogin": "Last login",
     "credentialsTitle": "Battle.net keys (for WoW)",
     "credentialsHint": "Create a client at develop.battle.net → API Access (any redirect URL, it is not used). Keys are stored encrypted on the server.",
-    "credentialsSaved": "Keys saved"
+    "credentialsSaved": "Keys saved",
+    "characters": "Characters",
+    "bestItemLevel": "Best item level",
+    "empty": "No characters yet. Save the Battle.net keys below and add a character."
   },
   "errors": {
     "notFound": "Account not found. For Dota, check that match data is public; for WoW, check region, realm and name.",
@@ -80,5 +110,7 @@
     "dota30": "30 days: {{wins}}–{{losses}}",
     "empty": "Add accounts in the Games section",
     "open": "Details"
-  }
+  },
+  "allAccounts": "All accounts",
+  "accountsTitle": "Accounts"
 }

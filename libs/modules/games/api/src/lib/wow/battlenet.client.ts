@@ -13,6 +13,8 @@ export interface WowProfile {
   name: string;
   realm: string;
   level: number;
+  /** Blizzard class id (1 Warrior … 13 Evoker): the class colour on the page. */
+  classId: number | null;
   className: string;
   raceName: string;
   specName: string | null;
@@ -60,6 +62,7 @@ export class BattlenetClient {
       name: summary.name,
       realm: summary.realm.name,
       level: summary.level,
+      classId: summary.character_class.id,
       className: summary.character_class.name,
       raceName: summary.race.name,
       specName: summary.active_spec?.name ?? null,
@@ -139,7 +142,7 @@ interface RawCharacter {
   name: string;
   level: number;
   realm: { name: string };
-  character_class: { name: string };
+  character_class: { id: number; name: string };
   race: { name: string };
   active_spec?: { name: string };
   guild?: { name: string };

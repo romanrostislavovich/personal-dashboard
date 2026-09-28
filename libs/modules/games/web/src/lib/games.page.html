@@ -9,76 +9,76 @@
   <mat-progress-bar mode="indeterminate" class="progress" />
 }
 
-<div class="accounts">
-  @for (account of accounts.value(); track account.id) {
-    <mat-card appearance="outlined">
-      <mat-card-content class="content">
-        @if (account.summary) {
-          @if (account.game === 'dota2') {
-            <pd-dota-card [summary]="asDota(account)" />
-          } @else {
-            <pd-wow-card [summary]="asWow(account)" />
-          }
-        } @else {
-          <p>{{ account.displayName }}</p>
-        }
-        @if (account.lastError) {
-          <p class="error">{{ account.lastError }}</p>
-        }
-      </mat-card-content>
-      <mat-card-actions align="end">
-        @if (account.lastSyncedAt) {
-          <span class="synced">
-            {{ 'games.synced' | transloco }} {{ account.lastSyncedAt | date: 'd MMM, HH:mm' }}
-          </span>
-        }
-        <button
-          matIconButton
-          [matTooltip]="'games.syncNow' | transloco"
-          (click)="sync(account)"
-          [disabled]="busy()"
-        >
-          <mat-icon>sync</mat-icon>
-        </button>
-        <button
-          matIconButton
-          [matTooltip]="'core.actions.delete' | transloco"
-          (click)="remove(account)"
-        >
-          <mat-icon>delete</mat-icon>
-        </button>
-      </mat-card-actions>
-    </mat-card>
-  } @empty {
-    <p class="empty">{{ 'games.empty' | transloco }}</p>
-  }
-</div>
+@if (accounts.value().length === 0 && !accounts.isLoading()) {
+  <p class="empty">{{ 'games.empty' | transloco }}</p>
+}
 
-<!-- Battle.net keys are needed only for WoW -->
-<mat-card appearance="outlined" class="credentials">
-  <mat-card-header>
-    <mat-card-title>{{ 'games.wow.credentialsTitle' | transloco }}</mat-card-title>
-  </mat-card-header>
-  <mat-card-content>
-    @if (settings.value()?.wowCredentials) {
-      <p class="ok">
-        <mat-icon inline>check_circle</mat-icon> {{ 'games.wow.credentialsSaved' | transloco }}
-      </p>
-    } @else {
-      <p class="hint">{{ 'games.wow.credentialsHint' | transloco }}</p>
-      <form class="form" [formGroup]="credentialsForm" (ngSubmit)="saveCredentials()">
-        <mat-form-field subscriptSizing="dynamic">
-          <mat-label>Client ID</mat-label>
-          <input matInput formControlName="clientId" autocomplete="off" />
-        </mat-form-field>
-        <mat-form-field subscriptSizing="dynamic">
-          <mat-label>Client Secret</mat-label>
-          <input matInput type="password" formControlName="clientSecret" autocomplete="off" />
-        </mat-form-field>
-        <button matButton="filled" type="submit" [disabled]="credentialsForm.invalid || busy()">
-          {{ 'core.actions.save' | transloco }}
-        </button>
-      </form>
-    }
-  </mat-card-content>
-</mat-card>
+<mat-tab-group
+  mat-stretch-tabs="false"
+  animationDuration="0ms"
+  [selectedIndex]="tabIndex()"
+  (selectedIndexChange)="tabIndex.set($event)"
+>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      Dota 2
+      @if (dota().length) {
+        <span class="count">{{ dota().length }}</span>
+      }
+    </ng-template>
+    <div class="tab">
+      @if (dota().length) {
+        <pd-dota-dashboard
+          [accounts]="dota()"
+          [busy]="busy()"
+          (sync)="sync($event)"
+          (remove)="remove($event)"
+        />
+      } @else {
+        <p class="empty">{{ 'games.dota.empty' | transloco }}</p>
+      }
+    </div>
+  </mat-tab>
+
+  <mat-tab>
+    <ng-template mat-tab-label>
+      World of Warcraft
+      @if (wow().length) {
+        <span class="count">{{ wow().length }}</span>
+      }
+    </ng-template>
+    <div class="tab">
+      <pd-wow-dashboard
+        [accounts]="wow()"
+        [busy]="busy()"
+        (sync)="sync($event)"
+        (remove)="remove($event)"
+      />
+
+      <!-- Battle.net keys are needed only for WoW -->
+      <section class="credentials">
+        <h3>{{ 'games.wow.credentialsTitle' | transloco }}</h3>
+        @if (settings.value()?.wowCredentials) {
+          <p class="ok">
+            <mat-icon inline>check_circle</mat-icon> {{ 'games.wow.credentialsSaved' | transloco }}
+          </p>
+        } @else {
+          <p class="hint">{{ 'games.wow.credentialsHint' | transloco }}</p>
+          <form class="form" [formGroup]="credentialsForm" (ngSubmit)="saveCredentials()">
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>Client ID</mat-label>
+              <input matInput formControlName="clientId" autocomplete="off" />
+            </mat-form-field>
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>Client Secret</mat-label>
+              <input matInput type="password" formControlName="clientSecret" autocomplete="off" />
+            </mat-form-field>
+            <button matButton="filled" type="submit" [disabled]="credentialsForm.invalid || busy()">
+              {{ 'core.actions.save' | transloco }}
+            </button>
+          </form>
+        }
+      </section>
+    </div>
+  </mat-tab>
+</mat-tab-group>

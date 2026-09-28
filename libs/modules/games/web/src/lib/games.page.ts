@@ -1,40 +1,36 @@
-import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { DotaSummary, GameAccount, GameAccountInput, WowSummary } from '@pd/contracts';
+import { GameAccountInput } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { AddGameAccountDialog } from './add-account.dialog';
-import { DotaCardComponent } from './dota/dota-card.component';
+import { DotaDashboardComponent } from './dota/dota-dashboard.component';
 import { GamesApi } from './games.api';
-import { WowCardComponent } from './wow/wow-card.component';
+import { WowDashboardComponent } from './wow/wow-dashboard.component';
 
 @Component({
   selector: 'pd-games-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
     ReactiveFormsModule,
-    MatCardModule,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
     MatProgressBarModule,
-    MatTooltipModule,
+    MatTabsModule,
     TranslocoPipe,
-    DotaCardComponent,
-    WowCardComponent,
+    DotaDashboardComponent,
+    WowDashboardComponent,
   ],
   templateUrl: './games.page.html',
   styleUrl: './games.page.scss',
@@ -54,13 +50,9 @@ export class GamesPage {
     clientSecret: ['', [Validators.required, Validators.minLength(10)]],
   });
 
-  protected asDota(account: GameAccount): DotaSummary {
-    return account.summary as DotaSummary;
-  }
-
-  protected asWow(account: GameAccount): WowSummary {
-    return account.summary as WowSummary;
-  }
+  protected readonly dota = computed(() => this.accounts.value().filter((a) => a.game === 'dota2'));
+  protected readonly wow = computed(() => this.accounts.value().filter((a) => a.game === 'wow'));
+  protected readonly tabIndex = signal(0);
 
   async add(): Promise<void> {
     const input = await firstValueFrom(
@@ -76,13 +68,14 @@ export class GamesPage {
     }
   }
 
-  async sync(account: GameAccount): Promise<void> {
-    await this.run(() => firstValueFrom(this.api.sync(account.id)));
+  async sync(accountId: string): Promise<void> {
+    await this.run(() => firstValueFrom(this.api.sync(accountId)));
   }
 
-  async remove(account: GameAccount): Promise<void> {
-    if (confirm(this.transloco.translate('games.confirmDelete', { name: account.displayName }))) {
-      await this.run(() => firstValueFrom(this.api.remove(account.id)));
+  async remove(accountId: string): Promise<void> {
+    const name = this.accounts.value().find((a) => a.id === accountId)?.displayName;
+    if (confirm(this.transloco.translate('games.confirmDelete', { name }))) {
+      await this.run(() => firstValueFrom(this.api.remove(accountId)));
     }
   }
 
