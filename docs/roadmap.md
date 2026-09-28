@@ -58,7 +58,6 @@
 
 The complexity hot spots (ESLint `complexity`, threshold 8) are cleaned up. Left:
 
-- NestJS 12 (major update, plan separately)
 - Nx 24 removes `nxViteTsPaths` and `nxCopyAssetsPlugin` used in the `vitest.config.mts` files —
   switch to `vite-tsconfig-paths` / Vite's `publicDir` before updating
 

@@ -37,12 +37,14 @@ npx prettier --check "apps/**/*.{ts,html,scss}" "libs/**/*.{ts,html,scss,json}"
 ## Dependency overrides
 
 `overrides` in `package.json` pin patched versions of transitive dependencies that `npm audit`
-flags and whose parents have no fixed release yet. Remove an entry once its parent ships the fix
-(check with `npm ls <package>` and `npm audit`):
+flags, or relax a peer range that is behind, while the parent has no fixed release yet. Remove an
+entry once its parent ships the fix (check with `npm ls <package>` and `npm audit`):
 
 - `nx` → `smol-toml`: nx pins 1.6.1 (DoS on malformed TOML).
 - `sockjs` → `uuid`: sockjs (via webpack-dev-server) is unmaintained and asks for uuid 8; it only
   calls `v4()`, which uuid 11 still has.
+- `@nx/nest` → `@nestjs/common`, `@nestjs/core`: @nx/nest 23.2 still declares NestJS below 12 as a
+  peer. It only provides generators (see docs/architecture.md), so it runs fine with NestJS 12.
 - `@esbuild-kit/core-utils` → `esbuild`: drizzle-kit still depends on esbuild-kit, which asks for
   esbuild 0.18; it uses the same esbuild as the rest of the repo instead.
 
