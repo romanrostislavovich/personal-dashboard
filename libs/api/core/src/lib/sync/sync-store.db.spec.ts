@@ -26,7 +26,7 @@ interface Side {
   store: SyncStore;
 }
 
-describe.skipIf(!ADMIN_URL)('SyncStore on two databases', () => {
+describe.skipIf(!ADMIN_URL)('SyncStore on two databases', { timeout: 60_000 }, () => {
   let admin: Pool;
   let server: Side;
   let client: Side;
@@ -47,8 +47,29 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', () => {
     return { name, pool, db, store };
   };
 
+  /**
+   * Sync reads only transactions older than every one still open in the PostgreSQL cluster —
+   * other databases included (say, a local instance catching up on the same server). Wait until
+   * this side's latest change is past that point.
+   */
+  const settle = async (side: Side) => {
+    for (let attempt = 0; attempt < 600; attempt++) {
+      const [{ ready }] = await rows<{ ready: boolean }>(
+        side,
+        sql`SELECT coalesce(max(tx) < pg_snapshot_xmin(pg_current_snapshot()), true) AS ready
+          FROM sync.row_versions`,
+      );
+      if (ready) {
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    throw new Error('A transaction elsewhere in the cluster stays open for too long');
+  };
+
   /** Server changes made since the last pull. */
   const serverChanges = async (): Promise<SyncChange[]> => {
+    await settle(server);
     const batch = await server.store.changesSince(pulled, (origin) => origin === null);
     pulled = batch.cursor;
     return batch.changes;
@@ -59,6 +80,7 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', () => {
 
   /** Where the client's change log ends now — its push cursor if it pushed right now. */
   const pushCursor = async (): Promise<string | null> => {
+    await settle(client);
     let cursor: string | null = null;
     for (;;) {
       const batch = await client.store.changesSince(cursor, () => false);
