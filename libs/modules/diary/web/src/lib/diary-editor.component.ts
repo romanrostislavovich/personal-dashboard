@@ -46,6 +46,15 @@ interface Snapshot {
   mood: number | null;
 }
 
+/** What the editor shows for a day without an entry. */
+const NO_ENTRY = { content: '', mood: null, updatedAt: null };
+
+/** Positions in the markdown source (`content`). */
+interface SourceRange {
+  start: number;
+  end: number;
+}
+
 /**
  * Editor for one day's entry: markdown, mood, emoji marks, photos.
  * Saves by itself a moment after you stop typing (and right away when switching days).
@@ -380,13 +389,13 @@ export class DiaryEditorComponent {
       if (this.entry.status() !== 'resolved') {
         return;
       }
-      const entry = this.entry.value() ?? null;
+      const { content, mood, updatedAt } = this.entry.value() ?? NO_ENTRY;
       untracked(() => {
-        this.content.set(entry?.content ?? '');
-        this.mood.set(entry?.mood ?? null);
-        this.savedAt.set(entry?.updatedAt ?? null);
+        this.content.set(content);
+        this.mood.set(mood);
+        this.savedAt.set(updatedAt);
         this.status.set('idle');
-        this.mode.set(entry?.content.trim() ? 'preview' : 'edit');
+        this.mode.set(content.trim() ? 'preview' : 'edit');
         this.questionShift.set(0);
       });
     });
@@ -440,27 +449,13 @@ export class DiaryEditorComponent {
     }
   }
 
+  /** Marks the selected text with the emoji; with nothing selected shows how to do it. */
   protected mark(emoji: string): void {
-    this.markHint.set(false);
-    const textarea = this.textarea()?.nativeElement;
-    if (this.mode() === 'edit' && textarea) {
-      const { selectionStart, selectionEnd } = textarea;
-      this.applyEdit(markSelection(this.content(), selectionStart, selectionEnd, emoji));
-      return;
+    const range = this.textareaSelection() ?? this.previewSelection();
+    this.markHint.set(range === null);
+    if (range) {
+      this.applyEdit(markSelection(this.content(), range.start, range.end, emoji));
     }
-    // In the preview the selected text is looked up in the source; formatting inside it breaks the match.
-    const selection = window.getSelection();
-    const selected = selection?.toString().trim() ?? '';
-    const insidePreview = this.previewElement()?.nativeElement.contains(
-      selection?.anchorNode ?? null,
-    );
-    const index = selected && insidePreview ? this.content().indexOf(selected) : -1;
-    if (index === -1) {
-      this.markHint.set(true);
-      return;
-    }
-    selection?.removeAllRanges();
-    this.applyEdit(markSelection(this.content(), index, index + selected.length, emoji));
   }
 
   protected unmark(): void {
@@ -493,6 +488,34 @@ export class DiaryEditorComponent {
     await firstValueFrom(this.api.remove(this.day()));
     this.entry.reload();
     this.saved.emit();
+  }
+
+  /** The selection in the source text while editing. */
+  private textareaSelection(): SourceRange | null {
+    const textarea = this.textarea()?.nativeElement;
+    if (this.mode() !== 'edit' || !textarea) {
+      return null;
+    }
+    return { start: textarea.selectionStart, end: textarea.selectionEnd };
+  }
+
+  /**
+   * Text selected in the preview, found in the source. Formatting inside the selection
+   * (bold, links) breaks the match — then there is nothing to mark.
+   */
+  private previewSelection(): SourceRange | null {
+    const selection = window.getSelection();
+    const preview = this.previewElement()?.nativeElement;
+    if (!selection || !preview?.contains(selection.anchorNode)) {
+      return null;
+    }
+    const selected = selection.toString().trim();
+    const start = selected ? this.content().indexOf(selected) : -1;
+    if (start === -1) {
+      return null;
+    }
+    selection.removeAllRanges();
+    return { start, end: start + selected.length };
   }
 
   private applyEdit(edit: TextEdit): void {

@@ -59,7 +59,6 @@
 Measured with ESLint `complexity` (threshold 8) and friends; most functions are simple — these are
 the ones worth a look:
 
-- Diary editor `mark()` (13)
 - Achievement and AI tool registrations are long but flat lists — split by topic like
   `finance.ai-tools.ts`, no logic change needed
 - Updates: Angular 22.2 and Nx 23.2.1 (minor), NestJS 12 (major, plan separately)
