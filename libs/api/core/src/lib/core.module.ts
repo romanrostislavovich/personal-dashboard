@@ -25,6 +25,7 @@ import { ProjectsController } from './projects/projects.controller';
 import { ProjectsService } from './projects/projects.service';
 import { SchedulerService } from './scheduler/scheduler.service';
 import { SecretsService } from './secrets/secrets.service';
+import { ServerActions } from './sync/server-actions';
 import { SyncClient } from './sync/sync-client.service';
 import { SyncController } from './sync/sync.controller';
 import { SyncService } from './sync/sync.service';
@@ -97,6 +98,7 @@ class HealthController {
     SyncStore,
     SyncService,
     SyncClient,
+    ServerActions,
     // New channels (Discord, e-mail…) are added to this list.
     {
       provide: NOTIFICATION_CHANNELS,
@@ -116,6 +118,8 @@ class HealthController {
     AchievementsService,
     // For AI: modules expose their data via registerTool().
     AiService,
+    // For actions that reach outside services: they run on the server (see ServerActions).
+    ServerActions,
   ],
 })
 export class CoreModule {}

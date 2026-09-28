@@ -1,12 +1,14 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, findById, idParameters, NO_PARAMETERS } from '@pd/api-core';
+import { AiService, findById, idParameters, NO_PARAMETERS, ServerActions } from '@pd/api-core';
 import { trackedRepoInputSchema } from '@pd/contracts';
 import { ReposService } from './repos.service';
+import { GITHUB_OSS_ACTIONS } from './github-oss.server-actions';
 
 /** AI access to open source statistics; tracking, untracking and refreshing repositories (assistant). */
 @Injectable()
 export class GithubOssAiTools implements OnModuleInit {
   constructor(
+    private readonly actions: ServerActions,
     private readonly ai: AiService,
     private readonly repos: ReposService,
   ) {}
@@ -69,7 +71,7 @@ export class GithubOssAiTools implements OnModuleInit {
         'Refreshes repository data from GitHub and npm now instead of waiting for the hourly sync.',
       parameters: NO_PARAMETERS,
       handler: async (userId) => {
-        await this.repos.syncAll(userId);
+        await this.actions.run(userId, GITHUB_OSS_ACTIONS.syncAll);
         return { refreshed: true };
       },
     });

@@ -63,6 +63,17 @@ The server must be reachable over HTTPS: the token and your data travel in these
 - Changes are applied in foreign key order. A change that references a row that has not arrived
   yet waits in `sync.parked` and is retried after every sync.
 
+### The server does the work, the computer keeps a copy
+
+Everything that runs by itself or reaches outside services happens on the server: scheduled jobs,
+the Telegram bot, unlocking achievements, imports from Last.fm, GitHub, OpenDota and the cost
+providers. The computer only keeps a copy and edits your own data (diary, finance, birthdays…).
+
+Buttons such as "connect", "add a repository" or "refresh now" work in the local copy too: the
+computer sends its changes, asks the server to do the job (`POST /api/sync/action`, the same
+`SYNC_TOKEN`) and pulls the result before the page updates. They need the server to be reachable;
+offline they answer that this runs on the server.
+
 ### Conflicts
 
 The **newer change wins** — per row, by the time of the change. The losing version is not

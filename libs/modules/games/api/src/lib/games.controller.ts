@@ -9,7 +9,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
 import {
   GameAccountInput,
   gameAccountInputSchema,
@@ -19,10 +19,12 @@ import {
 } from '@pd/contracts';
 import { GameAccountsService } from './game-accounts.service';
 import { WowService } from './wow/wow.service';
+import { GAMES_ACTIONS } from './games.server-actions';
 
 @Controller('games')
 export class GamesController {
   constructor(
+    private readonly actions: ServerActions,
     private readonly accounts: GameAccountsService,
     private readonly wow: WowService,
   ) {}
@@ -38,13 +40,13 @@ export class GamesController {
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(gameAccountInputSchema)) input: GameAccountInput,
   ) {
-    return this.accounts.add(user.id, input);
+    return this.actions.run(user.id, GAMES_ACTIONS.addAccount, input);
   }
 
   @Post('accounts/:id/sync')
   @HttpCode(204)
   sync(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.accounts.syncOne(user.id, id);
+    return this.actions.run(user.id, GAMES_ACTIONS.syncAccount, { id });
   }
 
   @Delete('accounts/:id')

@@ -1,12 +1,16 @@
 import {
+  HttpException,
   Inject,
   Injectable,
   Logger,
   OnApplicationBootstrap,
   OnApplicationShutdown,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  SyncActionRequest,
+  SyncActionResponse,
   SyncPullRequest,
   SyncPullResponse,
   SyncPushRequest,
@@ -26,7 +30,16 @@ const REQUEST_TIMEOUT_MS = 120_000;
 const MAX_BATCHES = 10_000;
 
 /** A sync error with a message for the settings page. */
-class SyncError extends Error {}
+class SyncError extends Error {
+  constructor(
+    message: string,
+    /** The server's HTTP status and its own message, when it answered with an error. */
+    readonly status?: number,
+    readonly serverMessage?: string,
+  ) {
+    super(message);
+  }
+}
 
 /**
  * The client side of sync: every SYNC_INTERVAL_SECONDS pulls the server's changes, then pushes
@@ -58,6 +71,45 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
 
   onApplicationShutdown(): void {
     this.timers.forEach(clearTimeout);
+  }
+
+  /**
+   * A sync that starts after everything written so far: waits for the one in progress, then runs
+   * a new one. Errors end up in the status, as with `syncNow`.
+   */
+  async syncFresh(): Promise<void> {
+    await this.running;
+    await this.syncNow();
+  }
+
+  /** Runs a server action for the user (see ServerActions) and returns its result. */
+  async runOnServer(
+    userId: string,
+    action: string,
+    args: Record<string, unknown>,
+  ): Promise<unknown> {
+    try {
+      const response = await this.request<SyncActionRequest, SyncActionResponse>('action', {
+        ...(await this.handshake()),
+        userId,
+        action,
+        args,
+      });
+      return response.result;
+    } catch (error) {
+      // "Invalid API token", "not found"…: the user sees the server's answer as it is.
+      if (
+        error instanceof SyncError &&
+        error.status &&
+        error.status < 500 &&
+        error.status !== 401
+      ) {
+        throw new HttpException(error.serverMessage ?? error.message, error.status);
+      }
+      throw new ServiceUnavailableException(
+        `This runs on the server: ${error instanceof Error ? error.message : error}`,
+      );
+    }
   }
 
   /** Runs a sync (or waits for the one in progress). Errors end up in the status. */
@@ -150,7 +202,7 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
     return { peer: this.peer, ...(await this.sync.handshake()) };
   }
 
-  private async request<Req, Res>(action: 'push' | 'pull', body: Req): Promise<Res> {
+  private async request<Req, Res>(action: 'push' | 'pull' | 'action', body: Req): Promise<Res> {
     const url = new URL(`/api/sync/${action}`, this.config.get('SYNC_SERVER_URL', { infer: true }));
     let response: Response;
     try {
@@ -177,7 +229,11 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
       } catch {
         // Not JSON (a proxy error page) — show the text as is.
       }
-      throw new SyncError(`The server answered ${response.status}: ${message.slice(0, 300)}`);
+      throw new SyncError(
+        `The server answered ${response.status}: ${message.slice(0, 300)}`,
+        response.status,
+        message.slice(0, 300),
+      );
     }
     return (await decodeSyncBody(Buffer.from(await response.arrayBuffer()))) as Res;
   }

@@ -39,6 +39,9 @@
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
 - **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
 - **Books** — reading list, progress, ratings and notes
+- **Faster sync of large amounts of data** — a client applies changes row by row (about 150 rows a
+  second), so catching up on 400,000 plays takes most of an hour; apply a batch per table with a
+  few statements instead
 - **Games: several accounts per game** — a combined view (totals, records, recent matches from
   every account) and achievements summed over all of them. Dota achievements already count every
   Dota account; the page, the AI tools and WoW still work per account

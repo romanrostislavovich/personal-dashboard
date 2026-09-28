@@ -5,6 +5,7 @@ import { LastfmHistoryImport } from './lastfm-history.import';
 import { LastfmSyncJob } from './lastfm-sync.job';
 import { LastfmService } from './lastfm.service';
 import { MusicController } from './music.controller';
+import { MusicServerActions } from './music.server-actions';
 import { MusicHistoryStatsService } from './music-history.stats';
 import { SpotifyService } from './spotify.service';
 
@@ -22,6 +23,7 @@ import { SpotifyService } from './spotify.service';
     MusicHistoryStatsService,
     MusicAchievements,
     MusicAiTools,
+    MusicServerActions,
   ],
 })
 export class MusicModule {}

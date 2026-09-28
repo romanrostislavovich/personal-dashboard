@@ -9,15 +9,17 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
 import { GithubTokenInput, githubTokenInputSchema, trackedRepoInputSchema } from '@pd/contracts';
 import { z } from 'zod';
 import { GithubTokenService } from './github-token.service';
 import { ReposService } from './repos.service';
+import { GITHUB_OSS_ACTIONS } from './github-oss.server-actions';
 
 @Controller('github-oss')
 export class GithubOssController {
   constructor(
+    private readonly actions: ServerActions,
     private readonly repos: ReposService,
     private readonly tokens: GithubTokenService,
   ) {}
@@ -36,7 +38,7 @@ export class GithubOssController {
     @Body(new ZodValidationPipe(trackedRepoInputSchema))
     input: z.output<typeof trackedRepoInputSchema>,
   ) {
-    return this.repos.add(user.id, input.repo, input.npmPackage ?? null);
+    return this.actions.run(user.id, GITHUB_OSS_ACTIONS.addRepo, input);
   }
 
   @Delete('repos/:id')
@@ -49,13 +51,13 @@ export class GithubOssController {
   @Post('sync')
   @HttpCode(204)
   async syncAll(@CurrentUser() user: AuthUser) {
-    await this.repos.syncAll(user.id);
+    await this.actions.run(user.id, GITHUB_OSS_ACTIONS.syncAll);
   }
 
   @Post('repos/:id/sync')
   @HttpCode(204)
   syncOne(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.repos.syncOne(user.id, id);
+    return this.actions.run(user.id, GITHUB_OSS_ACTIONS.syncRepo, { id });
   }
 
   // --- Token ---

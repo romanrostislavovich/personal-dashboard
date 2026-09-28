@@ -9,7 +9,7 @@ import {
   Query,
   Redirect,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, Public, ZodValidationPipe } from '@pd/api-core';
+import { AuthUser, CurrentUser, Public, ServerActions, ZodValidationPipe } from '@pd/api-core';
 import {
   LastfmSettingsInput,
   lastfmSettingsInputSchema,
@@ -22,10 +22,12 @@ import { z } from 'zod';
 import { LastfmHistoryImport } from './lastfm-history.import';
 import { LastfmService } from './lastfm.service';
 import { SpotifyService } from './spotify.service';
+import { MUSIC_ACTIONS } from './music.server-actions';
 
 @Controller('music')
 export class MusicController {
   constructor(
+    private readonly actions: ServerActions,
     private readonly lastfm: LastfmService,
     private readonly history: LastfmHistoryImport,
     private readonly spotify: SpotifyService,
@@ -83,15 +85,14 @@ export class MusicController {
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(lastfmSettingsInputSchema)) input: LastfmSettingsInput,
   ) {
-    await this.lastfm.connect(user.id, input);
-    this.history.start(user.id);
+    await this.actions.run(user.id, MUSIC_ACTIONS.connectLastfm, input);
   }
 
   /** Imports the rest of the history now instead of in portions every 15 minutes. */
   @Post('lastfm/history')
   @HttpCode(202)
-  importLastfmHistory(@CurrentUser() user: AuthUser): void {
-    this.history.start(user.id);
+  importLastfmHistory(@CurrentUser() user: AuthUser) {
+    return this.actions.run(user.id, MUSIC_ACTIONS.importHistory);
   }
 
   @Delete('lastfm')
@@ -103,7 +104,7 @@ export class MusicController {
   @Post('lastfm/sync')
   @HttpCode(204)
   syncLastfm(@CurrentUser() user: AuthUser) {
-    return this.lastfm.sync(user.id);
+    return this.actions.run(user.id, MUSIC_ACTIONS.syncLastfm);
   }
 
   // --- Spotify ---

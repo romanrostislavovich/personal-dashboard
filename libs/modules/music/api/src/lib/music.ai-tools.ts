@@ -1,12 +1,14 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, NO_PARAMETERS } from '@pd/api-core';
+import { AiService, NO_PARAMETERS, ServerActions } from '@pd/api-core';
 import { MUSIC_TOP_PERIODS, MusicTopPeriod } from '@pd/contracts';
 import { LastfmService } from './lastfm.service';
+import { MUSIC_ACTIONS } from './music.server-actions';
 
 /** AI access to music: Last.fm statistics and tops; refreshing them (assistant). */
 @Injectable()
 export class MusicAiTools implements OnModuleInit {
   constructor(
+    private readonly actions: ServerActions,
     private readonly ai: AiService,
     private readonly lastfm: LastfmService,
   ) {}
@@ -44,7 +46,7 @@ export class MusicAiTools implements OnModuleInit {
       description: 'Loads the latest plays from Last.fm now instead of waiting for the sync.',
       parameters: NO_PARAMETERS,
       handler: async (userId) => {
-        await this.lastfm.sync(userId);
+        await this.actions.run(userId, MUSIC_ACTIONS.syncLastfm);
         return this.lastfm.stats(userId);
       },
     });

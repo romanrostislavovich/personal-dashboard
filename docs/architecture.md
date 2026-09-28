@@ -52,6 +52,7 @@ libs/modules/birthdays/
     birthdays.messages.ts        notification texts per language
     birthdays.achievements.ts    achievements of the module
     birthdays.ai-tools.ts        data the AI assistant can request
+    *.server-actions.ts          actions that call outside services (see below; birthdays has none)
     next-birthday.ts (+ .spec)   pure logic — easy to test
     birthdays.module.ts          Nest module
   web/src/lib/
@@ -97,6 +98,12 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
      changes nothing and the model asks the user; the call runs when repeated after the user's reply.
      Edits take the record id and only the fields to change (`changedFields`, `findById`).
      Never expose secrets (API keys, tokens) through tools — they are set up in the dashboard.
+   - calls to outside services on a user's request (connect an account, "refresh now"):
+     `strava.server-actions.ts` — `ServerActions.register('strava.sync', handler)`, and the
+     controller / AI tool calls `ServerActions.run(userId, 'strava.sync', args)`. They then run on
+     the server even when the user clicks in the local copy (example —
+     `libs/modules/music/api/src/lib/music.server-actions.ts`). Background jobs need nothing: they
+     run on the server anyway.
 4. **Migration:** `npm run db:generate` → review the SQL in `apps/api/migrations`.
 5. **Frontend:** export a `WebDashboardModule` with `id`, menu item, routes, translations
    (`en` and `ru`) and widgets.
@@ -132,11 +139,15 @@ To add a service (e.g. DigitalOcean):
 
 - **Secrets:** `SecretsService` — an encrypted per-user key-value store.
 - **Achievements:** `AchievementsService` — modules register metrics with tiers; the engine evaluates
-  them hourly and on page load, and sends one notification with all new achievements.
+  them hourly, after the user's changes and on page load, and sends one notification with all new
+  achievements. With sync on, only the server unlocks achievements; a client shows progress.
+- **Server actions:** `ServerActions` — calls to outside services made on a user's request; on a
+  sync client they are forwarded to the server (see [sync.md](sync.md)).
 - **Sync:** `SyncService` / `SyncClient` — two-way sync between a local instance and a server
   (`SYNC_MODE`, see [sync.md](sync.md)). Every table in `public` is tracked by a trigger — module
   tables need nothing extra, but every table must have a primary key. Sync works on the whole
-  database, not per user. A client runs no scheduled jobs and does not receive bot messages.
+  database, not per user. A client runs no scheduled jobs, unlocks no achievements, does not
+  receive bot messages and forwards server actions.
 - **AI:** `AiService` — any OpenAI-compatible API; `ask()` is a dialogue with module tools
   (function-calling loop in `tool-loop.ts`), `complete()` is a single request without tools.
 - **Auth:** a global `AuthGuard` (JWT); public endpoints are marked with `@Public()`.

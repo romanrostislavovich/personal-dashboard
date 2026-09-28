@@ -8,14 +8,18 @@ import {
   ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
 import { CostSourceInput, costSourceInputSchema } from '@pd/contracts';
+import { FINANCE_ACTIONS } from '../finance.server-actions';
 import { CostSourcesService } from './cost-sources.service';
 
 /** Automatic cost import from external services: `/api/finance/cost-sources`. */
 @Controller('finance/cost-sources')
 export class CostSourcesController {
-  constructor(private readonly costSources: CostSourcesService) {}
+  constructor(
+    private readonly costSources: CostSourcesService,
+    private readonly actions: ServerActions,
+  ) {}
 
   @Get()
   list(@CurrentUser() user: AuthUser) {
@@ -28,13 +32,13 @@ export class CostSourcesController {
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(costSourceInputSchema)) input: CostSourceInput,
   ) {
-    return this.costSources.create(user.id, input);
+    return this.actions.run(user.id, FINANCE_ACTIONS.addCostSource, input);
   }
 
   @Post(':id/sync')
   @HttpCode(204)
   sync(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.costSources.syncOne(user.id, id);
+    return this.actions.run(user.id, FINANCE_ACTIONS.syncCostSource, { id });
   }
 
   @Delete(':id')

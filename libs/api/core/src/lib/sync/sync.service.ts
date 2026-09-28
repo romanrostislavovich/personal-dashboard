@@ -94,6 +94,12 @@ export class SyncService implements OnApplicationBootstrap {
     return { serverId: await this.serverId(), ...batch };
   }
 
+  /** An action request is checked like push and pull (see ServerActions). */
+  async acceptAction(request: { schema: string; keyCheck: string }): Promise<void> {
+    await this.verify(request);
+    await this.touchContact();
+  }
+
   // --- State and status ---
 
   async getState(key: string): Promise<string | null> {

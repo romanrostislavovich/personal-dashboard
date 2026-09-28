@@ -13,7 +13,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SyncStatus, syncPullRequestSchema, syncPushRequestSchema } from '@pd/contracts';
+import {
+  syncActionRequestSchema,
+  SyncStatus,
+  syncPullRequestSchema,
+  syncPushRequestSchema,
+} from '@pd/contracts';
 import { IncomingMessage } from 'node:http';
 import { z } from 'zod';
 import { Public } from '../auth/public.decorator';
@@ -25,12 +30,13 @@ import {
   readRequestBody,
   SYNC_CONTENT_TYPE,
 } from './sync-protocol';
+import { ServerActions } from './server-actions';
 import { SyncClient } from './sync-client.service';
 import { SyncService } from './sync.service';
 
 /**
- * `push` and `pull` are called by the client instance (SYNC_TOKEN instead of a user login:
- * sync covers the whole database). `status` and `run` are for the settings page.
+ * `push`, `pull` and `action` are called by the client instance (SYNC_TOKEN instead of a user
+ * login: sync covers the whole database). `status` and `run` are for the settings page.
  */
 @Controller('sync')
 export class SyncController {
@@ -38,6 +44,7 @@ export class SyncController {
     @Inject(ConfigService) private readonly config: AppConfig,
     private readonly sync: SyncService,
     private readonly client: SyncClient,
+    private readonly actions: ServerActions,
   ) {}
 
   @Public()
@@ -56,6 +63,18 @@ export class SyncController {
   async pull(@Req() request: IncomingMessage, @Headers('authorization') auth?: string) {
     const body = await this.readBody(request, auth, syncPullRequestSchema);
     return new StreamableFile(await encodeSyncBody(await this.sync.send(body)));
+  }
+
+  /** A module action the client asks the server to run (see ServerActions). */
+  @Public()
+  @Post('action')
+  @HttpCode(200)
+  @Header('Content-Type', SYNC_CONTENT_TYPE)
+  async action(@Req() request: IncomingMessage, @Headers('authorization') auth?: string) {
+    const body = await this.readBody(request, auth, syncActionRequestSchema);
+    await this.sync.acceptAction(body);
+    const result = await this.actions.execute(body.userId, body.action, body.args);
+    return new StreamableFile(await encodeSyncBody({ result: result ?? null }));
   }
 
   @Get('status')

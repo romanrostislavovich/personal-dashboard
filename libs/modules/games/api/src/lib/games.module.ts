@@ -7,6 +7,7 @@ import { DotaService } from './dota/dota.service';
 import { GameAccountsService } from './game-accounts.service';
 import { GamesSyncJob } from './games-sync.job';
 import { GamesController } from './games.controller';
+import { GamesServerActions } from './games.server-actions';
 import { WowService } from './wow/wow.service';
 
 /**
@@ -24,6 +25,7 @@ import { WowService } from './wow/wow.service';
     GamesSyncJob,
     GamesAchievements,
     GamesAiTools,
+    GamesServerActions,
   ],
 })
 export class GamesModule {}

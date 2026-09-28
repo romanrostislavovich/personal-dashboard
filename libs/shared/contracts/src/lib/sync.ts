@@ -55,6 +55,23 @@ export const syncPullRequestSchema = z.object({
 });
 export type SyncPullRequest = z.infer<typeof syncPullRequestSchema>;
 
+/**
+ * A module action the client asks the server to run for a user: anything that reaches outside
+ * services runs on the server only (see ServerActions in the core).
+ */
+export const syncActionRequestSchema = z.object({
+  ...handshake,
+  userId: z.uuid(),
+  /** `<module>.<action>`, e.g. `music.lastfm-sync`. */
+  action: z.string().regex(/^[a-z0-9-]+\.[a-z0-9-]+$/),
+  args: z.record(z.string(), z.unknown()),
+});
+export type SyncActionRequest = z.infer<typeof syncActionRequestSchema>;
+
+export interface SyncActionResponse {
+  result: unknown;
+}
+
 export interface SyncPullResponse {
   /** Changes a new server database with its own positions — the client starts over. */
   serverId: string;
