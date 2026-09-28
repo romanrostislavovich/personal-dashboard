@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { API_TEST_ENV } from './test-env.mts';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -6,6 +7,7 @@ export default defineConfig(() => ({
   // @pd/* aliases from tsconfig.base.json.
   resolve: { tsconfigPaths: true },
   test: {
+    env: API_TEST_ENV,
     name: 'api-core',
     watch: false,
     globals: true,
