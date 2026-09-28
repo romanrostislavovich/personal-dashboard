@@ -5,6 +5,7 @@ import { GamesModule } from '@pd/games-api';
 import { GithubOssModule } from '@pd/github-oss-api';
 import { MonitoringModule } from '@pd/monitoring-api';
 import { MusicModule } from '@pd/music-api';
+import { WeatherModule } from '@pd/weather-api';
 
 /**
  * Enabled dashboard modules (backend part).
@@ -18,4 +19,5 @@ export const enabledModules = [
   DiaryModule,
   MusicModule,
   GamesModule,
+  WeatherModule,
 ];

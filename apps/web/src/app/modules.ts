@@ -7,6 +7,7 @@ import { gamesModule } from '@pd/games-web';
 import { githubOssModule } from '@pd/github-oss-web';
 import { monitoringModule } from '@pd/monitoring-web';
 import { musicModule } from '@pd/music-web';
+import { weatherModule } from '@pd/weather-web';
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
@@ -16,6 +17,7 @@ import { WebDashboardModule } from '@pd/web-core';
 // Narrow and wide widgets alternate so the home grid fills without gaps.
 export const enabledModules: WebDashboardModule[] = [
   aiModule,
+  weatherModule,
   diaryModule,
   financeModule,
   birthdaysModule,

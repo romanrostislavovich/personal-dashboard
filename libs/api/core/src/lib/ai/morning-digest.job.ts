@@ -11,6 +11,7 @@ const TELEGRAM_LIMIT = 4000;
 
 const MORNING_DIGEST_PROMPT = [
   'Make my morning digest for today. Collect data with the tools:',
+  "today's weather and what to wear (start with it, a sentence or two),",
   'upcoming birthdays (today and this week), website status and failures,',
   'recurring payments and spending this month, open source news, diary streak.',
   'Short bullet points with emoji, only what matters; skip empty sections.',

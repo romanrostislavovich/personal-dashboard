@@ -1,0 +1,56 @@
+{
+  "title": "Weather",
+  "searchCity": "Find a city",
+  "noLocation": "Find your city above — the forecast, the clothing advice and the morning digest will be for it.",
+  "error": "Could not load the forecast, try again later.",
+  "feelsLike": "feels like {{value}}°",
+  "range": "{{min}}° … {{max}}°",
+  "whatToWear": "What to wear",
+  "precipitation": "Precipitation",
+  "wind": "Wind",
+  "uv": "UV index",
+  "sun": "Sunrise and sunset",
+  "hourly": "By the hour",
+  "mm": "mm",
+  "kmh": "km/h",
+  "widget": {
+    "noLocation": "Choose your city to see the weather and what to wear.",
+    "open": "Forecast"
+  },
+  "condition": {
+    "clear": "Clear",
+    "partly-cloudy": "Partly cloudy",
+    "cloudy": "Cloudy",
+    "fog": "Fog",
+    "drizzle": "Drizzle",
+    "rain": "Rain",
+    "freezing-rain": "Freezing rain",
+    "showers": "Showers",
+    "snow": "Snow",
+    "snow-showers": "Snow showers",
+    "thunderstorm": "Thunderstorm"
+  },
+  "outfit": {
+    "heavy-winter": "Severe frost: the warmest down coat, thermal underwear and winter boots",
+    "winter": "A winter coat or down jacket, a warm sweater and winter boots",
+    "warm": "A warm coat or insulated jacket over a sweater",
+    "jacket": "A jacket over a sweater or hoodie",
+    "light-jacket": "A light jacket, windbreaker or denim jacket",
+    "long-sleeve": "Long sleeves: a shirt, sweatshirt or light cardigan",
+    "summer": "A T-shirt with light trousers or jeans",
+    "hot": "Shorts, a T-shirt and light breathable clothes"
+  },
+  "extra": {
+    "layers": "Dress in layers — it gets much warmer during the day",
+    "umbrella": "Umbrella",
+    "raincoat": "Raincoat — too windy for an umbrella",
+    "waterproof-shoes": "Waterproof shoes",
+    "windproof": "Something windproof",
+    "hat": "Warm hat",
+    "gloves": "Gloves",
+    "scarf": "Scarf",
+    "sunglasses": "Sunglasses",
+    "sunscreen": "Sunscreen",
+    "cap": "A cap or sun hat"
+  }
+}

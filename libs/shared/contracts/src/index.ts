@@ -15,3 +15,4 @@ export * from './lib/ai';
 export * from './lib/diary-marks';
 export * from './lib/realtime';
 export * from './lib/sync';
+export * from './lib/weather';

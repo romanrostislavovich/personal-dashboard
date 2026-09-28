@@ -120,6 +120,13 @@
       "when": 1790620761390,
       "tag": "0016_dashboard_active_days",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790631037879,
+      "tag": "0017_weather_locations",
+      "breakpoints": true
     }
   ]
 }

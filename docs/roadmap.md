@@ -21,6 +21,8 @@
 - **Music:** Last.fm history and tops, Spotify “now playing”
 - **Games:** Dota 2 (full match history of every mode, via OpenDota) and World of Warcraft (Battle.net);
   several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO
+- **Weather:** today's forecast for your city (Open-Meteo, no API key) with clothing advice —
+  on its page, on the home page and in the morning digest
 - **Achievements:** 110+ achievements across all modules, rarities, XP and player level
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
   `/ask` in Telegram, morning digest, weekly diary summary; several saved connections with their
@@ -43,8 +45,6 @@
 - **Fitness** — workouts, activity and body metrics
 - **SoundCloud** — my own mixes and tracks: plays, likes, reposts and comments
 - **Science** — a section for science
-- **Morning weather digest** — a weather forecast for where I am, sent in the morning (the
-  weather service is not chosen yet)
 - **Voice messages in Telegram** — the bot takes voice messages, turns them into text (speech
   recognition) and handles them like a typed message: a diary note, a command, a question to AI
 - **Faster sync of large amounts of data** — a client applies changes row by row (about 150 rows a
