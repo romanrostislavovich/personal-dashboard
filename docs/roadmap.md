@@ -39,6 +39,9 @@
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
 - **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
 - **Books** — reading list, progress, ratings and notes
+- **Games: several accounts per game** — a combined view (totals, records, recent matches from
+  every account) and achievements summed over all of them. Dota achievements already count every
+  Dota account; the page, the AI tools and WoW still work per account
 - **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
   (bank notifications / SMS → transactions), then everything else the phone knows:
   - **location tracker** — where you have been, places and trips
