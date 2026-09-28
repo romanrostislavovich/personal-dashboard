@@ -26,6 +26,19 @@ interface ApplyContext {
   unsentAfter?: string | null;
 }
 
+/** A version of a row that lost a conflict; kept in `sync.conflicts`. */
+interface Loser {
+  table: SyncTable;
+  pk: string;
+  /** The row as JSON. */
+  row: string;
+  reason: string;
+  /** Skip if the row currently in the table is exactly this one. */
+  onlyIfDifferent?: boolean;
+}
+
+const LOST_TO_NEWER = 'lost to a newer row';
+
 export interface ChangeBatch {
   changes: SyncChange[];
   /** Where the next batch starts; `null` — the log is empty. */
@@ -167,6 +180,34 @@ export class SyncStore {
     if (!table) {
       throw new Error(`Unknown table ${change.table} — are both instances on the same version?`);
     }
+    const local = await this.localVersion(tx, table, change, unsentAfter);
+    if (local?.localWins) {
+      if (change.row !== null) {
+        const loser = { table, pk: change.pk, row: change.row, onlyIfDifferent: true };
+        await this.keepLoser(tx, { ...loser, reason: 'older than the local version' });
+      }
+      return 'skipped';
+    }
+    if (local?.unsent) {
+      await this.keepOverwrittenLocal(tx, table, change);
+    }
+    if (!(await this.writeRow(tx, table, change))) {
+      return 'skipped';
+    }
+    await this.recordVersion(tx, table, change, origin);
+    return 'applied';
+  }
+
+  /**
+   * How the incoming change relates to the local version of the row: the local one is newer
+   * (`localWins`), or it was changed here and not sent yet (`unsent`). Nothing — no local version.
+   */
+  private async localVersion(
+    tx: Transaction,
+    table: SyncTable,
+    change: SyncChange,
+    unsentAfter: ApplyContext['unsentAfter'],
+  ): Promise<{ localWins: boolean; unsent: boolean } | undefined> {
     const [unsentTx, unsentSeq] = parseCursor(unsentAfter ?? null);
     const { rows } = await tx.execute<{ local_wins: boolean; unsent: boolean }>(sql`
       SELECT changed_at >= ${change.changedAt}::timestamptz AS local_wins,
@@ -174,32 +215,40 @@ export class SyncStore {
           AND (tx, seq) > (${unsentTx}::xid8, ${unsentSeq}::bigint) AS unsent
       FROM sync.row_versions WHERE table_name = ${table.name} AND pk = ${change.pk}::jsonb
     `);
-    if (rows[0]?.local_wins) {
-      if (change.row !== null) {
-        await this.keepLoser(
-          tx,
-          table,
-          change.pk,
-          change.row,
-          'older than the local version',
-          true,
-        );
-      }
-      return 'skipped';
+    return rows[0] && { localWins: rows[0].local_wins, unsent: rows[0].unsent };
+  }
+
+  /** A newer change overwrites a local one that never reached the other side — keep the local. */
+  private async keepOverwrittenLocal(
+    tx: Transaction,
+    table: SyncTable,
+    change: SyncChange,
+  ): Promise<void> {
+    const local = await this.readRow(tx, table, change.pk);
+    if (local !== null && local !== change.row) {
+      const reason = 'overwritten by a newer change';
+      await this.keepLoser(tx, { table, pk: change.pk, row: local, reason });
     }
-    if (rows[0]?.unsent) {
-      const local = await this.readRow(tx, table, change.pk);
-      if (local !== null && local !== change.row) {
-        await this.keepLoser(tx, table, change.pk, local, 'overwritten by a newer change');
-      }
+  }
+
+  /** Deletes or upserts the row; false if the upsert lost to a newer row (see `upsert`). */
+  private async writeRow(tx: Transaction, table: SyncTable, change: SyncChange): Promise<boolean> {
+    if (change.row !== null) {
+      return this.upsert(tx, table, change);
     }
-    if (change.row === null) {
-      await tx.execute(
-        sql`DELETE FROM ${sql.identifier(table.name)} t WHERE ${pkMatch(table, change.pk)}`,
-      );
-    } else if (!(await this.upsert(tx, table, change))) {
-      return 'skipped';
-    }
+    await tx.execute(
+      sql`DELETE FROM ${sql.identifier(table.name)} t WHERE ${pkMatch(table, change.pk)}`,
+    );
+    return true;
+  }
+
+  /** Logs the applied change with its origin, so it is not sent back where it came from. */
+  private async recordVersion(
+    tx: Transaction,
+    table: SyncTable,
+    change: SyncChange,
+    origin: string,
+  ): Promise<void> {
     await tx.execute(sql`
       INSERT INTO sync.row_versions (table_name, pk, changed_at, tx, seq, origin)
       VALUES (${table.name}, ${change.pk}::jsonb, ${change.changedAt}::timestamptz,
@@ -213,7 +262,6 @@ export class SyncStore {
       DELETE FROM sync.parked WHERE table_name = ${table.name} AND pk = ${change.pk}::jsonb
         AND changed_at <= ${change.changedAt}::timestamptz
     `);
-    return 'applied';
   }
 
   /**
@@ -245,10 +293,11 @@ export class SyncStore {
           );
         }
         if (local.local_wins) {
-          await this.keepLoser(tx, table, change.pk, change.row ?? '{}', 'lost to a newer row');
+          const loser = { table, pk: change.pk, row: change.row ?? '{}', reason: LOST_TO_NEWER };
+          await this.keepLoser(tx, loser);
           return false;
         }
-        await this.keepLoser(tx, table, local.pk, local.row, 'lost to a newer row');
+        await this.keepLoser(tx, { table, pk: local.pk, row: local.row, reason: LOST_TO_NEWER });
         await tx.execute(sql`DELETE FROM ${name} t WHERE ${pkMatch(table, local.pk)}`);
       }
     }
@@ -266,11 +315,7 @@ export class SyncStore {
   /** Saves the losing version of a row (unless it equals the current one). */
   private async keepLoser(
     tx: Transaction,
-    table: SyncTable,
-    pk: string,
-    row: string,
-    reason: string,
-    onlyIfDifferent = false,
+    { table, pk, row, reason, onlyIfDifferent = false }: Loser,
   ): Promise<void> {
     const differs = onlyIfDifferent
       ? sql`AND NOT EXISTS (SELECT 1 FROM ${sql.identifier(table.name)} t

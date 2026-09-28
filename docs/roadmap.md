@@ -59,7 +59,6 @@
 Measured with ESLint `complexity` (threshold 8) and friends; most functions are simple — these are
 the ones worth a look:
 
-- `SyncStore.applyChange` (12) and `keepLoser` (6 parameters → an object)
 - Diary editor `mark()` (13); `TelegramBotService.onApplicationBootstrap` (92 lines → one method
   per update type)
 - Achievement and AI tool registrations are long but flat lists — split by topic like
