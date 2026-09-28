@@ -54,13 +54,6 @@
   without approval. It must not share tools or context with the main assistant, so a prompt
   injection in user data cannot switch it off.
 
-### Code health
-
-The complexity hot spots (ESLint `complexity`, threshold 8) are cleaned up. Left:
-
-- Nx 24 removes `nxViteTsPaths` and `nxCopyAssetsPlugin` used in the `vitest.config.mts` files —
-  switch to `vite-tsconfig-paths` / Vite's `publicDir` before updating
-
 ### Ideas
 
 - Production projects: errors (Sentry), traffic (Plausible / Umami / Google Analytics),

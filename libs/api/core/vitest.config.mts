@@ -1,11 +1,10 @@
 import { defineConfig } from 'vitest/config';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/libs/api/core',
-  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  // @pd/* aliases from tsconfig.base.json.
+  resolve: { tsconfigPaths: true },
   test: {
     name: 'api-core',
     watch: false,
