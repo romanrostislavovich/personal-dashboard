@@ -40,6 +40,11 @@
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
 - **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
 - **Books** — reading list, progress, ratings and notes
+- **Fitness** — workouts, activity and body metrics
+- **SoundCloud** — my own mixes and tracks: plays, likes, reposts and comments
+- **Science** — a section for science
+- **Voice messages in Telegram** — the bot takes voice messages, turns them into text (speech
+  recognition) and handles them like a typed message: a diary note, a command, a question to AI
 - **Faster sync of large amounts of data** — a client applies changes row by row (about 150 rows a
   second), so catching up on 400,000 plays takes most of an hour; apply a batch per table with a
   few statements instead
@@ -75,3 +80,5 @@
 - AI: native Anthropic API, streaming answers, saved conversations
 - Roles and sharing for multi-user setups
 - A module generator and more language translations
+- Far future: buying things and paying for them from the dashboard (and through the assistant),
+  with an explicit confirmation of every payment
