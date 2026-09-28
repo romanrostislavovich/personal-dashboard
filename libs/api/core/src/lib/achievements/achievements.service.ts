@@ -6,9 +6,11 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Achievement, RARITY_XP } from '@pd/contracts';
 import { eq } from 'drizzle-orm';
 import { debounceTime, groupBy, mergeMap, Subscription } from 'rxjs';
+import { AppConfig } from '../config/env';
 import { DB, Database } from '../database/database.module';
 import { coreMessages } from '../i18n/core.messages';
 import { localize } from '../i18n/locale';
@@ -36,21 +38,29 @@ const ACTIVITY_DEBOUNCE_MS = 3_000;
  * a few seconds after the user changes something, hourly (for data synced in the background)
  * and when the page is opened, and records unlocked tiers.
  * New achievements go to Telegram (one message per check) and live to open dashboards.
+ *
+ * A sync client (SYNC_MODE=client) never unlocks anything: the server does, and unlocked
+ * achievements arrive with the sync like any other data. The client only measures progress
+ * over its copy of the data to show it on the page.
  */
 @Injectable()
 export class AchievementsService implements OnModuleInit, OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(AchievementsService.name);
   private readonly metrics: AchievementMetric[] = [];
   private activitySubscription: Subscription | null = null;
+  private readonly isSyncClient: boolean;
 
   constructor(
     @Inject(DB) private readonly db: Database,
+    @Inject(ConfigService) config: AppConfig,
     private readonly users: UsersService,
     private readonly notifications: NotificationsService,
     private readonly scheduler: SchedulerService,
     private readonly realtime: RealtimeService,
     private readonly activity: UserActivityService,
-  ) {}
+  ) {
+    this.isSyncClient = config.get('SYNC_MODE', { infer: true }) === 'client';
+  }
 
   register(metric: AchievementMetric): void {
     this.metrics.push(metric);
@@ -67,6 +77,9 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
       },
     });
 
+    if (this.isSyncClient) {
+      return;
+    }
     // One debounced check per user after their changes.
     this.activitySubscription = this.activity.activity$
       .pipe(
@@ -119,6 +132,12 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     const values = new Map<string, number>();
     const now = new Date();
 
+    if (this.isSyncClient) {
+      // Progress only; unlocking is the server's job (see the class comment).
+      await this.measure(userId, this.metrics, values);
+      return { values, unlocked };
+    }
+
     // Meta achievements go second: they count what the first pass has just unlocked.
     const fresh = [
       ...(await this.unlockPass(
@@ -151,17 +170,13 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     values: Map<string, number>,
     now: Date,
   ): Promise<UnlockedTier[]> {
+    await this.measure(userId, metrics, values);
     const candidates: UnlockedTier[] = [];
-
     for (const metric of metrics) {
-      let value: number;
-      try {
-        value = await metric.measure(userId);
-      } catch (error) {
-        this.logger.warn(`Achievement metric ${metric.id} failed: ${error}`);
+      const value = values.get(metric.id);
+      if (value === undefined) {
         continue;
       }
-      values.set(metric.id, value);
       for (const tier of newlyUnlockedTiers(metric, value, new Set(unlocked.keys()))) {
         candidates.push({ metric, tier, index: metric.tiers.indexOf(tier) });
       }
@@ -185,6 +200,24 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     const insertedIds = new Set(inserted.map((row) => row.id));
     candidates.forEach(({ metric, tier }) => unlocked.set(achievementId(metric, tier), now));
     return candidates.filter(({ metric, tier }) => insertedIds.has(achievementId(metric, tier)));
+  }
+
+  /**
+   * Measures the metrics into `values`. A failed metric (for example, Last.fm is down) is left
+   * out and does not affect the others.
+   */
+  private async measure(
+    userId: string,
+    metrics: AchievementMetric[],
+    values: Map<string, number>,
+  ): Promise<void> {
+    for (const metric of metrics) {
+      try {
+        values.set(metric.id, await metric.measure(userId));
+      } catch (error) {
+        this.logger.warn(`Achievement metric ${metric.id} failed: ${error}`);
+      }
+    }
   }
 
   /** Live event for open dashboards and one message for Telegram. */
