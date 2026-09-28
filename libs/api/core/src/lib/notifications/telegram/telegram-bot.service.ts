@@ -8,12 +8,14 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Locale, SUPPORTED_LOCALES, TelegramLinkResponse } from '@pd/contracts';
-import { Bot, Context } from 'grammy';
+import { Bot, CommandContext, Context, Filter } from 'grammy';
+import type { Chat } from 'grammy/types';
 import { randomBytes } from 'node:crypto';
 import { AppConfig } from '../../config/env';
 import { coreMessages } from '../../i18n/core.messages';
 import { FALLBACK_LOCALE, localize } from '../../i18n/locale';
 import { UserActivityService } from '../../realtime/user-activity.service';
+import { UserRow } from '../../users/users.schema';
 import { UsersService } from '../../users/users.service';
 import { BotCommand, BotDocumentHandler, BotPhotoHandler, BotTextHandler } from './bot-command';
 
@@ -97,93 +99,122 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       this.logger.log('Sync client: the Telegram bot answers from the server');
       return;
     }
-
-    // Until the chat is linked, the language comes from Telegram settings, then from the dashboard profile.
-    this.bot.command('start', async (ctx) => {
-      const userId = this.consumeLinkCode(ctx.match);
-      if (!userId) {
-        await ctx.reply(coreMessages(ctx.from?.language_code).telegramLinkExpired);
-        return;
-      }
-      await this.users.setTelegramChatId(userId, String(ctx.chat.id));
-      const user = await this.users.findById(userId);
-      await ctx.reply(coreMessages(user?.locale).telegramLinked);
-    });
-    for (const command of this.commands) {
-      this.bot.command(command.command, async (ctx) => {
-        const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
-        if (!user) {
-          await ctx.reply(coreMessages(ctx.from?.language_code).telegramNotLinked);
-          return;
-        }
-        await ctx.reply(await command.handler(user, ctx.match.trim()));
-        this.activity.touched(user.id);
-      });
-    }
-    this.bot.on('message:photo', async (ctx) => {
-      const handler = this.photoHandler;
-      const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
-      if (!handler || !user) {
-        return;
-      }
-      const largest = ctx.message.photo[ctx.message.photo.length - 1];
-      const reply = await handler(user, {
-        caption: ctx.message.caption ?? '',
-        mimeType: 'image/jpeg',
-        download: () => this.downloadFile(largest.file_id),
-      });
-      await ctx.reply(reply);
-      this.activity.touched(user.id);
-    });
-    this.bot.on('message:document', async (ctx) => {
-      const handler = this.documentHandler;
-      const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
-      if (!handler || !user) {
-        return;
-      }
-      const { file_id, file_name, file_size } = ctx.message.document;
-      if (file_size !== undefined && file_size > DOWNLOAD_LIMIT_BYTES) {
-        await ctx.reply(coreMessages(user.locale).telegramFileTooLarge);
-        return;
-      }
-      const document = {
-        fileName: file_name ?? 'file',
-        caption: ctx.message.caption ?? '',
-        download: () => this.downloadFile(file_id),
-      };
-      await ctx.reply(await this.whileTyping(ctx, () => handler(user, document)));
-      this.activity.touched(user.id);
-    });
-    // Plain text (commands are handled above and never reach this point).
-    this.bot.on('message:text', async (ctx) => {
-      const handler = this.textHandler;
-      if (!handler || ctx.message.text.startsWith('/')) {
-        return;
-      }
-      const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
-      if (!user) {
-        await ctx.reply(coreMessages(ctx.from?.language_code).telegramNotLinked);
-        return;
-      }
-      await ctx.reply(await this.whileTyping(ctx, () => handler(user, ctx.message.text)));
-      this.activity.touched(user.id);
-    });
-    this.bot.catch((error) => this.logger.error(error.message));
-
+    this.listen(this.bot);
     await this.bot.init();
-    // Telegram command menu (the "/" button): English by default plus one per language.
+    await this.publishCommandMenu(this.bot);
+    // start() resolves only when the bot stops, so we do not await it.
+    void this.bot.start({ drop_pending_updates: true });
+    this.logger.log(`Telegram bot @${this.bot.botInfo.username} started`);
+  }
+
+  /** One handler per kind of update. */
+  private listen(bot: Bot): void {
+    bot.command('start', (ctx) => this.onStart(ctx));
+    for (const command of this.commands) {
+      bot.command(command.command, (ctx) => this.onCommand(ctx, command));
+    }
+    bot.on('message:photo', (ctx) => this.onPhoto(ctx));
+    bot.on('message:document', (ctx) => this.onDocument(ctx));
+    // Plain text (commands are handled above and never reach this point).
+    bot.on('message:text', (ctx) => this.onText(ctx));
+    bot.catch((error) => this.logger.error(error.message));
+  }
+
+  /** `/start <code>` from the link in the dashboard settings: links the chat to the user. */
+  private async onStart(ctx: CommandContext<Context>): Promise<void> {
+    // Until the chat is linked, the language comes from Telegram settings, then from the dashboard profile.
+    const userId = this.consumeLinkCode(ctx.match);
+    if (!userId) {
+      await ctx.reply(coreMessages(ctx.from?.language_code).telegramLinkExpired);
+      return;
+    }
+    await this.users.setTelegramChatId(userId, String(ctx.chat.id));
+    const user = await this.users.findById(userId);
+    await ctx.reply(coreMessages(user?.locale).telegramLinked);
+  }
+
+  private async onCommand(ctx: CommandContext<Context>, command: BotCommand): Promise<void> {
+    const user = await this.linkedUserOrHint(ctx);
+    if (user) {
+      await this.answer(ctx, user, await command.handler(user, ctx.match.trim()));
+    }
+  }
+
+  private async onText(ctx: Filter<Context, 'message:text'>): Promise<void> {
+    const handler = this.textHandler;
+    if (!handler || ctx.message.text.startsWith('/')) {
+      return;
+    }
+    const user = await this.linkedUserOrHint(ctx);
+    if (user) {
+      await this.answer(
+        ctx,
+        user,
+        await this.whileTyping(ctx, () => handler(user, ctx.message.text)),
+      );
+    }
+  }
+
+  /** Photos and documents from an unlinked chat are ignored silently. */
+  private async onPhoto(ctx: Filter<Context, 'message:photo'>): Promise<void> {
+    const handler = this.photoHandler;
+    const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
+    if (!handler || !user) {
+      return;
+    }
+    const largest = ctx.message.photo[ctx.message.photo.length - 1];
+    const reply = await handler(user, {
+      caption: ctx.message.caption ?? '',
+      mimeType: 'image/jpeg',
+      download: () => this.downloadFile(largest.file_id),
+    });
+    await this.answer(ctx, user, reply);
+  }
+
+  private async onDocument(ctx: Filter<Context, 'message:document'>): Promise<void> {
+    const handler = this.documentHandler;
+    const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
+    if (!handler || !user) {
+      return;
+    }
+    const { file_id, file_name, file_size } = ctx.message.document;
+    if (file_size !== undefined && file_size > DOWNLOAD_LIMIT_BYTES) {
+      await ctx.reply(coreMessages(user.locale).telegramFileTooLarge);
+      return;
+    }
+    const document = {
+      fileName: file_name ?? 'file',
+      caption: ctx.message.caption ?? '',
+      download: () => this.downloadFile(file_id),
+    };
+    await this.answer(ctx, user, await this.whileTyping(ctx, () => handler(user, document)));
+  }
+
+  /** The user this chat is linked to; otherwise tells the chat how to link it. */
+  private async linkedUserOrHint(ctx: Context & { chat: Chat }): Promise<UserRow | null> {
+    const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
+    if (!user) {
+      await ctx.reply(coreMessages(ctx.from?.language_code).telegramNotLinked);
+    }
+    return user ?? null;
+  }
+
+  private async answer(ctx: Context, user: UserRow, reply: string): Promise<void> {
+    await ctx.reply(reply);
+    this.activity.touched(user.id);
+  }
+
+  /** Telegram command menu (the "/" button): English by default plus one per language. */
+  private async publishCommandMenu(bot: Bot): Promise<void> {
     const commandsFor = (locale: Locale) =>
       this.commands.map(({ command, description }) => ({
         command,
         description: localize(description, locale),
       }));
-    await this.bot.api.setMyCommands(commandsFor(FALLBACK_LOCALE));
+    await bot.api.setMyCommands(commandsFor(FALLBACK_LOCALE));
     for (const locale of SUPPORTED_LOCALES) {
-      await this.bot.api.setMyCommands(commandsFor(locale), { language_code: locale });
+      await bot.api.setMyCommands(commandsFor(locale), { language_code: locale });
     }
-    // start() resolves only when the bot stops, so we do not await it.
-    void this.bot.start({ drop_pending_updates: true });
-    this.logger.log(`Telegram bot @${this.bot.botInfo.username} started`);
   }
 
   async onApplicationShutdown(): Promise<void> {
