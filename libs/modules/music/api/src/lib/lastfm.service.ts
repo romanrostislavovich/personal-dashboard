@@ -155,20 +155,6 @@ export class LastfmService {
     return client ? this.cached(userId, 'total', () => client.getTotalScrobbles()) : null;
   }
 
-  /** Record number of plays in one day (from the local history). */
-  async maxPlaysInDay(userId: string): Promise<number> {
-    const timeZone = this.config.get('APP_TIMEZONE', { infer: true });
-    const result = await this.db.execute<{ plays: number | null }>(sql`
-      SELECT max(plays)::int AS plays FROM (
-        SELECT count(*) AS plays
-        FROM ${scrobbles}
-        WHERE ${scrobbles.userId} = ${userId}
-        GROUP BY (${scrobbles.playedAt} AT TIME ZONE ${timeZone})::date
-      ) per_day
-    `);
-    return result.rows[0]?.plays ?? 0;
-  }
-
   async tops(userId: string, period: MusicTopPeriod): Promise<MusicTops | null> {
     const client = await this.clientFor(userId);
     if (!client) {

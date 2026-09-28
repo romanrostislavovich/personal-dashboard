@@ -35,6 +35,35 @@
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
+    },
+    "test": {
+      "// inputs": "the inferred ones plus database tests (*.db.spec.ts): the database and the migrations they apply",
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "fileset": "{projectRoot}/tsconfig.spec.json",
+          "dependencies": true
+        },
+        {
+          "json": "{workspaceRoot}/tsconfig.json",
+          "fields": ["compilerOptions"]
+        },
+        {
+          "externalDependencies": ["vitest"]
+        },
+        {
+          "env": "CI"
+        },
+        {
+          "env": "TEST_DATABASE_URL"
+        },
+        "{workspaceRoot}/apps/api/migrations/**/*",
+        {
+          "dependentTasksOutputFiles": "**/*.js",
+          "transitive": true
+        }
+      ]
     }
   },
   "plugins": [
