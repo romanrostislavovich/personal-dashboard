@@ -14,7 +14,7 @@ export type ServerActionHandler = (
  * A module registers its actions in `*.server-actions.ts` and its controllers and AI tools call
  * `run`. On a server (or without sync) that is a plain call. On a client, `run` first pushes local
  * changes (say, the account the user has just added), asks the server to run the action and pulls
- * the result, so the page reads fresh data right after.
+ * the result, so the page reads fresh data right after (see `SyncClient.pullSoon`).
  */
 @Injectable()
 export class ServerActions {
@@ -37,9 +37,9 @@ export class ServerActions {
     if (this.sync.mode !== 'client') {
       return (await this.execute(userId, name, { ...args })) as T;
     }
-    await this.client.syncFresh();
+    await this.client.pushFresh();
     const result = await this.client.runOnServer(userId, name, { ...args });
-    await this.client.syncFresh();
+    await this.client.pullSoon();
     return result as T;
   }
 

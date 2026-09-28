@@ -26,6 +26,11 @@ import { SERVER_ORIGIN, SYNC_STATE, SyncService } from './sync.service';
 const FIRST_SYNC_DELAY_MS = 5_000;
 /** A batch with diary photos over a slow connection may take a while. */
 const REQUEST_TIMEOUT_MS = 120_000;
+/**
+ * After a server action, the page waits this long for the result to be pulled. Usually it takes a
+ * moment; while a big backlog is being caught up, the result arrives with a later sync instead.
+ */
+const ACTION_PULL_WAIT_MS = 10_000;
 /** Protection against an endless loop if the server keeps saying "there is more". */
 const MAX_BATCHES = 10_000;
 
@@ -50,6 +55,7 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
   private readonly logger = new Logger(SyncClient.name);
   private timers: NodeJS.Timeout[] = [];
   private running: Promise<void> | null = null;
+  private pushing: Promise<number> | null = null;
   private readonly peer: string;
 
   constructor(
@@ -74,12 +80,28 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
   }
 
   /**
-   * A sync that starts after everything written so far: waits for the one in progress, then runs
-   * a new one. Errors end up in the status, as with `syncNow`.
+   * Sends everything written here so far, without pulling first (a pull may take long while a
+   * backlog is caught up). Before a server action: the server must see, say, the account the
+   * user has just added.
    */
-  async syncFresh(): Promise<void> {
-    await this.running;
-    await this.syncNow();
+  async pushFresh(): Promise<void> {
+    await this.pushing?.catch(() => 0);
+    try {
+      await this.pushOnce();
+    } catch (error) {
+      throw new ServiceUnavailableException(
+        `This runs on the server: ${error instanceof Error ? error.message : error}`,
+      );
+    }
+  }
+
+  /** After a server action: a new sync, waited for ACTION_PULL_WAIT_MS at most. */
+  async pullSoon(): Promise<void> {
+    const fresh = (async () => {
+      await this.running;
+      await this.syncNow();
+    })();
+    await Promise.race([fresh, new Promise((resolve) => setTimeout(resolve, ACTION_PULL_WAIT_MS))]);
   }
 
   /** Runs a server action for the user (see ServerActions) and returns its result. */
@@ -121,7 +143,7 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
   private async run(): Promise<void> {
     try {
       const pulled = await this.pull();
-      const pushed = await this.push();
+      const pushed = await this.pushOnce();
       await this.sync.setState(SYNC_STATE.lastSyncedAt, new Date().toISOString());
       await this.sync.setState(SYNC_STATE.lastError, null);
       if (pulled || pushed) {
@@ -134,6 +156,12 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
       }
       await this.sync.setState(SYNC_STATE.lastError, message);
     }
+  }
+
+  /** One push at a time: a regular sync and a server action may want one together. */
+  private pushOnce(): Promise<number> {
+    this.pushing ??= this.push().finally(() => (this.pushing = null));
+    return this.pushing;
   }
 
   /** Applies the server's changes; returns how many. */

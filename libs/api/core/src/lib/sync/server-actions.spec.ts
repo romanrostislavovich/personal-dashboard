@@ -4,7 +4,8 @@ import { ServerActions } from './server-actions';
 function setup(mode: 'off' | 'server' | 'client') {
   const calls: string[] = [];
   const client = {
-    syncFresh: vi.fn(async () => void calls.push('sync')),
+    pushFresh: vi.fn(async () => void calls.push('push')),
+    pullSoon: vi.fn(async () => void calls.push('pull')),
     runOnServer: vi.fn(async (_userId: string, name: string) => {
       calls.push(`server:${name}`);
       return { from: 'server' };
@@ -35,7 +36,7 @@ describe('ServerActions', () => {
   it('on a client: pushes local changes, runs on the server, pulls the result', async () => {
     const { actions, client, handler, calls } = setup('client');
     expect(await actions.run('user', 'test.refresh', { id: 1 })).toEqual({ from: 'server' });
-    expect(calls).toEqual(['sync', 'server:test.refresh', 'sync']);
+    expect(calls).toEqual(['push', 'server:test.refresh', 'pull']);
     expect(client.runOnServer).toHaveBeenCalledWith('user', 'test.refresh', { id: 1 });
     expect(handler).not.toHaveBeenCalled();
   });
