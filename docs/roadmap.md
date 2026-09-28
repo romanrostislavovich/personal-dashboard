@@ -36,8 +36,13 @@
 ### Planned
 
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
+- **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
+- **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
+- **Books** — reading list, progress, ratings and notes
 - **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
-  (bank notifications / SMS → transactions), then everything else the phone knows
+  (bank notifications / SMS → transactions), then everything else the phone knows:
+  - **location tracker** — where you have been, places and trips
+  - **sleep** — sleep time and quality, possibly from a fitness band
 - **Shared client core** for web, desktop and mobile: API client, auth, realtime events, i18n and
   contracts in one library, so every client behaves the same
 - **AI with full control of the platform, including its own code.** The assistant can already
