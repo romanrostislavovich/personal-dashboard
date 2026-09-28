@@ -1,6 +1,21 @@
 <header class="page-header">
   <h1 class="page-title">{{ 'ai.title' | transloco }}</h1>
   <div class="header-actions">
+    <!-- Switch the model in one click, e.g. when a provider's balance runs out. -->
+    @if ((settings.value()?.connections?.length ?? 0) > 1) {
+      <button matButton [matMenuTriggerFor]="models">
+        <mat-icon>smart_toy</mat-icon> {{ activeConnection()?.name }}
+        <mat-icon iconPositionEnd>arrow_drop_down</mat-icon>
+      </button>
+      <mat-menu #models="matMenu">
+        @for (c of settings.value()!.connections; track c.id) {
+          <button mat-menu-item (click)="useConnection(c)">
+            <mat-icon>{{ c.id === activeConnection()?.id ? 'check' : '' }}</mat-icon>
+            {{ c.name }} · {{ c.model }}
+          </button>
+        }
+      </mat-menu>
+    }
     @if (history().length) {
       <button matButton (click)="clear()">
         <mat-icon>delete_sweep</mat-icon> {{ 'ai.clear' | transloco }}
@@ -21,7 +36,7 @@
       @if (!s.configured) {
         <p class="intro">{{ 'ai.intro' | transloco }}</p>
       }
-      <pd-ai-settings [settings]="s" (changed)="settings.reload(); showSettings.set(false)" />
+      <pd-ai-settings [settings]="s" (changed)="settings.set($event)" />
     </div>
   }
 

@@ -14,24 +14,41 @@ export const AI_PROVIDER_PRESETS: Record<AiProvider, { baseUrl: string; model: s
   custom: { baseUrl: '', model: '' },
 };
 
-export const aiSettingsInputSchema = z.object({
+/**
+ * A saved AI connection: provider, address, model and key. The user keeps several (e.g. DeepSeek
+ * and OpenAI) and switches the active one in one click — say, when a balance runs out.
+ */
+export const aiConnectionInputSchema = z.object({
+  name: z.string().trim().min(1).max(60),
   provider: z.enum(AI_PROVIDERS),
   baseUrl: z.url(),
   model: z.string().trim().min(1).max(100),
   /** Empty — keep the saved key (Ollama has no key at all). */
   apiKey: z.string().trim().max(500).optional(),
-  /** Morning digest at 08:30 via notifications. */
-  morningDigest: z.boolean(),
 });
-export type AiSettingsInput = z.infer<typeof aiSettingsInputSchema>;
+export type AiConnectionInput = z.infer<typeof aiConnectionInputSchema>;
 
-export interface AiSettings {
-  configured: boolean;
+export interface AiConnection {
+  id: string;
+  name: string;
   provider: AiProvider;
   baseUrl: string;
   model: string;
   hasApiKey: boolean;
-  morningDigest: boolean;
+}
+
+export const aiPreferencesSchema = z.object({
+  /** Morning digest at 08:30 via notifications. */
+  morningDigest: z.boolean(),
+});
+export type AiPreferences = z.infer<typeof aiPreferencesSchema>;
+
+export interface AiSettings extends AiPreferences {
+  /** At least one connection exists — the AI features work. */
+  configured: boolean;
+  /** The connection every AI request goes through. */
+  activeConnectionId: string | null;
+  connections: AiConnection[];
 }
 
 /**

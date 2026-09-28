@@ -1,40 +1,29 @@
-import { HttpErrorResponse } from '@angular/common/http';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-} from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { AI_PROVIDER_PRESETS, AI_PROVIDERS, AiProvider, AiSettings } from '@pd/contracts';
+import { AiConnection, AiSettings } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
+import { AiConnectionFormDialog } from './ai-connection-form.dialog';
 
-/** AI connection: provider, address, model, key and the morning digest. */
+/**
+ * Saved AI connections — one of them active, switched in one click (say, when a balance runs
+ * out) — and the morning digest.
+ */
 @Component({
   selector: 'pd-ai-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ReactiveFormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
     MatSlideToggleModule,
+    MatTooltipModule,
     TranslocoPipe,
   ],
   template: `
@@ -44,126 +33,150 @@ import { AiApi } from './ai.api';
         <mat-card-subtitle>{{ 'ai.settings.privacy' | transloco }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <form class="form" [formGroup]="form" (ngSubmit)="save()">
-          <div class="row">
-            <mat-form-field>
-              <mat-label>{{ 'ai.settings.provider' | transloco }}</mat-label>
-              <mat-select formControlName="provider" (selectionChange)="applyPreset($event.value)">
-                @for (provider of providers; track provider) {
-                  <mat-option [value]="provider">
-                    {{ 'ai.settings.providers.' + provider | transloco }}
-                  </mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-              <mat-label>{{ 'ai.settings.model' | transloco }}</mat-label>
-              <input matInput formControlName="model" />
-            </mat-form-field>
-          </div>
-          <mat-form-field>
-            <mat-label>{{ 'ai.settings.baseUrl' | transloco }}</mat-label>
-            <input matInput formControlName="baseUrl" />
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>{{ 'ai.settings.apiKey' | transloco }}</mat-label>
-            <input
-              matInput
-              type="password"
-              formControlName="apiKey"
-              autocomplete="off"
-              [placeholder]="settings().hasApiKey ? ('ai.settings.apiKeySaved' | transloco) : ''"
-            />
-            <mat-hint>{{ 'ai.settings.apiKeyHint' | transloco }}</mat-hint>
-          </mat-form-field>
-          <mat-slide-toggle formControlName="morningDigest">
-            {{ 'ai.settings.morningDigest' | transloco }}
-          </mat-slide-toggle>
-          <div class="actions">
-            @if (settings().configured) {
-              <button matButton type="button" (click)="disconnect()">
-                {{ 'ai.settings.disconnect' | transloco }}
+        <h3 class="section">{{ 'ai.connections.title' | transloco }}</h3>
+        @for (c of settings().connections; track c.id) {
+          <div class="connection" [class.active]="c.id === settings().activeConnectionId">
+            <mat-icon class="state">
+              {{
+                c.id === settings().activeConnectionId
+                  ? 'radio_button_checked'
+                  : 'radio_button_unchecked'
+              }}
+            </mat-icon>
+            <span class="text">
+              <span class="name">{{ c.name }}</span>
+              <span class="details"
+                >{{ 'ai.settings.providers.' + c.provider | transloco }} · {{ c.model }}</span
+              >
+            </span>
+            @if (c.id === settings().activeConnectionId) {
+              <span class="badge">{{ 'ai.connections.active' | transloco }}</span>
+            } @else {
+              <button matButton (click)="activate(c)">
+                {{ 'ai.connections.use' | transloco }}
               </button>
             }
-            <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
-              {{ 'ai.settings.save' | transloco }}
+            <button matIconButton (click)="edit(c)" [matTooltip]="'core.actions.edit' | transloco">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              matIconButton
+              (click)="remove(c)"
+              [matTooltip]="'core.actions.delete' | transloco"
+            >
+              <mat-icon>delete</mat-icon>
             </button>
           </div>
-        </form>
+        } @empty {
+          <p class="empty">{{ 'ai.connections.empty' | transloco }}</p>
+        }
+        <button matButton="tonal" class="add" (click)="edit(null)">
+          <mat-icon>add</mat-icon> {{ 'ai.connections.add' | transloco }}
+        </button>
+
+        @if (settings().configured) {
+          <mat-slide-toggle
+            class="digest"
+            [checked]="settings().morningDigest"
+            (change)="setMorningDigest($event.checked)"
+          >
+            {{ 'ai.settings.morningDigest' | transloco }}
+          </mat-slide-toggle>
+        }
       </mat-card-content>
     </mat-card>
   `,
   styles: `
-    .form {
+    .section {
+      margin: 8px 0;
+      font: var(--mat-sys-title-small);
+    }
+    .connection {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 4px 8px 12px;
+      margin-bottom: 8px;
+      border: 1px solid var(--pd-border);
+      border-radius: var(--pd-radius-small);
+    }
+    .connection.active {
+      border-color: var(--mat-sys-primary);
+      background: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+    }
+    .state {
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .active .state {
+      color: var(--mat-sys-primary);
+    }
+    .text {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      min-width: 0;
     }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+    .name {
+      font: var(--mat-sys-title-small);
     }
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 8px;
+    .details {
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-on-surface-variant);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .badge {
+      padding: 2px 10px;
+      border-radius: 12px;
+      font: var(--mat-sys-label-medium);
+      background: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+    }
+    .add {
+      margin-top: 4px;
+    }
+    .digest {
+      display: block;
+      margin-top: 20px;
     }
   `,
 })
 export class AiSettingsComponent {
   readonly settings = input.required<AiSettings>();
-  readonly changed = output<void>();
+  /** New settings after any change: the page shows them without another request. */
+  readonly changed = output<AiSettings>();
 
   private readonly api = inject(AiApi);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
   private readonly transloco = inject(TranslocoService);
 
-  protected readonly providers = AI_PROVIDERS;
-  protected readonly busy = signal(false);
-  protected readonly form = inject(NonNullableFormBuilder).group({
-    provider: ['deepseek' as AiProvider],
-    baseUrl: ['', Validators.required],
-    model: ['', Validators.required],
-    apiKey: [''],
-    morningDigest: [false],
-  });
-
-  constructor() {
-    // Saved settings → into the form (the key is not shown, only a "saved" flag).
-    effect(() => {
-      const { provider, baseUrl, model, morningDigest } = this.settings();
-      this.form.patchValue({ provider, baseUrl, model, morningDigest, apiKey: '' });
-    });
-  }
-
-  /** A provider was selected — fill in its default address and model. */
-  applyPreset(provider: AiProvider): void {
-    const preset = AI_PROVIDER_PRESETS[provider];
-    this.form.patchValue({ baseUrl: preset.baseUrl, model: preset.model });
-  }
-
-  async save(): Promise<void> {
-    const { apiKey, ...rest } = this.form.getRawValue();
-    this.busy.set(true);
-    try {
-      await firstValueFrom(this.api.saveSettings({ ...rest, apiKey: apiKey || undefined }));
-      this.snackBar.open(this.transloco.translate('ai.settings.saved'), 'OK', { duration: 3000 });
-      this.changed.emit();
-    } catch (error) {
-      const message =
-        error instanceof HttpErrorResponse && error.status === 400
-          ? 'ai.settings.connectionFailed'
-          : 'ai.errors.generic';
-      this.snackBar.open(this.transloco.translate(message), 'OK', { duration: 6000 });
-    } finally {
-      this.busy.set(false);
+  async edit(connection: AiConnection | null): Promise<void> {
+    const settings = await firstValueFrom(
+      this.dialog
+        .open<AiConnectionFormDialog, AiConnection | null, AiSettings>(AiConnectionFormDialog, {
+          data: connection,
+        })
+        .afterClosed(),
+    );
+    if (settings) {
+      this.changed.emit(settings);
     }
   }
 
-  async disconnect(): Promise<void> {
-    await firstValueFrom(this.api.removeSettings());
-    this.changed.emit();
+  async activate(connection: AiConnection): Promise<void> {
+    this.changed.emit(await firstValueFrom(this.api.activateConnection(connection.id)));
+  }
+
+  async remove(connection: AiConnection): Promise<void> {
+    if (
+      confirm(this.transloco.translate('ai.connections.confirmDelete', { name: connection.name }))
+    ) {
+      this.changed.emit(await firstValueFrom(this.api.removeConnection(connection.id)));
+    }
+  }
+
+  async setMorningDigest(morningDigest: boolean): Promise<void> {
+    this.changed.emit(await firstValueFrom(this.api.savePreferences({ morningDigest })));
   }
 }

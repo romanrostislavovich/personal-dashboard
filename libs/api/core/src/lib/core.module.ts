@@ -4,8 +4,11 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { AchievementsController } from './achievements/achievements.controller';
 import { AchievementsService } from './achievements/achievements.service';
+import { AiConnectionsService } from './ai/ai-connections.service';
 import { AiController } from './ai/ai.controller';
-import { AiIntegrations } from './ai/ai.integrations';
+import { AiTelegramAssistant } from './ai/ai-telegram.assistant';
+import { CoreAiTools } from './ai/core.ai-tools';
+import { MorningDigestJob } from './ai/morning-digest.job';
 import { AiService } from './ai/ai.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthGuard } from './auth/auth.guard';
@@ -87,7 +90,10 @@ class HealthController {
     InAppChannel,
     AchievementsService,
     AiService,
-    AiIntegrations,
+    AiConnectionsService,
+    CoreAiTools,
+    AiTelegramAssistant,
+    MorningDigestJob,
     SyncStore,
     SyncService,
     SyncClient,

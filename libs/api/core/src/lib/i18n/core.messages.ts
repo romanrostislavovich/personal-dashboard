@@ -16,7 +16,13 @@ const messages = {
     askDescription: 'Ask AI about your data: /ask how much did I spend in September?',
     newChatDescription: 'Start a new conversation with the assistant',
     newChatDone: '🧹 Started a new conversation.',
-    assistantFailed: 'The AI request failed. Check the AI settings in the dashboard and try again.',
+    assistantFailed:
+      'The AI request failed. Check the AI settings in the dashboard or switch the model: /model',
+    modelDescription: 'Switch the AI model: /model 2',
+    modelList: (lines: string[]) =>
+      `🤖 AI connections:\n${lines.join('\n')}\n\nSwitch: /model <number>`,
+    modelUsage: 'Send the number from the list: /model 2. The list: /model',
+    modelSwitched: (name: string, model: string) => `✅ Now answering: ${name} (${model})`,
     telegramFileTooLarge: 'The file is larger than 20 MB — Telegram does not let bots download it.',
     attachmentUnsupported:
       'I can read PDF, Excel (.xlsx), CSV and text files. Photos go to the diary.',
@@ -38,7 +44,13 @@ const messages = {
     askDescription: 'Вопрос AI по твоим данным: /ask сколько я потратил в сентябре?',
     newChatDescription: 'Начать новый разговор с ассистентом',
     newChatDone: '🧹 Начали новый разговор.',
-    assistantFailed: 'Запрос к AI не удался. Проверь настройки AI в дашборде и попробуй ещё раз.',
+    assistantFailed:
+      'Запрос к AI не удался. Проверь настройки AI в дашборде или переключи модель: /model',
+    modelDescription: 'Переключить модель AI: /model 2',
+    modelList: (lines: string[]) =>
+      `🤖 Подключения AI:\n${lines.join('\n')}\n\nПереключить: /model <номер>`,
+    modelUsage: 'Отправь номер из списка: /model 2. Список: /model',
+    modelSwitched: (name: string, model: string) => `✅ Теперь отвечает: ${name} (${model})`,
     telegramFileTooLarge: 'Файл больше 20 МБ — Telegram не даёт ботам скачивать такие.',
     attachmentUnsupported:
       'Я читаю PDF, Excel (.xlsx), CSV и текстовые файлы. Фото уходят в дневник.',

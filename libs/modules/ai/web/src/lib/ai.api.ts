@@ -4,8 +4,9 @@ import {
   AiAttachmentUpload,
   AiChatMessage,
   AiChatResponse,
+  AiConnectionInput,
+  AiPreferences,
   AiSettings,
-  AiSettingsInput,
 } from '@pd/contracts';
 
 /** The AI gateway lives in the core (`/api/ai`); modules add tools to it. */
@@ -17,12 +18,23 @@ export class AiApi {
     return httpResource<AiSettings>(() => '/api/ai/settings');
   }
 
-  saveSettings(input: AiSettingsInput) {
-    return this.http.put<AiSettings>('/api/ai/settings', input);
+  savePreferences(preferences: AiPreferences) {
+    return this.http.put<AiSettings>('/api/ai/preferences', preferences);
   }
 
-  removeSettings() {
-    return this.http.delete<void>('/api/ai/settings');
+  /** The connection is checked with a short request before it is saved. */
+  saveConnection(input: AiConnectionInput, id?: string) {
+    return id
+      ? this.http.put<AiSettings>(`/api/ai/connections/${id}`, input)
+      : this.http.post<AiSettings>('/api/ai/connections', input);
+  }
+
+  removeConnection(id: string) {
+    return this.http.delete<AiSettings>(`/api/ai/connections/${id}`);
+  }
+
+  activateConnection(id: string) {
+    return this.http.post<AiSettings>(`/api/ai/connections/${id}/activate`, {});
   }
 
   chat(messages: AiChatMessage[]) {

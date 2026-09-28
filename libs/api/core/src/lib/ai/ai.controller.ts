@@ -5,6 +5,8 @@ import {
   Delete,
   Get,
   HttpCode,
+  Param,
+  ParseUUIDPipe,
   Post,
   Put,
   UploadedFile,
@@ -17,12 +19,15 @@ import {
   AiChatRequest,
   aiChatRequestSchema,
   AiChatResponse,
+  AiConnectionInput,
+  aiConnectionInputSchema,
+  AiPreferences,
+  aiPreferencesSchema,
   AiSettings,
-  AiSettingsInput,
-  aiSettingsInputSchema,
 } from '@pd/contracts';
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
 import { ZodValidationPipe } from '../validation/zod-validation.pipe';
+import { AiConnectionsService } from './ai-connections.service';
 import { AiService } from './ai.service';
 import { AttachmentError, attachmentText } from './attachment-text';
 
@@ -34,25 +39,58 @@ interface UploadedDocument {
 
 @Controller('ai')
 export class AiController {
-  constructor(private readonly ai: AiService) {}
+  constructor(
+    private readonly ai: AiService,
+    private readonly connections: AiConnectionsService,
+  ) {}
 
   @Get('settings')
   settings(@CurrentUser() user: AuthUser): Promise<AiSettings> {
-    return this.ai.getSettings(user.id);
+    return this.connections.settings(user.id);
   }
 
-  @Put('settings')
-  saveSettings(
+  @Put('preferences')
+  savePreferences(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(aiSettingsInputSchema)) input: AiSettingsInput,
+    @Body(new ZodValidationPipe(aiPreferencesSchema)) preferences: AiPreferences,
   ): Promise<AiSettings> {
-    return this.ai.saveSettings(user.id, input);
+    return this.connections.savePreferences(user.id, preferences);
   }
 
-  @Delete('settings')
-  @HttpCode(204)
-  removeSettings(@CurrentUser() user: AuthUser) {
-    return this.ai.removeSettings(user.id);
+  // --- Connections: several providers, one active ---
+
+  @Post('connections')
+  createConnection(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(aiConnectionInputSchema)) input: AiConnectionInput,
+  ): Promise<AiSettings> {
+    return this.connections.create(user.id, input);
+  }
+
+  @Put('connections/:id')
+  updateConnection(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(aiConnectionInputSchema)) input: AiConnectionInput,
+  ): Promise<AiSettings> {
+    return this.connections.update(user.id, id, input);
+  }
+
+  @Delete('connections/:id')
+  removeConnection(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<AiSettings> {
+    return this.connections.remove(user.id, id);
+  }
+
+  @Post('connections/:id/activate')
+  @HttpCode(200)
+  activateConnection(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<AiSettings> {
+    return this.connections.activate(user.id, id);
   }
 
   /**

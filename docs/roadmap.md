@@ -22,7 +22,8 @@
 - **Games:** Dota 2 (full match history of every mode, via OpenDota) and World of Warcraft (Battle.net)
 - **Achievements:** 110+ achievements across all modules, rarities, XP and player level
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
-  `/ask` in Telegram, morning digest, weekly diary summary
+  `/ask` in Telegram, morning digest, weekly diary summary; several saved connections with their
+  keys — switch the active one in one click (chat header, settings, `/model` in Telegram)
 - **Telegram assistant:** free-form messages go to the AI, which remembers the conversation and
   can add, edit and delete almost everything the dashboard can (asks before deleting)
 - **Files for the AI:** PDF, Excel, CSV and text files in the chat and in Telegram — e.g. a bank
@@ -39,6 +40,34 @@
   (bank notifications / SMS → transactions), then everything else the phone knows
 - **Shared client core** for web, desktop and mobile: API client, auth, realtime events, i18n and
   contracts in one library, so every client behaves the same
+- **AI with full control of the platform, including its own code.** The assistant can already
+  change data through tools; the next step is settings, modules and code. Guard rails before it
+  touches code: changes go through a branch and a pull request, CI (lint, tests, build) must pass,
+  the user approves every merge and deploy, a deploy can be rolled back in one step, the agent
+  runs in a sandbox without production secrets, and every action is written to an audit log.
+  Secrets, auth and the guard rails themselves stay out of its reach.
+- **AI security agent, 24/7.** A separate agent with its own model connection and read-only
+  access that watches the server and the app: failed logins and unusual activity, open ports and
+  the firewall, TLS certificates, dependency vulnerabilities (`npm audit`, image scans), leaked
+  secrets in the repository, backups actually being made, suspicious changes in the database. It
+  reports through notifications with a severity and a suggested fix and never fixes things itself
+  without approval. It must not share tools or context with the main assistant, so a prompt
+  injection in user data cannot switch it off.
+
+### Code health
+
+Measured with ESLint `complexity` (threshold 8) and friends; most functions are simple — these are
+the ones worth a look:
+
+- Dota: `DotaService.sync` (17) and `summary` (14, five sequential queries → `Promise.all`);
+  `DotaCareerService.load` scores 32 only because of `?? 0` fallbacks — `coalesce` in SQL removes
+  them
+- `SyncStore.applyChange` (12) and `keepLoser` (6 parameters → an object)
+- Diary editor `mark()` (13); `TelegramBotService.onApplicationBootstrap` (92 lines → one method
+  per update type)
+- Achievement and AI tool registrations are long but flat lists — split by topic like
+  `finance.ai-tools.ts`, no logic change needed
+- Updates: Angular 22.2 and Nx 23.2.1 (minor), NestJS 12 (major, plan separately)
 
 ### Ideas
 

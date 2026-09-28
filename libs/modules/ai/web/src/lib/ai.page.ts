@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
   inject,
   signal,
@@ -11,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -20,6 +22,7 @@ import {
   AI_MAX_ATTACHMENTS,
   AiAttachment,
   AiChatMessage,
+  AiConnection,
 } from '@pd/contracts';
 import { MarkdownPipe } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
@@ -44,6 +47,7 @@ const SUGGESTION_KEYS = ['birthdays', 'spending', 'sites', 'diary', 'music'];
     MatButtonModule,
     MatChipsModule,
     MatIconModule,
+    MatMenuModule,
     MatProgressBarModule,
     TranslocoPipe,
     MarkdownPipe,
@@ -63,6 +67,10 @@ export class AiPage {
   protected readonly draft = signal('');
   protected readonly thinking = signal(false);
   protected readonly showSettings = signal(false);
+  protected readonly activeConnection = computed(() => {
+    const settings = this.settings.value();
+    return settings?.connections.find((c) => c.id === settings.activeConnectionId) ?? null;
+  });
   /** Files read by the server, waiting to be sent with the next message. */
   protected readonly attachments = signal<AiAttachment[]>([]);
   protected readonly uploading = signal(false);
@@ -88,36 +96,32 @@ export class AiPage {
   async send(text = this.draft()): Promise<void> {
     const question = text.trim();
     const attachments = this.attachments();
-    if ((!question && !attachments.length) || this.thinking() || this.uploading()) {
+    if (!this.canSend(question, attachments)) {
       return;
     }
     this.draft.set('');
     this.attachments.set([]);
     this.attachError.set(null);
-    this.update([
-      ...this.history(),
-      { role: 'user', content: question, ...(attachments.length ? { attachments } : {}) },
-    ]);
+    this.append({
+      role: 'user',
+      content: question,
+      ...(attachments.length ? { attachments } : {}),
+    });
     this.thinking.set(true);
     try {
-      // Only the role, text and files are sent to the model, no internal fields.
-      const messages = this.history()
-        .filter((m) => !m.isError)
-        .map(({ role, content, attachments }) => ({ role, content, attachments }));
-      const { reply, toolsUsed } = await firstValueFrom(this.api.chat(messages));
-      this.update([...this.history(), { role: 'assistant', content: reply, toolsUsed }]);
+      const { reply, toolsUsed } = await firstValueFrom(this.api.chat(this.requestMessages()));
+      this.append({ role: 'assistant', content: reply, toolsUsed });
     } catch (error) {
-      const key =
-        error instanceof HttpErrorResponse && error.status === 400
-          ? 'ai.errors.api'
-          : 'ai.errors.generic';
-      this.update([
-        ...this.history(),
-        { role: 'assistant', content: this.transloco.translate(key), isError: true },
-      ]);
+      const key = isProviderError(error) ? 'ai.errors.api' : 'ai.errors.generic';
+      this.append({ role: 'assistant', content: this.transloco.translate(key), isError: true });
     } finally {
       this.thinking.set(false);
     }
+  }
+
+  /** The one-click switch from the chat header: the next answer comes from this connection. */
+  async useConnection(connection: AiConnection): Promise<void> {
+    this.settings.set(await firstValueFrom(this.api.activateConnection(connection.id)));
   }
 
   /** Reads the chosen files on the server; they are sent with the next message. */
@@ -128,25 +132,9 @@ export class AiPage {
     this.attachError.set(null);
     this.uploading.set(true);
     try {
-      for (const file of files) {
-        if (this.attachments().length >= AI_MAX_ATTACHMENTS) {
-          break;
-        }
-        if (file.size > AI_ATTACHMENT_MAX_BYTES) {
-          this.attachError.set(this.transloco.translate('ai.attach.tooLarge', { name: file.name }));
-          continue;
-        }
-        try {
-          const { name, text, truncated } = await firstValueFrom(this.api.uploadAttachment(file));
-          this.attachments.update((list) => [...list, { name, text }]);
-          if (truncated) {
-            this.attachError.set(this.transloco.translate('ai.attach.truncated', { name }));
-          }
-        } catch (error) {
-          this.attachError.set(
-            this.transloco.translate(attachErrorKey(error), { name: file.name }),
-          );
-        }
+      const room = AI_MAX_ATTACHMENTS - this.attachments().length;
+      for (const file of files.slice(0, room)) {
+        await this.readFile(file);
       }
     } finally {
       this.uploading.set(false);
@@ -173,6 +161,38 @@ export class AiPage {
     this.update([]);
   }
 
+  private canSend(question: string, attachments: AiAttachment[]): boolean {
+    const hasContent = Boolean(question) || attachments.length > 0;
+    return hasContent && !this.thinking() && !this.uploading();
+  }
+
+  /** Only the role, text and files go to the model — no internal fields, no error bubbles. */
+  private requestMessages(): AiChatMessage[] {
+    return this.history()
+      .filter((m) => !m.isError)
+      .map(({ role, content, attachments }) => ({ role, content, attachments }));
+  }
+
+  private async readFile(file: File): Promise<void> {
+    if (file.size > AI_ATTACHMENT_MAX_BYTES) {
+      this.attachError.set(this.transloco.translate('ai.attach.tooLarge', { name: file.name }));
+      return;
+    }
+    try {
+      const { name, text, truncated } = await firstValueFrom(this.api.uploadAttachment(file));
+      this.attachments.update((list) => [...list, { name, text }]);
+      if (truncated) {
+        this.attachError.set(this.transloco.translate('ai.attach.truncated', { name }));
+      }
+    } catch (error) {
+      this.attachError.set(this.transloco.translate(attachErrorKey(error), { name: file.name }));
+    }
+  }
+
+  private append(entry: ChatEntry): void {
+    this.update([...this.history(), entry]);
+  }
+
   private update(history: ChatEntry[]): void {
     this.history.set(history);
     try {
@@ -182,6 +202,11 @@ export class AiPage {
     }
     setTimeout(() => this.messagesEnd()?.nativeElement.scrollIntoView({ behavior: 'smooth' }));
   }
+}
+
+/** The provider rejected the request (a bad key, no balance): switching models may help. */
+function isProviderError(error: unknown): boolean {
+  return error instanceof HttpErrorResponse && error.status === 400;
 }
 
 /** The server says why a file could not be read (see AttachmentError). */

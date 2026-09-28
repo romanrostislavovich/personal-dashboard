@@ -39,15 +39,24 @@
     "apiKeyHint": "Stored encrypted on the server. Not needed for Ollama.",
     "morningDigest": "Morning digest at 08:30 (birthdays, websites, spending, news)",
     "save": "Save and verify",
-    "saved": "Connected",
-    "disconnect": "Disconnect",
     "connectionFailed": "Could not connect: check the URL, model and key"
   },
   "errors": {
-    "api": "The AI provider returned an error. Check the key and balance in the settings.",
+    "api": "The AI provider returned an error. Check the key and balance in the settings or switch to another connection.",
     "generic": "Something went wrong. Please try again."
   },
   "widget": {
     "subtitle": "Ask about your data"
+  },
+  "connections": {
+    "title": "Connections",
+    "add": "Add connection",
+    "edit": "Edit connection",
+    "name": "Name",
+    "active": "Active",
+    "use": "Use",
+    "empty": "No connections yet: add one to start using AI.",
+    "checking": "Checking…",
+    "confirmDelete": "Delete the “{{name}}” connection and its key?"
   }
 }

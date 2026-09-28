@@ -1,13 +1,30 @@
-import { boolean, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../users/users.schema';
 
-/** User AI settings. The API key is stored separately in SecretsService (`ai.api-key`). */
+/**
+ * Saved AI connections: several per user, one of them active (see `aiSettings`).
+ * The API key is stored separately in SecretsService under `ai.connection.<id>`.
+ */
+export const aiConnections = pgTable('ai_connections', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text().notNull(),
+  provider: text().notNull(),
+  baseUrl: text().notNull(),
+  model: text().notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+/** User AI settings: which connection is active, the morning digest. */
 export const aiSettings = pgTable('ai_settings', {
   userId: uuid()
     .primaryKey()
     .references(() => users.id, { onDelete: 'cascade' }),
-  provider: text().notNull(),
-  baseUrl: text().notNull(),
-  model: text().notNull(),
+  // Deleting the active connection leaves none active; the service then picks another.
+  activeConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
   morningDigest: boolean().notNull().default(false),
 });
+
+export type AiConnectionRow = typeof aiConnections.$inferSelect;

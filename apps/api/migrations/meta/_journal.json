@@ -92,6 +92,20 @@
       "when": 1790540229319,
       "tag": "0012_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790588020697,
+      "tag": "0013_ai_connections",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790588036502,
+      "tag": "0014_ai_settings_drop_connection",
+      "breakpoints": true
     }
   ]
 }
