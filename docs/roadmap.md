@@ -43,6 +43,8 @@
 - **Fitness** — workouts, activity and body metrics
 - **SoundCloud** — my own mixes and tracks: plays, likes, reposts and comments
 - **Science** — a section for science
+- **Morning weather digest** — a weather forecast for where I am, sent in the morning (the
+  weather service is not chosen yet)
 - **Voice messages in Telegram** — the bot takes voice messages, turns them into text (speech
   recognition) and handles them like a typed message: a diary note, a command, a question to AI
 - **Faster sync of large amounts of data** — a client applies changes row by row (about 150 rows a
