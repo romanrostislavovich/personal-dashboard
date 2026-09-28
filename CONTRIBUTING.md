@@ -34,6 +34,18 @@ npx prettier --check "apps/**/*.{ts,html,scss}" "libs/**/*.{ts,html,scss,json}"
   `@pd/contracts`. ESLint will tell you if a boundary is crossed.
 - Keep the code readable for humans: small files, clear names, comments where the _why_ is not obvious.
 
+## Dependency overrides
+
+`overrides` in `package.json` pin patched versions of transitive dependencies that `npm audit`
+flags and whose parents have no fixed release yet. Remove an entry once its parent ships the fix
+(check with `npm ls <package>` and `npm audit`):
+
+- `nx` → `smol-toml`: nx pins 1.6.1 (DoS on malformed TOML).
+- `sockjs` → `uuid`: sockjs (via webpack-dev-server) is unmaintained and asks for uuid 8; it only
+  calls `v4()`, which uuid 11 still has.
+- `@esbuild-kit/core-utils` → `esbuild`: drizzle-kit still depends on esbuild-kit, which asks for
+  esbuild 0.18; it uses the same esbuild as the rest of the repo instead.
+
 ## Commits and pull requests
 
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `feat(music): …`, `fix(finance): …`.
