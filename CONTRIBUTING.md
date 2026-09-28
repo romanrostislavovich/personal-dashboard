@@ -27,6 +27,9 @@ npx prettier --check "apps/**/*.{ts,html,scss}" "libs/**/*.{ts,html,scss,json}"
 - UI texts go to `i18n/en.json` **and** `i18n/ru.json` of the module (keys must match);
   server texts go to `*.messages.ts` with both `en` and `ru`.
 - Keep pure logic (dates, calculations) in small functions with unit tests next to them.
+- Tests that need PostgreSQL (`*.db.spec.ts`) run only when `TEST_DATABASE_URL` is set, e.g.
+  `TEST_DATABASE_URL=postgres://dashboard:dashboard@localhost:5432/dashboard npm test` with
+  `npm run db:up` running (use your `DB_PORT` if it differs). CI always runs them.
 - Modules must not import other modules — use the core (`@pd/api-core`, `@pd/web-core`) and
   `@pd/contracts`. ESLint will tell you if a boundary is crossed.
 - Keep the code readable for humans: small files, clear names, comments where the _why_ is not obvious.

@@ -5,5 +5,20 @@
   "projectType": "library",
   "tags": ["scope:api", "type:core"],
   "// targets": "to see all targets run: nx show project api-core --web",
-  "targets": {}
+  "targets": {
+    "test": {
+      "// inputs": "the inferred ones plus the sync database test: its DB and the migrations it applies",
+      "inputs": [
+        "default",
+        "^production",
+        { "fileset": "{projectRoot}/tsconfig.spec.json", "dependencies": true },
+        { "json": "{workspaceRoot}/tsconfig.json", "fields": ["compilerOptions"] },
+        { "externalDependencies": ["vitest"] },
+        { "env": "CI" },
+        { "env": "TEST_DATABASE_URL" },
+        "{workspaceRoot}/apps/api/migrations/**/*",
+        { "dependentTasksOutputFiles": "**/*.js", "transitive": true }
+      ]
+    }
+  }
 }
