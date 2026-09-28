@@ -56,10 +56,13 @@ const RECURRING_FIELDS = {
 /** Transaction ids come from the model: check the format before querying the database. */
 const idArgs = z.object({ id: z.uuid() });
 
-/** One call adds a whole bank statement; a longer one is split into several calls. */
-const MAX_BATCH = 100;
+/** Enough for a month of an active card; a longer statement is split into several calls. */
+const MAX_BATCH = 500;
 const batchArgs = z.object({
-  transactions: z.array(transactionInputSchema).min(1).max(MAX_BATCH),
+  transactions: z
+    .array(transactionInputSchema)
+    .min(1)
+    .max(MAX_BATCH, `At most ${MAX_BATCH} per call: send the rest with more calls now`),
 });
 
 /**
@@ -126,7 +129,8 @@ export class FinanceAiTools implements OnModuleInit {
       writes: true,
       description:
         `Records up to ${MAX_BATCH} incomes and expenses at once — for a bank statement or a ` +
-        'receipt the user sent. Before calling, load finance_transactions for the covered ' +
+        'receipt the user sent; if there are more, make several calls in the same turn. ' +
+        'Before calling, load finance_transactions for the covered ' +
         'period and leave out those already recorded (same date, amount and kind). Leave out ' +
         'transfers between the own accounts and card top-ups. Put the merchant or purpose into ' +
         "note; reuse the user's existing categories. All are saved or none (an error names the " +

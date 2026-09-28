@@ -54,6 +54,8 @@ const WRITE_RULES = [
   'Every request to change data needs its own tool call in this turn, even if similar changes',
   'were made earlier in the conversation. Never say that something was saved, added or recorded',
   'unless a tool call in this turn returned success; if a tool returned an error, say so.',
+  'If a tool error tells you how to fix the call (split a batch, fix a field), fix it and call',
+  'again right away in this turn; never answer with a promise to do it later.',
 ];
 
 /** When the conversation has files (see withAttachments). */
