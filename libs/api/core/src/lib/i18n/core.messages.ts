@@ -17,6 +17,12 @@ const messages = {
     newChatDescription: 'Start a new conversation with the assistant',
     newChatDone: '🧹 Started a new conversation.',
     assistantFailed: 'The AI request failed. Check the AI settings in the dashboard and try again.',
+    telegramFileTooLarge: 'The file is larger than 20 MB — Telegram does not let bots download it.',
+    attachmentUnsupported:
+      'I can read PDF, Excel (.xlsx), CSV and text files. Photos go to the diary.',
+    attachmentEmpty:
+      'There is no text in this file — probably a scan. Export the statement as PDF with text or CSV.',
+    attachmentFailed: 'Could not read the file. Is it damaged or password-protected?',
   },
   ru: {
     telegramLinked: '✅ Готово! Теперь уведомления дашборда будут приходить сюда.',
@@ -33,6 +39,12 @@ const messages = {
     newChatDescription: 'Начать новый разговор с ассистентом',
     newChatDone: '🧹 Начали новый разговор.',
     assistantFailed: 'Запрос к AI не удался. Проверь настройки AI в дашборде и попробуй ещё раз.',
+    telegramFileTooLarge: 'Файл больше 20 МБ — Telegram не даёт ботам скачивать такие.',
+    attachmentUnsupported:
+      'Я читаю PDF, Excel (.xlsx), CSV и текстовые файлы. Фото уходят в дневник.',
+    attachmentEmpty:
+      'В файле нет текста — похоже, это скан. Выгрузи выписку в PDF с текстом или в CSV.',
+    attachmentFailed: 'Не получилось прочитать файл. Он не повреждён и не защищён паролем?',
   },
 };
 

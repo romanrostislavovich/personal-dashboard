@@ -5,6 +5,15 @@
   "placeholder": "Ask anything about your data… (Enter to send, Shift+Enter for a new line)",
   "thinking": "Thinking and checking your data…",
   "sources": "Looked at:",
+  "attach": {
+    "hint": "Attach a file: a bank statement, a receipt… (PDF, Excel, CSV, text)",
+    "remove": "Remove file",
+    "tooLarge": "{{name}} is larger than 20 MB",
+    "unsupported": "{{name}}: only PDF, Excel (.xlsx), CSV and text files can be read",
+    "empty": "{{name}} has no text — probably a scan. Export it as a PDF with text or CSV",
+    "failed": "Could not read {{name}}",
+    "truncated": "{{name}} is long: only its beginning will be sent"
+  },
   "emptyHint": "For example:",
   "suggestions": {
     "birthdays": "Which birthdays are this week and what could I give?",

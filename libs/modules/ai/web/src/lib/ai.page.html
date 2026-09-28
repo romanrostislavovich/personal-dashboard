@@ -41,7 +41,15 @@
               </span>
             }
           } @else {
-            <div class="bubble">{{ message.content }}</div>
+            @if (message.content) {
+              <div class="bubble">{{ message.content }}</div>
+            }
+            @for (file of message.attachments; track $index) {
+              <span class="file">
+                <mat-icon inline>description</mat-icon>
+                {{ file.name }}
+              </span>
+            }
           }
         </div>
       } @empty {
@@ -67,7 +75,41 @@
       <span #messagesEnd></span>
     </div>
 
+    @if (attachments().length || attachError()) {
+      <div class="attachments">
+        <mat-chip-set>
+          @for (file of attachments(); track $index) {
+            <mat-chip (removed)="removeAttachment($index)">
+              <mat-icon matChipAvatar>description</mat-icon>
+              {{ file.name }}
+              <button matChipRemove [attr.aria-label]="'ai.attach.remove' | transloco">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip>
+          }
+        </mat-chip-set>
+        @if (attachError(); as error) {
+          <span class="attach-error">{{ error }}</span>
+        }
+      </div>
+    }
+
     <div class="composer">
+      <label
+        class="attach"
+        [class.disabled]="uploading() || attachments().length >= maxAttachments"
+        [title]="'ai.attach.hint' | transloco"
+      >
+        <input
+          type="file"
+          multiple
+          hidden
+          [accept]="accept"
+          [disabled]="uploading() || attachments().length >= maxAttachments"
+          (change)="attach($event)"
+        />
+        <mat-icon>{{ uploading() ? 'hourglass_top' : 'attach_file' }}</mat-icon>
+      </label>
       <textarea
         [ngModel]="draft()"
         (ngModelChange)="draft.set($event)"
@@ -78,7 +120,7 @@
       <button
         matIconButton
         class="send"
-        [disabled]="!draft().trim() || thinking()"
+        [disabled]="(!draft().trim() && !attachments().length) || thinking() || uploading()"
         (click)="send()"
       >
         <mat-icon>send</mat-icon>

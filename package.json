@@ -53,8 +53,10 @@
     "marked": "^18.0.14",
     "pg": "^8.23.0",
     "pg-boss": "^12.35.0",
+    "read-excel-file": "^9.3.10",
     "reflect-metadata": "^0.2.0",
     "rxjs": "~7.8.0",
+    "unpdf": "^1.8.1",
     "zod": "^4.6.5",
     "zone.js": "0.16.2"
   },

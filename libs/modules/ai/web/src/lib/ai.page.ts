@@ -14,7 +14,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { AiChatMessage } from '@pd/contracts';
+import {
+  AI_ATTACHMENT_EXTENSIONS,
+  AI_ATTACHMENT_MAX_BYTES,
+  AI_MAX_ATTACHMENTS,
+  AiAttachment,
+  AiChatMessage,
+} from '@pd/contracts';
 import { MarkdownPipe } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
@@ -57,6 +63,12 @@ export class AiPage {
   protected readonly draft = signal('');
   protected readonly thinking = signal(false);
   protected readonly showSettings = signal(false);
+  /** Files read by the server, waiting to be sent with the next message. */
+  protected readonly attachments = signal<AiAttachment[]>([]);
+  protected readonly uploading = signal(false);
+  protected readonly attachError = signal<string | null>(null);
+  protected readonly accept = AI_ATTACHMENT_EXTENSIONS.join(',');
+  protected readonly maxAttachments = AI_MAX_ATTACHMENTS;
 
   constructor() {
     // A question from the home widget: /ai?q=...
@@ -75,17 +87,23 @@ export class AiPage {
 
   async send(text = this.draft()): Promise<void> {
     const question = text.trim();
-    if (!question || this.thinking()) {
+    const attachments = this.attachments();
+    if ((!question && !attachments.length) || this.thinking() || this.uploading()) {
       return;
     }
     this.draft.set('');
-    this.update([...this.history(), { role: 'user', content: question }]);
+    this.attachments.set([]);
+    this.attachError.set(null);
+    this.update([
+      ...this.history(),
+      { role: 'user', content: question, ...(attachments.length ? { attachments } : {}) },
+    ]);
     this.thinking.set(true);
     try {
-      // Only the role and text are sent to the model, no internal fields.
+      // Only the role, text and files are sent to the model, no internal fields.
       const messages = this.history()
         .filter((m) => !m.isError)
-        .map(({ role, content }) => ({ role, content }));
+        .map(({ role, content, attachments }) => ({ role, content, attachments }));
       const { reply, toolsUsed } = await firstValueFrom(this.api.chat(messages));
       this.update([...this.history(), { role: 'assistant', content: reply, toolsUsed }]);
     } catch (error) {
@@ -100,6 +118,43 @@ export class AiPage {
     } finally {
       this.thinking.set(false);
     }
+  }
+
+  /** Reads the chosen files on the server; they are sent with the next message. */
+  async attach(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = [...(input.files ?? [])];
+    input.value = '';
+    this.attachError.set(null);
+    this.uploading.set(true);
+    try {
+      for (const file of files) {
+        if (this.attachments().length >= AI_MAX_ATTACHMENTS) {
+          break;
+        }
+        if (file.size > AI_ATTACHMENT_MAX_BYTES) {
+          this.attachError.set(this.transloco.translate('ai.attach.tooLarge', { name: file.name }));
+          continue;
+        }
+        try {
+          const { name, text, truncated } = await firstValueFrom(this.api.uploadAttachment(file));
+          this.attachments.update((list) => [...list, { name, text }]);
+          if (truncated) {
+            this.attachError.set(this.transloco.translate('ai.attach.truncated', { name }));
+          }
+        } catch (error) {
+          this.attachError.set(
+            this.transloco.translate(attachErrorKey(error), { name: file.name }),
+          );
+        }
+      }
+    } finally {
+      this.uploading.set(false);
+    }
+  }
+
+  removeAttachment(index: number): void {
+    this.attachments.update((list) => list.filter((_, i) => i !== index));
   }
 
   askSuggestion(key: string): Promise<void> {
@@ -127,6 +182,20 @@ export class AiPage {
     }
     setTimeout(() => this.messagesEnd()?.nativeElement.scrollIntoView({ behavior: 'smooth' }));
   }
+}
+
+/** The server says why a file could not be read (see AttachmentError). */
+function attachErrorKey(error: unknown): string {
+  if (error instanceof HttpErrorResponse) {
+    if (error.status === 413) {
+      return 'ai.attach.tooLarge';
+    }
+    const reason = (error.error as { reason?: string } | null)?.reason;
+    if (reason === 'unsupported' || reason === 'empty') {
+      return `ai.attach.${reason}`;
+    }
+  }
+  return 'ai.attach.failed';
 }
 
 function loadHistory(): ChatEntry[] {

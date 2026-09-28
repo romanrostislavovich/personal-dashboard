@@ -119,3 +119,46 @@
     }
   }
 }
+
+.file {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-end;
+  margin-top: 4px;
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 900px;
+}
+
+.attach-error {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-error);
+}
+
+.attach {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--mat-sys-on-surface-variant);
+
+  &:hover {
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  &.disabled {
+    cursor: default;
+    opacity: 0.38;
+    pointer-events: none;
+  }
+}

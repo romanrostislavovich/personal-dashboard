@@ -9,7 +9,7 @@ export type AiProvider = (typeof AI_PROVIDERS)[number];
 
 export const AI_PROVIDER_PRESETS: Record<AiProvider, { baseUrl: string; model: string }> = {
   deepseek: { baseUrl: 'https://api.deepseek.com', model: 'deepseek-flash' },
-  openai: { baseUrl: 'https://api.openai.com/v1', model: '' },
+  openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-6-luna' },
   ollama: { baseUrl: 'http://localhost:11434/v1', model: '' },
   custom: { baseUrl: '', model: '' },
 };
@@ -34,12 +34,48 @@ export interface AiSettings {
   morningDigest: boolean;
 }
 
+/**
+ * Files the assistant can read: the server extracts their text (bank statements, receipts,
+ * price lists…) and the model gets it as part of the message. Images are not supported —
+ * not every provider has a vision model.
+ */
+export const AI_ATTACHMENT_EXTENSIONS = [
+  '.pdf',
+  '.xlsx',
+  '.csv',
+  '.tsv',
+  '.txt',
+  '.md',
+  '.json',
+  '.xml',
+  '.ofx',
+  '.qif',
+] as const;
+/** Telegram bots can download files up to 20 MB; the web upload uses the same limit. */
+export const AI_ATTACHMENT_MAX_BYTES = 20 * 1024 * 1024;
+/** Extracted text is cut to this length so a file fits into the model context. */
+export const AI_ATTACHMENT_MAX_CHARS = 60_000;
+export const AI_MAX_ATTACHMENTS = 3;
+
+export const aiAttachmentSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  text: z.string().max(AI_ATTACHMENT_MAX_CHARS),
+});
+export type AiAttachment = z.infer<typeof aiAttachmentSchema>;
+
+/** `POST /api/ai/attachments`: the text of an uploaded file, to be sent with a chat message. */
+export interface AiAttachmentUpload extends AiAttachment {
+  /** The text was longer than AI_ATTACHMENT_MAX_CHARS and was cut. */
+  truncated: boolean;
+}
+
 export const aiChatRequestSchema = z.object({
   messages: z
     .array(
       z.object({
         role: z.enum(['user', 'assistant']),
         content: z.string().max(20_000),
+        attachments: z.array(aiAttachmentSchema).max(AI_MAX_ATTACHMENTS).optional(),
       }),
     )
     .min(1)

@@ -9,6 +9,7 @@ import {
 } from '@pd/api-core';
 import {
   recurringPaymentInputSchema,
+  Transaction,
   TRANSACTION_KINDS,
   transactionInputSchema,
   TransactionQuery,
@@ -54,6 +55,12 @@ const RECURRING_FIELDS = {
 
 /** Transaction ids come from the model: check the format before querying the database. */
 const idArgs = z.object({ id: z.uuid() });
+
+/** One call adds a whole bank statement; a longer one is split into several calls. */
+const MAX_BATCH = 100;
+const batchArgs = z.object({
+  transactions: z.array(transactionInputSchema).min(1).max(MAX_BATCH),
+});
 
 /**
  * AI access to finance: totals, transactions, recurring payments, cost sources;
@@ -111,6 +118,37 @@ export class FinanceAiTools implements OnModuleInit {
       },
       handler: (userId, args) =>
         this.transactions.create(userId, transactionInputSchema.parse(args)),
+    });
+
+    this.ai.registerTool({
+      name: 'finance_add_transactions',
+      module: 'finance',
+      writes: true,
+      description:
+        `Records up to ${MAX_BATCH} incomes and expenses at once — for a bank statement or a ` +
+        'receipt the user sent. Before calling, load finance_transactions for the covered ' +
+        'period and leave out those already recorded (same date, amount and kind). Leave out ' +
+        'transfers between the own accounts and card top-ups. Put the merchant or purpose into ' +
+        "note; reuse the user's existing categories. All are saved or none (an error names the " +
+        'bad item). Returns how many were added and the totals.',
+      parameters: {
+        type: 'object',
+        properties: {
+          transactions: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: TRANSACTION_FIELDS,
+              required: ['kind', 'amount', 'currency', 'category', 'occurredOn'],
+            },
+          },
+        },
+        required: ['transactions'],
+      },
+      handler: async (userId, args) =>
+        importSummary(
+          await this.transactions.createMany(userId, batchArgs.parse(args).transactions),
+        ),
     });
 
     this.ai.registerTool({
@@ -267,6 +305,21 @@ export class FinanceAiTools implements OnModuleInit {
       },
     });
   }
+}
+
+/** Not the whole list: a hundred rows would only fill the model context. */
+function importSummary(added: Transaction[]) {
+  const totals = new Map<string, number>();
+  for (const { kind, currency, amount } of added) {
+    const key = `${kind} ${currency}`;
+    totals.set(key, (totals.get(key) ?? 0) + amount);
+  }
+  return {
+    added: added.length,
+    from: added.reduce((min, t) => (t.occurredOn < min ? t.occurredOn : min), added[0]?.occurredOn),
+    to: added.reduce((max, t) => (t.occurredOn > max ? t.occurredOn : max), added[0]?.occurredOn),
+    totals: [...totals].map(([key, total]) => ({ [key]: Math.round(total * 100) / 100 })),
+  };
 }
 
 function toQuery(args: Record<string, unknown>): TransactionQuery {

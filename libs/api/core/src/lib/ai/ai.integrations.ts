@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AiChatMessage, projectInputSchema } from '@pd/contracts';
+import { AiAttachment, AiChatMessage, projectInputSchema } from '@pd/contracts';
 import { AchievementsService } from '../achievements/achievements.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { BotDocument } from '../notifications/telegram/bot-command';
 import { TelegramBotService } from '../notifications/telegram/telegram-bot.service';
 import { ProjectsService } from '../projects/projects.service';
 import { SchedulerService } from '../scheduler/scheduler.service';
@@ -9,6 +10,7 @@ import { coreMessages } from '../i18n/core.messages';
 import { UsersService } from '../users/users.service';
 import { changedFields, findById, idParameters, NO_PARAMETERS } from './ai-tool';
 import { AiService } from './ai.service';
+import { AttachmentError, attachmentText } from './attachment-text';
 
 /** Telegram limits a message to 4096 characters. */
 const TELEGRAM_LIMIT = 4000;
@@ -40,7 +42,8 @@ const PROJECT_FIELDS = {
  * - core tools (projects and their changes, achievements);
  * - the bot command `/ask question`;
  * - the Telegram assistant: plain messages go to the AI, which can also change data
- *   (tools with `writes`); `/new` forgets the conversation;
+ *   (tools with `writes`); documents (a bank statement…) go with their text; `/new` forgets
+ *   the conversation;
  * - the morning digest at 08:30 for users who enabled it.
  */
 @Injectable()
@@ -113,6 +116,9 @@ export class AiIntegrations implements OnModuleInit {
     });
 
     this.telegram.registerTextHandler((user, text) => this.assist(user.id, user.locale, text));
+    this.telegram.registerDocumentHandler((user, document) =>
+      this.assistWithDocument(user.id, user.locale, document),
+    );
 
     this.scheduler.register({
       name: 'ai.morning-digest',
@@ -168,8 +174,41 @@ export class AiIntegrations implements OnModuleInit {
     });
   }
 
+  /** A document from the chat: its text goes to the assistant together with the caption. */
+  private async assistWithDocument(
+    userId: string,
+    locale: string,
+    document: BotDocument,
+  ): Promise<string> {
+    const messages = coreMessages(locale);
+    if (!(await this.ai.isConfigured(userId))) {
+      return messages.askNotConfigured;
+    }
+    let attachment: AiAttachment;
+    try {
+      attachment = await attachmentText({
+        name: document.fileName,
+        data: await document.download(),
+      });
+    } catch (error) {
+      if (error instanceof AttachmentError) {
+        return error.reason === 'unsupported'
+          ? messages.attachmentUnsupported
+          : messages.attachmentEmpty;
+      }
+      this.logger.warn(`Could not read a Telegram document for ${userId}: ${error}`);
+      return messages.attachmentFailed;
+    }
+    return this.assist(userId, locale, document.caption, [attachment]);
+  }
+
   /** One turn of the Telegram assistant, with the recent conversation as context. */
-  private async assist(userId: string, locale: string, text: string): Promise<string> {
+  private async assist(
+    userId: string,
+    locale: string,
+    text: string,
+    attachments?: AiAttachment[],
+  ): Promise<string> {
     const messages = coreMessages(locale);
     if (!(await this.ai.isConfigured(userId))) {
       return messages.askNotConfigured;
@@ -177,7 +216,11 @@ export class AiIntegrations implements OnModuleInit {
     const previous = this.conversations.get(userId);
     const history =
       previous && Date.now() - previous.updatedAt < CONVERSATION_TTL_MS ? previous.messages : [];
-    const conversation: AiChatMessage[] = [...history, { role: 'user', content: text }];
+    // The file text stays in the conversation: a follow-up ("yes, add them") needs it.
+    const conversation: AiChatMessage[] = [
+      ...history,
+      { role: 'user', content: text, ...(attachments && { attachments }) },
+    ];
     try {
       const { reply } = await this.ai.ask(userId, conversation, {
         plainText: true,

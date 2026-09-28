@@ -44,6 +44,22 @@ export class TransactionsService {
     return toTransaction(row);
   }
 
+  /** Several transactions at once (an imported bank statement): all are saved or none. */
+  async createMany(userId: string, inputs: TransactionInput[]): Promise<Transaction[]> {
+    const projectIds = new Set(inputs.map((input) => input.projectId).filter((id) => id != null));
+    for (const projectId of projectIds) {
+      await this.projects.assertOwned(userId, projectId);
+    }
+    if (inputs.length === 0) {
+      return [];
+    }
+    const rows = await this.db
+      .insert(transactions)
+      .values(inputs.map((input) => ({ userId, ...input })))
+      .returning();
+    return rows.map(toTransaction);
+  }
+
   async update(userId: string, id: string, input: TransactionInput): Promise<Transaction> {
     if (input.projectId) {
       await this.projects.assertOwned(userId, input.projectId);

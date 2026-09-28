@@ -40,6 +40,19 @@ export interface BotPhoto {
  */
 export type BotPhotoHandler = (user: UserRow, photo: BotPhoto) => Promise<string>;
 
+/** A file sent to the bot as a document (not as a compressed photo). */
+export interface BotDocument {
+  fileName: string;
+  caption: string;
+  download: () => Promise<Buffer>;
+}
+
+/**
+ * Handles documents sent to the bot (the AI assistant reads them).
+ * Returns the bot reply. Only one handler owns documents — the first registered.
+ */
+export type BotDocumentHandler = (user: UserRow, document: BotDocument) => Promise<string>;
+
 /**
  * Handles plain text messages (not commands) — the AI assistant.
  * Returns the bot reply. Only one handler owns free text — the first registered.

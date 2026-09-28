@@ -19,6 +19,11 @@ export interface ChatConnection {
   baseUrl: string;
   model: string;
   apiKey: string | null;
+  /**
+   * OpenAI reasoning models (GPT-6) call tools in Chat Completions only with `none`, and reject
+   * `temperature` otherwise. Other providers do not know the parameter, so it is not sent to them.
+   */
+  reasoningEffort?: 'none';
 }
 
 export class AiRequestError extends Error {
@@ -49,6 +54,7 @@ export async function chatCompletion(
       model: connection.model,
       messages,
       ...(tools.length > 0 ? { tools } : {}),
+      ...(connection.reasoningEffort ? { reasoning_effort: connection.reasoningEffort } : {}),
       temperature: 0.3,
     }),
   });

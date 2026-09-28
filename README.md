@@ -92,7 +92,7 @@ sent back to the browser.
 | Dota 2            | Games → Steam ID or profile link; enable “Expose Public Match Data” in Dota                                                         |
 | World of Warcraft | Games → Battle.net client ID and secret from develop.battle.net, then region / realm / character                                    |
 
-Telegram bot: just write to it — the AI assistant answers and can do almost anything the dashboard can on request: add, edit and delete birthdays, diary entries, transactions, recurring payments, projects, monitored sites, repositories and game accounts (it asks before deleting anything; keys and tokens are set up only in the dashboard). Commands: `/d text` — add to today’s diary entry, `/mood 1–5` — rate the day, `/today` — show today’s entry, `/ask question` — a one-off question, `/new` — start a new conversation. A photo sent to the bot goes into today’s entry.
+Telegram bot: just write to it — the AI assistant answers and can do almost anything the dashboard can on request: add, edit and delete birthdays, diary entries, transactions, recurring payments, projects, monitored sites, repositories and game accounts (it asks before deleting anything; keys and tokens are set up only in the dashboard). Commands: `/d text` — add to today’s diary entry, `/mood 1–5` — rate the day, `/today` — show today’s entry, `/ask question` — a one-off question, `/new` — start a new conversation. A photo sent to the bot goes into today’s entry; a file (PDF, Excel, CSV, text) goes to the assistant — send a bank statement and its transactions land in finance. Files can be attached in the AI chat of the dashboard too.
 
 ## Configuration
 

@@ -8,19 +8,21 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Locale, SUPPORTED_LOCALES, TelegramLinkResponse } from '@pd/contracts';
-import { Bot } from 'grammy';
+import { Bot, Context } from 'grammy';
 import { randomBytes } from 'node:crypto';
 import { AppConfig } from '../../config/env';
 import { coreMessages } from '../../i18n/core.messages';
 import { FALLBACK_LOCALE, localize } from '../../i18n/locale';
 import { UserActivityService } from '../../realtime/user-activity.service';
 import { UsersService } from '../../users/users.service';
-import { BotCommand, BotPhotoHandler, BotTextHandler } from './bot-command';
+import { BotCommand, BotDocumentHandler, BotPhotoHandler, BotTextHandler } from './bot-command';
 
 /** Telegram hides "typing…" after 5 seconds; AI answers can take longer. */
 const TYPING_REFRESH_MS = 4_000;
 
 const LINK_CODE_TTL_MS = 10 * 60 * 1000;
+/** The Bot API does not let bots download larger files. */
+const DOWNLOAD_LIMIT_BYTES = 20 * 1024 * 1024;
 
 interface PendingLink {
   userId: string;
@@ -44,6 +46,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   private readonly pendingLinks = new Map<string, PendingLink>();
   private readonly commands: BotCommand[] = [];
   private photoHandler: BotPhotoHandler | null = null;
+  private documentHandler: BotDocumentHandler | null = null;
   private textHandler: BotTextHandler | null = null;
   private readonly token: string | undefined;
   /** A sync client leaves receiving messages to the server (see docs/sync.md). */
@@ -76,6 +79,11 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   /** A module that accepts photos from the chat (see BotPhotoHandler). */
   registerPhotoHandler(handler: BotPhotoHandler): void {
     this.photoHandler ??= handler;
+  }
+
+  /** Who reads documents sent to the bot (see BotDocumentHandler). */
+  registerDocumentHandler(handler: BotDocumentHandler): void {
+    this.documentHandler ??= handler;
   }
 
   async onApplicationBootstrap(): Promise<void> {
@@ -127,6 +135,25 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       await ctx.reply(reply);
       this.activity.touched(user.id);
     });
+    this.bot.on('message:document', async (ctx) => {
+      const handler = this.documentHandler;
+      const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
+      if (!handler || !user) {
+        return;
+      }
+      const { file_id, file_name, file_size } = ctx.message.document;
+      if (file_size !== undefined && file_size > DOWNLOAD_LIMIT_BYTES) {
+        await ctx.reply(coreMessages(user.locale).telegramFileTooLarge);
+        return;
+      }
+      const document = {
+        fileName: file_name ?? 'file',
+        caption: ctx.message.caption ?? '',
+        download: () => this.downloadFile(file_id),
+      };
+      await ctx.reply(await this.whileTyping(ctx, () => handler(user, document)));
+      this.activity.touched(user.id);
+    });
     // Plain text (commands are handled above and never reach this point).
     this.bot.on('message:text', async (ctx) => {
       const handler = this.textHandler;
@@ -138,16 +165,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
         await ctx.reply(coreMessages(ctx.from?.language_code).telegramNotLinked);
         return;
       }
-      await ctx.replyWithChatAction('typing');
-      const typing = setInterval(
-        () => void ctx.replyWithChatAction('typing').catch(() => undefined),
-        TYPING_REFRESH_MS,
-      );
-      try {
-        await ctx.reply(await handler(user, ctx.message.text));
-      } finally {
-        clearInterval(typing);
-      }
+      await ctx.reply(await this.whileTyping(ctx, () => handler(user, ctx.message.text)));
       this.activity.touched(user.id);
     });
     this.bot.catch((error) => this.logger.error(error.message));
@@ -191,6 +209,20 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
 
   async sendMessage(chatId: string, html: string): Promise<void> {
     await this.bot?.api.sendMessage(chatId, html, { parse_mode: 'HTML' });
+  }
+
+  /** Shows "typing…" until a slow reply (an AI answer) is ready. */
+  private async whileTyping<T>(ctx: Context, work: () => Promise<T>): Promise<T> {
+    await ctx.replyWithChatAction('typing');
+    const typing = setInterval(
+      () => void ctx.replyWithChatAction('typing').catch(() => undefined),
+      TYPING_REFRESH_MS,
+    );
+    try {
+      return await work();
+    } finally {
+      clearInterval(typing);
+    }
   }
 
   /** Files are downloaded from the Bot API file server by their path. */
