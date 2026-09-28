@@ -95,6 +95,15 @@ export interface FinanceSummary {
   topExpenseCategories: CategoryTotal[];
 }
 
+/** Income and expenses of one month in one currency — for the cash flow chart. */
+export interface MonthCashFlow {
+  /** `YYYY-MM` */
+  month: string;
+  currency: string;
+  income: number;
+  expense: number;
+}
+
 /**
  * Sources of automatic cost import. Each one updates, once a day,
  * a single expense transaction for the current month.

@@ -49,6 +49,14 @@ export class FinanceController {
     return this.transactions.summary(user.id, query);
   }
 
+  @Get('cash-flow')
+  cashFlow(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(transactionQuerySchema)) query: TransactionQuery,
+  ) {
+    return this.transactions.cashFlow(user.id, query);
+  }
+
   @Post('transactions')
   createTransaction(
     @CurrentUser() user: AuthUser,

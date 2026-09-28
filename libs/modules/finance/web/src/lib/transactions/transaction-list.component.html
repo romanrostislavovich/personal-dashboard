@@ -1,0 +1,119 @@
+@if (!compact()) {
+  <div class="filters">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search">
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+        [placeholder]="'finance.list.search' | transloco"
+      />
+    </mat-form-field>
+
+    <mat-button-toggle-group
+      hideSingleSelectionIndicator
+      [value]="kind()"
+      (change)="kind.set($event.value)"
+    >
+      <mat-button-toggle value="">{{ 'finance.scope.all' | transloco }}</mat-button-toggle>
+      <mat-button-toggle value="expense">{{ 'finance.kpi.expense' | transloco }}</mat-button-toggle>
+      <mat-button-toggle value="income">{{ 'finance.kpi.income' | transloco }}</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    @if (category(); as selected) {
+      <mat-chip-set>
+        <mat-chip (removed)="category.set(null)">
+          {{ selected }}
+          <button matChipRemove [attr.aria-label]="'finance.list.clearFilters' | transloco">
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip>
+      </mat-chip-set>
+    }
+  </div>
+}
+
+@for (group of days(); track group.day) {
+  <section class="day">
+    <header class="day-header">
+      <span class="day-label">
+        @if (dayLabel(group.day); as key) {
+          {{ key | transloco }}
+        } @else {
+          {{ group.day | date: 'EEEE, d MMMM' }}
+        }
+      </span>
+      @if (!compact()) {
+        <span class="day-total">
+          @for (total of group.totals; track total.currency; let last = $last) {
+            {{ total.net > 0 ? '+' : '' }}{{ total.net | currency: total.currency
+            }}{{ last ? '' : ' · ' }}
+          }
+        </span>
+      }
+    </header>
+
+    @for (t of group.transactions; track t.id) {
+      <div class="row">
+        <!-- The auto-import amount is recalculated by the sync, it is not edited by hand. -->
+        <button type="button" class="main" [disabled]="!!t.costSourceId" (click)="edit.emit(t)">
+          <span class="avatar" [class.income]="t.kind === 'income'">
+            <mat-icon>{{ icon(t) }}</mat-icon>
+          </span>
+          <span class="text">
+            <span class="title">{{ t.note || t.category }}</span>
+            <span class="subtitle">
+              @if (t.note) {
+                {{ t.category }}
+              }
+              @if (t.projectId && projectNames().get(t.projectId); as project) {
+                <span class="wallet">{{ project }}</span>
+              }
+              @if (t.recurringPaymentId) {
+                <mat-icon inline [matTooltip]="'finance.list.recurring' | transloco"
+                  >autorenew</mat-icon
+                >
+              }
+              @if (t.costSourceId) {
+                <mat-icon inline [matTooltip]="'finance.costSources.autoTooltip' | transloco"
+                  >cloud_sync</mat-icon
+                >
+              }
+            </span>
+          </span>
+          <span class="amount" [class.income]="t.kind === 'income'">
+            {{ t.kind === 'income' ? '+' : '−' }}{{ t.amount | currency: t.currency }}
+          </span>
+        </button>
+        <button
+          matIconButton
+          [matMenuTriggerFor]="menu"
+          [attr.aria-label]="'finance.list.actions' | transloco"
+        >
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu" xPosition="before">
+          @if (!t.costSourceId) {
+            <button mat-menu-item (click)="edit.emit(t)">
+              <mat-icon>edit</mat-icon> {{ 'core.actions.edit' | transloco }}
+            </button>
+          }
+          <button mat-menu-item (click)="remove.emit(t)">
+            <mat-icon>delete</mat-icon> {{ 'core.actions.delete' | transloco }}
+          </button>
+        </mat-menu>
+      </div>
+    }
+  </section>
+} @empty {
+  <div class="empty-state">
+    @if (isFiltered()) {
+      <p class="empty">{{ 'finance.list.notFound' | transloco }}</p>
+      <button matButton (click)="clearFilters()">
+        {{ 'finance.list.clearFilters' | transloco }}
+      </button>
+    } @else {
+      <p class="empty">{{ 'finance.transaction.empty' | transloco }}</p>
+    }
+  </div>
+}

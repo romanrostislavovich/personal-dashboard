@@ -4,6 +4,7 @@ import {
   CostSource,
   CostSourceInput,
   FinanceSummary,
+  MonthCashFlow,
   RecurringPayment,
   RecurringPaymentInput,
   Transaction,
@@ -33,6 +34,14 @@ export class FinanceApi {
       url: `${BASE}/summary`,
       params: toParams(query()),
     }));
+  }
+
+  /** Income and expenses per month and currency — for the chart and month-over-month deltas. */
+  cashFlow(query: () => TransactionQuery) {
+    return httpResource<MonthCashFlow[]>(
+      () => ({ url: `${BASE}/cash-flow`, params: toParams(query()) }),
+      { defaultValue: [] },
+    );
   }
 
   recurringPayments() {

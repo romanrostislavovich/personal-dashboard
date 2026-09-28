@@ -1,7 +1,13 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DB, Database, ProjectsService } from '@pd/api-core';
-import { FinanceSummary, Transaction, TransactionInput, TransactionQuery } from '@pd/contracts';
-import { and, desc, eq, gte, isNull, lte, SQL, sum } from 'drizzle-orm';
+import {
+  FinanceSummary,
+  MonthCashFlow,
+  Transaction,
+  TransactionInput,
+  TransactionQuery,
+} from '@pd/contracts';
+import { and, asc, desc, eq, gte, isNull, lte, sql, SQL, sum } from 'drizzle-orm';
 import { TransactionRow, transactions } from '../finance.schema';
 
 const TOP_CATEGORIES_LIMIT = 5;
@@ -114,6 +120,31 @@ export class TransactionsService {
       }),
       topExpenseCategories: topCategories,
     };
+  }
+
+  /** Income and expenses per month and currency, oldest month first. */
+  async cashFlow(userId: string, query: TransactionQuery): Promise<MonthCashFlow[]> {
+    const month = sql<string>`to_char(${transactions.occurredOn}, 'YYYY-MM')`;
+    const rows = await this.db
+      .select({
+        month,
+        currency: transactions.currency,
+        kind: transactions.kind,
+        total: sum(transactions.amount).mapWith(Number),
+      })
+      .from(transactions)
+      .where(this.filter(userId, query))
+      .groupBy(month, transactions.currency, transactions.kind)
+      .orderBy(asc(month));
+
+    const byMonth = new Map<string, MonthCashFlow>();
+    for (const { month, currency, kind, total } of rows) {
+      const key = `${month} ${currency}`;
+      const entry = byMonth.get(key) ?? { month, currency, income: 0, expense: 0 };
+      entry[kind] = round(total);
+      byMonth.set(key, entry);
+    }
+    return [...byMonth.values()];
   }
 
   private filter(userId: string, { from, to, scope }: TransactionQuery): SQL | undefined {

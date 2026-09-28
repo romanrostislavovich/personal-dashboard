@@ -18,20 +18,37 @@
 }
 
 .scope {
-  width: 220px;
+  width: 200px;
 }
 
-.summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.category-row {
+.overview {
   display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.currencies {
+  align-self: flex-start;
+}
+
+// Two cards side by side on wide screens, one under another on narrow ones.
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+// The chart is the main card: with upcoming payments next to it, it takes two thirds.
+@media (min-width: 1100px) {
+  .row.top:has(> :nth-child(2)) {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.tab-body {
+  padding: 16px 0;
 }
 
 .tab-actions {
@@ -61,11 +78,6 @@
   font: var(--mat-sys-title-small);
   margin-right: 8px;
   white-space: nowrap;
-}
-
-.auto {
-  margin: 0 12px;
-  color: var(--mat-sys-on-surface-variant);
 }
 
 .inactive {

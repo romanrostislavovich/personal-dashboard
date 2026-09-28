@@ -18,88 +18,122 @@
         }
       </mat-select>
     </mat-form-field>
+
+    <button matButton="filled" (click)="openTransactionForm()">
+      <mat-icon>add</mat-icon> {{ 'finance.transaction.add' | transloco }}
+    </button>
   </div>
 </header>
 
-<div class="summary">
-  <mat-card appearance="outlined">
-    <mat-card-content>
-      <pd-finance-totals [totals]="summary.value()?.totals ?? []" />
-    </mat-card-content>
-  </mat-card>
+<mat-tab-group
+  mat-stretch-tabs="false"
+  animationDuration="0ms"
+  [selectedIndex]="tab()"
+  (selectedIndexChange)="tab.set($event)"
+>
+  <!-- How the month went: totals, trend, categories, what is still to pay -->
+  <mat-tab [label]="'finance.tabs.overview' | transloco">
+    <div class="overview">
+      @if (currencies().length > 1) {
+        <mat-chip-listbox
+          class="currencies"
+          [value]="currency()"
+          (change)="$event.value && selectCurrency($event.value)"
+          [attr.aria-label]="'finance.currency' | transloco"
+        >
+          @for (c of currencies(); track c) {
+            <mat-chip-option [value]="c">{{ c }}</mat-chip-option>
+          }
+        </mat-chip-listbox>
+      }
 
-  @if (summary.value()?.topExpenseCategories?.length) {
-    <mat-card appearance="outlined">
-      <mat-card-header>
-        <mat-card-subtitle>{{ 'finance.topCategories' | transloco }}</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        @for (item of summary.value()!.topExpenseCategories; track item.category + item.currency) {
-          <div class="category-row">
-            <span>{{ item.category }}</span>
-            <span class="expense">{{ item.expense | currency: item.currency }}</span>
-          </div>
+      <pd-finance-kpis
+        [current]="currentFlow()"
+        [previous]="previousFlow()"
+        [currency]="currency()"
+      />
+
+      <div class="row top">
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>{{ 'finance.cashFlow.title' | transloco }}</mat-card-title>
+            <mat-card-subtitle>{{ 'finance.cashFlow.subtitle' | transloco }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <pd-cash-flow-chart
+              [months]="chartMonths()"
+              [currency]="currency()"
+              [selected]="month()"
+              (selectMonth)="selectMonth($event)"
+            />
+          </mat-card-content>
+        </mat-card>
+
+        @if (isCurrentMonth()) {
+          <mat-card appearance="outlined">
+            <mat-card-header>
+              <mat-card-title>{{ 'finance.upcoming.title' | transloco }}</mat-card-title>
+              <mat-card-subtitle>{{ 'finance.upcoming.subtitle' | transloco }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <pd-upcoming-payments [payments]="recurringPayments.value()" [month]="month()" />
+            </mat-card-content>
+          </mat-card>
         }
-      </mat-card-content>
-    </mat-card>
-  }
-</div>
+      </div>
 
-<mat-tab-group mat-stretch-tabs="false" animationDuration="0ms">
-  <!-- Transactions for the selected month -->
-  <mat-tab [label]="'finance.tabs.transactions' | transloco">
-    <div class="tab-actions">
-      <button matButton="filled" (click)="openTransactionForm()">
-        <mat-icon>add</mat-icon> {{ 'finance.transaction.add' | transloco }}
-      </button>
-    </div>
-    <mat-card appearance="outlined">
-      <mat-list>
-        @for (t of transactions.value(); track t.id) {
-          <mat-list-item>
-            <mat-icon matListItemIcon>{{ transactionIcon(t) }}</mat-icon>
-            <span matListItemTitle
-              >{{ t.category }}
-              @if (t.note) {
-                · {{ t.note }}
-              }
-            </span>
-            <span matListItemLine>
-              {{ t.occurredOn | date: 'd MMMM' }} ·
-              {{
-                t.projectId
-                  ? projectNames().get(t.projectId)
-                  : ('finance.scope.personal' | transloco)
-              }}
-            </span>
-            <div matListItemMeta class="meta">
-              <span
-                class="amount"
-                [class.income]="t.kind === 'income'"
-                [class.expense]="t.kind === 'expense'"
-              >
-                {{ t.kind === 'expense' ? '−' : '+' }}{{ t.amount | currency: t.currency }}
-              </span>
-              <!-- The auto-import amount is recalculated by the sync, it is not edited by hand. -->
-              @if (t.costSourceId) {
-                <mat-icon class="auto" [matTooltip]="'finance.costSources.autoTooltip' | transloco">
-                  lock
-                </mat-icon>
-              } @else {
-                <button matIconButton (click)="openTransactionForm(t)">
-                  <mat-icon>edit</mat-icon>
-                </button>
-              }
-              <button matIconButton (click)="removeTransaction(t)">
-                <mat-icon>delete</mat-icon>
+      <div class="row">
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>{{ 'finance.categories.title' | transloco }}</mat-card-title>
+            <mat-card-subtitle>{{ 'finance.categories.subtitle' | transloco }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <pd-category-breakdown
+              [shares]="categoryShares()"
+              [currency]="currency()"
+              (selectCategory)="showCategory($event)"
+            />
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>{{ 'finance.recent.title' | transloco }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <pd-transaction-list
+              [compact]="true"
+              [transactions]="transactions.value()"
+              [projectNames]="projectNames()"
+              [limit]="recentCount"
+              (edit)="openTransactionForm($event)"
+              (remove)="removeTransaction($event)"
+            />
+          </mat-card-content>
+          @if (transactions.value().length > recentCount) {
+            <mat-card-actions align="end">
+              <button matButton (click)="tab.set(Tab.Transactions)">
+                {{ 'finance.recent.all' | transloco }}
               </button>
-            </div>
-          </mat-list-item>
-        } @empty {
-          <p class="empty padded">{{ 'finance.transaction.empty' | transloco }}</p>
-        }
-      </mat-list>
-    </mat-card>
+            </mat-card-actions>
+          }
+        </mat-card>
+      </div>
+    </div>
+  </mat-tab>
+
+  <!-- Every transaction of the month, by day -->
+  <mat-tab [label]="'finance.tabs.transactions' | transloco">
+    <div class="tab-body">
+      <pd-transaction-list
+        [transactions]="transactions.value()"
+        [projectNames]="projectNames()"
+        [(category)]="categoryFilter"
+        (edit)="openTransactionForm($event)"
+        (remove)="removeTransaction($event)"
+      />
+    </div>
   </mat-tab>
 
   <!-- Recurring payments: servers, domains, subscriptions -->

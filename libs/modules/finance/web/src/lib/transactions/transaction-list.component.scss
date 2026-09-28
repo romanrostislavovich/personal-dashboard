@@ -1,0 +1,140 @@
+:host {
+  display: block;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.search {
+  flex: 1;
+  min-width: 220px;
+}
+
+.day + .day {
+  margin-top: 12px;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0 4px;
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.day-label::first-letter {
+  text-transform: uppercase;
+}
+
+.day-total {
+  font-variant-numeric: tabular-nums;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  // Room for the menu button's 48px touch target, or the list scrolls sideways.
+  padding-right: 4px;
+  border-radius: var(--pd-radius-small);
+
+  &:hover {
+    background: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+  }
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--pd-radius-small);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+  }
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface-variant);
+
+  &.income {
+    background: color-mix(in srgb, var(--pd-success) 16%, transparent);
+    color: var(--pd-success);
+  }
+}
+
+.text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title,
+.subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title {
+  font: var(--mat-sys-body-large);
+}
+
+.subtitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.wallet {
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--mat-sys-surface-container-high);
+}
+
+.amount {
+  font: var(--mat-sys-title-small);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  // Only income is colored: expenses are the norm, a wall of red would say nothing.
+  &.income {
+    color: var(--pd-success);
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+}
