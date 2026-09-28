@@ -56,10 +56,11 @@
 
 ### Code health
 
-Measured with ESLint `complexity` (threshold 8) and friends; most functions are simple — these are
-the ones worth a look:
+The complexity hot spots (ESLint `complexity`, threshold 8) are cleaned up. Left:
 
-- Updates: Angular 22.2 and Nx 23.2.1 (minor), NestJS 12 (major, plan separately)
+- NestJS 12 (major update, plan separately)
+- Nx 24 removes `nxViteTsPaths` and `nxCopyAssetsPlugin` used in the `vitest.config.mts` files —
+  switch to `vite-tsconfig-paths` / Vite's `publicDir` before updating
 
 ### Ideas
 
