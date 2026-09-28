@@ -40,6 +40,8 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', { timeout: 60_000 }, (
     const url = new URL(ADMIN_URL as string);
     url.pathname = `/${name}`;
     const pool = new Pool({ connectionString: url.toString() });
+    // A connection closed by the database at the end must not become an unhandled error.
+    pool.on('error', () => undefined);
     const db = drizzle({ client: pool, casing: 'snake_case' });
     await migrate(db, { migrationsFolder: MIGRATIONS });
     const store = new SyncStore(db);
@@ -128,7 +130,7 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', { timeout: 60_000 }, (
   afterAll(async () => {
     for (const side of [server, client].filter(Boolean)) {
       await side.pool.end();
-      await admin.query(`DROP DATABASE IF EXISTS ${side.name} WITH (FORCE)`);
+      await dropScratchDatabase(admin, side.name);
     }
     await admin?.end();
     Logger.overrideLogger(['log', 'error', 'warn']);
@@ -255,3 +257,22 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', { timeout: 60_000 }, (
     expect(parked.error).toContain('Unknown table');
   });
 });
+
+/**
+ * Drops a scratch database once our own connections to it are gone. `pool.end()` resolves while
+ * they may still be closing, and dropping WITH (FORCE) then kills them: pg reports
+ * "terminating connection due to administrator command" as an unhandled error (seen in CI).
+ */
+async function dropScratchDatabase(admin: Pool, name: string): Promise<void> {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const { rows } = await admin.query<{ open: number }>(
+      'SELECT count(*)::int AS open FROM pg_stat_activity WHERE datname = $1',
+      [name],
+    );
+    if (rows[0].open === 0) {
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
+}

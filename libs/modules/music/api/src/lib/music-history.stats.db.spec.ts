@@ -36,6 +36,8 @@ describe.skipIf(!ADMIN_URL)('MusicHistoryStatsService', () => {
     const url = new URL(ADMIN_URL as string);
     url.pathname = `/${DB_NAME}`;
     pool = new Pool({ connectionString: url.toString() });
+    // A connection closed by the database at the end must not become an unhandled error.
+    pool.on('error', () => undefined);
     db = drizzle({ client: pool, casing: 'snake_case' });
     await migrate(db, { migrationsFolder: MIGRATIONS });
     service = new MusicHistoryStatsService(db, { get: () => 'Europe/Warsaw' } as never);
@@ -43,7 +45,9 @@ describe.skipIf(!ADMIN_URL)('MusicHistoryStatsService', () => {
 
   afterAll(async () => {
     await pool?.end();
-    await admin?.query(`DROP DATABASE IF EXISTS ${DB_NAME} WITH (FORCE)`);
+    if (admin) {
+      await dropScratchDatabase(admin, DB_NAME);
+    }
     await admin?.end();
   });
 
@@ -91,3 +95,22 @@ describe.skipIf(!ADMIN_URL)('MusicHistoryStatsService', () => {
     });
   });
 });
+
+/**
+ * Drops a scratch database once our own connections to it are gone. `pool.end()` resolves while
+ * they may still be closing, and dropping WITH (FORCE) then kills them: pg reports
+ * "terminating connection due to administrator command" as an unhandled error (seen in CI).
+ */
+async function dropScratchDatabase(admin: Pool, name: string): Promise<void> {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const { rows } = await admin.query<{ open: number }>(
+      'SELECT count(*)::int AS open FROM pg_stat_activity WHERE datname = $1',
+      [name],
+    );
+    if (rows[0].open === 0) {
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
+}
