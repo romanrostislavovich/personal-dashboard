@@ -297,6 +297,38 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', { timeout: 60_000 }, (
     expect(kept).toBe(1);
   });
 
+  it('two versions changed at the same moment: both sides keep the same one', async () => {
+    const version = (id: string, name: string) => ({
+      table: 'birthdays',
+      pk: JSON.stringify({ id }),
+      changedAt: LONG_AGO,
+      row: JSON.stringify({
+        id,
+        user_id: userId,
+        name,
+        month: 5,
+        day: 6,
+        remind_days_before: [0],
+        created_at: LONG_AGO,
+      }),
+    });
+    // The same pair of versions arrives in the opposite order, as on the two sides.
+    const [first, second] = [randomUUID(), randomUUID()];
+    for (const [id, local, incoming] of [
+      [first, 'Anna', 'Zoe'],
+      [second, 'Zoe', 'Anna'],
+    ]) {
+      await client.store.apply([version(id, local)], { origin: 'server' });
+      await client.store.apply([version(id, incoming)], { origin: 'server' });
+    }
+
+    const names = await rows<{ name: string }>(
+      client,
+      sql`SELECT name FROM birthdays WHERE id = ANY(${uuids([first, second])}::uuid[])`,
+    );
+    expect(names).toEqual([{ name: 'Zoe' }, { name: 'Zoe' }]);
+  });
+
   it('deletes many rows in bulk', async () => {
     const ids = Array.from({ length: 10 }, () => randomUUID());
     for (const id of ids) {

@@ -360,8 +360,10 @@ export class SyncStore {
     unsentAfter: ApplyContext['unsentAfter'],
   ): Promise<{ localWins: boolean; unsent: boolean } | undefined> {
     const [unsentTx, unsentSeq] = parseCursor(unsentAfter ?? null);
+    const localRow = sql`(SELECT to_jsonb(t)::text FROM ${sql.identifier(table.name)} t
+      WHERE ${pkMatch(table, change.pk)})`;
     const { rows } = await tx.execute<{ local_wins: boolean; unsent: boolean }>(sql`
-      SELECT changed_at >= ${change.changedAt}::timestamptz AS local_wins,
+      SELECT ${winsOver(sql`changed_at`, localRow, change)} AS local_wins,
         ${unsentAfter !== undefined} AND origin IS NULL
           AND (tx, seq) > (${unsentTx}::xid8, ${unsentSeq}::bigint) AS unsent
       FROM sync.row_versions WHERE table_name = ${table.name} AND pk = ${change.pk}::jsonb
@@ -426,7 +428,7 @@ export class SyncStore {
       const { rows } = await tx.execute<{ pk: string; row: string; local_wins: boolean | null }>(
         sql`
           SELECT ${pkObject(table, sql`to_jsonb(t)`)}::text AS pk, to_jsonb(t)::text AS row,
-            v.changed_at >= ${change.changedAt}::timestamptz AS local_wins
+            ${winsOver(sql`v.changed_at`, sql`to_jsonb(t)::text`, change)} AS local_wins
           FROM ${name} t
           CROSS JOIN jsonb_populate_record(NULL::${name}, ${change.row}::jsonb) k
           LEFT JOIN sync.row_versions v
@@ -631,6 +633,19 @@ function jsonArray(items: string[]): string {
 function parseCursor(cursor: string | null): [string, string] {
   const [tx, seq] = (cursor ?? '0:0').split(':');
   return [tx, seq];
+}
+
+/**
+ * Whether the local version beats the incoming change: it is newer, or — changed at the same
+ * moment — its row sorts after the incoming one as JSON text. Both sides compare the same pair,
+ * so they keep the same version (rows that existed before sync all date from the epoch; without
+ * this each side would keep its own for good). A missing row (deleted) sorts first.
+ */
+function winsOver(localChangedAt: SQL, localRow: SQL, change: SyncChange): SQL {
+  const incoming = sql`${change.changedAt}::timestamptz`;
+  const incomingRow = sql`coalesce(${change.row}::jsonb::text, '')`;
+  return sql`(${localChangedAt} > ${incoming}
+    OR (${localChangedAt} = ${incoming} AND coalesce(${localRow}, '') >= ${incomingRow}))`;
 }
 
 /** `t.a, t.b` (or `a, b` without an alias). */
