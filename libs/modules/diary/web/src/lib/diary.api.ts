@@ -112,6 +112,11 @@ export class DiaryApi {
     return this.http.delete<void>(`${BASE}/entries/${day}`);
   }
 
+  /** Every entry and photo; the settings stay. */
+  removeAll() {
+    return this.http.delete<void>(BASE);
+  }
+
   summarize(period: { from: LocalDate; to: LocalDate }) {
     return this.http.post<DiarySummary>(`${BASE}/summary`, period);
   }

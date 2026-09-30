@@ -1,41 +1,33 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AiAttachment, AiChatMessage } from '@pd/contracts';
+import { AiAttachment } from '@pd/contracts';
 import { coreMessages } from '../i18n/core.messages';
 import { BotDocument } from '../notifications/telegram/bot-command';
 import { TelegramBotService } from '../notifications/telegram/telegram-bot.service';
 import { UserRow } from '../users/users.schema';
 import { AiConnectionsService } from './ai-connections.service';
+import { AiConversationsService } from './ai-conversations.service';
 import { AiService } from './ai.service';
 import { AttachmentError, attachmentText } from './attachment-text';
 
 /** Telegram limits a message to 4096 characters. */
 const TELEGRAM_LIMIT = 4000;
-/** The assistant remembers this many recent messages… */
-const CONVERSATION_MESSAGES = 16;
-/** …for this long after the last one; then a new conversation starts. */
-const CONVERSATION_TTL_MS = 30 * 60 * 1000;
-
-interface Conversation {
-  messages: AiChatMessage[];
-  updatedAt: number;
-}
 
 /**
  * The AI in Telegram:
- * - plain messages go to the assistant, which remembers the conversation and can change data
- *   (tools with `writes`); documents (a bank statement…) go with their text;
- * - `/ask question` — a one-off question, `/new` — forget the conversation,
+ * - plain messages go to the assistant, which can change data (tools with `writes`); documents
+ *   (a bank statement…) go with their text. The conversation is stored and shared with the
+ *   web chat (see AiConversationsService), so it survives restarts;
+ * - `/ask question` — a one-off question, `/new` — start a new conversation,
  *   `/model` — list the saved AI connections and switch the active one.
  */
 @Injectable()
 export class AiTelegramAssistant implements OnModuleInit {
   private readonly logger = new Logger(AiTelegramAssistant.name);
-  // In memory: a restart simply starts new conversations.
-  private readonly conversations = new Map<string, Conversation>();
 
   constructor(
     private readonly ai: AiService,
     private readonly connections: AiConnectionsService,
+    private readonly conversations: AiConversationsService,
     private readonly telegram: TelegramBotService,
   ) {}
 
@@ -53,7 +45,7 @@ export class AiTelegramAssistant implements OnModuleInit {
       command: 'new',
       description: both('newChatDescription'),
       handler: async (user) => {
-        this.conversations.delete(user.id);
+        await this.conversations.start(user.id);
         return coreMessages(user.locale).newChatDone;
       },
     });
@@ -127,39 +119,23 @@ export class AiTelegramAssistant implements OnModuleInit {
     }
   }
 
-  /** One turn of the assistant, with the recent conversation as context. */
+  /** One turn of the assistant in the current conversation (shared with the web chat). */
   private async assist(user: UserRow, text: string, attachments?: AiAttachment[]): Promise<string> {
     const messages = coreMessages(user.locale);
     if (!(await this.ai.isConfigured(user.id))) {
       return messages.askNotConfigured;
     }
-    // The file text stays in the conversation: a follow-up ("yes, add them") needs it.
-    const conversation: AiChatMessage[] = [
-      ...this.history(user.id),
-      { role: 'user', content: text, ...(attachments && { attachments }) },
-    ];
     try {
-      const { reply } = await this.ai.ask(user.id, conversation, {
-        plainText: true,
-        allowWrites: true,
-      });
-      this.conversations.set(user.id, {
-        messages: [...conversation, { role: 'assistant' as const, content: reply }].slice(
-          -CONVERSATION_MESSAGES,
-        ),
-        updatedAt: Date.now(),
-      });
+      // The file text is saved with the message: a follow-up ("yes, add them") needs it.
+      const { reply } = await this.conversations.ask(
+        user.id,
+        { content: text, attachments },
+        { plainText: true, allowWrites: true },
+      );
       return reply.slice(0, TELEGRAM_LIMIT) || '🤷';
     } catch (error) {
       this.logger.warn(`Telegram assistant failed for ${user.id}: ${error}`);
       return messages.assistantFailed;
     }
-  }
-
-  private history(userId: string): AiChatMessage[] {
-    const previous = this.conversations.get(userId);
-    return previous && Date.now() - previous.updatedAt < CONVERSATION_TTL_MS
-      ? previous.messages
-      : [];
   }
 }

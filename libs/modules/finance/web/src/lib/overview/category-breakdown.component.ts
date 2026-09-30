@@ -3,11 +3,12 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { MatIconModule } from '@angular/material/icon';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { categoryIcon } from './category-icon';
-import { CategoryShare } from './finance-stats';
+import { CategoryFilter, CategoryShare } from './finance-stats';
 
 /**
  * Where the money went: categories from the largest, each with its share of the month.
- * All bars share one color — they compare sizes, not identities. A click filters the list.
+ * All bars share one color — they compare sizes, not identities. A click filters the list;
+ * for "Other" it shows all the categories folded into it.
  */
 @Component({
   selector: 'pd-category-breakdown',
@@ -15,12 +16,7 @@ import { CategoryShare } from './finance-stats';
   imports: [CurrencyPipe, PercentPipe, MatIconModule, TranslocoPipe],
   template: `
     @for (row of rows(); track row.category) {
-      <button
-        type="button"
-        class="row"
-        [disabled]="row.category === null"
-        (click)="row.category && selectCategory.emit(row.category)"
-      >
+      <button type="button" class="row" (click)="select(row)">
         <span class="avatar"
           ><mat-icon>{{ row.category === null ? 'more_horiz' : row.icon }}</mat-icon></span
         >
@@ -60,13 +56,10 @@ import { CategoryShare } from './finance-stats';
       text-align: left;
       cursor: pointer;
     }
-    .row:hover:not(:disabled),
+    .row:hover,
     .row:focus-visible {
       background: color-mix(in srgb, var(--mat-sys-on-surface) 5%, transparent);
       outline: none;
-    }
-    .row:disabled {
-      cursor: default;
     }
     .avatar {
       display: grid;
@@ -122,7 +115,12 @@ import { CategoryShare } from './finance-stats';
 export class CategoryBreakdownComponent {
   readonly shares = input.required<CategoryShare[]>();
   readonly currency = input.required<string>();
-  readonly selectCategory = output<string>();
+  readonly selectCategory = output<CategoryFilter>();
+
+  /** The breakdown is of expenses, so the list shows the expenses it counted. */
+  protected select(row: CategoryShare): void {
+    this.selectCategory.emit({ label: row.category, categories: row.categories, kind: 'expense' });
+  }
 
   protected readonly rows = computed(() => {
     const max = Math.max(...this.shares().map((s) => s.amount), 0) || 1;

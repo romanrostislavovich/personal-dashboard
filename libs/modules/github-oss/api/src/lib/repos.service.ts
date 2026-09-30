@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database } from '@pd/api-core';
+import { AppConfig, DB, Database, isUniqueViolation } from '@pd/api-core';
 import { addDays, DateParts, todayIn, toLocalDate, TrackedRepo } from '@pd/contracts';
 import { and, asc, desc, eq, gte, inArray } from 'drizzle-orm';
 import { GithubNotFoundError } from './clients/github.client';
@@ -91,6 +91,55 @@ export class ReposService {
     if (!row) {
       throw new ConflictException('Repository is already tracked');
     }
+    await this.syncRepo(row, userId);
+  }
+
+  /**
+   * Changes the repository or its npm package and syncs it. Another repository starts its
+   * history from scratch: the saved star history belonged to the old one.
+   */
+  async update(
+    userId: string,
+    id: string,
+    fullName: string,
+    npmPackage: string | null,
+  ): Promise<void> {
+    const [current] = await this.db
+      .select()
+      .from(trackedRepos)
+      .where(and(eq(trackedRepos.id, id), eq(trackedRepos.userId, userId)));
+    if (!current) {
+      throw new NotFoundException('Repository not found');
+    }
+    let canonical = { fullName: current.fullName, htmlUrl: current.htmlUrl };
+    if (fullName.toLowerCase() !== current.fullName.toLowerCase()) {
+      try {
+        canonical = await (await this.tokens.clientFor(userId)).getRepo(fullName);
+      } catch (error) {
+        if (error instanceof GithubNotFoundError) {
+          throw new BadRequestException('Repository not found on GitHub');
+        }
+        throw error;
+      }
+    }
+    const repoChanged = canonical.fullName !== current.fullName;
+    const [row] = await this.db
+      .transaction(async (tx) => {
+        if (repoChanged) {
+          await tx.delete(repoDailyStats).where(eq(repoDailyStats.repoId, id));
+        }
+        return tx
+          .update(trackedRepos)
+          .set({ ...canonical, npmPackage })
+          .where(eq(trackedRepos.id, id))
+          .returning();
+      })
+      .catch((error: unknown) => {
+        if (isUniqueViolation(error)) {
+          throw new ConflictException('Repository is already tracked');
+        }
+        throw error;
+      });
     await this.syncRepo(row, userId);
   }
 

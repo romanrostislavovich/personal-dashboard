@@ -25,7 +25,7 @@ import {
 } from '@pd/contracts';
 import { and, arrayContains, asc, desc, eq, gte, isNotNull, lte, sql } from 'drizzle-orm';
 import { appendNote, extractTags, searchSnippet, shorten } from './diary-text';
-import { DiaryEntryRow, diaryEntries, diarySettings } from './diary.schema';
+import { DiaryEntryRow, diaryEntries, diaryPhotos, diarySettings } from './diary.schema';
 
 const MOOD_HISTORY_DAYS = 30;
 const TOP_TAGS_LIMIT = 10;
@@ -94,6 +94,14 @@ export class DiaryService {
     await this.db
       .delete(diaryEntries)
       .where(and(eq(diaryEntries.userId, userId), eq(diaryEntries.day, day)));
+  }
+
+  /** The whole diary: every entry and photo. Settings (reminders, template) stay. */
+  async removeAll(userId: string): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.delete(diaryPhotos).where(eq(diaryPhotos.userId, userId));
+      await tx.delete(diaryEntries).where(eq(diaryEntries.userId, userId));
+    });
   }
 
   /** Appends a note to today's entry (used by the Telegram commands). */

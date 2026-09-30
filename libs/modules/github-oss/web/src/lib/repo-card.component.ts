@@ -109,6 +109,14 @@ import { SparklineComponent } from '@pd/web-core';
       <mat-card-actions align="end">
         <button
           matIconButton
+          [matTooltip]="'core.actions.edit' | transloco"
+          [attr.aria-label]="'core.actions.edit' | transloco"
+          (click)="edit.emit(r)"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          matIconButton
           [matTooltip]="'core.actions.delete' | transloco"
           (click)="remove.emit(r)"
         >
@@ -169,6 +177,7 @@ import { SparklineComponent } from '@pd/web-core';
 })
 export class RepoCardComponent {
   readonly repo = input.required<TrackedRepo>();
+  readonly edit = output<TrackedRepo>();
   readonly remove = output<TrackedRepo>();
 
   protected readonly starsHistory = computed(() =>

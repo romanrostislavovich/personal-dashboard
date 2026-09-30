@@ -1,7 +1,9 @@
 {
   "title": "Weather",
   "searchCity": "Find a city",
-  "noLocation": "Find your city above — the forecast, the clothing advice and the morning digest will be for it.",
+  "myLocation": "My location",
+  "locateFailed": "Could not detect your location: allow it in the browser or find your city in the search.",
+  "noLocation": "Allow the location request or find your city above — the forecast, the clothing advice and the morning digest will be for it.",
   "error": "Could not load the forecast, try again later.",
   "feelsLike": "feels like {{value}}°",
   "range": "{{min}}° … {{max}}°",

@@ -7,10 +7,21 @@ const MAX_CATEGORIES = 7;
 export interface CategoryShare {
   /** null — the "Other" row with the smaller categories. */
   category: string | null;
+  /** The categories behind the row: one, or all the folded ones for "Other". */
+  categories: string[];
   amount: number;
   count: number;
   /** 0–1 of the total. */
   share: number;
+}
+
+/** What the transaction list shows after a click in the overview: one category or "Other". */
+export interface CategoryFilter {
+  /** null — "Other". */
+  label: string | null;
+  categories: string[];
+  /** The breakdown counts one kind: the list shows the same transactions it counted. */
+  kind: Transaction['kind'];
 }
 
 export interface DayGroup {
@@ -69,7 +80,7 @@ export function categoryShares(
   }
   const total = [...byCategory.values()].reduce((sum, e) => sum + e.amount, 0);
   const sorted = [...byCategory]
-    .map(([category, e]) => ({ category, ...e }))
+    .map(([category, e]) => ({ category, categories: [category], ...e }))
     .sort((a, b) => b.amount - a.amount);
 
   // Folding a single category would only rename it, so "Other" needs at least two.
@@ -80,6 +91,7 @@ export function categoryShares(
         ...shown,
         {
           category: null,
+          categories: rest.map((e) => e.category),
           amount: rest.reduce((sum, e) => sum + e.amount, 0),
           count: rest.reduce((sum, e) => sum + e.count, 0),
         },

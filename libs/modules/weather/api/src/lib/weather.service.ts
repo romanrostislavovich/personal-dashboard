@@ -3,6 +3,7 @@ import { DB, Database, UsersService } from '@pd/api-core';
 import { WeatherForecast, WeatherLocation, WeatherLocationInput } from '@pd/contracts';
 import { eq } from 'drizzle-orm';
 import { toForecast } from './forecast';
+import { NominatimClient } from './nominatim.client';
 import { OpenMeteoClient, RawForecast } from './open-meteo.client';
 import { weatherLocations } from './weather.schema';
 
@@ -16,6 +17,7 @@ const CACHE_MS = 15 * 60 * 1000;
 @Injectable()
 export class WeatherService {
   private readonly client = new OpenMeteoClient();
+  private readonly nominatim = new NominatimClient();
   private readonly cache = new Map<string, { at: number; raw: RawForecast }>();
 
   constructor(
@@ -67,6 +69,12 @@ export class WeatherService {
   async search(userId: string, query: string): Promise<WeatherLocation[]> {
     const locale = (await this.users.findById(userId))?.locale ?? 'en';
     return this.client.search(query, locale);
+  }
+
+  /** The place at the coordinates (the browser's location), named in the user's language. */
+  async placeAt(userId: string, latitude: number, longitude: number): Promise<WeatherLocation> {
+    const locale = (await this.users.findById(userId))?.locale ?? 'en';
+    return this.nominatim.placeAt(latitude, longitude, locale);
   }
 
   private async rawForecast({ latitude, longitude }: WeatherLocation): Promise<RawForecast> {

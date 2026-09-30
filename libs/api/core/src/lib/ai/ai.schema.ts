@@ -1,4 +1,14 @@
-import { boolean, jsonb, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { AiAttachment } from '@pd/contracts';
+import {
+  boolean,
+  index,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from '../users/users.schema';
 
 /**
@@ -44,4 +54,44 @@ export const morningDigestSnapshots = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.sectionId] })],
 );
 
+/**
+ * Conversations with the assistant, shared by the web chat and Telegram. The current one is
+ * the one updated last; "new conversation" (`/new` in Telegram) starts another.
+ */
+export const aiConversations = pgTable(
+  'ai_conversations',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: text(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId, table.updatedAt)],
+);
+
+export const aiMessages = pgTable(
+  'ai_messages',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    conversationId: uuid()
+      .notNull()
+      .references(() => aiConversations.id, { onDelete: 'cascade' }),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: text().$type<'user' | 'assistant'>().notNull(),
+    content: text().notNull(),
+    /** Files sent with the message, with their text: a follow-up ("add them") needs it. */
+    attachments: jsonb().$type<AiAttachment[]>().notNull().default([]),
+    toolsUsed: text().array().notNull().default([]),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.conversationId, table.createdAt)],
+);
+
 export type AiConnectionRow = typeof aiConnections.$inferSelect;
+export type AiConversationRow = typeof aiConversations.$inferSelect;
+export type AiMessageRow = typeof aiMessages.$inferSelect;

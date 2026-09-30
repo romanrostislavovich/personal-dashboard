@@ -8,12 +8,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { TrackedRepo } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { GithubOssApi } from './github-oss.api';
 import { RepoCardComponent } from './repo-card.component';
+import { RepoFormDialog } from './repo-form.dialog';
 
 @Component({
   selector: 'pd-github-oss-page',
@@ -36,6 +38,7 @@ import { RepoCardComponent } from './repo-card.component';
 export class GithubOssPage {
   private readonly api = inject(GithubOssApi);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
   private readonly transloco = inject(TranslocoService);
   private readonly fb = inject(NonNullableFormBuilder);
 
@@ -70,6 +73,17 @@ export class GithubOssPage {
       },
       { 400: 'github-oss.errors.notFound', 409: 'github-oss.errors.duplicate' },
     );
+  }
+
+  async editRepo(repo: TrackedRepo): Promise<void> {
+    const saved = await firstValueFrom(
+      this.dialog
+        .open<RepoFormDialog, TrackedRepo, boolean>(RepoFormDialog, { data: repo })
+        .afterClosed(),
+    );
+    if (saved) {
+      this.repos.reload();
+    }
   }
 
   async removeRepo(repo: TrackedRepo): Promise<void> {

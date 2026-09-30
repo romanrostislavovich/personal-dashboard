@@ -1,5 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -22,6 +29,7 @@ import {
 import { currentMonth, monthAsDate, monthRange, shiftMonth, todayLocalDate } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { DiaryApi } from './diary.api';
+import { DiaryDeleteDialog } from './diary-delete.dialog';
 import { DiaryEditorComponent } from './diary-editor.component';
 import { DiaryHeatmapComponent } from './diary-heatmap.component';
 import { DiaryInsightsComponent } from './diary-insights.component';
@@ -59,6 +67,7 @@ export class DiaryPage {
   private readonly api = inject(DiaryApi);
   private readonly transloco = inject(TranslocoService);
   private readonly dialog = inject(MatDialog);
+  private readonly editor = viewChild.required<DiaryEditorComponent>('editor');
 
   protected readonly moodEmoji = MOOD_EMOJI;
   protected readonly today = todayLocalDate();
@@ -149,6 +158,30 @@ export class DiaryPage {
     };
     await firstValueFrom(this.api.saveSettings({ ...current, ...change }));
     this.settings.reload();
+  }
+
+  /** From the list: the open day goes through the editor, which also drops its unsaved text. */
+  async deleteEntry(day: LocalDate): Promise<void> {
+    if (day === this.selectedDay()) {
+      await this.editor().remove();
+      return;
+    }
+    if (confirm(this.transloco.translate('diary.editor.confirmDelete'))) {
+      await firstValueFrom(this.api.remove(day));
+      this.onSaved();
+    }
+  }
+
+  async deleteAll(): Promise<void> {
+    const confirmed = await firstValueFrom(
+      this.dialog.open<DiaryDeleteDialog, void, boolean>(DiaryDeleteDialog).afterClosed(),
+    );
+    if (!confirmed) {
+      return;
+    }
+    await firstValueFrom(this.api.removeAll());
+    this.editor().reload();
+    this.onSaved();
   }
 
   async editTemplate(): Promise<void> {

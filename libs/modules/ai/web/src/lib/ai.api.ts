@@ -2,9 +2,11 @@ import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   AiAttachmentUpload,
-  AiChatMessage,
+  AiChatRequest,
   AiChatResponse,
   AiConnectionInput,
+  AiConversation,
+  AiConversationDetail,
   AiPreferences,
   AiSettings,
 } from '@pd/contracts';
@@ -37,8 +39,29 @@ export class AiApi {
     return this.http.post<AiSettings>(`/api/ai/connections/${id}/activate`, {});
   }
 
-  chat(messages: AiChatMessage[]) {
-    return this.http.post<AiChatResponse>('/api/ai/chat', { messages });
+  /** One message; the server keeps the conversation (shared with Telegram). */
+  chat(request: AiChatRequest) {
+    return this.http.post<AiChatResponse>('/api/ai/chat', request);
+  }
+
+  currentConversation() {
+    return this.http.get<AiConversationDetail | null>('/api/ai/conversations/current');
+  }
+
+  conversation(id: string) {
+    return this.http.get<AiConversationDetail>(`/api/ai/conversations/${id}`);
+  }
+
+  conversations() {
+    return this.http.get<AiConversation[]>('/api/ai/conversations');
+  }
+
+  startConversation() {
+    return this.http.post<AiConversationDetail>('/api/ai/conversations', {});
+  }
+
+  removeConversation(id: string) {
+    return this.http.delete<void>(`/api/ai/conversations/${id}`);
   }
 
   /** The server returns the file text; it goes back with the next chat message. */

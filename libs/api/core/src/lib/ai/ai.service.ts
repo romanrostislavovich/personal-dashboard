@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AiChatMessage, AiChatResponse } from '@pd/contracts';
+import { AiChatMessage } from '@pd/contracts';
 import { AppConfig } from '../config/env';
 import { coreMessages } from '../i18n/core.messages';
 import { UsersService } from '../users/users.service';
@@ -24,6 +24,12 @@ const MAX_TOOL_ROUNDS = 8;
 const MAX_TOOL_RESULT_CHARS = 12_000;
 
 export type AskOptions = Omit<PromptOptions, 'hasAttachments'>;
+
+export interface AiAnswer {
+  reply: string;
+  /** Modules the model took data from. */
+  toolsUsed: string[];
+}
 
 /**
  * AI gateway: any OpenAI-compatible API (DeepSeek, OpenAI, Ollama…).
@@ -63,11 +69,7 @@ export class AiService {
    * Chat with access to module data: the model requests tools,
    * we run them and return the results until it gives an answer.
    */
-  async ask(
-    userId: string,
-    history: AiChatMessage[],
-    options: AskOptions = {},
-  ): Promise<AiChatResponse> {
+  async ask(userId: string, history: AiChatMessage[], options: AskOptions = {}): Promise<AiAnswer> {
     const connection = await this.requireConnection(userId);
     const hasAttachments = history.some((message) => message.attachments?.length);
     const messages: ChatMessage[] = [

@@ -90,7 +90,7 @@
 
 <div class="repos">
   @for (repo of repos.value(); track repo.id) {
-    <pd-repo-card [repo]="repo" (remove)="removeRepo($event)" />
+    <pd-repo-card [repo]="repo" (edit)="editRepo($event)" (remove)="removeRepo($event)" />
   } @empty {
     <p class="empty">{{ 'github-oss.empty' | transloco }}</p>
   }

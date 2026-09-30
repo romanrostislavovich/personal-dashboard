@@ -15,6 +15,13 @@ export type WeatherLocationInput = z.input<typeof weatherLocationSchema>;
 export const weatherSearchQuerySchema = z.object({ q: z.string().trim().min(2).max(100) });
 export type WeatherSearchQuery = z.infer<typeof weatherSearchQuerySchema>;
 
+/** `GET /api/weather/places/at`: the place at the browser's location. */
+export const weatherCoordinatesQuerySchema = z.object({
+  latitude: z.coerce.number().min(-90).max(90),
+  longitude: z.coerce.number().min(-180).max(180),
+});
+export type WeatherCoordinatesQuery = z.infer<typeof weatherCoordinatesQuerySchema>;
+
 export interface WeatherLocation {
   name: string;
   region: string | null;

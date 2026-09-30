@@ -20,6 +20,10 @@ export class GithubOssApi {
     return this.http.post<void>(`${BASE}/repos`, input);
   }
 
+  updateRepo(id: string, input: TrackedRepoInput) {
+    return this.http.put<void>(`${BASE}/repos/${id}`, input);
+  }
+
   removeRepo(id: string) {
     return this.http.delete<void>(`${BASE}/repos/${id}`);
   }

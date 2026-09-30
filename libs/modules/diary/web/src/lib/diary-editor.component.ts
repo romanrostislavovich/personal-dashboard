@@ -96,6 +96,11 @@ type EditorMode = 'visual' | 'markdown';
             }
           }
         </mat-card-subtitle>
+        @if (entry.value()) {
+          <button matButton type="button" class="delete-entry" (click)="remove()">
+            <mat-icon>delete</mat-icon> {{ 'diary.deleteEntry' | transloco }}
+          </button>
+        }
       </mat-card-header>
 
       <mat-card-content>
@@ -252,14 +257,6 @@ type EditorMode = 'visual' | 'markdown';
 
         <p class="hint">{{ 'diary.editor.hint' | transloco }}</p>
       </mat-card-content>
-
-      @if (entry.value()) {
-        <mat-card-actions align="end">
-          <button matButton type="button" (click)="remove()">
-            {{ 'core.actions.delete' | transloco }}
-          </button>
-        </mat-card-actions>
-      }
     </mat-card>
   `,
   styles: `
@@ -270,6 +267,10 @@ type EditorMode = 'visual' | 'markdown';
       display: flex;
       align-items: center;
       gap: 4px;
+    }
+    .delete-entry {
+      margin-left: auto;
+      color: var(--mat-sys-error);
     }
     .status.error {
       color: var(--mat-sys-error);
@@ -682,8 +683,18 @@ export class DiaryEditorComponent {
     }
     this.pending = null;
     await firstValueFrom(this.api.remove(this.day()));
-    this.entry.reload();
+    this.reload();
     this.saved.emit();
+  }
+
+  /** Drops unsaved text and shows the day as stored (after the diary was deleted, say). */
+  reload(): void {
+    this.pending = null;
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    this.entry.reload();
   }
 
   protected pickPhotos(event: Event): void {

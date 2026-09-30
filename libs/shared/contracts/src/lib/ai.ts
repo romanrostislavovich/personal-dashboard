@@ -86,23 +86,52 @@ export interface AiAttachmentUpload extends AiAttachment {
   truncated: boolean;
 }
 
-export const aiChatRequestSchema = z.object({
-  messages: z
-    .array(
-      z.object({
-        role: z.enum(['user', 'assistant']),
-        content: z.string().max(20_000),
-        attachments: z.array(aiAttachmentSchema).max(AI_MAX_ATTACHMENTS).optional(),
-      }),
-    )
-    .min(1)
-    .max(40),
-});
+/** A message as the model gets it: the conversation so far is sent with every question. */
+export interface AiChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  attachments?: AiAttachment[];
+}
+
+/**
+ * `POST /api/ai/chat`: one new message. The conversation is stored on the server and shared by
+ * the web chat and Telegram; without `conversationId` the message goes to the current one.
+ */
+export const aiChatRequestSchema = z
+  .object({
+    conversationId: z.uuid().optional(),
+    content: z.string().trim().max(20_000),
+    attachments: z.array(aiAttachmentSchema).max(AI_MAX_ATTACHMENTS).optional(),
+  })
+  .refine((request) => request.content || request.attachments?.length, {
+    message: 'Write a message or attach a file',
+  });
 export type AiChatRequest = z.infer<typeof aiChatRequestSchema>;
-export type AiChatMessage = AiChatRequest['messages'][number];
 
 export interface AiChatResponse {
+  conversationId: string;
   reply: string;
   /** Which data the model requested — shown under the answer. */
   toolsUsed: string[];
+}
+
+/** A stored message; file texts stay on the server, the client gets their names. */
+export interface AiStoredMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  attachments: string[];
+  toolsUsed: string[];
+  createdAt: string;
+}
+
+export interface AiConversation {
+  id: string;
+  /** The beginning of the first question; `null` while the conversation is empty. */
+  title: string | null;
+  updatedAt: string;
+}
+
+export interface AiConversationDetail extends AiConversation {
+  messages: AiStoredMessage[];
 }

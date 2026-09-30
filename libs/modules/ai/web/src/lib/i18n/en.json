@@ -1,7 +1,13 @@
 {
   "title": "AI",
   "intro": "Connect AI to ask about your data in plain language: diary, finance, birthdays, websites, music, games. It also enables the morning digest in Telegram, the /ask bot command and diary summaries.",
-  "clear": "New chat",
+  "history": {
+    "title": "History",
+    "new": "New conversation",
+    "untitled": "Empty conversation",
+    "remove": "Delete the conversation",
+    "empty": "No conversations yet"
+  },
   "placeholder": "Ask anything about your data… (Enter to send, Shift+Enter for a new line)",
   "thinking": "Thinking and checking your data…",
   "sources": "Looked at:",

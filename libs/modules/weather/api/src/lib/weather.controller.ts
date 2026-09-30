@@ -1,6 +1,8 @@
 import { Body, Controller, Delete, Get, HttpCode, Put, Query } from '@nestjs/common';
 import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
 import {
+  WeatherCoordinatesQuery,
+  weatherCoordinatesQuerySchema,
   WeatherLocationInput,
   weatherLocationSchema,
   WeatherSearchQuery,
@@ -35,6 +37,16 @@ export class WeatherController {
   @HttpCode(204)
   clearLocation(@CurrentUser() user: AuthUser) {
     return this.weather.clearLocation(user.id);
+  }
+
+  /** Names the browser's location; the client then saves it as usual. */
+  @Get('places/at')
+  placeAt(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(weatherCoordinatesQuerySchema))
+    { latitude, longitude }: WeatherCoordinatesQuery,
+  ) {
+    return this.weather.placeAt(user.id, latitude, longitude);
   }
 
   @Get('places')

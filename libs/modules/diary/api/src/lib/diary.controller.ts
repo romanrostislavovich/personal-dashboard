@@ -83,6 +83,13 @@ export class DiaryController {
     return this.diary.remove(user.id, day);
   }
 
+  /** Deletes the whole diary; the web asks to type a word first. */
+  @Delete()
+  @HttpCode(204)
+  removeAll(@CurrentUser() user: AuthUser) {
+    return this.diary.removeAll(user.id);
+  }
+
   @Get('search')
   search(
     @CurrentUser() user: AuthUser,

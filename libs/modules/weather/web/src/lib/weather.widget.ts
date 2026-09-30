@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ClothingAdviceComponent } from './clothing-advice.component';
 import { WeatherApi } from './weather.api';
+import { WeatherLocator } from './weather-locator';
 import { conditionEmoji } from './weather-emoji';
 
 /** Home widget: the weather now and what to wear. */
@@ -72,4 +73,14 @@ import { conditionEmoji } from './weather-emoji';
 export class WeatherWidget {
   protected readonly forecast = inject(WeatherApi).forecast();
   protected readonly emoji = conditionEmoji;
+
+  constructor() {
+    const locator = inject(WeatherLocator);
+    // No city yet: take the browser's location (once per browser, the browser asks first).
+    effect(() => {
+      if (this.forecast.status() === 'resolved' && this.forecast.value() === null) {
+        void locator.detectOnce().then((place) => place && this.forecast.reload());
+      }
+    });
+  }
 }

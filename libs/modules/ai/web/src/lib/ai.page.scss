@@ -162,3 +162,42 @@
     pointer-events: none;
   }
 }
+
+// The history menu: title and date on the left, a delete button on the right.
+.archive-item {
+  display: inline-flex;
+  flex-direction: column;
+  max-width: 280px;
+  vertical-align: middle;
+}
+
+.archive-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.archive-date {
+  font: var(--mat-sys-label-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.archive-remove {
+  display: inline-flex;
+  margin-left: 12px;
+  vertical-align: middle;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  mat-icon {
+    margin: 0;
+  }
+}
+
+.archive-empty {
+  margin: 8px 16px;
+  color: var(--mat-sys-on-surface-variant);
+}

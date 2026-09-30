@@ -23,14 +23,17 @@
 - **Games:** Dota 2 (full match history of every mode, via OpenDota) and World of Warcraft (Battle.net);
   several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO
 - **Weather:** today's forecast for your city (Open-Meteo, no API key) with clothing advice —
-  on its page, on the home page and in the morning digest
+  on its page, on the home page and in the morning digest; the city comes from the browser's
+  location until you pick another
 - **Achievements:** 110+ achievements across all modules, rarities, XP and player level
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
   `/ask` in Telegram, morning digest (the weather and only what changed since the previous one),
   weekly diary summary; several saved connections with their keys — switch the active one in one
   click (chat header, settings, `/model` in Telegram)
-- **Telegram assistant:** free-form messages go to the AI, which remembers the conversation and
-  can add, edit and delete almost everything the dashboard can (asks before deleting)
+- **Telegram assistant:** free-form messages go to the AI, which can add, edit and delete almost
+  everything the dashboard can (asks before deleting)
+- **Saved conversations:** one conversation with the assistant shared by the web chat and
+  Telegram, stored on the server (survives reloads and redeploys); earlier ones in the history
 - **Files for the AI:** PDF, Excel, CSV and text files in the chat and in Telegram — e.g. a bank
   statement is imported into finance, skipping transactions that are already recorded
 - **Sync:** a local instance (works offline) and a server sync both ways; the newer change wins,
@@ -81,7 +84,7 @@
 - GitHub repository traffic (views / clones), npm downloads history
 - Notification settings: which module sends what and where
 - Channels: Discord, e-mail, web push (browser notifications when the tab is closed)
-- AI: native Anthropic API, streaming answers, saved conversations
+- AI: native Anthropic API, streaming answers
 - Roles and sharing for multi-user setups
 - A module generator and more language translations
 - Far future: buying things and paying for them from the dashboard (and through the assistant),

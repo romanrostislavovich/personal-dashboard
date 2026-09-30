@@ -16,9 +16,39 @@
         }
       </mat-menu>
     }
+    @if (settings.value()?.configured) {
+      <button matButton [matMenuTriggerFor]="archiveMenu" (menuOpened)="loadArchive()">
+        <mat-icon>history</mat-icon> {{ 'ai.history.title' | transloco }}
+      </button>
+      <mat-menu #archiveMenu="matMenu" class="ai-archive">
+        @for (c of archive(); track c.id) {
+          <button mat-menu-item (click)="open(c)">
+            <mat-icon>{{ c.id === conversationId() ? 'chat' : 'chat_bubble_outline' }}</mat-icon>
+            <span class="archive-item">
+              <span class="archive-title">{{
+                c.title ?? ('ai.history.untitled' | transloco)
+              }}</span>
+              <span class="archive-date">{{ c.updatedAt | date: 'd MMM, HH:mm' }}</span>
+            </span>
+            <span
+              class="archive-remove"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="'ai.history.remove' | transloco"
+              (click)="removeConversation(c, $event)"
+              (keydown.enter)="removeConversation(c, $event)"
+            >
+              <mat-icon>delete</mat-icon>
+            </span>
+          </button>
+        } @empty {
+          <p class="archive-empty">{{ 'ai.history.empty' | transloco }}</p>
+        }
+      </mat-menu>
+    }
     @if (history().length) {
-      <button matButton (click)="clear()">
-        <mat-icon>delete_sweep</mat-icon> {{ 'ai.clear' | transloco }}
+      <button matButton (click)="startNew()">
+        <mat-icon>add_comment</mat-icon> {{ 'ai.history.new' | transloco }}
       </button>
     }
     @if (settings.value()?.configured) {
@@ -62,7 +92,7 @@
             @for (file of message.attachments; track $index) {
               <span class="file">
                 <mat-icon inline>description</mat-icon>
-                {{ file.name }}
+                {{ file }}
               </span>
             }
           }

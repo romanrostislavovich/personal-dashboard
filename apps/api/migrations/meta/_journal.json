@@ -134,6 +134,13 @@
       "when": 1790764498264,
       "tag": "0018_morning_digest_snapshots",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790774810765,
+      "tag": "0019_ai_conversations",
+      "breakpoints": true
     }
   ]
 }

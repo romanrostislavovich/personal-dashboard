@@ -121,5 +121,14 @@
     "placeholder": "## What went well\n\n## Grateful for\n\n## Tomorrow",
     "save": "Save",
     "cancel": "Cancel"
+  },
+  "deleteEntry": "Delete the entry",
+  "deleteAll": {
+    "button": "Delete the diary",
+    "title": "Delete the whole diary?",
+    "warning": "Every entry and photo will be deleted, on this device and on the server. This cannot be undone. Reminders and the template stay.",
+    "typeWord": "To confirm, type “{{word}}”:",
+    "word": "delete",
+    "confirm": "Delete everything"
   }
 }

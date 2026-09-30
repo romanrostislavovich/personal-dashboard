@@ -1,21 +1,39 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { WeatherLocation } from '@pd/contracts';
 import { ClothingAdviceComponent } from './clothing-advice.component';
 import { LocationPickerComponent } from './location-picker.component';
 import { WeatherApi } from './weather.api';
+import { WeatherLocator } from './weather-locator';
 import { conditionEmoji, isDaytime } from './weather-emoji';
 
 @Component({
   selector: 'pd-weather-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatCardModule, TranslocoPipe, ClothingAdviceComponent, LocationPickerComponent],
+  imports: [
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    TranslocoPipe,
+    ClothingAdviceComponent,
+    LocationPickerComponent,
+  ],
   template: `
     <header class="page-header">
       <h1 class="page-title">{{ 'weather.title' | transloco }}</h1>
-      <pd-location-picker (chosen)="setLocation($event)" />
+      <div class="where">
+        <pd-location-picker (chosen)="setLocation($event)" />
+        <button matButton type="button" [disabled]="locating()" (click)="useMyLocation()">
+          <mat-icon>my_location</mat-icon> {{ 'weather.myLocation' | transloco }}
+        </button>
+      </div>
     </header>
+    @if (locateFailed()) {
+      <p class="locate-failed">{{ 'weather.locateFailed' | transloco }}</p>
+    }
 
     @if (forecast.value(); as weather) {
       <div class="top">
@@ -92,6 +110,16 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
     }
   `,
   styles: `
+    .where {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .locate-failed {
+      margin: -8px 0 16px;
+      color: var(--mat-sys-error);
+    }
     .top {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
@@ -178,11 +206,40 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
 })
 export class WeatherPage {
   private readonly api = inject(WeatherApi);
+  private readonly locator = inject(WeatherLocator);
   protected readonly forecast = this.api.forecast();
   protected readonly emoji = conditionEmoji;
   protected readonly day = isDaytime;
+  protected readonly locating = signal(false);
+  protected readonly locateFailed = signal(false);
+
+  constructor() {
+    // No city yet: take the browser's location (once per browser, the browser asks first).
+    effect(() => {
+      if (this.forecast.status() === 'resolved' && this.forecast.value() === null) {
+        void this.locator.detectOnce().then((place) => place && this.forecast.reload());
+      }
+    });
+  }
 
   protected setLocation(location: WeatherLocation): void {
+    this.locateFailed.set(false);
     this.api.setLocation(location).subscribe(() => this.forecast.reload());
+  }
+
+  protected async useMyLocation(): Promise<void> {
+    this.locating.set(true);
+    this.locateFailed.set(false);
+    try {
+      const place = await this.locator.detect();
+      this.locateFailed.set(!place);
+      if (place) {
+        this.forecast.reload();
+      }
+    } catch {
+      this.locateFailed.set(true);
+    } finally {
+      this.locating.set(false);
+    }
   }
 }

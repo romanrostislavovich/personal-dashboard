@@ -1,8 +1,13 @@
 /** PostgreSQL error codes: https://www.postgresql.org/docs/current/errcodes-appendix.html */
 const FOREIGN_KEY_VIOLATION = '23503';
+const UNIQUE_VIOLATION = '23505';
 
 export function isForeignKeyViolation(error: unknown): boolean {
   return pgErrorCode(error) === FOREIGN_KEY_VIOLATION;
+}
+
+export function isUniqueViolation(error: unknown): boolean {
+  return pgErrorCode(error) === UNIQUE_VIOLATION;
 }
 
 /** Drizzle wraps the driver error, so the code may be in `cause`. */

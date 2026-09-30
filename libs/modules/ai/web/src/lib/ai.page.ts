@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -21,28 +22,33 @@ import {
   AI_ATTACHMENT_MAX_BYTES,
   AI_MAX_ATTACHMENTS,
   AiAttachment,
-  AiChatMessage,
   AiConnection,
+  AiConversation,
+  AiConversationDetail,
 } from '@pd/contracts';
 import { MarkdownPipe } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
 import { AiSettingsComponent } from './ai-settings.component';
 
-interface ChatEntry extends AiChatMessage {
+interface ChatEntry {
+  role: 'user' | 'assistant';
+  content: string;
+  /** Names of the files sent with the message. */
+  attachments?: string[];
   /** Which modules the model took data from (answers only). */
   toolsUsed?: string[];
+  /** Shown here only, never stored: a failed answer saves nothing on the server. */
   isError?: boolean;
 }
 
-/** History lives while the tab is open; the server stores nothing. */
-const HISTORY_KEY = 'pd.ai.history';
 const SUGGESTION_KEYS = ['birthdays', 'spending', 'sites', 'diary', 'music'];
 
 @Component({
   selector: 'pd-ai-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DatePipe,
     FormsModule,
     MatButtonModule,
     MatChipsModule,
@@ -63,7 +69,11 @@ export class AiPage {
 
   protected readonly settings = this.api.settings();
   protected readonly suggestions = SUGGESTION_KEYS;
-  protected readonly history = signal<ChatEntry[]>(loadHistory());
+  /** The open conversation; it is stored on the server and shared with Telegram. */
+  protected readonly conversationId = signal<string | null>(null);
+  protected readonly history = signal<ChatEntry[]>([]);
+  /** Earlier conversations, loaded when the menu opens. */
+  protected readonly archive = signal<AiConversation[]>([]);
   protected readonly draft = signal('');
   protected readonly thinking = signal(false);
   protected readonly showSettings = signal(false);
@@ -84,8 +94,9 @@ export class AiPage {
     if (question) {
       // Remove the question from the URL so a page reload does not send it again.
       inject(Router).navigate([], { queryParams: {}, replaceUrl: true });
-      void this.send(question);
     }
+    // The question goes to the current conversation, so it waits until that is loaded.
+    void this.loadCurrent().then(() => (question ? this.send(question) : undefined));
   }
 
   /** Source caption: "Diary", "Finance"… — module names from their translations. */
@@ -105,11 +116,18 @@ export class AiPage {
     this.append({
       role: 'user',
       content: question,
-      ...(attachments.length ? { attachments } : {}),
+      attachments: attachments.map((file) => file.name),
     });
     this.thinking.set(true);
     try {
-      const { reply, toolsUsed } = await firstValueFrom(this.api.chat(this.requestMessages()));
+      const { conversationId, reply, toolsUsed } = await firstValueFrom(
+        this.api.chat({
+          conversationId: this.conversationId() ?? undefined,
+          content: question,
+          ...(attachments.length ? { attachments } : {}),
+        }),
+      );
+      this.conversationId.set(conversationId);
       this.append({ role: 'assistant', content: reply, toolsUsed });
     } catch (error) {
       const key = isProviderError(error) ? 'ai.errors.api' : 'ai.errors.generic';
@@ -157,20 +175,52 @@ export class AiPage {
     }
   }
 
-  clear(): void {
-    this.update([]);
+  /** A new conversation, here and in Telegram; the old one stays in the history menu. */
+  async startNew(): Promise<void> {
+    this.show(await firstValueFrom(this.api.startConversation()));
+  }
+
+  async loadArchive(): Promise<void> {
+    this.archive.set(await firstValueFrom(this.api.conversations()));
+  }
+
+  /** Opens an earlier conversation; a new message continues it (and makes it current). */
+  async open(conversation: AiConversation): Promise<void> {
+    this.show(await firstValueFrom(this.api.conversation(conversation.id)));
+  }
+
+  async removeConversation(conversation: AiConversation, event: Event): Promise<void> {
+    event.stopPropagation();
+    await firstValueFrom(this.api.removeConversation(conversation.id));
+    this.archive.update((list) => list.filter((c) => c.id !== conversation.id));
+    if (conversation.id === this.conversationId()) {
+      await this.loadCurrent();
+    }
+  }
+
+  private async loadCurrent(): Promise<void> {
+    try {
+      this.show(await firstValueFrom(this.api.currentConversation()));
+    } catch {
+      // The chat still works: the first message starts a conversation.
+    }
+  }
+
+  private show(conversation: AiConversationDetail | null): void {
+    this.conversationId.set(conversation?.id ?? null);
+    this.update(
+      (conversation?.messages ?? []).map(({ role, content, attachments, toolsUsed }) => ({
+        role,
+        content,
+        attachments,
+        toolsUsed,
+      })),
+    );
   }
 
   private canSend(question: string, attachments: AiAttachment[]): boolean {
     const hasContent = Boolean(question) || attachments.length > 0;
     return hasContent && !this.thinking() && !this.uploading();
-  }
-
-  /** Only the role, text and files go to the model — no internal fields, no error bubbles. */
-  private requestMessages(): AiChatMessage[] {
-    return this.history()
-      .filter((m) => !m.isError)
-      .map(({ role, content, attachments }) => ({ role, content, attachments }));
   }
 
   private async readFile(file: File): Promise<void> {
@@ -195,11 +245,6 @@ export class AiPage {
 
   private update(history: ChatEntry[]): void {
     this.history.set(history);
-    try {
-      sessionStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-    } catch {
-      // Storage is unavailable (private mode) — the history just won't survive a reload.
-    }
     setTimeout(() => this.messagesEnd()?.nativeElement.scrollIntoView({ behavior: 'smooth' }));
   }
 }
@@ -221,12 +266,4 @@ function attachErrorKey(error: unknown): string {
     }
   }
   return 'ai.attach.failed';
-}
-
-function loadHistory(): ChatEntry[] {
-  try {
-    return JSON.parse(sessionStorage.getItem(HISTORY_KEY) ?? '[]') as ChatEntry[];
-  } catch {
-    return [];
-  }
 }

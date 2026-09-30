@@ -20,7 +20,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { LocalDate, toLocalDate, Transaction, TransactionKind } from '@pd/contracts';
 import { todayLocalDate } from '@pd/web-core';
 import { categoryIcon } from '../overview/category-icon';
-import { groupByDay } from '../overview/finance-stats';
+import { CategoryFilter, groupByDay } from '../overview/finance-stats';
 
 /**
  * Transactions grouped by day, like a bank app: a day header with its total, then the rows.
@@ -51,8 +51,8 @@ export class TransactionListComponent {
   readonly projectNames = input<Map<string, string>>(new Map());
   readonly compact = input(false);
   readonly limit = input<number | null>(null);
-  /** Set from the overview when a category is clicked. */
-  readonly category = model<string | null>(null);
+  /** Set from the overview when a category (or "Other") is clicked. */
+  readonly category = model<CategoryFilter | null>(null);
   readonly edit = output<Transaction>();
   readonly remove = output<Transaction>();
 
@@ -68,7 +68,7 @@ export class TransactionListComponent {
     const kind = this.kind();
     const list = this.transactions().filter(
       (t) =>
-        (!category || t.category === category) &&
+        (!category || (category.kind === t.kind && category.categories.includes(t.category))) &&
         (!kind || t.kind === kind) &&
         (!query ||
           t.category.toLowerCase().includes(query) ||

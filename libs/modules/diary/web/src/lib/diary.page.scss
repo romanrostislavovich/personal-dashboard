@@ -280,3 +280,36 @@
   font: 600 0.7rem / 1 var(--pd-font);
   color: var(--mat-sys-on-surface-variant);
 }
+
+// A row of the list: the entry, and a delete button that shows on hover (always on touch).
+.entry-row {
+  position: relative;
+
+  .entry {
+    padding-right: 44px;
+  }
+
+  .entry-delete {
+    position: absolute;
+    top: 4px;
+    right: 2px;
+    color: var(--mat-sys-on-surface-variant);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  &:hover .entry-delete,
+  .entry-delete:focus-visible {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    .entry-delete {
+      opacity: 1;
+    }
+  }
+}
+
+.delete-all {
+  color: var(--mat-sys-error);
+}

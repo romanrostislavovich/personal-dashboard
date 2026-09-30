@@ -22,8 +22,8 @@
 
     @if (category(); as selected) {
       <mat-chip-set>
-        <mat-chip (removed)="category.set(null)">
-          {{ selected }}
+        <mat-chip (removed)="category.set(null)" [matTooltip]="selected.categories.join(', ')">
+          {{ selected.label ?? ('finance.categories.other' | transloco) }}
           <button matChipRemove [attr.aria-label]="'finance.list.clearFilters' | transloco">
             <mat-icon>cancel</mat-icon>
           </button>

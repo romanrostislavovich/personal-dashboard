@@ -21,6 +21,8 @@ import {
   AiChatResponse,
   AiConnectionInput,
   aiConnectionInputSchema,
+  AiConversation,
+  AiConversationDetail,
   AiPreferences,
   aiPreferencesSchema,
   AiSettings,
@@ -28,7 +30,7 @@ import {
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
 import { ZodValidationPipe } from '../validation/zod-validation.pipe';
 import { AiConnectionsService } from './ai-connections.service';
-import { AiService } from './ai.service';
+import { AiConversationsService } from './ai-conversations.service';
 import { AttachmentError, attachmentText } from './attachment-text';
 
 /** The part of a multer upload we use (multer's own types are not installed). */
@@ -40,8 +42,8 @@ interface UploadedDocument {
 @Controller('ai')
 export class AiController {
   constructor(
-    private readonly ai: AiService,
     private readonly connections: AiConnectionsService,
+    private readonly conversations: AiConversationsService,
   ) {}
 
   @Get('settings')
@@ -94,21 +96,53 @@ export class AiController {
   }
 
   /**
-   * Chat: the client sends the whole history, the server stores nothing.
-   * Like the Telegram assistant, it can also add data when asked.
+   * Chat: one new message; the conversation is stored and shared with Telegram.
+   * Like the Telegram assistant, it can also change data when asked.
    */
   @Post('chat')
   chat(
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(aiChatRequestSchema)) request: AiChatRequest,
   ): Promise<AiChatResponse> {
-    return this.ai.ask(user.id, request.messages, { allowWrites: true });
+    return this.conversations.ask(user.id, request, { allowWrites: true });
   }
 
-  /**
-   * The text of a file for the chat. Nothing is stored: the client sends the text back with
-   * the message, like the rest of the history.
-   */
+  // --- Conversations: the current one is the one updated last ---
+
+  @Get('conversations')
+  conversationList(@CurrentUser() user: AuthUser): Promise<AiConversation[]> {
+    return this.conversations.list(user.id);
+  }
+
+  @Get('conversations/current')
+  currentConversation(@CurrentUser() user: AuthUser): Promise<AiConversationDetail | null> {
+    return this.conversations.current(user.id);
+  }
+
+  @Get('conversations/:id')
+  conversation(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<AiConversationDetail> {
+    return this.conversations.get(user.id, id);
+  }
+
+  /** "New conversation": the next message, here or in Telegram, starts from scratch. */
+  @Post('conversations')
+  startConversation(@CurrentUser() user: AuthUser): Promise<AiConversationDetail> {
+    return this.conversations.start(user.id);
+  }
+
+  @Delete('conversations/:id')
+  @HttpCode(204)
+  removeConversation(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.conversations.remove(user.id, id);
+  }
+
+  /** The text of a file for the chat: the client sends it back with the next message. */
   @Post('attachments')
   @UseInterceptors(
     FileInterceptor('file', {

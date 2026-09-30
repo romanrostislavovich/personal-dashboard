@@ -41,6 +41,18 @@ export class GithubOssController {
     return this.actions.run(user.id, GITHUB_OSS_ACTIONS.addRepo, input);
   }
 
+  /** Changes the repository (owner/name) or its npm package. */
+  @Put('repos/:id')
+  @HttpCode(204)
+  update(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(trackedRepoInputSchema))
+    input: z.output<typeof trackedRepoInputSchema>,
+  ) {
+    return this.actions.run(user.id, GITHUB_OSS_ACTIONS.updateRepo, { id, input });
+  }
+
   @Delete('repos/:id')
   @HttpCode(204)
   remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {

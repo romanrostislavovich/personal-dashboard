@@ -32,7 +32,13 @@ import { FinanceApi } from './finance.api';
 import { CashFlowChartComponent } from './overview/cash-flow-chart.component';
 import { CategoryBreakdownComponent } from './overview/category-breakdown.component';
 import { FinanceKpisComponent } from './overview/finance-kpis.component';
-import { cashFlowMonths, categoryShares, mainCurrency, monthKey } from './overview/finance-stats';
+import {
+  cashFlowMonths,
+  CategoryFilter,
+  categoryShares,
+  mainCurrency,
+  monthKey,
+} from './overview/finance-stats';
 import { UpcomingPaymentsComponent } from './overview/upcoming-payments.component';
 import {
   RecurringPaymentFormData,
@@ -112,7 +118,7 @@ export class FinancePage {
   protected readonly Tab = Tab;
   protected readonly tab = signal(Tab.Overview);
   /** A category clicked in the overview filters the transactions tab. */
-  protected readonly categoryFilter = signal<string | null>(null);
+  protected readonly categoryFilter = signal<CategoryFilter | null>(null);
   protected readonly recentCount = RECENT_TRANSACTIONS;
 
   // --- Data ---
@@ -176,8 +182,8 @@ export class FinancePage {
     this.chosenCurrency.set(currency);
   }
 
-  showCategory(category: string): void {
-    this.categoryFilter.set(category);
+  showCategory(filter: CategoryFilter): void {
+    this.categoryFilter.set(filter);
     this.tab.set(Tab.Transactions);
   }
 
