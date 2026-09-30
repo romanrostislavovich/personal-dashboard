@@ -148,6 +148,27 @@
       "when": 1790777565207,
       "tag": "0020_ai_speech_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790788047475,
+      "tag": "0021_finance_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790788655173,
+      "tag": "0022_auth_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790789264655,
+      "tag": "0023_ai_privacy_and_trash",
+      "breakpoints": true
     }
   ]
 }

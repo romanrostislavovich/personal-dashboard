@@ -131,6 +131,13 @@
   }
 }
 
+.in-main {
+  display: block;
+  text-align: right;
+  font: var(--mat-sys-label-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .empty-state {
   display: flex;
   flex-direction: column;

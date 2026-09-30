@@ -18,7 +18,7 @@ single Docker image on your server. Every feature is a module: enable, disable o
 | ✨ AI           | Chat about your own data (DeepSeek, OpenAI, Ollama or any OpenAI-compatible API), `/ask` in Telegram, a morning digest, weekly diary summaries                                                      |
 | 🌤️ Weather      | Today's forecast for your city (Open-Meteo, no API key): feels-like temperature, precipitation, wind, UV, hourly view and what to wear; also in the morning digest                                  |
 | 📔 Diary        | Visual Markdown editor per day, autosave, mood, #tags, emoji marks on phrases (`==🔥 text==`), photos, search, year heatmap, “on this day”, mood insights; Telegram `/d`, `/mood`, `/today`, photos |
-| 💰 Finance      | Income and expenses per wallet (personal or a project), multi-currency, top categories, recurring payments, automatic cost import from Hetzner Cloud and DeepSeek                                   |
+| 💰 Finance      | Income and expenses per wallet, totals in your main currency (ECB rates), top categories, recurring payments, automatic cost import from Hetzner Cloud and DeepSeek                                 |
 | 🎂 Birthdays    | Countdown and age, reminders N days ahead                                                                                                                                                           |
 | 🐙 Open Source  | GitHub repositories: star history and growth, forks, issues, PRs, releases, npm downloads; alerts on new issues/PRs, releases and star milestones                                                   |
 | 📡 Monitoring   | Uptime checks every 5 minutes, uptime for 24 h / 7 / 30 days, response time chart, SSL expiry; “down / back up” alerts and SSL reminders                                                            |
@@ -28,6 +28,11 @@ single Docker image on your server. Every feature is a module: enable, disable o
 | 🚀 Projects     | Your websites and services — finance, monitoring and AI refer to them                                                                                                                               |
 
 The UI, notifications and AI answers are available in **English** and **Russian**.
+
+Security: short-lived access tokens with the refresh token in an httpOnly cookie, a list of signed-in
+devices, two-factor sign-in (an authenticator app, recovery codes), throttled sign-in, a 30-day trash
+for everything deleted (by you or by the AI), an AI action log and per-module switches of what the
+AI may see.
 
 ## Quick start (development)
 

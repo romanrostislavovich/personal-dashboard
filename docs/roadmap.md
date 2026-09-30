@@ -40,6 +40,11 @@
   the losing version is kept; rows go in bulk, thousands a second
 - **Shared client core** (`@pd/client-core`): session, every API request (core and modules), live
   events and locale in plain TypeScript, used by the web app and ready for a mobile one
+- **Main currency:** finance totals, charts and categories converted at the ECB rate of each
+  transaction's day; one currency as it is on a click
+- **Security:** 15-minute access tokens and an httpOnly refresh cookie, devices signed in (sign one
+  or all others out), two-factor sign-in with recovery codes, throttled sign-in; a 30-day trash for
+  everything deleted; the AI action log and per-module switches of what the AI sees
 - **Voice messages in Telegram:** recognized (OpenAI speech-to-text) and handled like typed ones —
   a question or a request to the assistant, the recognized text shown first
 
@@ -72,6 +77,49 @@
   reports through notifications with a severity and a suggested fix and never fixes things itself
   without approval. It must not share tools or context with the main assistant, so a prompt
   injection in user data cannot switch it off.
+
+#### Data safety
+
+- **Sync reconciliation** — the server and a client compare row counts and hashes per table on a
+  schedule and report a mismatch to Telegram (a sync bug once lost rows silently)
+- **Conflicts screen** — the rows `sync.conflicts` and `sync.parked` hold, both versions side by
+  side, "keep this one"
+- **Off-server backups** — the daily dump copied elsewhere (a Storage Box, S3), and a weekly
+  restore test into a scratch database that checks the row counts
+- **One-step deploy rollback** — the previous image kept, a database snapshot before migrations,
+  `deploy.sh --rollback`
+
+#### Tests and CI
+
+- **End-to-end smoke tests** (Playwright): sign-in, a diary entry, a transaction, an AI message
+- **Database tests in CI** — a PostgreSQL service in GitHub Actions, so the `*.db.spec.ts` tests
+  run instead of being skipped
+- **Dependency updates** (Renovate) and a clean `npm audit`
+
+#### Watching the dashboard itself
+
+- **Self-monitoring** — the dashboard's own health check in the monitoring module; failed
+  background jobs, sync errors and AI provider failures reported to Telegram
+- **Error log in the UI** — recent server errors without `docker compose logs`
+
+#### Everyday comfort
+
+- **Command palette (Ctrl+K)** — search across modules and quick actions
+- **PWA** — install on a phone, work offline (a cheap mobile app before the real one)
+- **Customizable home page** — order and hide widgets
+- **Telegram buttons** — "Yes / No" to confirm a deletion; quick commands like `/spent 12 coffee`
+
+#### Features
+
+- **Finance:** budgets per category with warnings; a photo of a receipt in Telegram becomes a
+  transaction
+- **Export of all data** — the diary as Markdown (Obsidian-compatible), finance as CSV,
+  everything as JSON
+- **Habits** — a habit tracker module, in the digest too
+- **Insights across modules** — mood on days with a run, what was playing on bad days (through AI
+  tools or core insights: modules do not depend on each other)
+- **AI memory** — facts about the user the assistant keeps between conversations
+- **AI reminders** — "remind me on Friday to call mum" becomes a scheduled job
 
 ### Ideas
 

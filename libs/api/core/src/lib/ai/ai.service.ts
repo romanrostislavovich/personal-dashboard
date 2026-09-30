@@ -1,9 +1,16 @@
-import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AiChatMessage } from '@pd/contracts';
+import { AiActionOutcome, AiChatMessage } from '@pd/contracts';
 import { AppConfig } from '../config/env';
 import { coreMessages } from '../i18n/core.messages';
 import { UsersService } from '../users/users.service';
+import { AiActionsService } from './ai-actions.service';
 import { AiConnectionsService } from './ai-connections.service';
 import { PromptOptions, systemPrompt } from './ai-prompt';
 import { AiTool } from './ai-tool';
@@ -49,6 +56,7 @@ export class AiService {
     @Inject(ConfigService) private readonly config: AppConfig,
     private readonly connections: AiConnectionsService,
     private readonly users: UsersService,
+    private readonly actions: AiActionsService,
   ) {}
 
   registerTool(tool: AiTool): void {
@@ -61,6 +69,16 @@ export class AiService {
 
   async isConfigured(userId: string): Promise<boolean> {
     return (await this.connections.active(userId)) !== null;
+  }
+
+  /** Modules that give the AI data: the ones the user can switch off in the AI settings. */
+  modules(): string[] {
+    return [...new Set(this.tools.map((tool) => tool.module))].sort();
+  }
+
+  /** Whether the user lets the AI see this module's data. */
+  async canSee(userId: string, module: string): Promise<boolean> {
+    return !(await this.connections.disabledModules(userId)).includes(module);
   }
 
   // --- Model requests ---
@@ -86,7 +104,10 @@ export class AiService {
         content: withAttachments(content, attachments),
       })),
     ];
-    const tools = options.allowWrites ? this.tools : this.tools.filter((tool) => !tool.writes);
+    const hidden = new Set(await this.connections.disabledModules(userId));
+    const tools = this.tools.filter(
+      (tool) => !hidden.has(tool.module) && (options.allowWrites || !tool.writes),
+    );
     const turn = ++this.turns;
     /** Write tools that changed data in this turn. */
     const changes: string[] = [];
@@ -128,8 +149,19 @@ export class AiService {
     }
   }
 
-  /** A single request without tools (summaries, rewording). */
-  async complete(userId: string, instruction: string, content: string): Promise<string> {
+  /**
+   * A single request without tools (summaries, rewording). `module` — whose data `content` is:
+   * refused if the user has switched that module off for the AI.
+   */
+  async complete(
+    userId: string,
+    instruction: string,
+    content: string,
+    module?: string,
+  ): Promise<string> {
+    if (module && !(await this.canSee(userId, module))) {
+      throw new ForbiddenException(`AI access to ${module} is off`);
+    }
     const connection = await this.requireConnection(userId);
     const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
     try {
@@ -156,16 +188,30 @@ export class AiService {
     if (!tool) {
       return { output: JSON.stringify({ error: 'Unknown tool' }), changed: false };
     }
+    let args: Record<string, unknown> = {};
+    // Changes go to the log (AiActionsService); reads are not worth it.
+    const log = (outcome: AiActionOutcome, error?: string) =>
+      tool.writes
+        ? this.actions.record(userId, {
+            tool: tool.name,
+            module: tool.module,
+            args,
+            outcome,
+            error,
+          })
+        : Promise.resolve();
     try {
-      const args = rawArgs ? (JSON.parse(rawArgs) as Record<string, unknown>) : {};
+      args = rawArgs ? (JSON.parse(rawArgs) as Record<string, unknown>) : {};
       if (
         tool.confirm &&
         !this.confirmations.confirmOrRequest(userId, callKey(tool.name, args), turn)
       ) {
         const willAffect = await tool.confirm(userId, args);
+        await log('asked');
         return { output: JSON.stringify(confirmationRequest(willAffect)), changed: false };
       }
       const value = await tool.handler(userId, args);
+      await log('done');
       const result = value === undefined ? '{"done":true}' : JSON.stringify(value);
       const output =
         result.length > MAX_TOOL_RESULT_CHARS
@@ -175,6 +221,7 @@ export class AiService {
     } catch (error) {
       this.logger.warn(`AI tool ${tool.name} failed: ${error}`);
       const message = error instanceof Error ? error.message : String(error);
+      await log('failed', message);
       return { output: JSON.stringify({ error: message }), changed: false };
     }
   }

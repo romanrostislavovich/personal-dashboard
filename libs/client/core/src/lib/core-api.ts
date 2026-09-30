@@ -4,14 +4,22 @@ import {
   CurrentUser,
   LoginRequest,
   LoginResponse,
+  LoginResult,
   NotificationSettings,
   PasswordChange,
   ProfileUpdate,
   Project,
   ProjectInput,
+  RecoveryCodes,
   RegisterRequest,
+  SessionInfo,
   SyncStatus,
   TelegramLinkResponse,
+  TrashItem,
+  TwoFactorDisable,
+  TwoFactorLogin,
+  TwoFactorSetup,
+  TwoFactorStatus,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from './api-client';
 
@@ -22,6 +30,13 @@ import { ApiClient, apiRequest } from './api-client';
 export const API_PATHS = {
   authConfig: '/api/auth/config',
   login: '/api/auth/login',
+  loginWithCode: '/api/auth/login/2fa',
+  refresh: '/api/auth/refresh',
+  logout: '/api/auth/logout',
+  sessions: '/api/auth/sessions',
+  session: (id: string) => `/api/auth/sessions/${encodeURIComponent(id)}`,
+  revokeOtherSessions: '/api/auth/sessions/revoke-others',
+  twoFactor: '/api/auth/2fa',
   register: '/api/auth/register',
   me: '/api/auth/me',
   password: '/api/auth/password',
@@ -35,6 +50,8 @@ export const API_PATHS = {
   testNotification: '/api/notifications/test',
   syncStatus: '/api/sync/status',
   syncRun: '/api/sync/run',
+  trash: '/api/trash',
+  trashItem: (id: string) => `/api/trash/${encodeURIComponent(id)}`,
 } as const;
 
 /** Read requests of the core (see ApiRequest). */
@@ -50,11 +67,27 @@ export function authApi(api: ApiClient) {
   return {
     /** Public server settings: whether sign-up is open. */
     config: () => api.get<AuthConfig>(API_PATHS.authConfig),
-    login: (credentials: LoginRequest) => api.post<LoginResponse>(API_PATHS.login, credentials),
+    login: (credentials: LoginRequest) => api.post<LoginResult>(API_PATHS.login, credentials),
+    loginWithCode: (input: TwoFactorLogin) =>
+      api.post<LoginResponse>(API_PATHS.loginWithCode, input),
     register: (input: RegisterRequest) => api.post<LoginResponse>(API_PATHS.register, input),
     me: () => api.get<CurrentUser>(API_PATHS.me),
     updateProfile: (changes: ProfileUpdate) => api.patch<CurrentUser>(API_PATHS.me, changes),
+    /** Also signs every other device out. */
     changePassword: (input: PasswordChange) => api.put<void>(API_PATHS.password, input),
+
+    /** Devices and browsers signed in. */
+    sessions: () => api.get<SessionInfo[]>(API_PATHS.sessions),
+    revokeSession: (id: string) => api.delete(API_PATHS.session(id)),
+    revokeOtherSessions: () => api.post<void>(API_PATHS.revokeOtherSessions, {}),
+
+    /** Two-factor sign-in: set up (a QR code), enable with the first code, disable. */
+    twoFactorStatus: () => api.get<TwoFactorStatus>(API_PATHS.twoFactor),
+    setupTwoFactor: () => api.post<TwoFactorSetup>(`${API_PATHS.twoFactor}/setup`, {}),
+    enableTwoFactor: (code: string) =>
+      api.post<RecoveryCodes>(`${API_PATHS.twoFactor}/enable`, { code }),
+    disableTwoFactor: (input: TwoFactorDisable) =>
+      api.post<void>(`${API_PATHS.twoFactor}/disable`, input),
   };
 }
 
@@ -83,6 +116,15 @@ export function notificationsApi(api: ApiClient) {
     linkTelegram: () => api.post<TelegramLinkResponse>(API_PATHS.telegramLink, {}),
     unlinkTelegram: () => api.delete(API_PATHS.telegram),
     sendTest: () => api.post<void>(API_PATHS.testNotification, {}),
+  };
+}
+
+/** Deleted data, kept for 30 days: bring it back or delete it for good. */
+export function trashApi(api: ApiClient) {
+  return {
+    list: () => api.get<TrashItem[]>(API_PATHS.trash),
+    restore: (id: string) => api.post<void>(`${API_PATHS.trashItem(id)}/restore`, {}),
+    remove: (id: string) => api.delete(API_PATHS.trashItem(id)),
   };
 }
 

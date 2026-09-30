@@ -50,6 +50,11 @@ export const aiPreferencesSchema = z.object({
    */
   speechConnectionId: z.uuid().nullable().optional(),
   speechModel: z.string().trim().min(1).max(100).optional(),
+  /**
+   * Modules whose data never goes to the AI provider: no assistant tools, no digest sections,
+   * no diary summaries.
+   */
+  disabledModules: z.array(z.string().trim().min(1).max(50)).max(50).optional(),
 });
 export type AiPreferences = z.infer<typeof aiPreferencesSchema>;
 
@@ -57,6 +62,7 @@ export interface AiSettings {
   morningDigest: boolean;
   speechConnectionId: string | null;
   speechModel: string;
+  disabledModules: string[];
   /** At least one connection exists — the AI features work. */
   configured: boolean;
   /** The connection every AI request goes through. */
@@ -143,6 +149,21 @@ export interface AiConversation {
   /** The beginning of the first question; `null` while the conversation is empty. */
   title: string | null;
   updatedAt: string;
+}
+
+/** How a change by the assistant ended: made, a confirmation asked for, or failed. */
+export type AiActionOutcome = 'done' | 'asked' | 'failed';
+
+/** A change the assistant made or tried to make (the log in the AI settings). */
+export interface AiAction {
+  id: string;
+  tool: string;
+  module: string;
+  /** The arguments as JSON (the beginning if long). */
+  args: string;
+  outcome: AiActionOutcome;
+  error: string | null;
+  createdAt: string;
 }
 
 export interface AiConversationDetail extends AiConversation {

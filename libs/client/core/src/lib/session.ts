@@ -1,20 +1,27 @@
 import { KeyValueStore } from './platform';
 
-/** The key the web app has always used, so a signed-in browser stays signed in. */
-const TOKEN_KEY = 'pd.accessToken';
+/** Where an app keeps its refresh token (the web keeps it in an httpOnly cookie instead). */
+const REFRESH_KEY = 'pd.refreshToken';
 
 type Listener = (token: string | null) => void;
 
 /**
- * The signed-in session: the access token, kept in the platform's storage. Other parts (the API
- * client, live events, the UI) follow it through `subscribe`.
+ * The signed-in session. The access token lives only in memory and for 15 minutes; a new one
+ * comes from the refresh token — an httpOnly cookie in a browser (out of reach of page scripts),
+ * the platform's secure storage in an app. Other parts (the API client, live events, the UI)
+ * follow the access token through `subscribe`.
  */
 export class Session {
   private current: string | null = null;
   private readonly listeners = new Set<Listener>();
 
-  constructor(private readonly storage: KeyValueStore) {}
+  constructor(
+    private readonly storage: KeyValueStore,
+    /** `cookie` — the browser keeps the refresh token; `storage` — this session does. */
+    private readonly refreshTokenIn: 'cookie' | 'storage',
+  ) {}
 
+  /** The access token. */
   get token(): string | null {
     return this.current;
   }
@@ -23,25 +30,32 @@ export class Session {
     return this.current !== null;
   }
 
-  /** Reads the saved token (on app start). */
-  async restore(): Promise<string | null> {
-    this.change(await this.storage.get(TOKEN_KEY));
-    return this.current;
+  get keepsRefreshToken(): boolean {
+    return this.refreshTokenIn === 'storage';
   }
 
-  /** After signing in. */
-  async start(token: string): Promise<void> {
-    await this.storage.set(TOKEN_KEY, token);
-    this.change(token);
+  /** The saved refresh token (an app); a browser has it in the cookie, `null` here. */
+  refreshToken(): Promise<string | null> {
+    return this.keepsRefreshToken ? this.storage.get(REFRESH_KEY) : Promise.resolve(null);
   }
 
-  /** Signing out, or the server said the token is no longer valid. */
+  /** After signing in or refreshing: a new access token, and a new refresh token if one came. */
+  async start(accessToken: string, refreshToken?: string): Promise<void> {
+    if (refreshToken && this.keepsRefreshToken) {
+      await this.storage.set(REFRESH_KEY, refreshToken);
+    }
+    this.change(accessToken);
+  }
+
+  /** Signing out, or the server no longer accepts the session. */
   async end(): Promise<void> {
-    await this.storage.remove(TOKEN_KEY);
+    if (this.keepsRefreshToken) {
+      await this.storage.remove(REFRESH_KEY);
+    }
     this.change(null);
   }
 
-  /** Calls `listener` on every change of the token; returns the unsubscribe function. */
+  /** Calls `listener` on every change of the access token; returns the unsubscribe function. */
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);

@@ -1,4 +1,5 @@
 import {
+  AiAction,
   AiAttachmentUpload,
   AiChatRequest,
   AiChatResponse,
@@ -32,6 +33,10 @@ export function aiApi(api: ApiClient) {
     removeConnection: (id: string) => api.delete<AiSettings>(`${BASE}/connections/${id}`),
     activateConnection: (id: string) =>
       api.post<AiSettings>(`${BASE}/connections/${id}/activate`, {}),
+    /** Modules that give the AI data: the switches of "what the AI sees". */
+    modules: () => api.get<string[]>(`${BASE}/modules`),
+    /** What the assistant changed or tried to change, newest first. */
+    actions: () => api.get<AiAction[]>(`${BASE}/actions`),
 
     /** One message; the server keeps the conversation (shared with Telegram). */
     chat: (request: AiChatRequest) => api.post<AiChatResponse>(`${BASE}/chat`, request),

@@ -32,6 +32,6 @@ export class DiarySummaryService {
       .reverse()
       .map((e) => `### ${e.day}${e.mood ? ` (mood ${e.mood}/5)` : ''}\n${e.content}`)
       .join('\n\n');
-    return this.ai.complete(userId, INSTRUCTION, text);
+    return this.ai.complete(userId, INSTRUCTION, text, 'diary');
   }
 }

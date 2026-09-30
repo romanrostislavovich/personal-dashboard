@@ -10,6 +10,12 @@ export interface ClientPlatform {
   baseUrl: string;
   /** Keeps the session between launches: `localStorage`, a phone's secure store… */
   storage: KeyValueStore;
+  /**
+   * Where the refresh token lives: `cookie` — a browser on the dashboard's own origin keeps it in
+   * an httpOnly cookie no script can read (the web app); `storage` — in `storage` (an app with a
+   * secure store). `storage` by default.
+   */
+  refreshTokenIn?: 'cookie' | 'storage';
   /** The platform's `fetch`; the global one by default. */
   fetch?: typeof fetch;
 }

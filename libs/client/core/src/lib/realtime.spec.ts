@@ -18,7 +18,7 @@ describe('SseParser', () => {
 
 describe('RealtimeConnection', () => {
   it('connects when signed in, with the token, and passes events on (not pings)', async () => {
-    const session = new Session(memoryStorage());
+    const session = new Session(memoryStorage(), 'storage');
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
         controller.enqueue(bytes('data: {"type":"ping"}\n\ndata: {"type":"notification"}\n\n'));

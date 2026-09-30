@@ -15,6 +15,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   AI_ATTACHMENT_MAX_BYTES,
+  AiAction,
   AiAttachmentUpload,
   AiChatRequest,
   aiChatRequestSchema,
@@ -30,7 +31,9 @@ import {
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
 import { ZodValidationPipe } from '../validation/zod-validation.pipe';
 import { AiConnectionsService } from './ai-connections.service';
+import { AiActionsService } from './ai-actions.service';
 import { AiConversationsService } from './ai-conversations.service';
+import { AiService } from './ai.service';
 import { AttachmentError, attachmentText } from './attachment-text';
 
 /** The part of a multer upload we use (multer's own types are not installed). */
@@ -42,6 +45,8 @@ interface UploadedDocument {
 @Controller('ai')
 export class AiController {
   constructor(
+    private readonly ai: AiService,
+    private readonly aiActions: AiActionsService,
     private readonly connections: AiConnectionsService,
     private readonly conversations: AiConversationsService,
   ) {}
@@ -49,6 +54,18 @@ export class AiController {
   @Get('settings')
   settings(@CurrentUser() user: AuthUser): Promise<AiSettings> {
     return this.connections.settings(user.id);
+  }
+
+  /** What the assistant changed or tried to change, newest first. */
+  @Get('actions')
+  actions(@CurrentUser() user: AuthUser): Promise<AiAction[]> {
+    return this.aiActions.list(user.id);
+  }
+
+  /** Modules that give the AI data — the switches of "what the AI sees". */
+  @Get('modules')
+  modules(): string[] {
+    return this.ai.modules();
   }
 
   @Put('preferences')

@@ -2,33 +2,32 @@ import { Session } from './session';
 import { memoryStorage } from './testing';
 
 describe('Session', () => {
-  it('keeps the token in the storage and tells subscribers about changes', async () => {
-    const storage = memoryStorage({ 'pd.accessToken': 'saved' });
-    const session = new Session(storage);
+  it('keeps the access token in memory and an app’s refresh token in the storage', async () => {
+    const storage = memoryStorage();
+    const session = new Session(storage, 'storage');
     const seen: (string | null)[] = [];
     session.subscribe((token) => seen.push(token));
 
-    expect(await session.restore()).toBe('saved');
-    await session.start('fresh');
-    expect(storage.values.get('pd.accessToken')).toBe('fresh');
+    await session.start('access-1', 'refresh-1');
+    expect(session.token).toBe('access-1');
+    expect(await session.refreshToken()).toBe('refresh-1');
+    expect([...storage.values.keys()]).toEqual(['pd.refreshToken']); // No access token stored.
+
+    await session.start('access-2'); // A refresh without rotation keeps the refresh token.
+    expect(await session.refreshToken()).toBe('refresh-1');
     await session.end();
 
-    expect(storage.values.has('pd.accessToken')).toBe(false);
+    expect(storage.values.size).toBe(0);
     expect(session.isSignedIn).toBe(false);
-    expect(seen).toEqual(['saved', 'fresh', null]);
+    expect(seen).toEqual(['access-1', 'access-2', null]);
   });
 
-  it('does not repeat an unchanged token', async () => {
-    const session = new Session(memoryStorage());
-    const listener = vi.fn();
-    const unsubscribe = session.subscribe(listener);
+  it('a browser keeps nothing: its refresh token is in an httpOnly cookie', async () => {
+    const storage = memoryStorage();
+    const session = new Session(storage, 'cookie');
+    await session.start('access', 'refresh');
 
-    await session.restore(); // null → null
-    await session.start('a');
-    await session.start('a');
-    unsubscribe();
-    await session.end();
-
-    expect(listener).toHaveBeenCalledTimes(1);
+    expect(storage.values.size).toBe(0);
+    expect(await session.refreshToken()).toBeNull();
   });
 });

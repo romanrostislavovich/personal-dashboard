@@ -29,6 +29,14 @@ export class AiApi {
     return fromCore(() => this.ai.removeConnection(id));
   }
 
+  modules() {
+    return fromCore(() => this.ai.modules());
+  }
+
+  actions() {
+    return fromCore(() => this.ai.actions());
+  }
+
   activateConnection(id: string) {
     return fromCore(() => this.ai.activateConnection(id));
   }

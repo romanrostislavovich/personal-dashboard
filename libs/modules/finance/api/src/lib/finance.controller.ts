@@ -12,12 +12,15 @@ import {
 } from '@nestjs/common';
 import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
 import {
+  FinanceSettingsInput,
+  financeSettingsSchema,
   recurringPaymentInputSchema,
   TransactionInput,
   transactionInputSchema,
   TransactionQuery,
   transactionQuerySchema,
 } from '@pd/contracts';
+import { FinanceSettingsService } from './currency/finance-settings.service';
 import {
   RecurringPaymentsService,
   ValidRecurringPaymentInput,
@@ -29,7 +32,23 @@ export class FinanceController {
   constructor(
     private readonly transactions: TransactionsService,
     private readonly recurring: RecurringPaymentsService,
+    private readonly settings: FinanceSettingsService,
   ) {}
+
+  // --- Settings: the main currency ---
+
+  @Get('settings')
+  getSettings(@CurrentUser() user: AuthUser) {
+    return this.settings.get(user.id);
+  }
+
+  @Put('settings')
+  saveSettings(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(financeSettingsSchema)) input: FinanceSettingsInput,
+  ) {
+    return this.settings.save(user.id, input);
+  }
 
   // --- Transactions ---
 
@@ -55,6 +74,15 @@ export class FinanceController {
     @Query(new ZodValidationPipe(transactionQuerySchema)) query: TransactionQuery,
   ) {
     return this.transactions.cashFlow(user.id, query);
+  }
+
+  /** The same months, everything converted into the main currency. */
+  @Get('cash-flow/main')
+  cashFlowInMain(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(transactionQuerySchema)) query: TransactionQuery,
+  ) {
+    return this.transactions.cashFlowInMain(user.id, query);
   }
 
   @Post('transactions')

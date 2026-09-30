@@ -163,6 +163,22 @@ To add a service (e.g. DigitalOcean):
 3. Add the language to every `*.messages.ts`, to `core.messages.ts` and to achievement tiers.
 4. Register Angular locale data in `libs/web/core/src/lib/provide-dashboard.ts`.
 
+## Security
+
+- **Sessions:** an access token lives 15 minutes, in memory only; a refresh token (only its
+  SHA-256 is stored, in the unsynced `auth` schema) gives new ones — in an httpOnly,
+  SameSite=Strict cookie for the web, in the response for an app with a secure store
+  (`client: 'app'`). It is replaced once a day; the replaced one works for another minute so two
+  tabs do not sign each other out. Signing out, a new password (other devices) and the devices list
+  in the settings end sessions; the guard notices within a minute.
+- **Two-factor sign-in:** TOTP (RFC 6238, `auth/totp.ts`), the secret and hashed recovery codes in
+  `SecretsService`. After the password the server returns a 5-minute challenge for the code.
+- **Throttling:** 10 wrong passwords or codes per address or account in 15 minutes lock it for
+  the rest of the window (`LoginThrottle`). The API trusts `X-Forwarded-For` from the proxy.
+- **AI:** the user switches modules off for the AI (`disabledModules`): no tools, no digest
+  sections, `complete(…, module)` refuses. Every change the assistant makes is logged
+  (`AiActionsService`); what it deletes lands in the trash like anything else.
+
 ## Core services
 
 - **Secrets:** `SecretsService` — an encrypted per-user key-value store.
@@ -180,10 +196,16 @@ To add a service (e.g. DigitalOcean):
   receive bot messages and forwards server actions.
 - **AI:** `AiService` — any OpenAI-compatible API; `ask()` is a dialogue with module tools
   (function-calling loop in `tool-loop.ts`), `complete()` is a single request without tools.
-- **Auth:** a global `AuthGuard` (JWT); public endpoints are marked with `@Public()`.
+- **Auth:** a global `AuthGuard`; public endpoints are marked with `@Public()`. See Security below.
+- **Trash:** `TrashService` — a trigger on every table of `public` keeps deleted rows in the
+  `trash` schema for 30 days (not synced: each instance keeps what was deleted on it); one
+  transaction is one item, restored with everything deleted along with it. A table whose deletions
+  are housekeeping (old check results, logs) goes to `NOT_TRASHED` in `trash-triggers.ts`.
 - **Configuration:** all environment variables are described by a zod schema in
   `libs/api/core/src/lib/config/env.ts`; on errors the app does not start and explains what is wrong.
 - **Dates:** calendar dates (birthday, transaction date) are stored as `YYYY-MM-DD` without a time zone;
   “today” is computed in `APP_TIMEZONE` (`todayIn()` in contracts).
-- **Money:** `numeric(14,2)`; amounts in different currencies are not converted and are summed separately.
+- **Money:** `numeric(14,2)`; totals are converted into the user's main currency at the ECB rate of
+  each transaction's day (Frankfurter; today's rate from open.er-api for a currency the ECB lacks),
+  kept as they are otherwise (`finance/currency`).
 - **Language:** code, comments and docs are in English; user-facing texts go through i18n (`en` + `ru`).

@@ -9,8 +9,10 @@ import { CORE_READS, notificationsApi } from '@pd/client-core';
 import { NotificationSettings } from '@pd/contracts';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { PasswordSettingsComponent } from './password-settings.component';
+import { SecuritySettingsComponent } from './security-settings.component';
 import { ProfileSettingsComponent } from './profile-settings.component';
 import { SyncSettingsComponent } from './sync-settings.component';
+import { TrashSettingsComponent } from './trash-settings.component';
 
 @Component({
   selector: 'pd-settings-page',
@@ -22,6 +24,8 @@ import { SyncSettingsComponent } from './sync-settings.component';
     TranslocoPipe,
     ProfileSettingsComponent,
     PasswordSettingsComponent,
+    SecuritySettingsComponent,
+    TrashSettingsComponent,
     SyncSettingsComponent,
   ],
   template: `
@@ -30,6 +34,8 @@ import { SyncSettingsComponent } from './sync-settings.component';
     <div class="grid">
       <pd-profile-settings />
       <pd-password-settings />
+      <pd-security-settings />
+      <pd-trash-settings />
       <pd-sync-settings />
 
       <mat-card appearance="outlined">

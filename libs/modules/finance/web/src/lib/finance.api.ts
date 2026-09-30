@@ -4,7 +4,10 @@ import { FINANCE_READS, financeApi } from '@pd/client-core';
 import {
   CostSource,
   CostSourceInput,
+  FinanceSettings,
+  FinanceSettingsInput,
   FinanceSummary,
+  MainCashFlow,
   MonthCashFlow,
   RecurringPayment,
   RecurringPaymentInput,
@@ -36,6 +39,19 @@ export class FinanceApi {
     return httpResource<MonthCashFlow[]>(() => FINANCE_READS.cashFlow(query()), {
       defaultValue: [],
     });
+  }
+
+  /** Everything converted into the main currency (see FinanceConversion). */
+  cashFlowInMain(query: () => TransactionQuery) {
+    return httpResource<MainCashFlow>(() => FINANCE_READS.cashFlowInMain(query()));
+  }
+
+  settings() {
+    return httpResource<FinanceSettings>(() => FINANCE_READS.settings());
+  }
+
+  saveSettings(input: FinanceSettingsInput) {
+    return fromCore(() => this.finance.saveSettings(input));
   }
 
   recurringPayments() {

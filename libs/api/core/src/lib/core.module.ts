@@ -7,6 +7,7 @@ import { AchievementsService } from './achievements/achievements.service';
 import { AiConnectionsService } from './ai/ai-connections.service';
 import { AiController } from './ai/ai.controller';
 import { AiTelegramAssistant } from './ai/ai-telegram.assistant';
+import { AiActionsService } from './ai/ai-actions.service';
 import { AiConversationsService } from './ai/ai-conversations.service';
 import { CoreAiTools } from './ai/core.ai-tools';
 import { MorningDigestJob } from './ai/morning-digest.job';
@@ -14,6 +15,10 @@ import { MorningDigestService } from './ai/morning-digest.service';
 import { AiService } from './ai/ai.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthGuard } from './auth/auth.guard';
+import { TrashController } from './trash/trash.controller';
+import { TrashService } from './trash/trash.service';
+import { SessionsService } from './auth/sessions.service';
+import { TwoFactorService } from './auth/two-factor.service';
 import { AuthService } from './auth/auth.service';
 import { Public } from './auth/public.decorator';
 import { AppConfig, validateEnv } from './config/env';
@@ -63,13 +68,15 @@ class HealthController {
       inject: [ConfigService],
       useFactory: (config: AppConfig) => ({
         secret: config.get('JWT_SECRET', { infer: true }),
-        signOptions: { expiresIn: '30d' },
+        // Every token sets its own lifetime (see AuthService); this is only a safety net.
+        signOptions: { expiresIn: '15m' },
       }),
     }),
   ],
   controllers: [
     HealthController,
     AuthController,
+    TrashController,
     ProjectsController,
     NotificationsController,
     AchievementsController,
@@ -81,6 +88,9 @@ class HealthController {
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_INTERCEPTOR, useClass: UserActivityInterceptor },
     AuthService,
+    SessionsService,
+    TrashService,
+    TwoFactorService,
     UsersService,
     ProjectsService,
     SchedulerService,
@@ -95,6 +105,7 @@ class HealthController {
     AiService,
     AiConnectionsService,
     AiConversationsService,
+    AiActionsService,
     CoreAiTools,
     AiTelegramAssistant,
     MorningDigestService,

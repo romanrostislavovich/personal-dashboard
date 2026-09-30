@@ -83,6 +83,11 @@
           </span>
           <span class="amount" [class.income]="t.kind === 'income'">
             {{ t.kind === 'income' ? '+' : '−' }}{{ t.amount | currency: t.currency }}
+            @if (mainCurrency(); as main) {
+              @if (t.currency !== main && t.mainAmount !== null) {
+                <span class="in-main">≈ {{ t.mainAmount | currency: main }}</span>
+              }
+            }
           </span>
         </button>
         <button

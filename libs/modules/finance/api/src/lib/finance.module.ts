@@ -4,6 +4,8 @@ import { CostSourcesJob } from './cost-sources/cost-sources.job';
 import { CostSourcesService } from './cost-sources/cost-sources.service';
 import { DeepseekCostProvider } from './cost-sources/providers/deepseek.provider';
 import { HetznerCostProvider } from './cost-sources/providers/hetzner.provider';
+import { ExchangeRatesService } from './currency/exchange-rates.service';
+import { FinanceSettingsService } from './currency/finance-settings.service';
 import { FinanceAchievements } from './finance.achievements';
 import { FinanceAiTools } from './finance.ai-tools';
 import { FinanceDigest } from './finance.digest';
@@ -21,6 +23,8 @@ import { TransactionsService } from './transactions/transactions.service';
   controllers: [FinanceController, CostSourcesController],
   providers: [
     TransactionsService,
+    ExchangeRatesService,
+    FinanceSettingsService,
     RecurringPaymentsService,
     RecurringPaymentsJob,
     CostSourcesService,

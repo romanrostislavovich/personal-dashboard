@@ -65,7 +65,9 @@ export class RealtimeConnection {
         signal: abort.signal,
       });
       if (response.status === 401) {
-        return; // The session is over; the next API request ends it.
+        // The access token expired: a new one reconnects through the session subscription.
+        await this.api.refresh().catch(() => null);
+        return;
       }
       if (!response.ok || !response.body) {
         throw new Error(`Events stream failed: ${response.status}`);

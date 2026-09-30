@@ -20,7 +20,13 @@
     "submit": "Sign in",
     "error": "Wrong email or password",
     "noAccount": "No account?",
-    "register": "Sign up"
+    "register": "Sign up",
+    "code": "Code",
+    "codeHint": "Enter the 6-digit code from your authenticator app, or a recovery code.",
+    "verify": "Confirm",
+    "back": "Back",
+    "wrongCode": "Wrong code, try again",
+    "tooMany": "Too many attempts. Wait 15 minutes and try again."
   },
   "register": {
     "title": "Sign up",
@@ -103,6 +109,58 @@
       "conflicts": "Versions that lost a conflict (kept in the database): {{count}}",
       "syncNow": "Sync now",
       "synced": "Synced"
+    },
+    "security": {
+      "title": "Security",
+      "twoFactor": "Two-factor sign-in",
+      "off": "Off: signing in needs only the password.",
+      "turnOn": "Turn on",
+      "scan": "Scan the QR code with an authenticator app (Google Authenticator, 1Password, Aegis…) and enter the code it shows.",
+      "manual": "Or enter the key by hand:",
+      "enable": "Confirm and turn on",
+      "on": "On. Recovery codes left: {{left}}.",
+      "disable": "Turn off",
+      "disabled": "Two-factor sign-in is off",
+      "codesHint": "Recovery codes: each signs in once when your phone is not at hand. Save them somewhere safe — they are shown only now.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "saved": "I have saved them",
+      "wrong": "Wrong code or password",
+      "devices": "Devices signed in",
+      "thisDevice": "this device",
+      "lastUsed": "last used",
+      "signOut": "Sign out this device",
+      "signOutOthers": "Sign out everywhere else"
+    },
+    "trash": {
+      "title": "Trash",
+      "subtitle": "Deleted in the last 30 days — by you or by the AI assistant",
+      "restore": "Restore",
+      "forever": "Delete for good",
+      "empty": "Nothing deleted lately",
+      "rows": "with: {{parts}}",
+      "restored": "Restored",
+      "confirmForever": "Delete this for good? It cannot be restored then.",
+      "parentFirst": "Restore what it belonged to first (for example, the project)",
+      "tables": {
+        "birthdays": "Birthday",
+        "diary_entries": "Diary entry",
+        "diary_photos": "Photo",
+        "finance_transactions": "Transaction",
+        "finance_recurring_payments": "Recurring payment",
+        "finance_cost_sources": "Cost source",
+        "projects": "Project",
+        "monitoring_monitors": "Monitored site",
+        "github_tracked_repos": "Repository",
+        "github_repo_daily_stats": "Star history day",
+        "games_accounts": "Game account",
+        "games_dota_matches": "Dota match",
+        "music_scrobbles": "Play",
+        "ai_conversations": "AI conversation",
+        "ai_messages": "AI message",
+        "ai_connections": "AI connection",
+        "weather_locations": "Weather city"
+      }
     }
   },
   "toast": {

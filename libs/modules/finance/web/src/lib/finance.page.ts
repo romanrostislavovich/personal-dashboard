@@ -7,6 +7,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -36,7 +37,7 @@ import {
   cashFlowMonths,
   CategoryFilter,
   categoryShares,
-  mainCurrency,
+  topCurrency,
   monthKey,
 } from './overview/finance-stats';
 import { UpcomingPaymentsComponent } from './overview/upcoming-payments.component';
@@ -59,12 +60,23 @@ enum Tab {
   CostSources,
 }
 
+/** The overview's "everything in the main currency" view. */
+const ALL_IN_MAIN = '*';
+
+/** Transactions as amounts in the main currency; those without a rate are left out. */
+function inMain(transactions: Transaction[], main: string): Transaction[] {
+  return transactions
+    .filter((t) => t.mainAmount !== null)
+    .map((t) => ({ ...t, amount: t.mainAmount as number, currency: main }));
+}
+
 /**
  * Finance for a month, laid out like personal finance apps (Monarch, Zenmoney): the overview
  * answers "how much came in, went out and is left, and where did it go"; the transactions tab
  * is the full list by day. The "wallet" (scope) switches between all transactions, personal ones
- * and those of a specific project. Amounts in different currencies are never summed — the
- * overview shows one currency at a time.
+ * and those of a specific project. By default everything is converted into the main currency
+ * (ECB rates of each transaction's day, see FinanceConversion); a currency chip shows the amounts
+ * of one currency as they are.
  */
 @Component({
   selector: 'pd-finance-page',
@@ -80,6 +92,7 @@ enum Tab {
     MatSelectModule,
     MatTabsModule,
     MatListModule,
+    MatMenuModule,
     MatTooltipModule,
     TranslocoPipe,
     CostSourcesTabComponent,
@@ -112,8 +125,9 @@ export class FinancePage {
     to: monthRange(this.month()).to,
     scope: this.scope() || undefined,
   }));
-  /** Chosen by the user; otherwise the month's main currency. */
-  private readonly chosenCurrency = signal<string | null>(null);
+  /** `ALL_IN_MAIN` — everything converted; otherwise one currency as it is. */
+  protected readonly view = signal<string>(ALL_IN_MAIN);
+  protected readonly allInMain = ALL_IN_MAIN;
 
   protected readonly Tab = Tab;
   protected readonly tab = signal(Tab.Overview);
@@ -125,6 +139,13 @@ export class FinancePage {
   protected readonly projects = inject(ProjectsApi).list();
   protected readonly transactions = this.api.transactions(this.query);
   protected readonly cashFlow = this.api.cashFlow(this.chartQuery);
+  protected readonly mainFlow = this.api.cashFlowInMain(this.chartQuery);
+  protected readonly settings = this.api.settings();
+  /** The currency totals are converted into. */
+  protected readonly mainCurrency = computed(
+    () =>
+      this.settings.value()?.effectiveMainCurrency ?? this.mainFlow.value()?.mainCurrency ?? null,
+  );
   protected readonly recurringPayments = this.api.recurringPayments();
 
   protected readonly monthDate = computed(() => monthAsDate(this.month()));
@@ -139,29 +160,57 @@ export class FinancePage {
     return [...new Set(inMonth.map((f) => f.currency))].sort();
   });
 
+  /** Whether the overview shows converted amounts. */
+  protected readonly showsMain = computed(
+    () =>
+      this.mainCurrency() !== null &&
+      (this.view() === ALL_IN_MAIN || !this.currencies().includes(this.view())),
+  );
+
+  /** The currency amounts are shown in. */
   protected readonly currency = computed(() => {
-    const chosen = this.chosenCurrency();
-    if (chosen && this.currencies().includes(chosen)) {
-      return chosen;
+    const main = this.mainCurrency();
+    if (this.showsMain() && main) {
+      return main;
     }
     const key = monthKey(this.month());
     const flows = this.cashFlow.value();
     return (
-      mainCurrency(flows.filter((f) => f.month === key)) ??
-      mainCurrency(flows) ??
+      topCurrency(flows.filter((f) => f.month === key)) ??
+      topCurrency(flows) ??
       this.transactions.value()[0]?.currency ??
       DEFAULT_CURRENCY
     );
   });
 
-  protected readonly chartMonths = computed(() =>
-    cashFlowMonths(this.cashFlow.value(), this.currency(), this.month(), CHART_MONTHS),
-  );
+  protected readonly chartMonths = computed(() => {
+    const flows = this.showsMain()
+      ? (this.mainFlow.value()?.months ?? []).map((m) => ({ ...m, currency: this.currency() }))
+      : this.cashFlow.value();
+    return cashFlowMonths(flows, this.currency(), this.month(), CHART_MONTHS);
+  });
   protected readonly currentFlow = computed(() => this.chartMonths()[CHART_MONTHS - 1]);
   protected readonly previousFlow = computed(() => this.chartMonths()[CHART_MONTHS - 2]);
   protected readonly categoryShares = computed(() =>
-    categoryShares(this.transactions.value(), this.currency()),
+    categoryShares(
+      this.showsMain()
+        ? inMain(this.transactions.value(), this.currency())
+        : this.transactions.value(),
+      this.currency(),
+    ),
   );
+
+  /** Currencies converted at today's rate, or not at all (shown under the totals). */
+  protected readonly conversion = computed(() => {
+    const flow = this.mainFlow.value();
+    return this.showsMain() && flow
+      ? {
+          approximate: flow.approximate,
+          missing: flow.missing,
+          foreign: this.currencies().some((c) => c !== flow.mainCurrency),
+        }
+      : null;
+  });
 
   protected readonly projectNames = computed(
     () => new Map(this.projects.value().map((project) => [project.id, project.name])),
@@ -179,7 +228,15 @@ export class FinancePage {
   }
 
   selectCurrency(currency: string): void {
-    this.chosenCurrency.set(currency);
+    this.view.set(currency);
+  }
+
+  /** `null` — back to automatic: the currency used most. */
+  async setMainCurrency(mainCurrency: string | null): Promise<void> {
+    this.settings.set(await firstValueFrom(this.api.saveSettings({ mainCurrency })));
+    this.view.set(ALL_IN_MAIN);
+    this.transactions.reload();
+    this.mainFlow.reload();
   }
 
   showCategory(filter: CategoryFilter): void {

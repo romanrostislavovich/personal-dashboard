@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { errorStatus } from '../client/core-requests';
 import { AuthService } from './auth.service';
 
 @Component({
@@ -26,27 +27,58 @@ import { AuthService } from './auth.service';
         <mat-card-title>{{ 'core.login.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <form [formGroup]="form" (ngSubmit)="submit()">
-          <mat-form-field>
-            <mat-label>{{ 'core.login.email' | transloco }}</mat-label>
-            <input matInput type="email" formControlName="email" autocomplete="username" />
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>{{ 'core.login.password' | transloco }}</mat-label>
-            <input
-              matInput
-              type="password"
-              formControlName="password"
-              autocomplete="current-password"
-            />
-          </mat-form-field>
-          @if (error()) {
-            <p class="error">{{ 'core.login.error' | transloco }}</p>
-          }
-          <button matButton="filled" type="submit" [disabled]="form.invalid || loading()">
-            {{ 'core.login.submit' | transloco }}
-          </button>
-        </form>
+        @if (challengeToken()) {
+          <!-- Two-factor sign-in: the password was right, now the code from the app -->
+          <form class="code-form" (ngSubmit)="submitCode()">
+            <p class="hint">{{ 'core.login.codeHint' | transloco }}</p>
+            <mat-form-field>
+              <mat-label>{{ 'core.login.code' | transloco }}</mat-label>
+              <input
+                matInput
+                name="code"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                [value]="code()"
+                (input)="code.set($any($event.target).value)"
+              />
+            </mat-form-field>
+            @if (error(); as key) {
+              <p class="error">{{ key | transloco }}</p>
+            }
+            <button
+              matButton="filled"
+              type="submit"
+              [disabled]="code().trim().length < 6 || loading()"
+            >
+              {{ 'core.login.verify' | transloco }}
+            </button>
+            <button matButton type="button" (click)="startOver()">
+              {{ 'core.login.back' | transloco }}
+            </button>
+          </form>
+        } @else {
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <mat-form-field>
+              <mat-label>{{ 'core.login.email' | transloco }}</mat-label>
+              <input matInput type="email" formControlName="email" autocomplete="username" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>{{ 'core.login.password' | transloco }}</mat-label>
+              <input
+                matInput
+                type="password"
+                formControlName="password"
+                autocomplete="current-password"
+              />
+            </mat-form-field>
+            @if (error(); as key) {
+              <p class="error">{{ key | transloco }}</p>
+            }
+            <button matButton="filled" type="submit" [disabled]="form.invalid || loading()">
+              {{ 'core.login.submit' | transloco }}
+            </button>
+          </form>
+        }
         @if (registrationEnabled()) {
           <p class="switch">
             {{ 'core.login.noAccount' | transloco }}
@@ -82,6 +114,13 @@ import { AuthService } from './auth.service';
       color: var(--mat-sys-error);
       margin: 0 0 8px;
     }
+    .code-form {
+      margin-top: 8px;
+    }
+    .hint {
+      margin: 0 0 8px;
+      color: var(--mat-sys-on-surface-variant);
+    }
   `,
 })
 export class LoginPage {
@@ -90,7 +129,11 @@ export class LoginPage {
 
   readonly loading = signal(false);
   readonly registrationEnabled = signal(false);
-  readonly error = signal(false);
+  /** The translation key of the error to show. */
+  readonly error = signal<string | null>(null);
+  /** Set after the password step when a 2FA code is needed. */
+  readonly challengeToken = signal<string | null>(null);
+  readonly code = signal('');
   readonly form = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
@@ -104,13 +147,46 @@ export class LoginPage {
   }
 
   async submit(): Promise<void> {
-    this.loading.set(true);
-    this.error.set(false);
-    try {
-      await this.auth.login(this.form.getRawValue());
+    await this.attempt(async () => {
+      const { challengeToken } = await this.auth.login(this.form.getRawValue());
+      if (challengeToken) {
+        this.challengeToken.set(challengeToken);
+        return;
+      }
       await this.router.navigateByUrl('/');
-    } catch {
-      this.error.set(true);
+    });
+  }
+
+  async submitCode(): Promise<void> {
+    const challengeToken = this.challengeToken();
+    if (!challengeToken) {
+      return;
+    }
+    await this.attempt(async () => {
+      await this.auth.completeLogin(challengeToken, this.code());
+      await this.router.navigateByUrl('/');
+    });
+  }
+
+  startOver(): void {
+    this.challengeToken.set(null);
+    this.code.set('');
+    this.error.set(null);
+  }
+
+  private async attempt(step: () => Promise<void>): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      await step();
+    } catch (error) {
+      this.error.set(
+        errorStatus(error) === 429
+          ? 'core.login.tooMany'
+          : this.challengeToken()
+            ? 'core.login.wrongCode'
+            : 'core.login.error',
+      );
     } finally {
       this.loading.set(false);
     }

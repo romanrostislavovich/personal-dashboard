@@ -45,7 +45,17 @@ export class AiConnectionsService {
       morningDigest: settings?.morningDigest ?? false,
       speechConnectionId: settings?.speechConnectionId ?? null,
       speechModel: settings?.speechModel ?? DEFAULT_SPEECH_MODEL,
+      disabledModules: settings?.disabledModules ?? [],
     };
+  }
+
+  /** Modules whose data the AI must not get. */
+  async disabledModules(userId: string): Promise<string[]> {
+    const [settings] = await this.db
+      .select({ disabledModules: aiSettings.disabledModules })
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
+    return settings?.disabledModules ?? [];
   }
 
   /** Adds a connection; the first one becomes active. */

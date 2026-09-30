@@ -1,14 +1,90 @@
 import { z } from 'zod';
 
+/**
+ * Where the refresh token goes: `web` — an httpOnly cookie a script cannot read; `app` (a mobile
+ * or desktop app with its own secure storage) — the response body.
+ */
+export const AUTH_CLIENTS = ['web', 'app'] as const;
+export type AuthClient = (typeof AUTH_CLIENTS)[number];
+
 export const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(1),
+  client: z.enum(AUTH_CLIENTS).default('web'),
 });
-export type LoginRequest = z.infer<typeof loginSchema>;
+export type LoginRequest = z.input<typeof loginSchema>;
 
+/**
+ * A signed-in session: a short-lived access token (15 minutes, kept in memory) and the user.
+ * A new access token comes from `POST /api/auth/refresh`.
+ */
 export interface LoginResponse {
   accessToken: string;
   user: CurrentUser;
+  /** Only for `client: 'app'`; the web keeps it in a cookie. */
+  refreshToken?: string;
+}
+
+/** The password was right, a code from the authenticator app is needed too. */
+export interface TwoFactorChallenge {
+  twoFactorRequired: true;
+  /** Proves the password step for 5 minutes; sent back with the code. */
+  challengeToken: string;
+}
+
+export type LoginResult = LoginResponse | TwoFactorChallenge;
+
+export function isTwoFactorChallenge(result: LoginResult): result is TwoFactorChallenge {
+  return 'twoFactorRequired' in result;
+}
+
+export const twoFactorLoginSchema = z.object({
+  challengeToken: z.string().min(1),
+  /** 6 digits from the app, or a recovery code `xxxxx-xxxxx`. */
+  code: z.string().trim().min(6).max(20),
+});
+export type TwoFactorLogin = z.infer<typeof twoFactorLoginSchema>;
+
+/** `POST /api/auth/refresh` and `/logout`: an app sends its token, the web relies on the cookie. */
+export const refreshSchema = z.object({ refreshToken: z.string().min(1).optional() });
+export type RefreshRequest = z.infer<typeof refreshSchema>;
+
+/** A device or browser signed in to the account. */
+export interface SessionInfo {
+  id: string;
+  createdAt: string;
+  lastUsedAt: string;
+  userAgent: string | null;
+  ip: string | null;
+  /** The session this request came from. */
+  current: boolean;
+}
+
+export interface TwoFactorStatus {
+  enabled: boolean;
+  recoveryCodesLeft: number;
+}
+
+/** A new secret to add to an authenticator app; it works only after `enable` with a code. */
+export interface TwoFactorSetup {
+  secret: string;
+  otpauthUrl: string;
+  /** The same as a QR code image (`data:image/svg+xml…`). */
+  qrCode: string;
+}
+
+export const twoFactorCodeSchema = z.object({ code: z.string().trim().min(6).max(20) });
+export type TwoFactorCode = z.infer<typeof twoFactorCodeSchema>;
+
+export const twoFactorDisableSchema = z.object({
+  password: z.string().min(1),
+  code: z.string().trim().min(6).max(20),
+});
+export type TwoFactorDisable = z.infer<typeof twoFactorDisableSchema>;
+
+/** Shown once after enabling 2FA: each code signs in once when the phone is not at hand. */
+export interface RecoveryCodes {
+  recoveryCodes: string[];
 }
 
 export interface CurrentUser {
@@ -27,6 +103,7 @@ export const registerSchema = z.object({
   password: z.string().min(8).max(200),
   displayName: z.string().trim().min(1).max(50),
   locale: z.enum(SUPPORTED_LOCALES).default('en'),
+  client: z.enum(AUTH_CLIENTS).default('web'),
 });
 export type RegisterRequest = z.input<typeof registerSchema>;
 

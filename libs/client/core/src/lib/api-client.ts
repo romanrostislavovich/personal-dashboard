@@ -1,3 +1,4 @@
+import { LoginResponse } from '@pd/contracts';
 import { ClientPlatform } from './platform';
 import { Session } from './session';
 
@@ -53,11 +54,13 @@ export function apiRequest(url: string, params?: QueryParams): ApiRequest {
 
 /**
  * Requests to the dashboard API: the server address, the session token, JSON both ways.
- * A 401 ends the session — the token has expired or was revoked — except for the sign-in
- * request itself, where it just means a wrong password.
+ * A 401 means the access token (15 minutes) has expired: a new one is fetched with the refresh
+ * token and the request is sent again; if that fails too, the session is over. Sign-in requests
+ * are the exception — there a 401 is just a wrong password.
  */
 export class ApiClient {
   private readonly fetch: typeof fetch;
+  private refreshing: Promise<LoginResponse | null> | null = null;
 
   constructor(
     private readonly platform: ClientPlatform,
@@ -93,11 +96,20 @@ export class ApiClient {
 
   /** A file (a diary photo): its bytes, for an object URL. */
   async blob(path: string): Promise<Blob> {
-    const response = await this.send('GET', path, {}, '*/*');
+    const response = await this.sendAuthorized('GET', path, {}, '*/*');
     if (!response.ok) {
-      throw await this.failure(path, response);
+      throw new ApiError(response.status, await readBody(response));
     }
     return response.blob();
+  }
+
+  /**
+   * A new access token for the refresh token (the cookie in a browser, the stored one in an app).
+   * `null` — the session is over and has been ended. Concurrent callers share one request.
+   */
+  refresh(): Promise<LoginResponse | null> {
+    this.refreshing ??= this.refreshSession().finally(() => (this.refreshing = null));
+    return this.refreshing;
   }
 
   get<T>(path: string, options?: RequestOptions): Promise<T> {
@@ -121,11 +133,48 @@ export class ApiClient {
   }
 
   async request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
-    const response = await this.send(method, path, options, 'application/json');
+    const response = await this.sendAuthorized(method, path, options, 'application/json');
+    const body = await readBody(response);
     if (!response.ok) {
-      throw await this.failure(path, response);
+      throw new ApiError(response.status, body);
     }
-    return (await readBody(response)) as T;
+    return body as T;
+  }
+
+  /** Sends; on a 401 refreshes the access token once and sends again. */
+  private async sendAuthorized(
+    method: string,
+    path: string,
+    options: RequestOptions,
+    accept: string,
+  ): Promise<Response> {
+    const response = await this.send(method, path, options, accept);
+    if (response.status !== 401 || isAuthRequest(path)) {
+      return response;
+    }
+    return (await this.refresh()) ? this.send(method, path, options, accept) : response;
+  }
+
+  private async refreshSession(): Promise<LoginResponse | null> {
+    const refreshToken = await this.session.refreshToken();
+    if (this.session.keepsRefreshToken && !refreshToken) {
+      await this.session.end();
+      return null;
+    }
+    // No connection: the error goes up and the session stays — it may work again later.
+    const response = await this.send(
+      'POST',
+      REFRESH_PATH,
+      { body: refreshToken ? { refreshToken } : {} },
+      'application/json',
+    );
+    if (!response.ok) {
+      await this.session.end();
+      return null;
+    }
+    const result = (await readBody(response)) as LoginResponse;
+    await this.session.start(result.accessToken, result.refreshToken);
+    return result;
   }
 
   private send(
@@ -148,14 +197,6 @@ export class ApiClient {
       signal,
     });
   }
-
-  /** The error for a failed answer; a 401 also ends the session (see the class comment). */
-  private async failure(path: string, response: Response): Promise<ApiError> {
-    if (response.status === 401 && !isSignIn(path)) {
-      await this.session.end();
-    }
-    return new ApiError(response.status, await readBody(response));
-  }
 }
 
 /** JSON when the server sent it, text otherwise, `undefined` for an empty answer (204). */
@@ -171,6 +212,12 @@ async function readBody(response: Response): Promise<unknown> {
   }
 }
 
-function isSignIn(path: string): boolean {
-  return path.startsWith('/api/auth/login') || path.startsWith('/api/auth/register');
+/** In `core-api.ts` too; kept here to avoid an import cycle. */
+const REFRESH_PATH = '/api/auth/refresh';
+
+/** Sign-in, refresh and sign-out: a 401 there is the answer itself, not an expired token. */
+function isAuthRequest(path: string): boolean {
+  return ['/api/auth/login', '/api/auth/register', REFRESH_PATH, '/api/auth/logout'].some(
+    (prefix) => path.startsWith(prefix),
+  );
 }

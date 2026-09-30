@@ -43,7 +43,7 @@ export function monthKey({ year, month }: Month): string {
 }
 
 /** The currency the month mostly lives in: most money moved. */
-export function mainCurrency(flows: MonthCashFlow[]): string | null {
+export function topCurrency(flows: MonthCashFlow[]): string | null {
   const [top] = [...flows].sort((a, b) => b.income + b.expense - (a.income + a.expense));
   return top?.currency ?? null;
 }

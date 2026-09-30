@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
 import { DB, Database } from '../database/database.module';
+import { AiConnectionsService } from './ai-connections.service';
 import { CollectedSection, DigestChange, digestChanges } from './digest-changes';
 import { DigestSection } from './digest-section';
 import { morningDigestSnapshots } from './ai.schema';
@@ -14,7 +15,10 @@ export class MorningDigestService {
   private readonly logger = new Logger(MorningDigestService.name);
   private readonly sections: DigestSection[] = [];
 
-  constructor(@Inject(DB) private readonly db: Database) {}
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    private readonly connections: AiConnectionsService,
+  ) {}
 
   register(section: DigestSection): void {
     this.sections.push(section);
@@ -22,9 +26,10 @@ export class MorningDigestService {
 
   /** Sections for today's digest; empty — nothing new, the digest is not sent. */
   async changes(userId: string): Promise<DigestChange[]> {
-    const collected = await Promise.all(
-      this.sections.map((section) => this.collect(userId, section)),
-    );
+    // The digest is written by the AI: modules switched off for it are left out.
+    const hidden = new Set(await this.connections.disabledModules(userId));
+    const visible = this.sections.filter((section) => !hidden.has(section.module));
+    const collected = await Promise.all(visible.map((section) => this.collect(userId, section)));
     return digestChanges(
       collected.filter((item) => item !== null),
       await this.lastSent(userId),

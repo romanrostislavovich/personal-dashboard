@@ -84,6 +84,15 @@ export const transactions = pgTable(
   (table) => [unique().on(table.costSourceId, table.costPeriod)],
 );
 
+/** Finance settings of a user. */
+export const financeSettings = pgTable('finance_settings', {
+  userId: uuid()
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  /** Totals are converted into it; `null` — the currency used most. */
+  mainCurrency: text(),
+});
+
 export type TransactionRow = typeof transactions.$inferSelect;
 export type RecurringPaymentRow = typeof recurringPayments.$inferSelect;
 export type CostSourceRow = typeof costSources.$inferSelect;

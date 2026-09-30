@@ -50,6 +50,8 @@ export class TransactionListComponent {
   /** Project names for the wallet caption; personal transactions have none. */
   readonly projectNames = input<Map<string, string>>(new Map());
   readonly compact = input(false);
+  /** Amounts in another currency also show their value in this one. */
+  readonly mainCurrency = input<string | null>(null);
   readonly limit = input<number | null>(null);
   /** Set from the overview when a category (or "Other") is clicked. */
   readonly category = model<CategoryFilter | null>(null);

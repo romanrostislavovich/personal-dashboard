@@ -9,7 +9,7 @@ function client(response = new Response(JSON.stringify({ id: 'p1' }))) {
   const fetch = vi.fn().mockResolvedValue(response);
   const api = new ApiClient(
     { baseUrl: '', storage: memoryStorage(), fetch },
-    new Session(memoryStorage()),
+    new Session(memoryStorage(), 'storage'),
   );
   return { fetch, api };
 }

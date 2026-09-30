@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -9,7 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { AiConnection, AiPreferences, AiSettings } from '@pd/contracts';
+import { AiAction, AiConnection, AiPreferences, AiSettings } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
 import { AiConnectionFormDialog } from './ai-connection-form.dialog';
@@ -22,6 +23,7 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
   selector: 'pd-ai-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DatePipe,
     MatCardModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -113,11 +115,81 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
               />
             </mat-form-field>
           </div>
+
+          <h3 class="section">👁️ {{ 'ai.privacy.title' | transloco }}</h3>
+          <p class="hint">{{ 'ai.privacy.hint' | transloco }}</p>
+          <div class="modules">
+            @for (module of modules(); track module) {
+              <mat-slide-toggle
+                [checked]="!settings().disabledModules.includes(module)"
+                (change)="setVisible(module, $event.checked)"
+              >
+                {{ moduleName(module) }}
+              </mat-slide-toggle>
+            }
+          </div>
+
+          <h3 class="section">📜 {{ 'ai.log.title' | transloco }}</h3>
+          @if (actions(); as list) {
+            @for (action of list; track action.id) {
+              <div class="action" [class.failed]="action.outcome === 'failed'">
+                <span class="action-time">{{ action.createdAt | date: 'd MMM, HH:mm' }}</span>
+                <span class="action-body">
+                  <span>
+                    {{ moduleName(action.module) }} · <code>{{ action.tool }}</code> ·
+                    {{ 'ai.log.outcome.' + action.outcome | transloco }}
+                  </span>
+                  <code class="action-args">{{ action.args }}</code>
+                  @if (action.error) {
+                    <span class="action-error">{{ action.error }}</span>
+                  }
+                </span>
+              </div>
+            } @empty {
+              <p class="hint">{{ 'ai.log.empty' | transloco }}</p>
+            }
+          } @else {
+            <button matButton (click)="loadActions()">
+              <mat-icon>history</mat-icon> {{ 'ai.log.show' | transloco }}
+            </button>
+          }
         }
       </mat-card-content>
     </mat-card>
   `,
   styles: `
+    .modules {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px 16px;
+    }
+    .action {
+      display: flex;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--pd-border);
+      font: var(--mat-sys-body-small);
+    }
+    .action-time {
+      flex-shrink: 0;
+      width: 90px;
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .action-body {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .action-args {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .action-error,
+    .action.failed {
+      color: var(--mat-sys-error);
+    }
     .hint {
       margin: 0 0 8px;
       color: var(--mat-sys-on-surface-variant);
@@ -194,6 +266,33 @@ export class AiSettingsComponent {
   private readonly api = inject(AiApi);
   private readonly dialog = inject(MatDialog);
   private readonly transloco = inject(TranslocoService);
+
+  /** Modules that give the AI data. */
+  protected readonly modules = signal<string[]>([]);
+  /** The assistant's changes; `null` until asked for. */
+  protected readonly actions = signal<AiAction[] | null>(null);
+
+  constructor() {
+    firstValueFrom(this.api.modules()).then(
+      (modules) => this.modules.set(modules),
+      () => this.modules.set([]),
+    );
+  }
+
+  protected moduleName(module: string): string {
+    const key = module === 'projects' ? 'core.nav.projects' : `${module}.title`;
+    const name = this.transloco.translate(key);
+    return name === key ? module : name;
+  }
+
+  async setVisible(module: string, visible: boolean): Promise<void> {
+    const others = this.settings().disabledModules.filter((m) => m !== module);
+    await this.savePreferences({ disabledModules: visible ? others : [...others, module] });
+  }
+
+  async loadActions(): Promise<void> {
+    this.actions.set(await firstValueFrom(this.api.actions()));
+  }
 
   async edit(connection: AiConnection | null): Promise<void> {
     const settings = await firstValueFrom(

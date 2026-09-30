@@ -34,6 +34,11 @@ export interface Transaction {
   recurringPaymentId: string | null;
   /** Set if the transaction is a monthly amount imported from a cost source (Hetzner, DeepSeek…). */
   costSourceId: string | null;
+  /**
+   * The amount in the main currency at the rate of its day (see FinanceConversion); `null` — no
+   * rate for this currency.
+   */
+  mainAmount: number | null;
 }
 
 export const transactionQuerySchema = z.object({
@@ -90,9 +95,56 @@ export interface CategoryTotal {
 export interface FinanceSummary {
   from: LocalDate;
   to: LocalDate;
-  /** Amounts are not converted between currencies — one row per currency. */
+  /** As they are, one row per currency. */
   totals: CurrencyTotals[];
   topExpenseCategories: CategoryTotal[];
+  /** Everything converted into the main currency; `null` without transactions. */
+  inMain: MainCurrencyTotals | null;
+}
+
+/**
+ * How amounts were converted into the main currency. Rates are the European Central Bank's for
+ * the day of each transaction (through Frankfurter); a currency the ECB does not publish is
+ * converted at today's rate (`approximate`); one without any rate is left out (`missing`).
+ */
+export interface FinanceConversion {
+  mainCurrency: string;
+  approximate: string[];
+  missing: string[];
+}
+
+export interface MainCurrencyTotals extends FinanceConversion {
+  income: number;
+  expense: number;
+  balance: number;
+  topExpenseCategories: { category: string; expense: number }[];
+}
+
+/** `GET /api/finance/cash-flow/main`: months in the main currency, and how they were converted. */
+export interface MainCashFlow extends FinanceConversion {
+  months: { month: string; income: number; expense: number }[];
+}
+
+/** An ISO 4217 code: `EUR`, `PLN`. */
+export const currencyCodeSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z]{3}$/, 'Expected a currency code like EUR');
+
+export const financeSettingsSchema = z.object({
+  /** `null` — the currency used most. */
+  mainCurrency: currencyCodeSchema.nullable(),
+});
+export type FinanceSettingsInput = z.infer<typeof financeSettingsSchema>;
+
+export interface FinanceSettings {
+  /** As chosen; `null` — automatic. */
+  mainCurrency: string | null;
+  /** The one in use: the chosen one or the most used. */
+  effectiveMainCurrency: string;
+  /** Currencies with daily ECB rates — the ones converted exactly. */
+  supportedCurrencies: string[];
 }
 
 /** Income and expenses of one month in one currency — for the cash flow chart. */

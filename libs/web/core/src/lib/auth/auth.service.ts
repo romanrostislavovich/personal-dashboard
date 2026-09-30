@@ -40,12 +40,28 @@ export class AuthService {
     return this.client.auth.config();
   }
 
-  async login(credentials: LoginRequest): Promise<void> {
-    this.signedIn(await this.client.signIn(credentials));
+  /** The password step; `challengeToken` — a code from the authenticator app is needed. */
+  async login(credentials: Omit<LoginRequest, 'client'>): Promise<{ challengeToken?: string }> {
+    const result = await this.client.signIn(credentials);
+    if (result.status === 'code-required') {
+      return { challengeToken: result.challengeToken };
+    }
+    this.signedIn(result.user);
+    return {};
   }
 
-  async register(input: RegisterRequest): Promise<void> {
+  /** The second step of signing in with two-factor sign-in on. */
+  async completeLogin(challengeToken: string, code: string): Promise<void> {
+    this.signedIn(await this.client.completeSignIn(challengeToken, code));
+  }
+
+  async register(input: Omit<RegisterRequest, 'client'>): Promise<void> {
     this.signedIn(await this.client.signUp(input));
+  }
+
+  /** A new access token after a 401 from `HttpClient`; `null` — the session is over. */
+  async refreshToken(): Promise<string | null> {
+    return (await this.client.api.refresh().catch(() => null))?.accessToken ?? null;
   }
 
   /** Loads the profile using the saved token (on app start). */

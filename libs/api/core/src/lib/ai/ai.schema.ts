@@ -38,6 +38,8 @@ export const aiSettings = pgTable('ai_settings', {
   // null — the first OpenAI connection transcribes voice messages.
   speechConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
   speechModel: text().notNull().default(DEFAULT_SPEECH_MODEL),
+  /** Modules the AI does not see (see AiPreferences.disabledModules). */
+  disabledModules: text().array().notNull().default([]),
 });
 
 /**
@@ -93,6 +95,25 @@ export const aiMessages = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index().on(table.conversationId, table.createdAt)],
+);
+
+/** Changes the assistant made or tried to make (see AiActionsService). */
+export const aiActions = pgTable(
+  'ai_actions',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tool: text().notNull(),
+    module: text().notNull(),
+    args: text().notNull(),
+    /** `done`, `asked` (a confirmation), `failed`. */
+    outcome: text().notNull(),
+    error: text(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId, table.createdAt)],
 );
 
 export type AiConnectionRow = typeof aiConnections.$inferSelect;

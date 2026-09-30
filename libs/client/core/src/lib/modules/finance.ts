@@ -1,7 +1,10 @@
 import {
   CostSource,
   CostSourceInput,
+  FinanceSettings,
+  FinanceSettingsInput,
   FinanceSummary,
+  MainCashFlow,
   MonthCashFlow,
   RecurringPayment,
   RecurringPaymentInput,
@@ -22,6 +25,10 @@ export const FINANCE_READS = {
   /** Income and expenses per month and currency — the chart and month-over-month deltas. */
   cashFlow: ({ from, to, scope }: TransactionQuery) =>
     apiRequest(`${BASE}/cash-flow`, { from, to, scope: scope || undefined }),
+  /** The same months with everything converted into the main currency. */
+  cashFlowInMain: ({ from, to, scope }: TransactionQuery) =>
+    apiRequest(`${BASE}/cash-flow/main`, { from, to, scope: scope || undefined }),
+  settings: () => apiRequest(`${BASE}/settings`),
   recurringPayments: () => apiRequest(`${BASE}/recurring-payments`),
   costSources: () => apiRequest(`${BASE}/cost-sources`),
 };
@@ -32,6 +39,12 @@ export function financeApi(api: ApiClient) {
       api.read<Transaction[]>(FINANCE_READS.transactions(query)),
     summary: (query: TransactionQuery) => api.read<FinanceSummary>(FINANCE_READS.summary(query)),
     cashFlow: (query: TransactionQuery) => api.read<MonthCashFlow[]>(FINANCE_READS.cashFlow(query)),
+    cashFlowInMain: (query: TransactionQuery) =>
+      api.read<MainCashFlow>(FINANCE_READS.cashFlowInMain(query)),
+    settings: () => api.read<FinanceSettings>(FINANCE_READS.settings()),
+    /** `mainCurrency: null` — the currency used most. */
+    saveSettings: (input: FinanceSettingsInput) =>
+      api.put<FinanceSettings>(`${BASE}/settings`, input),
     recurringPayments: () => api.read<RecurringPayment[]>(FINANCE_READS.recurringPayments()),
     costSources: () => api.read<CostSource[]>(FINANCE_READS.costSources()),
 

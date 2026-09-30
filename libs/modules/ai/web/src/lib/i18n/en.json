@@ -70,5 +70,19 @@
     "hint": "The bot turns a voice message into text and handles it like a typed one. It needs a connection with speech recognition — OpenAI (DeepSeek has none).",
     "connection": "Connection",
     "auto": "Automatically — the first OpenAI connection"
+  },
+  "privacy": {
+    "title": "What the AI sees",
+    "hint": "A switched-off module sends nothing to the AI provider: the assistant cannot read or change it, the morning digest and diary summaries leave it out."
+  },
+  "log": {
+    "title": "What the assistant changed",
+    "show": "Show the log",
+    "empty": "The assistant has not changed anything yet",
+    "outcome": {
+      "done": "done",
+      "asked": "asked to confirm",
+      "failed": "failed"
+    }
   }
 }

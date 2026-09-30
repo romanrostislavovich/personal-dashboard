@@ -34,17 +34,53 @@
   <!-- How the month went: totals, trend, categories, what is still to pay -->
   <mat-tab [label]="'finance.tabs.overview' | transloco">
     <div class="overview">
-      @if (currencies().length > 1) {
-        <mat-chip-listbox
-          class="currencies"
-          [value]="currency()"
-          (change)="$event.value && selectCurrency($event.value)"
-          [attr.aria-label]="'finance.currency' | transloco"
-        >
-          @for (c of currencies(); track c) {
-            <mat-chip-option [value]="c">{{ c }}</mat-chip-option>
-          }
-        </mat-chip-listbox>
+      <div class="currency-bar">
+        @if (mainCurrency(); as main) {
+          <mat-chip-listbox
+            class="currencies"
+            [value]="showsMain() ? allInMain : currency()"
+            (change)="$event.value && selectCurrency($event.value)"
+            [attr.aria-label]="'finance.currency' | transloco"
+          >
+            <mat-chip-option [value]="allInMain">
+              {{ 'finance.main.all' | transloco: { currency: main } }}
+            </mat-chip-option>
+            @for (c of currencies(); track c) {
+              @if (c !== main) {
+                <mat-chip-option [value]="c">{{ c }}</mat-chip-option>
+              }
+            }
+          </mat-chip-listbox>
+          <button matButton [matMenuTriggerFor]="mainMenu" class="main-currency">
+            <mat-icon>currency_exchange</mat-icon>
+            {{ 'finance.main.label' | transloco: { currency: main } }}
+          </button>
+          <mat-menu #mainMenu="matMenu">
+            <button mat-menu-item (click)="setMainCurrency(null)">
+              <mat-icon>{{ settings.value()?.mainCurrency === null ? 'check' : '' }}</mat-icon>
+              {{ 'finance.main.auto' | transloco }}
+            </button>
+            @for (c of settings.value()?.supportedCurrencies ?? []; track c) {
+              <button mat-menu-item (click)="setMainCurrency(c)">
+                <mat-icon>{{ settings.value()?.mainCurrency === c ? 'check' : '' }}</mat-icon>
+                {{ c }}
+              </button>
+            }
+          </mat-menu>
+        }
+      </div>
+      @if (conversion(); as c) {
+        @if (c.foreign || c.approximate.length || c.missing.length) {
+          <p class="conversion-note">
+            {{ 'finance.main.rates' | transloco }}
+            @if (c.approximate.length) {
+              {{ 'finance.main.approximate' | transloco: { currencies: c.approximate.join(', ') } }}
+            }
+            @if (c.missing.length) {
+              {{ 'finance.main.missing' | transloco: { currencies: c.missing.join(', ') } }}
+            }
+          </p>
+        }
       }
 
       <pd-finance-kpis
@@ -106,6 +142,7 @@
               [compact]="true"
               [transactions]="transactions.value()"
               [projectNames]="projectNames()"
+              [mainCurrency]="mainCurrency()"
               [limit]="recentCount"
               (edit)="openTransactionForm($event)"
               (remove)="removeTransaction($event)"
@@ -129,6 +166,7 @@
       <pd-transaction-list
         [transactions]="transactions.value()"
         [projectNames]="projectNames()"
+        [mainCurrency]="mainCurrency()"
         [(category)]="categoryFilter"
         (edit)="openTransactionForm($event)"
         (remove)="removeTransaction($event)"

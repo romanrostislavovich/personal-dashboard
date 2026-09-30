@@ -28,8 +28,22 @@
   padding: 16px 0;
 }
 
-.currencies {
-  align-self: flex-start;
+// "Everything in PLN", one chip per other currency, and the main currency menu.
+.currency-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.main-currency {
+  margin-left: auto;
+}
+
+.conversion-note {
+  margin: -8px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
 }
 
 // Two cards side by side on wide screens, one under another on narrow ones.

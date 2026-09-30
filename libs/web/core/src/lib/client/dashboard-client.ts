@@ -9,5 +9,22 @@ import { browserStorage, createDashboardClient, DashboardClient } from '@pd/clie
  */
 export const DASHBOARD_CLIENT = new InjectionToken<DashboardClient>('DashboardClient', {
   providedIn: 'root',
-  factory: () => createDashboardClient({ baseUrl: '', storage: browserStorage() }),
+  factory: () => {
+    forgetLegacyToken();
+    return createDashboardClient({
+      baseUrl: '',
+      storage: browserStorage(),
+      // The refresh token stays in an httpOnly cookie: page scripts (an XSS) cannot read it.
+      refreshTokenIn: 'cookie',
+    });
+  },
 });
+
+/** Before sessions, a 30-day access token was kept in localStorage — readable by any script. */
+function forgetLegacyToken(): void {
+  try {
+    localStorage.removeItem('pd.accessToken');
+  } catch {
+    // Storage is blocked: nothing was kept there either.
+  }
+}

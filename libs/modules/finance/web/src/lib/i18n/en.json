@@ -109,5 +109,13 @@
     "clearFilters": "Reset filters",
     "actions": "Actions",
     "recurring": "Recurring payment"
+  },
+  "main": {
+    "all": "Everything in {{currency}}",
+    "label": "Main currency: {{currency}}",
+    "auto": "Automatically — the one used most",
+    "rates": "Other currencies are converted at the European Central Bank rate of each transaction’s day.",
+    "approximate": "{{currencies}}: at today’s rate (the ECB does not publish it).",
+    "missing": "{{currencies}}: no rate, left out of the totals."
   }
 }

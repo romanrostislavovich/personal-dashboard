@@ -11,9 +11,11 @@ describe('transcribe', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('sends the audio, model and language as a form and returns the text', async () => {
-    const fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ text: ' Запиши в дневник: гулял в парке ' })),
-    );
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ text: ' Запиши в дневник: гулял в парке ' })),
+      );
     vi.stubGlobal('fetch', fetch);
 
     expect(await transcribe(connection, voice, 'ru')).toBe('Запиши в дневник: гулял в парке');

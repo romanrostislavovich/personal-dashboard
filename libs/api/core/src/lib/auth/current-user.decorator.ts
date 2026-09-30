@@ -4,6 +4,8 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 export interface AuthUser {
   id: string;
   email: string;
+  /** The sign-in session of the access token (see SessionsService). */
+  sessionId: string;
 }
 
 /** Example: `list(@CurrentUser() user: AuthUser)`. */
