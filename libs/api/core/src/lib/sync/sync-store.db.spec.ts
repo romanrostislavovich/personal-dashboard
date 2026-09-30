@@ -16,6 +16,8 @@ import { SyncStore } from './sync-store';
  */
 const ADMIN_URL = process.env['TEST_DATABASE_URL'];
 const MIGRATIONS = join(import.meta.dirname, '../../../../../../apps/api/migrations');
+/** A uuid[] literal: an array given to `sql` would turn into a row, not an array. */
+const uuids = (ids: string[]) => `{${ids.join(',')}}`;
 /** Far older than any change made by the test. */
 const LONG_AGO = '2000-01-01T00:00:00Z';
 
@@ -245,6 +247,104 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', { timeout: 60_000 }, (
 
     expect(await pull()).toEqual({ applied: 1, skipped: 0, parked: 0 });
     expect(await rows(client, sql`SELECT id FROM birthdays WHERE id = ${id}`)).toEqual([]);
+  });
+
+  it('copies thousands of rows in batches, with a few conflicts among them', async () => {
+    const count = 5_000;
+    const playedAt = (n: number) => sql`'2026-01-01'::timestamptz - make_interval(mins => ${n})`;
+    // The same play (unique: user + time + track) already here under another id — and older,
+    // so the incoming one wins and this one is kept as a conflict.
+    await client.db.execute(sql`INSERT INTO music_scrobbles (user_id, played_at, artist, track)
+      VALUES (${userId}, ${playedAt(7)}, 'Old', 'Track 7')`);
+    await pushCursor();
+    await tick();
+    await server.db.execute(sql`
+      INSERT INTO music_scrobbles (user_id, played_at, artist, track)
+      SELECT ${userId}, '2026-01-01'::timestamptz - make_interval(mins => n),
+        'Artist ' || n % 50, 'Track ' || n
+      FROM generate_series(1, ${count}) AS n
+    `);
+
+    const started = Date.now();
+    const total = { applied: 0, skipped: 0, parked: 0 };
+    for (;;) {
+      await settle(server);
+      const batch = await server.store.changesSince(pulled, (origin) => origin === null);
+      pulled = batch.cursor;
+      const result = await client.store.apply(batch.changes, { origin: 'server' });
+      total.applied += result.applied;
+      total.skipped += result.skipped;
+      total.parked += result.parked;
+      if (!batch.hasMore) {
+        break;
+      }
+    }
+    // Row by row this took ~20 s; in bulk ~1.5 s. A generous bound catches a return to row by row.
+    expect(Date.now() - started).toBeLessThan(10_000);
+
+    expect(total).toEqual({ applied: count, skipped: 0, parked: 0 });
+    const [{ copied }] = await rows<{ copied: number }>(
+      client,
+      sql`SELECT count(*)::int AS copied FROM music_scrobbles WHERE artist <> 'Old'`,
+    );
+    expect(copied).toBe(count);
+    // The older local duplicate lost to the incoming play and is kept as a conflict.
+    const [{ kept }] = await rows<{ kept: number }>(
+      client,
+      sql`SELECT count(*)::int AS kept FROM sync.conflicts
+        WHERE table_name = 'music_scrobbles' AND row->>'artist' = 'Old'`,
+    );
+    expect(kept).toBe(1);
+  });
+
+  it('deletes many rows in bulk', async () => {
+    const ids = Array.from({ length: 10 }, () => randomUUID());
+    for (const id of ids) {
+      await addBirthday(server, id);
+    }
+    await pull();
+    await server.db.execute(sql`DELETE FROM birthdays WHERE id = ANY(${uuids(ids)}::uuid[])`);
+
+    expect(await pull()).toEqual({ applied: 10, skipped: 0, parked: 0 });
+    expect(
+      await rows(client, sql`SELECT id FROM birthdays WHERE id = ANY(${uuids(ids)}::uuid[])`),
+    ).toEqual([]);
+  });
+
+  it('a run that fails in bulk goes row by row: the bad row is parked', async () => {
+    const ids = Array.from({ length: 4 }, () => randomUUID());
+    const orphan = randomUUID();
+    const change = (id: string, user: string) => ({
+      table: 'birthdays',
+      pk: JSON.stringify({ id }),
+      changedAt: new Date().toISOString(),
+      row: JSON.stringify({
+        id,
+        user_id: user,
+        name: 'Bulk',
+        month: 3,
+        day: 4,
+        remind_days_before: [0],
+        created_at: new Date().toISOString(),
+      }),
+    });
+    // The last row's user does not exist here: the bulk insert fails as a whole.
+    const result = await client.store.apply(
+      [...ids.map((id) => change(id, userId)), change(orphan, randomUUID())],
+      { origin: 'server' },
+    );
+
+    expect(result).toEqual({ applied: 4, skipped: 0, parked: 1 });
+    const applied = await rows<{ n: number }>(
+      client,
+      sql`SELECT count(*)::int AS n FROM birthdays WHERE id = ANY(${uuids(ids)}::uuid[])`,
+    );
+    expect(applied).toEqual([{ n: 4 }]);
+    const [parked] = await rows<{ error: string }>(
+      client,
+      sql`SELECT error FROM sync.parked WHERE pk = ${JSON.stringify({ id: orphan })}::jsonb`,
+    );
+    expect(parked.error).toContain('INSERT INTO "birthdays"');
   });
 
   it('parks a change for a table this side does not know', async () => {

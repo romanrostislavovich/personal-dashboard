@@ -37,13 +37,26 @@ export interface AiConnection {
   hasApiKey: boolean;
 }
 
+/** A speech-to-text model of OpenAI; any model of the chosen connection works. */
+export const DEFAULT_SPEECH_MODEL = 'gpt-4o-mini-transcribe';
+
+/** `PUT /api/ai/preferences`: only the fields sent are changed. */
 export const aiPreferencesSchema = z.object({
   /** Morning digest at 08:30 via notifications. */
-  morningDigest: z.boolean(),
+  morningDigest: z.boolean().optional(),
+  /**
+   * Which saved connection turns Telegram voice messages into text (its `/audio/transcriptions`).
+   * `null` — the first OpenAI connection.
+   */
+  speechConnectionId: z.uuid().nullable().optional(),
+  speechModel: z.string().trim().min(1).max(100).optional(),
 });
 export type AiPreferences = z.infer<typeof aiPreferencesSchema>;
 
-export interface AiSettings extends AiPreferences {
+export interface AiSettings {
+  morningDigest: boolean;
+  speechConnectionId: string | null;
+  speechModel: string;
   /** At least one connection exists — the AI features work. */
   configured: boolean;
   /** The connection every AI request goes through. */

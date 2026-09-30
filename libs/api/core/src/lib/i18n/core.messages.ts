@@ -24,6 +24,11 @@ const messages = {
     modelUsage: 'Send the number from the list: /model 2. The list: /model',
     modelSwitched: (name: string, model: string) => `✅ Now answering: ${name} (${model})`,
     telegramFileTooLarge: 'The file is larger than 20 MB — Telegram does not let bots download it.',
+    voiceNotConfigured:
+      'To understand voice messages, add an OpenAI connection in the dashboard: AI → settings ' +
+      '(DeepSeek has no speech recognition).',
+    voiceEmpty: '🎤 Could not hear any words — try again?',
+    voiceFailed: '🎤 Speech recognition failed. Check the connection in the AI settings.',
     attachmentUnsupported:
       'I can read PDF, Excel (.xlsx), CSV and text files. Photos go to the diary.',
     attachmentEmpty:
@@ -52,6 +57,11 @@ const messages = {
     modelUsage: 'Отправь номер из списка: /model 2. Список: /model',
     modelSwitched: (name: string, model: string) => `✅ Теперь отвечает: ${name} (${model})`,
     telegramFileTooLarge: 'Файл больше 20 МБ — Telegram не даёт ботам скачивать такие.',
+    voiceNotConfigured:
+      'Чтобы понимать голосовые, добавь подключение OpenAI в дашборде: AI → настройки ' +
+      '(у DeepSeek нет распознавания речи).',
+    voiceEmpty: '🎤 Не расслышал ни слова — попробуешь ещё раз?',
+    voiceFailed: '🎤 Не получилось распознать речь. Проверь подключение в настройках AI.',
     attachmentUnsupported:
       'Я читаю PDF, Excel (.xlsx), CSV и текстовые файлы. Фото уходят в дневник.',
     attachmentEmpty:

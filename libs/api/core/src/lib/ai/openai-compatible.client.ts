@@ -26,6 +26,13 @@ export interface ChatConnection {
   reasoningEffort?: 'none';
 }
 
+/** Where voice messages are turned into text: `POST {baseUrl}/audio/transcriptions`. */
+export interface SpeechConnection {
+  baseUrl: string;
+  apiKey: string | null;
+  model: string;
+}
+
 export class AiRequestError extends Error {
   constructor(
     message: string,
@@ -68,4 +75,41 @@ export async function chatCompletion(
     choices: { message: Extract<ChatMessage, { role: 'assistant' }> }[];
   };
   return data.choices[0].message;
+}
+
+export interface AudioFile {
+  data: Buffer;
+  /** With the extension: the API tells the format by it (Telegram voice messages are `.ogg`). */
+  fileName: string;
+  mimeType: string;
+}
+
+/** Speech to text (OpenAI Whisper / gpt-4o-transcribe, or any compatible server). */
+export async function transcribe(
+  connection: SpeechConnection,
+  audio: AudioFile,
+  /** ISO 639-1 (`ru`, `en`): a hint that improves accuracy. */
+  language?: string,
+): Promise<string> {
+  const form = new FormData();
+  form.append(
+    'file',
+    new Blob([new Uint8Array(audio.data)], { type: audio.mimeType }),
+    audio.fileName,
+  );
+  form.append('model', connection.model);
+  if (language) {
+    form.append('language', language);
+  }
+  const response = await fetch(`${connection.baseUrl.replace(/\/+$/, '')}/audio/transcriptions`, {
+    method: 'POST',
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+    headers: connection.apiKey ? { Authorization: `Bearer ${connection.apiKey}` } : {},
+    body: form,
+  });
+  if (!response.ok) {
+    throw new AiRequestError(await response.text(), response.status);
+  }
+  const { text } = (await response.json()) as { text?: string };
+  return (text ?? '').trim();
 }

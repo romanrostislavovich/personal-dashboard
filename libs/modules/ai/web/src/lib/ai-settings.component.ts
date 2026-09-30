@@ -2,18 +2,21 @@ import { ChangeDetectionStrategy, Component, inject, input, output } from '@angu
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { AiConnection, AiSettings } from '@pd/contracts';
+import { AiConnection, AiPreferences, AiSettings } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
 import { AiConnectionFormDialog } from './ai-connection-form.dialog';
 
 /**
  * Saved AI connections — one of them active, switched in one click (say, when a balance runs
- * out) — and the morning digest.
+ * out) — the morning digest and which connection understands Telegram voice messages.
  */
 @Component({
   selector: 'pd-ai-settings',
@@ -21,7 +24,10 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
   imports: [
     MatCardModule,
     MatButtonModule,
+    MatFormFieldModule,
     MatIconModule,
+    MatInputModule,
+    MatSelectModule,
     MatSlideToggleModule,
     MatTooltipModule,
     TranslocoPipe,
@@ -82,11 +88,49 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
           >
             {{ 'ai.settings.morningDigest' | transloco }}
           </mat-slide-toggle>
+
+          <h3 class="section">🎤 {{ 'ai.speech.title' | transloco }}</h3>
+          <p class="hint">{{ 'ai.speech.hint' | transloco }}</p>
+          <div class="speech">
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>{{ 'ai.speech.connection' | transloco }}</mat-label>
+              <mat-select
+                [value]="settings().speechConnectionId"
+                (selectionChange)="savePreferences({ speechConnectionId: $event.value })"
+              >
+                <mat-option [value]="null">{{ 'ai.speech.auto' | transloco }}</mat-option>
+                @for (c of settings().connections; track c.id) {
+                  <mat-option [value]="c.id">{{ c.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>{{ 'ai.settings.model' | transloco }}</mat-label>
+              <input
+                matInput
+                [value]="settings().speechModel"
+                (change)="saveSpeechModel($any($event.target).value)"
+              />
+            </mat-form-field>
+          </div>
         }
       </mat-card-content>
     </mat-card>
   `,
   styles: `
+    .hint {
+      margin: 0 0 8px;
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-body-small);
+    }
+    .speech {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .speech mat-form-field {
+      flex: 1 1 220px;
+    }
     .section {
       margin: 8px 0;
       font: var(--mat-sys-title-small);
@@ -177,6 +221,16 @@ export class AiSettingsComponent {
   }
 
   async setMorningDigest(morningDigest: boolean): Promise<void> {
-    this.changed.emit(await firstValueFrom(this.api.savePreferences({ morningDigest })));
+    await this.savePreferences({ morningDigest });
+  }
+
+  async saveSpeechModel(model: string): Promise<void> {
+    if (model.trim()) {
+      await this.savePreferences({ speechModel: model.trim() });
+    }
+  }
+
+  async savePreferences(preferences: AiPreferences): Promise<void> {
+    this.changed.emit(await firstValueFrom(this.api.savePreferences(preferences)));
   }
 }

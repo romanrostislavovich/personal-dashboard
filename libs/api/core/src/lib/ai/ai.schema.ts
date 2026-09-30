@@ -1,4 +1,4 @@
-import { AiAttachment } from '@pd/contracts';
+import { AiAttachment, DEFAULT_SPEECH_MODEL } from '@pd/contracts';
 import {
   boolean,
   index,
@@ -27,7 +27,7 @@ export const aiConnections = pgTable('ai_connections', {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-/** User AI settings: which connection is active, the morning digest. */
+/** User AI settings: which connection is active, the morning digest, voice recognition. */
 export const aiSettings = pgTable('ai_settings', {
   userId: uuid()
     .primaryKey()
@@ -35,6 +35,9 @@ export const aiSettings = pgTable('ai_settings', {
   // Deleting the active connection leaves none active; the service then picks another.
   activeConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
   morningDigest: boolean().notNull().default(false),
+  // null — the first OpenAI connection transcribes voice messages.
+  speechConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
+  speechModel: text().notNull().default(DEFAULT_SPEECH_MODEL),
 });
 
 /**

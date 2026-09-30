@@ -33,6 +33,13 @@ const REQUEST_TIMEOUT_MS = 120_000;
 const ACTION_PULL_WAIT_MS = 10_000;
 /** Protection against an endless loop if the server keeps saying "there is more". */
 const MAX_BATCHES = 10_000;
+/**
+ * Versions before this one read the change log in text order ("1000" before "19"): when a batch
+ * was cut, some rows were never sent. Both logs are walked once more from the start — rows that
+ * are already here are skipped, the missing ones arrive. Bump it to recheck again.
+ */
+const RECHECK_DONE = '2026-09-30';
+const RECHECK_PULLING = 'pulling';
 
 /** A sync error with a message for the settings page. */
 class SyncError extends Error {
@@ -142,7 +149,14 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
 
   private async run(): Promise<void> {
     try {
+      const recheck = await this.startRecheck();
       const pulled = await this.pull();
+      if (recheck) {
+        // Only now: during the pull the push cursor tells which local rows are unsent, and a
+        // reset one would turn every local row into a conflict.
+        await this.sync.setState(SYNC_STATE.pushCursor, null);
+        await this.sync.setState(SYNC_STATE.recheck, RECHECK_DONE);
+      }
       const pushed = await this.pushOnce();
       await this.sync.setState(SYNC_STATE.lastSyncedAt, new Date().toISOString());
       await this.sync.setState(SYNC_STATE.lastError, null);
@@ -156,6 +170,23 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
       }
       await this.sync.setState(SYNC_STATE.lastError, message);
     }
+  }
+
+  /**
+   * Starts the one-time recheck (see RECHECK_DONE) or goes on with one cut short by a lost
+   * connection — from where it stopped. Returns whether a recheck is running.
+   */
+  private async startRecheck(): Promise<boolean> {
+    const state = await this.sync.getState(SYNC_STATE.recheck);
+    if (state === RECHECK_DONE) {
+      return false;
+    }
+    if (state !== RECHECK_PULLING) {
+      this.logger.warn('Rechecking the whole change log once: earlier versions could skip rows');
+      await this.sync.setState(SYNC_STATE.pullCursor, null);
+      await this.sync.setState(SYNC_STATE.recheck, RECHECK_PULLING);
+    }
+    return true;
   }
 
   /** One push at a time: a regular sync and a server action may want one together. */

@@ -64,5 +64,11 @@
     "empty": "No connections yet: add one to start using AI.",
     "checking": "Checking…",
     "confirmDelete": "Delete the “{{name}}” connection and its key?"
+  },
+  "speech": {
+    "title": "Voice messages in Telegram",
+    "hint": "The bot turns a voice message into text and handles it like a typed one. It needs a connection with speech recognition — OpenAI (DeepSeek has none).",
+    "connection": "Connection",
+    "auto": "Automatically — the first OpenAI connection"
   }
 }

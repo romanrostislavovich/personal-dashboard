@@ -37,7 +37,9 @@
 - **Files for the AI:** PDF, Excel, CSV and text files in the chat and in Telegram — e.g. a bank
   statement is imported into finance, skipping transactions that are already recorded
 - **Sync:** a local instance (works offline) and a server sync both ways; the newer change wins,
-  the losing version is kept
+  the losing version is kept; rows go in bulk, thousands a second
+- **Voice messages in Telegram:** recognized (OpenAI speech-to-text) and handled like typed ones —
+  a question or a request to the assistant, the recognized text shown first
 
 ## Next
 
@@ -50,11 +52,6 @@
 - **Fitness** — workouts, activity and body metrics
 - **SoundCloud** — my own mixes and tracks: plays, likes, reposts and comments
 - **Science** — a section for science
-- **Voice messages in Telegram** — the bot takes voice messages, turns them into text (speech
-  recognition) and handles them like a typed message: a diary note, a command, a question to AI
-- **Faster sync of large amounts of data** — a client applies changes row by row (about 150 rows a
-  second), so catching up on 400,000 plays takes most of an hour; apply a batch per table with a
-  few statements instead
 
 - **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
   (bank notifications / SMS → transactions), then everything else the phone knows:

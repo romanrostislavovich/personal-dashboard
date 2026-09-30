@@ -5,12 +5,18 @@ import {
   AiPreferences,
   AiProvider,
   AiSettings,
+  DEFAULT_SPEECH_MODEL,
 } from '@pd/contracts';
 import { and, asc, eq } from 'drizzle-orm';
 import { DB, Database } from '../database/database.module';
 import { SecretsService } from '../secrets/secrets.service';
 import { AiConnectionRow, aiConnections, aiSettings } from './ai.schema';
-import { AiRequestError, ChatConnection, chatCompletion } from './openai-compatible.client';
+import {
+  AiRequestError,
+  ChatConnection,
+  chatCompletion,
+  SpeechConnection,
+} from './openai-compatible.client';
 
 /** The API key of a connection in SecretsService. */
 const apiKeySecret = (connectionId: string) => `ai.connection.${connectionId}`;
@@ -37,6 +43,8 @@ export class AiConnectionsService {
       activeConnectionId: activeRow(rows, settings?.activeConnectionId)?.id ?? null,
       connections,
       morningDigest: settings?.morningDigest ?? false,
+      speechConnectionId: settings?.speechConnectionId ?? null,
+      speechModel: settings?.speechModel ?? DEFAULT_SPEECH_MODEL,
     };
   }
 
@@ -89,12 +97,36 @@ export class AiConnectionsService {
     return this.settings(userId);
   }
 
+  /** Only the fields sent change (Drizzle skips `undefined` ones). */
   async savePreferences(userId: string, preferences: AiPreferences): Promise<AiSettings> {
+    if (preferences.speechConnectionId) {
+      await this.find(userId, preferences.speechConnectionId);
+    }
     await this.db
       .insert(aiSettings)
       .values({ userId, ...preferences })
       .onConflictDoUpdate({ target: aiSettings.userId, set: preferences });
     return this.settings(userId);
+  }
+
+  /**
+   * The connection that turns voice messages into text: the chosen one, or the first OpenAI one;
+   * `null` — none (DeepSeek, for one, has no speech recognition).
+   */
+  async speech(userId: string): Promise<SpeechConnection | null> {
+    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    const rows = await this.rows(userId);
+    const row =
+      rows.find((r) => r.id === settings?.speechConnectionId) ??
+      rows.find((r) => r.provider === 'openai');
+    if (!row) {
+      return null;
+    }
+    return {
+      baseUrl: row.baseUrl,
+      apiKey: await this.secrets.get(userId, apiKeySecret(row.id)),
+      model: settings?.speechModel ?? DEFAULT_SPEECH_MODEL,
+    };
   }
 
   /** The connection AI requests go through; null — AI is not configured. */

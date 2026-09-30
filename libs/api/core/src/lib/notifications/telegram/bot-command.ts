@@ -58,3 +58,21 @@ export type BotDocumentHandler = (user: UserRow, document: BotDocument) => Promi
  * Returns the bot reply. Only one handler owns free text — the first registered.
  */
 export type BotTextHandler = (user: UserRow, text: string) => Promise<string>;
+
+/** A voice message (or an audio file) sent to the bot. */
+export interface BotVoice {
+  /** With the extension, which tells speech recognition the format: `voice.ogg`. */
+  fileName: string;
+  mimeType: string;
+  durationSec: number;
+  download: () => Promise<Buffer>;
+}
+
+/** The recognized text, or a reply explaining why there is none (recognition is not set up…). */
+export type BotTranscription = { text: string } | { reply: string };
+
+/**
+ * Turns voice messages into text (the AI core, through a speech recognition connection).
+ * The bot then handles the text like a typed message: a `/command` or the assistant.
+ */
+export type BotVoiceTranscriber = (user: UserRow, voice: BotVoice) => Promise<BotTranscription>;

@@ -1,0 +1,3 @@
+ALTER TABLE "ai_settings" ADD COLUMN "speech_connection_id" uuid;--> statement-breakpoint
+ALTER TABLE "ai_settings" ADD COLUMN "speech_model" text DEFAULT 'gpt-4o-mini-transcribe' NOT NULL;--> statement-breakpoint
+ALTER TABLE "ai_settings" ADD CONSTRAINT "ai_settings_speech_connection_id_ai_connections_id_fk" FOREIGN KEY ("speech_connection_id") REFERENCES "public"."ai_connections"("id") ON DELETE set null ON UPDATE no action;

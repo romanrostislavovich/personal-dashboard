@@ -62,6 +62,9 @@ The server must be reachable over HTTPS: the token and your data travel in these
 - Only committed transactions are read, in commit order, so no change is skipped.
 - Changes are applied in foreign key order. A change that references a row that has not arrived
   yet waits in `sync.parked` and is retried after every sync.
+- Batches of up to 1,000 changes. Rows of one table are read and written in bulk — a few
+  statements per table, thousands of rows a second; a change that needs care (a newer local
+  version, a clash on a unique key, an error) is handled on its own with the rules below.
 
 ### The server does the work, the computer keeps a copy
 

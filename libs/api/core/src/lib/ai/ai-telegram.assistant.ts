@@ -1,13 +1,14 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { AiAttachment } from '@pd/contracts';
 import { coreMessages } from '../i18n/core.messages';
-import { BotDocument } from '../notifications/telegram/bot-command';
+import { BotDocument, BotTranscription, BotVoice } from '../notifications/telegram/bot-command';
 import { TelegramBotService } from '../notifications/telegram/telegram-bot.service';
 import { UserRow } from '../users/users.schema';
 import { AiConnectionsService } from './ai-connections.service';
 import { AiConversationsService } from './ai-conversations.service';
 import { AiService } from './ai.service';
 import { AttachmentError, attachmentText } from './attachment-text';
+import { transcribe } from './openai-compatible.client';
 
 /** Telegram limits a message to 4096 characters. */
 const TELEGRAM_LIMIT = 4000;
@@ -58,6 +59,7 @@ export class AiTelegramAssistant implements OnModuleInit {
     this.telegram.registerDocumentHandler((user, document) =>
       this.assistWithDocument(user, document),
     );
+    this.telegram.registerVoiceTranscriber((user, voice) => this.transcribe(user, voice));
   }
 
   private async askOnce(user: UserRow, question: string): Promise<string> {
@@ -94,6 +96,26 @@ export class AiTelegramAssistant implements OnModuleInit {
     }
     await this.connections.activate(user.id, chosen.id);
     return text.modelSwitched(chosen.name, chosen.model);
+  }
+
+  /** A voice message → text, through the speech connection chosen in the AI settings. */
+  private async transcribe(user: UserRow, voice: BotVoice): Promise<BotTranscription> {
+    const messages = coreMessages(user.locale);
+    const connection = await this.connections.speech(user.id);
+    if (!connection) {
+      return { reply: messages.voiceNotConfigured };
+    }
+    try {
+      const text = await transcribe(
+        connection,
+        { data: await voice.download(), fileName: voice.fileName, mimeType: voice.mimeType },
+        user.locale,
+      );
+      return text ? { text } : { reply: messages.voiceEmpty };
+    } catch (error) {
+      this.logger.warn(`Voice recognition failed for ${user.id}: ${error}`);
+      return { reply: messages.voiceFailed };
+    }
   }
 
   /** A document from the chat: its text goes to the assistant together with the caption. */

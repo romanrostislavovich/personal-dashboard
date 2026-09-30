@@ -34,6 +34,8 @@ export const SYNC_STATE = {
   /** Client: send all rows, not only local changes (after the server database changed). */
   pushAll: 'push-all',
   pullCursor: 'pull-cursor',
+  /** Client: progress of the one-time recheck of the whole change log (see SyncClient). */
+  recheck: 'recheck',
   lastSyncedAt: 'last-synced-at',
   lastError: 'last-error',
 } as const;

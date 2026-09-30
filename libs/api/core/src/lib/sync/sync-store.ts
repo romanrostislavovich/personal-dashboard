@@ -7,6 +7,10 @@ import { APPLYING_SETTING, installSyncTriggers, pkObject } from './sync-triggers
 
 /** Rows of the change log looked at per batch. */
 const SCAN_LIMIT = 1_000;
+/** Fewer changes of one table than this go one at a time: bulk statements would not pay off. */
+const BULK_MIN = 3;
+/** Rows of one table read with one query. */
+const READ_CHUNK = 500;
 /** A batch stops growing after this much row data (diary photos are up to 10 MB each). */
 const MAX_BATCH_BYTES = 8 * 1024 * 1024;
 /** Parked changes may wait for each other (a transaction for a parked project). */
@@ -38,6 +42,22 @@ interface Loser {
 }
 
 const LOST_TO_NEWER = 'lost to a newer row';
+
+/** An entry of the change log as read for a batch. */
+type Version = {
+  table_name: string;
+  pk: string;
+  changed_at: string;
+  tx_text: string;
+  seq_text: string;
+  origin: string | null;
+};
+
+/** Consecutive log entries of one table, whose rows are read with one query. */
+interface ReadChunk {
+  table: SyncTable | undefined;
+  versions: Version[];
+}
 
 export interface ChangeBatch {
   changes: SyncChange[];
@@ -75,37 +95,39 @@ export class SyncStore {
     const [tx, seq] = parseCursor(cursor);
     return this.db.transaction(
       async (db): Promise<ChangeBatch> => {
-        const { rows } = await db.execute<{
-          table_name: string;
-          pk: string;
-          changed_at: string;
-          tx: string;
-          seq: string;
-          origin: string | null;
-        }>(sql`
-          SELECT table_name, pk::text AS pk, changed_at::text AS changed_at,
-            tx::text AS tx, seq::text AS seq, origin
-          FROM sync.row_versions
-          WHERE (tx, seq) > (${tx}::xid8, ${seq}::bigint)
-            AND tx < pg_snapshot_xmin(pg_current_snapshot())
-          ORDER BY tx, seq
+        // Ordered by the columns themselves: ordering by the text copies (`tx_text`) would put
+        // "1000" before "19", and a batch cut in the middle would skip rows for good.
+        const { rows } = await db.execute<Version>(sql`
+          SELECT v.table_name, v.pk::text AS pk, v.changed_at::text AS changed_at,
+            v.tx::text AS tx_text, v.seq::text AS seq_text, v.origin
+          FROM sync.row_versions v
+          WHERE (v.tx, v.seq) > (${tx}::xid8, ${seq}::bigint)
+            AND v.tx < pg_snapshot_xmin(pg_current_snapshot())
+          ORDER BY v.tx, v.seq
           LIMIT ${SCAN_LIMIT}
         `);
         const changes: SyncChange[] = [];
         let next = cursor;
         let bytes = 0;
-        for (const version of rows) {
-          if (bytes >= MAX_BATCH_BYTES) {
-            return { changes, cursor: next, hasMore: true };
+        for (const chunk of readChunks(rows, (version) => this.table(version.table_name))) {
+          const data = await this.readRows(db, chunk, include);
+          for (const version of chunk.versions) {
+            if (bytes >= MAX_BATCH_BYTES) {
+              return { changes, cursor: next, hasMore: true };
+            }
+            next = `${version.tx_text}:${version.seq_text}`;
+            if (!chunk.table || !include(version.origin)) {
+              continue;
+            }
+            const row = data.get(version.pk) ?? null;
+            changes.push({
+              table: chunk.table.name,
+              pk: version.pk,
+              changedAt: version.changed_at,
+              row,
+            });
+            bytes += (row?.length ?? 0) + version.pk.length;
           }
-          next = `${version.tx}:${version.seq}`;
-          const table = this.table(version.table_name);
-          if (!table || !include(version.origin)) {
-            continue;
-          }
-          const row = await this.readRow(db, table, version.pk);
-          changes.push({ table: table.name, pk: version.pk, changedAt: version.changed_at, row });
-          bytes += (row?.length ?? 0) + version.pk.length;
         }
         return { changes, cursor: next, hasMore: rows.length === SCAN_LIMIT };
       },
@@ -114,19 +136,148 @@ export class SyncStore {
     );
   }
 
-  /** Applies changes from the other side (see ApplyContext). */
+  /**
+   * Applies changes from the other side (see ApplyContext). Changes of one table go in bulk —
+   * a few statements for the whole run; the ones that need care (a local version, a clash on a
+   * unique key, an error) go one at a time with the full conflict rules.
+   */
   async apply(changes: SyncChange[], context: ApplyContext): Promise<SyncPushResponse> {
     const result: SyncPushResponse = { applied: 0, skipped: 0, parked: 0 };
     await this.db.transaction(async (tx) => {
       // Our trigger ignores this transaction: applied changes are logged below with their origin.
       await tx.execute(sql`SELECT set_config(${APPLYING_SETTING}, 'on', true)`);
-      for (const change of this.dependencyOrder(changes)) {
-        const outcome = await this.applyOrPark(tx, change, context);
-        result[outcome]++;
+      for (const run of writeRuns(this.dependencyOrder(changes))) {
+        const table = this.table(run[0].table);
+        const { applied, rest } =
+          table && run.length >= BULK_MIN
+            ? await this.applyInBulk(tx, table, run, context)
+            : { applied: 0, rest: run };
+        result.applied += applied;
+        for (const change of rest) {
+          result[await this.applyOrPark(tx, change, context)]++;
+        }
       }
       await this.retryParked(tx, context);
     });
     return result;
+  }
+
+  /**
+   * One run of upserts or deletes of one table. Returns how many were applied and the changes
+   * left for the one-at-a-time path.
+   */
+  private async applyInBulk(
+    tx: Transaction,
+    table: SyncTable,
+    run: SyncChange[],
+    context: ApplyContext,
+  ): Promise<{ applied: number; rest: SyncChange[] }> {
+    const careful = new Set([
+      ...(await this.withLocalVersion(tx, table, run, context)),
+      ...(run[0].row !== null ? await this.withUniqueClash(tx, table, run) : []),
+    ]);
+    const plain = run.filter((_, index) => !careful.has(index));
+    const rest = run.filter((_, index) => careful.has(index));
+    if (plain.length === 0) {
+      return { applied: 0, rest };
+    }
+    try {
+      // A savepoint: if the bulk write fails (a missing parent row…), nothing of it stays and the
+      // same changes go one at a time, where the failing ones are parked.
+      await tx.transaction((savepoint) => this.writeInBulk(savepoint, table, plain, context));
+      return { applied: plain.length, rest };
+    } catch {
+      return { applied: 0, rest: [...rest, ...plain] };
+    }
+  }
+
+  /**
+   * Positions (0-based) of the changes with a local version that matters: newer than the
+   * incoming one, or not sent yet (see ApplyContext.unsentAfter).
+   */
+  private async withLocalVersion(
+    tx: Transaction,
+    table: SyncTable,
+    run: SyncChange[],
+    { unsentAfter }: ApplyContext,
+  ): Promise<number[]> {
+    const [unsentTx, unsentSeq] = parseCursor(unsentAfter ?? null);
+    const { rows } = await tx.execute<{ i: number }>(sql`
+      SELECT (e.i - 1)::int AS i
+      FROM jsonb_array_elements(${versionsJson(run)}::jsonb) WITH ORDINALITY AS e(value, i)
+      JOIN sync.row_versions v ON v.table_name = ${table.name} AND v.pk = e.value -> 'pk'
+      WHERE v.changed_at >= (e.value ->> 'at')::timestamptz
+        OR (${unsentAfter !== undefined} AND v.origin IS NULL
+          AND (v.tx, v.seq) > (${unsentTx}::xid8, ${unsentSeq}::bigint))
+    `);
+    return rows.map((row) => row.i);
+  }
+
+  /** Positions of the incoming rows whose unique values another local row already holds. */
+  private async withUniqueClash(
+    tx: Transaction,
+    table: SyncTable,
+    run: SyncChange[],
+  ): Promise<number[]> {
+    const name = sql.identifier(table.name);
+    const clashes: number[] = [];
+    for (const unique of table.uniques) {
+      const { rows } = await tx.execute<{ i: number }>(sql`
+        SELECT DISTINCT (e.i - 1)::int AS i
+        FROM jsonb_array_elements(${jsonArray(run.map((c) => c.row ?? '{}'))}::jsonb)
+          WITH ORDINALITY AS e(value, i)
+        CROSS JOIN LATERAL jsonb_populate_record(NULL::${name}, e.value) k
+        JOIN ${name} t ON (${columns('t', unique)}) = (${columns('k', unique)})
+          AND (${columns('t', table.primaryKey)}) <> (${columns('k', table.primaryKey)})
+      `);
+      clashes.push(...rows.map((row) => row.i));
+    }
+    return clashes;
+  }
+
+  /** Writes the rows and logs their versions: three statements for the whole run. */
+  private async writeInBulk(
+    tx: Transaction,
+    table: SyncTable,
+    run: SyncChange[],
+    { origin }: ApplyContext,
+  ): Promise<void> {
+    const name = sql.identifier(table.name);
+    if (run[0].row !== null) {
+      const updates = table.columns
+        .filter((column) => !table.primaryKey.includes(column))
+        .map((column) => sql`${sql.identifier(column)} = EXCLUDED.${sql.identifier(column)}`);
+      const rows = jsonArray(run.map((change) => change.row ?? '{}'));
+      await tx.execute(sql`
+        INSERT INTO ${name} SELECT * FROM jsonb_populate_recordset(NULL::${name}, ${rows}::jsonb)
+        ON CONFLICT (${columns(null, table.primaryKey)})
+        ${updates.length ? sql`DO UPDATE SET ${sql.join(updates, sql`, `)}` : sql`DO NOTHING`}
+      `);
+    } else {
+      await tx.execute(sql`
+        DELETE FROM ${name} t WHERE (${columns('t', table.primaryKey)}) IN (
+          SELECT ${columns('k', table.primaryKey)}
+          FROM jsonb_populate_recordset(NULL::${name}, ${jsonArray(run.map((c) => c.pk))}::jsonb) k
+        )
+      `);
+    }
+    const versions = versionsJson(run);
+    await tx.execute(sql`
+      INSERT INTO sync.row_versions (table_name, pk, changed_at, tx, seq, origin)
+      SELECT ${table.name}, e.value -> 'pk', (e.value ->> 'at')::timestamptz,
+        pg_current_xact_id(), nextval('sync.change_seq'), ${origin}
+      FROM jsonb_array_elements(${versions}::jsonb) WITH ORDINALITY AS e(value, i)
+      ORDER BY e.i
+      ON CONFLICT (table_name, pk) DO UPDATE
+        SET changed_at = EXCLUDED.changed_at, tx = EXCLUDED.tx, seq = EXCLUDED.seq,
+          origin = EXCLUDED.origin
+    `);
+    // Older parked versions of these rows are obsolete now.
+    await tx.execute(sql`
+      DELETE FROM sync.parked p USING jsonb_array_elements(${versions}::jsonb) AS e(value)
+      WHERE p.table_name = ${table.name} AND p.pk = e.value -> 'pk'
+        AND p.changed_at <= (e.value ->> 'at')::timestamptz
+    `);
   }
 
   /** Local changes not sent yet (client). */
@@ -367,6 +518,28 @@ export class SyncStore {
     }
   }
 
+  /** The rows of a chunk that are sent, by primary key; a deleted row is simply missing. */
+  private async readRows(
+    tx: Transaction,
+    { table, versions }: ReadChunk,
+    include: (origin: string | null) => boolean,
+  ): Promise<Map<string, string>> {
+    const pks = versions.filter((version) => include(version.origin)).map((v) => v.pk);
+    if (!table || pks.length === 0) {
+      return new Map();
+    }
+    const name = sql.identifier(table.name);
+    const { rows } = await tx.execute<{ pk: string; row: string }>(sql`
+      SELECT ${pkObject(table, sql`to_jsonb(t)`)}::text AS pk, to_jsonb(t)::text AS row
+      FROM ${name} t
+      WHERE (${columns('t', table.primaryKey)}) IN (
+        SELECT ${columns('k', table.primaryKey)}
+        FROM jsonb_populate_recordset(NULL::${name}, ${jsonArray(pks)}::jsonb) k
+      )
+    `);
+    return new Map(rows.map((row) => [row.pk, row.row]));
+  }
+
   private async readRow(tx: Transaction, table: SyncTable, pk: string): Promise<string | null> {
     const { rows } = await tx.execute<{ row: string }>(sql`
       SELECT to_jsonb(t)::text AS row FROM ${sql.identifier(table.name)} t
@@ -393,6 +566,65 @@ export class SyncStore {
   private table(name: string): SyncTable | undefined {
     return this.tables.find((table) => table.name === name);
   }
+}
+
+/**
+ * Splits the log into runs of one table (up to READ_CHUNK) for bulk reads. Rows with binary data
+ * (photos, up to 10 MB each) are read one at a time so the batch size limit is checked between them.
+ */
+function readChunks(
+  versions: Version[],
+  tableOf: (version: Version) => SyncTable | undefined,
+): ReadChunk[] {
+  const chunks: ReadChunk[] = [];
+  for (const version of versions) {
+    const table = tableOf(version);
+    const last = chunks.at(-1);
+    const joins =
+      last && last.table === table && !table?.large && last.versions.length < READ_CHUNK;
+    if (joins) {
+      last.versions.push(version);
+    } else {
+      chunks.push({ table, versions: [version] });
+    }
+  }
+  return chunks;
+}
+
+/**
+ * Splits changes (in dependency order) into runs of one table and one kind — upserts or
+ * deletes — for bulk writes. A row changed twice starts a new run: one statement cannot write
+ * the same row twice.
+ */
+function writeRuns(changes: SyncChange[]): SyncChange[][] {
+  const runs: SyncChange[][] = [];
+  let pks = new Set<string>();
+  for (const change of changes) {
+    const run = runs.at(-1);
+    const joins =
+      run &&
+      run[0].table === change.table &&
+      (run[0].row === null) === (change.row === null) &&
+      !pks.has(change.pk);
+    if (joins) {
+      run.push(change);
+    } else {
+      runs.push([change]);
+      pks = new Set();
+    }
+    pks.add(change.pk);
+  }
+  return runs;
+}
+
+/** `[{"pk": {…}, "at": "…"}, …]` — the primary keys and change times of a run. */
+function versionsJson(run: SyncChange[]): string {
+  return jsonArray(run.map((c) => `{"pk":${c.pk},"at":${JSON.stringify(c.changedAt)}}`));
+}
+
+/** A JSON array of values that are JSON already (rows, primary keys). */
+function jsonArray(items: string[]): string {
+  return `[${items.join(',')}]`;
 }
 
 /** Cursor `tx:seq` — a position in the change log. */

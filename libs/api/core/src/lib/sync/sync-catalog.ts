@@ -10,6 +10,8 @@ export interface SyncTable {
   uniques: string[][];
   /** Tables this one references by foreign keys. */
   references: string[];
+  /** Has binary columns (diary photos): its rows are read one at a time, not in bulk. */
+  large: boolean;
 }
 
 /**
@@ -23,6 +25,7 @@ export async function readSyncTables(db: Database): Promise<SyncTable[]> {
     primary_key: string[] | null;
     uniques: string[][] | null;
     references: string[] | null;
+    large: boolean;
   }>(sql`
     SELECT c.relname AS name,
       (SELECT array_agg(a.attname::text ORDER BY a.attnum) FROM pg_attribute a
@@ -38,7 +41,9 @@ export async function readSyncTables(db: Database): Promise<SyncTable[]> {
           WHERE p.conrelid = c.oid AND p.contype = 'u' GROUP BY p.oid) u) AS uniques,
       (SELECT array_agg(DISTINCT r.relname::text) FROM pg_constraint f
         JOIN pg_class r ON r.oid = f.confrelid
-        WHERE f.conrelid = c.oid AND f.contype = 'f' AND f.confrelid <> c.oid) AS references
+        WHERE f.conrelid = c.oid AND f.contype = 'f' AND f.confrelid <> c.oid) AS references,
+      EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = c.oid AND a.attnum > 0
+        AND NOT a.attisdropped AND a.atttypid = 'bytea'::regtype) AS large
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public' AND c.relkind = 'r'
@@ -51,6 +56,7 @@ export async function readSyncTables(db: Database): Promise<SyncTable[]> {
       columns: row.columns,
       uniques: row.uniques ?? [],
       references: row.references ?? [],
+      large: row.large,
     }));
   return dependencyOrder(tables);
 }

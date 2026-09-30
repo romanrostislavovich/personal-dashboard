@@ -17,7 +17,14 @@ import { FALLBACK_LOCALE, localize } from '../../i18n/locale';
 import { UserActivityService } from '../../realtime/user-activity.service';
 import { UserRow } from '../../users/users.schema';
 import { UsersService } from '../../users/users.service';
-import { BotCommand, BotDocumentHandler, BotPhotoHandler, BotTextHandler } from './bot-command';
+import {
+  BotCommand,
+  BotDocumentHandler,
+  BotPhotoHandler,
+  BotTextHandler,
+  BotVoice,
+  BotVoiceTranscriber,
+} from './bot-command';
 
 /** Telegram hides "typing…" after 5 seconds; AI answers can take longer. */
 const TYPING_REFRESH_MS = 4_000;
@@ -50,6 +57,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   private photoHandler: BotPhotoHandler | null = null;
   private documentHandler: BotDocumentHandler | null = null;
   private textHandler: BotTextHandler | null = null;
+  private voiceTranscriber: BotVoiceTranscriber | null = null;
   private readonly token: string | undefined;
   /** A sync client leaves receiving messages to the server (see docs/sync.md). */
   private readonly isSyncClient: boolean;
@@ -81,6 +89,11 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   /** A module that accepts photos from the chat (see BotPhotoHandler). */
   registerPhotoHandler(handler: BotPhotoHandler): void {
     this.photoHandler ??= handler;
+  }
+
+  /** Who turns voice messages into text (see BotVoiceTranscriber). */
+  registerVoiceTranscriber(transcriber: BotVoiceTranscriber): void {
+    this.voiceTranscriber ??= transcriber;
   }
 
   /** Who reads documents sent to the bot (see BotDocumentHandler). */
@@ -115,6 +128,20 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     }
     bot.on('message:photo', (ctx) => this.onPhoto(ctx));
     bot.on('message:document', (ctx) => this.onDocument(ctx));
+    bot.on('message:voice', (ctx) =>
+      this.onVoice(ctx, {
+        ...ctx.message.voice,
+        fileName: 'voice.ogg',
+        mimeType: ctx.message.voice.mime_type ?? 'audio/ogg',
+      }),
+    );
+    bot.on('message:audio', (ctx) =>
+      this.onVoice(ctx, {
+        ...ctx.message.audio,
+        fileName: ctx.message.audio.file_name ?? 'audio.mp3',
+        mimeType: ctx.message.audio.mime_type ?? 'audio/mpeg',
+      }),
+    );
     // Plain text (commands are handled above and never reach this point).
     bot.on('message:text', (ctx) => this.onText(ctx));
     bot.catch((error) => this.logger.error(error.message));
@@ -141,8 +168,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   }
 
   private async onText(ctx: Filter<Context, 'message:text'>): Promise<void> {
-    const handler = this.textHandler;
-    if (!handler || ctx.message.text.startsWith('/')) {
+    if (!this.textHandler || ctx.message.text.startsWith('/')) {
       return;
     }
     const user = await this.linkedUserOrHint(ctx);
@@ -150,9 +176,63 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       await this.answer(
         ctx,
         user,
-        await this.whileTyping(ctx, () => handler(user, ctx.message.text)),
+        await this.whileTyping(ctx, () => this.handleText(user, ctx.message.text)),
       );
     }
+  }
+
+  /**
+   * A voice message: the recognized text is shown (so a misheard word is seen) and then
+   * handled like a typed message.
+   */
+  private async onVoice(
+    ctx: Context & { chat: Chat },
+    voice: {
+      file_id: string;
+      file_size?: number;
+      duration: number;
+      fileName: string;
+      mimeType: string;
+    },
+  ): Promise<void> {
+    const transcriber = this.voiceTranscriber;
+    const user = await this.linkedUserOrHint(ctx);
+    if (!transcriber || !user) {
+      return;
+    }
+    if (voice.file_size !== undefined && voice.file_size > DOWNLOAD_LIMIT_BYTES) {
+      await ctx.reply(coreMessages(user.locale).telegramFileTooLarge);
+      return;
+    }
+    const message: BotVoice = {
+      fileName: voice.fileName,
+      mimeType: voice.mimeType,
+      durationSec: voice.duration,
+      download: () => this.downloadFile(voice.file_id),
+    };
+    const result = await this.whileTyping(ctx, () => transcriber(user, message));
+    if ('reply' in result) {
+      await this.answer(ctx, user, result.reply);
+      return;
+    }
+    await ctx.reply(`🎤 ${result.text}`);
+    await this.answer(
+      ctx,
+      user,
+      await this.whileTyping(ctx, () => this.handleText(user, result.text)),
+    );
+  }
+
+  /** Text from the chat or from a voice message: `/command args` or a message to the assistant. */
+  private async handleText(user: UserRow, text: string): Promise<string> {
+    const command = /^\/(\w+)(?:@\w+)?\s*([\s\S]*)$/.exec(text.trim());
+    if (command) {
+      const found = this.commands.find((c) => c.command === command[1].toLowerCase());
+      if (found) {
+        return found.handler(user, command[2].trim());
+      }
+    }
+    return this.textHandler ? this.textHandler(user, text) : '';
   }
 
   /** Photos and documents from an unlinked chat are ignored silently. */
