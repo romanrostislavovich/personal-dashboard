@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GithubOssAchievements } from './github-oss.achievements';
 import { GithubOssAiTools } from './github-oss.ai-tools';
+import { GithubOssDigest } from './github-oss.digest';
 import { GithubOssController } from './github-oss.controller';
 import { GithubOssServerActions } from './github-oss.server-actions';
 import { GithubTokenService } from './github-token.service';
@@ -21,6 +22,7 @@ import { RepoSyncService } from './sync/repo-sync.service';
     GithubSyncJob,
     GithubOssAchievements,
     GithubOssAiTools,
+    GithubOssDigest,
     GithubOssServerActions,
   ],
 })

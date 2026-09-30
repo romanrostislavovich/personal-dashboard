@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MonitoringAiTools } from './monitoring.ai-tools';
+import { MonitoringDigest } from './monitoring.digest';
 import { MonitoringAchievements } from './monitoring.achievements';
 import { CheckerService } from './checker.service';
 import { MonitoringController } from './monitoring.controller';
@@ -18,6 +19,7 @@ import { MonitorsService } from './monitors.service';
     MonitoringJobs,
     MonitoringAchievements,
     MonitoringAiTools,
+    MonitoringDigest,
   ],
 })
 export class MonitoringModule {}

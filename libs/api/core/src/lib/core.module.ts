@@ -9,6 +9,7 @@ import { AiController } from './ai/ai.controller';
 import { AiTelegramAssistant } from './ai/ai-telegram.assistant';
 import { CoreAiTools } from './ai/core.ai-tools';
 import { MorningDigestJob } from './ai/morning-digest.job';
+import { MorningDigestService } from './ai/morning-digest.service';
 import { AiService } from './ai/ai.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthGuard } from './auth/auth.guard';
@@ -94,6 +95,7 @@ class HealthController {
     AiConnectionsService,
     CoreAiTools,
     AiTelegramAssistant,
+    MorningDigestService,
     MorningDigestJob,
     SyncStore,
     SyncService,
@@ -118,6 +120,8 @@ class HealthController {
     AchievementsService,
     // For AI: modules expose their data via registerTool().
     AiService,
+    // For the morning digest: modules add their sections via register().
+    MorningDigestService,
     // For actions that reach outside services: they run on the server (see ServerActions).
     ServerActions,
   ],

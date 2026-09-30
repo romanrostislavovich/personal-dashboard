@@ -1,4 +1,4 @@
-import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, jsonb, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../users/users.schema';
 
 /**
@@ -26,5 +26,22 @@ export const aiSettings = pgTable('ai_settings', {
   activeConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
   morningDigest: boolean().notNull().default(false),
 });
+
+/**
+ * The facts of each morning digest section as last sent: the next digest tells only what
+ * differs from them (see `digestChanges`).
+ */
+export const morningDigestSnapshots = pgTable(
+  'morning_digest_snapshots',
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    sectionId: text().notNull(),
+    facts: jsonb().notNull(),
+    sentAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.sectionId] })],
+);
 
 export type AiConnectionRow = typeof aiConnections.$inferSelect;

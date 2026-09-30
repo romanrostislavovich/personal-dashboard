@@ -52,6 +52,7 @@ libs/modules/birthdays/
     birthdays.messages.ts        notification texts per language
     birthdays.achievements.ts    achievements of the module
     birthdays.ai-tools.ts        data the AI assistant can request
+    birthdays.digest.ts          its section of the morning digest
     *.server-actions.ts          actions that call outside services (see below; birthdays has none)
     next-birthday.ts (+ .spec)   pure logic — easy to test
     birthdays.module.ts          Nest module
@@ -98,6 +99,12 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
      changes nothing and the model asks the user; the call runs when repeated after the user's reply.
      Edits take the record id and only the fields to change (`changedFields`, `findById`).
      Never expose secrets (API keys, tokens) through tools — they are set up in the dashboard.
+   - morning digest: `strava.digest.ts` — a section with `id`, `module`, `description` and
+     `collect`, registered with `MorningDigestService.register()`. The digest tells only what
+     changed since the previous one, so `collect(userId)` returns facts that stay the same until
+     there is news (stars, a status, a release tag — not response times or "days until"); `null` —
+     nothing to tell. `always: true` puts the section in every digest (the weather). Example —
+     `libs/modules/github-oss/api/src/lib/github-oss.digest.ts`.
    - calls to outside services on a user's request (connect an account, "refresh now"):
      `strava.server-actions.ts` — `ServerActions.register('strava.sync', handler)`, and the
      controller / AI tool calls `ServerActions.run(userId, 'strava.sync', args)`. They then run on

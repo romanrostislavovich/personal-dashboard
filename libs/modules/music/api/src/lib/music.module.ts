@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MusicAiTools } from './music.ai-tools';
+import { MusicDigest } from './music.digest';
 import { MusicAchievements } from './music.achievements';
 import { LastfmHistoryImport } from './lastfm-history.import';
 import { LastfmSyncJob } from './lastfm-sync.job';
@@ -23,6 +24,7 @@ import { SpotifyService } from './spotify.service';
     MusicHistoryStatsService,
     MusicAchievements,
     MusicAiTools,
+    MusicDigest,
     MusicServerActions,
   ],
 })

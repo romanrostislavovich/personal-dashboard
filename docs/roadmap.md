@@ -25,8 +25,9 @@
   on its page, on the home page and in the morning digest
 - **Achievements:** 110+ achievements across all modules, rarities, XP and player level
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
-  `/ask` in Telegram, morning digest, weekly diary summary; several saved connections with their
-  keys — switch the active one in one click (chat header, settings, `/model` in Telegram)
+  `/ask` in Telegram, morning digest (the weather and only what changed since the previous one),
+  weekly diary summary; several saved connections with their keys — switch the active one in one
+  click (chat header, settings, `/model` in Telegram)
 - **Telegram assistant:** free-form messages go to the AI, which remembers the conversation and
   can add, edit and delete almost everything the dashboard can (asks before deleting)
 - **Files for the AI:** PDF, Excel, CSV and text files in the chat and in Telegram — e.g. a bank

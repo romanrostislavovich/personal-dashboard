@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DiaryAchievements } from './diary.achievements';
 import { DiaryAiTools } from './diary.ai-tools';
+import { DiaryDigest } from './diary.digest';
 import { DiaryPhotosService } from './diary-photos.service';
 import { DiarySummaryService } from './diary-summary.service';
 import { DiaryController } from './diary.controller';
@@ -21,6 +22,7 @@ import { DiaryService } from './diary.service';
     DiaryJobs,
     DiaryAchievements,
     DiaryAiTools,
+    DiaryDigest,
   ],
 })
 export class DiaryModule {}

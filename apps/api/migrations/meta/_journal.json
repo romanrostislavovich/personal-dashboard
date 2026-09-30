@@ -127,6 +127,13 @@
       "when": 1790631037879,
       "tag": "0017_weather_locations",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790764498264,
+      "tag": "0018_morning_digest_snapshots",
+      "breakpoints": true
     }
   ]
 }

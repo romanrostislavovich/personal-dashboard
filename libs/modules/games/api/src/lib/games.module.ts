@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { GamesAiTools } from './games.ai-tools';
+import { GamesDigest } from './games.digest';
 import { GamesAchievements } from './games.achievements';
 import { DotaAchievements } from './dota/dota.achievements';
 import { DotaCareerService } from './dota/dota-career.service';
@@ -29,6 +30,7 @@ import { WowService } from './wow/wow.service';
     GamesSyncJob,
     GamesAchievements,
     GamesAiTools,
+    GamesDigest,
     GamesServerActions,
   ],
 })

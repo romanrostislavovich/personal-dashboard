@@ -6,6 +6,7 @@ import { DeepseekCostProvider } from './cost-sources/providers/deepseek.provider
 import { HetznerCostProvider } from './cost-sources/providers/hetzner.provider';
 import { FinanceAchievements } from './finance.achievements';
 import { FinanceAiTools } from './finance.ai-tools';
+import { FinanceDigest } from './finance.digest';
 import { FinanceController } from './finance.controller';
 import { FinanceServerActions } from './finance.server-actions';
 import { RecurringPaymentsJob } from './recurring/recurring-payments.job';
@@ -29,6 +30,7 @@ import { TransactionsService } from './transactions/transactions.service';
     DeepseekCostProvider,
     FinanceAchievements,
     FinanceAiTools,
+    FinanceDigest,
     FinanceServerActions,
   ],
 })
