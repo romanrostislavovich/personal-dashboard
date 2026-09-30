@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +8,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { initialLanguage } from '../i18n/language';
 import { AuthService } from './auth.service';
+import { errorStatus } from '../client/core-requests';
 
 /** Sign-up — available only if the server allows it (ALLOW_REGISTRATION=true). */
 @Component({
@@ -110,7 +110,7 @@ export class RegisterPage {
       await this.auth.register({ ...this.form.getRawValue(), locale: initialLanguage() });
       await this.router.navigateByUrl('/');
     } catch (error) {
-      const status = error instanceof HttpErrorResponse ? error.status : 0;
+      const status = errorStatus(error);
       this.errorKey.set(
         status === 409
           ? 'core.register.errorExists'

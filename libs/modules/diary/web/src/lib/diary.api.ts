@@ -1,5 +1,6 @@
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { DIARY_READS, diaryApi } from '@pd/client-core';
 import {
   DiaryCalendarDay,
   DiaryEntry,
@@ -12,30 +13,25 @@ import {
   DiarySearchHit,
   DiarySettings,
   DiaryStats,
-  DiarySummary,
   LocalDate,
 } from '@pd/contracts';
+import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
-const BASE = '/api/diary';
-
+/**
+ * The diary requests of the client core (`@pd/client-core`) for Angular: reads as reactive
+ * `httpResource`s (re-fetched when their signals change), the rest as Observables.
+ */
 @Injectable({ providedIn: 'root' })
 export class DiaryApi {
-  private readonly http = inject(HttpClient);
+  private readonly diary = diaryApi(inject(DASHBOARD_CLIENT).api);
 
   entries(query: () => DiaryQuery) {
-    return httpResource<DiaryEntry[]>(
-      () => {
-        const { from, to, tag } = query();
-        const params: Record<string, string> = tag ? { from, to, tag } : { from, to };
-        return { url: `${BASE}/entries`, params };
-      },
-      { defaultValue: [] },
-    );
+    return httpResource<DiaryEntry[]>(() => DIARY_READS.entries(query()), { defaultValue: [] });
   }
 
   /** The selected day's entry; `null` if it does not exist yet. */
   entry(day: () => LocalDate) {
-    return httpResource<DiaryEntry | null>(() => `${BASE}/entries/${day()}`);
+    return httpResource<DiaryEntry | null>(() => DIARY_READS.entry(day()));
   }
 
   /** Full-text search; no request while the query is shorter than 2 characters. */
@@ -43,7 +39,7 @@ export class DiaryApi {
     return httpResource<DiarySearchHit[]>(
       () => {
         const q = query().trim();
-        return q.length >= 2 ? { url: `${BASE}/search`, params: { q } } : undefined;
+        return q.length >= 2 ? DIARY_READS.search(q) : undefined;
       },
       { defaultValue: [] },
     );
@@ -54,74 +50,69 @@ export class DiaryApi {
     return httpResource<DiaryMarkHit[]>(
       () => {
         const value = emoji();
-        return value ? { url: `${BASE}/marks`, params: { emoji: value } } : undefined;
+        return value ? DIARY_READS.marks(value) : undefined;
       },
       { defaultValue: [] },
     );
   }
 
   calendar(year: () => number) {
-    return httpResource<DiaryCalendarDay[]>(
-      () => ({ url: `${BASE}/calendar`, params: { year: year() } }),
-      { defaultValue: [] },
-    );
-  }
-
-  memories(day: () => LocalDate) {
-    return httpResource<DiaryMemory[]>(() => `${BASE}/memories/${day()}`, { defaultValue: [] });
-  }
-
-  insights() {
-    return httpResource<DiaryInsights>(() => `${BASE}/insights`);
-  }
-
-  stats() {
-    return httpResource<DiaryStats>(() => `${BASE}/stats`);
-  }
-
-  settings() {
-    return httpResource<DiarySettings>(() => `${BASE}/settings`);
-  }
-
-  photos(day: () => LocalDate) {
-    return httpResource<DiaryPhoto[]>(() => `${BASE}/entries/${day()}/photos`, {
+    return httpResource<DiaryCalendarDay[]>(() => DIARY_READS.calendar(year()), {
       defaultValue: [],
     });
   }
 
+  memories(day: () => LocalDate) {
+    return httpResource<DiaryMemory[]>(() => DIARY_READS.memories(day()), { defaultValue: [] });
+  }
+
+  insights() {
+    return httpResource<DiaryInsights>(() => DIARY_READS.insights());
+  }
+
+  stats() {
+    return httpResource<DiaryStats>(() => DIARY_READS.stats());
+  }
+
+  settings() {
+    return httpResource<DiarySettings>(() => DIARY_READS.settings());
+  }
+
+  photos(day: () => LocalDate) {
+    return httpResource<DiaryPhoto[]>(() => DIARY_READS.photos(day()), { defaultValue: [] });
+  }
+
   /** The image as a blob: `<img src>` cannot send the auth header, an object URL can be shown. */
   photoBlob(id: string) {
-    return this.http.get(`${BASE}/photos/${id}`, { responseType: 'blob' });
+    return fromCore(() => this.diary.photo(id));
   }
 
   uploadPhoto(day: LocalDate, file: File) {
-    const form = new FormData();
-    form.append('file', file);
-    return this.http.post<DiaryPhoto>(`${BASE}/entries/${day}/photos`, form);
+    return fromCore(() => this.diary.uploadPhoto(day, file));
   }
 
   removePhoto(id: string) {
-    return this.http.delete<void>(`${BASE}/photos/${id}`);
+    return fromCore(() => this.diary.removePhoto(id));
   }
 
   save(day: LocalDate, input: DiaryEntryInput) {
-    return this.http.put<DiaryEntry | null>(`${BASE}/entries/${day}`, input);
+    return fromCore(() => this.diary.save(day, input));
   }
 
   remove(day: LocalDate) {
-    return this.http.delete<void>(`${BASE}/entries/${day}`);
+    return fromCore(() => this.diary.remove(day));
   }
 
   /** Every entry and photo; the settings stay. */
   removeAll() {
-    return this.http.delete<void>(BASE);
+    return fromCore(() => this.diary.removeAll());
   }
 
   summarize(period: { from: LocalDate; to: LocalDate }) {
-    return this.http.post<DiarySummary>(`${BASE}/summary`, period);
+    return fromCore(() => this.diary.summarize(period));
   }
 
   saveSettings(settings: DiarySettings) {
-    return this.http.put<DiarySettings>(`${BASE}/settings`, settings);
+    return fromCore(() => this.diary.saveSettings(settings));
   }
 }

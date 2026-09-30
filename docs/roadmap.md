@@ -38,6 +38,8 @@
   statement is imported into finance, skipping transactions that are already recorded
 - **Sync:** a local instance (works offline) and a server sync both ways; the newer change wins,
   the losing version is kept; rows go in bulk, thousands a second
+- **Shared client core** (`@pd/client-core`): session, every API request (core and modules), live
+  events and locale in plain TypeScript, used by the web app and ready for a mobile one
 - **Voice messages in Telegram:** recognized (OpenAI speech-to-text) and handled like typed ones —
   a question or a request to the assistant, the recognized text shown first
 
@@ -57,8 +59,6 @@
   (bank notifications / SMS → transactions), then everything else the phone knows:
   - **location tracker** — where you have been, places and trips
   - **sleep** — sleep time and quality, possibly from a fitness band
-- **Shared client core** for web, desktop and mobile: API client, auth, realtime events, i18n and
-  contracts in one library, so every client behaves the same
 - **AI with full control of the platform, including its own code.** The assistant can already
   change data through tools; the next step is settings, modules and code. Guard rails before it
   touches code: changes go through a branch and a pull request, CI (lint, tests, build) must pass,

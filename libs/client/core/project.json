@@ -1,0 +1,9 @@
+{
+  "name": "client-core",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/client/core/src",
+  "projectType": "library",
+  "tags": ["scope:client", "type:core"],
+  "// targets": "to see all targets run: nx show project client-core --web",
+  "targets": {}
+}

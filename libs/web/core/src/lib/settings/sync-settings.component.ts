@@ -1,13 +1,14 @@
 import { DatePipe } from '@angular/common';
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { CORE_READS, syncApi } from '@pd/client-core';
 import { SyncStatus } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
+import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 
 /** Sync between this computer and the server (docs/sync.md): what this instance is and how it syncs. */
 @Component({
@@ -75,11 +76,11 @@ import { firstValueFrom } from 'rxjs';
   `,
 })
 export class SyncSettingsComponent {
-  private readonly http = inject(HttpClient);
+  private readonly sync = syncApi(inject(DASHBOARD_CLIENT).api);
   private readonly snackBar = inject(MatSnackBar);
   private readonly transloco = inject(TranslocoService);
 
-  protected readonly status = httpResource<SyncStatus>(() => '/api/sync/status');
+  protected readonly status = httpResource<SyncStatus>(() => CORE_READS.syncStatus());
   protected readonly syncing = signal(false);
 
   protected never(): string {
@@ -89,7 +90,7 @@ export class SyncSettingsComponent {
   async syncNow(): Promise<void> {
     this.syncing.set(true);
     try {
-      const status = await firstValueFrom(this.http.post<SyncStatus>('/api/sync/run', {}));
+      const status = await this.sync.runNow();
       this.status.set(status);
       if (!status.lastError) {
         this.snackBar.open(this.transloco.translate('core.settings.sync.synced'), 'OK', {

@@ -1,17 +1,16 @@
-import { Locale, SUPPORTED_LOCALES } from '@pd/contracts';
+import { resolveLocale, toSupportedLocale } from '@pd/client-core';
+import { Locale } from '@pd/contracts';
 
 const STORAGE_KEY = 'pd.lang';
 
 /**
- * UI language at startup: saved choice → browser language → English.
+ * UI language at startup: saved choice → browser languages → English (see `resolveLocale`).
  * The profile language is applied after sign-in (see AuthService) via `applyLanguage`.
  */
 export function initialLanguage(): Locale {
-  return (
-    toSupported(readStored()) ??
-    toSupported(typeof navigator === 'undefined' ? null : navigator.language) ??
-    'en'
-  );
+  const browser =
+    typeof navigator === 'undefined' ? [] : (navigator.languages ?? [navigator.language]);
+  return resolveLocale(readStored(), browser);
 }
 
 /**
@@ -19,7 +18,7 @@ export function initialLanguage(): Locale {
  * so the page reloads after a language change.
  */
 export function applyLanguage(locale: string): void {
-  const next = toSupported(locale);
+  const next = toSupportedLocale(locale);
   if (!next || next === initialLanguage()) {
     return;
   }
@@ -37,9 +36,4 @@ function readStored(): string | null {
   } catch {
     return null;
   }
-}
-
-function toSupported(value: string | null | undefined): Locale | null {
-  const short = value?.slice(0, 2).toLowerCase();
-  return (SUPPORTED_LOCALES as readonly string[]).includes(short ?? '') ? (short as Locale) : null;
 }

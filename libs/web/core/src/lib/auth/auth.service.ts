@@ -1,89 +1,76 @@
-import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   AuthConfig,
   CurrentUser,
   LoginRequest,
-  LoginResponse,
   PasswordChange,
   ProfileUpdate,
   RegisterRequest,
 } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
+import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { applyLanguage } from '../i18n/language';
 
-const TOKEN_KEY = 'pd.accessToken';
-
+/**
+ * The signed-in user for Angular: signals over the session of the client core. Whoever ends the
+ * session — sign-out, a 401 from any request — lands on the sign-in page.
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
+  private readonly client = inject(DASHBOARD_CLIENT);
   private readonly router = inject(Router);
 
-  readonly token = signal<string | null>(localStorage.getItem(TOKEN_KEY));
+  readonly token = signal<string | null>(this.client.session.token);
   readonly user = signal<CurrentUser | null>(null);
   readonly isLoggedIn = computed(() => this.token() !== null);
 
+  constructor() {
+    const unsubscribe = this.client.session.subscribe((token) => {
+      this.token.set(token);
+      if (token === null) {
+        this.user.set(null);
+        void this.router.navigateByUrl('/login');
+      }
+    });
+    inject(DestroyRef).onDestroy(unsubscribe);
+  }
+
   /** Public server settings: whether sign-up is available. */
   config(): Promise<AuthConfig> {
-    return firstValueFrom(this.http.get<AuthConfig>('/api/auth/config'));
+    return this.client.auth.config();
   }
 
   async login(credentials: LoginRequest): Promise<void> {
-    this.startSession(
-      await firstValueFrom(this.http.post<LoginResponse>('/api/auth/login', credentials)),
-    );
+    this.signedIn(await this.client.signIn(credentials));
   }
 
   async register(input: RegisterRequest): Promise<void> {
-    this.startSession(
-      await firstValueFrom(this.http.post<LoginResponse>('/api/auth/register', input)),
-    );
+    this.signedIn(await this.client.signUp(input));
   }
 
   /** Loads the profile using the saved token (on app start). */
   async restoreSession(): Promise<void> {
-    if (!this.token()) {
-      return;
-    }
-    try {
-      const user = await firstValueFrom(this.http.get<CurrentUser>('/api/auth/me'));
-      this.user.set(user);
-      applyLanguage(user.locale);
-    } catch {
-      this.logout();
+    const user = await this.client.restoreSession();
+    if (user) {
+      this.signedIn(user);
     }
   }
 
   async updateProfile(changes: ProfileUpdate): Promise<void> {
-    const user = await firstValueFrom(this.http.patch<CurrentUser>('/api/auth/me', changes));
-    this.user.set(user);
-    applyLanguage(user.locale);
+    this.signedIn(await this.client.auth.updateProfile(changes));
   }
 
   changePassword(input: PasswordChange): Promise<void> {
-    return firstValueFrom(this.http.put<void>('/api/auth/password', input));
+    return this.client.auth.changePassword(input);
   }
 
   logout(): void {
-    this.setToken(null);
-    this.user.set(null);
-    this.router.navigateByUrl('/login');
+    void this.client.signOut();
   }
 
-  private startSession(response: LoginResponse): void {
-    this.setToken(response.accessToken);
-    this.user.set(response.user);
+  private signedIn(user: CurrentUser): void {
+    this.user.set(user);
     // Language from the profile: if it differs from the current one, the page reloads.
-    applyLanguage(response.user.locale);
-  }
-
-  private setToken(token: string | null): void {
-    this.token.set(token);
-    if (token) {
-      localStorage.setItem(TOKEN_KEY, token);
-    } else {
-      localStorage.removeItem(TOKEN_KEY);
-    }
+    applyLanguage(user.locale);
   }
 }

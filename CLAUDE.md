@@ -5,8 +5,10 @@ Architecture and rules: `docs/architecture.md`. Quick start: `README.md`. Contri
 ## Main rules
 
 - Code must be easy to read for humans: small files, clear names, comments where the _why_ is not obvious.
-- A module (`libs/modules/*`) depends only on the core (`@pd/api-core`, `@pd/web-core`) and
-  `@pd/contracts`, **never** on another module.
+- A module (`libs/modules/*`) depends only on the core (`@pd/api-core`, `@pd/web-core`,
+  `@pd/client-core`) and `@pd/contracts`, **never** on another module.
+- Every API request (URL, parameters, body) lives in `@pd/client-core` (`libs/client/core`), the
+  plain-TypeScript core shared by all clients; a web module's `*.api.ts` only wraps it for Angular.
 - Request/response types and zod schemas live only in `libs/shared/contracts`; the backend validates
   with `ZodValidationPipe`.
 - Every module table has `userId`; every query filters by it.

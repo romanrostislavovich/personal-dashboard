@@ -3,7 +3,10 @@ import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
-/** Adds the JWT to API requests and logs out if the token has expired. */
+/**
+ * Module requests through `HttpClient`: adds the token of the client core's session and ends the
+ * session on a 401 (the client core does the same for its own requests).
+ */
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AuthService);
   const token = auth.token();

@@ -1,5 +1,4 @@
 import { DatePipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -26,7 +25,7 @@ import {
   AiConversation,
   AiConversationDetail,
 } from '@pd/contracts';
-import { MarkdownPipe } from '@pd/web-core';
+import { MarkdownPipe, errorBody, errorStatus } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
 import { AiSettingsComponent } from './ai-settings.component';
@@ -251,19 +250,17 @@ export class AiPage {
 
 /** The provider rejected the request (a bad key, no balance): switching models may help. */
 function isProviderError(error: unknown): boolean {
-  return error instanceof HttpErrorResponse && error.status === 400;
+  return errorStatus(error) === 400;
 }
 
 /** The server says why a file could not be read (see AttachmentError). */
 function attachErrorKey(error: unknown): string {
-  if (error instanceof HttpErrorResponse) {
-    if (error.status === 413) {
-      return 'ai.attach.tooLarge';
-    }
-    const reason = (error.error as { reason?: string } | null)?.reason;
-    if (reason === 'unsupported' || reason === 'empty') {
-      return `ai.attach.${reason}`;
-    }
+  if (errorStatus(error) === 413) {
+    return 'ai.attach.tooLarge';
+  }
+  const reason = (errorBody(error) as { reason?: string } | null)?.reason;
+  if (reason === 'unsupported' || reason === 'empty') {
+    return `ai.attach.${reason}`;
   }
   return 'ai.attach.failed';
 }

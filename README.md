@@ -132,6 +132,8 @@ libs/
   shared/contracts/   shared types and zod schemas for API and web
   api/core/           backend core: DB, auth, projects, scheduler, notifications, secrets,
                       achievements engine, AI gateway
+  client/core/        client core for every client (web, desktop, mobile): session, every API
+                      request, live events, locale — plain TypeScript
   web/core/           frontend core: layout, auth, i18n, home page with widgets, module SDK
   modules/<name>/api  backend of a module
   modules/<name>/web  frontend of a module

@@ -1,5 +1,4 @@
 import { DecimalPipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { TrackedRepo } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
+import { errorStatus } from '@pd/web-core';
 import { GithubOssApi } from './github-oss.api';
 import { RepoCardComponent } from './repo-card.component';
 import { RepoFormDialog } from './repo-form.dialog';
@@ -128,7 +128,7 @@ export class GithubOssPage {
     try {
       await action();
     } catch (error) {
-      const key = error instanceof HttpErrorResponse ? errorKeys[error.status] : undefined;
+      const key = errorKeys[errorStatus(error)];
       this.snackBar.open(this.transloco.translate(key ?? 'github-oss.errors.generic'), 'OK', {
         duration: 6000,
       });

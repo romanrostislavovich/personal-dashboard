@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { CORE_READS } from '@pd/client-core';
 import { Achievement, levelFromXp } from '@pd/contracts';
 import { RealtimeClient } from '../realtime/realtime.client';
 
@@ -109,7 +110,7 @@ import { RealtimeClient } from '../realtime/realtime.client';
   `,
 })
 export class LevelCardComponent {
-  private readonly achievements = httpResource<Achievement[]>(() => '/api/achievements', {
+  private readonly achievements = httpResource<Achievement[]>(() => CORE_READS.achievements(), {
     defaultValue: [],
   });
 

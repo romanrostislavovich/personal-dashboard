@@ -1,5 +1,6 @@
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { GAMES_READS, gamesApi } from '@pd/client-core';
 import {
   DotaMatchesPage,
   DotaMatchesQuery,
@@ -9,56 +10,43 @@ import {
   GamesSettings,
   WowCredentialsInput,
 } from '@pd/contracts';
+import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
-const BASE = '/api/games';
-
+/** The games requests of the client core (`@pd/client-core`) for Angular. */
 @Injectable({ providedIn: 'root' })
 export class GamesApi {
-  private readonly http = inject(HttpClient);
+  private readonly games = gamesApi(inject(DASHBOARD_CLIENT).api);
 
   accounts() {
-    return httpResource<GameAccount[]>(() => `${BASE}/accounts`, { defaultValue: [] });
+    return httpResource<GameAccount[]>(() => GAMES_READS.accounts(), { defaultValue: [] });
   }
 
   /** `accountId()` → one account; `null` → all Dota accounts together. */
   dotaOverview(accountId: () => string | null) {
-    return httpResource<DotaOverview>(() => ({
-      url: `${BASE}/dota/overview`,
-      params: withoutEmpty({ accountId: accountId() }),
-    }));
+    return httpResource<DotaOverview>(() => GAMES_READS.dotaOverview(accountId()));
   }
 
   dotaMatches(query: () => Partial<DotaMatchesQuery>) {
-    return httpResource<DotaMatchesPage>(() => ({
-      url: `${BASE}/dota/matches`,
-      params: withoutEmpty(query()),
-    }));
+    return httpResource<DotaMatchesPage>(() => GAMES_READS.dotaMatches(query()));
   }
 
   settings() {
-    return httpResource<GamesSettings>(() => `${BASE}/settings`);
+    return httpResource<GamesSettings>(() => GAMES_READS.settings());
   }
 
   add(input: GameAccountInput) {
-    return this.http.post<void>(`${BASE}/accounts`, input);
+    return fromCore(() => this.games.add(input));
   }
 
   sync(id: string) {
-    return this.http.post<void>(`${BASE}/accounts/${id}/sync`, {});
+    return fromCore(() => this.games.sync(id));
   }
 
   remove(id: string) {
-    return this.http.delete<void>(`${BASE}/accounts/${id}`);
+    return fromCore(() => this.games.remove(id));
   }
 
   saveWowCredentials(input: WowCredentialsInput) {
-    return this.http.put<void>(`${BASE}/wow/credentials`, input);
+    return fromCore(() => this.games.saveWowCredentials(input));
   }
-}
-
-/** Query parameters without the unset ones. */
-function withoutEmpty(params: Record<string, string | number | null | undefined>) {
-  return Object.fromEntries(
-    Object.entries(params).filter(([, value]) => value !== null && value !== undefined),
-  ) as Record<string, string | number>;
 }

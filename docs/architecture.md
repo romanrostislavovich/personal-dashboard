@@ -8,6 +8,8 @@
                 │   notifications · secrets · achievements · AI   │
   apps/web ───► │ libs/web/core: layout · auth · i18n ·           │ ◄── libs/shared/contracts
                 │   home page with widgets · module SDK           │     (types + zod schemas)
+                │     └─► libs/client/core: session · API client ·│
+                │         live events · locale (plain TypeScript) │
                 └────────────▲────────────────────▲───────────────┘
                              │                    │
                  libs/modules/birthdays    libs/modules/finance    … (diary, music, games, …)
@@ -18,6 +20,20 @@ Every feature is a **module** made of two libraries (`api` and `web`). A module 
 core and the contracts and **never on another module**. ESLint enforces this
 (`@nx/enforce-module-boundaries`, tags `type:module` / `type:core` / `type:contracts`), so any module
 can be removed or disabled without breaking anything.
+
+**The client core** (`@pd/client-core`, tag `scope:client`) is what every client of the dashboard
+shares: the session and its token, the API client (server address, token, JSON, files, errors, a
+401 ends the session), live events over Server-Sent Events with reconnects, the UI language — and
+**every request of the API**, the core's and each module's (`libs/client/core/src/lib/modules/`),
+like their types live in `@pd/contracts`. It is plain TypeScript without Angular, so a mobile app —
+whatever it is built with — gets the same behaviour; a platform plugs in the server address,
+`fetch` and a key-value store (`ClientPlatform`).
+
+Requests come in two kinds: reads are `{ url, params }` objects (`DIARY_READS.entries(query)`),
+writes are functions (`diaryApi(api).save(day, input)`). The web core wraps the client for Angular
+(`DASHBOARD_CLIENT`, `AuthService`, `RealtimeClient`); a module's `*.api.ts` passes the reads to
+`httpResource` (which takes exactly such objects) and the writes through `fromCore()` as
+Observables. Errors from both are read with `errorStatus()` / `errorBody()`.
 
 Apps (`apps/*`) are thin hosts with no business logic — only the list of enabled modules:
 
@@ -57,7 +73,7 @@ libs/modules/birthdays/
     next-birthday.ts (+ .spec)   pure logic — easy to test
     birthdays.module.ts          Nest module
   web/src/lib/
-    birthdays.api.ts             HTTP client
+    birthdays.api.ts             the module's requests of the client core, for Angular
     birthdays.page.ts            module page
     upcoming-birthdays.widget.ts home page widget
     i18n/en.json, i18n/ru.json   translations
@@ -76,6 +92,9 @@ Say it is `strava`.
    npx nx g @nx/angular:library libs/modules/strava/web --name=strava-web --importPath=@pd/strava-web --prefix=pd --tags=scope:web,type:module --skipModule
    ```
 2. **Contracts:** add `libs/shared/contracts/src/lib/strava.ts` (zod schemas and interfaces) and export it from `index.ts`.
+   **Requests:** add `libs/client/core/src/lib/modules/strava.ts` — `STRAVA_READS` (`{ url, params }`
+   via `apiRequest`) and `stravaApi(api)` with the reads and writes — and export it from `index.ts`.
+   Every client (web, mobile) uses these; none writes its own URLs.
 3. **Backend:**
    - tables in `strava.schema.ts` (reference core tables via `@pd/api-core/schema`);
    - a service and a controller; `@CurrentUser()` gives the current user, `ZodValidationPipe` validates input;
@@ -112,8 +131,10 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
      `libs/modules/music/api/src/lib/music.server-actions.ts`). Background jobs need nothing: they
      run on the server anyway.
 4. **Migration:** `npm run db:generate` → review the SQL in `apps/api/migrations`.
-5. **Frontend:** export a `WebDashboardModule` with `id`, menu item, routes, translations
-   (`en` and `ru`) and widgets.
+5. **Frontend:** `strava.api.ts` wraps the requests of the client core for Angular (reads as
+   `httpResource(() => STRAVA_READS.x())`, writes as `fromCore(() => this.strava.y())`, example —
+   `libs/modules/birthdays/web/src/lib/birthdays.api.ts`); export a `WebDashboardModule` with `id`,
+   menu item, routes, translations (`en` and `ru`) and widgets.
 6. **Enable** the module in `apps/api/src/modules.ts` and `apps/web/src/app/modules.ts`.
 7. **Restart `npm run dev`**: the bundlers read the `@pd/*` aliases from `tsconfig.base.json` only on start.
 

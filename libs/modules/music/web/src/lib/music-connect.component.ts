@@ -1,5 +1,4 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MusicSettings } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
+import { errorStatus } from '@pd/web-core';
 import { MusicApi } from './music.api';
 
 /** Connecting sources: Last.fm (username + API key) and Spotify (OAuth). */
@@ -238,10 +238,7 @@ export class MusicConnectComponent {
       await action();
       this.changed.emit();
     } catch (error) {
-      const key =
-        error instanceof HttpErrorResponse && error.status === 400
-          ? 'music.connect.invalid'
-          : 'music.connect.error';
+      const key = errorStatus(error) === 400 ? 'music.connect.invalid' : 'music.connect.error';
       this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });
     } finally {
       this.busy.set(false);

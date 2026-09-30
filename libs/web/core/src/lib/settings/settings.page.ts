@@ -1,12 +1,13 @@
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { NotificationSettings, TelegramLinkResponse } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
+import { CORE_READS, notificationsApi } from '@pd/client-core';
+import { NotificationSettings } from '@pd/contracts';
+import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { PasswordSettingsComponent } from './password-settings.component';
 import { ProfileSettingsComponent } from './profile-settings.component';
 import { SyncSettingsComponent } from './sync-settings.component';
@@ -98,30 +99,28 @@ import { SyncSettingsComponent } from './sync-settings.component';
   `,
 })
 export class SettingsPage {
-  private readonly http = inject(HttpClient);
+  private readonly notifications = notificationsApi(inject(DASHBOARD_CLIENT).api);
   private readonly snackBar = inject(MatSnackBar);
   private readonly transloco = inject(TranslocoService);
 
-  protected readonly settings = httpResource<NotificationSettings>(
-    () => '/api/notifications/settings',
+  protected readonly settings = httpResource<NotificationSettings>(() =>
+    CORE_READS.notificationSettings(),
   );
   protected readonly linkOpened = signal(false);
 
   async connect(): Promise<void> {
-    const link = await firstValueFrom(
-      this.http.post<TelegramLinkResponse>('/api/notifications/telegram/link', {}),
-    );
+    const link = await this.notifications.linkTelegram();
     window.open(link.deepLink, '_blank');
     this.linkOpened.set(true);
   }
 
   async disconnect(): Promise<void> {
-    await firstValueFrom(this.http.delete('/api/notifications/telegram'));
+    await this.notifications.unlinkTelegram();
     this.settings.reload();
   }
 
   async sendTest(): Promise<void> {
-    await firstValueFrom(this.http.post('/api/notifications/test', {}));
+    await this.notifications.sendTest();
     this.snackBar.open(this.transloco.translate('core.settings.telegram.testSent'), 'OK', {
       duration: 3000,
     });

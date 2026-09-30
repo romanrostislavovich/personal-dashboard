@@ -1,5 +1,4 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -19,6 +18,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CostSource, CostSourceInput, Project } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
+import { errorStatus } from '@pd/web-core';
 import { CostSourceFormData, CostSourceFormDialog } from './cost-source-form.dialog';
 import { FinanceApi } from './finance.api';
 
@@ -182,7 +182,7 @@ export class CostSourcesTabComponent {
       this.changed.emit();
     } catch (error) {
       const key =
-        error instanceof HttpErrorResponse && error.status === 400
+        errorStatus(error) === 400
           ? 'finance.costSources.invalidToken'
           : 'finance.costSources.error';
       this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });

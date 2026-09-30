@@ -1,42 +1,43 @@
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { GITHUB_OSS_READS, githubOssApi } from '@pd/client-core';
 import { GithubSettings, TrackedRepo, TrackedRepoInput } from '@pd/contracts';
+import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
-const BASE = '/api/github-oss';
-
+/** The open source requests of the client core (`@pd/client-core`) for Angular. */
 @Injectable({ providedIn: 'root' })
 export class GithubOssApi {
-  private readonly http = inject(HttpClient);
+  private readonly oss = githubOssApi(inject(DASHBOARD_CLIENT).api);
 
   repos() {
-    return httpResource<TrackedRepo[]>(() => `${BASE}/repos`, { defaultValue: [] });
+    return httpResource<TrackedRepo[]>(() => GITHUB_OSS_READS.repos(), { defaultValue: [] });
   }
 
   settings() {
-    return httpResource<GithubSettings>(() => `${BASE}/settings`);
+    return httpResource<GithubSettings>(() => GITHUB_OSS_READS.settings());
   }
 
   addRepo(input: TrackedRepoInput) {
-    return this.http.post<void>(`${BASE}/repos`, input);
+    return fromCore(() => this.oss.addRepo(input));
   }
 
   updateRepo(id: string, input: TrackedRepoInput) {
-    return this.http.put<void>(`${BASE}/repos/${id}`, input);
+    return fromCore(() => this.oss.updateRepo(id, input));
   }
 
   removeRepo(id: string) {
-    return this.http.delete<void>(`${BASE}/repos/${id}`);
+    return fromCore(() => this.oss.removeRepo(id));
   }
 
   syncAll() {
-    return this.http.post<void>(`${BASE}/sync`, {});
+    return fromCore(() => this.oss.syncAll());
   }
 
   saveToken(token: string) {
-    return this.http.put<void>(`${BASE}/token`, { token });
+    return fromCore(() => this.oss.saveToken(token));
   }
 
   removeToken() {
-    return this.http.delete<void>(`${BASE}/token`);
+    return fromCore(() => this.oss.removeToken());
   }
 }

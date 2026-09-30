@@ -35,7 +35,8 @@
       "@pd/achievements-web": ["./libs/modules/achievements/web/src/index.ts"],
       "@pd/ai-web": ["./libs/modules/ai/web/src/index.ts"],
       "@pd/weather-api": ["./libs/modules/weather/api/src/index.ts"],
-      "@pd/weather-web": ["./libs/modules/weather/web/src/index.ts"]
+      "@pd/weather-web": ["./libs/modules/weather/web/src/index.ts"],
+      "@pd/client-core": ["./libs/client/core/src/index.ts"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true

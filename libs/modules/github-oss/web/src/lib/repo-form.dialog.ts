@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TrackedRepo } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
+import { errorStatus } from '@pd/web-core';
 import { GithubOssApi } from './github-oss.api';
 
 /** Errors the server explains: not on GitHub, or already tracked under the new name. */
@@ -93,7 +93,7 @@ export class RepoFormDialog {
       );
       this.dialogRef.close(true);
     } catch (error) {
-      const status = error instanceof HttpErrorResponse ? error.status : 0;
+      const status = errorStatus(error);
       this.error.set(ERROR_KEYS[status] ?? 'github-oss.errors.generic');
     } finally {
       this.saving.set(false);

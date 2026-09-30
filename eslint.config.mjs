@@ -17,7 +17,9 @@ export default [
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
           // Architecture rules (details in docs/architecture.md):
           // - backend and frontend do not import each other; shared code goes only through contracts;
-          // - modules depend only on the core and contracts, NEVER on each other.
+          // - modules depend only on the core and contracts, NEVER on each other;
+          // - the client core (plain TypeScript for every client: web, desktop, mobile) knows only
+          //   contracts; clients build on it.
           depConstraints: [
             {
               sourceTag: 'scope:shared',
@@ -28,8 +30,12 @@ export default [
               onlyDependOnLibsWithTags: ['scope:api', 'scope:shared'],
             },
             {
+              sourceTag: 'scope:client',
+              onlyDependOnLibsWithTags: ['scope:client', 'scope:shared'],
+            },
+            {
               sourceTag: 'scope:web',
-              onlyDependOnLibsWithTags: ['scope:web', 'scope:shared'],
+              onlyDependOnLibsWithTags: ['scope:web', 'scope:client', 'scope:shared'],
             },
             {
               sourceTag: 'scope:desktop',

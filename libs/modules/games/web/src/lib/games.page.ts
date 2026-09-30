@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,6 +11,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { GameAccountInput } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
+import { errorStatus } from '@pd/web-core';
 import { AddGameAccountDialog } from './add-account.dialog';
 import { DotaDashboardComponent } from './dota/dota-dashboard.component';
 import { GamesApi } from './games.api';
@@ -97,7 +97,7 @@ export class GamesPage {
       await action();
       this.accounts.reload();
     } catch (error) {
-      const key = error instanceof HttpErrorResponse ? errorKeys[error.status] : undefined;
+      const key = errorKeys[errorStatus(error)];
       this.snackBar.open(this.transloco.translate(key ?? 'games.errors.generic'), 'OK', {
         duration: 6000,
       });

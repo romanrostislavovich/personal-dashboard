@@ -1,3 +1,4 @@
+import { diaryPhotoPath } from '@pd/client-core';
 import { Image, ImageOptions } from '@tiptap/extension-image';
 
 /**
@@ -9,7 +10,7 @@ const PHOTO_SRC = /^\/api\/diary\/photos\/([0-9a-f-]{36})$/i;
 const PHOTO_SRC_IN_TEXT = /!\[[^\]]*]\(\/api\/diary\/photos\/([0-9a-f-]{36})\)/gi;
 
 export function photoSrc(id: string): string {
-  return `/api/diary/photos/${id}`;
+  return diaryPhotoPath(id);
 }
 
 /** The photo id of a diary photo address; `null` for any other image. */

@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../auth/auth.service';
+import { errorStatus } from '../client/core-requests';
 
 @Component({
   selector: 'pd-password-settings',
@@ -84,7 +84,7 @@ export class PasswordSettingsComponent {
       this.form.reset();
       this.notify('core.settings.password.changed');
     } catch (error) {
-      const wrong = error instanceof HttpErrorResponse && error.status === 400;
+      const wrong = errorStatus(error) === 400;
       this.notify(wrong ? 'core.settings.password.wrong' : 'core.login.error');
     } finally {
       this.saving.set(false);

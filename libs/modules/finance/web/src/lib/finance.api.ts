@@ -1,5 +1,6 @@
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { FINANCE_READS, financeApi } from '@pd/client-core';
 import {
   CostSource,
   CostSourceInput,
@@ -11,41 +12,34 @@ import {
   TransactionInput,
   TransactionQuery,
 } from '@pd/contracts';
+import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
-const BASE = '/api/finance';
-
+/** The finance requests of the client core (`@pd/client-core`) for Angular. */
 @Injectable({ providedIn: 'root' })
 export class FinanceApi {
-  private readonly http = inject(HttpClient);
+  private readonly finance = financeApi(inject(DASHBOARD_CLIENT).api);
 
   // --- Reactive reads: re-fetched automatically when query() changes ---
 
   transactions(query: () => TransactionQuery) {
-    return httpResource<Transaction[]>(
-      () => ({ url: `${BASE}/transactions`, params: toParams(query()) }),
-      {
-        defaultValue: [],
-      },
-    );
+    return httpResource<Transaction[]>(() => FINANCE_READS.transactions(query()), {
+      defaultValue: [],
+    });
   }
 
   summary(query: () => TransactionQuery) {
-    return httpResource<FinanceSummary>(() => ({
-      url: `${BASE}/summary`,
-      params: toParams(query()),
-    }));
+    return httpResource<FinanceSummary>(() => FINANCE_READS.summary(query()));
   }
 
   /** Income and expenses per month and currency — for the chart and month-over-month deltas. */
   cashFlow(query: () => TransactionQuery) {
-    return httpResource<MonthCashFlow[]>(
-      () => ({ url: `${BASE}/cash-flow`, params: toParams(query()) }),
-      { defaultValue: [] },
-    );
+    return httpResource<MonthCashFlow[]>(() => FINANCE_READS.cashFlow(query()), {
+      defaultValue: [],
+    });
   }
 
   recurringPayments() {
-    return httpResource<RecurringPayment[]>(() => `${BASE}/recurring-payments`, {
+    return httpResource<RecurringPayment[]>(() => FINANCE_READS.recurringPayments(), {
       defaultValue: [],
     });
   }
@@ -53,44 +47,36 @@ export class FinanceApi {
   // --- Mutations ---
 
   saveTransaction(input: TransactionInput, id?: string) {
-    return id
-      ? this.http.put<Transaction>(`${BASE}/transactions/${id}`, input)
-      : this.http.post<Transaction>(`${BASE}/transactions`, input);
+    return fromCore(() => this.finance.saveTransaction(input, id));
   }
 
   removeTransaction(id: string) {
-    return this.http.delete<void>(`${BASE}/transactions/${id}`);
+    return fromCore(() => this.finance.removeTransaction(id));
   }
 
   saveRecurringPayment(input: RecurringPaymentInput, id?: string) {
-    return id
-      ? this.http.put<RecurringPayment>(`${BASE}/recurring-payments/${id}`, input)
-      : this.http.post<RecurringPayment>(`${BASE}/recurring-payments`, input);
+    return fromCore(() => this.finance.saveRecurringPayment(input, id));
   }
 
   removeRecurringPayment(id: string) {
-    return this.http.delete<void>(`${BASE}/recurring-payments/${id}`);
+    return fromCore(() => this.finance.removeRecurringPayment(id));
   }
 
   // --- Automatic cost import ---
 
   costSources() {
-    return httpResource<CostSource[]>(() => `${BASE}/cost-sources`, { defaultValue: [] });
+    return httpResource<CostSource[]>(() => FINANCE_READS.costSources(), { defaultValue: [] });
   }
 
   addCostSource(input: CostSourceInput) {
-    return this.http.post<void>(`${BASE}/cost-sources`, input);
+    return fromCore(() => this.finance.addCostSource(input));
   }
 
   syncCostSource(id: string) {
-    return this.http.post<void>(`${BASE}/cost-sources/${id}/sync`, {});
+    return fromCore(() => this.finance.syncCostSource(id));
   }
 
   removeCostSource(id: string) {
-    return this.http.delete<void>(`${BASE}/cost-sources/${id}`);
+    return fromCore(() => this.finance.removeCostSource(id));
   }
-}
-
-function toParams({ from, to, scope }: TransactionQuery): Record<string, string> {
-  return scope ? { from, to, scope } : { from, to };
 }

@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -10,6 +9,7 @@ import { Project, ProjectInput } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { ProjectFormDialog } from './project-form.dialog';
 import { ProjectsApi } from './projects.api';
+import { errorStatus } from '../client/core-requests';
 
 @Component({
   selector: 'pd-projects-page',
@@ -93,7 +93,7 @@ export class ProjectsPage {
       await firstValueFrom(this.api.remove(project.id));
       this.projects.reload();
     } catch (error) {
-      if (error instanceof HttpErrorResponse && error.status === 409) {
+      if (errorStatus(error) === 409) {
         this.snackBar.open(this.transloco.translate('core.projects.inUse'), 'OK', {
           duration: 5000,
         });

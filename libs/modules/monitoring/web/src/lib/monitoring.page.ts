@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -12,7 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Monitor } from '@pd/contracts';
-import { ProjectsApi } from '@pd/web-core';
+import { ProjectsApi, errorStatus } from '@pd/web-core';
 import { firstValueFrom, interval } from 'rxjs';
 import { MonitorCardComponent } from './monitor-card.component';
 import { MonitoringApi } from './monitoring.api';
@@ -151,9 +150,7 @@ export class MonitoringPage {
       this.monitors.reload();
     } catch (error) {
       const key =
-        error instanceof HttpErrorResponse && error.status === 409
-          ? 'monitoring.errors.duplicate'
-          : 'monitoring.errors.generic';
+        errorStatus(error) === 409 ? 'monitoring.errors.duplicate' : 'monitoring.errors.generic';
       this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 5000 });
     } finally {
       this.busy.set(false);

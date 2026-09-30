@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +14,7 @@ import {
   AiSettings,
 } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
+import { errorStatus } from '@pd/web-core';
 import { AiApi } from './ai.api';
 
 /** Provider names for a new connection's default name. */
@@ -157,9 +157,7 @@ export class AiConnectionFormDialog {
       this.dialogRef.close(settings);
     } catch (error) {
       this.error.set(
-        error instanceof HttpErrorResponse && error.status === 400
-          ? 'ai.settings.connectionFailed'
-          : 'ai.errors.generic',
+        errorStatus(error) === 400 ? 'ai.settings.connectionFailed' : 'ai.errors.generic',
       );
     } finally {
       this.busy.set(false);

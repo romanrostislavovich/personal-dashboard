@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { WeatherLocation } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
@@ -21,7 +20,6 @@ const POSITION_OPTIONS: PositionOptions = {
 @Injectable({ providedIn: 'root' })
 export class WeatherLocator {
   private readonly api = inject(WeatherApi);
-  private readonly http = inject(HttpClient);
   private detecting: Promise<WeatherLocation | null> | null = null;
 
   /** Detects and saves the location once per browser; `null` — not detected. */
@@ -47,11 +45,7 @@ export class WeatherLocator {
     }
     const { latitude, longitude } = position.coords;
     try {
-      const place = await firstValueFrom(
-        this.http.get<WeatherLocation>('/api/weather/places/at', {
-          params: { latitude, longitude },
-        }),
-      );
+      const place = await firstValueFrom(this.api.placeAt(latitude, longitude));
       return await firstValueFrom(this.api.setLocation(place));
     } catch {
       return null; // Naming the place failed: the city can still be found in the search.
