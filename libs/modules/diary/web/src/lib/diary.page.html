@@ -68,18 +68,6 @@
         </mat-chip-listbox>
       </div>
     }
-    @if (s.topMarks.length) {
-      <div class="tile wide">
-        <span class="label">{{ 'diary.marks.title' | transloco }}</span>
-        <mat-chip-listbox [attr.aria-label]="'diary.marks.title' | transloco">
-          @for (m of s.topMarks; track m.emoji) {
-            <mat-chip-option [selected]="markEmoji() === m.emoji" (click)="toggleMark(m.emoji)">
-              {{ m.emoji }} · {{ m.count }}
-            </mat-chip-option>
-          }
-        </mat-chip-listbox>
-      </div>
-    }
   </div>
 }
 
@@ -119,6 +107,27 @@
         [placeholder]="'diary.search.placeholder' | transloco"
       />
     </label>
+
+    <!-- Every emoji of the palette, even unused ones, so the filter is always there to find -->
+    <div class="mark-filter" role="group" [attr.aria-label]="'diary.marks.filter' | transloco">
+      <span class="mark-filter-label">{{ 'diary.marks.filter' | transloco }}</span>
+      @for (m of markFilters(); track m.emoji) {
+        <button
+          type="button"
+          class="mark-chip"
+          [class.selected]="markEmoji() === m.emoji"
+          [class.unused]="!m.count"
+          [attr.aria-pressed]="markEmoji() === m.emoji"
+          [matTooltip]="'diary.marks.count' | transloco: { count: m.count }"
+          (click)="toggleMark(m.emoji)"
+        >
+          {{ m.emoji }}
+          @if (m.count) {
+            <span class="mark-count">{{ m.count }}</span>
+          }
+        </button>
+      }
+    </div>
 
     @switch (panel()) {
       @case ('search') {

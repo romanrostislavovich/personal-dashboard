@@ -24,6 +24,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
   DIARY_MARK_EMOJIS,
+  DIARY_PHOTO_MAX_BYTES,
   LocalDate,
   markSelection,
   MOODS,
@@ -36,7 +37,8 @@ import { DiaryApi } from './diary.api';
 import { DiaryPhotosComponent } from './diary-photos.component';
 import { questionOfTheDay } from './diary-questions';
 import { diaryEditorExtensions, entryMarkdown } from './editor/diary-markdown';
-import { FORMAT_ACTIONS, FormatAction } from './editor/format-actions';
+import { photoIdFromSrc, photoIdsIn, photoSrc } from './editor/diary-images';
+import { FORMAT_ACTIONS, FormatAction, TABLE_ACTIONS } from './editor/format-actions';
 import { MOOD_EMOJI } from './mood';
 
 /** Pause in typing after which the entry is saved. */
@@ -146,6 +148,21 @@ type EditorMode = 'visual' | 'markdown';
                 <mat-icon>{{ action.icon }}</mat-icon>
               </button>
             }
+            <label
+              class="format photo-button"
+              [class.busy]="uploading()"
+              [matTooltip]="'diary.editor.format.photo' | transloco"
+            >
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                [attr.aria-label]="'diary.editor.format.photo' | transloco"
+                (change)="pickPhotos($event)"
+              />
+              <mat-icon>add_photo_alternate</mat-icon>
+            </label>
             <span class="divider"></span>
           }
           @for (emoji of markEmojis; track emoji) {
@@ -171,6 +188,28 @@ type EditorMode = 'visual' | 'markdown';
             <mat-icon>ink_eraser</mat-icon>
           </button>
         </div>
+
+        @if (mode() === 'visual' && inTable()) {
+          <div class="marks table-tools" role="toolbar">
+            <span class="table-label">{{ 'diary.editor.format.table' | transloco }}:</span>
+            @for (action of tableActions; track action.id) {
+              <button
+                matIconButton
+                type="button"
+                class="format"
+                [matTooltip]="'diary.editor.format.' + action.id | transloco"
+                [attr.aria-label]="'diary.editor.format.' + action.id | transloco"
+                (mousedown)="$event.preventDefault()"
+                (click)="format(action)"
+              >
+                <mat-icon>{{ action.icon }}</mat-icon>
+              </button>
+            }
+          </div>
+        }
+        @if (photoError(); as message) {
+          <p class="photo-error">{{ message }}</p>
+        }
 
         @if (!content().trim()) {
           <div class="starter">
@@ -209,7 +248,7 @@ type EditorMode = 'visual' | 'markdown';
         }
 
         <h4 class="section">{{ 'diary.photos.title' | transloco }}</h4>
-        <pd-diary-photos [day]="day()" />
+        <pd-diary-photos [day]="day()" [hiddenIds]="photosInText()" />
 
         <p class="hint">{{ 'diary.editor.hint' | transloco }}</p>
       </mat-card-content>
@@ -280,6 +319,35 @@ type EditorMode = 'visual' | 'markdown';
     .format.active {
       color: var(--mat-sys-on-secondary-container);
       background: var(--mat-sys-secondary-container);
+    }
+    .photo-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .photo-button:hover {
+      background: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+    }
+    .photo-button.busy {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .table-tools {
+      margin-top: -4px;
+    }
+    .table-label {
+      margin: 0 6px;
+      font: 600 0.75rem / 1.2 var(--pd-font);
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .photo-error {
+      margin: 0 0 8px;
+      color: var(--mat-sys-error);
+      font: 0.8rem / 1.3 var(--pd-font);
     }
     .divider {
       width: 1px;
@@ -383,6 +451,44 @@ type EditorMode = 'visual' | 'markdown';
       color: inherit;
       background: color-mix(in srgb, var(--mat-sys-tertiary) 22%, transparent);
     }
+    .visual ::ng-deep .diary-image {
+      display: block;
+      max-width: 100%;
+      max-height: 480px;
+      margin: 8px 0;
+      border-radius: 12px;
+    }
+    .visual ::ng-deep .diary-image.ProseMirror-selectednode {
+      outline: 3px solid var(--mat-sys-primary);
+    }
+    .visual ::ng-deep .diary-image.broken {
+      min-width: 120px;
+      min-height: 80px;
+      background: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+    }
+    .visual ::ng-deep table {
+      width: 100%;
+      margin: 8px 0;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .visual ::ng-deep th,
+    .visual ::ng-deep td {
+      padding: 6px 10px;
+      border: 1px solid var(--pd-border);
+      vertical-align: top;
+    }
+    .visual ::ng-deep th {
+      background: color-mix(in srgb, var(--mat-sys-on-surface) 5%, transparent);
+      text-align: left;
+    }
+    .visual ::ng-deep th p,
+    .visual ::ng-deep td p {
+      margin: 0;
+    }
+    .visual ::ng-deep .selectedCell {
+      background: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+    }
     /* The emoji is not part of the text: it is drawn from the mark's attribute. */
     .visual ::ng-deep .diary-mark[data-emoji]::before {
       content: attr(data-emoji) ' ';
@@ -414,6 +520,7 @@ export class DiaryEditorComponent {
   protected readonly moodEmoji = MOOD_EMOJI;
   protected readonly markEmojis = DIARY_MARK_EMOJIS;
   protected readonly formatActions = FORMAT_ACTIONS;
+  protected readonly tableActions = TABLE_ACTIONS;
   protected readonly entry = this.api.entry(this.day);
 
   protected readonly content = signal('');
@@ -425,12 +532,22 @@ export class DiaryEditorComponent {
   protected readonly question = computed(() =>
     questionOfTheDay(this.day(), this.transloco.getActiveLang(), this.questionShift()),
   );
+  /** Photos placed in the text: the photo strip below does not repeat them. */
+  protected readonly photosInText = computed(() => photoIdsIn(this.content()));
+  protected readonly uploading = signal(false);
+  protected readonly photoError = signal<string | null>(null);
   /** Bumped on every editor transaction, so the formatting buttons show the current state. */
   private readonly editorState = signal(0);
+  protected readonly inTable = computed(() => {
+    this.editorState();
+    return this.editor?.isActive('table') ?? false;
+  });
 
   private pending: Snapshot | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private editor: Editor | null = null;
+  /** Object URLs of photos shown in the text, by address; revoked when the editor goes away. */
+  private readonly photoUrls = new Map<string, Promise<string>>();
 
   constructor() {
     afterNextRender(() => this.createEditor());
@@ -460,6 +577,7 @@ export class DiaryEditorComponent {
     inject(DestroyRef).onDestroy(() => {
       void this.flush();
       this.editor?.destroy();
+      this.photoUrls.forEach((url) => void url.then(URL.revokeObjectURL, () => undefined));
     });
   }
 
@@ -568,10 +686,69 @@ export class DiaryEditorComponent {
     this.saved.emit();
   }
 
+  protected pickPhotos(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = [...(input.files ?? [])];
+    input.value = '';
+    void this.insertPhotos(files);
+  }
+
+  /**
+   * Uploads the images as photos of the day and puts them at the cursor (or at `position`,
+   * where they were dropped), one after another.
+   */
+  private async insertPhotos(files: File[], position?: number): Promise<void> {
+    const images = files.filter((file) => file.type.startsWith('image/'));
+    if (!this.editor || images.length === 0) {
+      return;
+    }
+    this.photoError.set(null);
+    this.uploading.set(true);
+    const day = this.day();
+    try {
+      for (const file of images) {
+        if (file.size > DIARY_PHOTO_MAX_BYTES) {
+          this.photoError.set(this.transloco.translate('diary.photos.tooLarge'));
+          continue;
+        }
+        const photo = await firstValueFrom(this.api.uploadPhoto(day, file));
+        if (day !== this.day()) {
+          return; // The user moved to another day: the photo stays in that day's strip.
+        }
+        const chain = this.editor.chain().focus();
+        (position === undefined ? chain : chain.setTextSelection(position))
+          .setImage({ src: photoSrc(photo.id), alt: '' })
+          .run();
+        position = undefined;
+      }
+    } catch {
+      this.photoError.set(this.transloco.translate('diary.photos.uploadFailed'));
+    } finally {
+      this.uploading.set(false);
+    }
+  }
+
+  /** Diary photos need the auth header: they are loaded as blobs and shown via object URLs. */
+  private loadImage(src: string): Promise<string> {
+    const id = photoIdFromSrc(src);
+    if (!id) {
+      return Promise.resolve(src);
+    }
+    let url = this.photoUrls.get(src);
+    if (!url) {
+      url = firstValueFrom(this.api.photoBlob(id)).then((blob) => URL.createObjectURL(blob));
+      this.photoUrls.set(src, url);
+    }
+    return url;
+  }
+
   private createEditor(): void {
     this.editor = new Editor({
       element: this.visualHost().nativeElement,
-      extensions: diaryEditorExtensions(() => this.transloco.translate('diary.editor.placeholder')),
+      extensions: diaryEditorExtensions({
+        placeholder: () => this.transloco.translate('diary.editor.placeholder'),
+        loadImage: (src) => this.loadImage(src),
+      }),
       content: this.content(),
       contentType: 'markdown',
       onUpdate: ({ editor }) => {
@@ -588,6 +765,25 @@ export class DiaryEditorComponent {
             return true;
           }
           return false;
+        },
+        // A pasted or dropped picture becomes a photo of the day, right where it was put.
+        handlePaste: (_view, event) => {
+          const files = [...(event.clipboardData?.files ?? [])];
+          if (!files.some((file) => file.type.startsWith('image/'))) {
+            return false;
+          }
+          void this.insertPhotos(files);
+          return true;
+        },
+        handleDrop: (view, event, _slice, moved) => {
+          const files = [...(event.dataTransfer?.files ?? [])];
+          if (moved || !files.some((file) => file.type.startsWith('image/'))) {
+            return false;
+          }
+          event.preventDefault();
+          const at = view.posAtCoords({ left: event.clientX, top: event.clientY });
+          void this.insertPhotos(files, at?.pos);
+          return true;
         },
       },
     });

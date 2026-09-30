@@ -1,3 +1,5 @@
+import { diaryPlainText } from '@pd/contracts';
+
 /**
  * Tags are hashtags in the text: `#work`, `#side_project`. Markdown headings (`# Heading`)
  * are not tags because there is a space after `#`.
@@ -16,24 +18,13 @@ export function appendNote(content: string, note: string, time: string | null): 
   return content.trim() ? `${content.trimEnd()}\n\n${line}` : line;
 }
 
-/** Markdown → plain text for previews and snippets (marks keep their emoji). */
-export function toPlainText(content: string): string {
-  return content
-    .replace(/==/g, '')
-    .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
-    .replace(/\[([^\]]*)]\([^)]*\)/g, '$1')
-    .replace(/[#*_`>~|-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 export function shorten(text: string, maxLength: number): string {
   return text.length > maxLength ? `${text.slice(0, maxLength).trimEnd()}…` : text;
 }
 
 /** Plain text around the first case-insensitive match of `query` (or the beginning). */
 export function searchSnippet(content: string, query: string, radius = 80): string {
-  const plain = toPlainText(content);
+  const plain = diaryPlainText(content);
   const index = plain.toLowerCase().indexOf(query.toLowerCase());
   if (index === -1) {
     return shorten(plain, radius * 2);

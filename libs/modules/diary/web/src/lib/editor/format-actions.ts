@@ -52,4 +52,31 @@ export const FORMAT_ACTIONS: FormatAction[] = [
     run: (chain) => chain.toggleBlockquote(),
     isActive: (editor) => editor.isActive('blockquote'),
   },
+  {
+    id: 'table',
+    icon: 'table',
+    run: (chain) => chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true }),
+    isActive: (editor) => editor.isActive('table'),
+  },
+];
+
+const never = () => false;
+
+/** Shown while the cursor is in a table. */
+export const TABLE_ACTIONS: FormatAction[] = [
+  { id: 'addRow', icon: 'add_row_below', run: (chain) => chain.addRowAfter(), isActive: never },
+  {
+    id: 'addColumn',
+    icon: 'add_column_right',
+    run: (chain) => chain.addColumnAfter(),
+    isActive: never,
+  },
+  { id: 'deleteRow', icon: 'variable_remove', run: (chain) => chain.deleteRow(), isActive: never },
+  {
+    id: 'deleteColumn',
+    icon: 'view_column',
+    run: (chain) => chain.deleteColumn(),
+    isActive: never,
+  },
+  { id: 'deleteTable', icon: 'delete', run: (chain) => chain.deleteTable(), isActive: never },
 ];

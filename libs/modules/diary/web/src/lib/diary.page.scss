@@ -230,3 +230,53 @@
 .muted {
   color: var(--mat-sys-on-surface-variant);
 }
+
+.mark-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.mark-filter-label {
+  margin-right: 4px;
+  font: 600 0.7rem / 1.2 var(--pd-font);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.mark-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+  }
+
+  &.unused {
+    opacity: 0.45;
+  }
+
+  &.selected {
+    opacity: 1;
+    border-color: var(--mat-sys-primary);
+    background: var(--mat-sys-secondary-container);
+  }
+}
+
+.mark-count {
+  font: 600 0.7rem / 1 var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+}

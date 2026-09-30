@@ -41,7 +41,14 @@
       "heading": "Heading",
       "bulletList": "Bulleted list",
       "orderedList": "Numbered list",
-      "quote": "Quote"
+      "quote": "Quote",
+      "table": "Table",
+      "photo": "Photo in the text (you can also paste or drop one)",
+      "addRow": "Add a row",
+      "addColumn": "Add a column",
+      "deleteRow": "Delete the row",
+      "deleteColumn": "Delete the column",
+      "deleteTable": "Delete the table"
     }
   },
   "widget": {
@@ -66,10 +73,11 @@
     "results": "Found: {{count}}"
   },
   "marks": {
-    "title": "Marks",
     "fragments": "Marked {{emoji}}",
     "empty": "No fragments with this mark yet",
-    "close": "Back to the month"
+    "close": "Back to the month",
+    "filter": "Marks",
+    "count": "{{count}} marked — show them"
   },
   "calendar": {
     "title": "Year in the diary",

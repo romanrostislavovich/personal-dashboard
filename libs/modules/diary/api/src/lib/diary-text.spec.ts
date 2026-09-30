@@ -1,4 +1,4 @@
-import { appendNote, extractTags, searchSnippet, toPlainText } from './diary-text';
+import { appendNote, extractTags, searchSnippet } from './diary-text';
 
 describe('extractTags', () => {
   it('finds hashtags in Cyrillic and Latin, lowercased and unique', () => {
@@ -22,14 +22,6 @@ describe('appendNote', () => {
   it('appends to existing text with a blank line', () => {
     expect(appendNote('Утро было хорошим.\n', 'Обед', '13:00')).toBe(
       'Утро было хорошим.\n\n**13:00** Обед',
-    );
-  });
-});
-
-describe('toPlainText', () => {
-  it('drops markdown markup but keeps text and mark emoji', () => {
-    expect(toPlainText('# Day\n**Bold** [link](https://x.y) ==🔥 hot==')).toBe(
-      'Day Bold link 🔥 hot',
     );
   });
 });

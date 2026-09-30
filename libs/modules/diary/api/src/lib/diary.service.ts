@@ -16,6 +16,7 @@ import {
   DiarySearchHit,
   DiarySettings,
   DiaryStats,
+  diaryPlainText,
   LocalDate,
   parseDiaryMarks,
   parseLocalDate,
@@ -23,7 +24,7 @@ import {
   toLocalDate,
 } from '@pd/contracts';
 import { and, arrayContains, asc, desc, eq, gte, isNotNull, lte, sql } from 'drizzle-orm';
-import { appendNote, extractTags, searchSnippet, shorten, toPlainText } from './diary-text';
+import { appendNote, extractTags, searchSnippet, shorten } from './diary-text';
 import { DiaryEntryRow, diaryEntries, diarySettings } from './diary.schema';
 
 const MOOD_HISTORY_DAYS = 30;
@@ -251,7 +252,7 @@ export class DiaryService {
     return rows.map((row) => ({
       day: row.day,
       mood: row.mood,
-      preview: shorten(toPlainText(row.content), MEMORY_PREVIEW_LENGTH),
+      preview: shorten(diaryPlainText(row.content), MEMORY_PREVIEW_LENGTH),
     }));
   }
 

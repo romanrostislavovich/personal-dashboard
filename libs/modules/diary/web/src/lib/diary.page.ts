@@ -11,6 +11,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
   addDays,
+  DIARY_MARK_EMOJIS,
+  diaryPlainText,
   DiaryEntry,
   DiarySettings,
   LocalDate,
@@ -87,6 +89,14 @@ export class DiaryPage {
   protected readonly insights = this.api.insights();
   protected readonly stats = this.api.stats();
   protected readonly settings = this.api.settings();
+  /** The editor's palette plus any other emoji used in marks, with how often each is used. */
+  protected readonly markFilters = computed(() => {
+    const counts = new Map(
+      (this.stats.value()?.topMarks ?? []).map(({ emoji, count }) => [emoji, count]),
+    );
+    const emojis = new Set([...DIARY_MARK_EMOJIS, ...counts.keys()]);
+    return [...emojis].map((emoji) => ({ emoji, count: counts.get(emoji) ?? 0 }));
+  });
 
   protected readonly selectedDay = signal<LocalDate>(this.today);
   protected readonly summary = signal<{
@@ -174,12 +184,7 @@ export class DiaryPage {
   }
 
   protected preview(entry: DiaryEntry): string {
-    // Strip markdown so the list shows plain text.
-    const plain = entry.content
-      .replace(/==/g, '')
-      .replace(/[#*_`>[\]()-]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const plain = diaryPlainText(entry.content);
     return plain.length > PREVIEW_LENGTH ? `${plain.slice(0, PREVIEW_LENGTH)}…` : plain;
   }
 

@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   effect,
   inject,
@@ -16,7 +17,7 @@ import { firstValueFrom } from 'rxjs';
 import { DiaryApi } from './diary.api';
 
 /**
- * Photos of a day: thumbnails, upload and a full-size view.
+ * Photos of a day that are not placed in the text: thumbnails, upload and a full-size view.
  * Images need the auth header, so they are fetched as blobs and shown via object URLs.
  */
 @Component({
@@ -26,7 +27,7 @@ import { DiaryApi } from './diary.api';
   host: { '(document:keydown.escape)': 'opened.set(null)' },
   template: `
     <div class="photos">
-      @for (photo of photos.value(); track photo.id) {
+      @for (photo of visible(); track photo.id) {
         <div class="photo">
           <button type="button" class="thumb" (click)="open(photo)" [title]="photo.caption ?? ''">
             @if (urls()[photo.id]; as url) {
@@ -177,11 +178,16 @@ import { DiaryApi } from './diary.api';
 })
 export class DiaryPhotosComponent {
   readonly day = input.required<LocalDate>();
+  /** Photos placed in the entry text: they are already shown there. */
+  readonly hiddenIds = input<string[]>([]);
 
   private readonly api = inject(DiaryApi);
   private readonly transloco = inject(TranslocoService);
 
   protected readonly photos = this.api.photos(this.day);
+  protected readonly visible = computed(() =>
+    this.photos.value().filter((photo) => !this.hiddenIds().includes(photo.id)),
+  );
   /** Object URLs of loaded images by photo id. */
   protected readonly urls = signal<Record<string, string>>({});
   protected readonly opened = signal<DiaryPhoto | null>(null);
@@ -192,7 +198,7 @@ export class DiaryPhotosComponent {
 
   constructor() {
     effect(() => {
-      for (const photo of this.photos.value()) {
+      for (const photo of this.visible()) {
         if (!this.requested.has(photo.id)) {
           this.requested.add(photo.id);
           void this.load(photo.id);

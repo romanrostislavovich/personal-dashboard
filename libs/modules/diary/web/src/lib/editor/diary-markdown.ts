@@ -1,11 +1,12 @@
 import { Editor, Extensions, Mark, mergeAttributes } from '@tiptap/core';
 import { HardBreak } from '@tiptap/extension-hard-break';
-import { Image } from '@tiptap/extension-image';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
+import { TableKit } from '@tiptap/extension-table';
 import { Placeholder } from '@tiptap/extensions';
 import { Markdown } from '@tiptap/markdown';
 import { StarterKit } from '@tiptap/starter-kit';
 import { splitMarkEmoji } from '@pd/contracts';
+import { DiaryImage, DiaryImageOptions } from './diary-images';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -109,11 +110,17 @@ const LineBreak = HardBreak.extend({
   renderMarkdown: () => '\n',
 });
 
-/**
- * Everything the diary editor understands; the same list parses and saves Markdown.
- * The placeholder is a function: translations may load after the editor is created.
- */
-export function diaryEditorExtensions(placeholder: () => string = () => ''): Extensions {
+export interface DiaryEditorOptions {
+  /** A function: translations may load after the editor is created. */
+  placeholder?: () => string;
+  loadImage?: DiaryImageOptions['loadSrc'];
+}
+
+/** Everything the diary editor understands; the same list parses and saves Markdown. */
+export function diaryEditorExtensions({
+  placeholder = () => '',
+  loadImage = async (src) => src,
+}: DiaryEditorOptions = {}): Extensions {
   return [
     StarterKit.configure({
       hardBreak: false,
@@ -122,11 +129,12 @@ export function diaryEditorExtensions(placeholder: () => string = () => ''): Ext
       link: { openOnClick: false, autolink: true },
     }),
     LineBreak,
-    // Photos have their own section, but an image in the text must not turn into its alt text.
-    Image,
+    DiaryMark,
+    DiaryImage.configure({ loadSrc: loadImage }),
     TaskList,
     TaskItem.configure({ nested: true }),
-    DiaryMark,
+    // Saved as GFM tables; column widths are not part of Markdown, so no resizing.
+    TableKit.configure({ table: { resizable: false } }),
     Placeholder.configure({ placeholder: () => placeholder() }),
     Markdown.configure({ markedOptions: { gfm: true, breaks: true } }),
   ];
@@ -134,11 +142,20 @@ export function diaryEditorExtensions(placeholder: () => string = () => ''): Ext
 
 /** A link whose text is its own address, `[https://…](https://…)`. */
 const BARE_LINK = /\[(https?:\/\/[^\]\s]+)\]\(\1\)/g;
+/** Tiptap puts an extra blank line before and after a table. */
+const BLANK_BEFORE_TABLE = /\n{3,}(?=\|)/g;
+const BLANK_AFTER_TABLE = /^(\|.*\|)\n{3,}/gm;
 
 /**
  * The entry as Markdown. Tiptap leaves blank lines after a closing list or code block and
- * writes a pasted address as `[url](url)`; both are tidied up so the source stays as typed.
+ * around tables, and writes a pasted address as `[url](url)`; these are tidied up so the
+ * source stays as typed.
  */
 export function entryMarkdown(editor: Editor): string {
-  return editor.getMarkdown().trimEnd().replace(BARE_LINK, '$1');
+  return editor
+    .getMarkdown()
+    .trimEnd()
+    .replace(BARE_LINK, '$1')
+    .replace(BLANK_BEFORE_TABLE, '\n\n')
+    .replace(BLANK_AFTER_TABLE, '$1\n\n');
 }

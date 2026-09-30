@@ -1,5 +1,6 @@
 import { Editor } from '@tiptap/core';
 import { parseDiaryMarks } from '@pd/contracts';
+import { photoIdsIn, photoSrc } from './diary-images';
 import { diaryEditorExtensions, entryMarkdown } from './diary-markdown';
 
 function editorWith(markdown: string): Editor {
@@ -50,6 +51,24 @@ describe('diary editor Markdown', () => {
       '[a link](https://example.com) and https://example.org',
     ].join('\n');
     expect(roundTrip(markdown)).toBe(markdown);
+  });
+
+  it('keeps tables and photos between paragraphs', () => {
+    const markdown = [
+      'Before',
+      '',
+      // Tiptap pads the columns: still a GFM table, and the source reads better.
+      '| Day | Km        |',
+      '| --- | --------- |',
+      '| Mon | 5         |',
+      '| Tue | ==🔥 12== |',
+      '',
+      `![](${photoSrc('0b6f7c1e-2a3d-4e5f-8a9b-0c1d2e3f4a5b')})`,
+      '',
+      'After',
+    ].join('\n');
+    expect(roundTrip(markdown)).toBe(markdown);
+    expect(photoIdsIn(markdown)).toEqual(['0b6f7c1e-2a3d-4e5f-8a9b-0c1d2e3f4a5b']);
   });
 
   it('marks the paragraph under the cursor when nothing is selected', () => {
