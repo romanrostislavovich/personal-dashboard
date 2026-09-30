@@ -30,11 +30,13 @@ import {
   TextEdit,
   unmarkAt,
 } from '@pd/contracts';
-import { MarkdownPipe } from '@pd/web-core';
+import { Editor } from '@tiptap/core';
 import { firstValueFrom } from 'rxjs';
 import { DiaryApi } from './diary.api';
 import { DiaryPhotosComponent } from './diary-photos.component';
 import { questionOfTheDay } from './diary-questions';
+import { diaryEditorExtensions, entryMarkdown } from './editor/diary-markdown';
+import { FORMAT_ACTIONS, FormatAction } from './editor/format-actions';
 import { MOOD_EMOJI } from './mood';
 
 /** Pause in typing after which the entry is saved. */
@@ -49,14 +51,11 @@ interface Snapshot {
 /** What the editor shows for a day without an entry. */
 const NO_ENTRY = { content: '', mood: null, updatedAt: null };
 
-/** Positions in the markdown source (`content`). */
-interface SourceRange {
-  start: number;
-  end: number;
-}
+type EditorMode = 'visual' | 'markdown';
 
 /**
- * Editor for one day's entry: markdown, mood, emoji marks, photos.
+ * Editor for one day's entry: a visual (WYSIWYG) editor or the Markdown source, mood,
+ * emoji marks, photos. The entry is stored as Markdown either way.
  * Saves by itself a moment after you stop typing (and right away when switching days).
  */
 @Component({
@@ -71,7 +70,6 @@ interface SourceRange {
     MatIconModule,
     MatTooltipModule,
     TranslocoPipe,
-    MarkdownPipe,
     DiaryPhotosComponent,
   ],
   template: `
@@ -118,20 +116,38 @@ interface SourceRange {
           </div>
           <mat-button-toggle-group
             [value]="mode()"
-            (change)="mode.set($event.value)"
+            (change)="switchMode($event.value)"
             hideSingleSelectionIndicator
           >
-            <mat-button-toggle value="edit">
-              <mat-icon>edit</mat-icon> {{ 'diary.editor.edit' | transloco }}
+            <mat-button-toggle value="visual">
+              <mat-icon>edit_note</mat-icon> {{ 'diary.editor.visual' | transloco }}
             </mat-button-toggle>
-            <mat-button-toggle value="preview">
-              <mat-icon>visibility</mat-icon> {{ 'diary.editor.preview' | transloco }}
+            <mat-button-toggle value="markdown">
+              <mat-icon>code</mat-icon> {{ 'diary.editor.markdown' | transloco }}
             </mat-button-toggle>
           </mat-button-toggle-group>
         </div>
 
         <!-- mousedown is prevented so the text selection survives the click -->
-        <div class="marks" role="toolbar" [attr.aria-label]="'diary.editor.markTitle' | transloco">
+        <div class="marks" role="toolbar" [attr.aria-label]="'diary.editor.toolbar' | transloco">
+          @if (mode() === 'visual') {
+            @for (action of formatActions; track action.id) {
+              <button
+                matIconButton
+                type="button"
+                class="format"
+                [class.active]="isActive(action)"
+                [attr.aria-pressed]="isActive(action)"
+                [matTooltip]="'diary.editor.format.' + action.id | transloco"
+                [attr.aria-label]="'diary.editor.format.' + action.id | transloco"
+                (mousedown)="$event.preventDefault()"
+                (click)="format(action)"
+              >
+                <mat-icon>{{ action.icon }}</mat-icon>
+              </button>
+            }
+            <span class="divider"></span>
+          }
           @for (emoji of markEmojis; track emoji) {
             <button
               type="button"
@@ -154,12 +170,9 @@ interface SourceRange {
           >
             <mat-icon>ink_eraser</mat-icon>
           </button>
-          @if (markHint()) {
-            <span class="mark-hint">{{ 'diary.editor.markPreviewHint' | transloco }}</span>
-          }
         </div>
 
-        @if (mode() === 'edit' && !content().trim()) {
+        @if (!content().trim()) {
           <div class="starter">
             @if (template()) {
               <button matButton="tonal" type="button" (click)="insertTemplate()">
@@ -181,7 +194,9 @@ interface SourceRange {
           </div>
         }
 
-        @if (mode() === 'edit') {
+        <!-- Kept in the DOM while the source is shown, so the visual editor keeps its undo history -->
+        <div #visual class="text visual" [hidden]="mode() !== 'visual'"></div>
+        @if (mode() === 'markdown') {
           <textarea
             #text
             class="text"
@@ -191,8 +206,6 @@ interface SourceRange {
             (keydown.control.s)="$event.preventDefault(); flush()"
             (keydown.meta.s)="$event.preventDefault(); flush()"
           ></textarea>
-        } @else {
-          <div #preview class="preview" [innerHTML]="content() | markdown"></div>
         }
 
         <h4 class="section">{{ 'diary.photos.title' | transloco }}</h4>
@@ -261,6 +274,19 @@ interface SourceRange {
       border-radius: 12px;
       background: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
     }
+    .format {
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .format.active {
+      color: var(--mat-sys-on-secondary-container);
+      background: var(--mat-sys-secondary-container);
+    }
+    .divider {
+      width: 1px;
+      height: 24px;
+      margin: 0 6px;
+      background: var(--pd-border);
+    }
     .mark-button {
       width: 34px;
       height: 34px;
@@ -273,11 +299,6 @@ interface SourceRange {
     .mark-button:hover,
     .mark-button:focus-visible {
       background: color-mix(in srgb, var(--mat-sys-primary) 16%, transparent);
-    }
-    .mark-hint {
-      margin-left: 8px;
-      font: 0.75rem / 1.3 var(--pd-font);
-      color: var(--mat-sys-on-surface-variant);
     }
     .starter {
       display: flex;
@@ -322,23 +343,49 @@ interface SourceRange {
       color: inherit;
       font: 1rem / 1.65 var(--pd-font);
     }
-    .text:focus {
+    .text:focus,
+    .visual:focus-within {
       outline: 2px solid var(--mat-sys-primary);
       outline-offset: -1px;
     }
-    .preview {
-      min-height: 360px;
-      padding: 0 4px;
-      font: 1rem / 1.65 var(--pd-font);
+    .visual {
+      resize: none;
+      cursor: text;
     }
-    .preview ::ng-deep .md-mark {
+    .visual[hidden] {
+      display: none;
+    }
+    .visual ::ng-deep .ProseMirror {
+      min-height: 330px;
+      outline: none;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+    .visual ::ng-deep .ProseMirror > :first-child {
+      margin-top: 0;
+    }
+    .visual ::ng-deep p.is-editor-empty:first-child::before {
+      content: attr(data-placeholder);
+      float: left;
+      height: 0;
+      pointer-events: none;
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .visual ::ng-deep blockquote {
+      margin: 0.5em 0;
+      padding-left: 12px;
+      border-left: 3px solid var(--pd-border);
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .visual ::ng-deep .diary-mark {
       padding: 1px 4px;
       border-radius: 6px;
       color: inherit;
       background: color-mix(in srgb, var(--mat-sys-tertiary) 22%, transparent);
     }
-    .preview ::ng-deep .md-mark-emoji {
-      margin-right: 4px;
+    /* The emoji is not part of the text: it is drawn from the mark's attribute. */
+    .visual ::ng-deep .diary-mark[data-emoji]::before {
+      content: attr(data-emoji) ' ';
     }
     .section {
       font: 700 0.9rem / 1.3 var(--pd-font-heading);
@@ -361,28 +408,33 @@ export class DiaryEditorComponent {
   private readonly transloco = inject(TranslocoService);
   private readonly injector = inject(Injector);
   private readonly textarea = viewChild<ElementRef<HTMLTextAreaElement>>('text');
-  private readonly previewElement = viewChild<ElementRef<HTMLElement>>('preview');
+  private readonly visualHost = viewChild.required<ElementRef<HTMLElement>>('visual');
 
   protected readonly moods = MOODS;
   protected readonly moodEmoji = MOOD_EMOJI;
   protected readonly markEmojis = DIARY_MARK_EMOJIS;
+  protected readonly formatActions = FORMAT_ACTIONS;
   protected readonly entry = this.api.entry(this.day);
 
   protected readonly content = signal('');
   protected readonly mood = signal<number | null>(null);
-  protected readonly mode = signal<'edit' | 'preview'>('edit');
+  protected readonly mode = signal<EditorMode>('visual');
   protected readonly status = signal<'idle' | 'saving' | 'error'>('idle');
   protected readonly savedAt = signal<string | null>(null);
-  protected readonly markHint = signal(false);
   protected readonly questionShift = signal(0);
   protected readonly question = computed(() =>
     questionOfTheDay(this.day(), this.transloco.getActiveLang(), this.questionShift()),
   );
+  /** Bumped on every editor transaction, so the formatting buttons show the current state. */
+  private readonly editorState = signal(0);
 
   private pending: Snapshot | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private editor: Editor | null = null;
 
   constructor() {
+    afterNextRender(() => this.createEditor());
+
     // Another day's entry loaded — show it in the editor.
     effect(() => {
       // Only once the response arrives: while loading or on error, leave the editor alone.
@@ -395,8 +447,8 @@ export class DiaryEditorComponent {
         this.mood.set(mood);
         this.savedAt.set(updatedAt);
         this.status.set('idle');
-        this.mode.set(content.trim() ? 'preview' : 'edit');
         this.questionShift.set(0);
+        this.setEditorContent(content);
       });
     });
 
@@ -405,7 +457,10 @@ export class DiaryEditorComponent {
       this.day();
       untracked(() => void this.flush());
     });
-    inject(DestroyRef).onDestroy(() => void this.flush());
+    inject(DestroyRef).onDestroy(() => {
+      void this.flush();
+      this.editor?.destroy();
+    });
   }
 
   protected setMood(value: number): void {
@@ -449,35 +504,58 @@ export class DiaryEditorComponent {
     }
   }
 
-  /** Marks the selected text with the emoji; with nothing selected shows how to do it. */
+  /**
+   * Marks the selected text with the emoji; with nothing selected — the paragraph under
+   * the cursor.
+   */
   protected mark(emoji: string): void {
-    const range = this.textareaSelection() ?? this.previewSelection();
-    this.markHint.set(range === null);
-    if (range) {
-      this.applyEdit(markSelection(this.content(), range.start, range.end, emoji));
+    const textarea = this.textarea()?.nativeElement;
+    if (this.mode() === 'markdown' && textarea) {
+      const { selectionStart, selectionEnd } = textarea;
+      this.applyEdit(markSelection(this.content(), selectionStart, selectionEnd, emoji));
+    } else {
+      this.editor?.chain().focus().setDiaryMark(emoji).run();
     }
   }
 
   protected unmark(): void {
     const textarea = this.textarea()?.nativeElement;
-    if (!textarea) {
-      this.markHint.set(true);
-      return;
+    if (this.mode() === 'markdown' && textarea) {
+      const edit = unmarkAt(this.content(), textarea.selectionStart);
+      if (edit) {
+        this.applyEdit(edit);
+      }
+    } else {
+      this.editor?.chain().focus().unsetDiaryMark().run();
     }
-    const edit = unmarkAt(this.content(), textarea.selectionStart);
-    if (edit) {
-      this.applyEdit(edit);
+  }
+
+  protected format(action: FormatAction): void {
+    if (this.editor) {
+      action.run(this.editor.chain().focus()).run();
     }
+  }
+
+  protected isActive(action: FormatAction): boolean {
+    this.editorState();
+    return this.editor ? action.isActive(this.editor) : false;
+  }
+
+  /** The visual editor re-reads the source when it comes back: it may have been edited. */
+  protected switchMode(mode: EditorMode): void {
+    if (mode === 'visual') {
+      this.setEditorContent(this.content());
+    }
+    this.mode.set(mode);
+    this.focusText(null);
   }
 
   protected insertTemplate(): void {
-    this.content.set(this.template() ?? '');
-    this.focusText(this.content().length);
+    this.replaceContent(this.template() ?? '');
   }
 
   protected answer(): void {
-    this.content.set(`**${this.question()}**\n\n`);
-    this.focusText(this.content().length);
+    this.replaceContent(`**${this.question()}**\n\n`);
   }
 
   async remove(): Promise<void> {
@@ -490,32 +568,45 @@ export class DiaryEditorComponent {
     this.saved.emit();
   }
 
-  /** The selection in the source text while editing. */
-  private textareaSelection(): SourceRange | null {
-    const textarea = this.textarea()?.nativeElement;
-    if (this.mode() !== 'edit' || !textarea) {
-      return null;
-    }
-    return { start: textarea.selectionStart, end: textarea.selectionEnd };
+  private createEditor(): void {
+    this.editor = new Editor({
+      element: this.visualHost().nativeElement,
+      extensions: diaryEditorExtensions(() => this.transloco.translate('diary.editor.placeholder')),
+      content: this.content(),
+      contentType: 'markdown',
+      onUpdate: ({ editor }) => {
+        this.content.set(entryMarkdown(editor));
+        this.scheduleSave();
+      },
+      onTransaction: () => this.editorState.update((value) => value + 1),
+      editorProps: {
+        // Ctrl+S / Cmd+S saves right away, as in the Markdown source.
+        handleKeyDown: (_view, event) => {
+          if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+            event.preventDefault();
+            void this.flush();
+            return true;
+          }
+          return false;
+        },
+      },
+    });
   }
 
   /**
-   * Text selected in the preview, found in the source. Formatting inside the selection
-   * (bold, links) breaks the match — then there is nothing to mark.
+   * Shows `content` in the visual editor without treating it as a change: an entry that was
+   * only opened is never re-saved, so its Markdown stays exactly as it was written.
    */
-  private previewSelection(): SourceRange | null {
-    const selection = window.getSelection();
-    const preview = this.previewElement()?.nativeElement;
-    if (!selection || !preview?.contains(selection.anchorNode)) {
-      return null;
-    }
-    const selected = selection.toString().trim();
-    const start = selected ? this.content().indexOf(selected) : -1;
-    if (start === -1) {
-      return null;
-    }
-    selection.removeAllRanges();
-    return { start, end: start + selected.length };
+  private setEditorContent(content: string): void {
+    this.editor?.commands.setContent(content, { contentType: 'markdown', emitUpdate: false });
+  }
+
+  /** Replaces the whole entry (a template, a question) and puts the cursor at the end. */
+  private replaceContent(content: string): void {
+    this.content.set(content);
+    this.setEditorContent(content);
+    this.scheduleSave();
+    this.focusText(content.length);
   }
 
   private applyEdit(edit: TextEdit): void {
@@ -524,13 +615,22 @@ export class DiaryEditorComponent {
     this.focusText(edit.selectionStart, edit.selectionEnd);
   }
 
-  /** Puts the cursor into the textarea once it has re-rendered with the new text. */
-  private focusText(start: number, end = start): void {
+  /**
+   * Focuses the current editor once it has re-rendered: the source — at the given range
+   * (or where it was), the visual editor — at the end of the text.
+   */
+  private focusText(start: number | null, end = start): void {
     afterNextRender(
       () => {
+        if (this.mode() === 'visual') {
+          this.editor?.commands.focus('end');
+          return;
+        }
         const textarea = this.textarea()?.nativeElement;
         textarea?.focus();
-        textarea?.setSelectionRange(start, end);
+        if (start !== null && end !== null) {
+          textarea?.setSelectionRange(start, end);
+        }
       },
       { injector: this.injector },
     );

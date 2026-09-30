@@ -18,22 +18,31 @@
   },
   "editor": {
     "mood": "Mood",
-    "edit": "Text",
-    "preview": "Preview",
-    "placeholder": "How was your day? Markdown is supported, tags start with #, e.g. #work",
-    "hint": "Saves automatically. Select text and pick an emoji to mark it; with nothing selected the paragraph under the cursor is marked. From Telegram: /d text, /mood 4, photos.",
+    "visual": "Editor",
+    "markdown": "Markdown",
+    "placeholder": "How was your day? Tags start with #, e.g. #work",
+    "hint": "Saves automatically. Select a sentence and pick an emoji to mark it; with nothing selected the paragraph under the cursor is marked. From Telegram: /d text, /mood 4, photos.",
     "savedAt": "Saved",
     "empty": "No entry yet",
     "confirmDelete": "Delete the entry for this day?",
     "saving": "Saving…",
     "saveFailed": "Could not save — will retry on the next change",
     "markTitle": "Mark the selection",
+    "toolbar": "Formatting and emoji marks",
     "unmark": "Remove the mark under the cursor",
-    "markPreviewHint": "Select text in the preview or switch to “Text” to mark it",
     "insertTemplate": "Insert template",
     "question": "Question of the day",
     "answer": "Answer",
-    "anotherQuestion": "Another question"
+    "anotherQuestion": "Another question",
+    "format": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "strike": "Strikethrough",
+      "heading": "Heading",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "quote": "Quote"
+    }
   },
   "widget": {
     "daysInRow": "days in a row",

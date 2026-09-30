@@ -16,8 +16,9 @@
   Hetzner Cloud and DeepSeek
 - **Open Source:** GitHub stars history, issues, PRs, releases, npm downloads, alerts
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
-- **Diary:** markdown with autosave, mood, hashtags, emoji marks on phrases, photos, search, year
-  heatmap, “on this day”, mood insights, templates; `/d`, `/mood`, `/today` and photos from Telegram
+- **Diary:** visual editor over Markdown (the source is a click away) with autosave, mood,
+  hashtags, emoji marks on phrases, photos, search, year heatmap, “on this day”, mood insights,
+  templates; `/d`, `/mood`, `/today` and photos from Telegram
 - **Music:** Last.fm history and tops, Spotify “now playing”
 - **Games:** Dota 2 (full match history of every mode, via OpenDota) and World of Warcraft (Battle.net);
   several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO
