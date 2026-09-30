@@ -193,7 +193,13 @@ To add a service (e.g. DigitalOcean):
   (`SYNC_MODE`, see [sync.md](sync.md)). Every table in `public` is tracked by a trigger — module
   tables need nothing extra, but every table must have a primary key. Sync works on the whole
   database, not per user. A client runs no scheduled jobs, unlocks no achievements, does not
-  receive bot messages and forwards server actions.
+  receive bot messages and forwards server actions. Every 6 hours the client compares row counts
+  and hashes of every table with the server's (`SyncStore.fingerprints`); what sync set aside
+  (`sync.conflicts`, `sync.parked`) is shown in the settings, where either version can be kept
+  (`SyncConflictsService`).
+- **Backups:** `BackupService` — the server watches the daily dumps and the weekly test restore of
+  `deploy/backup.sh` (`BACKUP_DIR`) and reports problems to the owner (the first user); the sync
+  client copies the newest dump to the computer (`BACKUP_COPY_DIR`).
 - **AI:** `AiService` — any OpenAI-compatible API; `ask()` is a dialogue with module tools
   (function-calling loop in `tool-loop.ts`), `complete()` is a single request without tools.
 - **Auth:** a global `AuthGuard`; public endpoints are marked with `@Public()`. See Security below.

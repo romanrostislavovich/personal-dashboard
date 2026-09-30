@@ -59,6 +59,17 @@ export const envSchema = z
     SYNC_INTERVAL_SECONDS: z.coerce.number().int().min(10).default(60),
     /** Client: its name on the server (defaults to the computer name). */
     SYNC_PEER_NAME: z.string().optional(),
+
+    /**
+     * Server: the folder with the daily database dumps (deploy/backup.sh). Set, the dashboard
+     * watches them, reports a missing dump or a failed restore check and hands the newest one
+     * to the sync client.
+     */
+    BACKUP_DIR: z.string().optional(),
+    /** Client: where copies of the server's dumps are kept (docs/deploy.md, "Backups"). */
+    BACKUP_COPY_DIR: z.string().default('backups'),
+    /** Client: how many copies to keep. */
+    BACKUP_COPY_KEEP: z.coerce.number().int().min(1).default(14),
   })
   .superRefine((env, ctx) => {
     if (env.SYNC_MODE !== 'off' && !env.SYNC_TOKEN) {

@@ -34,6 +34,20 @@ const messages = {
     attachmentEmpty:
       'There is no text in this file — probably a scan. Export the statement as PDF with text or CSV.',
     attachmentFailed: 'Could not read the file. Is it damaged or password-protected?',
+    backupTitle: '🗄️ Backups need attention',
+    backupProblems: {
+      missing: 'There is no database dump at all.',
+      stale: 'The newest database dump is too old — the backup job may have stopped.',
+      unchecked: 'No test restore for more than a week.',
+      'restore-failed': 'The latest test restore of a dump failed or lost rows.',
+    },
+    backupCopyStale: (days: number) =>
+      `The last copy of the server's backup on this computer is ${days} days old.`,
+    backupSeeSettings: 'Details: Settings → Sync.',
+    reconcileTitle: '⚠️ The computer and the server hold different data',
+    reconcileBody: (tables: string) =>
+      `Tables: ${tables}.
+Settings → Sync on the computer: "Resync everything" usually fixes it.`,
   },
   ru: {
     telegramLinked: '✅ Готово! Теперь уведомления дашборда будут приходить сюда.',
@@ -67,6 +81,20 @@ const messages = {
     attachmentEmpty:
       'В файле нет текста — похоже, это скан. Выгрузи выписку в PDF с текстом или в CSV.',
     attachmentFailed: 'Не получилось прочитать файл. Он не повреждён и не защищён паролем?',
+    backupTitle: '🗄️ С бэкапами что-то не так',
+    backupProblems: {
+      missing: 'Нет ни одного дампа базы.',
+      stale: 'Последний дамп базы слишком старый — похоже, бэкап перестал делаться.',
+      unchecked: 'Больше недели не было пробного восстановления.',
+      'restore-failed': 'Последнее пробное восстановление дампа не удалось или потеряло строки.',
+    },
+    backupCopyStale: (days: number) =>
+      `Последней копии бэкапа сервера на этом компьютере уже ${days} дн.`,
+    backupSeeSettings: 'Подробности: Настройки → Синхронизация.',
+    reconcileTitle: '⚠️ На компьютере и на сервере разные данные',
+    reconcileBody: (tables: string) =>
+      `Таблицы: ${tables}.
+Настройки → Синхронизация на компьютере: «Синхронизировать всё заново» обычно помогает.`,
   },
 };
 

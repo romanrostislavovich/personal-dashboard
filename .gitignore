@@ -60,5 +60,7 @@ vitest.config.*.timestamp*
 
 # server database dumps (deploy/compose.yml)
 deploy/backups/
+# copies of the server's dumps on the sync client (BACKUP_COPY_DIR)
+/backups/
 # your server's address for deploy.sh
 deploy/deploy.local.env

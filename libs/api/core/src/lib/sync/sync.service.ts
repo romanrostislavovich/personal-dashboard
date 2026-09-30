@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  ReconcileResult,
   SyncMode,
   SyncPullRequest,
   SyncPullResponse,
@@ -38,6 +39,12 @@ export const SYNC_STATE = {
   recheck: 'recheck',
   lastSyncedAt: 'last-synced-at',
   lastError: 'last-error',
+  /** Client: when to compare the data with the server's next (see SyncClient.reconcile). */
+  reconcileDue: 'reconcile-due',
+  /** Client: tables that differed once, waiting for a second check to confirm. */
+  reconcileSuspect: 'reconcile-suspect',
+  /** Client: the latest comparison, a ReconcileResult. */
+  reconcileResult: 'reconcile-result',
 } as const;
 
 /** Origin of changes the client received from the server. */
@@ -120,7 +127,8 @@ export class SyncService implements OnApplicationBootstrap {
       .onConflictDoUpdate({ target: syncState.key, set: { value } });
   }
 
-  async status(): Promise<SyncStatus> {
+  /** The status without backups: those are BackupService's (the controller joins both). */
+  async status(): Promise<Omit<SyncStatus, 'backup'>> {
     const client = this.mode === 'client';
     const off = this.mode === 'off';
     return {
@@ -134,6 +142,9 @@ export class SyncService implements OnApplicationBootstrap {
         ? await this.store.pendingCount(await this.getState(SYNC_STATE.pushCursor))
         : 0,
       ...(off ? { parked: 0, conflicts: 0 } : await this.store.problemCounts()),
+      reconcile: client
+        ? parseJson<ReconcileResult>(await this.getState(SYNC_STATE.reconcileResult))
+        : null,
     };
   }
 
@@ -170,6 +181,10 @@ export class SyncService implements OnApplicationBootstrap {
     );
     return rows[0]?.hash ?? 'none';
   }
+}
+
+function parseJson<T>(text: string | null): T | null {
+  return text === null ? null : (JSON.parse(text) as T);
 }
 
 function clientOrigin(peer: string): string {

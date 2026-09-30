@@ -9,8 +9,12 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  ReconcileResult,
   SyncActionRequest,
   SyncActionResponse,
+  SyncBackupInfo,
+  SyncFingerprintsRequest,
+  SyncFingerprintsResponse,
   SyncPullRequest,
   SyncPullResponse,
   SyncPushRequest,
@@ -18,6 +22,10 @@ import {
 } from '@pd/contracts';
 import { hostname } from 'node:os';
 import { AppConfig } from '../config/env';
+import { coreMessages } from '../i18n/core.messages';
+import { NotificationsService } from '../notifications/notifications.service';
+import { UsersService } from '../users/users.service';
+import { compareFingerprints } from './reconcile';
 import { decodeSyncBody, encodeSyncBody, SYNC_CONTENT_TYPE } from './sync-protocol';
 import { SyncStore } from './sync-store';
 import { SERVER_ORIGIN, SYNC_STATE, SyncService } from './sync.service';
@@ -40,6 +48,12 @@ const MAX_BATCHES = 10_000;
  */
 const RECHECK_DONE = '2026-09-30';
 const RECHECK_PULLING = 'pulling';
+/** How often the client compares its data with the server's (row counts and hashes). */
+const RECONCILE_EVERY_MS = 6 * 3_600_000;
+/** A difference is raised only if a second check this much later sees it again. */
+const RECONCILE_CONFIRM_MS = 10 * 60_000;
+/** A day's dump over a slow connection. */
+const BACKUP_DOWNLOAD_TIMEOUT_MS = 30 * 60_000;
 
 /** A sync error with a message for the settings page. */
 class SyncError extends Error {
@@ -69,6 +83,8 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
     @Inject(ConfigService) private readonly config: AppConfig,
     private readonly sync: SyncService,
     private readonly store: SyncStore,
+    private readonly users: UsersService,
+    private readonly notifications: NotificationsService,
   ) {
     this.peer = config.get('SYNC_PEER_NAME', { infer: true }) ?? hostname();
   }
@@ -141,6 +157,38 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
     }
   }
 
+  /** The server's newest dump (see BackupService). */
+  async backupInfo(): Promise<SyncBackupInfo> {
+    const response = await this.fetchServer('backup', { method: 'GET' });
+    return (await response.json()) as SyncBackupInfo;
+  }
+
+  /** A dump of the server's, as a stream. */
+  async downloadBackup(name: string): Promise<ReadableStream<Uint8Array>> {
+    const response = await this.fetchServer(`backup/${encodeURIComponent(name)}`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(BACKUP_DOWNLOAD_TIMEOUT_MS),
+    });
+    if (!response.body) {
+      throw new SyncError('The server sent an empty backup');
+    }
+    return response.body;
+  }
+
+  /**
+   * "Resync everything": both change logs are walked from the start — every row of the server
+   * comes here and every row of here goes there. Mends whatever a comparison found different.
+   */
+  async resyncEverything(): Promise<void> {
+    await this.running;
+    await this.sync.setState(SYNC_STATE.recheck, null);
+    await this.sync.setState(SYNC_STATE.pushAll, 'yes');
+    await this.sync.setState(SYNC_STATE.reconcileSuspect, null);
+    await this.sync.setState(SYNC_STATE.reconcileDue, null);
+    await this.sync.setState(SYNC_STATE.reconcileResult, null);
+    await this.syncNow();
+  }
+
   /** Runs a sync (or waits for the one in progress). Errors end up in the status. */
   syncNow(): Promise<void> {
     this.running ??= this.run().finally(() => (this.running = null));
@@ -162,6 +210,12 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
       await this.sync.setState(SYNC_STATE.lastError, null);
       if (pulled || pushed) {
         this.logger.log(`Synced: ${pulled} received, ${pushed} sent`);
+      } else {
+        // A failed comparison is not a failed sync: it is tried again later.
+        await this.reconcileIfDue().catch(async (error) => {
+          this.logger.warn(`Comparing the data with the server's failed: ${error}`);
+          await this.sync.setState(SYNC_STATE.reconcileDue, later(RECONCILE_CONFIRM_MS));
+        });
       }
     } catch (error) {
       const message = error instanceof SyncError ? error.message : `Sync failed: ${error}`;
@@ -187,6 +241,64 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
       await this.sync.setState(SYNC_STATE.recheck, RECHECK_PULLING);
     }
     return true;
+  }
+
+  /**
+   * Compares the data with the server's (docs/sync.md, "Reconciliation"): a sync bug once lost
+   * rows silently. Runs after a sync that moved nothing, so both sides should be equal; a
+   * difference is raised only when a second check confirms it.
+   */
+  private async reconcileIfDue(): Promise<void> {
+    const due = await this.sync.getState(SYNC_STATE.reconcileDue);
+    if (due && Date.parse(due) > Date.now()) {
+      return;
+    }
+    const server = await this.request<SyncFingerprintsRequest, SyncFingerprintsResponse>(
+      'fingerprints',
+      await this.handshake(),
+    );
+    // Rows missing from the change log are logged now: they count as pending below and go
+    // out with the next sync, and the comparison waits for that.
+    await this.store.trackUntracked();
+    const local = await this.store.fingerprints();
+    // A change on either side meanwhile makes the comparison meaningless: next sync then.
+    const pending = await this.store.pendingCount(await this.sync.getState(SYNC_STATE.pushCursor));
+    if (pending > 0 || (await this.pull()) > 0) {
+      return;
+    }
+    const mismatches = compareFingerprints(local, server.tables);
+    const tables = mismatches.map((mismatch) => mismatch.table).join(', ');
+    const suspect = await this.sync.getState(SYNC_STATE.reconcileSuspect);
+    if (mismatches.length && suspect !== tables) {
+      await this.sync.setState(SYNC_STATE.reconcileSuspect, tables);
+      await this.sync.setState(SYNC_STATE.reconcileDue, later(RECONCILE_CONFIRM_MS));
+      return;
+    }
+    await this.sync.setState(SYNC_STATE.reconcileSuspect, null);
+    await this.sync.setState(SYNC_STATE.reconcileDue, later(RECONCILE_EVERY_MS));
+    const previous = await this.sync.getState(SYNC_STATE.reconcileResult);
+    const result: ReconcileResult = { checkedAt: new Date().toISOString(), mismatches };
+    await this.sync.setState(SYNC_STATE.reconcileResult, JSON.stringify(result));
+    if (!mismatches.length) {
+      return;
+    }
+    this.logger.warn(`The data differs from the server's: ${tables}`);
+    const known = previous ? (JSON.parse(previous) as ReconcileResult).mismatches : [];
+    if (known.map((mismatch) => mismatch.table).join(', ') !== tables) {
+      await this.notifyOwner(tables);
+    }
+  }
+
+  private async notifyOwner(tables: string): Promise<void> {
+    const owner = await this.users.owner();
+    if (owner) {
+      const text = coreMessages(owner.locale);
+      await this.notifications.send(owner.id, {
+        title: text.reconcileTitle,
+        body: text.reconcileBody(tables),
+        source: 'sync',
+      });
+    }
   }
 
   /** One push at a time: a regular sync and a server action may want one together. */
@@ -261,18 +373,30 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
     return { peer: this.peer, ...(await this.sync.handshake()) };
   }
 
-  private async request<Req, Res>(action: 'push' | 'pull' | 'action', body: Req): Promise<Res> {
-    const url = new URL(`/api/sync/${action}`, this.config.get('SYNC_SERVER_URL', { infer: true }));
+  private async request<Req, Res>(
+    action: 'push' | 'pull' | 'action' | 'fingerprints',
+    body: Req,
+  ): Promise<Res> {
+    const response = await this.fetchServer(action, {
+      method: 'POST',
+      headers: { 'Content-Type': SYNC_CONTENT_TYPE },
+      body: new Uint8Array(await encodeSyncBody(body)),
+    });
+    return (await decodeSyncBody(Buffer.from(await response.arrayBuffer()))) as Res;
+  }
+
+  /** A request to `/api/sync/<path>` with SYNC_TOKEN; a failure becomes a SyncError. */
+  private async fetchServer(path: string, init: RequestInit): Promise<Response> {
+    const url = new URL(`/api/sync/${path}`, this.config.get('SYNC_SERVER_URL', { infer: true }));
     let response: Response;
     try {
       response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.config.get('SYNC_TOKEN', { infer: true })}`,
-          'Content-Type': SYNC_CONTENT_TYPE,
-        },
-        body: new Uint8Array(await encodeSyncBody(body)),
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        ...init,
+        headers: {
+          ...init.headers,
+          Authorization: `Bearer ${this.config.get('SYNC_TOKEN', { infer: true })}`,
+        },
       });
     } catch {
       throw new SyncError('The server is unreachable — working offline, will retry');
@@ -294,6 +418,11 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
         message.slice(0, 300),
       );
     }
-    return (await decodeSyncBody(Buffer.from(await response.arrayBuffer()))) as Res;
+    return response;
   }
+}
+
+/** A time `ms` from now, as sync state keeps it. */
+function later(ms: number): string {
+  return new Date(Date.now() + ms).toISOString();
 }

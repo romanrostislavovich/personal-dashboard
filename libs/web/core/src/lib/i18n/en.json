@@ -105,10 +105,63 @@
       "lastSynced": "Last synced: {{time}}",
       "never": "never",
       "pending": "Changes waiting to be sent: {{count}}",
-      "parked": "Changes waiting for related data: {{count}}",
-      "conflicts": "Versions that lost a conflict (kept in the database): {{count}}",
+      "parked": "Changes waiting for related data: {{count}}.",
+      "conflicts": "Versions that lost a conflict: {{count}}.",
       "syncNow": "Sync now",
-      "synced": "Synced"
+      "synced": "Synced",
+      "show": "Show",
+      "hide": "Hide",
+      "mismatch": "The data here differs from the server's. \"Resync everything\" usually mends it:",
+      "mismatchRows": "rows here {{local}}, on the server {{server}}",
+      "matches": "The data matches the server's (checked {{time}})",
+      "resync": "Resync everything",
+      "confirmResync": "Walk through all data of both sides again? Everything missing on either side is sent over; it may take a few minutes.",
+      "conflictsTitle": "Versions that lost a conflict",
+      "dismissAll": "Keep all current",
+      "confirmDismissAll": "Keep the current rows and forget all the versions that lost?",
+      "keptVersion": "Set aside",
+      "currentVersion": "Now",
+      "keepThis": "Bring this one back",
+      "keepCurrent": "Keep the current",
+      "noCurrent": "The row no longer exists.",
+      "kept": "Brought back — it will reach the other side with the next sync",
+      "parentGone": "What this row belonged to no longer exists",
+      "parkedTitle": "Changes that could not be applied",
+      "deletion": "deletion",
+      "showRow": "The row",
+      "discard": "Discard",
+      "nothingSetAside": "Nothing is set aside.",
+      "reasons": {
+        "older_than_the_local_version": "older than the version here",
+        "overwritten_by_a_newer_change": "overwritten by a newer change",
+        "lost_to_a_newer_row": "lost to a newer row",
+        "differed_from_the_other_side": "differs from the other side"
+      },
+      "backup": {
+        "title": "Backups",
+        "latest": "Latest dump: {{time}}, {{size}} MB ({{count}} kept)",
+        "latestCopy": "Latest copy of the server's backup here: {{time}}, {{size}} MB ({{count}} kept)",
+        "folder": "Folder: {{folder}}",
+        "restoreOk": "Test restore {{time}}: {{tables}} tables, {{rows}} rows — all in place",
+        "restoreError": "The test restore failed: {{error}}",
+        "restoreMismatch": "The test restore lost rows in {{table}}: {{restored}} of {{live}}",
+        "copyNow": "Copy the backup now",
+        "copied": "The backup copy is up to date",
+        "problems": {
+          "server": {
+            "missing": "No dumps yet — is the backup container running?",
+            "stale": "The newest dump is more than a day old — is the backup container running?",
+            "unchecked": "No test restore for more than a week.",
+            "restore-failed": "The latest test restore did not go well."
+          },
+          "client": {
+            "missing": "No copy of the server's backup on this computer yet.",
+            "stale": "The newest copy here is several days old.",
+            "unchecked": "The server has not test-restored a dump for more than a week.",
+            "restore-failed": "The server's latest test restore did not go well."
+          }
+        }
+      }
     },
     "security": {
       "title": "Security",

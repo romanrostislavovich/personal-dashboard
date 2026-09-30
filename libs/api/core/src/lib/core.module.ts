@@ -37,6 +37,8 @@ import { SyncClient } from './sync/sync-client.service';
 import { SyncController } from './sync/sync.controller';
 import { SyncService } from './sync/sync.service';
 import { SyncStore } from './sync/sync-store';
+import { SyncConflictsService } from './sync/sync-conflicts.service';
+import { BackupService } from './backup/backup.service';
 import { UsersService } from './users/users.service';
 import { InAppChannel } from './realtime/in-app.channel';
 import { RealtimeController } from './realtime/realtime.controller';
@@ -114,6 +116,8 @@ class HealthController {
     SyncService,
     SyncClient,
     ServerActions,
+    SyncConflictsService,
+    BackupService,
     // New channels (Discord, e-mail…) are added to this list.
     {
       provide: NOTIFICATION_CHANNELS,

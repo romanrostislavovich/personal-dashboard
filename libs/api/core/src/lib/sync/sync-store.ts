@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { SyncChange, SyncPushResponse } from '@pd/contracts';
+import { SyncChange, SyncPushResponse, TableFingerprint } from '@pd/contracts';
 import { sql, SQL } from 'drizzle-orm';
 import { DB, Database } from '../database/database.module';
 import { readSyncTables, SyncTable } from './sync-catalog';
@@ -290,6 +290,54 @@ export class SyncStore {
     return rows[0]?.count ?? 0;
   }
 
+  /**
+   * Logs rows that have no entry in the change log — they would never reach the other side.
+   * Normally there are none; before a comparison with the other side both look again. Dated at
+   * the epoch like at install time: any real change wins over them. Returns how many were found.
+   */
+  async trackUntracked(): Promise<number> {
+    let found = 0;
+    for (const table of this.tables) {
+      const pk = pkObject(table, sql`to_jsonb(t)`);
+      const { rowCount } = await this.db.execute(sql`
+        INSERT INTO sync.row_versions (table_name, pk, changed_at, tx, seq, origin)
+        SELECT ${table.name}, ${pk}, 'epoch', pg_current_xact_id(), nextval('sync.change_seq'), NULL
+        FROM ${sql.identifier(table.name)} t
+        WHERE NOT EXISTS (SELECT 1 FROM sync.row_versions v
+          WHERE v.table_name = ${table.name} AND v.pk = ${pk})
+        ON CONFLICT DO NOTHING
+      `);
+      if (rowCount) {
+        this.logger.warn(`${rowCount} row(s) of ${table.name} were not in the change log`);
+        found += rowCount;
+      }
+    }
+    return found;
+  }
+
+  /**
+   * The row count and a hash of the rows of every synced table, to compare with the other side.
+   * One snapshot for all tables; times in UTC, so both sides print rows the same way.
+   */
+  async fingerprints(): Promise<Record<string, TableFingerprint>> {
+    return this.db.transaction(
+      async (tx) => {
+        await tx.execute(sql`SET LOCAL TimeZone = 'UTC'`);
+        const result: Record<string, TableFingerprint> = {};
+        for (const table of this.tables) {
+          // Rows hashed one by one and the hashes sorted: no need to agree on a row order.
+          const { rows } = await tx.execute<{ rows: number; hash: string | null }>(sql`
+            SELECT count(*)::int AS rows, md5(string_agg(h, '' ORDER BY h)) AS hash
+            FROM (SELECT md5(to_jsonb(t)::text) AS h FROM ${sql.identifier(table.name)} t) r
+          `);
+          result[table.name] = { rows: rows[0].rows, hash: rows[0].hash ?? '' };
+        }
+        return result;
+      },
+      { isolationLevel: 'repeatable read', accessMode: 'read only' },
+    );
+  }
+
   async problemCounts(): Promise<{ parked: number; conflicts: number }> {
     const { rows } = await this.db.execute<{ parked: number; conflicts: number }>(sql`
       SELECT (SELECT count(*)::int FROM sync.parked) AS parked,
@@ -307,7 +355,7 @@ export class SyncStore {
       // A savepoint: a failed change is rolled back alone, the rest of the batch goes on.
       return await tx.transaction((savepoint) => this.applyChange(savepoint, change, context));
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = errorMessage(error);
       this.logger.warn(`Parked ${change.table} ${change.pk}: ${message}`);
       await tx.execute(sql`
         INSERT INTO sync.parked (table_name, pk, changed_at, row, origin, error)
@@ -339,8 +387,11 @@ export class SyncStore {
       }
       return 'skipped';
     }
-    if (local?.unsent) {
-      await this.keepOverwrittenLocal(tx, table, change);
+    if (local?.unsent || local?.sameVersion) {
+      const reason = local.unsent
+        ? 'overwritten by a newer change'
+        : 'differed from the other side';
+      await this.keepOverwrittenLocal(tx, table, change, reason);
     }
     if (!(await this.writeRow(tx, table, change))) {
       return 'skipped';
@@ -351,24 +402,38 @@ export class SyncStore {
 
   /**
    * How the incoming change relates to the local version of the row: the local one is newer
-   * (`localWins`), or it was changed here and not sent yet (`unsent`). Nothing — no local version.
+   * (`localWins`), or it was changed here and not sent yet (`unsent`), or it claims the same
+   * version (`sameVersion`: normally the same row sent again, as in "resync everything" — but
+   * if the contents differ, a bug got them apart and the local one is kept). Nothing — no local
+   * version.
    */
   private async localVersion(
     tx: Transaction,
     table: SyncTable,
     change: SyncChange,
     unsentAfter: ApplyContext['unsentAfter'],
-  ): Promise<{ localWins: boolean; unsent: boolean } | undefined> {
+  ): Promise<{ localWins: boolean; unsent: boolean; sameVersion: boolean } | undefined> {
     const [unsentTx, unsentSeq] = parseCursor(unsentAfter ?? null);
     const localRow = sql`(SELECT to_jsonb(t)::text FROM ${sql.identifier(table.name)} t
       WHERE ${pkMatch(table, change.pk)})`;
-    const { rows } = await tx.execute<{ local_wins: boolean; unsent: boolean }>(sql`
+    const { rows } = await tx.execute<{
+      local_wins: boolean;
+      unsent: boolean;
+      same_version: boolean;
+    }>(sql`
       SELECT ${winsOver(sql`changed_at`, localRow, change)} AS local_wins,
         ${unsentAfter !== undefined} AND origin IS NULL
-          AND (tx, seq) > (${unsentTx}::xid8, ${unsentSeq}::bigint) AS unsent
+          AND (tx, seq) > (${unsentTx}::xid8, ${unsentSeq}::bigint) AS unsent,
+        changed_at = ${change.changedAt}::timestamptz AS same_version
       FROM sync.row_versions WHERE table_name = ${table.name} AND pk = ${change.pk}::jsonb
     `);
-    return rows[0] && { localWins: rows[0].local_wins, unsent: rows[0].unsent };
+    return (
+      rows[0] && {
+        localWins: rows[0].local_wins,
+        unsent: rows[0].unsent,
+        sameVersion: rows[0].same_version,
+      }
+    );
   }
 
   /** A newer change overwrites a local one that never reached the other side — keep the local. */
@@ -376,10 +441,10 @@ export class SyncStore {
     tx: Transaction,
     table: SyncTable,
     change: SyncChange,
+    reason: string,
   ): Promise<void> {
     const local = await this.readRow(tx, table, change.pk);
     if (local !== null && local !== change.row) {
-      const reason = 'overwritten by a newer change';
       await this.keepLoser(tx, { table, pk: change.pk, row: local, reason });
     }
   }
@@ -507,7 +572,7 @@ export class SyncStore {
           `);
           progress = true;
         } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
+          const message = errorMessage(error);
           await tx.execute(sql`
             UPDATE sync.parked SET error = ${message}
             WHERE table_name = ${change.table} AND pk = ${change.pk}::jsonb
@@ -663,4 +728,15 @@ function pkMatch(table: SyncTable, pk: string): SQL {
   const name = sql.identifier(table.name);
   return sql`(${columns('t', table.primaryKey)}) = (SELECT ${columns('k', table.primaryKey)}
     FROM jsonb_populate_record(NULL::${name}, ${pk}::jsonb) k)`;
+}
+
+/**
+ * What went wrong, for the parked list: the database's own words ("violates foreign key
+ * constraint …"), not Drizzle's wrapper with the whole query in it.
+ */
+function errorMessage(error: unknown): string {
+  if (error instanceof Error && error.cause instanceof Error) {
+    return error.cause.message;
+  }
+  return error instanceof Error ? error.message : String(error);
 }

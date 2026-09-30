@@ -35,6 +35,10 @@ services:
       DATABASE_URL: postgres://dashboard:${DB_PASSWORD}@db:5432/dashboard
       PUBLIC_URL: https://${DOMAIN:?Set DOMAIN in .env}
       API_PORT: 3300
+      # The dumps of the backup job: watched, reported on and handed to the sync client.
+      BACKUP_DIR: /backups
+    volumes:
+      - ./backups:/backups:ro
     depends_on:
       db:
         condition: service_healthy
@@ -58,8 +62,9 @@ services:
       - app
     <<: *logging
 
-  # A dump of the database once a day, the last BACKUP_KEEP_DAYS days are kept in ./backups.
-  # Your computer (the sync client) holds a full copy as well — that is the off-site backup.
+  # A dump of the database once a day, the last BACKUP_KEEP_DAYS days are kept in ./backups;
+  # once a week the dump is test-restored into a scratch database. Your computer (the sync
+  # client) downloads the newest dump every day — that is the off-site copy.
   backup:
     image: postgres:17-alpine
     restart: unless-stopped

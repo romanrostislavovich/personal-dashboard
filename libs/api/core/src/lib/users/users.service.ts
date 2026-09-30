@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { DB, Database } from '../database/database.module';
 import { UserRow, users } from './users.schema';
 
@@ -25,6 +25,15 @@ export class UsersService {
   /** Used by background jobs that iterate over all users. */
   findAll(): Promise<UserRow[]> {
     return this.db.select().from(users);
+  }
+
+  /**
+   * The first user — the one who runs the instance. Hears about the instance itself (backups,
+   * sync) and sees sync conflicts of rows that belong to no user.
+   */
+  async owner(): Promise<UserRow | undefined> {
+    const [user] = await this.db.select().from(users).orderBy(asc(users.createdAt)).limit(1);
+    return user;
   }
 
   async count(): Promise<number> {

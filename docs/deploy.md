@@ -10,7 +10,7 @@ What runs on the server (`deploy/compose.yml`):
 | `caddy`  | HTTPS with automatic Let's Encrypt certificates, the only thing open to the internet |
 | `app`    | the dashboard image from GitHub Container Registry                                   |
 | `db`     | PostgreSQL, not reachable from outside                                               |
-| `backup` | a database dump once a day into `./backups`, the last 14 days are kept               |
+| `backup` | a database dump once a day into `./backups` (14 days kept), a test restore weekly    |
 
 The image is built by GitHub Actions (`.github/workflows/image.yml`) for amd64 and arm64:
 every push to `main` publishes the tag `main`, a tag `v0.2.0` publishes `0.2.0` and `latest`.
@@ -130,6 +130,14 @@ Migrations are applied automatically on start. To pin a version instead of follo
 ## Backups
 
 - `./backups/dashboard-YYYY-MM-DD.dump` on the server, daily, 14 days (`BACKUP_KEEP_DAYS`).
+- **A test restore every week:** the backup job restores the fresh dump into a scratch database
+  and compares the row count of every table with the live one (`backups/restore-check.json`).
+- **A copy on your computer:** the sync client downloads the newest dump every day into
+  `BACKUP_COPY_DIR` (`backups/` next to the local instance; with `docker compose` — `./backups`
+  of the repository) and keeps the last 14 (`BACKUP_COPY_KEEP`). It survives losing the server.
+  The dumps hold your data unencrypted except integration tokens — keep that folder private.
+- The dashboard watches all this: a missing or old dump, a failed test restore or a copy several
+  days old go to Telegram, and **Settings → Sync** shows the latest dump, copy and check.
 - Hetzner Backups: snapshots of the whole server.
 - Your computer: a full, constantly synced copy of the data.
 
@@ -148,3 +156,19 @@ docker compose start app
 
 Without the last `psql` line the computer would not notice the restore and would not send back
 what changed after the dump.
+
+## Rolling back
+
+Before every update `deploy/deploy.sh` keeps the running image and a dump of the database
+(`backups/pre-deploy-*.dump`, the last three). If an update goes wrong:
+
+```bash
+deploy/deploy.sh --rollback
+```
+
+It starts the previous image again. If the update applied migrations, it first restores the
+database from before the update — what was written on the server after it is lost, and your
+computer sends its own changes again. Then run the same version on the computer (the script
+prints which): until both match, sync waits.
+
+If the restore itself fails, the app stays stopped: restore a daily dump by hand as above.

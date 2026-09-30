@@ -24,6 +24,10 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgres://dashboard:dashboard@db:5432/dashboard
+      # A sync client keeps copies of the server's daily dumps here (docs/deploy.md, "Backups").
+      BACKUP_COPY_DIR: /backups
+    volumes:
+      - ./backups:/backups
     ports:
       - '3300:3300'
     depends_on:

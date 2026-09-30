@@ -6,6 +6,9 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { Pool } from 'pg';
+import { Database } from '../database/database.module';
+import { UsersService } from '../users/users.service';
+import { SyncConflictsService } from './sync-conflicts.service';
 import { SyncStore } from './sync-store';
 
 /**
@@ -376,7 +379,7 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', { timeout: 60_000 }, (
       client,
       sql`SELECT error FROM sync.parked WHERE pk = ${JSON.stringify({ id: orphan })}::jsonb`,
     );
-    expect(parked.error).toContain('INSERT INTO "birthdays"');
+    expect(parked.error).toContain('violates foreign key constraint');
   });
 
   it('parks a change for a table this side does not know', async () => {
@@ -387,6 +390,57 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', { timeout: 60_000 }, (
       sql`SELECT error FROM sync.parked WHERE table_name = 'from_the_future'`,
     );
     expect(parked.error).toContain('Unknown table');
+  });
+
+  it('fingerprints match after a sync and tell a differing row', async () => {
+    const id = randomUUID();
+    await server.db.execute(sql`INSERT INTO projects (id, user_id, name)
+      VALUES (${id}, ${userId}, 'Site')`);
+    await pull();
+    // The two sides print times in different zones: the fingerprint must not care.
+    await client.db.execute(
+      sql`ALTER DATABASE ${sql.identifier(client.name)} SET TimeZone = 'Asia/Tokyo'`,
+    );
+    const same = [await server.store.fingerprints(), await client.store.fingerprints()];
+    expect(same[1]['projects']).toEqual(same[0]['projects']);
+    expect(same[0]['projects'].rows).toBeGreaterThan(0);
+
+    await client.db.execute(sql`UPDATE projects SET name = 'Changed' WHERE id = ${id}`);
+    const [serverSide, clientSide] = [
+      await server.store.fingerprints(),
+      await client.store.fingerprints(),
+    ];
+    expect(clientSide['projects'].rows).toBe(serverSide['projects'].rows);
+    expect(clientSide['projects'].hash).not.toBe(serverSide['projects'].hash);
+  });
+
+  it('a version set aside can be brought back, pushing out a row of the same day', async () => {
+    const conflicts = new SyncConflictsService(
+      client.db as unknown as Database,
+      {
+        owner: async () => ({ id: userId }),
+      } as unknown as UsersService,
+    );
+    const kept = randomUUID();
+    const current = randomUUID();
+    await client.db.execute(sql`INSERT INTO diary_entries (id, user_id, day, content)
+      VALUES (${current}, ${userId}, '2026-09-01', 'written here')`);
+    const lost = { id: kept, user_id: userId, day: '2026-09-01', content: 'written there' };
+    await client.db.execute(sql`INSERT INTO sync.conflicts (table_name, pk, row, reason)
+      SELECT 'diary_entries', ${JSON.stringify({ id: kept })}::jsonb,
+        to_jsonb(e) || ${JSON.stringify(lost)}::jsonb, 'lost to a newer row'
+      FROM diary_entries e WHERE id = ${current}`);
+
+    const [conflict] = (await conflicts.conflicts(userId)).filter((c) => c.kept['id'] === kept);
+    expect(conflict).toMatchObject({ table: 'diary_entries', current: null });
+    // Someone else's conflicts are not shown.
+    expect(await conflicts.conflicts(randomUUID())).toEqual([]);
+
+    await conflicts.keep(userId, conflict.id);
+    expect(
+      await rows(client, sql`SELECT id, content FROM diary_entries WHERE day = '2026-09-01'`),
+    ).toEqual([{ id: kept, content: 'written there' }]);
+    expect((await conflicts.conflicts(userId)).some((c) => c.id === conflict.id)).toBe(false);
   });
 });
 

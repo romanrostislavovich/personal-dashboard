@@ -13,6 +13,9 @@ import {
   RecoveryCodes,
   RegisterRequest,
   SessionInfo,
+  SyncConflict,
+  SyncParkedChange,
+  SyncParkedKey,
   SyncStatus,
   TelegramLinkResponse,
   TrashItem,
@@ -50,6 +53,12 @@ export const API_PATHS = {
   testNotification: '/api/notifications/test',
   syncStatus: '/api/sync/status',
   syncRun: '/api/sync/run',
+  syncResync: '/api/sync/resync',
+  syncBackupCopy: '/api/sync/backup/copy',
+  syncConflicts: '/api/sync/conflicts',
+  syncConflict: (id: string) => `/api/sync/conflicts/${encodeURIComponent(id)}`,
+  syncParked: '/api/sync/parked',
+  syncParkedDiscard: '/api/sync/parked/discard',
   trash: '/api/trash',
   trashItem: (id: string) => `/api/trash/${encodeURIComponent(id)}`,
 } as const;
@@ -60,6 +69,8 @@ export const CORE_READS = {
   achievements: () => apiRequest(API_PATHS.achievements),
   notificationSettings: () => apiRequest(API_PATHS.notificationSettings),
   syncStatus: () => apiRequest(API_PATHS.syncStatus),
+  syncConflicts: () => apiRequest(API_PATHS.syncConflicts),
+  syncParked: () => apiRequest(API_PATHS.syncParked),
 };
 
 /** Signing in and the profile. Signing in does not start the session — see `DashboardClient`. */
@@ -133,6 +144,22 @@ export function syncApi(api: ApiClient) {
   return {
     status: () => api.read<SyncStatus>(CORE_READS.syncStatus()),
     runNow: () => api.post<SyncStatus>(API_PATHS.syncRun, {}),
+    /** Walks both change logs from the start: mends data that differs from the server's. */
+    resyncEverything: () => api.post<SyncStatus>(API_PATHS.syncResync, {}),
+    /** Copies the server's newest backup to this computer now. */
+    copyBackup: () => api.post<SyncStatus>(API_PATHS.syncBackupCopy, {}),
+
+    /** Versions of rows that lost a conflict, next to the current rows. */
+    conflicts: () => api.read<SyncConflict[]>(CORE_READS.syncConflicts()),
+    /** Keep the version that lost instead of the current row. */
+    keepConflict: (id: string) => api.post<void>(`${API_PATHS.syncConflict(id)}/keep`, {}),
+    /** Keep the current row. */
+    dismissConflict: (id: string) => api.delete(API_PATHS.syncConflict(id)),
+    dismissAllConflicts: () => api.delete(API_PATHS.syncConflicts),
+
+    /** Incoming changes that could not be applied yet. */
+    parked: () => api.read<SyncParkedChange[]>(CORE_READS.syncParked()),
+    discardParked: (key: SyncParkedKey) => api.post<void>(API_PATHS.syncParkedDiscard, key),
   };
 }
 

@@ -45,6 +45,11 @@
 - **Security:** 15-minute access tokens and an httpOnly refresh cookie, devices signed in (sign one
   or all others out), two-factor sign-in with recovery codes, throttled sign-in; a 30-day trash for
   everything deleted; the AI action log and per-module switches of what the AI sees
+- **Data safety:** the computer keeps copies of the server's daily dumps; the server test-restores
+  a dump weekly and checks the row counts; the client compares its data with the server's
+  (row counts and hashes) every 6 hours and reports a difference, "Resync everything" mends it;
+  a conflicts screen (both versions side by side, bring either back); `deploy.sh --rollback`
+  (the previous image and the database from before the update)
 - **Voice messages in Telegram:** recognized (OpenAI speech-to-text) and handled like typed ones —
   a question or a request to the assistant, the recognized text shown first
 
@@ -59,6 +64,8 @@
 - **Fitness** — workouts, activity and body metrics
 - **SoundCloud** — my own mixes and tracks: plays, likes, reposts and comments
 - **Science** — a section for science
+- **Psychology** — a section for psychology; how exactly to tie it in is still open (for example
+  mood and diary patterns, self-reflection prompts, tests and notes)
 
 - **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
   (bank notifications / SMS → transactions), then everything else the phone knows:
@@ -77,17 +84,6 @@
   reports through notifications with a severity and a suggested fix and never fixes things itself
   without approval. It must not share tools or context with the main assistant, so a prompt
   injection in user data cannot switch it off.
-
-#### Data safety
-
-- **Sync reconciliation** — the server and a client compare row counts and hashes per table on a
-  schedule and report a mismatch to Telegram (a sync bug once lost rows silently)
-- **Conflicts screen** — the rows `sync.conflicts` and `sync.parked` hold, both versions side by
-  side, "keep this one"
-- **Off-server backups** — the daily dump copied elsewhere (a Storage Box, S3), and a weekly
-  restore test into a scratch database that checks the row counts
-- **One-step deploy rollback** — the previous image kept, a database snapshot before migrations,
-  `deploy.sh --rollback`
 
 #### Tests and CI
 

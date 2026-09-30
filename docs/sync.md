@@ -89,6 +89,29 @@ To look at them: `SELECT table_name, row, reason, created_at FROM sync.conflicts
 
 The clocks of both machines should be right (NTP): "newer" is decided by the time of the change.
 
+To look at them and choose: **Settings → Sync → Show**. Only the fields that differ are shown,
+the version set aside next to the row as it is now: "Bring this one back" makes it the current row
+(an ordinary change — it syncs to the other side; a row of the same day it pushes out lands in the
+trash), "Keep the current" forgets the other version. Changes waiting for related data are listed
+there too, with the database's error; "Discard" gives one up.
+
+### Reconciliation
+
+A sync bug once lost rows without a word, so the client checks: every 6 hours, after a sync that
+moved nothing, it compares the row count and a hash of all rows of every table with the server's
+(`POST /api/sync/fingerprints`). A difference is reported only when a second check 10 minutes
+later sees it again — a change caught halfway does not count. Then Telegram gets a message and
+**Settings → Sync** lists the tables.
+
+Before comparing, both sides look for rows missing from the change log and log them — such rows
+would never reach the other side; now they arrive with the next sync and the difference heals by
+itself (the log says "N row(s) of … were not in the change log").
+
+**Resync everything** (Settings → Sync on the computer) walks both change logs from the start:
+every row of the server comes to the computer and every row of the computer goes to the server.
+Where both sides hold the same version of a row with different contents, one wins by the usual
+rule and the other is kept in the conflicts ("differs from the other side") — nothing is lost.
+
 ### When something goes wrong
 
 - **"The instances run different versions"** — update both to the same version (migrations must match).
