@@ -59,7 +59,11 @@
 
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
-- **WakaTime** — coding time from WakaTime: per day, project, language and editor
+- **Development** — a new section that groups everything about coding:
+  - **Open Source** — the existing module moves here as a subsection
+  - **GitHub account** — profile statistics: contributions and streaks, commits, PRs, reviews and
+    issues over time, languages, top repositories, followers
+  - **WakaTime** — coding time from WakaTime: per day, project, language and editor
 - **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
 - **Books** — reading list, progress, ratings and notes
 - **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and
