@@ -23,6 +23,8 @@ import {
   GamesSettings,
   OpenDotaKeyInput,
   openDotaKeyInputSchema,
+  SteamKeyInput,
+  steamKeyInputSchema,
   WowCredentialsInput,
   wowCredentialsInputSchema,
 } from '@pd/contracts';
@@ -31,6 +33,7 @@ import { OpenDotaKeyService } from './dota/opendota-key.service';
 import { GameAccountsService } from './game-accounts.service';
 import { WowService } from './wow/wow.service';
 import { GAMES_ACTIONS } from './games.server-actions';
+import { SteamKeyService } from './steam/steam-key.service';
 
 @Controller('games')
 export class GamesController {
@@ -40,6 +43,7 @@ export class GamesController {
     private readonly wow: WowService,
     private readonly dota: DotaOverviewService,
     private readonly openDotaKeys: OpenDotaKeyService,
+    private readonly steamKeys: SteamKeyService,
   ) {}
 
   @Get('accounts')
@@ -95,6 +99,7 @@ export class GamesController {
   @Get('settings')
   async settings(@CurrentUser() user: AuthUser): Promise<GamesSettings> {
     return {
+      steamKey: await this.steamKeys.has(user.id),
       wowCredentials: await this.wow.hasCredentials(user.id),
       openDotaKeyAccounts: await this.openDotaKeys.accountsWithKey(
         user.id,
@@ -110,6 +115,22 @@ export class GamesController {
     @Body(new ZodValidationPipe(wowCredentialsInputSchema)) input: WowCredentialsInput,
   ) {
     return this.wow.saveCredentials(user.id, input);
+  }
+
+  /** Checks the Steam Web API key, saves it and refreshes the accounts with it. */
+  @Put('steam/key')
+  @HttpCode(204)
+  saveSteamKey(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(steamKeyInputSchema)) input: SteamKeyInput,
+  ) {
+    return this.actions.run(user.id, GAMES_ACTIONS.saveSteamKey, input);
+  }
+
+  @Delete('steam/key')
+  @HttpCode(204)
+  removeSteamKey(@CurrentUser() user: AuthUser) {
+    return this.steamKeys.remove(user.id);
   }
 
   /** Checks the OpenDota API key of a Dota account, saves it and refreshes the account with it. */

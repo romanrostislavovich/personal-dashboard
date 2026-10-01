@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const GAMES = ['dota2', 'wow'] as const;
+export const GAMES = ['dota2', 'wow', 'steam'] as const;
 export type Game = (typeof GAMES)[number];
 
 export const WOW_REGIONS = ['eu', 'us', 'kr', 'tw'] as const;
@@ -11,6 +11,11 @@ export const gameAccountInputSchema = z.discriminatedUnion('game', [
     game: z.literal('dota2'),
     /** Steam ID32, Steam ID64 or an OpenDota/Dotabuff/Steam profile link with a numeric id. */
     steamId: z.string().trim().min(1).max(200),
+  }),
+  z.object({
+    game: z.literal('steam'),
+    /** Steam ID64, a profile link or the custom name of `steamcommunity.com/id/<name>`. */
+    steamId: z.string().trim().min(2).max(200),
   }),
   z.object({
     game: z.literal('wow'),
@@ -38,7 +43,15 @@ export const openDotaKeyInputSchema = z.object({
 });
 export type OpenDotaKeyInput = z.infer<typeof openDotaKeyInputSchema>;
 
+export const steamKeyInputSchema = z.object({
+  /** The Web API key from steamcommunity.com/dev/apikey. */
+  apiKey: z.string().trim().min(10).max(200),
+});
+export type SteamKeyInput = z.infer<typeof steamKeyInputSchema>;
+
 export interface GamesSettings {
+  /** Whether the Steam Web API key is set: Steam accounts and Dota matches are read with it. */
+  steamKey: boolean;
   /** Whether the Battle.net app keys are set (needed for WoW). */
   wowCredentials: boolean;
   /** Dota accounts (ids) with an OpenDota API key of their own: not bound by the free limit. */
@@ -219,6 +232,50 @@ export interface DotaMatchesPage {
   pageSize: number;
 }
 
+// --- Steam ---
+
+/** A game of the Steam library. */
+export interface SteamGame {
+  appId: number;
+  name: string;
+  /** The hash of the small icon (see `steamIconUrl`); `null` — the game has none. */
+  iconHash: string | null;
+  /** Playtime over all time and over the last two weeks, minutes. */
+  minutes: number;
+  minutes2Weeks: number;
+  lastPlayedAt: string | null;
+  /** `null` — the game has no achievements (or they were not read yet). */
+  achievements: { unlocked: number; total: number } | null;
+}
+
+export interface SteamSummary {
+  game: 'steam';
+  personaName: string;
+  avatarUrl: string | null;
+  profileUrl: string;
+  level: number | null;
+  /** When the account was created (ISO); hidden on a private profile. */
+  createdAt: string | null;
+  /** "Game details" of the profile are not public: Steam does not tell the library. */
+  gamesHidden: boolean;
+  totals: {
+    /** Games in the library and the ones ever started. */
+    games: number;
+    played: number;
+    minutes: number;
+    minutes2Weeks: number;
+    /** Achievements unlocked over all games. */
+    achievements: number;
+  };
+  /** Played games, the most played first (at most a hundred). */
+  games: SteamGame[];
+}
+
+/** The small square icon of a Steam game. */
+export function steamIconUrl(appId: number, iconHash: string): string {
+  return `https://media.steampowered.com/steamcommunity/public/images/apps/${appId}/${iconHash}.jpg`;
+}
+
 // --- World of Warcraft ---
 
 export interface WowAchievement {
@@ -254,5 +311,5 @@ export interface GameAccount {
   lastSyncedAt: string | null;
   lastError: string | null;
   /** `null` until the first sync has run. */
-  summary: DotaSummary | WowSummary | null;
+  summary: DotaSummary | WowSummary | SteamSummary | null;
 }

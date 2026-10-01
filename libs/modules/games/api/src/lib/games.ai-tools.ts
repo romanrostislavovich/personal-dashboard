@@ -5,7 +5,10 @@ import { DotaOverviewService } from './dota/dota-overview.service';
 import { GameAccountsService } from './game-accounts.service';
 import { GAMES_ACTIONS } from './games.server-actions';
 
-/** AI access to games: Dota 2 and WoW; adding, refreshing and removing accounts (assistant). */
+/** Steam games an account shows in the list of accounts. */
+const STEAM_TOP = 15;
+
+/** AI access to games: Steam, Dota 2 and WoW; adding, refreshing and removing accounts (assistant). */
 @Injectable()
 export class GamesAiTools implements OnModuleInit {
   constructor(
@@ -22,9 +25,19 @@ export class GamesAiTools implements OnModuleInit {
       description:
         'Game accounts (with id). Dota 2: medal (rankTier = medal×10+stars, 8 = Immortal), ' +
         'wins/losses over 30 days, recent matches with heroes and KDA, favourite heroes. ' +
-        'WoW: character, ilvl, achievement points and recent achievements.',
+        'WoW: character, ilvl, achievement points and recent achievements. Steam: level, hours ' +
+        'in games in total and over two weeks, achievements unlocked, the most played games ' +
+        '(the whole library — games_steam_library).',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.accounts.list(userId),
+      handler: async (userId) =>
+        (await this.accounts.list(userId)).map((account) =>
+          account.summary?.game === 'steam'
+            ? {
+                ...account,
+                summary: { ...account.summary, games: account.summary.games.slice(0, STEAM_TOP) },
+              }
+            : account,
+        ),
     });
 
     this.ai.registerTool({
@@ -51,19 +64,38 @@ export class GamesAiTools implements OnModuleInit {
     });
 
     this.ai.registerTool({
+      name: 'games_steam_library',
+      module: 'games',
+      description:
+        'Played games of the Steam accounts, the most played first: name, minutes in total and ' +
+        'over the last two weeks, when it was last played, achievements unlocked out of all. ' +
+        'Use it for "what do I play", "how many hours in X", "which games did I never finish".',
+      parameters: NO_PARAMETERS,
+      handler: async (userId) =>
+        (await this.accounts.list(userId)).flatMap((account) =>
+          account.summary?.game === 'steam'
+            ? [{ account: account.summary.personaName, games: account.summary.games }]
+            : [],
+        ),
+    });
+
+    this.ai.registerTool({
       name: 'games_add_account',
       module: 'games',
       writes: true,
       description:
-        'Adds a game account and loads its data. Dota 2 needs steamId; WoW needs region, realm ' +
-        'and character name (WoW works only after Battle.net keys are set in the dashboard).',
+        'Adds a game account and loads its data. Dota 2 and Steam need steamId; WoW needs ' +
+        'region, realm and character name. Steam works only after the Steam Web API key is ' +
+        'set in the dashboard, WoW — after the Battle.net keys.',
       parameters: {
         type: 'object',
         properties: {
           game: { type: 'string', enum: [...GAMES] },
           steamId: {
             type: 'string',
-            description: 'Dota 2: Steam ID32/ID64 or an OpenDota/Dotabuff/Steam profile link',
+            description:
+              'Dota 2: Steam ID32/ID64 or an OpenDota/Dotabuff/Steam profile link. ' +
+              'Steam: Steam ID64, a profile link or the custom profile name',
           },
           region: { type: 'string', enum: [...WOW_REGIONS], description: 'WoW' },
           realm: {

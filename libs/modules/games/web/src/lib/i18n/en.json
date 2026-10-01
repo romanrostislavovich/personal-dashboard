@@ -1,7 +1,7 @@
 {
   "title": "Games",
   "add": "Add account",
-  "empty": "No accounts yet. Add Dota 2 (only a Steam ID is needed) or a WoW character.",
+  "empty": "No accounts yet. Add a Steam profile, a Dota 2 account or a WoW character.",
   "synced": "Updated",
   "syncNow": "Update",
   "syncAll": "Refresh all",
@@ -111,7 +111,8 @@
   "widget": {
     "dota30": "30 days: {{wins}}–{{losses}}",
     "empty": "Add accounts in the Games section",
-    "open": "Details"
+    "open": "Details",
+    "steam": "2 weeks: {{hours}} h · total {{total}} h"
   },
   "allAccounts": "All accounts",
   "accountsTitle": "Accounts",
@@ -123,5 +124,25 @@
     "remove": "Remove the key",
     "invalid": "OpenDota rejected the key",
     "noAccounts": "Add a Dota 2 account on the Games page first."
+  },
+  "steam": {
+    "empty": "No Steam accounts yet. Save the Steam key (Settings → Integrations) and add a profile.",
+    "level": "Level {{level}}",
+    "hours": "Hours",
+    "hours2Weeks": "In 2 weeks",
+    "played": "Games played",
+    "ofLibrary": "of {{count}} in the library",
+    "achievements": "Achievements",
+    "game": "Game",
+    "lastPlayed": "Last played",
+    "gamesHidden": "Steam does not tell the library of this profile: open Steam → Profile → Edit Profile → Privacy Settings and make “Game details” public.",
+    "profile": "Steam profile",
+    "profileHint": "A link to the profile, its Steam ID64 or the custom name from steamcommunity.com/id/…",
+    "keyTitle": "Steam Web API key",
+    "keyHint": "The key from steamcommunity.com/dev/apikey (any domain name will do). One key reads all your Steam accounts: the library with hours and achievements and the Dota 2 match history.",
+    "keyLabel": "Web API key",
+    "keySaved": "Key saved (encrypted on the server)",
+    "keyRemove": "Remove the key",
+    "keyInvalid": "Steam rejected the key"
   }
 }

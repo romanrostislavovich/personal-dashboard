@@ -10,7 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Game, GameAccountInput, WOW_REGIONS, WowRegion } from '@pd/contracts';
 
-/** Adding a game account: a Steam ID for Dota or region/realm/name for WoW. */
+/** Adding a game account: a Steam profile, a Steam ID for Dota or region/realm/name for WoW. */
 @Component({
   selector: 'pd-add-game-account-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,11 +29,18 @@ import { Game, GameAccountInput, WOW_REGIONS, WowRegion } from '@pd/contracts';
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
         <mat-button-toggle-group formControlName="game" class="game">
+          <mat-button-toggle value="steam">Steam</mat-button-toggle>
           <mat-button-toggle value="dota2">Dota 2</mat-button-toggle>
           <mat-button-toggle value="wow">World of Warcraft</mat-button-toggle>
         </mat-button-toggle-group>
 
-        @if (game() === 'dota2') {
+        @if (game() === 'steam') {
+          <mat-form-field>
+            <mat-label>{{ 'games.steam.profile' | transloco }}</mat-label>
+            <input matInput formControlName="steamProfile" cdkFocusInitial />
+            <mat-hint>{{ 'games.steam.profileHint' | transloco }}</mat-hint>
+          </mat-form-field>
+        } @else if (game() === 'dota2') {
           <mat-form-field>
             <mat-label>{{ 'games.dota.steamId' | transloco }}</mat-label>
             <input matInput formControlName="steamId" cdkFocusInitial />
@@ -95,6 +102,7 @@ export class AddGameAccountDialog {
   protected readonly regions = WOW_REGIONS;
   protected readonly form = inject(NonNullableFormBuilder).group({
     game: ['dota2' as Game],
+    steamProfile: ['', Validators.required],
     steamId: ['', Validators.required],
     region: ['eu' as WowRegion],
     realm: ['', Validators.required],
@@ -107,15 +115,23 @@ export class AddGameAccountDialog {
   /** Validate only the fields of the selected game. */
   protected isValid(): boolean {
     const c = this.form.controls;
-    return this.game() === 'dota2' ? c.steamId.valid : c.realm.valid && c.name.valid;
+    switch (this.game()) {
+      case 'steam':
+        return c.steamProfile.valid;
+      case 'dota2':
+        return c.steamId.valid;
+      case 'wow':
+        return c.realm.valid && c.name.valid;
+    }
   }
 
   save(): void {
     const v = this.form.getRawValue();
-    this.dialogRef.close(
-      v.game === 'dota2'
-        ? { game: 'dota2', steamId: v.steamId }
-        : { game: 'wow', region: v.region, realm: v.realm, name: v.name },
-    );
+    const input: Record<Game, GameAccountInput> = {
+      steam: { game: 'steam', steamId: v.steamProfile },
+      dota2: { game: 'dota2', steamId: v.steamId },
+      wow: { game: 'wow', region: v.region, realm: v.realm, name: v.name },
+    };
+    this.dialogRef.close(input[v.game]);
   }
 }

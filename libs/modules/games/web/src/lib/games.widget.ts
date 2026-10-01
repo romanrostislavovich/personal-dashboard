@@ -3,11 +3,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { DotaSummary, GameAccount, WowSummary } from '@pd/contracts';
+import { DotaSummary, GameAccount, SteamSummary, WowSummary } from '@pd/contracts';
 import { DotaRankComponent } from './dota/dota-rank.component';
 import { GamesApi } from './games.api';
 
-/** Home widget: medal and win rate in Dota, ilvl and the latest achievement in WoW. */
+/** Home widget: Steam hours, medal and win rate in Dota, ilvl and the latest achievement in WoW. */
 @Component({
   selector: 'pd-games-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,6 +30,26 @@ import { GamesApi } from './games.api';
                       | transloco: { wins: d.last30Days.wins, losses: d.last30Days.losses }
                   }}
                 </span>
+              </div>
+            } @else if (steam(account); as s) {
+              @if (s.avatarUrl) {
+                <img class="avatar" [src]="s.avatarUrl" alt="" />
+              }
+              <div class="info">
+                <b>{{ s.personaName }}</b>
+                <span class="muted">
+                  {{
+                    'games.widget.steam'
+                      | transloco
+                        : {
+                            hours: hours(s.totals.minutes2Weeks),
+                            total: hours(s.totals.minutes),
+                          }
+                  }}
+                </span>
+                @if (s.games[0]; as top) {
+                  <span class="muted">🎮 {{ top.name }}</span>
+                }
               </div>
             } @else if (wow(account); as w) {
               @if (w.avatarUrl) {
@@ -81,6 +101,14 @@ export class GamesWidget {
 
   protected dota(account: GameAccount): DotaSummary | null {
     return account.summary?.game === 'dota2' ? account.summary : null;
+  }
+
+  protected steam(account: GameAccount): SteamSummary | null {
+    return account.summary?.game === 'steam' ? account.summary : null;
+  }
+
+  protected hours(minutes: number): number {
+    return Math.round(minutes / 60);
   }
 
   protected wow(account: GameAccount): WowSummary | null {

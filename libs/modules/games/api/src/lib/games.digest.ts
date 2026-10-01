@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MorningDigestService } from '@pd/api-core';
-import { DotaSummary, GameAccount, WowSummary } from '@pd/contracts';
+import { GameAccount } from '@pd/contracts';
 import { GameAccountsService } from './game-accounts.service';
 
 /** WoW achievements the digest looks at: enough to spot the new ones between two mornings. */
@@ -21,7 +21,9 @@ export class GamesDigest implements OnModuleInit {
       description:
         'Game accounts. Dota 2: medal (rankTier = medal×10+stars, 8 = Immortal), leaderboard ' +
         'rank, personal records (kind, value, hero). WoW: level, item level, achievement points, ' +
-        'latest achievements. Tell about new records, a new medal, new achievements, a higher ilvl.',
+        'latest achievements. Steam: level, hours in games rounded down to a hundred, achievements ' +
+        'unlocked. Tell about new records, a new medal, new achievements, a higher ilvl, a new ' +
+        'hundred of hours.',
       // Match counts and win rates change with every game, so only milestones are compared.
       collect: async (userId) => {
         const accounts = (await this.accounts.list(userId)).filter((account) => account.summary);
@@ -31,8 +33,20 @@ export class GamesDigest implements OnModuleInit {
   }
 }
 
+/** Steam hours are told in steps of a hundred: they grow every day by themselves. */
+const STEAM_HOURS_STEP = 100;
+
 function progress(account: GameAccount) {
-  const summary = account.summary as DotaSummary | WowSummary;
+  const summary = account.summary as NonNullable<GameAccount['summary']>;
+  if (summary.game === 'steam') {
+    return {
+      game: 'steam',
+      account: summary.personaName,
+      level: summary.level,
+      hoursMilestone: Math.floor(summary.totals.minutes / 60 / STEAM_HOURS_STEP) * STEAM_HOURS_STEP,
+      achievements: summary.totals.achievements,
+    };
+  }
   if (summary.game === 'dota2') {
     return {
       game: 'dota2',

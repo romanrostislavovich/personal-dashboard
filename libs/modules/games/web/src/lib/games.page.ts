@@ -13,6 +13,7 @@ import { errorStatus, INTEGRATIONS_LINK } from '@pd/web-core';
 import { AddGameAccountDialog } from './add-account.dialog';
 import { DotaDashboardComponent } from './dota/dota-dashboard.component';
 import { GamesApi } from './games.api';
+import { SteamDashboardComponent } from './steam/steam-dashboard.component';
 import { WowDashboardComponent } from './wow/wow-dashboard.component';
 
 @Component({
@@ -26,6 +27,7 @@ import { WowDashboardComponent } from './wow/wow-dashboard.component';
     RouterLink,
     TranslocoPipe,
     DotaDashboardComponent,
+    SteamDashboardComponent,
     WowDashboardComponent,
   ],
   templateUrl: './games.page.html',
@@ -41,9 +43,12 @@ export class GamesPage {
   protected readonly settings = this.api.settings();
   protected readonly busy = signal(false);
 
-  /** Battle.net keys are in Settings → Integrations (battle-net.integration.ts). */
+  /** The Steam and Battle.net keys are in Settings → Integrations (`*.integration.ts`). */
   protected readonly integrations = INTEGRATIONS_LINK;
 
+  protected readonly steam = computed(() =>
+    this.accounts.value().filter((a) => a.game === 'steam'),
+  );
   protected readonly dota = computed(() => this.accounts.value().filter((a) => a.game === 'dota2'));
   protected readonly wow = computed(() => this.accounts.value().filter((a) => a.game === 'wow'));
   protected readonly tabIndex = signal(0);

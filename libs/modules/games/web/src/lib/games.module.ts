@@ -20,6 +20,10 @@ export const gamesModule: WebDashboardModule = {
   ],
   integrations: [
     {
+      id: 'games.steam',
+      loadComponent: () => import('./steam.integration').then((m) => m.SteamIntegration),
+    },
+    {
       id: 'games.battle-net',
       loadComponent: () => import('./battle-net.integration').then((m) => m.BattleNetIntegration),
     },

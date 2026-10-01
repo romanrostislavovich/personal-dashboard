@@ -50,6 +50,14 @@ export class GamesApi {
     return fromCore(() => this.games.remove(id));
   }
 
+  saveSteamKey(apiKey: string) {
+    return fromCore(() => this.games.saveSteamKey(apiKey));
+  }
+
+  removeSteamKey() {
+    return fromCore(() => this.games.removeSteamKey());
+  }
+
   saveWowCredentials(input: WowCredentialsInput) {
     return fromCore(() => this.games.saveWowCredentials(input));
   }

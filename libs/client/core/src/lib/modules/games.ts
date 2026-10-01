@@ -34,6 +34,9 @@ export function gamesApi(api: ApiClient) {
     /** Every game account now, Dota with its whole history. */
     syncAll: () => api.post<void>(`${BASE}/sync`, {}),
     remove: (id: string) => api.delete(`${BASE}/accounts/${id}`),
+    /** The Steam Web API key: it is checked and every account is refreshed with it. */
+    saveSteamKey: (apiKey: string) => api.put<void>(`${BASE}/steam/key`, { apiKey }),
+    removeSteamKey: () => api.delete(`${BASE}/steam/key`),
     saveWowCredentials: (input: WowCredentialsInput) =>
       api.put<void>(`${BASE}/wow/credentials`, input),
     /** The key of one Dota account: it is checked and the account is refreshed with it. */

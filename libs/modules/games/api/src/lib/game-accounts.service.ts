@@ -16,6 +16,8 @@ import { parseDotaAccountId } from './dota/steam-id';
 import { gameAccounts, GameAccountRow } from './games.schema';
 import { gamesMessages } from './games.messages';
 import { WowCharacterNotFoundError } from './wow/battlenet.client';
+import { SteamProfileNotFoundError } from './steam/steam.client';
+import { SteamService } from './steam/steam.service';
 import { toWowExternalId, WowService } from './wow/wow.service';
 
 @Injectable()
@@ -27,6 +29,7 @@ export class GameAccountsService {
     private readonly dota: DotaService,
     private readonly openDotaKeys: OpenDotaKeyService,
     private readonly wow: WowService,
+    private readonly steam: SteamService,
     private readonly users: UsersService,
     private readonly notifications: NotificationsService,
   ) {}
@@ -44,14 +47,14 @@ export class GameAccountsService {
         displayName: row.displayName,
         lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
         lastError: row.lastError,
-        summary: row.game === 'dota2' ? await this.dota.summary(row) : await this.wow.summary(row),
+        summary: await this.summary(row),
       })),
     );
   }
 
   /** Adds an account and syncs it right away; a non-existent account is not saved. */
   async add(userId: string, input: GameAccountInput): Promise<void> {
-    const { externalId, displayName } = this.identify(input);
+    const { externalId, displayName } = await this.identify(userId, input);
     const [row] = await this.db
       .insert(gameAccounts)
       .values({ userId, game: input.game, externalId, displayName })
@@ -64,7 +67,11 @@ export class GameAccountsService {
       await this.syncAccount(row, { throwErrors: true });
     } catch (error) {
       await this.remove(userId, row.id);
-      if (error instanceof DotaProfileNotFoundError || error instanceof WowCharacterNotFoundError) {
+      if (
+        error instanceof DotaProfileNotFoundError ||
+        error instanceof WowCharacterNotFoundError ||
+        error instanceof SteamProfileNotFoundError
+      ) {
         throw new BadRequestException('Account not found');
       }
       throw error;
@@ -120,8 +127,7 @@ export class GameAccountsService {
     { throwErrors = false, fullHistory = false } = {},
   ): Promise<void> {
     try {
-      const news =
-        row.game === 'dota2' ? await this.syncDota(row, fullHistory) : await this.syncWow(row);
+      const news = await this.syncGame(row, fullHistory);
       if (news.length > 0) {
         await this.notify(row.userId, news);
       }
@@ -135,6 +141,36 @@ export class GameAccountsService {
         .set({ lastError: error instanceof Error ? error.message : String(error) })
         .where(eq(gameAccounts.id, row.id));
     }
+  }
+
+  private summary(row: GameAccountRow): Promise<GameAccount['summary']> {
+    switch (row.game) {
+      case 'dota2':
+        return this.dota.summary(row);
+      case 'wow':
+        return this.wow.summary(row);
+      case 'steam':
+        return this.steam.summary(row);
+    }
+  }
+
+  /** Syncs the account with its game; returns news lines for a notification. */
+  private syncGame(row: GameAccountRow, fullHistory: boolean): Promise<string[]> {
+    switch (row.game) {
+      case 'dota2':
+        return this.syncDota(row, fullHistory);
+      case 'wow':
+        return this.syncWow(row);
+      case 'steam':
+        return this.syncSteam(row);
+    }
+  }
+
+  /** A library changes quietly: playtime and achievements are on the page, not in notifications. */
+  private async syncSteam(row: GameAccountRow): Promise<string[]> {
+    const profile = await this.steam.sync(row);
+    await this.saveProfile(row, profile.personaName, { ...profile });
+    return [];
   }
 
   private async syncDota(row: GameAccountRow, fullHistory: boolean): Promise<string[]> {
@@ -176,7 +212,14 @@ export class GameAccountsService {
   }
 
   /** External id and name before the first sync. */
-  private identify(input: GameAccountInput): { externalId: string; displayName: string } {
+  private async identify(
+    userId: string,
+    input: GameAccountInput,
+  ): Promise<{ externalId: string; displayName: string }> {
+    if (input.game === 'steam') {
+      const steamId = await this.steam.resolveSteamId(userId, input.steamId);
+      return { externalId: steamId, displayName: steamId };
+    }
     if (input.game === 'dota2') {
       const accountId = parseDotaAccountId(input.steamId);
       if (!accountId) {

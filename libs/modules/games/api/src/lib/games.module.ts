@@ -12,10 +12,13 @@ import { GameAccountsService } from './game-accounts.service';
 import { GamesSyncJob } from './games-sync.job';
 import { GamesController } from './games.controller';
 import { GamesServerActions } from './games.server-actions';
+import { SteamAchievements } from './steam/steam.achievements';
+import { SteamKeyService } from './steam/steam-key.service';
+import { SteamService } from './steam/steam.service';
 import { WowService } from './wow/wow.service';
 
 /**
- * Games: Dota 2 (OpenDota) and World of Warcraft (Battle.net API).
+ * Games: Steam (profile and library), Dota 2 (OpenDota) and World of Warcraft (Battle.net API).
  * API: `/api/games/*`.
  */
 @Module({
@@ -29,6 +32,9 @@ import { WowService } from './wow/wow.service';
     DotaCareerService,
     DotaAchievements,
     WowService,
+    SteamKeyService,
+    SteamService,
+    SteamAchievements,
     GamesSyncJob,
     GamesAchievements,
     GamesAiTools,

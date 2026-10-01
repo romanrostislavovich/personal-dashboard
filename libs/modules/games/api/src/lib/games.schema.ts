@@ -19,7 +19,8 @@ export const gameEnum = pgEnum('games_game', GAMES);
 
 /**
  * The user's game accounts.
- * `externalId`: for Dota — the Steam account id (32-bit), for WoW — `region/realm/name`.
+ * `externalId`: for Dota — the Steam account id (32-bit), for WoW — `region/realm/name`,
+ * for Steam — the Steam ID64.
  */
 export const gameAccounts = pgTable(
   'games_accounts',
@@ -80,6 +81,31 @@ export const dotaMatches = pgTable(
     primaryKey({ columns: [table.accountId, table.matchId] }),
     index().on(table.accountId, table.startedAt),
   ],
+);
+
+/**
+ * The library of a Steam account: every game with its playtime, and the achievements of the
+ * played ones. Updated by the sync; playtime only grows, so a row changes when a game is played.
+ */
+export const steamGames = pgTable(
+  'games_steam_games',
+  {
+    accountId: uuid()
+      .notNull()
+      .references(() => gameAccounts.id, { onDelete: 'cascade' }),
+    appId: integer().notNull(),
+    name: text().notNull(),
+    iconHash: text(),
+    playtimeMinutes: integer().notNull().default(0),
+    playtime2WeeksMinutes: integer().notNull().default(0),
+    lastPlayedAt: timestamp({ withTimezone: true }),
+    /** `null` — the game has no achievements, or they were not read yet. */
+    achievementsUnlocked: integer(),
+    achievementsTotal: integer(),
+    /** The playtime at which the achievements were last read: they are re-read once it grows. */
+    achievementsPlaytime: integer(),
+  },
+  (table) => [primaryKey({ columns: [table.accountId, table.appId] })],
 );
 
 /** Earned WoW achievements — to notice new ones and send a notification. */
