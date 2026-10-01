@@ -6,16 +6,16 @@ import {
   HttpCode,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
-  Put,
 } from '@nestjs/common';
 import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
-import { trackedRepoInputSchema } from '@pd/contracts';
+import { trackedRepoInputSchema, trackedRepoUpdateSchema } from '@pd/contracts';
 import { z } from 'zod';
 import { ReposService } from './repos.service';
 import { OPEN_SOURCE_ACTIONS } from './open-source.server-actions';
 
-/** Tracked open source repositories. */
+/** Repositories of the Open Source section. */
 @Controller('development/repos')
 export class OpenSourceController {
   constructor(
@@ -38,34 +38,29 @@ export class OpenSourceController {
     return this.actions.run(user.id, OPEN_SOURCE_ACTIONS.addRepo, input);
   }
 
-  /** Changes the repository (owner/name) or its npm package. */
-  @Put(':id')
+  /** Hides or shows a repository, switches its notifications, sets its npm package. */
+  @Patch(':id')
   @HttpCode(204)
   update(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(trackedRepoInputSchema))
-    input: z.output<typeof trackedRepoInputSchema>,
+    @Body(new ZodValidationPipe(trackedRepoUpdateSchema))
+    update: z.output<typeof trackedRepoUpdateSchema>,
   ) {
-    return this.actions.run(user.id, OPEN_SOURCE_ACTIONS.updateRepo, { id, input });
+    return this.repos.update(user.id, id, update);
   }
 
+  /** Only a repository added by hand; one of the account is hidden instead. */
   @Delete(':id')
   @HttpCode(204)
   remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.repos.remove(user.id, id);
   }
 
-  /** Refresh the data now without waiting for the hourly sync. */
+  /** Re-read the account's repositories and refresh all of them now, not on the hour. */
   @Post('sync-all')
   @HttpCode(204)
   async syncAll(@CurrentUser() user: AuthUser) {
     await this.actions.run(user.id, OPEN_SOURCE_ACTIONS.syncAll);
-  }
-
-  @Post(':id/sync')
-  @HttpCode(204)
-  syncOne(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.actions.run(user.id, OPEN_SOURCE_ACTIONS.syncRepo, { id });
   }
 }

@@ -19,7 +19,7 @@ const WIDGET_MAX_REPOS = 5;
         <mat-card-title>🐙 {{ 'development.oss.widget.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        @if (repos.value().length > 0) {
+        @if (top().length > 0) {
           <div class="table-wrap">
             <table>
               <thead>
@@ -97,7 +97,13 @@ const WIDGET_MAX_REPOS = 5;
 })
 export class OpenSourceWidget {
   protected readonly repos = inject(OpenSourceApi).repos();
-  protected readonly top = computed(() => this.repos.value().slice(0, WIDGET_MAX_REPOS));
+  /** By stars, as the server returns them; hidden ones are left out. */
+  protected readonly top = computed(() =>
+    this.repos
+      .value()
+      .filter((repo) => !repo.hidden)
+      .slice(0, WIDGET_MAX_REPOS),
+  );
 
   protected shortName(fullName: string): string {
     return fullName.split('/')[1] ?? fullName;

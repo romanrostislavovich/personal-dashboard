@@ -19,7 +19,7 @@ export class OpenSourceDigest implements OnModuleInit {
         'Tell the differences: new stars and forks, new issues or PRs, a new release.',
       // npm downloads and sync times change every day by themselves, so they are left out.
       collect: async (userId) =>
-        (await this.repos.list(userId)).map((repo) => ({
+        (await this.repos.visible(userId)).map((repo) => ({
           repo: repo.fullName,
           stars: repo.stars,
           forks: repo.forks,

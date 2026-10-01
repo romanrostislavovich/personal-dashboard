@@ -18,6 +18,24 @@ export function npmPackageName(value: string): string {
   return decodeURIComponent(first.startsWith('@') && second ? `${first}/${second}` : first);
 }
 
+const npmPackageSchema = z
+  .string()
+  .transform(npmPackageName)
+  .pipe(z.string().min(1).max(214).regex(NPM_NAME, 'Expected an npm package name'));
+
+/** Where repositories come from. GitLab and Bitbucket join here later. */
+export const REPO_PROVIDERS = ['github'] as const;
+export type RepoProvider = (typeof REPO_PROVIDERS)[number];
+
+/**
+ * How a repository got into the list: `owner` and `organization` come from the integration
+ * (the account's own public repositories and those of its organizations), `manual` is any
+ * repository added by hand.
+ */
+export const REPO_RELATIONS = ['owner', 'organization', 'manual'] as const;
+export type RepoRelation = (typeof REPO_RELATIONS)[number];
+
+/** Adding a repository by hand — one the integration does not bring by itself. */
 export const trackedRepoInputSchema = z.object({
   /** `owner/name` or a link https://github.com/owner/name. */
   repo: z
@@ -26,13 +44,20 @@ export const trackedRepoInputSchema = z.object({
     .transform((value) => value.replace(/^https?:\/\/github\.com\//i, '').replace(/\/+$/, ''))
     .pipe(z.string().regex(/^[\w.-]+\/[\w.-]+$/, 'Expected owner/name')),
   /** The npm package of this repository — for download statistics. */
-  npmPackage: z
-    .string()
-    .transform(npmPackageName)
-    .pipe(z.string().min(1).max(214).regex(NPM_NAME, 'Expected an npm package name'))
-    .nullish(),
+  npmPackage: npmPackageSchema.nullish(),
 });
 export type TrackedRepoInput = z.input<typeof trackedRepoInputSchema>;
+
+/** `PATCH /api/development/repos/:id`: only the fields sent change. */
+export const trackedRepoUpdateSchema = z.object({
+  /** Out of the list, the totals, the widget and the digest. */
+  hidden: z.boolean().optional(),
+  /** Tell about new issues, PRs, releases and star milestones. */
+  notify: z.boolean().optional(),
+  /** The package set by hand; `null` — the repository has none (the detected one is ignored). */
+  npmPackage: npmPackageSchema.nullable().optional(),
+});
+export type TrackedRepoUpdate = z.input<typeof trackedRepoUpdateSchema>;
 
 export const githubTokenInputSchema = z.object({
   token: z.string().trim().min(10),
@@ -40,7 +65,7 @@ export const githubTokenInputSchema = z.object({
 export type GithubTokenInput = z.infer<typeof githubTokenInputSchema>;
 
 export interface GithubSettings {
-  /** The token is set. Without it the public API is used, limited to 60 requests per hour. */
+  /** The token is set: repositories and the account are read with it. */
   tokenConfigured: boolean;
 }
 
@@ -53,11 +78,21 @@ export interface RepoStatsPoint {
 
 export interface TrackedRepo {
   id: string;
+  provider: RepoProvider;
+  relation: RepoRelation;
   /** `owner/name` */
   fullName: string;
   htmlUrl: string;
   description: string | null;
+  /** The main language. */
+  language: string | null;
+  isFork: boolean;
+  isArchived: boolean;
+  hidden: boolean;
+  notify: boolean;
   npmPackage: string | null;
+  /** The package was set by hand, not read from the repository's package.json. */
+  npmPackageManual: boolean;
   stars: number;
   forks: number;
   openIssues: number;

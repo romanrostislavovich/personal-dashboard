@@ -1,5 +1,7 @@
 import { users } from '@pd/api-core/schema';
+import { RepoProvider, RepoRelation } from '@pd/contracts';
 import {
+  boolean,
   date,
   integer,
   pgTable,
@@ -10,7 +12,10 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-/** Tracked repositories and their current figures (updated by the sync). */
+/**
+ * Repositories of the Open Source section and their current figures (updated by the sync):
+ * the public ones the integration brings and the ones added by hand.
+ */
 export const trackedRepos = pgTable(
   'github_tracked_repos',
   {
@@ -18,12 +23,25 @@ export const trackedRepos = pgTable(
     userId: uuid()
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    /** Canonical name from the GitHub API: `owner/name`. */
+    provider: text().$type<RepoProvider>().notNull().default('github'),
+    /** How it got here: the account's own, an organization's, or added by hand. */
+    relation: text().$type<RepoRelation>().notNull().default('manual'),
+    /** The provider's own id: a renamed repository stays the same row and keeps its history. */
+    externalId: text(),
+    /** Canonical name from the provider: `owner/name`. */
     fullName: text().notNull(),
+    hidden: boolean().notNull().default(false),
+    /** Tell about new issues, PRs, releases and star milestones. */
+    notify: boolean().notNull().default(false),
     npmPackage: text(),
+    /** Set by hand: the sync does not replace it with the one from package.json. */
+    npmPackageManual: boolean().notNull().default(false),
 
     htmlUrl: text().notNull(),
     description: text(),
+    language: text(),
+    isFork: boolean().notNull().default(false),
+    isArchived: boolean().notNull().default(false),
     stars: integer().notNull().default(0),
     forks: integer().notNull().default(0),
     openIssues: integer().notNull().default(0),
@@ -37,7 +55,7 @@ export const trackedRepos = pgTable(
     syncError: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [unique().on(table.userId, table.fullName)],
+  (table) => [unique().on(table.userId, table.provider, table.fullName)],
 );
 
 /** Daily history: one row per repository per day (the last value of the day). */

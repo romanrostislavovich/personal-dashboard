@@ -10,15 +10,16 @@ import { firstValueFrom } from 'rxjs';
 import { errorStatus } from '@pd/web-core';
 import { OpenSourceApi } from './open-source.api';
 
-/** Errors the server explains: not on GitHub, or already tracked under the new name. */
+/** Errors the server explains: not on GitHub, already in the list, a wrong package name. */
 const ERROR_KEYS: Record<number, string> = {
   400: 'development.errors.notFound',
   409: 'development.errors.duplicate',
 };
 
 /**
- * Editing a tracked repository: its owner/name (a moved repository, a typo) and npm package.
- * Saves by itself and closes with `true` once the repository is synced.
+ * Two small forms in one dialog: adding a repository the account does not bring by itself
+ * (opened without data), and the npm package of a repository already in the list.
+ * Saves by itself and closes with `true`.
  */
 @Component({
   selector: 'pd-repo-form-dialog',
@@ -32,17 +33,24 @@ const ERROR_KEYS: Record<number, string> = {
     TranslocoPipe,
   ],
   template: `
-    <h2 mat-dialog-title>{{ 'development.oss.editTitle' | transloco }}</h2>
+    <h2 mat-dialog-title>
+      {{ (repo ? 'development.oss.editNpm' : 'development.oss.addTitle') | transloco }}
+    </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
-        <mat-form-field>
-          <mat-label>{{ 'development.oss.repo' | transloco }}</mat-label>
-          <input matInput formControlName="repo" placeholder="owner/name" />
-          <mat-hint>{{ 'development.oss.repoChangeHint' | transloco }}</mat-hint>
-        </mat-form-field>
+        @if (repo) {
+          <p class="hint">{{ repo.fullName }}</p>
+        } @else {
+          <p class="hint">{{ 'development.oss.addHint' | transloco }}</p>
+          <mat-form-field>
+            <mat-label>{{ 'development.oss.repo' | transloco }}</mat-label>
+            <input matInput formControlName="repo" placeholder="owner/name" />
+          </mat-form-field>
+        }
         <mat-form-field>
           <mat-label>{{ 'development.oss.npmPackage' | transloco }}</mat-label>
           <input matInput formControlName="npmPackage" />
+          <mat-hint>{{ 'development.oss.npmHint' | transloco }}</mat-hint>
         </mat-form-field>
         @if (error(); as key) {
           <p class="error">{{ key | transloco }}</p>
@@ -53,7 +61,7 @@ const ERROR_KEYS: Record<number, string> = {
           {{ 'core.actions.cancel' | transloco }}
         </button>
         <button matButton="filled" type="submit" [disabled]="form.invalid || saving()">
-          {{ 'core.actions.save' | transloco }}
+          {{ (repo ? 'core.actions.save' : 'core.actions.add') | transloco }}
         </button>
       </mat-dialog-actions>
     </form>
@@ -65,6 +73,10 @@ const ERROR_KEYS: Record<number, string> = {
       gap: 8px;
       min-width: min(420px, 80vw);
     }
+    .hint {
+      margin: 0 0 4px;
+      color: var(--mat-sys-on-surface-variant);
+    }
     .error {
       margin: 0;
       color: var(--mat-sys-error);
@@ -72,29 +84,34 @@ const ERROR_KEYS: Record<number, string> = {
   `,
 })
 export class RepoFormDialog {
-  private readonly repo = inject<TrackedRepo>(MAT_DIALOG_DATA);
+  /** `null` — a new repository is being added. */
+  protected readonly repo = inject<TrackedRepo | null>(MAT_DIALOG_DATA);
   private readonly api = inject(OpenSourceApi);
   private readonly dialogRef = inject(MatDialogRef<RepoFormDialog, boolean>);
 
   protected readonly form = inject(NonNullableFormBuilder).group({
-    repo: [this.repo.fullName, Validators.required],
-    npmPackage: [this.repo.npmPackage ?? ''],
+    repo: [this.repo?.fullName ?? '', Validators.required],
+    npmPackage: [this.repo?.npmPackage ?? ''],
   });
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
 
   protected async save(): Promise<void> {
     const { repo, npmPackage } = this.form.getRawValue();
+    const packageName = npmPackage.trim() || null;
     this.saving.set(true);
     this.error.set(null);
     try {
       await firstValueFrom(
-        this.api.updateRepo(this.repo.id, { repo, npmPackage: npmPackage.trim() || null }),
+        this.repo
+          ? this.api.updateRepo(this.repo.id, { npmPackage: packageName })
+          : this.api.addRepo({ repo, npmPackage: packageName }),
       );
       this.dialogRef.close(true);
     } catch (error) {
-      const status = errorStatus(error);
-      this.error.set(ERROR_KEYS[status] ?? 'development.errors.generic');
+      // For an existing repository a 400 can only be about the package name.
+      const key = this.repo ? 'development.errors.npmName' : ERROR_KEYS[errorStatus(error)];
+      this.error.set(key ?? 'development.errors.generic');
     } finally {
       this.saving.set(false);
     }

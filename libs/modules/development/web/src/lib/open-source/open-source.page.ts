@@ -1,39 +1,71 @@
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatDialog } from '@angular/material/dialog';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { TrackedRepo } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
+import { REPO_RELATIONS, TrackedRepo, TrackedRepoUpdate } from '@pd/contracts';
 import { errorStatus, INTEGRATIONS_LINK } from '@pd/web-core';
+import { firstValueFrom } from 'rxjs';
 import { GithubApi } from '../github/github.api';
 import { OpenSourceApi } from './open-source.api';
-import { RepoCardComponent } from './repo-card.component';
+import { RepoDetailsComponent } from './repo-details.component';
+import {
+  DEFAULT_REPO_FILTER,
+  filterRepos,
+  RepoFilter,
+  RepoKind,
+  repoLanguages,
+  RepoSort,
+  RepoSortColumn,
+  sortRepos,
+} from './repo-filter';
 import { RepoFormDialog } from './repo-form.dialog';
 
+/** Sortable columns after the name; numbers are right-aligned. */
+const COLUMNS: { column: RepoSortColumn; labelKey: string; numeric: boolean }[] = [
+  { column: 'language', labelKey: 'development.oss.language', numeric: false },
+  { column: 'stars', labelKey: 'development.oss.stars', numeric: true },
+  { column: 'starsWeek', labelKey: 'development.oss.week', numeric: true },
+  { column: 'forks', labelKey: 'development.oss.forks', numeric: true },
+  { column: 'openIssues', labelKey: 'development.oss.issues', numeric: true },
+  { column: 'openPulls', labelKey: 'development.oss.pulls', numeric: true },
+  { column: 'npmWeeklyDownloads', labelKey: 'development.oss.npmWeekly', numeric: true },
+  { column: 'pushedAt', labelKey: 'development.oss.lastPush', numeric: true },
+];
+
+/**
+ * Open source repositories: the public ones of the GitHub account and its organizations appear
+ * by themselves, any other is added by hand. A table with filters; a row opens into details.
+ */
 @Component({
   selector: 'pd-open-source-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DatePipe,
     DecimalPipe,
-    ReactiveFormsModule,
-    MatCardModule,
+    NgTemplateOutlet,
     MatButtonModule,
-    MatIconModule,
+    MatCardModule,
+    MatChipsModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
     MatProgressBarModule,
+    MatSelectModule,
+    MatTooltipModule,
     RouterLink,
     TranslocoPipe,
-    RepoCardComponent,
+    RepoDetailsComponent,
   ],
   templateUrl: './open-source.page.html',
   styleUrl: './open-source.page.scss',
@@ -43,7 +75,6 @@ export class OpenSourcePage {
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly transloco = inject(TranslocoService);
-  private readonly fb = inject(NonNullableFormBuilder);
 
   protected readonly repos = this.api.repos();
   protected readonly settings = inject(GithubApi).settings();
@@ -51,9 +82,27 @@ export class OpenSourcePage {
   /** The GitHub token lives in Settings → Integrations (github/github-token.integration.ts). */
   protected readonly integrations = INTEGRATIONS_LINK;
 
+  protected readonly columns = COLUMNS;
+  protected readonly relations = REPO_RELATIONS;
+  protected readonly kinds: RepoKind[] = ['forks', 'archived', 'hidden'];
+  protected readonly filter = signal<RepoFilter>(DEFAULT_REPO_FILTER);
+  protected readonly sort = signal<RepoSort>({ column: 'stars', descending: true });
+  /** The row opened into details. */
+  protected readonly expanded = signal<string | null>(null);
+
+  protected readonly languages = computed(() => repoLanguages(this.repos.value()));
+  protected readonly rows = computed(() =>
+    sortRepos(filterRepos(this.repos.value(), this.filter()), this.sort()),
+  );
+  protected readonly hiddenCount = computed(
+    () => this.repos.value().filter((repo) => repo.hidden).length,
+  );
+
+  /** Totals of everything not hidden, whatever the filters show. */
   protected readonly totals = computed(() => {
-    const repos = this.repos.value();
+    const repos = this.repos.value().filter((repo) => !repo.hidden);
     return {
+      repos: repos.length,
       stars: repos.reduce((sum, r) => sum + r.stars, 0),
       starsWeek: repos.reduce((sum, r) => sum + r.starsDelta.week, 0),
       issues: repos.reduce((sum, r) => sum + r.openIssues, 0),
@@ -62,48 +111,78 @@ export class OpenSourcePage {
     };
   });
 
-  protected readonly addForm = this.fb.group({
-    repo: ['', Validators.required],
-    npmPackage: [''],
-  });
+  protected setFilter(change: Partial<RepoFilter>): void {
+    this.filter.update((filter) => ({ ...filter, ...change }));
+  }
 
-  async addRepo(): Promise<void> {
-    const { repo, npmPackage } = this.addForm.getRawValue();
-    await this.run(
-      async () => {
-        await firstValueFrom(this.api.addRepo({ repo, npmPackage: npmPackage || null }));
-        this.addForm.reset();
-        this.repos.reload();
-      },
-      { 400: 'development.errors.notFound', 409: 'development.errors.duplicate' },
+  /** A second click on the same column turns the order around; text starts A→Z, numbers high→low. */
+  protected sortBy(column: RepoSortColumn): void {
+    this.sort.update((sort) =>
+      sort.column === column
+        ? { column, descending: !sort.descending }
+        : { column, descending: column !== 'fullName' && column !== 'language' },
     );
   }
 
-  async editRepo(repo: TrackedRepo): Promise<void> {
+  protected ariaSort(column: RepoSortColumn): 'ascending' | 'descending' | null {
+    const sort = this.sort();
+    return sort.column === column ? (sort.descending ? 'descending' : 'ascending') : null;
+  }
+
+  protected toggle(repo: TrackedRepo): void {
+    this.expanded.update((id) => (id === repo.id ? null : repo.id));
+  }
+
+  protected shortName(repo: TrackedRepo): { owner: string; name: string } {
+    const [owner, name] = repo.fullName.split('/');
+    return { owner, name: name ?? owner };
+  }
+
+  async add(): Promise<void> {
+    await this.openForm(null);
+  }
+
+  async editNpm(repo: TrackedRepo): Promise<void> {
+    await this.openForm(repo);
+  }
+
+  async update(repo: TrackedRepo, update: TrackedRepoUpdate): Promise<void> {
+    await this.run(async () => {
+      await firstValueFrom(this.api.updateRepo(repo.id, update));
+      this.repos.reload();
+    });
+  }
+
+  async remove(repo: TrackedRepo): Promise<void> {
+    if (
+      confirm(this.transloco.translate('development.oss.confirmDelete', { name: repo.fullName }))
+    ) {
+      await this.run(async () => {
+        await firstValueFrom(this.api.removeRepo(repo.id));
+        this.repos.reload();
+      });
+    }
+  }
+
+  async syncAll(): Promise<void> {
+    await this.run(
+      async () => {
+        await firstValueFrom(this.api.syncAll());
+        this.repos.reload();
+      },
+      { 400: 'development.errors.invalidToken' },
+    );
+  }
+
+  private async openForm(repo: TrackedRepo | null): Promise<void> {
     const saved = await firstValueFrom(
       this.dialog
-        .open<RepoFormDialog, TrackedRepo, boolean>(RepoFormDialog, { data: repo })
+        .open<RepoFormDialog, TrackedRepo | null, boolean>(RepoFormDialog, { data: repo })
         .afterClosed(),
     );
     if (saved) {
       this.repos.reload();
     }
-  }
-
-  async removeRepo(repo: TrackedRepo): Promise<void> {
-    if (
-      confirm(this.transloco.translate('development.oss.confirmDelete', { name: repo.fullName }))
-    ) {
-      await firstValueFrom(this.api.removeRepo(repo.id));
-      this.repos.reload();
-    }
-  }
-
-  async syncAll(): Promise<void> {
-    await this.run(async () => {
-      await firstValueFrom(this.api.syncAll());
-      this.repos.reload();
-    });
   }
 
   /**

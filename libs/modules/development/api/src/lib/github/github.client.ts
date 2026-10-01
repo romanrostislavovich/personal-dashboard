@@ -1,22 +1,5 @@
 const API = 'https://api.github.com';
 
-export interface GithubRepo {
-  fullName: string;
-  htmlUrl: string;
-  description: string | null;
-  stars: number;
-  forks: number;
-  /** GitHub counts PRs as issues too, so this is issues + PRs. */
-  openIssuesAndPulls: number;
-  pushedAt: string | null;
-}
-
-export interface GithubRelease {
-  tag: string;
-  publishedAt: string;
-  htmlUrl: string;
-}
-
 export interface GithubIssue {
   title: string;
   htmlUrl: string;
@@ -25,57 +8,14 @@ export interface GithubIssue {
   isPullRequest: boolean;
 }
 
-export class GithubNotFoundError extends Error {}
 export class GithubAuthError extends Error {}
 
 /**
- * Minimal GitHub REST API client — only what the module needs.
- * Without a token the limit is 60 requests per hour per IP, with a token — 5000.
+ * Minimal GitHub REST API client — the token check and the list of new issues and PRs.
+ * Repositories and the account are read over GraphQL (github-graphql.ts).
  */
 export class GithubClient {
   constructor(private readonly token: string | null) {}
-
-  async getRepo(fullName: string): Promise<GithubRepo> {
-    const repo = await this.get<RawRepo>(`/repos/${fullName}`);
-    return {
-      fullName: repo.full_name,
-      htmlUrl: repo.html_url,
-      description: repo.description,
-      stars: repo.stargazers_count,
-      forks: repo.forks_count,
-      openIssuesAndPulls: repo.open_issues_count,
-      pushedAt: repo.pushed_at,
-    };
-  }
-
-  /**
-   * Number of open PRs in one request: ask for 1 PR per page
-   * and take the last page number from the Link header.
-   */
-  async countOpenPulls(fullName: string): Promise<number> {
-    const response = await this.request(`/repos/${fullName}/pulls?state=open&per_page=1`);
-    const lastPage = response.headers.get('link')?.match(/[?&]page=(\d+)>; rel="last"/);
-    if (lastPage) {
-      return Number(lastPage[1]);
-    }
-    return ((await response.json()) as unknown[]).length;
-  }
-
-  async getLatestRelease(fullName: string): Promise<GithubRelease | null> {
-    try {
-      const release = await this.get<RawRelease>(`/repos/${fullName}/releases/latest`);
-      return {
-        tag: release.tag_name,
-        publishedAt: release.published_at,
-        htmlUrl: release.html_url,
-      };
-    } catch (error) {
-      if (error instanceof GithubNotFoundError) {
-        return null; // no releases yet
-      }
-      throw error;
-    }
-  }
 
   /** Issues and PRs created after `since`. */
   async listCreatedSince(fullName: string, since: Date): Promise<GithubIssue[]> {
@@ -112,9 +52,6 @@ export class GithubClient {
         ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
       },
     });
-    if (response.status === 404) {
-      throw new GithubNotFoundError(`GitHub: ${path} not found`);
-    }
     if (response.status === 401) {
       throw new GithubAuthError('GitHub token is invalid');
     }
@@ -127,22 +64,6 @@ export class GithubClient {
 }
 
 // --- Raw GitHub API responses (only the fields we use) ---
-
-interface RawRepo {
-  full_name: string;
-  html_url: string;
-  description: string | null;
-  stargazers_count: number;
-  forks_count: number;
-  open_issues_count: number;
-  pushed_at: string | null;
-}
-
-interface RawRelease {
-  tag_name: string;
-  published_at: string;
-  html_url: string;
-}
 
 interface RawIssue {
   title: string;

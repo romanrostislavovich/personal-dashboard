@@ -1,9 +1,9 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
-import { count, eq, sum } from 'drizzle-orm';
+import { and, count, eq, sum } from 'drizzle-orm';
 import { trackedRepos } from './open-source.schema';
 
-/** Open source achievements: stars and npm downloads across all tracked repositories. */
+/** Open source achievements: stars, forks and npm downloads across the user's own repositories. */
 @Injectable()
 export class OpenSourceAchievements implements OnModuleInit {
   constructor(
@@ -86,7 +86,7 @@ export class OpenSourceAchievements implements OnModuleInit {
     });
   }
 
-  /** Forks and the number of tracked repositories. */
+  /** Forks and the number of own repositories. */
   private registerCommunity(): void {
     this.achievements.register({
       id: 'development.forks',
@@ -116,13 +116,13 @@ export class OpenSourceAchievements implements OnModuleInit {
           5,
           '📦',
           { en: 'Portfolio', ru: 'Портфолио' },
-          { en: '5 tracked repositories', ru: '5 отслеживаемых репозиториев' },
+          { en: '5 public repositories of your own', ru: '5 своих публичных репозиториев' },
         ],
         [
           15,
           '🗂️',
           { en: 'Maintainer', ru: 'Мейнтейнер' },
-          { en: '15 tracked repositories', ru: '15 отслеживаемых репозиториев' },
+          { en: '15 public repositories of your own', ru: '15 своих публичных репозиториев' },
         ],
       ),
     });
@@ -135,15 +135,20 @@ export class OpenSourceAchievements implements OnModuleInit {
     const [row] = await this.db
       .select({ total: sum(trackedRepos[column]).mapWith(Number) })
       .from(trackedRepos)
-      .where(eq(trackedRepos.userId, userId));
+      .where(this.own(userId));
     return row?.total ?? 0;
+  }
+
+  /** Achievements are about one's own work: organizations' and hand-added repositories do not count. */
+  private own(userId: string) {
+    return and(eq(trackedRepos.userId, userId), eq(trackedRepos.relation, 'owner'));
   }
 
   private async repoCount(userId: string): Promise<number> {
     const [row] = await this.db
       .select({ value: count() })
       .from(trackedRepos)
-      .where(eq(trackedRepos.userId, userId));
+      .where(this.own(userId));
     return row?.value ?? 0;
   }
 }

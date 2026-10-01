@@ -9,7 +9,8 @@
     "notFound": "Repository not found on GitHub",
     "duplicate": "This repository is already tracked",
     "invalidToken": "GitHub rejected the token",
-    "generic": "Something went wrong. Please try again."
+    "generic": "Something went wrong. Please try again.",
+    "npmName": "This does not look like an npm package name"
   },
   "oss": {
     "syncNow": "Update",
@@ -24,28 +25,62 @@
     "historyCollecting": "Collecting history: the chart appears from the second day.",
     "lastPush": "Last push",
     "syncError": "Sync error",
-    "addTitle": "Track a repository",
-    "editTitle": "Edit the repository",
-    "repoChangeHint": "Another repository starts its star history anew",
     "repo": "Repository (owner/name or link)",
     "npmPackage": "npm package (optional)",
-    "empty": "No repositories yet — add the first one above.",
     "confirmDelete": "Stop tracking {{name}}? Its history will be deleted.",
+    "add": "Add a repository",
+    "addTitle": "Add a repository",
+    "addHint": "Your public repositories and those of your organizations appear by themselves. Add any other one here.",
+    "editNpm": "npm package",
+    "npmHint": "Read from package.json by itself; set it here if it is different",
+    "npmPackageShort": "npm package",
+    "repos": "Repositories",
+    "hiddenCount": "hidden: {{count}}",
+    "week": "7 days",
+    "language": "Language",
+    "repository": "Repository",
+    "search": "Search by name or description",
+    "source": "Source",
+    "all": "All",
+    "show": "Show",
+    "relations": {
+      "owner": "Mine",
+      "organization": "Organizations",
+      "manual": "Added by hand"
+    },
+    "kinds": {
+      "forks": "Forks",
+      "archived": "Archived",
+      "hidden": "Hidden"
+    },
+    "badges": {
+      "fork": "fork",
+      "archived": "archived",
+      "hidden": "hidden"
+    },
+    "release": "Latest release",
+    "notify": "Notify about issues, PRs, releases and star milestones",
+    "notifyOn": "Notifications are on",
+    "hide": "Hide from the list, the totals and the digest",
+    "openRepo": "Open the repository",
+    "remove": "Stop tracking",
+    "nothingFound": "Nothing matches the filters.",
+    "empty": "No repositories yet — press “Update” to load them from GitHub.",
+    "noTokenHint": "Public repositories are read with your personal access token: add it in the integrations and the list builds itself.",
     "widget": {
       "title": "Open Source",
       "week": "7 days",
-      "empty": "Add repositories in the Open Source section",
+      "empty": "Your public repositories appear here once GitHub is connected",
       "open": "Details"
     }
   },
   "github": {
     "token": {
       "title": "GitHub token",
-      "hint": "A personal access token (classic) with the “read:user” and “repo” permissions: it loads your account with private contributions and lifts the limit of 60 requests an hour for Open Source. A read-only token for public repositories is enough for Open Source alone.",
+      "hint": "A personal access token (classic) with the “read:user”, “repo” and “read:org” permissions: it loads your public repositories (those of your organizations too) and your account with private contributions. Without “repo” private contributions are counted but not split by type; without “read:org” organizations with hidden membership are left out.",
       "label": "Personal access token",
       "configured": "Token saved (encrypted on the server)",
-      "remove": "Remove token",
-      "noToken": "No GitHub token: 60 requests an hour, enough for a few repositories."
+      "remove": "Remove token"
     },
     "syncNow": "Update",
     "syncedAt": "Updated",

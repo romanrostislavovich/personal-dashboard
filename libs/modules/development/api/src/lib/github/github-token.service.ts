@@ -10,12 +10,7 @@ const TOKEN_KEY = 'development.github-token';
 export class GithubTokenService {
   constructor(private readonly secrets: SecretsService) {}
 
-  /** A client with the user's token, or an anonymous one if there is no token. */
-  async clientFor(userId: string): Promise<GithubClient> {
-    return new GithubClient(await this.secrets.get(userId, TOKEN_KEY));
-  }
-
-  /** The token itself, for clients other than `GithubClient` (GraphQL). */
+  /** `null` — not set: nothing is read from GitHub then. */
   token(userId: string): Promise<string | null> {
     return this.secrets.get(userId, TOKEN_KEY);
   }

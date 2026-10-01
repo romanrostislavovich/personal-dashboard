@@ -1,7 +1,6 @@
 import { GithubContributionDay, GithubLanguageShare, GithubTopRepo } from '@pd/contracts';
-import { GithubAuthError } from '../github/github.client';
+import { githubGraphql } from '../github/github-graphql';
 
-const GRAPHQL_URL = 'https://api.github.com/graphql';
 /** GitHub returns at most 100 repositories a page; the most starred ones are enough here. */
 const MAX_REPOS = 100;
 const LANGUAGES_PER_REPO = 10;
@@ -135,28 +134,8 @@ export class GithubGraphqlClient {
     };
   }
 
-  private async query<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
-    const response = await fetch(GRAPHQL_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        'Content-Type': 'application/json',
-        'User-Agent': 'personal-dashboard',
-      },
-      body: JSON.stringify({ query, variables }),
-    });
-    if (response.status === 401) {
-      throw new GithubAuthError('GitHub token is invalid');
-    }
-    if (!response.ok) {
-      throw new Error(`GitHub GraphQL ${response.status}`);
-    }
-    // GraphQL reports its errors (a missing permission, a rate limit) with status 200.
-    const body = (await response.json()) as { data?: T; errors?: { message: string }[] };
-    if (body.errors?.length || !body.data) {
-      throw new Error(`GitHub: ${body.errors?.map((error) => error.message).join('; ')}`);
-    }
-    return body.data;
+  private query<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
+    return githubGraphql<T>(this.token, query, variables);
   }
 }
 

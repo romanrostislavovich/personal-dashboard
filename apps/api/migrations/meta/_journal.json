@@ -190,6 +190,13 @@
       "when": 1790873809903,
       "tag": "0026_wakatime",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1790877651198,
+      "tag": "0027_open_source_auto",
+      "breakpoints": true
     }
   ]
 }

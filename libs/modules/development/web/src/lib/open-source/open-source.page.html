@@ -1,5 +1,10 @@
+@let tokenMissing = settings.value() && !settings.value()?.tokenConfigured;
+
 <header class="toolbar">
-  <button matButton (click)="syncAll()" [disabled]="busy() || repos.value().length === 0">
+  <button matButton (click)="add()" [disabled]="busy() || tokenMissing">
+    <mat-icon>add</mat-icon> {{ 'development.oss.add' | transloco }}
+  </button>
+  <button matButton (click)="syncAll()" [disabled]="busy() || tokenMissing">
     <mat-icon>sync</mat-icon> {{ 'development.oss.syncNow' | transloco }}
   </button>
 </header>
@@ -8,16 +13,36 @@
   <mat-progress-bar mode="indeterminate" class="progress" />
 }
 
-<!-- Totals across all repositories -->
+<!-- Repositories are read with the token, so without one the list cannot build itself. -->
+@if (tokenMissing) {
+  <section class="setup">
+    <h3>{{ 'development.github.noTokenTitle' | transloco }}</h3>
+    <p class="hint">{{ 'development.oss.noTokenHint' | transloco }}</p>
+    <a matButton="filled" [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+      {{ 'core.settings.openIntegrations' | transloco }}
+    </a>
+  </section>
+}
+
 @if (repos.value().length > 0) {
+  <!-- Totals across everything that is not hidden -->
   <mat-card appearance="outlined" class="totals">
     <mat-card-content class="totals-grid">
       <div class="stat">
+        <span class="label">{{ 'development.oss.repos' | transloco }}</span>
+        <span class="value">{{ totals().repos | number }}</span>
+        @if (hiddenCount() > 0) {
+          <span class="sub">
+            {{ 'development.oss.hiddenCount' | transloco: { count: hiddenCount() } }}
+          </span>
+        }
+      </div>
+      <div class="stat">
         <span class="label">{{ 'development.oss.totalStars' | transloco }}</span>
         <span class="value">{{ totals().stars | number }}</span>
-        <span class="sub"
-          >+{{ totals().starsWeek | number }} {{ 'development.oss.perWeek' | transloco }}</span
-        >
+        <span class="sub">
+          +{{ totals().starsWeek | number }} {{ 'development.oss.perWeek' | transloco }}
+        </span>
       </div>
       <div class="stat">
         <span class="label">{{ 'development.oss.issues' | transloco }}</span>
@@ -33,44 +58,170 @@
       </div>
     </mat-card-content>
   </mat-card>
+
+  <div class="filters">
+    <mat-form-field subscriptSizing="dynamic" class="search">
+      <mat-label>{{ 'development.oss.search' | transloco }}</mat-label>
+      <input
+        matInput
+        type="search"
+        [value]="filter().search"
+        (input)="setFilter({ search: $any($event.target).value })"
+      />
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>{{ 'development.oss.source' | transloco }}</mat-label>
+      <mat-select
+        [value]="filter().relation"
+        (selectionChange)="setFilter({ relation: $event.value })"
+      >
+        <mat-option [value]="null">{{ 'development.oss.all' | transloco }}</mat-option>
+        @for (relation of relations; track relation) {
+          <mat-option [value]="relation">
+            {{ 'development.oss.relations.' + relation | transloco }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>{{ 'development.oss.language' | transloco }}</mat-label>
+      <mat-select
+        [value]="filter().language"
+        (selectionChange)="setFilter({ language: $event.value })"
+      >
+        <mat-option [value]="null">{{ 'development.oss.all' | transloco }}</mat-option>
+        @for (language of languages(); track language) {
+          <mat-option [value]="language">{{ language }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <!-- Which kinds are shown: forks and archived by default, hidden ones on request. -->
+    <mat-chip-listbox
+      multiple
+      [value]="filter().kinds"
+      [attr.aria-label]="'development.oss.show' | transloco"
+      (change)="setFilter({ kinds: $event.value })"
+    >
+      @for (kind of kinds; track kind) {
+        <mat-chip-option [value]="kind">
+          {{ 'development.oss.kinds.' + kind | transloco }}
+        </mat-chip-option>
+      }
+    </mat-chip-listbox>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="name" [attr.aria-sort]="ariaSort('fullName')">
+            <button type="button" class="sort" (click)="sortBy('fullName')">
+              {{ 'development.oss.repository' | transloco }}
+              <ng-container *ngTemplateOutlet="arrow; context: { column: 'fullName' }" />
+            </button>
+          </th>
+          @for (c of columns; track c.column) {
+            <th [class.numeric]="c.numeric" [attr.aria-sort]="ariaSort(c.column)">
+              <button type="button" class="sort" (click)="sortBy(c.column)">
+                {{ c.labelKey | transloco }}
+                <ng-container *ngTemplateOutlet="arrow; context: { column: c.column }" />
+              </button>
+            </th>
+          }
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (repo of rows(); track repo.id) {
+          @let open = expanded() === repo.id;
+          @let short = shortName(repo);
+          <tr class="row" [class.open]="open" [class.muted]="repo.hidden" (click)="toggle(repo)">
+            <td class="name">
+              <button
+                type="button"
+                class="expand"
+                [attr.aria-expanded]="open"
+                (click)="toggle(repo); $event.stopPropagation()"
+              >
+                <mat-icon>{{ open ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                <span>
+                  <span class="owner">{{ short.owner }}/</span><b>{{ short.name }}</b>
+                </span>
+              </button>
+              @if (repo.isFork) {
+                <span class="badge">{{ 'development.oss.badges.fork' | transloco }}</span>
+              }
+              @if (repo.isArchived) {
+                <span class="badge">{{ 'development.oss.badges.archived' | transloco }}</span>
+              }
+              @if (repo.hidden) {
+                <span class="badge">{{ 'development.oss.badges.hidden' | transloco }}</span>
+              }
+              @if (repo.notify) {
+                <mat-icon class="mark" [matTooltip]="'development.oss.notifyOn' | transloco">
+                  notifications_active
+                </mat-icon>
+              }
+              @if (repo.syncError) {
+                <mat-icon class="mark error" [matTooltip]="repo.syncError">warning</mat-icon>
+              }
+            </td>
+            <td>{{ repo.language ?? '—' }}</td>
+            <td class="numeric">{{ repo.stars | number }}</td>
+            <td class="numeric" [class.up]="repo.starsDelta.week > 0">
+              {{ repo.starsDelta.week > 0 ? '+' + repo.starsDelta.week : '—' }}
+            </td>
+            <td class="numeric">{{ repo.forks | number }}</td>
+            <td class="numeric">{{ repo.openIssues | number }}</td>
+            <td class="numeric">{{ repo.openPulls | number }}</td>
+            <td class="numeric">
+              {{ repo.npmWeeklyDownloads === null ? '—' : (repo.npmWeeklyDownloads | number) }}
+            </td>
+            <td class="numeric nowrap">
+              {{ repo.pushedAt ? (repo.pushedAt | date: 'd MMM y') : '—' }}
+            </td>
+            <td class="link">
+              <a
+                matIconButton
+                [href]="repo.htmlUrl"
+                target="_blank"
+                rel="noopener"
+                [matTooltip]="'development.oss.openRepo' | transloco"
+                [attr.aria-label]="'development.oss.openRepo' | transloco"
+                (click)="$event.stopPropagation()"
+              >
+                <mat-icon>open_in_new</mat-icon>
+              </a>
+            </td>
+          </tr>
+          @if (open) {
+            <tr class="details">
+              <td [attr.colspan]="columns.length + 2">
+                <pd-repo-details
+                  [repo]="repo"
+                  (update)="update(repo, $event)"
+                  (editNpm)="editNpm($event)"
+                  (remove)="remove($event)"
+                />
+              </td>
+            </tr>
+          }
+        } @empty {
+          <tr>
+            <td class="empty" [attr.colspan]="columns.length + 2">
+              {{ 'development.oss.nothingFound' | transloco }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else if (!repos.isLoading() && !tokenMissing) {
+  <p class="hint">{{ 'development.oss.empty' | transloco }}</p>
 }
 
-<div class="setup">
-  <!-- Adding a repository -->
-  <mat-card appearance="outlined">
-    <mat-card-header>
-      <mat-card-title>{{ 'development.oss.addTitle' | transloco }}</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form class="add-form" [formGroup]="addForm" (ngSubmit)="addRepo()">
-        <mat-form-field subscriptSizing="dynamic">
-          <mat-label>{{ 'development.oss.repo' | transloco }}</mat-label>
-          <input matInput formControlName="repo" placeholder="owner/name" />
-        </mat-form-field>
-        <mat-form-field subscriptSizing="dynamic">
-          <mat-label>{{ 'development.oss.npmPackage' | transloco }}</mat-label>
-          <input matInput formControlName="npmPackage" />
-        </mat-form-field>
-        <button matButton="filled" type="submit" [disabled]="addForm.invalid || busy()">
-          {{ 'core.actions.add' | transloco }}
-        </button>
-      </form>
-      @if (settings.value() && !settings.value()?.tokenConfigured) {
-        <p class="hint">
-          {{ 'development.github.token.noToken' | transloco }}
-          <a [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
-            {{ 'core.settings.openIntegrations' | transloco }}
-          </a>
-        </p>
-      }
-    </mat-card-content>
-  </mat-card>
-</div>
-
-<div class="repos">
-  @for (repo of repos.value(); track repo.id) {
-    <pd-repo-card [repo]="repo" (edit)="editRepo($event)" (remove)="removeRepo($event)" />
-  } @empty {
-    <p class="empty">{{ 'development.oss.empty' | transloco }}</p>
+<ng-template #arrow let-column="column">
+  @if (sort().column === column) {
+    <mat-icon class="arrow">{{ sort().descending ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
   }
-</div>
+</ng-template>

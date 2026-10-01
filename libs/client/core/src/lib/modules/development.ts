@@ -4,6 +4,7 @@ import {
   GithubSettings,
   TrackedRepo,
   TrackedRepoInput,
+  TrackedRepoUpdate,
   WakatimePeriod,
   WakatimeSettings,
   WakatimeStats,
@@ -14,7 +15,7 @@ const BASE = '/api/development';
 
 /** Read requests of the Development section (see ApiRequest). */
 export const DEVELOPMENT_READS = {
-  /** Tracked open source repositories, by stars. */
+  /** Open source repositories, by stars; hidden ones included. */
   repos: () => apiRequest(`${BASE}/repos`),
   /** Whether the GitHub token is set. */
   githubSettings: () => apiRequest(`${BASE}/github/settings`),
@@ -31,8 +32,10 @@ export function developmentApi(api: ApiClient) {
   return {
     repos: () => api.read<TrackedRepo[]>(DEVELOPMENT_READS.repos()),
     addRepo: (input: TrackedRepoInput) => api.post<void>(`${BASE}/repos`, input),
-    updateRepo: (id: string, input: TrackedRepoInput) =>
-      api.put<void>(`${BASE}/repos/${id}`, input),
+    /** Hide or show, notifications, the npm package — only the fields sent change. */
+    updateRepo: (id: string, update: TrackedRepoUpdate) =>
+      api.patch<void>(`${BASE}/repos/${id}`, update),
+    /** Only a repository added by hand; one of the account is hidden instead. */
     removeRepo: (id: string) => api.delete(`${BASE}/repos/${id}`),
     syncRepos: () => api.post<void>(`${BASE}/repos/sync-all`, {}),
 

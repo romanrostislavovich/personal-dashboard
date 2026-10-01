@@ -1,15 +1,35 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .toolbar {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: -8px;
 }
 
-.progress {
-  margin-bottom: 16px;
+.setup {
+  max-width: 640px;
+  padding: 14px 16px;
+  border-radius: var(--pd-radius);
+  border: 1px solid var(--pd-border);
+  background: var(--pd-card);
+
+  h3 {
+    margin: 0 0 8px;
+    font: 700 1rem / 1.3 var(--pd-font-heading);
+  }
+
+  .hint {
+    margin: 0 0 12px;
+  }
 }
 
-.totals {
-  margin-bottom: 16px;
+.hint {
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .totals-grid {
@@ -38,43 +58,155 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
-.setup {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.add-form {
+.filters {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding-top: 8px;
+  gap: 12px;
 
-  // Fields take the full card width, the button goes below them on the right.
   mat-form-field {
-    flex: 1 1 100%;
+    width: 180px;
   }
 
-  button {
-    margin-left: auto;
+  .search {
+    flex: 1 1 220px;
   }
 }
 
-.hint {
+// A phone scrolls the table sideways instead of squeezing nine columns.
+.table-wrap {
+  overflow-x: auto;
+  // Icon buttons overflow their cells by a pixel: no vertical scrollbar for that.
+  overflow-y: hidden;
+  border: 1px solid var(--pd-border);
+  border-radius: var(--pd-radius);
+  background: var(--pd-card);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--mat-sys-body-medium);
+}
+
+th {
+  padding: 4px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+td {
+  padding: 6px 12px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+.arrow {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+}
+
+.row {
+  cursor: pointer;
+
+  &:hover,
+  &.open {
+    background: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+  }
+
+  // A hidden repository shown on request is still visibly out of the list.
+  &.muted td:not(.link) {
+    opacity: 0.6;
+  }
+}
+
+td.name {
+  min-width: 240px;
+}
+
+.expand {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.owner {
   color: var(--mat-sys-on-surface-variant);
 }
 
-.ok {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.badge {
+  margin-left: 6px;
+  vertical-align: middle;
+  padding: 1px 8px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 999px;
+  font: var(--mat-sys-label-small);
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+}
+
+.mark {
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  font-size: 16px;
+  vertical-align: middle;
+  color: var(--mat-sys-primary);
+
+  &.error {
+    color: var(--mat-sys-error);
+  }
+}
+
+.up {
   color: var(--mat-sys-primary);
 }
 
-.repos {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
-  gap: 16px;
+td.link {
+  width: 48px;
+  padding: 0 4px;
+}
+
+.details td {
+  padding: 0;
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 2%, transparent);
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
 }
