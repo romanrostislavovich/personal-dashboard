@@ -28,7 +28,8 @@
   hashtags, emoji marks on phrases, photos, search, year heatmap, “on this day”, mood insights,
   templates; `/d`, `/mood`, `/today` and photos from Telegram
 - **Music:** Last.fm history and tops, Spotify “now playing”
-- **Games:** Dota 2 (full match history of every mode, via OpenDota) and World of Warcraft (Battle.net);
+- **Games:** Steam (several accounts: level, hours and achievements per game), Dota 2 (full match
+  history of every mode from Steam, complemented by OpenDota) and World of Warcraft (Battle.net);
   several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO;
   refreshed every half an hour and with the "Refresh all" button, an optional OpenDota API key
 - **Weather:** today's forecast and the week ahead for your city (Open-Meteo, no API key) with
@@ -166,7 +167,7 @@
   webhooks and a public API with tokens
 - **Evening check-in in Telegram** — the bot asks "how was your day?", the answer goes to mood and
   the diary
-- **Games:** Steam, PlayStation and Xbox — playtime and platform achievements
+- **Games:** PlayStation and Xbox — playtime and platform achievements
 - **Music and media:** podcasts and YouTube history
 - **Export of all data** — the diary as Markdown (Obsidian-compatible), finance as CSV,
   everything as JSON

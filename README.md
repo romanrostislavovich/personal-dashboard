@@ -23,7 +23,7 @@ single Docker image on your server. Every feature is a module: enable, disable o
 | 👨‍💻 Development  | Open source: your public GitHub repositories and those of your organizations appear by themselves (stars, forks, issues, PRs, releases, npm downloads; alerts for the ones you mark), your GitHub account (contribution calendar, streaks, languages, followers) and coding time from WakaTime |
 | 📡 Monitoring   | Uptime checks every 5 minutes, uptime for 24 h / 7 / 30 days, response time chart, SSL expiry; “down / back up” alerts and SSL reminders                                                                                                                                                       |
 | 🎧 Music        | Last.fm listening history, plays per day, top artists / tracks / albums; Spotify “now playing”                                                                                                                                                                                                 |
-| 🎮 Games        | Dota 2 via OpenDota (medal, win rate, matches, heroes) and World of Warcraft via Battle.net (character, item level, achievements)                                                                                                                                                              |
+| 🎮 Games        | Steam (level, hours and achievements per game across your accounts), Dota 2 (the whole match history from Steam, complemented by OpenDota: medal, win rate, heroes) and World of Warcraft via Battle.net (character, item level, achievements)                                                 |
 | 🏆 Achievements | 42 personal achievements across all modules, with tiers and progress                                                                                                                                                                                                                           |
 | 🚀 Projects     | Your websites and services — finance, monitoring and AI refer to them                                                                                                                                                                                                                          |
 
@@ -86,18 +86,19 @@ npm run desktop:package       # build an installer → dist/desktop-installers
 Everything is connected in one place: **Settings → Integrations**. All tokens entered there are
 stored encrypted (AES-256-GCM with `ENCRYPTION_KEY`) and are never sent back to the browser.
 
-| Integration       | How to connect                                                                                                                      |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Telegram          | Create a bot with [@BotFather](https://t.me/BotFather), set `TELEGRAM_BOT_TOKEN`, then “Connect Telegram”                           |
-| AI                | Add a connection: provider (DeepSeek by default), model, API key. Add several and switch in one click. For full privacy use Ollama  |
-| GitHub            | A classic token with `read:user`, `repo` and `read:org`: your public repositories, organizations and account statistics             |
-| WakaTime          | The secret API key from wakatime.com → Settings → Account; days are copied to the dashboard, so history outlives the free plan      |
-| Hetzner Cloud     | Cost import → a project API token with Read access                                                                                  |
-| DeepSeek costs    | Cost import → an API key; spending is derived from balance changes                                                                  |
-| Last.fm           | Username + API key from [last.fm/api/account/create](https://www.last.fm/api/account/create)                                        |
-| Spotify           | Create an app at developer.spotify.com, Redirect URI = `PUBLIC_URL` + `/api/music/spotify/callback`, set `SPOTIFY_CLIENT_ID/SECRET` |
-| Dota 2            | Games → Steam ID or profile link; enable “Expose Public Match Data” in Dota. An OpenDota API key (optional) lifts its free limit    |
-| World of Warcraft | Battle.net client ID and secret from develop.battle.net, then Games → region / realm / character                                    |
+| Integration       | How to connect                                                                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Telegram          | Create a bot with [@BotFather](https://t.me/BotFather), set `TELEGRAM_BOT_TOKEN`, then “Connect Telegram”                                                              |
+| AI                | Add a connection: provider (DeepSeek by default), model, API key. Add several and switch in one click. For full privacy use Ollama                                     |
+| GitHub            | A classic token with `read:user`, `repo` and `read:org`: your public repositories, organizations and account statistics                                                |
+| WakaTime          | The secret API key from wakatime.com → Settings → Account; days are copied to the dashboard, so history outlives the free plan                                         |
+| Hetzner Cloud     | Cost import → a project API token with Read access                                                                                                                     |
+| DeepSeek costs    | Cost import → an API key; spending is derived from balance changes                                                                                                     |
+| Last.fm           | Username + API key from [last.fm/api/account/create](https://www.last.fm/api/account/create)                                                                           |
+| Spotify           | Create an app at developer.spotify.com, Redirect URI = `PUBLIC_URL` + `/api/music/spotify/callback`, set `SPOTIFY_CLIENT_ID/SECRET`                                    |
+| Steam             | A Web API key from steamcommunity.com/dev/apikey (one for all accounts), then add your profiles on the Games page                                                      |
+| Dota 2            | Games → Steam ID or profile link; enable “Expose Public Match Data” in Dota. Matches come from Steam (with the key above); an OpenDota API key per account is optional |
+| World of Warcraft | Battle.net client ID and secret from develop.battle.net, then Games → region / realm / character                                                                       |
 
 Telegram bot: just write to it — the AI assistant answers and can do almost anything the dashboard can on request: add, edit and delete birthdays, diary entries, transactions, recurring payments, projects, monitored sites, repositories and game accounts (it asks before deleting anything; keys and tokens are set up only in the dashboard). Commands: `/d text` — add to today’s diary entry, `/mood 1–5` — rate the day, `/today` — show today’s entry, `/ask question` — a one-off question, `/new` — start a new conversation (the conversation is shared with the AI chat of the dashboard and kept across restarts), `/model` — list the saved AI connections, `/model 2` — switch to the second one. A voice message is turned into text (with an OpenAI connection, see Settings → Integrations) and handled like a typed one. A photo sent to the bot goes into today’s entry; a file (PDF, Excel, CSV, text) goes to the assistant — send a bank statement and its transactions land in finance. Files can be attached in the AI chat of the dashboard too.
 

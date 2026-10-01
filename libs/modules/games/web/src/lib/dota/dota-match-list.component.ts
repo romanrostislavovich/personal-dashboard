@@ -15,7 +15,7 @@ import { TimeAgoPipe } from '../time-ago.pipe';
   template: `
     <ul class="matches">
       @for (m of matches(); track m.accountId + m.matchId) {
-        <li [class.won]="m.won">
+        <li [class.won]="m.won === true" [class.unknown]="m.won === null">
           <img class="hero" [src]="m.hero.imageUrl" alt="" />
           <span class="main">
             <span class="hero-name">{{ m.hero.name }}</span>
@@ -29,7 +29,14 @@ import { TimeAgoPipe } from '../time-ago.pipe';
               [href]="'https://www.dotabuff.com/matches/' + m.matchId"
               target="_blank"
               rel="noopener"
-              >{{ (m.won ? 'games.dota.wonMatch' : 'games.dota.lostMatch') | transloco }}</a
+              >{{
+                (m.won === null
+                  ? 'games.dota.unknownResult'
+                  : m.won
+                    ? 'games.dota.wonMatch'
+                    : 'games.dota.lostMatch'
+                ) | transloco
+              }}</a
             >
             <span class="muted">{{ m.startedAt | timeAgo: lang() }}</span>
           </span>
@@ -40,10 +47,14 @@ import { TimeAgoPipe } from '../time-ago.pipe';
             <span class="muted">{{ duration(m.durationSec) }}</span>
           </span>
           <span class="main">
-            <span class="kda">{{ m.kills }} / {{ m.deaths }} / {{ m.assists }}</span>
-            <span class="muted"
-              >KDA {{ (m.kills + m.assists) / (m.deaths || 1) | number: '1.1-1' }}</span
-            >
+            @if (m.kills !== null && m.deaths !== null && m.assists !== null) {
+              <span class="kda">{{ m.kills }} / {{ m.deaths }} / {{ m.assists }}</span>
+              <span class="muted"
+                >KDA {{ (m.kills + m.assists) / (m.deaths || 1) | number: '1.1-1' }}</span
+              >
+            } @else {
+              <span class="muted">—</span>
+            }
           </span>
           <span class="main wide right">
             @if (m.goldPerMin !== null) {
@@ -114,6 +125,12 @@ import { TimeAgoPipe } from '../time-ago.pipe';
       color: var(--loss);
       text-decoration: none;
     }
+    li.unknown {
+      border-left-color: var(--mat-sys-outline-variant);
+    }
+    .unknown .result {
+      color: var(--mat-sys-on-surface-variant);
+    }
     .won .result {
       color: var(--win);
     }
@@ -163,7 +180,10 @@ export class DotaMatchListComponent {
   readonly accountNames = input<Record<string, string>>({});
   readonly lang = input.required<string>();
 
-  protected duration(seconds: number): string {
+  protected duration(seconds: number | null): string {
+    if (seconds === null) {
+      return '';
+    }
     const minutes = Math.floor(seconds / 60);
     return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
   }

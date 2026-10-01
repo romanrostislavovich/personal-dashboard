@@ -83,15 +83,19 @@ export function dotaMatchMode(gameMode: number | null, lobbyType: number | null)
   return lobbyType === 0 ? 'unranked' : 'other';
 }
 
+/**
+ * A match of the saved history. Steam lists a match before its result and numbers are known,
+ * so everything about how it went may be `null` for a while (or for good, if no source has it).
+ */
 export interface DotaMatch {
   matchId: number;
   hero: DotaHero;
   mode: DotaMatchMode;
-  won: boolean;
-  kills: number;
-  deaths: number;
-  assists: number;
-  durationSec: number;
+  won: boolean | null;
+  kills: number | null;
+  deaths: number | null;
+  assists: number | null;
+  durationSec: number | null;
   startedAt: string;
 }
 
@@ -114,6 +118,14 @@ export interface DotaRecord {
   startedAt: string;
 }
 
+/** Matches of a mode; `decided` — the ones with a known result. */
+export interface DotaModeStats {
+  mode: DotaMatchMode;
+  matches: number;
+  decided: number;
+  wins: number;
+}
+
 export interface DotaSummary {
   game: 'dota2';
   personaName: string;
@@ -124,15 +136,16 @@ export interface DotaSummary {
   leaderboardRank: number | null;
   /** OpenDota cannot see the history — the player has to enable "Expose Public Match Data". */
   historyHidden: boolean;
-  /** Over all saved matches. */
+  /** Over all saved matches; `decided` — the ones with a known result (the base of a win rate). */
   totals: {
     matches: number;
+    decided: number;
     wins: number;
     heroesPlayed: number;
     hoursPlayed: number;
     firstMatchAt: string | null;
   };
-  modes: { mode: DotaMatchMode; matches: number; wins: number }[];
+  modes: DotaModeStats[];
   records: DotaRecord[];
   last30Days: { wins: number; losses: number };
   recentMatches: DotaMatch[];
@@ -149,20 +162,26 @@ export interface DotaAccountSummary {
   leaderboardRank: number | null;
   historyHidden: boolean;
   matches: number;
+  /** Matches with a known result. */
+  decided: number;
   wins: number;
   lastMatchAt: string | null;
   lastSyncedAt: string | null;
   lastError: string | null;
 }
 
-/** A hero over the selected accounts; kills, deaths and assists are averages per match. */
+/**
+ * A hero over the selected accounts; kills, deaths and assists are averages per match with
+ * known numbers (`null` — no such match yet), `decided` — matches with a known result.
+ */
 export interface DotaHeroStats {
   hero: DotaHero;
   matches: number;
+  decided: number;
   wins: number;
-  kills: number;
-  deaths: number;
-  assists: number;
+  kills: number | null;
+  deaths: number | null;
+  assists: number | null;
   goldPerMin: number | null;
   xpPerMin: number | null;
   lastPlayedAt: string;
@@ -172,6 +191,8 @@ export interface DotaHeroStats {
 export interface DotaActivityDay {
   day: string;
   matches: number;
+  /** Matches with a known result. */
+  decided: number;
   wins: number;
 }
 
@@ -189,6 +210,8 @@ export interface DotaOverview {
   accounts: DotaAccountSummary[];
   totals: {
     matches: number;
+    /** Matches with a known result: the base of the win rate. */
+    decided: number;
     wins: number;
     heroesPlayed: number;
     hoursPlayed: number;
@@ -199,7 +222,7 @@ export interface DotaOverview {
     firstMatchAt: string | null;
     lastMatchAt: string | null;
   };
-  modes: { mode: DotaMatchMode; matches: number; wins: number }[];
+  modes: DotaModeStats[];
   last30Days: { wins: number; losses: number };
   records: (DotaRecord & { accountId: string })[];
   /** Every hero played, most played first. */

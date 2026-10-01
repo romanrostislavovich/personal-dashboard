@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { SecretsService } from '@pd/api-core';
+import { SteamDotaClient } from './steam-dota.client';
 import { SteamClient, SteamKeyError } from './steam.client';
 
 const KEY_SECRET = 'games.steam-key';
@@ -17,9 +18,9 @@ export class SteamKeyService {
   }
 
   /** A client with the user's key; `null` — no key, nothing can be read from Steam. */
-  async clientFor(userId: string): Promise<SteamClient | null> {
+  async clientFor(userId: string): Promise<SteamDotaClient | null> {
     const key = await this.secrets.get(userId, KEY_SECRET);
-    return key ? new SteamClient(key) : null;
+    return key ? new SteamDotaClient(key) : null;
   }
 
   async save(userId: string, apiKey: string): Promise<void> {

@@ -9,19 +9,27 @@ type Column = 'matches' | 'winrate' | 'kda' | 'goldPerMin' | 'xpPerMin' | 'lastP
 
 const VALUE: Record<Column, (h: DotaHeroStats) => number> = {
   matches: (h) => h.matches,
-  winrate: (h) => h.wins / h.matches,
-  kda: (h) => kda(h),
+  winrate: (h) => winrate(h) ?? -1,
+  kda: (h) => kda(h) ?? -1,
   goldPerMin: (h) => h.goldPerMin ?? -1,
   xpPerMin: (h) => h.xpPerMin ?? -1,
   lastPlayedAt: (h) => new Date(h.lastPlayedAt).getTime(),
 };
 
+/** `null` — no match with known numbers yet. */
 export function kda({
   kills,
   deaths,
   assists,
-}: Pick<DotaHeroStats, 'kills' | 'deaths' | 'assists'>) {
-  return (kills + assists) / Math.max(1, deaths);
+}: Pick<DotaHeroStats, 'kills' | 'deaths' | 'assists'>): number | null {
+  return kills === null || deaths === null || assists === null
+    ? null
+    : (kills + assists) / Math.max(1, deaths);
+}
+
+/** Wins among the matches with a known result; `null` — there are none yet. */
+export function winrate({ wins, decided }: Pick<DotaHeroStats, 'wins' | 'decided'>): number | null {
+  return decided ? wins / decided : null;
 }
 
 /**
@@ -68,16 +76,18 @@ export function kda({
                 ></span>
               </td>
               <td>
-                <span class="num" [class.good]="h.wins / h.matches >= 0.5">{{
-                  h.wins / h.matches | percent: '1.1-1'
+                @let rate = winrate(h);
+                <span class="num" [class.good]="(rate ?? 0) >= 0.5">{{
+                  rate === null ? '—' : (rate | percent: '1.1-1')
                 }}</span>
-                <span class="bar rate"
-                  ><span [style.width.%]="(h.wins / h.matches) * 100"></span
-                ></span>
+                <span class="bar rate"><span [style.width.%]="(rate ?? 0) * 100"></span></span>
               </td>
               <td>
-                <span class="num">{{ kda(h) | number: '1.2-2' }}</span>
-                <span class="kda-parts">{{ h.kills }} / {{ h.deaths }} / {{ h.assists }}</span>
+                @let ratio = kda(h);
+                <span class="num">{{ ratio === null ? '—' : (ratio | number: '1.2-2') }}</span>
+                @if (ratio !== null) {
+                  <span class="kda-parts">{{ h.kills }} / {{ h.deaths }} / {{ h.assists }}</span>
+                }
               </td>
               @if (!limit()) {
                 <td class="wide num">{{ h.goldPerMin ?? '—' }}</td>
@@ -180,6 +190,7 @@ export class DotaHeroesTableComponent {
   readonly lang = input.required<string>();
 
   protected readonly kda = kda;
+  protected readonly winrate = winrate;
   protected readonly sort = signal<Sort>({ active: 'matches', direction: 'desc' });
   protected readonly most = computed(() => Math.max(1, ...this.heroes().map((h) => h.matches)));
 

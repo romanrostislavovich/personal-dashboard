@@ -2,7 +2,6 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig, DB, Database } from '@pd/api-core';
 import {
-  DOTA_MATCH_MODES,
   DOTA_RECORDS,
   DotaAccountSummary,
   DotaHero,
@@ -17,6 +16,7 @@ import {
 import { and, asc, desc, eq, gt, inArray, isNotNull, SQL, sql } from 'drizzle-orm';
 import { dotaMatches, gameAccounts, GameAccountRow } from '../games.schema';
 import { DotaHeroesService } from './dota-heroes.service';
+import { sumByMode } from './mode-stats';
 import { DotaProfile } from './opendota.client';
 
 const RECENT_MATCHES = 15;
@@ -118,6 +118,7 @@ export class DotaOverviewService {
     const [row] = await this.db
       .select({
         matches: sql<number>`count(*)::int`,
+        decided: sql<number>`count(${m.won})::int`,
         wins: sql<number>`count(*) FILTER (WHERE ${m.won})::int`,
         heroesPlayed: sql<number>`count(DISTINCT ${m.heroId})::int`,
         hoursPlayed: sql<number>`coalesce(round(sum(${m.durationSec}) / 3600.0), 0)::int`,
@@ -138,6 +139,7 @@ export class DotaOverviewService {
       .select({
         accountId: m.accountId,
         matches: sql<number>`count(*)::int`,
+        decided: sql<number>`count(${m.won})::int`,
         wins: sql<number>`count(*) FILTER (WHERE ${m.won})::int`,
         lastMatchAt: sql<string>`max(${m.startedAt})`,
       })
@@ -155,21 +157,13 @@ export class DotaOverviewService {
         gameMode: m.gameMode,
         lobbyType: m.lobbyType,
         matches: sql<number>`count(*)::int`,
+        decided: sql<number>`count(${m.won})::int`,
         wins: sql<number>`count(*) FILTER (WHERE ${m.won})::int`,
       })
       .from(m)
       .where(inArray(m.accountId, ids))
       .groupBy(m.gameMode, m.lobbyType);
-    const byMode = new Map<DotaMatchMode, { matches: number; wins: number }>();
-    for (const row of rows) {
-      const mode = dotaMatchMode(row.gameMode, row.lobbyType);
-      const total = byMode.get(mode) ?? { matches: 0, wins: 0 };
-      byMode.set(mode, { matches: total.matches + row.matches, wins: total.wins + row.wins });
-    }
-    return DOTA_MATCH_MODES.flatMap((mode) => {
-      const total = byMode.get(mode);
-      return total ? [{ mode, ...total }] : [];
-    });
+    return sumByMode(rows);
   }
 
   private async last30Days(ids: string[]): Promise<DotaOverview['last30Days']> {
@@ -224,10 +218,11 @@ export class DotaOverviewService {
       .select({
         heroId: m.heroId,
         matches: sql<number>`count(*)::int`,
+        decided: sql<number>`count(${m.won})::int`,
         wins: sql<number>`count(*) FILTER (WHERE ${m.won})::int`,
-        kills: sql<number>`round(avg(${m.kills}), 1)::float`,
-        deaths: sql<number>`round(avg(${m.deaths}), 1)::float`,
-        assists: sql<number>`round(avg(${m.assists}), 1)::float`,
+        kills: sql<number | null>`round(avg(${m.kills}), 1)::float`,
+        deaths: sql<number | null>`round(avg(${m.deaths}), 1)::float`,
+        assists: sql<number | null>`round(avg(${m.assists}), 1)::float`,
         goldPerMin: sql<number | null>`round(avg(${m.goldPerMin}))::int`,
         xpPerMin: sql<number | null>`round(avg(${m.xpPerMin}))::int`,
         lastPlayedAt: sql<string>`max(${m.startedAt})`,
@@ -252,6 +247,7 @@ export class DotaOverviewService {
         .select({
           day: sql<string>`${day}`,
           matches: sql<number>`count(*)::int`,
+          decided: sql<number>`count(${m.won})::int`,
           wins: sql<number>`count(*) FILTER (WHERE ${m.won})::int`,
         })
         .from(m)
@@ -324,7 +320,7 @@ function modeFilter(mode: DotaMatchMode): SQL {
 
 function toAccountSummary(
   account: GameAccountRow,
-  counts: { matches: number; wins: number; lastMatchAt: string } | undefined,
+  counts: { matches: number; decided: number; wins: number; lastMatchAt: string } | undefined,
 ): DotaAccountSummary {
   const profile = account.profile as DotaProfile | null;
   return {
@@ -336,6 +332,7 @@ function toAccountSummary(
     leaderboardRank: profile?.leaderboardRank ?? null,
     historyHidden: profile?.historyHidden ?? false,
     matches: counts?.matches ?? 0,
+    decided: counts?.decided ?? 0,
     wins: counts?.wins ?? 0,
     lastMatchAt: iso(counts?.lastMatchAt ?? null),
     lastSyncedAt: account.lastSyncedAt?.toISOString() ?? null,
@@ -352,6 +349,7 @@ function emptyOverview(): DotaOverview {
     accounts: [],
     totals: {
       matches: 0,
+      decided: 0,
       wins: 0,
       heroesPlayed: 0,
       hoursPlayed: 0,

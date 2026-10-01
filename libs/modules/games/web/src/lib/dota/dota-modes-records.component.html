@@ -12,9 +12,11 @@
             }}</span>
             <span class="muted">{{ m.matches | number }}</span>
             <span class="bar" aria-hidden="true">
-              <span [style.width.%]="(m.wins / m.matches) * 100"></span>
+              <span [style.width.%]="m.decided ? (m.wins / m.decided) * 100 : 0"></span>
             </span>
-            <span class="rate">{{ m.wins / m.matches | percent: '1.1-1' }}</span>
+            <span class="rate">
+              {{ m.decided ? (m.wins / m.decided | percent: '1.1-1') : '—' }}
+            </span>
           </div>
         }
       </div>

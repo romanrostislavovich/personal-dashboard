@@ -116,6 +116,10 @@ export class DotaCareerService {
       .orderBy(asc(dotaMatches.startedAt));
     const resultsByAccount = new Map<string, boolean[]>();
     for (const row of rows) {
+      // A match without a known result neither continues a streak nor breaks it.
+      if (row.won === null) {
+        continue;
+      }
       const results = resultsByAccount.get(row.accountId) ?? [];
       results.push(row.won);
       resultsByAccount.set(row.accountId, results);

@@ -1,18 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DB, Database } from '@pd/api-core';
-import {
-  DOTA_MATCH_MODES,
-  DOTA_RECORDS,
-  DotaHero,
-  DotaMatchMode,
-  DotaRecord,
-  dotaMatchMode,
-  DotaSummary,
-} from '@pd/contracts';
-import { and, desc, eq, getTableColumns, gt, isNotNull, sql } from 'drizzle-orm';
+import { DOTA_RECORDS, DotaHero, DotaRecord, dotaMatchMode, DotaSummary } from '@pd/contracts';
+import { and, desc, eq, gt, isNotNull, sql } from 'drizzle-orm';
 import { dotaMatches, gameAccounts, GameAccountRow } from '../games.schema';
 import { DotaHeroesService } from './dota-heroes.service';
+import { SteamDotaClient, SteamDotaPrivateError } from '../steam/steam-dota.client';
+import { toSteamId64 } from '../steam/steam-id';
+import { SteamKeyService } from '../steam/steam-key.service';
+import { DotaSteamSource } from './dota-steam.source';
 import { OpenDotaKeyService } from './opendota-key.service';
+import { sumByMode } from './mode-stats';
 import { DotaProfile, openDota, OpenDotaMatch } from './opendota.client';
 import { medalChange } from './steam-id';
 
@@ -58,17 +55,73 @@ export class DotaService {
     @Inject(DB) private readonly db: Database,
     private readonly heroes: DotaHeroesService,
     private readonly keys: OpenDotaKeyService,
+    private readonly steamKeys: SteamKeyService,
+    private readonly steamSource: DotaSteamSource,
   ) {}
 
   /**
-   * Updates the profile and saves matches. The whole history is downloaded on the first sync,
-   * once a day and on a manual refresh — so matches OpenDota learns about later are not lost.
+   * Updates the profile and the matches of the account from its sources.
+   *
+   * Steam (with the user's Web API key) comes first: it lists every match, and the result and
+   * numbers of each are filled in after. OpenDota then adds what Steam does not give — the medal
+   * and the fields of the matches it knows — and is the only source when there is no Steam key.
+   * `fullHistory` (a manual refresh) walks the whole history again on both.
    */
-  async sync(account: GameAccountRow, { fullHistory = false } = {}): Promise<DotaSyncResult> {
+  async sync(
+    account: GameAccountRow,
+    { fullHistory = false, awaitDetails = false } = {},
+  ): Promise<DotaSyncResult> {
+    const steam = await this.steamKeys.clientFor(account.userId);
+    const apiKey = await this.keys.get(account.userId, account.id);
+
+    let historyHidden = false;
+    if (steam) {
+      try {
+        await this.steamSource.syncList(account, steam, { full: fullHistory });
+      } catch (error) {
+        if (!(error instanceof SteamDotaPrivateError)) {
+          throw error;
+        }
+        historyHidden = true;
+      }
+    }
+
+    // Without Steam OpenDota is all there is, and its failure is the failure of the sync.
+    const fromOpenDota = await this.syncOpenDota(account, fullHistory, apiKey).catch((error) => {
+      if (!steam) {
+        throw error;
+      }
+      this.logger.warn(`OpenDota did not add to ${account.displayName}: ${error}`);
+      return null;
+    });
+
+    if (steam && !historyHidden) {
+      // A request per match: the hourly job waits for it, a click on the page does not.
+      const filling = this.steamSource
+        .fillDetails(account, steam)
+        .catch((error) => this.logger.warn(`Dota match details failed: ${error}`));
+      if (awaitDetails) {
+        await filling;
+      }
+    }
+
+    const profile = steam
+      ? {
+          ...(fromOpenDota ?? (await this.steamProfile(steam, account))),
+          historyHidden,
+        }
+      : (fromOpenDota as DotaProfile);
+    return { profile, rankChange: rankChangeSinceLastSync(account, profile) };
+  }
+
+  /** The profile and the matches OpenDota has; nulls never replace what is already saved. */
+  private async syncOpenDota(
+    account: GameAccountRow,
+    fullHistory: boolean,
+    apiKey: string | null,
+  ): Promise<DotaProfile> {
     const accountId = Number(account.externalId);
     const full = fullHistory || isHistoryStale(account);
-
-    const apiKey = await this.keys.get(account.userId, account.id);
 
     const [profile, matches] = await Promise.all([
       openDota.getProfile(accountId, apiKey),
@@ -84,8 +137,24 @@ export class DotaService {
       // it missed, a new medal) comes with the next sync.
       await this.requestRefresh(account, apiKey);
     }
+    return profile;
+  }
 
-    return { profile, rankChange: rankChangeSinceLastSync(account, profile) };
+  /** The name and the picture from Steam when OpenDota did not answer; the medal stays as it was. */
+  private async steamProfile(
+    steam: SteamDotaClient,
+    account: GameAccountRow,
+  ): Promise<DotaProfile> {
+    const previous = account.profile as DotaProfile | null;
+    const player = await steam.getPlayer(toSteamId64(account.externalId));
+    return {
+      personaName: player.personaName,
+      avatarUrl: player.avatarUrl,
+      profileUrl: `https://www.opendota.com/players/${account.externalId}`,
+      rankTier: previous?.rankTier ?? null,
+      leaderboardRank: previous?.leaderboardRank ?? null,
+      historyHidden: false,
+    };
   }
 
   async summary(account: GameAccountRow): Promise<DotaSummary | null> {
@@ -146,6 +215,7 @@ export class DotaService {
     const [{ firstMatchAt, ...totals }] = await this.db
       .select({
         matches: sql<number>`count(*)::int`,
+        decided: sql<number>`count(${dotaMatches.won})::int`,
         wins: sql<number>`count(*) FILTER (WHERE ${dotaMatches.won})::int`,
         heroesPlayed: sql<number>`count(DISTINCT ${dotaMatches.heroId})::int`,
         hoursPlayed: sql<number>`coalesce(round(sum(${dotaMatches.durationSec}) / 3600.0), 0)::int`,
@@ -209,16 +279,20 @@ export class DotaService {
     return rows.map((h) => ({ hero: hero(h.heroId), games: h.games, wins: h.wins }));
   }
 
-  /** Insert new matches and fill in details of already saved ones. */
+  /**
+   * Inserts new matches and fills in the details of already saved ones. A value of OpenDota
+   * replaces the saved one, but its `null` does not: the match may have come from Steam with
+   * that field known.
+   */
   private async saveMatches(accountId: string, matches: OpenDotaMatch[]): Promise<void> {
     // `excluded.<column>` is the row that failed to insert; columns are snake_case in the database.
     const set = Object.fromEntries(
-      Object.keys(getTableColumns(dotaMatches))
-        .filter((key) => key !== 'accountId' && key !== 'matchId')
-        .map((key) => [
-          key,
-          sql.raw(`excluded.${key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`)}`),
-        ]),
+      Object.keys(matches[0] ?? {})
+        .filter((key) => key !== 'matchId')
+        .map((key) => {
+          const column = key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+          return [key, sql.raw(`coalesce(excluded.${column}, "games_dota_matches".${column})`)];
+        }),
     );
     for (let i = 0; i < matches.length; i += INSERT_CHUNK) {
       await this.db
@@ -235,22 +309,14 @@ export class DotaService {
         gameMode: dotaMatches.gameMode,
         lobbyType: dotaMatches.lobbyType,
         matches: sql<number>`count(*)::int`,
+        decided: sql<number>`count(${dotaMatches.won})::int`,
         wins: sql<number>`count(*) FILTER (WHERE ${dotaMatches.won})::int`,
       })
       .from(dotaMatches)
       .where(eq(dotaMatches.accountId, accountId))
       .groupBy(dotaMatches.gameMode, dotaMatches.lobbyType);
 
-    const byMode = new Map<DotaMatchMode, { matches: number; wins: number }>();
-    for (const row of rows) {
-      const mode = dotaMatchMode(row.gameMode, row.lobbyType);
-      const total = byMode.get(mode) ?? { matches: 0, wins: 0 };
-      byMode.set(mode, { matches: total.matches + row.matches, wins: total.wins + row.wins });
-    }
-    return DOTA_MATCH_MODES.filter((mode) => byMode.has(mode)).map((mode) => ({
-      mode,
-      ...(byMode.get(mode) as { matches: number; wins: number }),
-    }));
+    return sumByMode(rows);
   }
 
   /** The best match for each record kind; the queries are independent, so they run together. */

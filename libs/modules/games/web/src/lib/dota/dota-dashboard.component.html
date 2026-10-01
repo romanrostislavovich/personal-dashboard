@@ -92,11 +92,18 @@
       <span class="value">
         <span class="win">{{ o.totals.wins | number }}</span>
         <span class="dash">–</span>
-        <span class="loss">{{ o.totals.matches - o.totals.wins | number }}</span>
+        <span class="loss">{{ o.totals.decided - o.totals.wins | number }}</span>
       </span>
       <span class="muted">{{ winrate() === null ? '—' : (winrate() | percent: '1.2-2') }}</span>
     </div>
   </section>
+
+  <!-- Steam lists a match first and tells how it went later: say so instead of counting it lost. -->
+  @if (o.totals.matches > o.totals.decided) {
+    <p class="muted pending">
+      {{ 'games.dota.pendingResults' | transloco: { count: o.totals.matches - o.totals.decided } }}
+    </p>
+  }
 
   @if (single()?.historyHidden && !o.totals.matches) {
     <div class="notice" role="status">
@@ -212,7 +219,7 @@
                 }}</span>
                 <span
                   >{{ a.matches | number }} ·
-                  {{ a.matches ? (a.wins / a.matches | percent: '1.0-1') : '—' }}</span
+                  {{ a.decided ? (a.wins / a.decided | percent: '1.0-1') : '—' }}</span
                 >
                 <span class="muted">{{ a.lastMatchAt | timeAgo: lang() }}</span>
                 <span class="actions">

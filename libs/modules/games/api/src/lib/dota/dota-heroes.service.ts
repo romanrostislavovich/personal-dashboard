@@ -31,6 +31,12 @@ export class DotaHeroesService {
     });
   }
 
+  /** Ids of all heroes — for walking the match history hero by hero. */
+  async ids(): Promise<number[]> {
+    await this.resolver();
+    return [...(this.cache?.map.keys() ?? [])];
+  }
+
   private async load(previous: Map<number, HeroInfo>) {
     for (const source of [() => openDota.getHeroes(), () => openDota.getHeroesFromMirror()]) {
       try {

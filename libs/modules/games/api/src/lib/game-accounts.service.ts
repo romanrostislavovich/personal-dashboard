@@ -118,16 +118,16 @@ export class GameAccountsService {
   /** Background sync of all accounts; news goes to notifications. */
   async syncAll(): Promise<void> {
     for (const row of await this.db.select().from(gameAccounts)) {
-      await this.syncAccount(row);
+      await this.syncAccount(row, { awaitDetails: true });
     }
   }
 
   private async syncAccount(
     row: GameAccountRow,
-    { throwErrors = false, fullHistory = false } = {},
+    { throwErrors = false, fullHistory = false, awaitDetails = false } = {},
   ): Promise<void> {
     try {
-      const news = await this.syncGame(row, fullHistory);
+      const news = await this.syncGame(row, { fullHistory, awaitDetails });
       if (news.length > 0) {
         await this.notify(row.userId, news);
       }
@@ -155,10 +155,13 @@ export class GameAccountsService {
   }
 
   /** Syncs the account with its game; returns news lines for a notification. */
-  private syncGame(row: GameAccountRow, fullHistory: boolean): Promise<string[]> {
+  private syncGame(
+    row: GameAccountRow,
+    options: { fullHistory: boolean; awaitDetails: boolean },
+  ): Promise<string[]> {
     switch (row.game) {
       case 'dota2':
-        return this.syncDota(row, fullHistory);
+        return this.syncDota(row, options);
       case 'wow':
         return this.syncWow(row);
       case 'steam':
@@ -173,8 +176,11 @@ export class GameAccountsService {
     return [];
   }
 
-  private async syncDota(row: GameAccountRow, fullHistory: boolean): Promise<string[]> {
-    const { profile, rankChange } = await this.dota.sync(row, { fullHistory });
+  private async syncDota(
+    row: GameAccountRow,
+    options: { fullHistory: boolean; awaitDetails: boolean },
+  ): Promise<string[]> {
+    const { profile, rankChange } = await this.dota.sync(row, options);
     await this.saveProfile(row, profile.personaName, { ...profile });
     const text = gamesMessages(await this.localeOf(row.userId));
     return rankChange ? [text.dotaRank(profile.personaName, rankChange.from, rankChange.to)] : [];

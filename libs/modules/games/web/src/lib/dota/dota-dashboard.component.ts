@@ -102,7 +102,7 @@ export class DotaDashboardComponent {
 
   protected readonly winrate = computed(() => {
     const totals = this.overview.value()?.totals;
-    return totals?.matches ? totals.wins / totals.matches : null;
+    return totals?.decided ? totals.wins / totals.decided : null;
   });
 
   protected readonly kda = computed(() => {

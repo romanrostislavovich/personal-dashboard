@@ -84,7 +84,9 @@
       "anyMode": "Any mode",
       "all": "All"
     },
-    "loadFailed": "Could not load the Dota statistics. Reload the page; the saved matches are not lost."
+    "loadFailed": "Could not load the Dota statistics. Reload the page; the saved matches are not lost.",
+    "unknownResult": "No result yet",
+    "pendingResults": "Steam has not told the result of {{count}} matches yet: they are filled in with every sync and are not counted in the win rate."
   },
   "wow": {
     "region": "Region",

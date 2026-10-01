@@ -6,6 +6,11 @@
   gap: 16px;
 }
 
+.pending {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+}
+
 .muted {
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-small);
