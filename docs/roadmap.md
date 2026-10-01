@@ -58,6 +58,10 @@
 ### Planned
 
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
+- **Tasks** — a new section with two subsections:
+  - **Reminders** — scheduled reminders for a date and time, sent to Telegram and as notifications;
+    can be snoozed
+  - **TODO list** — tasks with due dates, priorities and checklists; overdue ones in the digest
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
 - **Development** — a new section that groups everything about coding:
   - **Open Source** — the existing module moves here as a subsection
@@ -68,7 +72,7 @@
 - **Books** — reading list, progress, ratings and notes
 - **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and
   its trend, heart rate; data from smart watches and fitness bands (Apple Health, Google Fit /
-  Health Connect, Garmin, Fitbit, Mi Band / Zepp and similar)
+  Health Connect, Garmin, Fitbit, Mi Band / Zepp and similar); runs and rides from Strava
 - **SoundCloud** — my own mixes and tracks: plays, likes, reposts and comments
 - **Science** — a section for science
 - **Psychology** — a section for psychology; how exactly to tie it in is still open (for example
