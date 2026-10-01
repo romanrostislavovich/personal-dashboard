@@ -5,7 +5,7 @@ export * from './lib/projects';
 export * from './lib/notifications';
 export * from './lib/birthdays';
 export * from './lib/finance';
-export * from './lib/github-oss';
+export * from './lib/open-source';
 export * from './lib/monitoring';
 export * from './lib/diary';
 export * from './lib/music';

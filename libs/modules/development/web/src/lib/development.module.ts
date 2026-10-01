@@ -1,11 +1,26 @@
 import { WebDashboardModule } from '@pd/web-core';
 
-/** Web part of the Open Source module (GitHub + npm). Plugged in at apps/web/src/app/modules.ts. */
-export const githubOssModule: WebDashboardModule = {
-  id: 'github-oss',
-  nav: { labelKey: 'github-oss.title', icon: 'code' },
+/**
+ * Web part of the Development section: open source repositories (GitHub + npm).
+ * Plugged in at apps/web/src/app/modules.ts.
+ */
+export const developmentModule: WebDashboardModule = {
+  id: 'development',
+  nav: { labelKey: 'development.title', icon: 'code' },
+  // The page holds the tabs; every subsection is its child route.
   loadRoutes: async () => [
-    { path: '', loadComponent: () => import('./github-oss.page').then((m) => m.GithubOssPage) },
+    {
+      path: '',
+      loadComponent: () => import('./development.page').then((m) => m.DevelopmentPage),
+      children: [
+        { path: '', pathMatch: 'full', redirectTo: 'open-source' },
+        {
+          path: 'open-source',
+          loadComponent: () =>
+            import('./open-source/open-source.page').then((m) => m.OpenSourcePage),
+        },
+      ],
+    },
   ],
   translations: {
     en: () => import('./i18n/en.json'),
@@ -13,16 +28,17 @@ export const githubOssModule: WebDashboardModule = {
   },
   widgets: [
     {
-      id: 'github-oss.summary',
+      id: 'development.open-source',
       size: 'medium',
-      loadComponent: () => import('./github-oss.widget').then((m) => m.GithubOssWidget),
+      loadComponent: () =>
+        import('./open-source/open-source.widget').then((m) => m.OpenSourceWidget),
     },
   ],
   integrations: [
     {
-      id: 'github-oss.token',
+      id: 'development.github-token',
       loadComponent: () =>
-        import('./github-token.integration').then((m) => m.GithubTokenIntegration),
+        import('./github/github-token.integration').then((m) => m.GithubTokenIntegration),
     },
   ],
 };

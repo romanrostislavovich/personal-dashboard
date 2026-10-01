@@ -3,10 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { AppConfig, DB, Database } from '@pd/api-core';
 import { todayIn, toLocalDate } from '@pd/contracts';
 import { eq } from 'drizzle-orm';
-import { GithubClient, GithubIssue, GithubRelease } from '../clients/github.client';
-import { fetchNpmWeeklyDownloads } from '../clients/npm.client';
-import { repoDailyStats, TrackedRepoRow, trackedRepos } from '../github-oss.schema';
-import { crossedStarMilestone } from '../stats/star-stats';
+import { GithubClient, GithubIssue, GithubRelease } from '../github/github.client';
+import { fetchNpmWeeklyDownloads } from './npm.client';
+import { repoDailyStats, TrackedRepoRow, trackedRepos } from './open-source.schema';
+import { crossedStarMilestone } from './star-stats';
 
 /** What happened to the repository since the last sync — for notifications. */
 export interface RepoSyncEvents {

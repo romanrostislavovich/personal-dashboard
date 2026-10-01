@@ -123,7 +123,7 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
      changed since the previous one, so `collect(userId)` returns facts that stay the same until
      there is news (stars, a status, a release tag — not response times or "days until"); `null` —
      nothing to tell. `always: true` puts the section in every digest (the weather). Example —
-     `libs/modules/github-oss/api/src/lib/github-oss.digest.ts`.
+     `libs/modules/development/api/src/lib/open-source/open-source.digest.ts`.
    - calls to outside services on a user's request (connect an account, "refresh now"):
      `strava.server-actions.ts` — `ServerActions.register('strava.sync', handler)`, and the
      controller / AI tool calls `ServerActions.run(userId, 'strava.sync', args)`. They then run on
@@ -140,12 +140,12 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
 
 Connections to outside services (tokens, API keys, accounts) all live in one place, Settings →
 Integrations: the module exports a self-contained component as `integrations` of its
-`WebDashboardModule` (example — `libs/modules/github-oss/web/src/lib/github-token.integration.ts`),
+`WebDashboardModule` (example — `libs/modules/development/web/src/lib/github/github-token.integration.ts`),
 and its pages only link there (`INTEGRATIONS_LINK`) while nothing is connected.
 
 Tokens of external services are entered by the user in that component and stored with the core
 `SecretsService`: `secrets.set(userId, 'strava.token', value)`. Values are encrypted with AES-256-GCM
-using `ENCRYPTION_KEY` and are never sent to the frontend. Example — `GithubTokenService` in `github-oss`.
+using `ENCRYPTION_KEY` and are never sent to the frontend. Example — `GithubTokenService` in `development`.
 
 ## Adding a cost provider
 

@@ -10,16 +10,16 @@ import { ConfigService } from '@nestjs/config';
 import { AppConfig, DB, Database, isUniqueViolation } from '@pd/api-core';
 import { addDays, DateParts, todayIn, toLocalDate, TrackedRepo } from '@pd/contracts';
 import { and, asc, desc, eq, gte, inArray } from 'drizzle-orm';
-import { GithubNotFoundError } from './clients/github.client';
-import { GithubTokenService } from './github-token.service';
+import { GithubNotFoundError } from '../github/github.client';
+import { GithubTokenService } from '../github/github-token.service';
 import {
   repoDailyStats,
   RepoDailyStatsRow,
   TrackedRepoRow,
   trackedRepos,
-} from './github-oss.schema';
-import { starsDelta } from './stats/star-stats';
-import { RepoSyncEvents, RepoSyncService } from './sync/repo-sync.service';
+} from './open-source.schema';
+import { starsDelta } from './star-stats';
+import { RepoSyncEvents, RepoSyncService } from './repo-sync.service';
 
 const HISTORY_DAYS = 30;
 

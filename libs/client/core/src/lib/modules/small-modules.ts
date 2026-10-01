@@ -1,10 +1,7 @@
 import {
   BirthdayInput,
-  GithubSettings,
   Monitor,
   MonitorInput,
-  TrackedRepo,
-  TrackedRepoInput,
   UpcomingBirthday,
   WeatherForecast,
   WeatherLocation,
@@ -12,7 +9,7 @@ import {
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
-// Modules with a handful of requests each: birthdays, open source, monitoring, weather.
+// Modules with a handful of requests each: birthdays, monitoring, weather.
 
 // --- Birthdays ---
 
@@ -28,28 +25,6 @@ export function birthdaysApi(api: ApiClient) {
     update: (id: string, input: BirthdayInput) =>
       api.put<UpcomingBirthday>(`/api/birthdays/${id}`, input),
     remove: (id: string) => api.delete(`/api/birthdays/${id}`),
-  };
-}
-
-// --- Open source (GitHub and npm) ---
-
-export const GITHUB_OSS_READS = {
-  repos: () => apiRequest('/api/github-oss/repos'),
-  settings: () => apiRequest('/api/github-oss/settings'),
-};
-
-export function githubOssApi(api: ApiClient) {
-  const base = '/api/github-oss';
-  return {
-    repos: () => api.read<TrackedRepo[]>(GITHUB_OSS_READS.repos()),
-    settings: () => api.read<GithubSettings>(GITHUB_OSS_READS.settings()),
-    addRepo: (input: TrackedRepoInput) => api.post<void>(`${base}/repos`, input),
-    updateRepo: (id: string, input: TrackedRepoInput) =>
-      api.put<void>(`${base}/repos/${id}`, input),
-    removeRepo: (id: string) => api.delete(`${base}/repos/${id}`),
-    syncAll: () => api.post<void>(`${base}/sync`, {}),
-    saveToken: (token: string) => api.put<void>(`${base}/token`, { token }),
-    removeToken: () => api.delete(`${base}/token`),
   };
 }
 
@@ -90,6 +65,5 @@ export function weatherApi(api: ApiClient) {
 }
 
 export type BirthdaysClient = ReturnType<typeof birthdaysApi>;
-export type GithubOssClient = ReturnType<typeof githubOssApi>;
 export type MonitoringClient = ReturnType<typeof monitoringApi>;
 export type WeatherClient = ReturnType<typeof weatherApi>;

@@ -2,7 +2,7 @@ import { BirthdaysModule } from '@pd/birthdays-api';
 import { DiaryModule } from '@pd/diary-api';
 import { FinanceModule } from '@pd/finance-api';
 import { GamesModule } from '@pd/games-api';
-import { GithubOssModule } from '@pd/github-oss-api';
+import { DevelopmentModule } from '@pd/development-api';
 import { MonitoringModule } from '@pd/monitoring-api';
 import { MusicModule } from '@pd/music-api';
 import { WeatherModule } from '@pd/weather-api';
@@ -14,7 +14,7 @@ import { WeatherModule } from '@pd/weather-api';
 export const enabledModules = [
   BirthdaysModule,
   FinanceModule,
-  GithubOssModule,
+  DevelopmentModule,
   MonitoringModule,
   DiaryModule,
   MusicModule,

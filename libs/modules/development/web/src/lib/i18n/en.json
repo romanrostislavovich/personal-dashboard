@@ -1,31 +1,7 @@
 {
-  "title": "Open Source",
-  "syncNow": "Update",
-  "totalStars": "Total stars",
-  "stars": "Stars",
-  "forks": "Forks",
-  "issues": "Issues",
-  "pulls": "PRs",
-  "npmWeekly": "npm per week",
-  "perWeek": "this week",
-  "starsHistory": "Stars over 30 days",
-  "historyCollecting": "Collecting history: the chart appears from the second day.",
-  "lastPush": "Last push",
-  "syncError": "Sync error",
-  "addTitle": "Track a repository",
-  "editTitle": "Edit the repository",
-  "repoChangeHint": "Another repository starts its star history anew",
-  "repo": "Repository (owner/name or link)",
-  "npmPackage": "npm package (optional)",
-  "empty": "No repositories yet — add the first one above.",
-  "confirmDelete": "Stop tracking {{name}}? Its history will be deleted.",
-  "token": {
-    "title": "GitHub token",
-    "hint": "Optional. Without a token GitHub allows 60 requests per hour — enough for a few repositories. Create a fine-grained token with read-only access to public repositories.",
-    "label": "Personal access token",
-    "configured": "Token saved (encrypted on the server)",
-    "remove": "Remove token",
-    "noToken": "No GitHub token: 60 requests an hour, enough for a few repositories."
+  "title": "Development",
+  "tabs": {
+    "openSource": "Open Source"
   },
   "errors": {
     "notFound": "Repository not found on GitHub",
@@ -33,10 +9,41 @@
     "invalidToken": "GitHub rejected the token",
     "generic": "Something went wrong. Please try again."
   },
-  "widget": {
-    "title": "Open Source",
-    "week": "7 days",
-    "empty": "Add repositories in the Open Source section",
-    "open": "Details"
+  "oss": {
+    "syncNow": "Update",
+    "totalStars": "Total stars",
+    "stars": "Stars",
+    "forks": "Forks",
+    "issues": "Issues",
+    "pulls": "PRs",
+    "npmWeekly": "npm per week",
+    "perWeek": "this week",
+    "starsHistory": "Stars over 30 days",
+    "historyCollecting": "Collecting history: the chart appears from the second day.",
+    "lastPush": "Last push",
+    "syncError": "Sync error",
+    "addTitle": "Track a repository",
+    "editTitle": "Edit the repository",
+    "repoChangeHint": "Another repository starts its star history anew",
+    "repo": "Repository (owner/name or link)",
+    "npmPackage": "npm package (optional)",
+    "empty": "No repositories yet — add the first one above.",
+    "confirmDelete": "Stop tracking {{name}}? Its history will be deleted.",
+    "widget": {
+      "title": "Open Source",
+      "week": "7 days",
+      "empty": "Add repositories in the Open Source section",
+      "open": "Details"
+    }
+  },
+  "github": {
+    "token": {
+      "title": "GitHub token",
+      "hint": "Optional. Without a token GitHub allows 60 requests per hour — enough for a few repositories. Create a fine-grained token with read-only access to public repositories.",
+      "label": "Personal access token",
+      "configured": "Token saved (encrypted on the server)",
+      "remove": "Remove token",
+      "noToken": "No GitHub token: 60 requests an hour, enough for a few repositories."
+    }
   }
 }

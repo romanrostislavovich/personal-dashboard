@@ -2,11 +2,11 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, findById, idParameters, NO_PARAMETERS, ServerActions } from '@pd/api-core';
 import { trackedRepoInputSchema } from '@pd/contracts';
 import { ReposService } from './repos.service';
-import { GITHUB_OSS_ACTIONS } from './github-oss.server-actions';
+import { OPEN_SOURCE_ACTIONS } from './open-source.server-actions';
 
 /** AI access to open source statistics; tracking, untracking and refreshing repositories (assistant). */
 @Injectable()
-export class GithubOssAiTools implements OnModuleInit {
+export class OpenSourceAiTools implements OnModuleInit {
   constructor(
     private readonly actions: ServerActions,
     private readonly ai: AiService,
@@ -16,7 +16,7 @@ export class GithubOssAiTools implements OnModuleInit {
   onModuleInit(): void {
     this.ai.registerTool({
       name: 'github_repos',
-      module: 'github-oss',
+      module: 'development',
       description:
         'Open source repositories: id, stars and growth over 7/30 days, forks, open issues and PRs, ' +
         'latest release, weekly npm downloads.',
@@ -27,7 +27,7 @@ export class GithubOssAiTools implements OnModuleInit {
 
     this.ai.registerTool({
       name: 'github_track_repo',
-      module: 'github-oss',
+      module: 'development',
       writes: true,
       description: 'Starts tracking a GitHub repository (stars, issues, releases, npm downloads).',
       parameters: {
@@ -50,7 +50,7 @@ export class GithubOssAiTools implements OnModuleInit {
 
     this.ai.registerTool({
       name: 'github_untrack_repo',
-      module: 'github-oss',
+      module: 'development',
       writes: true,
       confirm: async (userId, args) => {
         const { fullName, stars } = await find(userId, args);
@@ -65,13 +65,13 @@ export class GithubOssAiTools implements OnModuleInit {
 
     this.ai.registerTool({
       name: 'github_sync',
-      module: 'github-oss',
+      module: 'development',
       writes: true,
       description:
         'Refreshes repository data from GitHub and npm now instead of waiting for the hourly sync.',
       parameters: NO_PARAMETERS,
       handler: async (userId) => {
-        await this.actions.run(userId, GITHUB_OSS_ACTIONS.syncAll);
+        await this.actions.run(userId, OPEN_SOURCE_ACTIONS.syncAll);
         return { refreshed: true };
       },
     });

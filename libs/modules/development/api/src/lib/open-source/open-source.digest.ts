@@ -4,7 +4,7 @@ import { ReposService } from './repos.service';
 
 /** Open source news in the morning digest: new stars, forks, issues, PRs, releases. */
 @Injectable()
-export class GithubOssDigest implements OnModuleInit {
+export class OpenSourceDigest implements OnModuleInit {
   constructor(
     private readonly digest: MorningDigestService,
     private readonly repos: ReposService,
@@ -12,8 +12,8 @@ export class GithubOssDigest implements OnModuleInit {
 
   onModuleInit(): void {
     this.digest.register({
-      id: 'github-oss.repos',
-      module: 'github-oss',
+      id: 'development.repos',
+      module: 'development',
       description:
         'Open source repositories: stars, forks, open issues and PRs, latest release tag. ' +
         'Tell the differences: new stars and forks, new issues or PRs, a new release.',

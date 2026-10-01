@@ -3,12 +3,12 @@ import { API_TEST_ENV } from '../../../api/core/test-env.mts';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../../../../node_modules/.vite/libs/modules/github-oss/api',
+  cacheDir: '../../../../node_modules/.vite/libs/modules/development/api',
   // @pd/* aliases from tsconfig.base.json.
   resolve: { tsconfigPaths: true },
   test: {
     env: API_TEST_ENV,
-    name: 'github-oss-api',
+    name: 'development-api',
     watch: false,
     globals: true,
     environment: 'node',
@@ -16,7 +16,7 @@ export default defineConfig(() => ({
     passWithNoTests: true,
     reporters: ['default'],
     coverage: {
-      reportsDirectory: '../../../../coverage/libs/modules/github-oss/api',
+      reportsDirectory: '../../../../coverage/libs/modules/development/api',
       provider: 'v8' as const,
     },
   },

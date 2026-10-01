@@ -11,7 +11,7 @@ export const userSecrets = pgTable(
     userId: uuid()
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    /** Key prefixed with the module id: `github-oss.token`. */
+    /** Key prefixed with the module id: `development.github-token`. */
     key: text().notNull(),
     encryptedValue: text().notNull(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

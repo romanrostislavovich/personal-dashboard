@@ -1,2 +1,2 @@
-export * from './lib/github-oss.module';
-export * from './lib/github-oss.schema';
+export * from './lib/development.module';
+export * from './lib/open-source/open-source.schema';

@@ -4,8 +4,8 @@
  *
  * ```ts
  * digest.register({
- *   id: 'github-oss.repos',
- *   module: 'github-oss',
+ *   id: 'development.repos',
+ *   module: 'development',
  *   description: 'Open source repositories: stars, issues and PRs, latest release',
  *   collect: async (userId) => (await this.repos.list(userId)).map(({ fullName, stars }) => ({ fullName, stars })),
  * });

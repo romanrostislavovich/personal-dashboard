@@ -1,7 +1,7 @@
 {
-  "name": "github-oss-web",
+  "name": "development-web",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/modules/github-oss/web/src",
+  "sourceRoot": "libs/modules/development/web/src",
   "prefix": "pd",
   "projectType": "library",
   "tags": ["scope:web", "type:module"],

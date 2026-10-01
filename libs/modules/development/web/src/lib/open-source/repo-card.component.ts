@@ -37,39 +37,39 @@ import { SparklineComponent } from '@pd/web-core';
       <mat-card-content>
         @if (r.syncError) {
           <p class="error">
-            <mat-icon inline>warning</mat-icon> {{ 'github-oss.syncError' | transloco }}:
+            <mat-icon inline>warning</mat-icon> {{ 'development.oss.syncError' | transloco }}:
             {{ r.syncError }}
           </p>
         }
 
         <div class="stats">
           <div class="stat">
-            <span class="label">{{ 'github-oss.stars' | transloco }}</span>
+            <span class="label">{{ 'development.oss.stars' | transloco }}</span>
             <span class="value">{{ r.stars | number }}</span>
             <span class="delta" [class.up]="r.starsDelta.week > 0">
               {{ r.starsDelta.week > 0 ? '+' : '' }}{{ r.starsDelta.week }}
-              {{ 'github-oss.perWeek' | transloco }}
+              {{ 'development.oss.perWeek' | transloco }}
             </span>
           </div>
           <div class="stat">
-            <span class="label">{{ 'github-oss.forks' | transloco }}</span>
+            <span class="label">{{ 'development.oss.forks' | transloco }}</span>
             <span class="value">{{ r.forks | number }}</span>
           </div>
           <div class="stat">
-            <span class="label">{{ 'github-oss.issues' | transloco }}</span>
+            <span class="label">{{ 'development.oss.issues' | transloco }}</span>
             <a class="value" [href]="r.htmlUrl + '/issues'" target="_blank" rel="noopener">
               {{ r.openIssues }}
             </a>
           </div>
           <div class="stat">
-            <span class="label">{{ 'github-oss.pulls' | transloco }}</span>
+            <span class="label">{{ 'development.oss.pulls' | transloco }}</span>
             <a class="value" [href]="r.htmlUrl + '/pulls'" target="_blank" rel="noopener">
               {{ r.openPulls }}
             </a>
           </div>
           @if (r.npmPackage) {
             <div class="stat">
-              <span class="label">{{ 'github-oss.npmWeekly' | transloco }}</span>
+              <span class="label">{{ 'development.oss.npmWeekly' | transloco }}</span>
               <a
                 class="value"
                 [href]="'https://www.npmjs.com/package/' + r.npmPackage"
@@ -83,14 +83,14 @@ import { SparklineComponent } from '@pd/web-core';
         </div>
 
         <div class="chart">
-          <span class="label">{{ 'github-oss.starsHistory' | transloco }}</span>
+          <span class="label">{{ 'development.oss.starsHistory' | transloco }}</span>
           @if (starsHistory().length > 1) {
             <pd-sparkline
               [points]="starsHistory()"
-              [label]="'github-oss.starsHistory' | transloco"
+              [label]="'development.oss.starsHistory' | transloco"
             />
           } @else {
-            <p class="hint">{{ 'github-oss.historyCollecting' | transloco }}</p>
+            <p class="hint">{{ 'development.oss.historyCollecting' | transloco }}</p>
           }
         </div>
 
@@ -101,7 +101,7 @@ import { SparklineComponent } from '@pd/web-core';
             </span>
           }
           @if (r.pushedAt) {
-            <span>{{ 'github-oss.lastPush' | transloco }} {{ r.pushedAt | date: 'd MMM y' }}</span>
+            <span>{{ 'development.oss.lastPush' | transloco }} {{ r.pushedAt | date: 'd MMM y' }}</span>
           }
         </p>
       </mat-card-content>

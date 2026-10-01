@@ -9,9 +9,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { errorStatus } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
-import { GithubOssApi } from './github-oss.api';
+import { GithubApi } from './github.api';
 
-/** The GitHub token, in Settings → Integrations (see `integrations` in github-oss.module.ts). */
+/** The GitHub token, in Settings → Integrations (see `integrations` in development.module.ts). */
 @Component({
   selector: 'pd-github-token-integration',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,21 +29,21 @@ import { GithubOssApi } from './github-oss.api';
       <mat-card-header>
         <mat-icon mat-card-avatar>code</mat-icon>
         <mat-card-title>GitHub</mat-card-title>
-        <mat-card-subtitle>{{ 'github-oss.token.title' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{ 'development.github.token.title' | transloco }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (settings.value()?.tokenConfigured) {
           <p class="ok">
-            <mat-icon>check_circle</mat-icon> {{ 'github-oss.token.configured' | transloco }}
+            <mat-icon>check_circle</mat-icon> {{ 'development.github.token.configured' | transloco }}
           </p>
           <button matButton (click)="removeToken()">
-            {{ 'github-oss.token.remove' | transloco }}
+            {{ 'development.github.token.remove' | transloco }}
           </button>
         } @else {
-          <p class="hint">{{ 'github-oss.token.hint' | transloco }}</p>
+          <p class="hint">{{ 'development.github.token.hint' | transloco }}</p>
           <form class="form" [formGroup]="tokenForm" (ngSubmit)="saveToken()">
             <mat-form-field subscriptSizing="dynamic">
-              <mat-label>{{ 'github-oss.token.label' | transloco }}</mat-label>
+              <mat-label>{{ 'development.github.token.label' | transloco }}</mat-label>
               <input matInput type="password" formControlName="token" autocomplete="off" />
             </mat-form-field>
             <button matButton="filled" type="submit" [disabled]="tokenForm.invalid || busy()">
@@ -77,7 +77,7 @@ import { GithubOssApi } from './github-oss.api';
   `,
 })
 export class GithubTokenIntegration {
-  private readonly api = inject(GithubOssApi);
+  private readonly api = inject(GithubApi);
   private readonly snackBar = inject(MatSnackBar);
   private readonly transloco = inject(TranslocoService);
 
@@ -95,7 +95,7 @@ export class GithubTokenIntegration {
       this.settings.reload();
     } catch (error) {
       const key =
-        errorStatus(error) === 400 ? 'github-oss.errors.invalidToken' : 'github-oss.errors.generic';
+        errorStatus(error) === 400 ? 'development.errors.invalidToken' : 'development.errors.generic';
       this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });
     } finally {
       this.busy.set(false);

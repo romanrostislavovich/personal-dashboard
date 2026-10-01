@@ -169,6 +169,13 @@
       "when": 1790789264655,
       "tag": "0023_ai_privacy_and_trash",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790872789012,
+      "tag": "0024_development_section",
+      "breakpoints": true
     }
   ]
 }

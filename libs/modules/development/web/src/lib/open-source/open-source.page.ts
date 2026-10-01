@@ -14,12 +14,13 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { TrackedRepo } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { errorStatus, INTEGRATIONS_LINK } from '@pd/web-core';
-import { GithubOssApi } from './github-oss.api';
+import { GithubApi } from '../github/github.api';
+import { OpenSourceApi } from './open-source.api';
 import { RepoCardComponent } from './repo-card.component';
 import { RepoFormDialog } from './repo-form.dialog';
 
 @Component({
-  selector: 'pd-github-oss-page',
+  selector: 'pd-open-source-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DecimalPipe,
@@ -34,20 +35,20 @@ import { RepoFormDialog } from './repo-form.dialog';
     TranslocoPipe,
     RepoCardComponent,
   ],
-  templateUrl: './github-oss.page.html',
-  styleUrl: './github-oss.page.scss',
+  templateUrl: './open-source.page.html',
+  styleUrl: './open-source.page.scss',
 })
-export class GithubOssPage {
-  private readonly api = inject(GithubOssApi);
+export class OpenSourcePage {
+  private readonly api = inject(OpenSourceApi);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly transloco = inject(TranslocoService);
   private readonly fb = inject(NonNullableFormBuilder);
 
   protected readonly repos = this.api.repos();
-  protected readonly settings = this.api.settings();
+  protected readonly settings = inject(GithubApi).settings();
   protected readonly busy = signal(false);
-  /** The GitHub token lives in Settings → Integrations (github-token.integration.ts). */
+  /** The GitHub token lives in Settings → Integrations (github/github-token.integration.ts). */
   protected readonly integrations = INTEGRATIONS_LINK;
 
   protected readonly totals = computed(() => {
@@ -74,7 +75,7 @@ export class GithubOssPage {
         this.addForm.reset();
         this.repos.reload();
       },
-      { 400: 'github-oss.errors.notFound', 409: 'github-oss.errors.duplicate' },
+      { 400: 'development.errors.notFound', 409: 'development.errors.duplicate' },
     );
   }
 
@@ -90,7 +91,7 @@ export class GithubOssPage {
   }
 
   async removeRepo(repo: TrackedRepo): Promise<void> {
-    if (confirm(this.transloco.translate('github-oss.confirmDelete', { name: repo.fullName }))) {
+    if (confirm(this.transloco.translate('development.oss.confirmDelete', { name: repo.fullName }))) {
       await firstValueFrom(this.api.removeRepo(repo.id));
       this.repos.reload();
     }
@@ -116,7 +117,7 @@ export class GithubOssPage {
       await action();
     } catch (error) {
       const key = errorKeys[errorStatus(error)];
-      this.snackBar.open(this.transloco.translate(key ?? 'github-oss.errors.generic'), 'OK', {
+      this.snackBar.open(this.transloco.translate(key ?? 'development.errors.generic'), 'OK', {
         duration: 6000,
       });
     } finally {

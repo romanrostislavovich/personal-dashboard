@@ -1,5 +1,5 @@
 import { pickMessages } from '@pd/api-core';
-import { RepoSyncEvents } from './sync/repo-sync.service';
+import { RepoSyncEvents } from './repo-sync.service';
 
 interface Labels {
   stars: (n: number) => string;
@@ -50,7 +50,7 @@ const messages = {
   },
 };
 
-export function githubOssMessages(locale: string) {
+export function openSourceMessages(locale: string) {
   return pickMessages(messages, locale);
 }
 

@@ -1,11 +1,11 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
 import { count, eq, sum } from 'drizzle-orm';
-import { trackedRepos } from './github-oss.schema';
+import { trackedRepos } from './open-source.schema';
 
 /** Open source achievements: stars and npm downloads across all tracked repositories. */
 @Injectable()
-export class GithubOssAchievements implements OnModuleInit {
+export class OpenSourceAchievements implements OnModuleInit {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly achievements: AchievementsService,
@@ -19,8 +19,8 @@ export class GithubOssAchievements implements OnModuleInit {
   /** Stars and npm downloads. */
   private registerPopularity(): void {
     this.achievements.register({
-      id: 'github-oss.stars',
-      module: 'github-oss',
+      id: 'development.stars',
+      module: 'development',
       measure: (userId) => this.total(userId, 'stars'),
       tiers: [
         achievementTier(
@@ -60,8 +60,8 @@ export class GithubOssAchievements implements OnModuleInit {
     });
 
     this.achievements.register({
-      id: 'github-oss.npm-weekly',
-      module: 'github-oss',
+      id: 'development.npm-weekly',
+      module: 'development',
       measure: (userId) => this.total(userId, 'npmWeeklyDownloads'),
       tiers: [
         achievementTier(
@@ -89,8 +89,8 @@ export class GithubOssAchievements implements OnModuleInit {
   /** Forks and the number of tracked repositories. */
   private registerCommunity(): void {
     this.achievements.register({
-      id: 'github-oss.forks',
-      module: 'github-oss',
+      id: 'development.forks',
+      module: 'development',
       measure: (userId) => this.total(userId, 'forks'),
       tiers: achievementTiers(
         [
@@ -108,8 +108,8 @@ export class GithubOssAchievements implements OnModuleInit {
       ),
     });
     this.achievements.register({
-      id: 'github-oss.repos',
-      module: 'github-oss',
+      id: 'development.repos',
+      module: 'development',
       measure: (userId) => this.repoCount(userId),
       tiers: achievementTiers(
         [

@@ -10,7 +10,7 @@ const ALGORITHM = 'aes-256-gcm';
 
 /**
  * Encrypted storage for integration tokens.
- * Example: `await secrets.set(userId, 'github-oss.token', token)`.
+ * Example: `await secrets.set(userId, 'development.github-token', token)`.
  *
  * Values are never sent to the frontend — only a "configured / not" flag.
  */

@@ -8,12 +8,12 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { TrackedRepo } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { errorStatus } from '@pd/web-core';
-import { GithubOssApi } from './github-oss.api';
+import { OpenSourceApi } from './open-source.api';
 
 /** Errors the server explains: not on GitHub, or already tracked under the new name. */
 const ERROR_KEYS: Record<number, string> = {
-  400: 'github-oss.errors.notFound',
-  409: 'github-oss.errors.duplicate',
+  400: 'development.errors.notFound',
+  409: 'development.errors.duplicate',
 };
 
 /**
@@ -32,16 +32,16 @@ const ERROR_KEYS: Record<number, string> = {
     TranslocoPipe,
   ],
   template: `
-    <h2 mat-dialog-title>{{ 'github-oss.editTitle' | transloco }}</h2>
+    <h2 mat-dialog-title>{{ 'development.oss.editTitle' | transloco }}</h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
         <mat-form-field>
-          <mat-label>{{ 'github-oss.repo' | transloco }}</mat-label>
+          <mat-label>{{ 'development.oss.repo' | transloco }}</mat-label>
           <input matInput formControlName="repo" placeholder="owner/name" />
-          <mat-hint>{{ 'github-oss.repoChangeHint' | transloco }}</mat-hint>
+          <mat-hint>{{ 'development.oss.repoChangeHint' | transloco }}</mat-hint>
         </mat-form-field>
         <mat-form-field>
-          <mat-label>{{ 'github-oss.npmPackage' | transloco }}</mat-label>
+          <mat-label>{{ 'development.oss.npmPackage' | transloco }}</mat-label>
           <input matInput formControlName="npmPackage" />
         </mat-form-field>
         @if (error(); as key) {
@@ -73,7 +73,7 @@ const ERROR_KEYS: Record<number, string> = {
 })
 export class RepoFormDialog {
   private readonly repo = inject<TrackedRepo>(MAT_DIALOG_DATA);
-  private readonly api = inject(GithubOssApi);
+  private readonly api = inject(OpenSourceApi);
   private readonly dialogRef = inject(MatDialogRef<RepoFormDialog, boolean>);
 
   protected readonly form = inject(NonNullableFormBuilder).group({
@@ -94,7 +94,7 @@ export class RepoFormDialog {
       this.dialogRef.close(true);
     } catch (error) {
       const status = errorStatus(error);
-      this.error.set(ERROR_KEYS[status] ?? 'github-oss.errors.generic');
+      this.error.set(ERROR_KEYS[status] ?? 'development.errors.generic');
     } finally {
       this.saving.set(false);
     }

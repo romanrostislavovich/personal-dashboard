@@ -1,7 +1,6 @@
-<header class="page-header">
-  <h1 class="page-title">{{ 'github-oss.title' | transloco }}</h1>
+<header class="toolbar">
   <button matButton (click)="syncAll()" [disabled]="busy() || repos.value().length === 0">
-    <mat-icon>sync</mat-icon> {{ 'github-oss.syncNow' | transloco }}
+    <mat-icon>sync</mat-icon> {{ 'development.oss.syncNow' | transloco }}
   </button>
 </header>
 
@@ -14,22 +13,22 @@
   <mat-card appearance="outlined" class="totals">
     <mat-card-content class="totals-grid">
       <div class="stat">
-        <span class="label">{{ 'github-oss.totalStars' | transloco }}</span>
+        <span class="label">{{ 'development.oss.totalStars' | transloco }}</span>
         <span class="value">{{ totals().stars | number }}</span>
         <span class="sub"
-          >+{{ totals().starsWeek | number }} {{ 'github-oss.perWeek' | transloco }}</span
+          >+{{ totals().starsWeek | number }} {{ 'development.oss.perWeek' | transloco }}</span
         >
       </div>
       <div class="stat">
-        <span class="label">{{ 'github-oss.issues' | transloco }}</span>
+        <span class="label">{{ 'development.oss.issues' | transloco }}</span>
         <span class="value">{{ totals().issues | number }}</span>
       </div>
       <div class="stat">
-        <span class="label">{{ 'github-oss.pulls' | transloco }}</span>
+        <span class="label">{{ 'development.oss.pulls' | transloco }}</span>
         <span class="value">{{ totals().pulls | number }}</span>
       </div>
       <div class="stat">
-        <span class="label">{{ 'github-oss.npmWeekly' | transloco }}</span>
+        <span class="label">{{ 'development.oss.npmWeekly' | transloco }}</span>
         <span class="value">{{ totals().npmWeekly | number }}</span>
       </div>
     </mat-card-content>
@@ -40,16 +39,16 @@
   <!-- Adding a repository -->
   <mat-card appearance="outlined">
     <mat-card-header>
-      <mat-card-title>{{ 'github-oss.addTitle' | transloco }}</mat-card-title>
+      <mat-card-title>{{ 'development.oss.addTitle' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <form class="add-form" [formGroup]="addForm" (ngSubmit)="addRepo()">
         <mat-form-field subscriptSizing="dynamic">
-          <mat-label>{{ 'github-oss.repo' | transloco }}</mat-label>
+          <mat-label>{{ 'development.oss.repo' | transloco }}</mat-label>
           <input matInput formControlName="repo" placeholder="owner/name" />
         </mat-form-field>
         <mat-form-field subscriptSizing="dynamic">
-          <mat-label>{{ 'github-oss.npmPackage' | transloco }}</mat-label>
+          <mat-label>{{ 'development.oss.npmPackage' | transloco }}</mat-label>
           <input matInput formControlName="npmPackage" />
         </mat-form-field>
         <button matButton="filled" type="submit" [disabled]="addForm.invalid || busy()">
@@ -58,7 +57,7 @@
       </form>
       @if (settings.value() && !settings.value()?.tokenConfigured) {
         <p class="hint">
-          {{ 'github-oss.token.noToken' | transloco }}
+          {{ 'development.github.token.noToken' | transloco }}
           <a [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
             {{ 'core.settings.openIntegrations' | transloco }}
           </a>
@@ -72,6 +71,6 @@
   @for (repo of repos.value(); track repo.id) {
     <pd-repo-card [repo]="repo" (edit)="editRepo($event)" (remove)="removeRepo($event)" />
   } @empty {
-    <p class="empty">{{ 'github-oss.empty' | transloco }}</p>
+    <p class="empty">{{ 'development.oss.empty' | transloco }}</p>
   }
 </div>

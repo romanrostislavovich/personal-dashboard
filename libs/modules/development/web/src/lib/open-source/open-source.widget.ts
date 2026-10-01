@@ -4,19 +4,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { GithubOssApi } from './github-oss.api';
+import { OpenSourceApi } from './open-source.api';
 
 const WIDGET_MAX_REPOS = 5;
 
 /** Home widget: stars, weekly growth, open issues/PRs for the top repositories. */
 @Component({
-  selector: 'pd-github-oss-widget',
+  selector: 'pd-open-source-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DecimalPipe, RouterLink, MatCardModule, MatButtonModule, TranslocoPipe],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>🐙 {{ 'github-oss.widget.title' | transloco }}</mat-card-title>
+        <mat-card-title>🐙 {{ 'development.oss.widget.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         @if (repos.value().length > 0) {
@@ -26,9 +26,9 @@ const WIDGET_MAX_REPOS = 5;
                 <tr>
                   <th></th>
                   <th>⭐</th>
-                  <th>{{ 'github-oss.widget.week' | transloco }}</th>
-                  <th>{{ 'github-oss.issues' | transloco }}</th>
-                  <th>{{ 'github-oss.pulls' | transloco }}</th>
+                  <th>{{ 'development.oss.widget.week' | transloco }}</th>
+                  <th>{{ 'development.oss.issues' | transloco }}</th>
+                  <th>{{ 'development.oss.pulls' | transloco }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -51,11 +51,11 @@ const WIDGET_MAX_REPOS = 5;
             </table>
           </div>
         } @else {
-          <p class="empty">{{ 'github-oss.widget.empty' | transloco }}</p>
+          <p class="empty">{{ 'development.oss.widget.empty' | transloco }}</p>
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/github-oss">{{ 'github-oss.widget.open' | transloco }}</a>
+        <a matButton routerLink="/development/open-source">{{ 'development.oss.widget.open' | transloco }}</a>
       </mat-card-actions>
     </mat-card>
   `,
@@ -93,8 +93,8 @@ const WIDGET_MAX_REPOS = 5;
     }
   `,
 })
-export class GithubOssWidget {
-  protected readonly repos = inject(GithubOssApi).repos();
+export class OpenSourceWidget {
+  protected readonly repos = inject(OpenSourceApi).repos();
   protected readonly top = computed(() => this.repos.value().slice(0, WIDGET_MAX_REPOS));
 
   protected shortName(fullName: string): string {

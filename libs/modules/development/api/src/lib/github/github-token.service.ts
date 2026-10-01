@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { SecretsService } from '@pd/api-core';
 import { GithubSettings } from '@pd/contracts';
-import { GithubAuthError, GithubClient } from './clients/github.client';
+import { GithubAuthError, GithubClient } from './github.client';
 
-const TOKEN_KEY = 'github-oss.token';
+const TOKEN_KEY = 'development.github-token';
 
 /** The user's personal GitHub token (stored encrypted in the core). */
 @Injectable()

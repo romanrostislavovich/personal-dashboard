@@ -1,4 +1,4 @@
-import { npmPackageName, trackedRepoInputSchema } from './github-oss';
+import { npmPackageName, trackedRepoInputSchema } from './open-source';
 
 describe('npmPackageName', () => {
   it('takes the name from a package page on npmjs.com', () => {

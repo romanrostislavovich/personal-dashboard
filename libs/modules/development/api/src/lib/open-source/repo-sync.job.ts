@@ -1,14 +1,14 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { NotificationsService, SchedulerService, UsersService } from '@pd/api-core';
-import { githubOssMessages, hasNews } from '../github-oss.messages';
-import { ReposService } from '../repos.service';
+import { openSourceMessages, hasNews } from './open-source.messages';
+import { ReposService } from './repos.service';
 
 /**
  * Updates repository statistics hourly and sends news:
  * new issues/PRs, releases, round star milestones.
  */
 @Injectable()
-export class GithubSyncJob implements OnModuleInit {
+export class RepoSyncJob implements OnModuleInit {
   constructor(
     private readonly scheduler: SchedulerService,
     private readonly users: UsersService,
@@ -18,7 +18,7 @@ export class GithubSyncJob implements OnModuleInit {
 
   onModuleInit(): void {
     this.scheduler.register({
-      name: 'github-oss.sync',
+      name: 'development.repo-sync',
       cron: '0 * * * *',
       handler: () => this.run(),
     });
@@ -30,11 +30,11 @@ export class GithubSyncJob implements OnModuleInit {
       if (news.length === 0) {
         continue;
       }
-      const text = githubOssMessages(user.locale);
+      const text = openSourceMessages(user.locale);
       await this.notifications.send(user.id, {
         title: text.title,
         body: text.body(news),
-        source: 'github-oss',
+        source: 'development',
       });
     }
   }
