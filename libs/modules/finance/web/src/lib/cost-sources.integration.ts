@@ -10,7 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CostSource, CostSourceInput } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
-import { errorStatus, ProjectsApi } from '@pd/web-core';
+import { IntegrationGuideComponent, ProjectsApi, errorStatus } from '@pd/web-core';
 import { CostSourceFormData, CostSourceFormDialog } from './cost-source-form.dialog';
 import { FinanceApi } from './finance.api';
 
@@ -25,6 +25,7 @@ import { FinanceApi } from './finance.api';
     CurrencyPipe,
     DatePipe,
     MatCardModule,
+    IntegrationGuideComponent,
     MatListModule,
     MatButtonModule,
     MatIconModule,
@@ -89,6 +90,20 @@ import { FinanceApi } from './finance.api';
           <p class="empty padded">{{ 'finance.costSources.empty' | transloco }}</p>
         }
       </mat-list>
+      <div class="guides">
+        <pd-integration-guide
+          guide="finance.costSources.guide.hetzner"
+          [steps]="3"
+          link="https://console.hetzner.cloud"
+          title="Hetzner Cloud"
+        />
+        <pd-integration-guide
+          guide="finance.costSources.guide.deepseek"
+          [steps]="3"
+          link="https://platform.deepseek.com/api_keys"
+          title="DeepSeek"
+        />
+      </div>
       <mat-card-actions>
         <button matButton="filled" (click)="add()" [disabled]="busy()">
           <mat-icon>add_link</mat-icon> {{ 'finance.costSources.add' | transloco }}
@@ -97,6 +112,9 @@ import { FinanceApi } from './finance.api';
     </mat-card>
   `,
   styles: `
+    .guides {
+      padding: 0 16px;
+    }
     .meta {
       display: flex;
       align-items: center;

@@ -2,11 +2,14 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { AppConfig } from '@pd/api-core';
+import { AppConfig, SystemLogger } from '@pd/api-core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Errors and warnings also go to the system log (Settings → System).
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: new SystemLogger(),
+  });
   // The AI chat sends its whole history, and it may include the text of attached files.
   app.useBodyParser('json', { limit: '5mb' });
   app.setGlobalPrefix('api');

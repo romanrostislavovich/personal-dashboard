@@ -80,7 +80,12 @@
       "hint": "A personal access token (classic) with the “read:user”, “repo” and “read:org” permissions: it loads your public repositories (those of your organizations too) and your account with private contributions. Without “repo” private contributions are counted but not split by type; without “read:org” organizations with hidden membership are left out.",
       "label": "Personal access token",
       "configured": "Token saved (encrypted on the server)",
-      "remove": "Remove token"
+      "remove": "Remove token",
+      "guide": {
+        "1": "GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic).",
+        "2": "Tick the scopes read:user, repo and read:org; the expiration is up to you (the token has to be replaced when it runs out).",
+        "3": "Copy the token — GitHub shows it only once — and paste it here."
+      }
     },
     "syncNow": "Update",
     "syncedAt": "Updated",
@@ -169,7 +174,12 @@
       "label": "Secret API key",
       "connected": "Connected: {{username}}",
       "disconnect": "Disconnect",
-      "invalid": "WakaTime rejected the key"
+      "invalid": "WakaTime rejected the key",
+      "guide": {
+        "1": "Install the WakaTime plugin in your editor (wakatime.com/plugins) and sign in: it starts counting the time by itself.",
+        "2": "Open wakatime.com → Settings → Account and copy the Secret API Key.",
+        "3": "Paste it here. The last week is copied at once, and the history grows from then on."
+      }
     }
   }
 }

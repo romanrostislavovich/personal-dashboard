@@ -10,15 +10,17 @@ import { PasswordSettingsComponent } from './password-settings.component';
 import { ProfileSettingsComponent } from './profile-settings.component';
 import { SecuritySettingsComponent } from './security-settings.component';
 import { SyncSettingsComponent } from './sync-settings.component';
+import { SystemSettingsComponent } from './system-settings.component';
 import { TelegramSettingsComponent } from './telegram-settings.component';
 import { TrashSettingsComponent } from './trash-settings.component';
 
 /** Tabs of the page, as `?tab=` names them: module pages link to `integrations`. */
-const TABS = ['account', 'integrations', 'data'] as const;
+const TABS = ['account', 'integrations', 'data', 'system'] as const;
 
 /**
  * Settings: the account, every connection to an outside service (Telegram and what the modules
- * register as `integrations`) and the data (sync, backups, trash).
+ * register as `integrations`), the data (sync, backups, trash) and how the instance itself is
+ * doing (background jobs, the log of errors).
  */
 @Component({
   selector: 'pd-settings-page',
@@ -32,6 +34,7 @@ const TABS = ['account', 'integrations', 'data'] as const;
     SecuritySettingsComponent,
     TrashSettingsComponent,
     SyncSettingsComponent,
+    SystemSettingsComponent,
     TelegramSettingsComponent,
   ],
   template: `
@@ -67,6 +70,15 @@ const TABS = ['account', 'integrations', 'data'] as const;
           <pd-trash-settings />
         </div>
       </mat-tab>
+
+      <mat-tab [label]="'core.settings.tabs.system' | transloco">
+        <!-- Loaded when opened: the log is of no use to the other tabs. -->
+        <ng-template matTabContent>
+          <div class="system">
+            <pd-system-settings />
+          </div>
+        </ng-template>
+      </mat-tab>
     </mat-tab-group>
   `,
   styles: `
@@ -75,6 +87,10 @@ const TABS = ['account', 'integrations', 'data'] as const;
       grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
       gap: 16px;
       align-items: start;
+      padding-top: 16px;
+    }
+    .system {
+      max-width: 1000px;
       padding-top: 16px;
     }
     .intro {

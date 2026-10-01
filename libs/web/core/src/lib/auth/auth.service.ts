@@ -7,6 +7,7 @@ import {
   PasswordChange,
   ProfileUpdate,
   RegisterRequest,
+  deviceTimeZone,
 } from '@pd/contracts';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { applyLanguage } from '../i18n/language';
@@ -88,5 +89,21 @@ export class AuthService {
     this.user.set(user);
     // Language from the profile: if it differs from the current one, the page reloads.
     applyLanguage(user.locale);
+    this.rememberTimeZone(user);
+  }
+
+  /**
+   * Tells the server the zone of this device when it differs from the saved one: reminders and
+   * the digest follow the clock of the device the user opened last — a laptop, a phone.
+   */
+  private rememberTimeZone(user: CurrentUser): void {
+    const timeZone = deviceTimeZone();
+    if (timeZone && timeZone !== user.timeZone) {
+      void this.client.auth
+        .updateProfile({ timeZone })
+        .then((updated) => this.user.set(updated))
+        // Not worth an error on screen: the next opening tries again.
+        .catch(() => undefined);
+    }
   }
 }

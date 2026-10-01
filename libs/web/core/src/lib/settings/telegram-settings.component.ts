@@ -10,10 +10,17 @@ import { NotificationSettings } from '@pd/contracts';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 
 /** Telegram: where notifications go and where the assistant answers. */
+import { IntegrationGuideComponent } from '../ui/integration-guide.component';
 @Component({
   selector: 'pd-telegram-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatCardModule, MatButtonModule, MatIconModule, TranslocoPipe],
+  imports: [
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    TranslocoPipe,
+    IntegrationGuideComponent,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
@@ -39,6 +46,11 @@ import { DASHBOARD_CLIENT } from '../client/dashboard-client';
             }
           }
         }
+        <pd-integration-guide
+          guide="core.settings.telegram.guide"
+          [steps]="3"
+          link="https://t.me/BotFather"
+        />
       </mat-card-content>
       @if (settings.value()?.telegram; as telegram) {
         <mat-card-actions>

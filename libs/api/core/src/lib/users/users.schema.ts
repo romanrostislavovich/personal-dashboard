@@ -10,6 +10,8 @@ export const users = pgTable('users', {
   passwordHash: text().notNull(),
   displayName: text().notNull(),
   locale: text().notNull().default('en'),
+  /** IANA zone of the user's device; `null` — not known yet, the server's zone is used. */
+  timeZone: text(),
   telegramChatId: text(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

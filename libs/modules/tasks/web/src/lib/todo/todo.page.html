@@ -1,0 +1,135 @@
+@let f = filter();
+
+<div class="toolbar">
+  <mat-button-toggle-group
+    hideSingleSelectionIndicator
+    [value]="f.view"
+    (change)="setFilter({ view: $event.value })"
+  >
+    <mat-button-toggle value="today">
+      {{ 'tasks.todo.views.today' | transloco }} · {{ counts().today }}
+    </mat-button-toggle>
+    <mat-button-toggle value="upcoming">
+      {{ 'tasks.todo.views.upcoming' | transloco }} · {{ counts().upcoming }}
+    </mat-button-toggle>
+    <mat-button-toggle value="all">
+      {{ 'tasks.todo.views.all' | transloco }} · {{ counts().all }}
+    </mat-button-toggle>
+    <mat-button-toggle value="done">{{ 'tasks.todo.views.done' | transloco }}</mat-button-toggle>
+  </mat-button-toggle-group>
+  <span class="spacer"></span>
+  <button matButton="filled" (click)="open(null)">
+    <mat-icon>add</mat-icon> {{ 'tasks.todo.newTitle' | transloco }}
+  </button>
+</div>
+
+<div class="filters">
+  <mat-form-field subscriptSizing="dynamic" class="list">
+    <mat-label>{{ 'tasks.todo.list' | transloco }}</mat-label>
+    <mat-select [value]="f.listId" (selectionChange)="setFilter({ listId: $event.value })">
+      <mat-option [value]="null">{{ 'tasks.todo.allLists' | transloco }}</mat-option>
+      <mat-option value="inbox">{{ 'tasks.todo.inbox' | transloco }}</mat-option>
+      @for (list of lists.value(); track list.id) {
+        <mat-option [value]="list.id">{{ list.name }} · {{ list.open }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  @if (f.listId && f.listId !== 'inbox') {
+    <button
+      matIconButton
+      [matTooltip]="'tasks.todo.deleteList' | transloco"
+      [attr.aria-label]="'tasks.todo.deleteList' | transloco"
+      (click)="removeList(f.listId, listNames().get(f.listId) ?? '')"
+    >
+      <mat-icon>delete</mat-icon>
+    </button>
+  }
+  <mat-form-field subscriptSizing="dynamic" class="new-list">
+    <mat-label>{{ 'tasks.todo.newList' | transloco }}</mat-label>
+    <input matInput #listName maxlength="60" (keydown.enter)="addList(listName)" />
+  </mat-form-field>
+
+  @if (tags().length) {
+    <mat-chip-listbox
+      [value]="f.tag"
+      [attr.aria-label]="'tasks.todo.tags' | transloco"
+      (change)="setFilter({ tag: $event.value ?? null })"
+    >
+      @for (tag of tags(); track tag) {
+        <mat-chip-option [value]="tag">#{{ tag }}</mat-chip-option>
+      }
+    </mat-chip-listbox>
+  }
+</div>
+
+@if (f.view !== 'done') {
+  <mat-form-field subscriptSizing="dynamic" class="quick">
+    <mat-label>{{ 'tasks.todo.quickAdd' | transloco }}</mat-label>
+    <input matInput #quick maxlength="300" (keydown.enter)="quickAdd(quick)" />
+  </mat-form-field>
+}
+
+<ul class="tasks">
+  @for (task of shown(); track task.id) {
+    <li [class.done]="task.completedAt" [class]="'priority-' + task.priority">
+      <mat-checkbox
+        [checked]="task.completedAt !== null"
+        [attr.aria-label]="task.title"
+        (change)="toggle(task, $event.checked)"
+      />
+      <button type="button" class="body" (click)="open(task)">
+        <span class="title">{{ task.title }}</span>
+        <span class="meta">
+          @if (task.dueDate) {
+            <span [class.overdue]="overdue(task)">
+              <mat-icon inline>event</mat-icon> {{ task.dueDate | date: 'd MMM' }}
+            </span>
+          }
+          @if (task.repeat) {
+            <mat-icon inline [attr.aria-label]="'tasks.repeat.label' | transloco">repeat</mat-icon>
+          }
+          @if (task.reminderAt) {
+            <span>
+              <mat-icon inline>notifications</mat-icon> {{ task.reminderAt | date: 'd MMM, HH:mm' }}
+            </span>
+          }
+          @if (task.checklist.length) {
+            <span>
+              <mat-icon inline>checklist</mat-icon> {{ checklistDone(task) }}/{{
+                task.checklist.length
+              }}
+            </span>
+          }
+          @if (task.listId) {
+            <span>{{ listNames().get(task.listId) }}</span>
+          }
+          @for (tag of task.tags; track tag) {
+            <span class="tag">#{{ tag }}</span>
+          }
+        </span>
+      </button>
+      @if (!task.completedAt) {
+        <button
+          matIconButton
+          [matTooltip]="'tasks.todo.remind' | transloco"
+          [attr.aria-label]="'tasks.todo.remind' | transloco"
+          (click)="remind(task)"
+        >
+          <mat-icon>notification_add</mat-icon>
+        </button>
+      }
+      <button
+        matIconButton
+        [matTooltip]="'core.actions.delete' | transloco"
+        [attr.aria-label]="'core.actions.delete' | transloco"
+        (click)="remove(task)"
+      >
+        <mat-icon>delete</mat-icon>
+      </button>
+    </li>
+  } @empty {
+    @if (!tasks.isLoading()) {
+      <li class="empty">{{ 'tasks.todo.empty.' + f.view | transloco }}</li>
+    }
+  }
+</ul>

@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { errorStatus } from '@pd/web-core';
+import { IntegrationGuideComponent, errorStatus } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { GithubApi } from './github.api';
 
@@ -18,6 +18,7 @@ import { GithubApi } from './github.api';
   imports: [
     ReactiveFormsModule,
     MatCardModule,
+    IntegrationGuideComponent,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -52,6 +53,11 @@ import { GithubApi } from './github.api';
             </button>
           </form>
         }
+        <pd-integration-guide
+          guide="development.github.token.guide"
+          [steps]="3"
+          link="https://github.com/settings/tokens/new"
+        />
       </mat-card-content>
     </mat-card>
   `,

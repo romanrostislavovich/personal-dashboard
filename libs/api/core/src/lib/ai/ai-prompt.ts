@@ -1,4 +1,4 @@
-import { todayIn, toLocalDate } from '@pd/contracts';
+import { zonedDateTime } from '@pd/contracts';
 import { coreMessages } from '../i18n/core.messages';
 import { UserRow } from '../users/users.schema';
 
@@ -54,9 +54,10 @@ export function systemPrompt(
   timeZone: string,
   { plainText, allowWrites, hasAttachments }: PromptOptions,
 ): string {
+  const now = zonedDateTime(new Date(), timeZone);
   return [
     `You are the assistant of ${user?.displayName ?? 'the user'}'s personal dashboard.`,
-    `Today is ${toLocalDate(todayIn(timeZone))}, time zone ${timeZone}.`,
+    `Now it is ${now.date} ${now.time} for the user, time zone ${timeZone}.`,
     `Always answer in ${coreMessages(user?.locale).aiLanguage}, briefly and to the point.`,
     'Get any data about the user only through the tools and never make things up;',
     'if there is no data, say so. Always state currencies for amounts.',

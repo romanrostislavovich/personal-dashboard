@@ -60,5 +60,18 @@
     "empty": "Подключи Last.fm или Spotify в разделе Музыка",
     "open": "Подробнее"
   },
-  "noSource": "Источники музыки ещё не подключены: подключи Last.fm или Spotify, чтобы видеть историю, статистику и топы."
+  "noSource": "Источники музыки ещё не подключены: подключи Last.fm или Spotify, чтобы видеть историю, статистику и топы.",
+  "guide": {
+    "lastfm": {
+      "1": "Зарегистрируйся на last.fm и включи скробблинг в том, где слушаешь музыку (для Spotify: last.fm → Settings → Applications → Spotify).",
+      "2": "Открой last.fm/api/account/create: название приложения любое, остальные поля можно не заполнять; скопируй API key.",
+      "3": "Впиши сюда свой логин Last.fm и ключ: история загрузится в фоне."
+    },
+    "spotify": {
+      "1": "Открой developer.spotify.com/dashboard и создай приложение (название любое).",
+      "2": "В Redirect URI добавь адрес дашборда плюс /api/music/spotify/callback (localhost Spotify не принимает — локально используй 127.0.0.1).",
+      "3": "Впиши Client ID и Client Secret в .env на сервере как SPOTIFY_CLIENT_ID и SPOTIFY_CLIENT_SECRET и перезапусти дашборд.",
+      "4": "Нажми здесь «Подключить» и разреши доступ в Spotify."
+    }
+  }
 }

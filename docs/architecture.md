@@ -107,6 +107,10 @@ Say it is `strava`.
      `strava.messages.ts` via `pickMessages({ en: {...}, ru: {...} }, user.locale)`;
    - Telegram commands: `TelegramBotService.registerCommand({ command, description, handler })`
      (example — `/d` in `libs/modules/diary/api/src/lib/diary.jobs.ts`);
+   - buttons under a Telegram notification: `actions` of the notification (`{ label, data }`) and
+     `TelegramBotService.registerAction(prefix, handler)` for the presses; a reply with
+     `expectText` takes the user's next message as the answer (example — the reminder buttons in
+     `libs/modules/tasks/api/src/lib/tasks.jobs.ts`);
    - achievements: `strava.achievements.ts` — a metric (`measure(userId) → number`) and tiers via
      `achievementTiers([goal, icon, title, description], ...)`, registered with
      `AchievementsService.register()` (example — `libs/modules/games/api/src/lib/dota/dota.achievements.ts`).
@@ -149,6 +153,8 @@ Connections to outside services (tokens, API keys, accounts) all live in one pla
 Integrations: the module exports a self-contained component as `integrations` of its
 `WebDashboardModule` (example — `libs/modules/development/web/src/lib/github/github-token.integration.ts`),
 and its pages only link there (`INTEGRATIONS_LINK`) while nothing is connected.
+Every card carries a "How to connect" guide (`<pd-integration-guide>` from the web core, steps in
+the module's translations): where to click on the other service is never obvious.
 
 Tokens of external services are entered by the user in that component and stored with the core
 `SecretsService`: `secrets.set(userId, 'strava.token', value)`. Values are encrypted with AES-256-GCM
@@ -202,6 +208,12 @@ To add a service (e.g. DigitalOcean):
   An unlocked achievement stays even when its value drops; after the rules change the user
   counts them all again with the "Recount" button on the achievements page (`recount`): what
   is not earned today is taken back and lands in the trash.
+- **System status:** `SystemLogger` hands every error and warning the server writes to
+  `SystemLogService`, which keeps them for 14 days in the unsynced `system` schema (a repeated
+  one is one entry with a counter) and sends an error to the owner, throttled;
+  `JobRunsService` records the last runs of the background jobs. Both are shown in
+  Settings → System. A module needs nothing extra: `logger.error(...)` is enough for a
+  problem to be seen and reported, `logger.warn(...)` for one to be seen.
 - **Server actions:** `ServerActions` — calls to outside services made on a user's request; on a
   sync client they are forwarded to the server (see [sync.md](sync.md)).
 - **Sync:** `SyncService` / `SyncClient` — two-way sync between a local instance and a server
@@ -226,6 +238,11 @@ To add a service (e.g. DigitalOcean):
   `libs/api/core/src/lib/config/env.ts`; on errors the app does not start and explains what is wrong.
 - **Dates:** calendar dates (birthday, transaction date) are stored as `YYYY-MM-DD` without a time zone;
   “today” is computed in `APP_TIMEZONE` (`todayIn()` in contracts).
+- **The user's time:** the server may stand anywhere, so anything shown or asked as a time of day
+  (reminders, the digest time, the AI's "now") uses the user's own time zone — the web app sends
+  the device's one on sign-in, `UsersService.timeZoneOf(user)` gives it (falls back to
+  `APP_TIMEZONE`); moments are stored in UTC, `zonedToUtc()` / `zonedDateTime()` in contracts
+  convert.
 - **Money:** `numeric(14,2)`; totals are converted into the user's main currency at the ECB rate of
   each transaction's day (Frankfurter; today's rate from open.er-api for a currency the ECB lacks),
   kept as they are otherwise (`finance/currency`).

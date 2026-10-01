@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { todayIn, toLocalDate } from '@pd/contracts';
+import { LocalDate } from '@pd/contracts';
 import { AppConfig } from '../config/env';
 import { coreMessages } from '../i18n/core.messages';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -8,7 +8,6 @@ import { SchedulerService } from '../scheduler/scheduler.service';
 import { UsersService } from '../users/users.service';
 import { AiConnectionsService } from './ai-connections.service';
 import { AiService } from './ai.service';
-import { clockIn } from './digest-schedule';
 import { MorningDigestService } from './morning-digest.service';
 
 /** Telegram limits a message to 4096 characters. */
@@ -55,25 +54,22 @@ export class MorningDigestJob implements OnModuleInit {
   }
 
   private async sendAll(): Promise<void> {
-    const timeZone = this.config.get('APP_TIMEZONE', { infer: true });
-    const today = toLocalDate(todayIn(timeZone));
-    for (const userId of await this.connections.usersWithDigestDue(today, clockIn(timeZone))) {
+    for (const { userId, today } of await this.connections.usersWithDigestDue()) {
       // Marked before sending: a failing provider gets one attempt a day, not one every run.
       await this.connections.markDigestDay(userId, today);
       // One user's failing provider (no balance, a bad key) must not cancel everyone else's digest.
-      await this.send(userId).catch((error) =>
-        this.logger.warn(`Morning digest failed for ${userId}: ${error}`),
+      await this.send(userId, today).catch((error) =>
+        this.logger.error(`Morning digest failed for ${userId}: ${error}`),
       );
     }
   }
 
   /** Sends only when there is news: the weather alone is enough, an unchanged day is not. */
-  private async send(userId: string): Promise<void> {
+  private async send(userId: string, today: LocalDate): Promise<void> {
     const changes = await this.digest.changes(userId);
     if (changes.length === 0) {
       return;
     }
-    const today = toLocalDate(todayIn(this.config.get('APP_TIMEZONE', { infer: true })));
     const data = {
       today,
       sections: changes.map(({ section, facts, previous }) => ({

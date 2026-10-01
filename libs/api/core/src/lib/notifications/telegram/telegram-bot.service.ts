@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Locale, SUPPORTED_LOCALES, TelegramLinkResponse } from '@pd/contracts';
-import { Bot, CommandContext, Context, Filter } from 'grammy';
+import { Bot, CommandContext, Context, Filter, InlineKeyboard } from 'grammy';
 import type { Chat } from 'grammy/types';
 import { randomBytes } from 'node:crypto';
 import { AppConfig } from '../../config/env';
@@ -17,7 +17,9 @@ import { FALLBACK_LOCALE, localize } from '../../i18n/locale';
 import { UserActivityService } from '../../realtime/user-activity.service';
 import { UserRow } from '../../users/users.schema';
 import { UsersService } from '../../users/users.service';
+import { NotificationAction } from '../notification-channel';
 import {
+  BotAction,
   BotCommand,
   BotDocumentHandler,
   BotPhotoHandler,
@@ -30,8 +32,17 @@ import {
 const TYPING_REFRESH_MS = 4_000;
 
 const LINK_CODE_TTL_MS = 10 * 60 * 1000;
+/** How long the bot waits for the answer to its question (see BotActionReply). */
+const EXPECTED_TEXT_TTL_MS = 10 * 60 * 1000;
+/** Buttons in a row under a message. */
+const BUTTONS_PER_ROW = 3;
 /** The Bot API does not let bots download larger files. */
 const DOWNLOAD_LIMIT_BYTES = 20 * 1024 * 1024;
+
+interface ExpectedText {
+  handler: (user: UserRow, text: string) => Promise<string>;
+  expiresAt: number;
+}
 
 interface PendingLink {
   userId: string;
@@ -54,6 +65,9 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   // Codes live in memory for 10 minutes — enough for a single API instance.
   private readonly pendingLinks = new Map<string, PendingLink>();
   private readonly commands: BotCommand[] = [];
+  private readonly actions: BotAction[] = [];
+  /** Chats the bot asked something: the next message there is the answer. */
+  private readonly expectedText = new Map<string, ExpectedText>();
   private photoHandler: BotPhotoHandler | null = null;
   private documentHandler: BotDocumentHandler | null = null;
   private textHandler: BotTextHandler | null = null;
@@ -79,6 +93,11 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   /** Modules add their commands in `onModuleInit` (see BotCommand). */
   registerCommand(command: BotCommand): void {
     this.commands.push(command);
+  }
+
+  /** Handlers of the buttons under the bot's messages (see BotAction). */
+  registerAction(action: BotAction): void {
+    this.actions.push(action);
   }
 
   /** Who answers plain text messages (see BotTextHandler). */
@@ -142,6 +161,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
         mimeType: ctx.message.audio.mime_type ?? 'audio/mpeg',
       }),
     );
+    bot.on('callback_query:data', (ctx) => this.onButton(ctx));
     // Plain text (commands are handled above and never reach this point).
     bot.on('message:text', (ctx) => this.onText(ctx));
     bot.catch((error) => this.logger.error(error.message));
@@ -167,11 +187,50 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     }
   }
 
+  /**
+   * A button under a message: its handler answers, the buttons go away (the choice is made),
+   * and the handler may ask for a text — the user's next message.
+   */
+  private async onButton(ctx: Filter<Context, 'callback_query:data'>): Promise<void> {
+    const chatId = String(ctx.chat?.id ?? ctx.from.id);
+    const user = await this.users.findByTelegramChatId(chatId);
+    const [name, ...payload] = ctx.callbackQuery.data.split(':');
+    const action = this.actions.find((a) => a.name === name);
+    // Telegram shows a spinner on the button until the press is answered.
+    await ctx.answerCallbackQuery().catch(() => undefined);
+    if (!user || !action) {
+      return;
+    }
+    const result = await action.handler(user, payload.join(':'));
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => undefined);
+    if (typeof result === 'string') {
+      this.expectedText.delete(chatId);
+      await this.answer(ctx, user, result);
+      return;
+    }
+    this.expectedText.set(chatId, {
+      handler: result.expectText,
+      expiresAt: Date.now() + EXPECTED_TEXT_TTL_MS,
+    });
+    await this.answer(ctx, user, result.reply);
+  }
+
   private async onText(ctx: Filter<Context, 'message:text'>): Promise<void> {
-    if (!this.textHandler || ctx.message.text.startsWith('/')) {
+    if (ctx.message.text.startsWith('/')) {
+      return;
+    }
+    const chatId = String(ctx.chat.id);
+    const expected = this.expectedText.get(chatId);
+    this.expectedText.delete(chatId);
+    if (!expected && !this.textHandler) {
       return;
     }
     const user = await this.linkedUserOrHint(ctx);
+    // The bot asked a question a moment ago: this message is the answer, not one for the assistant.
+    if (user && expected && expected.expiresAt > Date.now()) {
+      await this.answer(ctx, user, await expected.handler(user, ctx.message.text));
+      return;
+    }
     if (user) {
       await this.answer(
         ctx,
@@ -318,8 +377,23 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     };
   }
 
-  async sendMessage(chatId: string, html: string): Promise<void> {
-    await this.bot?.api.sendMessage(chatId, html, { parse_mode: 'HTML' });
+  /** `actions` become buttons under the message (see NotificationAction). */
+  async sendMessage(
+    chatId: string,
+    html: string,
+    actions: NotificationAction[] = [],
+  ): Promise<void> {
+    const keyboard = new InlineKeyboard();
+    actions.forEach(({ label, action }, index) => {
+      if (index > 0 && index % BUTTONS_PER_ROW === 0) {
+        keyboard.row();
+      }
+      keyboard.text(label, action);
+    });
+    await this.bot?.api.sendMessage(chatId, html, {
+      parse_mode: 'HTML',
+      ...(actions.length ? { reply_markup: keyboard } : {}),
+    });
   }
 
   /** Shows "typing…" until a slow reply (an AI answer) is ready. */

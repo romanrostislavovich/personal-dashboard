@@ -102,7 +102,12 @@
     "credentialsSaved": "Keys saved",
     "characters": "Characters",
     "bestItemLevel": "Best item level",
-    "empty": "No characters yet. Save the Battle.net keys (Settings → Integrations) and add a character."
+    "empty": "No characters yet. Save the Battle.net keys (Settings → Integrations) and add a character.",
+    "guide": {
+      "1": "Open develop.battle.net, sign in with the Battle.net account and go to API Access → Create Client.",
+      "2": "Any name; a Redirect URL is required — https://localhost will do; tick nothing else and create.",
+      "3": "Copy the Client ID and the Client Secret and paste them here, then add characters on the Games page."
+    }
   },
   "errors": {
     "notFound": "Account not found. For Dota, check that match data is public; for WoW, check region, realm and name.",
@@ -125,7 +130,12 @@
     "saved": "Key saved (encrypted on the server)",
     "remove": "Remove the key",
     "invalid": "OpenDota rejected the key",
-    "noAccounts": "Add a Dota 2 account on the Games page first."
+    "noAccounts": "Add a Dota 2 account on the Games page first.",
+    "guide": {
+      "1": "Open opendota.com and sign in with the Steam account.",
+      "2": "Open opendota.com/api-keys and create a key: the page tells what it costs.",
+      "3": "Paste the key next to the Dota account it is for; the account is refreshed with it at once."
+    }
   },
   "steam": {
     "empty": "No Steam accounts yet. Save the Steam key (Settings → Integrations) and add a profile.",
@@ -145,6 +155,12 @@
     "keyLabel": "Web API key",
     "keySaved": "Key saved (encrypted on the server)",
     "keyRemove": "Remove the key",
-    "keyInvalid": "Steam rejected the key"
+    "keyInvalid": "Steam rejected the key",
+    "guide": {
+      "1": "Steam gives keys only to accounts that are not limited — ones that have spent about 5 USD in the store; free games do not count.",
+      "2": "Open steamcommunity.com/dev/apikey, type any domain name (for example localhost), agree and copy the key.",
+      "3": "Paste it here, then add your profiles on the Games page — one key reads all of them.",
+      "4": "For data to come: in the Steam profile make “Game details” public, in Dota 2 turn on “Expose Public Match Data”."
+    }
   }
 }

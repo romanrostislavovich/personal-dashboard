@@ -32,6 +32,9 @@ import { ProjectsController } from './projects/projects.controller';
 import { ProjectsService } from './projects/projects.service';
 import { SchedulerService } from './scheduler/scheduler.service';
 import { SecretsService } from './secrets/secrets.service';
+import { JobRunsService } from './system/job-runs.service';
+import { SystemController } from './system/system.controller';
+import { SystemLogService } from './system/system-log.service';
 import { ServerActions } from './sync/server-actions';
 import { SyncClient } from './sync/sync-client.service';
 import { SyncController } from './sync/sync.controller';
@@ -85,6 +88,7 @@ class HealthController {
     AiController,
     RealtimeController,
     SyncController,
+    SystemController,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AuthGuard },
@@ -118,6 +122,8 @@ class HealthController {
     ServerActions,
     SyncConflictsService,
     BackupService,
+    JobRunsService,
+    SystemLogService,
     // New channels (Discord, e-mail…) are added to this list.
     {
       provide: NOTIFICATION_CHANNELS,

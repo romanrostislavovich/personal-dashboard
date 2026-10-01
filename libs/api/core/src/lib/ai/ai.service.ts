@@ -90,14 +90,12 @@ export class AiService {
   async ask(userId: string, history: AiChatMessage[], options: AskOptions = {}): Promise<AiAnswer> {
     const connection = await this.requireConnection(userId);
     const hasAttachments = history.some((message) => message.attachments?.length);
+    const user = await this.users.findById(userId);
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: systemPrompt(
-          await this.users.findById(userId),
-          this.config.get('APP_TIMEZONE', { infer: true }),
-          { ...options, hasAttachments },
-        ),
+        // "Today" and "tomorrow at 9" are the user's own, wherever the server stands.
+        content: systemPrompt(user, this.users.timeZoneOf(user), { ...options, hasAttachments }),
       },
       ...history.map(({ role, content, attachments }) => ({
         role,

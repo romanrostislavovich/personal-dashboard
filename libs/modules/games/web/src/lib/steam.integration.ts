@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { errorStatus } from '@pd/web-core';
+import { IntegrationGuideComponent, errorStatus } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { GamesApi } from './games.api';
 
@@ -21,6 +21,7 @@ import { GamesApi } from './games.api';
   imports: [
     ReactiveFormsModule,
     MatCardModule,
+    IntegrationGuideComponent,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -52,6 +53,11 @@ import { GamesApi } from './games.api';
             </button>
           </form>
         }
+        <pd-integration-guide
+          guide="games.steam.guide"
+          [steps]="4"
+          link="https://steamcommunity.com/dev/apikey"
+        />
       </mat-card-content>
     </mat-card>
   `,

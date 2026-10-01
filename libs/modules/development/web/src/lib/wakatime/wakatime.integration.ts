@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { errorStatus } from '@pd/web-core';
+import { IntegrationGuideComponent, errorStatus } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { WakatimeApi } from './wakatime.api';
 
@@ -20,6 +20,7 @@ import { WakatimeApi } from './wakatime.api';
     DatePipe,
     ReactiveFormsModule,
     MatCardModule,
+    IntegrationGuideComponent,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -65,6 +66,11 @@ import { WakatimeApi } from './wakatime.api';
             </form>
           }
         }
+        <pd-integration-guide
+          guide="development.wakatime.key.guide"
+          [steps]="3"
+          link="https://wakatime.com/settings/account"
+        />
       </mat-card-content>
     </mat-card>
   `,

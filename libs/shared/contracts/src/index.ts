@@ -1,4 +1,6 @@
 export * from './lib/local-date';
+export * from './lib/time-zone';
+export * from './lib/recurrence';
 export * from './lib/streaks';
 export * from './lib/auth';
 export * from './lib/projects';
@@ -18,5 +20,7 @@ export * from './lib/diary-marks';
 export * from './lib/diary-text';
 export * from './lib/realtime';
 export * from './lib/sync';
+export * from './lib/system';
 export * from './lib/trash';
+export * from './lib/tasks';
 export * from './lib/weather';

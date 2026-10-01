@@ -5,6 +5,7 @@ import { GamesModule } from '@pd/games-api';
 import { DevelopmentModule } from '@pd/development-api';
 import { MonitoringModule } from '@pd/monitoring-api';
 import { MusicModule } from '@pd/music-api';
+import { TasksModule } from '@pd/tasks-api';
 import { WeatherModule } from '@pd/weather-api';
 
 /**
@@ -12,6 +13,7 @@ import { WeatherModule } from '@pd/weather-api';
  * To disable a module, remove it from this list (and from apps/web/src/app/modules.ts).
  */
 export const enabledModules = [
+  TasksModule,
   BirthdaysModule,
   FinanceModule,
   DevelopmentModule,

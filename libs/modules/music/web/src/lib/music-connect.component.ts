@@ -11,7 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MusicSettings } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
-import { errorStatus } from '@pd/web-core';
+import { IntegrationGuideComponent, errorStatus } from '@pd/web-core';
 import { MusicApi } from './music.api';
 
 /** Connecting sources: Last.fm (username + API key) and Spotify (OAuth). */
@@ -24,6 +24,7 @@ import { MusicApi } from './music.api';
     MatProgressBarModule,
     ReactiveFormsModule,
     MatCardModule,
+    IntegrationGuideComponent,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -97,6 +98,11 @@ import { MusicApi } from './music.api';
               </button>
             </form>
           }
+          <pd-integration-guide
+            guide="music.guide.lastfm"
+            [steps]="3"
+            link="https://www.last.fm/api/account/create"
+          />
         </mat-card-content>
         @if (s.lastfm.username) {
           <mat-card-actions align="end">
@@ -133,6 +139,11 @@ import { MusicApi } from './music.api';
           } @else {
             <p class="hint">{{ 'music.connect.spotifyHint' | transloco }}</p>
           }
+          <pd-integration-guide
+            guide="music.guide.spotify"
+            [steps]="4"
+            link="https://developer.spotify.com/dashboard"
+          />
         </mat-card-content>
         @if (s.spotify.available) {
           <mat-card-actions align="end">

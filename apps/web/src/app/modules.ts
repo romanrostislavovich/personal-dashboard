@@ -7,6 +7,7 @@ import { gamesModule } from '@pd/games-web';
 import { developmentModule } from '@pd/development-web';
 import { monitoringModule } from '@pd/monitoring-web';
 import { musicModule } from '@pd/music-web';
+import { tasksModule } from '@pd/tasks-web';
 import { weatherModule } from '@pd/weather-web';
 import { WebDashboardModule } from '@pd/web-core';
 
@@ -18,6 +19,7 @@ import { WebDashboardModule } from '@pd/web-core';
 export const enabledModules: WebDashboardModule[] = [
   aiModule,
   weatherModule,
+  tasksModule,
   diaryModule,
   financeModule,
   birthdaysModule,

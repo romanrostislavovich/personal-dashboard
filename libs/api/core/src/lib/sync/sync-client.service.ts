@@ -71,8 +71,13 @@ class SyncError extends Error {
  * The client side of sync: every SYNC_INTERVAL_SECONDS pulls the server's changes, then pushes
  * local ones. Without a connection it simply tries again later — the instance keeps working.
  */
+/** A sync failing for this long is reported as an error. */
+const SYNC_FAILING_REPORT_MS = 15 * 60 * 1000;
+
 @Injectable()
 export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown {
+  /** Since when syncs keep failing; `null` — the last one worked, `0` — already reported. */
+  private failingSince: number | null = null;
   private readonly logger = new Logger(SyncClient.name);
   private timers: NodeJS.Timeout[] = [];
   private running: Promise<void> | null = null;
@@ -208,6 +213,7 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
       const pushed = await this.pushOnce();
       await this.sync.setState(SYNC_STATE.lastSyncedAt, new Date().toISOString());
       await this.sync.setState(SYNC_STATE.lastError, null);
+      this.failingSince = null;
       if (pulled || pushed) {
         this.logger.log(`Synced: ${pulled} received, ${pushed} sent`);
       } else {
@@ -223,6 +229,22 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
         this.logger.warn(message);
       }
       await this.sync.setState(SYNC_STATE.lastError, message);
+      this.reportIfLasting(message);
+    }
+  }
+
+  /**
+   * A lost connection for a minute is ordinary; a sync that has not worked for a while is
+   * reported once as an error — it lands in the system log and is told to the owner.
+   */
+  private reportIfLasting(message: string): void {
+    this.failingSince ??= Date.now();
+    if (this.failingSince !== 0 && Date.now() - this.failingSince >= SYNC_FAILING_REPORT_MS) {
+      this.logger.error(
+        `Sync has not worked for ${SYNC_FAILING_REPORT_MS / 60_000} minutes: ${message}`,
+      );
+      // Reported: stay quiet until a sync succeeds and it starts failing again.
+      this.failingSince = 0;
     }
   }
 

@@ -17,6 +17,7 @@ import {
   SyncParkedChange,
   SyncParkedKey,
   SyncStatus,
+  SystemStatus,
   TelegramLinkResponse,
   TrashItem,
   TwoFactorDisable,
@@ -59,6 +60,8 @@ export const API_PATHS = {
   syncConflict: (id: string) => `/api/sync/conflicts/${encodeURIComponent(id)}`,
   syncParked: '/api/sync/parked',
   syncParkedDiscard: '/api/sync/parked/discard',
+  systemStatus: '/api/system/status',
+  systemLog: '/api/system/log',
   trash: '/api/trash',
   trashItem: (id: string) => `/api/trash/${encodeURIComponent(id)}`,
 } as const;
@@ -71,6 +74,8 @@ export const CORE_READS = {
   syncStatus: () => apiRequest(API_PATHS.syncStatus),
   syncConflicts: () => apiRequest(API_PATHS.syncConflicts),
   syncParked: () => apiRequest(API_PATHS.syncParked),
+  /** Background jobs and the log of errors; only the owner may read it. */
+  systemStatus: () => apiRequest(API_PATHS.systemStatus),
 };
 
 /** Signing in and the profile. Signing in does not start the session — see `DashboardClient`. */
@@ -118,6 +123,14 @@ export function achievementsApi(api: ApiClient) {
     list: () => api.read<Achievement[]>(CORE_READS.achievements()),
     /** Counts all achievements again; what is not earned today is taken back. */
     recount: () => api.post<void>(`${API_PATHS.achievements}/recount`, {}),
+  };
+}
+
+/** How the instance is doing: background jobs and the log of errors (the owner only). */
+export function systemApi(api: ApiClient) {
+  return {
+    status: () => api.read<SystemStatus>(CORE_READS.systemStatus()),
+    clearLog: () => api.delete(API_PATHS.systemLog),
   };
 }
 

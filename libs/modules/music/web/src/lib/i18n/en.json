@@ -60,5 +60,18 @@
     "empty": "Connect Last.fm or Spotify in the Music section",
     "open": "Details"
   },
-  "noSource": "No music source connected yet: connect Last.fm or Spotify to see history, statistics and tops."
+  "noSource": "No music source connected yet: connect Last.fm or Spotify to see history, statistics and tops.",
+  "guide": {
+    "lastfm": {
+      "1": "Sign up at last.fm and turn on scrobbling in what you listen with (for Spotify: last.fm → Settings → Applications → Spotify).",
+      "2": "Open last.fm/api/account/create: any application name, the other fields may stay empty; copy the API key.",
+      "3": "Type your Last.fm user name and the key here: the history is imported in the background."
+    },
+    "spotify": {
+      "1": "Open developer.spotify.com/dashboard and create an app (any name).",
+      "2": "As its Redirect URI, add the address of the dashboard plus /api/music/spotify/callback (Spotify does not accept localhost — use 127.0.0.1 locally).",
+      "3": "Put the Client ID and the Client Secret into the server's .env as SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET and restart the dashboard.",
+      "4": "Press “Connect” here and allow access in Spotify."
+    }
+  }
 }

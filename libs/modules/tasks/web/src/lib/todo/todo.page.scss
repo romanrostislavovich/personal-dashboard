@@ -1,0 +1,116 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toolbar,
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.list {
+  width: 220px;
+}
+
+.new-list {
+  width: 240px;
+}
+
+.quick {
+  width: 100%;
+}
+
+.tasks {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--pd-border);
+  border-radius: var(--pd-radius);
+  background: var(--pd-card);
+}
+
+li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 4px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  // The priority is a stripe on the left: nothing for "none", stronger with each step.
+  border-left: 3px solid transparent;
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  &.priority-1 {
+    border-left-color: color-mix(in srgb, var(--mat-sys-primary) 45%, transparent);
+  }
+
+  &.priority-2 {
+    border-left-color: var(--mat-sys-primary);
+  }
+
+  &.priority-3 {
+    border-left-color: var(--mat-sys-error);
+  }
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.title {
+  overflow-wrap: anywhere;
+}
+
+.done .title {
+  text-decoration: line-through;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+
+  &:empty {
+    display: none;
+  }
+}
+
+.overdue {
+  color: var(--mat-sys-error);
+}
+
+.tag {
+  color: var(--mat-sys-primary);
+}
+
+.empty {
+  padding: 24px;
+  justify-content: center;
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -1,11 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { asc, eq } from 'drizzle-orm';
+import { AppConfig } from '../config/env';
 import { DB, Database } from '../database/database.module';
 import { UserRow, users } from './users.schema';
 
 @Injectable()
 export class UsersService {
-  constructor(@Inject(DB) private readonly db: Database) {}
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    @Inject(ConfigService) private readonly config: AppConfig,
+  ) {}
 
   async findById(id: string): Promise<UserRow | undefined> {
     const [user] = await this.db.select().from(users).where(eq(users.id, id));
@@ -36,6 +41,15 @@ export class UsersService {
     return user;
   }
 
+  /**
+   * The zone the user lives in: the one of their device, sent by the client. Until a client has
+   * told it, the server's own zone (APP_TIMEZONE). Everything about "today" and "at 9:00" for a
+   * user goes through this — the server may stand anywhere.
+   */
+  timeZoneOf(user: Pick<UserRow, 'timeZone'> | undefined): string {
+    return user?.timeZone ?? this.config.get('APP_TIMEZONE', { infer: true });
+  }
+
   async count(): Promise<number> {
     return this.db.$count(users);
   }
@@ -55,7 +69,7 @@ export class UsersService {
 
   async update(
     userId: string,
-    changes: Partial<Pick<UserRow, 'displayName' | 'locale' | 'passwordHash'>>,
+    changes: Partial<Pick<UserRow, 'displayName' | 'locale' | 'passwordHash' | 'timeZone'>>,
   ): Promise<UserRow> {
     const [user] = await this.db.update(users).set(changes).where(eq(users.id, userId)).returning();
     return user;

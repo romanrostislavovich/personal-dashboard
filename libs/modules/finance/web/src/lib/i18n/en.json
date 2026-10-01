@@ -70,7 +70,19 @@
       }
     },
     "title": "Cost import",
-    "inSettings": "Cost import from services (Hetzner, DeepSeek…) — in Settings → Integrations"
+    "inSettings": "Cost import from services (Hetzner, DeepSeek…) — in Settings → Integrations",
+    "guide": {
+      "hetzner": {
+        "1": "Open console.hetzner.cloud and choose the project whose costs you want.",
+        "2": "Security → API tokens → Generate API token, permission “Read”.",
+        "3": "Press “Connect a service” here, choose Hetzner Cloud and paste the token."
+      },
+      "deepseek": {
+        "1": "Open platform.deepseek.com and sign in.",
+        "2": "API keys → Create new API key; copy it — it is shown once.",
+        "3": "Press “Connect a service” here, choose DeepSeek and paste the key: spending is counted from the changes of the balance."
+      }
+    }
   },
   "kpi": {
     "income": "Income",

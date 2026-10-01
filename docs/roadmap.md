@@ -23,6 +23,12 @@
     languages, top repositories, followers; an optional streak reminder in the morning digest
   - **WakaTime:** coding time per day, project, language and editor; every day is copied to the
     dashboard, so the history grows past what the free plan keeps
+- **Tasks:** one section with two tabs —
+  - **TODO list:** tasks with due dates, priorities, checklists, your own lists and tags, a link
+    to a project; repeating tasks; views for today (with the overdue), upcoming, all and done
+  - **Reminders:** for a day and time on your own clock (the time zone comes from the device),
+    one-off or repeating, about a task or on their own; sent to Telegram with "Done", "+1 hour",
+    "Tomorrow" and "Another time" buttons and as notifications; `/todo`, `/remind`, `/tasks`
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
 - **Diary:** visual editor over Markdown (the source is a click away) with autosave, mood,
   hashtags, emoji marks on phrases, photos, search, year heatmap, “on this day”, mood insights,
@@ -62,6 +68,10 @@
   (row counts and hashes) every 6 hours and reports a difference, "Resync everything" mends it;
   a conflicts screen (both versions side by side, bring either back); `deploy.sh --rollback`
   (the previous image and the database from before the update)
+- **Self-monitoring:** Settings → System shows the background jobs with their last runs and the
+  server's errors and warnings of the last 14 days; a failed job, a failing sync or AI provider
+  and any unhandled error are also reported to Telegram
+- **Integration guides:** every integration card explains step by step where to get its key
 - **Voice messages in Telegram:** recognized (OpenAI speech-to-text) and handled like typed ones —
   a question or a request to the assistant, the recognized text shown first
 
@@ -70,10 +80,6 @@
 ### Planned
 
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
-- **Tasks** — a new section with two subsections:
-  - **Reminders** — scheduled reminders for a date and time, sent to Telegram and as notifications;
-    can be snoozed
-  - **TODO list** — tasks with due dates, priorities and checklists; overdue ones in the digest
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
 - **Activity** — a new section with computer activity tracked by the desktop app: time at the PC
   per day, time per application (and window or site), active vs idle time, daily and weekly
@@ -131,12 +137,6 @@
 - **Database tests in CI** — a PostgreSQL service in GitHub Actions, so the `*.db.spec.ts` tests
   run instead of being skipped
 - **Dependency updates** (Renovate) and a clean `npm audit`
-
-#### Watching the dashboard itself
-
-- **Self-monitoring** — the dashboard's own health check in the monitoring module; failed
-  background jobs, sync errors and AI provider failures reported to Telegram
-- **Error log in the UI** — recent server errors without `docker compose logs`
 
 #### Everyday comfort
 
