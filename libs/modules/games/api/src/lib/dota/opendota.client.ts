@@ -1,5 +1,8 @@
 const API = 'https://api.opendota.com/api';
 const STEAM_CDN = 'https://cdn.cloudflare.steamstatic.com';
+/** The same hero list OpenDota serves, straight from the project's repository. */
+const HEROES_MIRROR =
+  'https://raw.githubusercontent.com/odota/dotaconstants/master/build/heroes.json';
 
 export class DotaProfileNotFoundError extends Error {}
 
@@ -125,15 +128,28 @@ export const openDota = {
   },
 
   async getHeroes(): Promise<Map<number, HeroInfo>> {
-    const heroes = await get<Record<string, RawHero>>('/constants/heroes');
-    return new Map(
-      Object.values(heroes).map((h) => [
-        h.id,
-        { name: h.localized_name, imageUrl: STEAM_CDN + h.img.replace(/\?$/, '') },
-      ]),
-    );
+    return toHeroes(await get<Record<string, RawHero>>('/constants/heroes'));
+  },
+
+  /** The hero list from the mirror: for when the OpenDota API itself is down. */
+  async getHeroesFromMirror(): Promise<Map<number, HeroInfo>> {
+    const response = await fetch(HEROES_MIRROR);
+    if (!response.ok) {
+      throw new Error(`Hero list mirror ${response.status}`);
+    }
+    return toHeroes((await response.json()) as Record<string, RawHero>);
   },
 };
+
+/** Hero id → name and picture from the constants file (OpenDota and its mirror share the format). */
+export function toHeroes(heroes: Record<string, RawHero>): Map<number, HeroInfo> {
+  return new Map(
+    Object.values(heroes).map((h) => [
+      h.id,
+      { name: h.localized_name, imageUrl: STEAM_CDN + h.img.replace(/\?$/, '') },
+    ]),
+  );
+}
 
 async function get<T>(path: string): Promise<T> {
   return (await (await request('GET', path)).json()) as T;
@@ -176,7 +192,7 @@ interface RawMatch {
   leaver_status?: number | null;
 }
 
-interface RawHero {
+export interface RawHero {
   id: number;
   localized_name: string;
   img: string;

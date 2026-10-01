@@ -255,4 +255,7 @@
       </section>
     }
   }
+} @else if (overview.error()) {
+  <!-- An empty page says nothing: tell that the statistics did not load. -->
+  <p class="error">{{ 'games.dota.loadFailed' | transloco }}</p>
 }

@@ -82,7 +82,8 @@
       "mode": "Mode",
       "anyMode": "Any mode",
       "all": "All"
-    }
+    },
+    "loadFailed": "Could not load the Dota statistics. Reload the page; the saved matches are not lost."
   },
   "wow": {
     "region": "Region",
