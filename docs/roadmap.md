@@ -132,7 +132,9 @@
   everything as JSON
 - **Habits** — a habit tracker module, in the digest too
 - **Insights across modules** — mood on days with a run, what was playing on bad days (through AI
-  tools or core insights: modules do not depend on each other)
+  tools or core insights: modules do not depend on each other). The AI looks for such links across
+  all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you
+  were sad, you listened to this music and did that"
 - **AI memory** — facts about the user the assistant keeps between conversations
 - **AI reminders** — "remind me on Friday to call mum" becomes a scheduled job
 
