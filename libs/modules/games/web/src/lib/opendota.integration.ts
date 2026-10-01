@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { errorStatus } from '@pd/web-core';
+import { IntegrationGuideComponent, errorStatus } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { GamesApi } from './games.api';
 
@@ -19,6 +19,7 @@ import { GamesApi } from './games.api';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     MatCardModule,
+    IntegrationGuideComponent,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -61,6 +62,11 @@ import { GamesApi } from './games.api';
         } @empty {
           <p class="hint">{{ 'games.opendota.noAccounts' | transloco }}</p>
         }
+        <pd-integration-guide
+          guide="games.opendota.guide"
+          [steps]="3"
+          link="https://www.opendota.com/api-keys"
+        />
       </mat-card-content>
     </mat-card>
   `,

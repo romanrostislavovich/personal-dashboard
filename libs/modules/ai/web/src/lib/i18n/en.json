@@ -85,5 +85,22 @@
       "asked": "asked to confirm",
       "failed": "failed"
     }
+  },
+  "guide": {
+    "deepseek": {
+      "1": "Open platform.deepseek.com, sign in and top up the balance (a few dollars last long).",
+      "2": "API keys → Create new API key; copy it — it is shown once.",
+      "3": "Press “Add a connection”, choose DeepSeek and paste the key; the address and the model are filled in."
+    },
+    "openai": {
+      "1": "Open platform.openai.com, sign in and add a payment method in Billing.",
+      "2": "API keys → Create new secret key; copy it — it is shown once.",
+      "3": "Press “Add a connection”, choose OpenAI and paste the key. An OpenAI connection also understands Telegram voice messages."
+    },
+    "ollama": {
+      "1": "Install Ollama on the machine the dashboard runs on (ollama.com/download).",
+      "2": "Download a model that can call tools, for example: ollama pull qwen3.",
+      "3": "Press “Add a connection”, choose Ollama and type the name of the model; no key is needed, and nothing leaves your machine."
+    }
   }
 }

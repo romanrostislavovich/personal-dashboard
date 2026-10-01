@@ -12,6 +12,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AiAction, AiConnection, AiPreferences, AiSettings } from '@pd/contracts';
+import { IntegrationGuideComponent } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
 import { AiConnectionFormDialog } from './ai-connection-form.dialog';
@@ -26,6 +27,7 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
   imports: [
     DatePipe,
     MatCardModule,
+    IntegrationGuideComponent,
     MatCheckboxModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -83,6 +85,25 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
         <button matButton="tonal" class="add" (click)="edit(null)">
           <mat-icon>add</mat-icon> {{ 'ai.connections.add' | transloco }}
         </button>
+
+        <pd-integration-guide
+          guide="ai.guide.deepseek"
+          [steps]="3"
+          link="https://platform.deepseek.com/api_keys"
+          title="DeepSeek"
+        />
+        <pd-integration-guide
+          guide="ai.guide.openai"
+          [steps]="3"
+          link="https://platform.openai.com/api-keys"
+          title="OpenAI"
+        />
+        <pd-integration-guide
+          guide="ai.guide.ollama"
+          [steps]="3"
+          link="https://ollama.com/download"
+          title="Ollama"
+        />
 
         @if (settings().configured) {
           <mat-slide-toggle

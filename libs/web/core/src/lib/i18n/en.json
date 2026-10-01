@@ -74,7 +74,12 @@
       "check": "Check",
       "test": "Send a test",
       "testSent": "Test notification sent",
-      "disconnect": "Disconnect"
+      "disconnect": "Disconnect",
+      "guide": {
+        "1": "In Telegram, open @BotFather, send /newbot and follow it: you get the token of your own bot.",
+        "2": "Put the token into the server's .env as TELEGRAM_BOT_TOKEN and restart the dashboard.",
+        "3": "Press “Connect Telegram” here, then “Start” in the chat with the bot, then “Check”."
+      }
     },
     "profile": {
       "title": "Profile",
@@ -242,6 +247,10 @@
       "clear": "Clear",
       "since": "Repeats since",
       "logEmpty": "Nothing here — the server has no complaints."
+    },
+    "guide": {
+      "title": "How to connect",
+      "open": "Open {{site}}"
     }
   },
   "toast": {

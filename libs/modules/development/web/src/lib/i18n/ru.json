@@ -80,7 +80,12 @@
       "hint": "Personal access token (classic) с правами «read:user», «repo» и «read:org»: по нему загружаются твои публичные репозитории (и репозитории твоих организаций) и аккаунт с приватными контрибуциями. Без «repo» приватные контрибуции считаются, но не делятся по типам; без «read:org» не попадут организации со скрытым членством.",
       "label": "Personal access token",
       "configured": "Токен сохранён (зашифрован на сервере)",
-      "remove": "Удалить токен"
+      "remove": "Удалить токен",
+      "guide": {
+        "1": "GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic).",
+        "2": "Отметь права read:user, repo и read:org; срок действия — на твой выбор (когда истечёт, токен нужно заменить).",
+        "3": "Скопируй токен — GitHub показывает его один раз — и вставь сюда."
+      }
     },
     "syncNow": "Обновить",
     "syncedAt": "Обновлено",
@@ -169,7 +174,12 @@
       "label": "Secret API key",
       "connected": "Подключено: {{username}}",
       "disconnect": "Отключить",
-      "invalid": "WakaTime не принял ключ"
+      "invalid": "WakaTime не принял ключ",
+      "guide": {
+        "1": "Установи плагин WakaTime в свой редактор (wakatime.com/plugins) и войди: время начнёт считаться само.",
+        "2": "Открой wakatime.com → Settings → Account и скопируй Secret API Key.",
+        "3": "Вставь его сюда. Последняя неделя скопируется сразу, дальше история копится здесь."
+      }
     }
   }
 }

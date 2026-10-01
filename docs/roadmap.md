@@ -62,6 +62,10 @@
   (row counts and hashes) every 6 hours and reports a difference, "Resync everything" mends it;
   a conflicts screen (both versions side by side, bring either back); `deploy.sh --rollback`
   (the previous image and the database from before the update)
+- **Self-monitoring:** Settings → System shows the background jobs with their last runs and the
+  server's errors and warnings of the last 14 days; a failed job, a failing sync or AI provider
+  and any unhandled error are also reported to Telegram
+- **Integration guides:** every integration card explains step by step where to get its key
 - **Voice messages in Telegram:** recognized (OpenAI speech-to-text) and handled like typed ones —
   a question or a request to the assistant, the recognized text shown first
 
@@ -131,12 +135,6 @@
 - **Database tests in CI** — a PostgreSQL service in GitHub Actions, so the `*.db.spec.ts` tests
   run instead of being skipped
 - **Dependency updates** (Renovate) and a clean `npm audit`
-
-#### Watching the dashboard itself
-
-- **Self-monitoring** — the dashboard's own health check in the monitoring module; failed
-  background jobs, sync errors and AI provider failures reported to Telegram
-- **Error log in the UI** — recent server errors without `docker compose logs`
 
 #### Everyday comfort
 
