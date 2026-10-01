@@ -23,6 +23,12 @@
     languages, top repositories, followers; an optional streak reminder in the morning digest
   - **WakaTime:** coding time per day, project, language and editor; every day is copied to the
     dashboard, so the history grows past what the free plan keeps
+- **Tasks:** one section with two tabs —
+  - **TODO list:** tasks with due dates, priorities, checklists, your own lists and tags, a link
+    to a project; repeating tasks; views for today (with the overdue), upcoming, all and done
+  - **Reminders:** for a day and time on your own clock (the time zone comes from the device),
+    one-off or repeating, about a task or on their own; sent to Telegram with "Done", "+1 hour",
+    "Tomorrow" and "Another time" buttons and as notifications; `/todo`, `/remind`, `/tasks`
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
 - **Diary:** visual editor over Markdown (the source is a click away) with autosave, mood,
   hashtags, emoji marks on phrases, photos, search, year heatmap, “on this day”, mood insights,
@@ -74,10 +80,6 @@
 ### Planned
 
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
-- **Tasks** — a new section with two subsections:
-  - **Reminders** — scheduled reminders for a date and time, sent to Telegram and as notifications;
-    can be snoozed
-  - **TODO list** — tasks with due dates, priorities and checklists; overdue ones in the digest
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
 - **Activity** — a new section with computer activity tracked by the desktop app: time at the PC
   per day, time per application (and window or site), active vs idle time, daily and weekly

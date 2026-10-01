@@ -1,0 +1,91 @@
+{
+  "title": "Tasks",
+  "tabs": {
+    "todo": "TODO list",
+    "reminders": "Reminders"
+  },
+  "priority": {
+    "0": "No priority",
+    "1": "Low",
+    "2": "Medium",
+    "3": "High"
+  },
+  "repeat": {
+    "label": "Repeat",
+    "never": "Does not repeat",
+    "every": "Every",
+    "needsDate": "A repeating task needs a due date.",
+    "units": {
+      "day": "Days",
+      "week": "Weeks",
+      "month": "Months",
+      "year": "Years"
+    },
+    "short": {
+      "day": "d",
+      "week": "wk",
+      "month": "mo",
+      "year": "yr"
+    }
+  },
+  "todo": {
+    "views": {
+      "today": "Today",
+      "upcoming": "Upcoming",
+      "all": "All",
+      "done": "Done"
+    },
+    "newTitle": "New task",
+    "editTitle": "Task",
+    "quickAdd": "A new task — type and press Enter",
+    "title": "What to do",
+    "notes": "Notes",
+    "dueDate": "Due date",
+    "priority": "Priority",
+    "list": "List",
+    "allLists": "All lists",
+    "inbox": "Inbox",
+    "newList": "New list — Enter",
+    "deleteList": "Delete the list",
+    "project": "Project",
+    "tags": "Tags",
+    "tagsHint": "home urgent",
+    "checklist": "Checklist",
+    "checklistAdd": "A step — Enter",
+    "remind": "Remind me about it",
+    "confirmDelete": "Delete “{{title}}”? Its reminders go with it.",
+    "confirmDeleteList": "Delete the list “{{name}}”? Its tasks go back to the inbox.",
+    "empty": {
+      "today": "Nothing for today. 🎉",
+      "upcoming": "No tasks with a later date.",
+      "all": "No tasks yet — type the first one above.",
+      "done": "Nothing done in the last month."
+    }
+  },
+  "reminders": {
+    "dialog": {
+      "new": "New reminder",
+      "snooze": "Remind me later",
+      "edit": "Reminder"
+    },
+    "text": "What to remind about",
+    "when": "When (your local time)",
+    "groups": {
+      "fired": "Waiting for an answer",
+      "scheduled": "Scheduled",
+      "done": "Done lately"
+    },
+    "done": "Done",
+    "snooze": "Later",
+    "aboutTask": "about a task",
+    "confirmDelete": "Delete the reminder “{{text}}”?",
+    "confirmDeleteSeries": "Delete the repeating reminder “{{text}}” — the whole series?",
+    "empty": "No reminders yet. They come to Telegram and as notifications here."
+  },
+  "widget": {
+    "title": "Tasks for today",
+    "more": "and {{count}} more",
+    "empty": "Nothing for today. 🎉",
+    "open": "All tasks"
+  }
+}

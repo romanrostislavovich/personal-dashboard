@@ -107,6 +107,10 @@ Say it is `strava`.
      `strava.messages.ts` via `pickMessages({ en: {...}, ru: {...} }, user.locale)`;
    - Telegram commands: `TelegramBotService.registerCommand({ command, description, handler })`
      (example — `/d` in `libs/modules/diary/api/src/lib/diary.jobs.ts`);
+   - buttons under a Telegram notification: `actions` of the notification (`{ label, data }`) and
+     `TelegramBotService.registerAction(prefix, handler)` for the presses; a reply with
+     `expectText` takes the user's next message as the answer (example — the reminder buttons in
+     `libs/modules/tasks/api/src/lib/tasks.jobs.ts`);
    - achievements: `strava.achievements.ts` — a metric (`measure(userId) → number`) and tiers via
      `achievementTiers([goal, icon, title, description], ...)`, registered with
      `AchievementsService.register()` (example — `libs/modules/games/api/src/lib/dota/dota.achievements.ts`).
@@ -234,6 +238,11 @@ To add a service (e.g. DigitalOcean):
   `libs/api/core/src/lib/config/env.ts`; on errors the app does not start and explains what is wrong.
 - **Dates:** calendar dates (birthday, transaction date) are stored as `YYYY-MM-DD` without a time zone;
   “today” is computed in `APP_TIMEZONE` (`todayIn()` in contracts).
+- **The user's time:** the server may stand anywhere, so anything shown or asked as a time of day
+  (reminders, the digest time, the AI's "now") uses the user's own time zone — the web app sends
+  the device's one on sign-in, `UsersService.timeZoneOf(user)` gives it (falls back to
+  `APP_TIMEZONE`); moments are stored in UTC, `zonedToUtc()` / `zonedDateTime()` in contracts
+  convert.
 - **Money:** `numeric(14,2)`; totals are converted into the user's main currency at the ECB rate of
   each transaction's day (Frankfurter; today's rate from open.er-api for a currency the ECB lacks),
   kept as they are otherwise (`finance/currency`).
