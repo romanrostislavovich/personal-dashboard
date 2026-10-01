@@ -54,11 +54,11 @@ export class GamesApi {
     return fromCore(() => this.games.saveWowCredentials(input));
   }
 
-  saveOpenDotaKey(apiKey: string) {
-    return fromCore(() => this.games.saveOpenDotaKey(apiKey));
+  saveOpenDotaKey(accountId: string, apiKey: string) {
+    return fromCore(() => this.games.saveOpenDotaKey(accountId, apiKey));
   }
 
-  removeOpenDotaKey() {
-    return fromCore(() => this.games.removeOpenDotaKey());
+  removeOpenDotaKey(accountId: string) {
+    return fromCore(() => this.games.removeOpenDotaKey(accountId));
   }
 }

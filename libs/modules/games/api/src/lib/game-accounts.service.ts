@@ -11,6 +11,7 @@ import { GameAccount, GameAccountInput } from '@pd/contracts';
 import { and, asc, eq } from 'drizzle-orm';
 import { DotaProfileNotFoundError } from './dota/opendota.client';
 import { DotaService } from './dota/dota.service';
+import { OpenDotaKeyService } from './dota/opendota-key.service';
 import { parseDotaAccountId } from './dota/steam-id';
 import { gameAccounts, GameAccountRow } from './games.schema';
 import { gamesMessages } from './games.messages';
@@ -24,6 +25,7 @@ export class GameAccountsService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly dota: DotaService,
+    private readonly openDotaKeys: OpenDotaKeyService,
     private readonly wow: WowService,
     private readonly users: UsersService,
     private readonly notifications: NotificationsService,
@@ -70,9 +72,20 @@ export class GameAccountsService {
   }
 
   async remove(userId: string, id: string): Promise<void> {
+    // The key was this account's: without the account it would only lie around.
+    await this.openDotaKeys.remove(userId, id);
     await this.db
       .delete(gameAccounts)
       .where(and(eq(gameAccounts.id, id), eq(gameAccounts.userId, userId)));
+  }
+
+  /** Ids of the user's accounts of a game. */
+  async idsOf(userId: string, game: GameAccountRow['game']): Promise<string[]> {
+    const rows = await this.db
+      .select({ id: gameAccounts.id })
+      .from(gameAccounts)
+      .where(and(eq(gameAccounts.userId, userId), eq(gameAccounts.game, game)));
+    return rows.map((row) => row.id);
   }
 
   async syncOne(userId: string, id: string): Promise<void> {

@@ -96,7 +96,10 @@ export class GamesController {
   async settings(@CurrentUser() user: AuthUser): Promise<GamesSettings> {
     return {
       wowCredentials: await this.wow.hasCredentials(user.id),
-      openDotaKey: await this.openDotaKeys.has(user.id),
+      openDotaKeyAccounts: await this.openDotaKeys.accountsWithKey(
+        user.id,
+        await this.accounts.idsOf(user.id, 'dota2'),
+      ),
     };
   }
 
@@ -109,19 +112,20 @@ export class GamesController {
     return this.wow.saveCredentials(user.id, input);
   }
 
-  /** Checks the OpenDota API key, saves it and refreshes the accounts with it. */
-  @Put('dota/key')
+  /** Checks the OpenDota API key of a Dota account, saves it and refreshes the account with it. */
+  @Put('accounts/:id/opendota-key')
   @HttpCode(204)
   saveOpenDotaKey(
     @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) accountId: string,
     @Body(new ZodValidationPipe(openDotaKeyInputSchema)) input: OpenDotaKeyInput,
   ) {
-    return this.actions.run(user.id, GAMES_ACTIONS.saveOpenDotaKey, input);
+    return this.actions.run(user.id, GAMES_ACTIONS.saveOpenDotaKey, { accountId, ...input });
   }
 
-  @Delete('dota/key')
+  @Delete('accounts/:id/opendota-key')
   @HttpCode(204)
-  removeOpenDotaKey(@CurrentUser() user: AuthUser) {
-    return this.openDotaKeys.remove(user.id);
+  removeOpenDotaKey(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) accountId: string) {
+    return this.openDotaKeys.remove(user.id, accountId);
   }
 }

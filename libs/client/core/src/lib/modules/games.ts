@@ -36,9 +36,11 @@ export function gamesApi(api: ApiClient) {
     remove: (id: string) => api.delete(`${BASE}/accounts/${id}`),
     saveWowCredentials: (input: WowCredentialsInput) =>
       api.put<void>(`${BASE}/wow/credentials`, input),
-    /** The key is checked and the Dota accounts are refreshed with it. */
-    saveOpenDotaKey: (apiKey: string) => api.put<void>(`${BASE}/dota/key`, { apiKey }),
-    removeOpenDotaKey: () => api.delete(`${BASE}/dota/key`),
+    /** The key of one Dota account: it is checked and the account is refreshed with it. */
+    saveOpenDotaKey: (accountId: string, apiKey: string) =>
+      api.put<void>(`${BASE}/accounts/${accountId}/opendota-key`, { apiKey }),
+    removeOpenDotaKey: (accountId: string) =>
+      api.delete(`${BASE}/accounts/${accountId}/opendota-key`),
   };
 }
 

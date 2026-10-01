@@ -41,8 +41,8 @@ export type OpenDotaKeyInput = z.infer<typeof openDotaKeyInputSchema>;
 export interface GamesSettings {
   /** Whether the Battle.net app keys are set (needed for WoW). */
   wowCredentials: boolean;
-  /** Whether the OpenDota API key is set: Dota requests are then not bound by the free limit. */
-  openDotaKey: boolean;
+  /** Dota accounts (ids) with an OpenDota API key of their own: not bound by the free limit. */
+  openDotaKeyAccounts: string[];
 }
 
 // --- Dota 2 ---

@@ -117,10 +117,11 @@
   "accountsTitle": "Accounts",
   "opendota": {
     "title": "Dota 2 statistics",
-    "hint": "Optional. Without a key OpenDota gives a small shared number of requests a day, and matches may come late or not at all. A key from opendota.com/api-keys lifts the limit; one key covers all your Dota accounts.",
+    "hint": "Optional. Without a key OpenDota gives a small shared number of requests a day, and matches may come late. A key from opendota.com/api-keys lifts the limit; every Dota account takes a key of its own.",
     "label": "API key",
     "saved": "Key saved (encrypted on the server)",
     "remove": "Remove the key",
-    "invalid": "OpenDota rejected the key"
+    "invalid": "OpenDota rejected the key",
+    "noAccounts": "Add a Dota 2 account on the Games page first."
   }
 }

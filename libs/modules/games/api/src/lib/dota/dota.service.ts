@@ -68,7 +68,7 @@ export class DotaService {
     const accountId = Number(account.externalId);
     const full = fullHistory || isHistoryStale(account);
 
-    const apiKey = await this.keys.get(account.userId);
+    const apiKey = await this.keys.get(account.userId, account.id);
 
     const [profile, matches] = await Promise.all([
       openDota.getProfile(accountId, apiKey),

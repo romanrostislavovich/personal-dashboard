@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { ServerActions } from '@pd/api-core';
 import { gameAccountInputSchema, openDotaKeyInputSchema } from '@pd/contracts';
 import { z } from 'zod';
@@ -14,6 +14,7 @@ export const GAMES_ACTIONS = {
 } as const;
 
 const idArgs = z.object({ id: z.uuid() });
+const keyArgs = openDotaKeyInputSchema.extend({ accountId: z.uuid() });
 
 @Injectable()
 export class GamesServerActions implements OnModuleInit {
@@ -31,10 +32,15 @@ export class GamesServerActions implements OnModuleInit {
       this.accounts.syncOne(userId, idArgs.parse(args).id),
     );
     this.actions.register(GAMES_ACTIONS.syncAll, (userId) => this.accounts.syncAllOf(userId));
-    // The key is checked against OpenDota, and the accounts are re-read with it right away.
+    // The key is checked against OpenDota, and its account is re-read with it right away.
     this.actions.register(GAMES_ACTIONS.saveOpenDotaKey, async (userId, args) => {
-      await this.openDotaKeys.save(userId, openDotaKeyInputSchema.parse(args).apiKey);
-      await this.accounts.syncAllOf(userId);
+      const { accountId, apiKey } = keyArgs.parse(args);
+      // 404 for somebody else's account before anything is saved.
+      if (!(await this.accounts.idsOf(userId, 'dota2')).includes(accountId)) {
+        throw new NotFoundException();
+      }
+      await this.openDotaKeys.save(userId, accountId, apiKey);
+      await this.accounts.syncOne(userId, accountId);
     });
   }
 }
