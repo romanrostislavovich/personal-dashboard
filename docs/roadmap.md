@@ -62,7 +62,9 @@
 - **WakaTime** — coding time from WakaTime: per day, project, language and editor
 - **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
 - **Books** — reading list, progress, ratings and notes
-- **Fitness** — workouts, activity and body metrics
+- **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and
+  its trend, heart rate; data from smart watches and fitness bands (Apple Health, Google Fit /
+  Health Connect, Garmin, Fitbit, Mi Band / Zepp and similar)
 - **SoundCloud** — my own mixes and tracks: plays, likes, reposts and comments
 - **Science** — a section for science
 - **Psychology** — a section for psychology; how exactly to tie it in is still open (for example
