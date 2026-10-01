@@ -1,7 +1,8 @@
 {
   "title": "Разработка",
   "tabs": {
-    "openSource": "Open Source"
+    "openSource": "Open Source",
+    "github": "GitHub"
   },
   "errors": {
     "notFound": "Репозиторий не найден на GitHub",
@@ -39,11 +40,50 @@
   "github": {
     "token": {
       "title": "Токен GitHub",
-      "hint": "Необязательно. Без токена GitHub даёт 60 запросов в час — хватит на несколько репозиториев. Создай fine-grained token с доступом только на чтение публичных репозиториев.",
+      "hint": "Personal access token (classic) с правами «read:user» и «repo»: по нему загружается твой аккаунт с приватными контрибуциями и снимается лимит в 60 запросов в час для Open Source. Для одного Open Source хватит токена только на чтение публичных репозиториев.",
       "label": "Personal access token",
       "configured": "Токен сохранён (зашифрован на сервере)",
       "remove": "Удалить токен",
       "noToken": "Без токена GitHub: 60 запросов в час, хватит на несколько репозиториев."
-    }
+    },
+    "syncNow": "Обновить",
+    "syncedAt": "Обновлено",
+    "syncError": "Ошибка синхронизации",
+    "noTokenTitle": "Подключи GitHub",
+    "noTokenHint": "Аккаунт читается по твоему personal access token: добавь его в интеграциях — статистика загрузится сама.",
+    "notLoaded": "Пока ничего не загружено — нажми «Обновить».",
+    "since": "на GitHub с",
+    "currentStreak": "Текущая серия, дней",
+    "longestStreak": "Рекорд",
+    "today": "Сегодня",
+    "perWeek": "за 7 дней",
+    "totalContributions": "Всего контрибуций",
+    "busiestDay": "Лучший день",
+    "followers": "Подписчики",
+    "following": "Подписки",
+    "repos": "Репозитории",
+    "calendar": "Контрибуции",
+    "year": "Год",
+    "contributions": "Контрибуции",
+    "contributionsCount": "контрибуций: {{count}}",
+    "commits": "Коммиты",
+    "pullRequests": "Pull requests",
+    "reviews": "Ревью",
+    "issues": "Issues",
+    "restricted": "Из них {{count}} — в приватных репозиториях, куда токен не видит: дай ему право «repo», чтобы разложить их на коммиты, PR и ревью.",
+    "byMonth": "По месяцам",
+    "languages": "Языки",
+    "languagesHint": "По объёму кода в твоих репозиториях",
+    "topRepos": "Топ репозиториев",
+    "private": "Приватный",
+    "followersHistory": "Подписчики за 90 дней",
+    "historyCollecting": "История собирается: график появится со второго дня."
+  },
+  "heatmap": {
+    "less": "Меньше",
+    "more": "Больше"
+  },
+  "digestOptions": {
+    "streak": "Напоминать о серии контрибуций на GitHub"
   }
 }

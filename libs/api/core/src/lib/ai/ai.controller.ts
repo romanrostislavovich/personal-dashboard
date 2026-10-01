@@ -35,6 +35,7 @@ import { AiActionsService } from './ai-actions.service';
 import { AiConversationsService } from './ai-conversations.service';
 import { AiService } from './ai.service';
 import { AttachmentError, attachmentText } from './attachment-text';
+import { MorningDigestService } from './morning-digest.service';
 
 /** The part of a multer upload we use (multer's own types are not installed). */
 interface UploadedDocument {
@@ -49,6 +50,7 @@ export class AiController {
     private readonly aiActions: AiActionsService,
     private readonly connections: AiConnectionsService,
     private readonly conversations: AiConversationsService,
+    private readonly digest: MorningDigestService,
   ) {}
 
   @Get('settings')
@@ -66,6 +68,12 @@ export class AiController {
   @Get('modules')
   modules(): string[] {
     return this.ai.modules();
+  }
+
+  /** Optional sections of the morning digest — the switches under it in the settings. */
+  @Get('digest-options')
+  digestOptions(): string[] {
+    return this.digest.optIns();
   }
 
   @Put('preferences')

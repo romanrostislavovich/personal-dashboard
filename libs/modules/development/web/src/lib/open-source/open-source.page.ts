@@ -91,7 +91,9 @@ export class OpenSourcePage {
   }
 
   async removeRepo(repo: TrackedRepo): Promise<void> {
-    if (confirm(this.transloco.translate('development.oss.confirmDelete', { name: repo.fullName }))) {
+    if (
+      confirm(this.transloco.translate('development.oss.confirmDelete', { name: repo.fullName }))
+    ) {
       await firstValueFrom(this.api.removeRepo(repo.id));
       this.repos.reload();
     }

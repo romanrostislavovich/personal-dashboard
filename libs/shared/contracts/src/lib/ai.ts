@@ -55,6 +55,8 @@ export const aiPreferencesSchema = z.object({
    * no diary summaries.
    */
   disabledModules: z.array(z.string().trim().min(1).max(50)).max(50).optional(),
+  /** Optional sections of the morning digest that are switched on (ids from `digest-options`). */
+  digestOptIns: z.array(z.string().trim().min(1).max(100)).max(50).optional(),
 });
 export type AiPreferences = z.infer<typeof aiPreferencesSchema>;
 
@@ -63,6 +65,7 @@ export interface AiSettings {
   speechConnectionId: string | null;
   speechModel: string;
   disabledModules: string[];
+  digestOptIns: string[];
   /** At least one connection exists — the AI features work. */
   configured: boolean;
   /** The connection every AI request goes through. */

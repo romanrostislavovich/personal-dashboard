@@ -26,4 +26,9 @@ export interface DigestSection {
   collect: (userId: string) => Promise<unknown>;
   /** In every digest, changed or not (the weather). */
   always?: boolean;
+  /**
+   * Left out until the user switches it on in the AI settings (a reminder not everyone wants).
+   * The switch is named by the module's translation `<module>.digestOptions.<rest of the id>`.
+   */
+  optIn?: boolean;
 }

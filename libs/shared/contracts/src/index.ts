@@ -6,6 +6,7 @@ export * from './lib/notifications';
 export * from './lib/birthdays';
 export * from './lib/finance';
 export * from './lib/open-source';
+export * from './lib/github-profile';
 export * from './lib/monitoring';
 export * from './lib/diary';
 export * from './lib/music';

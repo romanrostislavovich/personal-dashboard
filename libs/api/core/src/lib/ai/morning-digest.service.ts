@@ -24,11 +24,19 @@ export class MorningDigestService {
     this.sections.push(section);
   }
 
+  /** Sections a user may switch on in the AI settings. */
+  optIns(): string[] {
+    return this.sections.filter((section) => section.optIn).map((section) => section.id);
+  }
+
   /** Sections for today's digest; empty — nothing new, the digest is not sent. */
   async changes(userId: string): Promise<DigestChange[]> {
     // The digest is written by the AI: modules switched off for it are left out.
     const hidden = new Set(await this.connections.disabledModules(userId));
-    const visible = this.sections.filter((section) => !hidden.has(section.module));
+    const optedIn = new Set(await this.connections.digestOptIns(userId));
+    const visible = this.sections.filter(
+      (section) => !hidden.has(section.module) && (!section.optIn || optedIn.has(section.id)),
+    );
     const collected = await Promise.all(visible.map((section) => this.collect(userId, section)));
     return digestChanges(
       collected.filter((item) => item !== null),

@@ -1,4 +1,10 @@
-import { GithubSettings, TrackedRepo, TrackedRepoInput } from '@pd/contracts';
+import {
+  GithubContributionDay,
+  GithubProfile,
+  GithubSettings,
+  TrackedRepo,
+  TrackedRepoInput,
+} from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
 const BASE = '/api/development';
@@ -9,6 +15,10 @@ export const DEVELOPMENT_READS = {
   repos: () => apiRequest(`${BASE}/repos`),
   /** Whether the GitHub token is set. */
   githubSettings: () => apiRequest(`${BASE}/github/settings`),
+  /** The account of the token's owner; `null` until the first sync. */
+  githubProfile: () => apiRequest(`${BASE}/github/profile`),
+  /** The contribution calendar of a year. */
+  githubContributions: (year: number) => apiRequest(`${BASE}/github/contributions`, { year }),
 };
 
 export function developmentApi(api: ApiClient) {
@@ -23,6 +33,11 @@ export function developmentApi(api: ApiClient) {
     githubSettings: () => api.read<GithubSettings>(DEVELOPMENT_READS.githubSettings()),
     saveGithubToken: (token: string) => api.put<void>(`${BASE}/github/token`, { token }),
     removeGithubToken: () => api.delete(`${BASE}/github/token`),
+
+    githubProfile: () => api.read<GithubProfile | null>(DEVELOPMENT_READS.githubProfile()),
+    githubContributions: (year: number) =>
+      api.read<GithubContributionDay[]>(DEVELOPMENT_READS.githubContributions(year)),
+    syncGithubProfile: () => api.post<void>(`${BASE}/github/profile/sync`, {}),
   };
 }
 

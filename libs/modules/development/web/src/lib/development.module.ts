@@ -1,7 +1,8 @@
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
- * Web part of the Development section: open source repositories (GitHub + npm).
+ * Web part of the Development section: open source repositories (GitHub + npm) and the
+ * GitHub account.
  * Plugged in at apps/web/src/app/modules.ts.
  */
 export const developmentModule: WebDashboardModule = {
@@ -18,6 +19,11 @@ export const developmentModule: WebDashboardModule = {
           path: 'open-source',
           loadComponent: () =>
             import('./open-source/open-source.page').then((m) => m.OpenSourcePage),
+        },
+        {
+          path: 'github',
+          loadComponent: () =>
+            import('./github/github-profile.page').then((m) => m.GithubProfilePage),
         },
       ],
     },

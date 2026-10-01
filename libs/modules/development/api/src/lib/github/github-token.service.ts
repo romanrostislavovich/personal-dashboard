@@ -15,8 +15,17 @@ export class GithubTokenService {
     return new GithubClient(await this.secrets.get(userId, TOKEN_KEY));
   }
 
+  /** The token itself, for clients other than `GithubClient` (GraphQL). */
+  token(userId: string): Promise<string | null> {
+    return this.secrets.get(userId, TOKEN_KEY);
+  }
+
+  hasToken(userId: string): Promise<boolean> {
+    return this.secrets.has(userId, TOKEN_KEY);
+  }
+
   async settings(userId: string): Promise<GithubSettings> {
-    return { tokenConfigured: await this.secrets.has(userId, TOKEN_KEY) };
+    return { tokenConfigured: await this.hasToken(userId) };
   }
 
   async save(userId: string, token: string): Promise<void> {

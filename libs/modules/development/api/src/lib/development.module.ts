@@ -1,6 +1,13 @@
 import { Module } from '@nestjs/common';
 import { GithubController } from './github/github.controller';
 import { GithubTokenService } from './github/github-token.service';
+import { GithubProfileAchievements } from './github-profile/github-profile.achievements';
+import { GithubProfileAiTools } from './github-profile/github-profile.ai-tools';
+import { GithubProfileController } from './github-profile/github-profile.controller';
+import { GithubProfileDigest } from './github-profile/github-profile.digest';
+import { GithubProfileJob } from './github-profile/github-profile.job';
+import { GithubProfileServerActions } from './github-profile/github-profile.server-actions';
+import { GithubProfileService } from './github-profile/github-profile.service';
 import { OpenSourceAchievements } from './open-source/open-source.achievements';
 import { OpenSourceAiTools } from './open-source/open-source.ai-tools';
 import { OpenSourceController } from './open-source/open-source.controller';
@@ -13,12 +20,13 @@ import { ReposService } from './open-source/repos.service';
 /**
  * Everything about coding, one folder per subsection:
  * - `open-source/` — tracked repositories: GitHub stars, forks, issues, PRs, releases, npm downloads;
+ * - `github-profile/` — the GitHub account of the token's owner: contributions, streaks, languages;
  * - `github/` — the GitHub token and client the subsections share.
  *
  * API: `/api/development/*`.
  */
 @Module({
-  controllers: [GithubController, OpenSourceController],
+  controllers: [GithubController, GithubProfileController, OpenSourceController],
   providers: [
     GithubTokenService,
     ReposService,
@@ -28,6 +36,12 @@ import { ReposService } from './open-source/repos.service';
     OpenSourceAiTools,
     OpenSourceDigest,
     OpenSourceServerActions,
+    GithubProfileService,
+    GithubProfileJob,
+    GithubProfileAchievements,
+    GithubProfileAiTools,
+    GithubProfileDigest,
+    GithubProfileServerActions,
   ],
 })
 export class DevelopmentModule {}

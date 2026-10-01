@@ -34,7 +34,8 @@ import { GithubApi } from './github.api';
       <mat-card-content>
         @if (settings.value()?.tokenConfigured) {
           <p class="ok">
-            <mat-icon>check_circle</mat-icon> {{ 'development.github.token.configured' | transloco }}
+            <mat-icon>check_circle</mat-icon>
+            {{ 'development.github.token.configured' | transloco }}
           </p>
           <button matButton (click)="removeToken()">
             {{ 'development.github.token.remove' | transloco }}
@@ -95,7 +96,9 @@ export class GithubTokenIntegration {
       this.settings.reload();
     } catch (error) {
       const key =
-        errorStatus(error) === 400 ? 'development.errors.invalidToken' : 'development.errors.generic';
+        errorStatus(error) === 400
+          ? 'development.errors.invalidToken'
+          : 'development.errors.generic';
       this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });
     } finally {
       this.busy.set(false);

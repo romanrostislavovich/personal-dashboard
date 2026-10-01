@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +26,7 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
   imports: [
     DatePipe,
     MatCardModule,
+    MatCheckboxModule,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
@@ -90,6 +92,19 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
           >
             {{ 'ai.settings.morningDigest' | transloco }}
           </mat-slide-toggle>
+          @if (digestOptions().length) {
+            <div class="digest-options">
+              @for (option of digestOptions(); track option) {
+                <mat-checkbox
+                  [checked]="settings().digestOptIns.includes(option)"
+                  [disabled]="!settings().morningDigest"
+                  (change)="setDigestOption(option, $event.checked)"
+                >
+                  {{ digestOptionName(option) }}
+                </mat-checkbox>
+              }
+            </div>
+          }
 
           <h3 class="section">🎤 {{ 'ai.speech.title' | transloco }}</h3>
           <p class="hint">{{ 'ai.speech.hint' | transloco }}</p>
@@ -256,6 +271,11 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
       display: block;
       margin-top: 20px;
     }
+    .digest-options {
+      display: flex;
+      flex-direction: column;
+      margin: 4px 0 0 44px;
+    }
   `,
 })
 export class AiSettingsComponent {
@@ -269,6 +289,8 @@ export class AiSettingsComponent {
 
   /** Modules that give the AI data. */
   protected readonly modules = signal<string[]>([]);
+  /** Optional digest sections that modules offer (`development.streak`). */
+  protected readonly digestOptions = signal<string[]>([]);
   /** The assistant's changes; `null` until asked for. */
   protected readonly actions = signal<AiAction[] | null>(null);
 
@@ -277,12 +299,29 @@ export class AiSettingsComponent {
       (modules) => this.modules.set(modules),
       () => this.modules.set([]),
     );
+    firstValueFrom(this.api.digestOptions()).then(
+      (options) => this.digestOptions.set(options),
+      () => this.digestOptions.set([]),
+    );
   }
 
   protected moduleName(module: string): string {
     const key = module === 'projects' ? 'core.nav.projects' : `${module}.title`;
     const name = this.transloco.translate(key);
     return name === key ? module : name;
+  }
+
+  /** The owning module names its option: `development.streak` → `development.digestOptions.streak`. */
+  protected digestOptionName(option: string): string {
+    const [module, ...rest] = option.split('.');
+    const key = `${module}.digestOptions.${rest.join('.')}`;
+    const name = this.transloco.translate(key);
+    return name === key ? option : name;
+  }
+
+  async setDigestOption(option: string, enabled: boolean): Promise<void> {
+    const others = this.settings().digestOptIns.filter((id) => id !== option);
+    await this.savePreferences({ digestOptIns: enabled ? [...others, option] : others });
   }
 
   async setVisible(module: string, visible: boolean): Promise<void> {

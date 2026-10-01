@@ -1,7 +1,8 @@
 {
   "title": "Development",
   "tabs": {
-    "openSource": "Open Source"
+    "openSource": "Open Source",
+    "github": "GitHub"
   },
   "errors": {
     "notFound": "Repository not found on GitHub",
@@ -39,11 +40,50 @@
   "github": {
     "token": {
       "title": "GitHub token",
-      "hint": "Optional. Without a token GitHub allows 60 requests per hour — enough for a few repositories. Create a fine-grained token with read-only access to public repositories.",
+      "hint": "A personal access token (classic) with the “read:user” and “repo” permissions: it loads your account with private contributions and lifts the limit of 60 requests an hour for Open Source. A read-only token for public repositories is enough for Open Source alone.",
       "label": "Personal access token",
       "configured": "Token saved (encrypted on the server)",
       "remove": "Remove token",
       "noToken": "No GitHub token: 60 requests an hour, enough for a few repositories."
-    }
+    },
+    "syncNow": "Update",
+    "syncedAt": "Updated",
+    "syncError": "Sync error",
+    "noTokenTitle": "Connect GitHub",
+    "noTokenHint": "The account is read with your personal access token: add it in the integrations and the statistics load by themselves.",
+    "notLoaded": "Nothing loaded yet — press “Update”.",
+    "since": "on GitHub since",
+    "currentStreak": "Current streak, days",
+    "longestStreak": "Longest",
+    "today": "Today",
+    "perWeek": "in 7 days",
+    "totalContributions": "Contributions in total",
+    "busiestDay": "Best day",
+    "followers": "Followers",
+    "following": "Following",
+    "repos": "Repositories",
+    "calendar": "Contributions",
+    "year": "Year",
+    "contributions": "Contributions",
+    "contributionsCount": "contributions: {{count}}",
+    "commits": "Commits",
+    "pullRequests": "Pull requests",
+    "reviews": "Reviews",
+    "issues": "Issues",
+    "restricted": "Including {{count}} in private repositories the token cannot see into: give it the “repo” permission to split them into commits, PRs and reviews.",
+    "byMonth": "By month",
+    "languages": "Languages",
+    "languagesHint": "By the amount of code in your own repositories",
+    "topRepos": "Top repositories",
+    "private": "Private",
+    "followersHistory": "Followers over 90 days",
+    "historyCollecting": "Collecting history: the chart appears from the second day."
+  },
+  "heatmap": {
+    "less": "Less",
+    "more": "More"
+  },
+  "digestOptions": {
+    "streak": "Remind about the GitHub contribution streak"
   }
 }

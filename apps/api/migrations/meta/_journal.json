@@ -176,6 +176,13 @@
       "when": 1790872789012,
       "tag": "0024_development_section",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790873376227,
+      "tag": "0025_github_profile",
+      "breakpoints": true
     }
   ]
 }

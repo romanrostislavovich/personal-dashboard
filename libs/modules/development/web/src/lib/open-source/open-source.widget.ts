@@ -55,7 +55,9 @@ const WIDGET_MAX_REPOS = 5;
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/development/open-source">{{ 'development.oss.widget.open' | transloco }}</a>
+        <a matButton routerLink="/development/open-source">{{
+          'development.oss.widget.open' | transloco
+        }}</a>
       </mat-card-actions>
     </mat-card>
   `,

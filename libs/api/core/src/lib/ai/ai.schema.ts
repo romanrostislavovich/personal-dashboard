@@ -40,6 +40,8 @@ export const aiSettings = pgTable('ai_settings', {
   speechModel: text().notNull().default(DEFAULT_SPEECH_MODEL),
   /** Modules the AI does not see (see AiPreferences.disabledModules). */
   disabledModules: text().array().notNull().default([]),
+  /** Opt-in digest sections the user switched on (see DigestSection.optIn). */
+  digestOptIns: text().array().notNull().default([]),
 });
 
 /**

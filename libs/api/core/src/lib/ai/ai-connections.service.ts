@@ -46,6 +46,7 @@ export class AiConnectionsService {
       speechConnectionId: settings?.speechConnectionId ?? null,
       speechModel: settings?.speechModel ?? DEFAULT_SPEECH_MODEL,
       disabledModules: settings?.disabledModules ?? [],
+      digestOptIns: settings?.digestOptIns ?? [],
     };
   }
 
@@ -56,6 +57,15 @@ export class AiConnectionsService {
       .from(aiSettings)
       .where(eq(aiSettings.userId, userId));
     return settings?.disabledModules ?? [];
+  }
+
+  /** Opt-in sections of the morning digest the user switched on. */
+  async digestOptIns(userId: string): Promise<string[]> {
+    const [settings] = await this.db
+      .select({ digestOptIns: aiSettings.digestOptIns })
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
+    return settings?.digestOptIns ?? [];
   }
 
   /** Adds a connection; the first one becomes active. */

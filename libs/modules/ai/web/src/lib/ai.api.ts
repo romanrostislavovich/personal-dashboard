@@ -33,6 +33,10 @@ export class AiApi {
     return fromCore(() => this.ai.modules());
   }
 
+  digestOptions() {
+    return fromCore(() => this.ai.digestOptions());
+  }
+
   actions() {
     return fromCore(() => this.ai.actions());
   }

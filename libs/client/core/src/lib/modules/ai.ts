@@ -35,6 +35,8 @@ export function aiApi(api: ApiClient) {
       api.post<AiSettings>(`${BASE}/connections/${id}/activate`, {}),
     /** Modules that give the AI data: the switches of "what the AI sees". */
     modules: () => api.get<string[]>(`${BASE}/modules`),
+    /** Optional sections of the morning digest: ids like `development.streak`. */
+    digestOptions: () => api.get<string[]>(`${BASE}/digest-options`),
     /** What the assistant changed or tried to change, newest first. */
     actions: () => api.get<AiAction[]>(`${BASE}/actions`),
 

@@ -101,7 +101,9 @@ import { SparklineComponent } from '@pd/web-core';
             </span>
           }
           @if (r.pushedAt) {
-            <span>{{ 'development.oss.lastPush' | transloco }} {{ r.pushedAt | date: 'd MMM y' }}</span>
+            <span
+              >{{ 'development.oss.lastPush' | transloco }} {{ r.pushedAt | date: 'd MMM y' }}</span
+            >
           }
         </p>
       </mat-card-content>
