@@ -51,7 +51,7 @@ export class SteamDotaClient extends SteamClient {
     accountId: number,
     { beforeMatchId, heroId }: { beforeMatchId?: number; heroId?: number } = {},
   ): Promise<SteamHistoryPage> {
-    const { result } = await this.get<{ result: RawHistory }>(
+    const answer = await this.get<{ result: RawHistory }>(
       '/IDOTA2Match_570/GetMatchHistory/v1/',
       {
         account_id: String(accountId),
@@ -59,7 +59,16 @@ export class SteamDotaClient extends SteamClient {
         ...(beforeMatchId ? { start_at_match_id: String(beforeMatchId - 1) } : {}),
         ...(heroId ? { hero_id: String(heroId) } : {}),
       },
+      // Steam answers a hero query with 400 and `{}` instead of an empty list.
+      { tolerate: heroId ? [400] : [] },
     );
+    if (!answer?.result) {
+      if (heroId) {
+        return { matches: [], hasMore: false };
+      }
+      throw new Error('Steam match history: an empty answer');
+    }
+    const { result } = answer;
     if (result.status === 15) {
       throw new SteamDotaPrivateError('The Dota 2 match history of the account is not public');
     }

@@ -10,18 +10,25 @@ export type HistoryPageReader = (query: {
  * Every match of an account. Steam gives one query 500 matches at most, however it is paged,
  * so a history that long is walked again hero by hero — each hero is a query of its own, and
  * nobody has 500 matches on every hero.
+ *
+ * `save` gets the matches of every query as soon as it is read: the walk takes over a hundred
+ * requests, and one of them failing must not lose what the others brought.
  */
 export async function wholeHistory(
   readPage: HistoryPageReader,
   heroIds: () => Promise<number[]>,
+  save: (matches: SteamListedMatch[]) => Promise<void> = async () => undefined,
 ): Promise<SteamListedMatch[]> {
   const all = await walk(readPage);
+  await save(all);
   if (all.length < STEAM_HISTORY_LIMIT) {
     return all;
   }
   const byId = new Map(all.map((match) => [match.matchId, match]));
   for (const heroId of await heroIds()) {
-    for (const match of await walk(readPage, heroId)) {
+    const onHero = await walk(readPage, heroId);
+    await save(onHero);
+    for (const match of onHero) {
       byId.set(match.matchId, match);
     }
   }

@@ -47,9 +47,12 @@ export class DotaSteamSource {
       ? await wholeHistory(
           (query) => steam.getMatchHistory(accountId, query),
           () => this.heroes.ids(),
+          (part) => this.saveListed(account.id, part),
         )
       : (await steam.getMatchHistory(accountId)).matches;
-    await this.saveListed(account.id, matches);
+    if (!walkAll) {
+      await this.saveListed(account.id, matches);
+    }
     if (walkAll) {
       await this.db
         .update(gameAccounts)

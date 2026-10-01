@@ -47,6 +47,18 @@ describe('wholeHistory', () => {
     expect(history.length).toBeLessThan(matches.length);
   });
 
+  it('saves every query as it is read, so a later failure loses nothing', async () => {
+    const { readPage, heroIds } = account([700, 300]);
+    const saved: number[] = [];
+    const failing: HistoryPageReader = (query) =>
+      query.heroId === 2 ? Promise.reject(new Error('Steam 500')) : readPage(query);
+    await expect(
+      wholeHistory(failing, heroIds, async (part) => void saved.push(part.length)),
+    ).rejects.toThrow('Steam 500');
+    // The 500 newest of all, then the 500 on the first hero.
+    expect(saved).toEqual([500, 500]);
+  });
+
   it('gives nothing for an account without matches', async () => {
     const { readPage, heroIds } = account([]);
     expect(await wholeHistory(readPage, heroIds)).toEqual([]);
