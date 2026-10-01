@@ -10,7 +10,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Locale, SUPPORTED_LOCALES } from '@pd/contracts';
 import { AuthService } from '../auth/auth.service';
 
-/** Name and language. The language changes the UI, notifications and AI answers (the page reloads). */
+/** Name, language and the time zone the device told. The language changes the UI, notifications and AI answers (the page reloads). */
 @Component({
   selector: 'pd-profile-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +45,10 @@ import { AuthService } from '../auth/auth.service';
               }
             </mat-select>
           </mat-form-field>
+          <p class="zone">
+            {{ 'core.settings.profile.timeZone' | transloco }}: <b>{{ auth.user()?.timeZone }}</b>
+            <span>{{ 'core.settings.profile.timeZoneHint' | transloco }}</span>
+          </p>
           <button matButton="filled" type="submit" [disabled]="form.invalid || saving()">
             {{ 'core.settings.profile.save' | transloco }}
           </button>
@@ -58,6 +62,14 @@ import { AuthService } from '../auth/auth.service';
       flex-direction: column;
       gap: 4px;
       padding-top: 16px;
+    }
+    .zone {
+      margin: 0 0 12px;
+      font: var(--mat-sys-body-small);
+    }
+    .zone span {
+      display: block;
+      color: var(--mat-sys-on-surface-variant);
     }
     .form button {
       align-self: flex-end;

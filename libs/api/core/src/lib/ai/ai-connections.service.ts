@@ -8,10 +8,13 @@ import {
   DEFAULT_DIGEST_TIME,
   DEFAULT_SPEECH_MODEL,
   LocalDate,
+  zonedDateTime,
 } from '@pd/contracts';
 import { and, asc, eq } from 'drizzle-orm';
 import { DB, Database } from '../database/database.module';
 import { SecretsService } from '../secrets/secrets.service';
+import { users } from '../users/users.schema';
+import { UsersService } from '../users/users.service';
 import { AiConnectionRow, aiConnections, aiSettings } from './ai.schema';
 import { isDigestDue } from './digest-schedule';
 import {
@@ -34,6 +37,7 @@ export class AiConnectionsService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly secrets: SecretsService,
+    private readonly users: UsersService,
   ) {}
 
   async settings(userId: string): Promise<AiSettings> {
@@ -164,17 +168,25 @@ export class AiConnectionsService {
     return toChatConnection(row, apiKey);
   }
 
-  /** Users whose morning digest is due: it is on, their time has come, today's is not handled. */
-  async usersWithDigestDue(today: LocalDate, now: string): Promise<string[]> {
+  /**
+   * Users whose morning digest is due: it is on, their time has come on their own clock,
+   * today's is not handled. `today` is the user's day — the one to mark as handled.
+   */
+  async usersWithDigestDue(at: Date = new Date()): Promise<{ userId: string; today: LocalDate }[]> {
     const rows = await this.db
       .select({
         userId: aiSettings.userId,
         time: aiSettings.morningDigestTime,
         lastDay: aiSettings.morningDigestDay,
+        timeZone: users.timeZone,
       })
       .from(aiSettings)
+      .innerJoin(users, eq(users.id, aiSettings.userId))
       .where(eq(aiSettings.morningDigest, true));
-    return rows.filter((row) => isDigestDue(row, today, now)).map((row) => row.userId);
+    return rows.flatMap((row) => {
+      const now = zonedDateTime(at, this.users.timeZoneOf(row));
+      return isDigestDue(row, now.date, now.time) ? [{ userId: row.userId, today: now.date }] : [];
+    });
   }
 
   /** Today's digest of the user is handled: the next one goes out tomorrow. */

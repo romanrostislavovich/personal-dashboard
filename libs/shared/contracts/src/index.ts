@@ -1,4 +1,6 @@
 export * from './lib/local-date';
+export * from './lib/time-zone';
+export * from './lib/recurrence';
 export * from './lib/streaks';
 export * from './lib/auth';
 export * from './lib/projects';

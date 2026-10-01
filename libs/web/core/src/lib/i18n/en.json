@@ -86,7 +86,9 @@
       "displayName": "Name",
       "language": "Language",
       "save": "Save",
-      "saved": "Profile saved"
+      "saved": "Profile saved",
+      "timeZone": "Time zone",
+      "timeZoneHint": "Taken from this device by itself: reminders, due dates and the digest follow your clock."
     },
     "languages": {
       "en": "English",

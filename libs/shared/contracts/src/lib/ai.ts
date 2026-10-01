@@ -47,7 +47,7 @@ export const DEFAULT_SPEECH_MODEL = 'gpt-4o-mini-transcribe';
 export const aiPreferencesSchema = z.object({
   /** The morning digest via notifications. */
   morningDigest: z.boolean().optional(),
-  /** When to send it, `HH:mm` on the server's clock (APP_TIMEZONE). */
+  /** When to send it, `HH:mm` on the user's own clock (see `CurrentUser.timeZone`). */
   morningDigestTime: z
     .string()
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:mm')

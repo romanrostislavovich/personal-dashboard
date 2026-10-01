@@ -1,4 +1,4 @@
-import { clockIn, isDigestDue } from './digest-schedule';
+import { isDigestDue } from './digest-schedule';
 
 describe('isDigestDue', () => {
   const today = '2026-10-02';
@@ -18,17 +18,5 @@ describe('isDigestDue', () => {
 
   it('sends the first digest of a user who never got one', () => {
     expect(isDigestDue({ time: '08:30', lastDay: null }, today, '08:30')).toBe(true);
-  });
-});
-
-describe('clockIn', () => {
-  it('reads the clock of the time zone', () => {
-    const at = new Date('2026-10-02T05:07:00Z');
-    expect(clockIn('Europe/Warsaw', at)).toBe('07:07');
-    expect(clockIn('UTC', at)).toBe('05:07');
-  });
-
-  it('writes midnight as 00, not 24', () => {
-    expect(clockIn('UTC', new Date('2026-10-02T00:03:00Z'))).toBe('00:03');
   });
 });

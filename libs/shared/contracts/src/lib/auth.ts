@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidTimeZone } from './time-zone';
 
 /**
  * Where the refresh token goes: `web` — an httpOnly cookie a script cannot read; `app` (a mobile
@@ -92,6 +93,12 @@ export interface CurrentUser {
   email: string;
   displayName: string;
   locale: string;
+  /**
+   * The IANA time zone of the device the user last opened the dashboard on (`Europe/Warsaw`):
+   * reminders, due dates and the digest follow the user's own clock, wherever the server is.
+   * `null` — never opened in a browser yet; the server's zone is used.
+   */
+  timeZone: string | null;
 }
 
 /** Languages of the UI, notifications and AI answers. A new language = translations in every module. */
@@ -110,6 +117,8 @@ export type RegisterRequest = z.input<typeof registerSchema>;
 export const profileUpdateSchema = z.object({
   displayName: z.string().trim().min(1).max(50).optional(),
   locale: z.enum(SUPPORTED_LOCALES).optional(),
+  /** Sent by the client itself when the device's zone differs from the saved one. */
+  timeZone: z.string().max(64).refine(isValidTimeZone, 'Unknown time zone').optional(),
 });
 export type ProfileUpdate = z.infer<typeof profileUpdateSchema>;
 

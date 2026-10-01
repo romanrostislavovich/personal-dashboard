@@ -46,7 +46,7 @@ describe.skipIf(!ADMIN_URL)('AuthService', { timeout: 60_000 }, () => {
     const config = {
       get: (key: string) => ({ ENCRYPTION_KEY: 'k'.repeat(32), ALLOW_REGISTRATION: true })[key],
     } as unknown as AppConfig;
-    const users = new UsersService(db);
+    const users = new UsersService(db, config);
     sessions = new SessionsService(db);
     twoFactor = new TwoFactorService(new SecretsService(db, config));
     auth = new AuthService(users, jwt, sessions, twoFactor, config);

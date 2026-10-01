@@ -241,5 +241,11 @@ export class AuthService implements OnApplicationBootstrap {
 }
 
 function toCurrentUser(user: UserRow): CurrentUser {
-  return { id: user.id, email: user.email, displayName: user.displayName, locale: user.locale };
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: user.displayName,
+    locale: user.locale,
+    timeZone: user.timeZone,
+  };
 }

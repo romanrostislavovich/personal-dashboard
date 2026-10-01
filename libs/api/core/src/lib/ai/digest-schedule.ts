@@ -15,15 +15,3 @@ export interface DigestSchedule {
 export function isDigestDue(schedule: DigestSchedule, today: LocalDate, now: string): boolean {
   return schedule.lastDay !== today && now >= schedule.time;
 }
-
-/** `HH:mm` on the clock of the given time zone. */
-export function clockIn(timeZone: string, at: Date = new Date()): string {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone,
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(at);
-  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? '00';
-  return `${get('hour')}:${get('minute')}`;
-}
