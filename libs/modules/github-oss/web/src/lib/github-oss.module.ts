@@ -18,4 +18,11 @@ export const githubOssModule: WebDashboardModule = {
       loadComponent: () => import('./github-oss.widget').then((m) => m.GithubOssWidget),
     },
   ],
+  integrations: [
+    {
+      id: 'github-oss.token',
+      loadComponent: () =>
+        import('./github-token.integration').then((m) => m.GithubTokenIntegration),
+    },
+  ],
 };

@@ -19,16 +19,17 @@ import {
   TransactionInput,
   TransactionQuery,
 } from '@pd/contracts';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
   currentMonth,
+  INTEGRATIONS_LINK,
   Month,
   monthAsDate,
   monthRange,
   ProjectsApi,
   shiftMonth,
 } from '@pd/web-core';
-import { CostSourcesTabComponent } from './cost-sources-tab.component';
 import { FinanceApi } from './finance.api';
 import { CashFlowChartComponent } from './overview/cash-flow-chart.component';
 import { CategoryBreakdownComponent } from './overview/category-breakdown.component';
@@ -94,8 +95,8 @@ function inMain(transactions: Transaction[], main: string): Transaction[] {
     MatListModule,
     MatMenuModule,
     MatTooltipModule,
+    RouterLink,
     TranslocoPipe,
-    CostSourcesTabComponent,
     FinanceKpisComponent,
     CashFlowChartComponent,
     CategoryBreakdownComponent,
@@ -137,6 +138,8 @@ export class FinancePage {
 
   // --- Data ---
   protected readonly projects = inject(ProjectsApi).list();
+  /** Cost import from services is set up in Settings → Integrations. */
+  protected readonly integrations = INTEGRATIONS_LINK;
   protected readonly transactions = this.api.transactions(this.query);
   protected readonly cashFlow = this.api.cashFlow(this.chartQuery);
   protected readonly mainFlow = this.api.cashFlowInMain(this.chartQuery);

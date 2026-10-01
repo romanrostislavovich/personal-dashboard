@@ -52,21 +52,25 @@
       </button>
     }
     @if (settings.value()?.configured) {
-      <button matButton (click)="showSettings.set(!showSettings())">
+      <a matButton [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
         <mat-icon>tune</mat-icon> {{ 'ai.settings.title' | transloco }}
-      </button>
+      </a>
     }
   </div>
 </header>
 
 @if (settings.value(); as s) {
-  <!-- While the AI is not configured, show the settings instead of the chat. -->
-  @if (!s.configured || showSettings()) {
+  <!-- Until the AI is configured, the page only says where to do it. -->
+  @if (!s.configured) {
     <div class="settings">
-      @if (!s.configured) {
-        <p class="intro">{{ 'ai.intro' | transloco }}</p>
-      }
-      <pd-ai-settings [settings]="s" (changed)="settings.set($event)" />
+      <p class="intro">{{ 'ai.intro' | transloco }}</p>
+      <a
+        matButton="filled"
+        [routerLink]="integrations.path"
+        [queryParams]="integrations.queryParams"
+      >
+        {{ 'core.settings.openIntegrations' | transloco }}
+      </a>
     </div>
   }
 

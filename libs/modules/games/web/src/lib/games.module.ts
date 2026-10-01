@@ -18,4 +18,10 @@ export const gamesModule: WebDashboardModule = {
       loadComponent: () => import('./games.widget').then((m) => m.GamesWidget),
     },
   ],
+  integrations: [
+    {
+      id: 'games.battle-net',
+      loadComponent: () => import('./battle-net.integration').then((m) => m.BattleNetIntegration),
+    },
+  ],
 };

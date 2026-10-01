@@ -18,4 +18,11 @@ export const financeModule: WebDashboardModule = {
       loadComponent: () => import('./finance-summary.widget').then((m) => m.FinanceSummaryWidget),
     },
   ],
+  integrations: [
+    {
+      id: 'finance.cost-sources',
+      loadComponent: () =>
+        import('./cost-sources.integration').then((m) => m.CostSourcesIntegration),
+    },
+  ],
 };

@@ -18,4 +18,10 @@ export const musicModule: WebDashboardModule = {
       loadComponent: () => import('./music.widget').then((m) => m.MusicWidget),
     },
   ],
+  integrations: [
+    {
+      id: 'music.sources',
+      loadComponent: () => import('./music.integration').then((m) => m.MusicIntegration),
+    },
+  ],
 };

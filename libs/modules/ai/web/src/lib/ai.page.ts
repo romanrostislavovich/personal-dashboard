@@ -14,7 +14,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
   AI_ATTACHMENT_EXTENSIONS,
@@ -25,10 +25,9 @@ import {
   AiConversation,
   AiConversationDetail,
 } from '@pd/contracts';
-import { MarkdownPipe, errorBody, errorStatus } from '@pd/web-core';
+import { INTEGRATIONS_LINK, MarkdownPipe, errorBody, errorStatus } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
-import { AiSettingsComponent } from './ai-settings.component';
 
 interface ChatEntry {
   role: 'user' | 'assistant';
@@ -56,7 +55,7 @@ const SUGGESTION_KEYS = ['birthdays', 'spending', 'sites', 'diary', 'music'];
     MatProgressBarModule,
     TranslocoPipe,
     MarkdownPipe,
-    AiSettingsComponent,
+    RouterLink,
   ],
   templateUrl: './ai.page.html',
   styleUrl: './ai.page.scss',
@@ -75,7 +74,8 @@ export class AiPage {
   protected readonly archive = signal<AiConversation[]>([]);
   protected readonly draft = signal('');
   protected readonly thinking = signal(false);
-  protected readonly showSettings = signal(false);
+  /** Connections, privacy and the action log are in Settings → Integrations (ai.integration.ts). */
+  protected readonly integrations = INTEGRATIONS_LINK;
   protected readonly activeConnection = computed(() => {
     const settings = this.settings.value();
     return settings?.connections.find((c) => c.id === settings.activeConnectionId) ?? null;

@@ -1,13 +1,5 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input,
-  output,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -16,15 +8,18 @@ import { MatListModule } from '@angular/material/list';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { CostSource, CostSourceInput, Project } from '@pd/contracts';
+import { CostSource, CostSourceInput } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
-import { errorStatus } from '@pd/web-core';
+import { errorStatus, ProjectsApi } from '@pd/web-core';
 import { CostSourceFormData, CostSourceFormDialog } from './cost-source-form.dialog';
 import { FinanceApi } from './finance.api';
 
-/** "Auto import" tab: connected services and their costs for the current month. */
+/**
+ * Cost import from services (Hetzner, DeepSeek…) with their costs for the current month, in
+ * Settings → Integrations (see `integrations` in finance.module.ts).
+ */
 @Component({
-  selector: 'pd-cost-sources-tab',
+  selector: 'pd-cost-sources-integration',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CurrencyPipe,
@@ -37,14 +32,12 @@ import { FinanceApi } from './finance.api';
     TranslocoPipe,
   ],
   template: `
-    <div class="tab-actions">
-      <p class="hint">{{ 'finance.costSources.hint' | transloco }}</p>
-      <button matButton="filled" (click)="add()" [disabled]="busy()">
-        <mat-icon>add_link</mat-icon> {{ 'finance.costSources.add' | transloco }}
-      </button>
-    </div>
-
     <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>cloud_sync</mat-icon>
+        <mat-card-title>{{ 'finance.costSources.title' | transloco }}</mat-card-title>
+        <mat-card-subtitle>{{ 'finance.costSources.hint' | transloco }}</mat-card-subtitle>
+      </mat-card-header>
       <mat-list>
         @for (source of sources.value(); track source.id) {
           <mat-list-item>
@@ -96,23 +89,14 @@ import { FinanceApi } from './finance.api';
           <p class="empty padded">{{ 'finance.costSources.empty' | transloco }}</p>
         }
       </mat-list>
+      <mat-card-actions>
+        <button matButton="filled" (click)="add()" [disabled]="busy()">
+          <mat-icon>add_link</mat-icon> {{ 'finance.costSources.add' | transloco }}
+        </button>
+      </mat-card-actions>
     </mat-card>
   `,
   styles: `
-    .tab-actions button {
-      flex-shrink: 0;
-    }
-    .tab-actions {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 16px;
-      padding: 16px 0;
-    }
-    .hint {
-      margin: 0 auto 0 0;
-      color: var(--mat-sys-on-surface-variant);
-    }
     .meta {
       display: flex;
       align-items: center;
@@ -131,13 +115,7 @@ import { FinanceApi } from './finance.api';
     }
   `,
 })
-export class CostSourcesTabComponent {
-  readonly projects = input.required<Project[]>();
-  /** The page's current wallet: a new source is linked to it by default. */
-  readonly defaultProjectId = input<string | null>(null);
-  /** Costs changed — time for the page to reload transactions and totals. */
-  readonly changed = output<void>();
-
+export class CostSourcesIntegration {
   private readonly api = inject(FinanceApi);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
@@ -145,15 +123,16 @@ export class CostSourcesTabComponent {
 
   protected readonly sources = this.api.costSources();
   protected readonly busy = signal(false);
+  private readonly projects = inject(ProjectsApi).list();
   protected readonly projectNames = computed(
-    () => new Map(this.projects().map((project) => [project.id, project.name])),
+    () => new Map(this.projects.value().map((project) => [project.id, project.name])),
   );
 
   async add(): Promise<void> {
     const input = await firstValueFrom(
       this.dialog
         .open<CostSourceFormDialog, CostSourceFormData, CostSourceInput>(CostSourceFormDialog, {
-          data: { projects: this.projects(), defaultProjectId: this.defaultProjectId() },
+          data: { projects: this.projects.value(), defaultProjectId: null },
         })
         .afterClosed(),
     );
@@ -179,7 +158,6 @@ export class CostSourcesTabComponent {
     try {
       await action();
       this.sources.reload();
-      this.changed.emit();
     } catch (error) {
       const key =
         errorStatus(error) === 400

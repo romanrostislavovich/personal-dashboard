@@ -35,17 +35,6 @@
   }
 }
 
-.form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-
-  mat-form-field {
-    flex: 1 1 200px;
-  }
-}
-
 .hint {
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-small);

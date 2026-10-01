@@ -21,4 +21,10 @@ export const aiModule: WebDashboardModule = {
       loadComponent: () => import('./ai.widget').then((m) => m.AiWidget),
     },
   ],
+  integrations: [
+    {
+      id: 'ai.connections',
+      loadComponent: () => import('./ai.integration').then((m) => m.AiIntegration),
+    },
+  ],
 };

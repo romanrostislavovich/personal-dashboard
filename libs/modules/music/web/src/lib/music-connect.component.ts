@@ -222,7 +222,7 @@ export class MusicConnectComponent {
     }
   }
 
-  /** Go to the Spotify sign-in page; it sends us back to /music?spotify=connected. */
+  /** Go to the Spotify sign-in page; it sends us back to the settings with `?spotify=…`. */
   async connectSpotify(): Promise<void> {
     const { url } = await firstValueFrom(this.api.spotifyConnectUrl());
     window.location.href = url;

@@ -24,7 +24,8 @@
     "hint": "Optional. Without a token GitHub allows 60 requests per hour — enough for a few repositories. Create a fine-grained token with read-only access to public repositories.",
     "label": "Personal access token",
     "configured": "Token saved (encrypted on the server)",
-    "remove": "Remove token"
+    "remove": "Remove token",
+    "noToken": "No GitHub token: 60 requests an hour, enough for a few repositories."
   },
   "errors": {
     "notFound": "Repository not found on GitHub",

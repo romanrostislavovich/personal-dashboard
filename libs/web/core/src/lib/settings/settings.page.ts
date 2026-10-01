@@ -1,90 +1,73 @@
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { CORE_READS, notificationsApi } from '@pd/client-core';
-import { NotificationSettings } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
+import { NgComponentOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, Type } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { MatTabsModule } from '@angular/material/tabs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { map } from 'rxjs';
+import { DASHBOARD_MODULES } from '../dashboard-module';
 import { PasswordSettingsComponent } from './password-settings.component';
-import { SecuritySettingsComponent } from './security-settings.component';
 import { ProfileSettingsComponent } from './profile-settings.component';
+import { SecuritySettingsComponent } from './security-settings.component';
 import { SyncSettingsComponent } from './sync-settings.component';
+import { TelegramSettingsComponent } from './telegram-settings.component';
 import { TrashSettingsComponent } from './trash-settings.component';
 
+/** Tabs of the page, as `?tab=` names them: module pages link to `integrations`. */
+const TABS = ['account', 'integrations', 'data'] as const;
+
+/**
+ * Settings: the account, every connection to an outside service (Telegram and what the modules
+ * register as `integrations`) and the data (sync, backups, trash).
+ */
 @Component({
   selector: 'pd-settings-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
+    MatTabsModule,
+    NgComponentOutlet,
     TranslocoPipe,
     ProfileSettingsComponent,
     PasswordSettingsComponent,
     SecuritySettingsComponent,
     TrashSettingsComponent,
     SyncSettingsComponent,
+    TelegramSettingsComponent,
   ],
   template: `
     <h1 class="page-title">{{ 'core.settings.title' | transloco }}</h1>
 
-    <div class="grid">
-      <pd-profile-settings />
-      <pd-password-settings />
-      <pd-security-settings />
-      <pd-trash-settings />
-      <pd-sync-settings />
+    <mat-tab-group
+      [selectedIndex]="tabIndex()"
+      (selectedIndexChange)="selectTab($event)"
+      mat-stretch-tabs="false"
+      mat-align-tabs="start"
+    >
+      <mat-tab [label]="'core.settings.tabs.account' | transloco">
+        <div class="grid">
+          <pd-profile-settings />
+          <pd-password-settings />
+          <pd-security-settings />
+        </div>
+      </mat-tab>
 
-      <mat-card appearance="outlined">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>send</mat-icon>
-          <mat-card-title>Telegram</mat-card-title>
-          <mat-card-subtitle>{{
-            'core.settings.telegram.description' | transloco
-          }}</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          @if (settings.value(); as s) {
-            @if (!s.telegram.available) {
-              <p>{{ 'core.settings.telegram.notConfigured' | transloco }}</p>
-            } @else if (s.telegram.connected) {
-              <p class="ok">
-                <mat-icon>check_circle</mat-icon>
-                {{ 'core.settings.telegram.connected' | transloco }}
-              </p>
-            } @else {
-              <p>{{ 'core.settings.telegram.notConnected' | transloco }}</p>
-              @if (linkOpened()) {
-                <p class="hint">{{ 'core.settings.telegram.afterStart' | transloco }}</p>
-              }
-            }
+      <mat-tab [label]="'core.settings.tabs.integrations' | transloco">
+        <p class="intro">{{ 'core.settings.integrationsIntro' | transloco }}</p>
+        <div class="grid">
+          <pd-telegram-settings />
+          @for (integration of integrations(); track integration.id) {
+            <ng-container *ngComponentOutlet="integration.component" />
           }
-        </mat-card-content>
-        @if (settings.value()?.telegram; as telegram) {
-          <mat-card-actions>
-            @if (telegram.available && !telegram.connected) {
-              <button matButton="filled" (click)="connect()">
-                {{ 'core.settings.telegram.connect' | transloco }}
-              </button>
-              <button matButton (click)="settings.reload()">
-                {{ 'core.settings.telegram.check' | transloco }}
-              </button>
-            }
-            @if (telegram.connected) {
-              <button matButton="filled" (click)="sendTest()">
-                {{ 'core.settings.telegram.test' | transloco }}
-              </button>
-              <button matButton (click)="disconnect()">
-                {{ 'core.settings.telegram.disconnect' | transloco }}
-              </button>
-            }
-          </mat-card-actions>
-        }
-      </mat-card>
-    </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab [label]="'core.settings.tabs.data' | transloco">
+        <div class="grid">
+          <pd-sync-settings />
+          <pd-trash-settings />
+        </div>
+      </mat-tab>
+    </mat-tab-group>
   `,
   styles: `
     .grid {
@@ -92,43 +75,40 @@ import { TrashSettingsComponent } from './trash-settings.component';
       grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
       gap: 16px;
       align-items: start;
+      padding-top: 16px;
     }
-    .ok {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--mat-sys-primary);
-    }
-    .hint {
+    .intro {
+      margin: 16px 0 0;
       color: var(--mat-sys-on-surface-variant);
     }
   `,
 })
 export class SettingsPage {
-  private readonly notifications = notificationsApi(inject(DASHBOARD_CLIENT).api);
-  private readonly snackBar = inject(MatSnackBar);
-  private readonly transloco = inject(TranslocoService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
-  protected readonly settings = httpResource<NotificationSettings>(() =>
-    CORE_READS.notificationSettings(),
+  private readonly tab = toSignal(
+    this.route.queryParamMap.pipe(map((params) => params.get('tab'))),
   );
-  protected readonly linkOpened = signal(false);
+  protected readonly tabIndex = computed(() =>
+    Math.max(0, TABS.indexOf(this.tab() as (typeof TABS)[number])),
+  );
 
-  async connect(): Promise<void> {
-    const link = await this.notifications.linkTelegram();
-    window.open(link.deepLink, '_blank');
-    this.linkOpened.set(true);
+  protected readonly integrations = signal<{ id: string; component: Type<unknown> }[]>([]);
+
+  constructor() {
+    const integrations = inject(DASHBOARD_MODULES).flatMap((module) => module.integrations ?? []);
+    void Promise.all(
+      integrations.map(async (item) => ({ id: item.id, component: await item.loadComponent() })),
+    ).then((loaded) => this.integrations.set(loaded));
   }
 
-  async disconnect(): Promise<void> {
-    await this.notifications.unlinkTelegram();
-    this.settings.reload();
-  }
-
-  async sendTest(): Promise<void> {
-    await this.notifications.sendTest();
-    this.snackBar.open(this.transloco.translate('core.settings.telegram.testSent'), 'OK', {
-      duration: 3000,
+  /** The tab goes to the address: a reload or a link opens the same one. */
+  protected selectTab(index: number): void {
+    void this.router.navigate([], {
+      queryParams: { tab: TABS[index] },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 }

@@ -2,21 +2,19 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { MUSIC_TOP_PERIODS, MusicTopPeriod } from '@pd/contracts';
-import { SparklineComponent } from '@pd/web-core';
+import { INTEGRATIONS_LINK, SparklineComponent } from '@pd/web-core';
 import { interval } from 'rxjs';
 import { MusicApi } from './music.api';
-import { MusicConnectComponent } from './music-connect.component';
 import { NowPlayingComponent } from './now-playing.component';
 import { TopListComponent } from './top-list.component';
 
 /** "Now playing" changes often — refresh every 30 seconds while the page is open. */
 const NOW_PLAYING_REFRESH_MS = 30_000;
-const HISTORY_REFRESH_MS = 5_000;
 
 @Component({
   selector: 'pd-music-page',
@@ -24,11 +22,12 @@ const HISTORY_REFRESH_MS = 5_000;
   imports: [
     DatePipe,
     DecimalPipe,
+    MatButtonModule,
     MatCardModule,
     MatButtonToggleModule,
+    RouterLink,
     TranslocoPipe,
     SparklineComponent,
-    MusicConnectComponent,
     NowPlayingComponent,
     TopListComponent,
   ],
@@ -38,6 +37,8 @@ const HISTORY_REFRESH_MS = 5_000;
 export class MusicPage {
   private readonly api = inject(MusicApi);
 
+  /** Last.fm and Spotify are connected in Settings → Integrations (music.integration.ts). */
+  protected readonly integrations = INTEGRATIONS_LINK;
   protected readonly periods = MUSIC_TOP_PERIODS;
   protected readonly period = signal<MusicTopPeriod>('7day');
 
@@ -59,37 +60,5 @@ export class MusicPage {
     interval(NOW_PLAYING_REFRESH_MS)
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.nowPlaying.reload());
-    // While the history import runs, show its progress.
-    interval(HISTORY_REFRESH_MS)
-      .pipe(takeUntilDestroyed())
-      .subscribe(() => {
-        if (this.settings.value()?.lastfm.history?.running) {
-          this.settings.reload();
-        }
-      });
-    this.showSpotifyResult();
-  }
-
-  onSourcesChanged(): void {
-    this.settings.reload();
-    this.stats.reload();
-    this.tops.reload();
-    this.nowPlaying.reload();
-  }
-
-  /** After Spotify sign-in we are sent back to /music?spotify=connected|error. */
-  private showSpotifyResult(): void {
-    const route = inject(ActivatedRoute);
-    const router = inject(Router);
-    const snackBar = inject(MatSnackBar);
-    const transloco = inject(TranslocoService);
-    const result = route.snapshot.queryParamMap.get('spotify');
-    if (result) {
-      snackBar.open(transloco.translate(`music.connect.spotify.${result}`), 'OK', {
-        duration: 5000,
-      });
-      // Remove the parameter from the URL so the message does not repeat on reload.
-      router.navigate([], { queryParams: {}, replaceUrl: true });
-    }
   }
 }

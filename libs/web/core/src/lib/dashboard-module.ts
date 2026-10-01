@@ -22,7 +22,21 @@ export interface WebDashboardModule {
   translations: Record<string, () => Promise<{ default: Translation }>>;
   /** Widgets for the home page. */
   widgets?: DashboardWidget[];
+  /**
+   * Connections to outside services (tokens, accounts, API keys). They are all shown in one
+   * place — Settings → Integrations — not on the module's pages.
+   */
+  integrations?: DashboardIntegration[];
 }
+
+/** A self-contained card (or a few) that connects a module to an outside service. */
+export interface DashboardIntegration {
+  id: string;
+  loadComponent: () => Promise<Type<unknown>>;
+}
+
+/** Where the integrations are: module pages link here when something is not connected yet. */
+export const INTEGRATIONS_LINK = { path: '/settings', queryParams: { tab: 'integrations' } };
 
 export interface DashboardWidget {
   id: string;

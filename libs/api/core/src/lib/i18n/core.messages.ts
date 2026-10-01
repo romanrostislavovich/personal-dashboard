@@ -12,12 +12,13 @@ const messages = {
     morningDigestTitle: '☀️ Good morning',
     aiLanguage: 'English',
     askUsage: 'Write a question after the command, e.g. /ask what birthdays are this week?',
-    askNotConfigured: 'AI is not configured: open the “AI” section of the dashboard and add a key.',
+    askNotConfigured:
+      'AI is not configured: add a connection in the dashboard, Settings → Integrations.',
     askDescription: 'Ask AI about your data: /ask how much did I spend in September?',
     newChatDescription: 'Start a new conversation with the assistant',
     newChatDone: '🧹 Started a new conversation.',
     assistantFailed:
-      'The AI request failed. Check the AI settings in the dashboard or switch the model: /model',
+      'The AI request failed. Check the connection in Settings → Integrations or switch the model: /model',
     modelDescription: 'Switch the AI model: /model 2',
     modelList: (lines: string[]) =>
       `🤖 AI connections:\n${lines.join('\n')}\n\nSwitch: /model <number>`,
@@ -25,10 +26,10 @@ const messages = {
     modelSwitched: (name: string, model: string) => `✅ Now answering: ${name} (${model})`,
     telegramFileTooLarge: 'The file is larger than 20 MB — Telegram does not let bots download it.',
     voiceNotConfigured:
-      'To understand voice messages, add an OpenAI connection in the dashboard: AI → settings ' +
+      'To understand voice messages, add an OpenAI connection in the dashboard: Settings → Integrations ' +
       '(DeepSeek has no speech recognition).',
     voiceEmpty: '🎤 Could not hear any words — try again?',
-    voiceFailed: '🎤 Speech recognition failed. Check the connection in the AI settings.',
+    voiceFailed: '🎤 Speech recognition failed. Check the connection in Settings → Integrations.',
     attachmentUnsupported:
       'I can read PDF, Excel (.xlsx), CSV and text files. Photos go to the diary.',
     attachmentEmpty:
@@ -59,12 +60,12 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
     morningDigestTitle: '☀️ Доброе утро',
     aiLanguage: 'Russian',
     askUsage: 'Напиши вопрос после команды, например: /ask какие дни рождения на этой неделе?',
-    askNotConfigured: 'AI не настроен: открой раздел «AI» в дашборде и укажи ключ.',
+    askNotConfigured: 'AI не настроен: добавь подключение в дашборде, Настройки → Интеграции.',
     askDescription: 'Вопрос AI по твоим данным: /ask сколько я потратил в сентябре?',
     newChatDescription: 'Начать новый разговор с ассистентом',
     newChatDone: '🧹 Начали новый разговор.',
     assistantFailed:
-      'Запрос к AI не удался. Проверь настройки AI в дашборде или переключи модель: /model',
+      'Запрос к AI не удался. Проверь подключение в Настройки → Интеграции или переключи модель: /model',
     modelDescription: 'Переключить модель AI: /model 2',
     modelList: (lines: string[]) =>
       `🤖 Подключения AI:\n${lines.join('\n')}\n\nПереключить: /model <номер>`,
@@ -72,10 +73,10 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
     modelSwitched: (name: string, model: string) => `✅ Теперь отвечает: ${name} (${model})`,
     telegramFileTooLarge: 'Файл больше 20 МБ — Telegram не даёт ботам скачивать такие.',
     voiceNotConfigured:
-      'Чтобы понимать голосовые, добавь подключение OpenAI в дашборде: AI → настройки ' +
+      'Чтобы понимать голосовые, добавь подключение OpenAI в дашборде: Настройки → Интеграции ' +
       '(у DeepSeek нет распознавания речи).',
     voiceEmpty: '🎤 Не расслышал ни слова — попробуешь ещё раз?',
-    voiceFailed: '🎤 Не получилось распознать речь. Проверь подключение в настройках AI.',
+    voiceFailed: '🎤 Не получилось распознать речь. Проверь подключение в Настройки → Интеграции.',
     attachmentUnsupported:
       'Я читаю PDF, Excel (.xlsx), CSV и текстовые файлы. Фото уходят в дневник.',
     attachmentEmpty:

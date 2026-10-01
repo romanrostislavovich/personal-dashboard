@@ -59,5 +59,6 @@
     "today": "Today: {{count}}",
     "empty": "Connect Last.fm or Spotify in the Music section",
     "open": "Details"
-  }
+  },
+  "noSource": "No music source connected yet: connect Last.fm or Spotify to see history, statistics and tops."
 }

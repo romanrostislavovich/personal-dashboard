@@ -95,9 +95,17 @@
       </mat-card-content>
     </mat-card>
   }
-}
-
-<h2 class="section-title">{{ 'music.connect.title' | transloco }}</h2>
-@if (settings.value(); as s) {
-  <pd-music-connect [settings]="s" (changed)="onSourcesChanged()" />
+} @else if (settings.value()) {
+  <mat-card appearance="outlined">
+    <mat-card-content class="padded">
+      <p>{{ 'music.noSource' | transloco }}</p>
+      <a
+        matButton="filled"
+        [routerLink]="integrations.path"
+        [queryParams]="integrations.queryParams"
+      >
+        {{ 'core.settings.openIntegrations' | transloco }}
+      </a>
+    </mat-card-content>
+  </mat-card>
 }

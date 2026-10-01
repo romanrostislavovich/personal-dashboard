@@ -1,17 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { GameAccountInput } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
-import { errorStatus } from '@pd/web-core';
+import { errorStatus, INTEGRATIONS_LINK } from '@pd/web-core';
 import { AddGameAccountDialog } from './add-account.dialog';
 import { DotaDashboardComponent } from './dota/dota-dashboard.component';
 import { GamesApi } from './games.api';
@@ -21,13 +19,11 @@ import { WowDashboardComponent } from './wow/wow-dashboard.component';
   selector: 'pd-games-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatProgressBarModule,
     MatTabsModule,
+    RouterLink,
     TranslocoPipe,
     DotaDashboardComponent,
     WowDashboardComponent,
@@ -45,10 +41,8 @@ export class GamesPage {
   protected readonly settings = this.api.settings();
   protected readonly busy = signal(false);
 
-  protected readonly credentialsForm = inject(NonNullableFormBuilder).group({
-    clientId: ['', [Validators.required, Validators.minLength(10)]],
-    clientSecret: ['', [Validators.required, Validators.minLength(10)]],
-  });
+  /** Battle.net keys are in Settings → Integrations (battle-net.integration.ts). */
+  protected readonly integrations = INTEGRATIONS_LINK;
 
   protected readonly dota = computed(() => this.accounts.value().filter((a) => a.game === 'dota2'));
   protected readonly wow = computed(() => this.accounts.value().filter((a) => a.game === 'wow'));
@@ -77,17 +71,6 @@ export class GamesPage {
     if (confirm(this.transloco.translate('games.confirmDelete', { name }))) {
       await this.run(() => firstValueFrom(this.api.remove(accountId)));
     }
-  }
-
-  async saveCredentials(): Promise<void> {
-    await this.run(
-      async () => {
-        await firstValueFrom(this.api.saveWowCredentials(this.credentialsForm.getRawValue()));
-        this.credentialsForm.reset();
-        this.settings.reload();
-      },
-      { 400: 'games.errors.invalidCredentials' },
-    );
   }
 
   /** Loading indicator, list refresh and a clear error by HTTP status. */

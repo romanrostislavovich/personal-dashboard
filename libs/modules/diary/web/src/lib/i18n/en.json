@@ -64,7 +64,7 @@
     "title": "Your week in the diary",
     "loading": "AI is reading the last 7 days…",
     "noEntries": "No entries in the last 7 days.",
-    "error": "Failed: check the AI settings in the “AI” section.",
+    "error": "Failed: check the AI connection in Settings → Integrations.",
     "close": "Close"
   },
   "search": {

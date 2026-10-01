@@ -214,7 +214,14 @@
         "ai_connections": "AI connection",
         "weather_locations": "Weather city"
       }
-    }
+    },
+    "tabs": {
+      "account": "Account",
+      "integrations": "Integrations",
+      "data": "Data"
+    },
+    "integrationsIntro": "Connections to outside services: where notifications go, where the modules take their data from, which AI answers.",
+    "openIntegrations": "Connect in Settings → Integrations"
   },
   "toast": {
     "achievement": "New achievement!",

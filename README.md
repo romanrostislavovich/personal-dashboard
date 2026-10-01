@@ -83,22 +83,22 @@ npm run desktop:package       # build an installer → dist/desktop-installers
 
 ## Integrations
 
-All tokens entered in the UI are stored encrypted (AES-256-GCM with `ENCRYPTION_KEY`) and are never
-sent back to the browser.
+Everything is connected in one place: **Settings → Integrations**. All tokens entered there are
+stored encrypted (AES-256-GCM with `ENCRYPTION_KEY`) and are never sent back to the browser.
 
-| Integration       | How to connect                                                                                                                          |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Telegram          | Create a bot with [@BotFather](https://t.me/BotFather), set `TELEGRAM_BOT_TOKEN`, then Settings → “Connect Telegram”                    |
-| AI                | AI → add a connection: provider (DeepSeek by default), model, API key. Add several and switch in one click. For full privacy use Ollama |
-| GitHub            | Optional fine-grained token (read-only) in Open Source — without it GitHub allows 60 requests per hour                                  |
-| Hetzner Cloud     | Finance → Auto-import → a project API token with Read access                                                                            |
-| DeepSeek costs    | Finance → Auto-import → an API key; spending is derived from balance changes                                                            |
-| Last.fm           | Music → username + API key from [last.fm/api/account/create](https://www.last.fm/api/account/create)                                    |
-| Spotify           | Create an app at developer.spotify.com, Redirect URI = `PUBLIC_URL` + `/api/music/spotify/callback`, set `SPOTIFY_CLIENT_ID/SECRET`     |
-| Dota 2            | Games → Steam ID or profile link; enable “Expose Public Match Data” in Dota                                                             |
-| World of Warcraft | Games → Battle.net client ID and secret from develop.battle.net, then region / realm / character                                        |
+| Integration       | How to connect                                                                                                                      |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Telegram          | Create a bot with [@BotFather](https://t.me/BotFather), set `TELEGRAM_BOT_TOKEN`, then “Connect Telegram”                           |
+| AI                | Add a connection: provider (DeepSeek by default), model, API key. Add several and switch in one click. For full privacy use Ollama  |
+| GitHub            | Optional fine-grained token (read-only) — without it GitHub allows 60 requests per hour                                             |
+| Hetzner Cloud     | Cost import → a project API token with Read access                                                                                  |
+| DeepSeek costs    | Cost import → an API key; spending is derived from balance changes                                                                  |
+| Last.fm           | Username + API key from [last.fm/api/account/create](https://www.last.fm/api/account/create)                                        |
+| Spotify           | Create an app at developer.spotify.com, Redirect URI = `PUBLIC_URL` + `/api/music/spotify/callback`, set `SPOTIFY_CLIENT_ID/SECRET` |
+| Dota 2            | Games → Steam ID or profile link; enable “Expose Public Match Data” in Dota                                                         |
+| World of Warcraft | Battle.net client ID and secret from develop.battle.net, then Games → region / realm / character                                    |
 
-Telegram bot: just write to it — the AI assistant answers and can do almost anything the dashboard can on request: add, edit and delete birthdays, diary entries, transactions, recurring payments, projects, monitored sites, repositories and game accounts (it asks before deleting anything; keys and tokens are set up only in the dashboard). Commands: `/d text` — add to today’s diary entry, `/mood 1–5` — rate the day, `/today` — show today’s entry, `/ask question` — a one-off question, `/new` — start a new conversation (the conversation is shared with the AI chat of the dashboard and kept across restarts), `/model` — list the saved AI connections, `/model 2` — switch to the second one. A voice message is turned into text (with an OpenAI connection, see AI settings) and handled like a typed one. A photo sent to the bot goes into today’s entry; a file (PDF, Excel, CSV, text) goes to the assistant — send a bank statement and its transactions land in finance. Files can be attached in the AI chat of the dashboard too.
+Telegram bot: just write to it — the AI assistant answers and can do almost anything the dashboard can on request: add, edit and delete birthdays, diary entries, transactions, recurring payments, projects, monitored sites, repositories and game accounts (it asks before deleting anything; keys and tokens are set up only in the dashboard). Commands: `/d text` — add to today’s diary entry, `/mood 1–5` — rate the day, `/today` — show today’s entry, `/ask question` — a one-off question, `/new` — start a new conversation (the conversation is shared with the AI chat of the dashboard and kept across restarts), `/model` — list the saved AI connections, `/model 2` — switch to the second one. A voice message is turned into text (with an OpenAI connection, see Settings → Integrations) and handled like a typed one. A photo sent to the bot goes into today’s entry; a file (PDF, Excel, CSV, text) goes to the assistant — send a bank statement and its transactions land in finance. Files can be attached in the AI chat of the dashboard too.
 
 ## Configuration
 

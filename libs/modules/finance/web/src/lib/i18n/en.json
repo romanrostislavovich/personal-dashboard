@@ -20,8 +20,7 @@
   "tabs": {
     "overview": "Overview",
     "transactions": "Transactions",
-    "recurring": "Recurring payments",
-    "costSources": "Auto-import"
+    "recurring": "Recurring payments"
   },
   "transaction": {
     "add": "Add transaction",
@@ -69,7 +68,9 @@
         "title": "DeepSeek",
         "hint": "DeepSeek has no spending history in the API, so spending is derived from balance decreases between daily checks; top-ups are not counted. Key: platform.deepseek.com → API keys."
       }
-    }
+    },
+    "title": "Cost import",
+    "inSettings": "Cost import from services (Hetzner, DeepSeek…) — in Settings → Integrations"
   },
   "kpi": {
     "income": "Income",

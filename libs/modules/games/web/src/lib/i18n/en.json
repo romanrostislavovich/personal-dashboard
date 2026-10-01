@@ -98,7 +98,7 @@
     "credentialsSaved": "Keys saved",
     "characters": "Characters",
     "bestItemLevel": "Best item level",
-    "empty": "No characters yet. Save the Battle.net keys below and add a character."
+    "empty": "No characters yet. Save the Battle.net keys (Settings → Integrations) and add a character."
   },
   "errors": {
     "notFound": "Account not found. For Dota, check that match data is public; for WoW, check region, realm and name.",

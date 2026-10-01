@@ -134,11 +134,16 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
 5. **Frontend:** `strava.api.ts` wraps the requests of the client core for Angular (reads as
    `httpResource(() => STRAVA_READS.x())`, writes as `fromCore(() => this.strava.y())`, example —
    `libs/modules/birthdays/web/src/lib/birthdays.api.ts`); export a `WebDashboardModule` with `id`,
-   menu item, routes, translations (`en` and `ru`) and widgets.
+   menu item, routes, translations (`en` and `ru`), widgets and integrations.
 6. **Enable** the module in `apps/api/src/modules.ts` and `apps/web/src/app/modules.ts`.
 7. **Restart `npm run dev`**: the bundlers read the `@pd/*` aliases from `tsconfig.base.json` only on start.
 
-Tokens of external services are entered by the user in the module UI and stored with the core
+Connections to outside services (tokens, API keys, accounts) all live in one place, Settings →
+Integrations: the module exports a self-contained component as `integrations` of its
+`WebDashboardModule` (example — `libs/modules/github-oss/web/src/lib/github-token.integration.ts`),
+and its pages only link there (`INTEGRATIONS_LINK`) while nothing is connected.
+
+Tokens of external services are entered by the user in that component and stored with the core
 `SecretsService`: `secrets.set(userId, 'strava.token', value)`. Values are encrypted with AES-256-GCM
 using `ENCRYPTION_KEY` and are never sent to the frontend. Example — `GithubTokenService` in `github-oss`.
 

@@ -19,6 +19,15 @@
       </mat-select>
     </mat-form-field>
 
+    <a
+      matIconButton
+      [routerLink]="integrations.path"
+      [queryParams]="integrations.queryParams"
+      [matTooltip]="'finance.costSources.inSettings' | transloco"
+      [attr.aria-label]="'finance.costSources.inSettings' | transloco"
+    >
+      <mat-icon>cloud_sync</mat-icon>
+    </a>
     <button matButton="filled" (click)="openTransactionForm()">
       <mat-icon>add</mat-icon> {{ 'finance.transaction.add' | transloco }}
     </button>
@@ -212,14 +221,5 @@
         }
       </mat-list>
     </mat-card>
-  </mat-tab>
-
-  <!-- Automatic cost import from services: Hetzner, DeepSeek… -->
-  <mat-tab [label]="'finance.tabs.costSources' | transloco">
-    <pd-cost-sources-tab
-      [projects]="projects.value()"
-      [defaultProjectId]="scope() && scope() !== 'personal' ? scope() : null"
-      (changed)="reloadTransactions()"
-    />
   </mat-tab>
 </mat-tab-group>

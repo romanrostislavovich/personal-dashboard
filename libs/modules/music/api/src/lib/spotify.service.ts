@@ -62,11 +62,11 @@ export class SpotifyService {
       this.pendingStates.delete(state);
     }
     if (!this.client || !code || !pending || pending.expiresAt < Date.now()) {
-      return `${this.publicUrl}/music?spotify=error`;
+      return `${this.publicUrl}/settings?tab=integrations&spotify=error`;
     }
     const tokens = await this.client.exchangeCode(code);
     await this.saveTokens(pending.userId, tokens);
-    return `${this.publicUrl}/music?spotify=connected`;
+    return `${this.publicUrl}/settings?tab=integrations&spotify=connected`;
   }
 
   async disconnect(userId: string): Promise<void> {

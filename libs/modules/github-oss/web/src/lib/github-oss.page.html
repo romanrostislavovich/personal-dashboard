@@ -56,33 +56,13 @@
           {{ 'core.actions.add' | transloco }}
         </button>
       </form>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- GitHub token -->
-  <mat-card appearance="outlined">
-    <mat-card-header>
-      <mat-card-title>{{ 'github-oss.token.title' | transloco }}</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      @if (settings.value()?.tokenConfigured) {
-        <p class="ok">
-          <mat-icon>check_circle</mat-icon> {{ 'github-oss.token.configured' | transloco }}
+      @if (settings.value() && !settings.value()?.tokenConfigured) {
+        <p class="hint">
+          {{ 'github-oss.token.noToken' | transloco }}
+          <a [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+            {{ 'core.settings.openIntegrations' | transloco }}
+          </a>
         </p>
-        <button matButton (click)="removeToken()">
-          {{ 'github-oss.token.remove' | transloco }}
-        </button>
-      } @else {
-        <p class="hint">{{ 'github-oss.token.hint' | transloco }}</p>
-        <form class="add-form" [formGroup]="tokenForm" (ngSubmit)="saveToken()">
-          <mat-form-field subscriptSizing="dynamic">
-            <mat-label>{{ 'github-oss.token.label' | transloco }}</mat-label>
-            <input matInput type="password" formControlName="token" autocomplete="off" />
-          </mat-form-field>
-          <button matButton="filled" type="submit" [disabled]="tokenForm.invalid || busy()">
-            {{ 'core.actions.save' | transloco }}
-          </button>
-        </form>
       }
     </mat-card-content>
   </mat-card>
