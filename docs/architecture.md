@@ -199,6 +199,9 @@ To add a service (e.g. DigitalOcean):
   achievements. With sync on, only the server unlocks achievements; a client shows progress.
   The core adds its own: achievements about achievements and about the dashboard itself
   (how long and how often it is used — visit days go to `dashboard_active_days`).
+  An unlocked achievement stays even when its value drops; after a section's rules change the
+  user counts it again with the button next to the section on the achievements page (`recount`):
+  what is not earned today is taken back and lands in the trash.
 - **Server actions:** `ServerActions` — calls to outside services made on a user's request; on a
   sync client they are forwarded to the server (see [sync.md](sync.md)).
 - **Sync:** `SyncService` / `SyncClient` — two-way sync between a local instance and a server

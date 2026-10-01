@@ -7,13 +7,19 @@ function setup(syncMode: 'off' | 'server' | 'client') {
     onConflictDoNothing: () => ({ returning: async () => [{ id: 'test.plays.10' }] }),
   }));
   const insert = vi.fn(() => ({ values: insertValues }));
-  const db = { select: () => ({ from: () => ({ where: async () => [] }) }), insert };
+  const deleteWhere = vi.fn(async (_condition: unknown) => undefined);
+  const db = {
+    select: () => ({ from: () => ({ where: async () => [] }) }),
+    insert,
+    delete: vi.fn(() => ({ where: deleteWhere })),
+  };
   const config = { get: (key: string) => (key === 'SYNC_MODE' ? syncMode : undefined) };
   const users = { findById: async () => ({ locale: 'en' }), findAll: async () => [] };
   const notifications = { send: vi.fn(async () => undefined) };
   const scheduler = { register: vi.fn() };
   const realtime = { emit: vi.fn() };
   const activity = { activity$: { pipe: () => ({ subscribe: vi.fn() }) } };
+  const actions = { register: vi.fn() };
   const service = new AchievementsService(
     db as never,
     config as never,
@@ -22,6 +28,7 @@ function setup(syncMode: 'off' | 'server' | 'client') {
     scheduler as never,
     realtime as never,
     activity as never,
+    actions as never,
   );
   service.register({
     id: 'test.plays',
@@ -29,7 +36,7 @@ function setup(syncMode: 'off' | 'server' | 'client') {
     measure: async () => 25,
     tiers: [{ goal: 10, icon: '🎵', title: { en: 'Ten' }, description: { en: '10 plays' } }],
   });
-  return { service, insert, insertValues, notifications, activity };
+  return { service, db, insert, insertValues, notifications, activity };
 }
 
 describe('AchievementsService', () => {
@@ -59,6 +66,26 @@ describe('AchievementsService', () => {
     expect(unlocked.size).toBe(0);
     expect(insert).not.toHaveBeenCalled();
     expect(notifications.send).not.toHaveBeenCalled();
+  });
+
+  it('takes back achievements a recounted section no longer reaches', async () => {
+    const { service, db } = setup('server');
+    service.register({
+      id: 'test.repos',
+      module: 'test',
+      measure: async () => 3,
+      tiers: [{ goal: 5, icon: '📦', title: { en: 'Five' }, description: { en: '5 repos' } }],
+    });
+    service.register({
+      id: 'other.plays',
+      module: 'other',
+      measure: async () => 0,
+      tiers: [{ goal: 5, icon: '🎵', title: { en: 'Five' }, description: { en: '5 plays' } }],
+    });
+    await service.recount('user', 'test');
+    // Only the section asked for: `test.repos` is below its goal, `test.plays` (25) is not,
+    // and the other module is not touched although its value is below the goal too.
+    expect(db.delete).toHaveBeenCalledTimes(1);
   });
 
   it('does not react to user activity on a sync client', () => {

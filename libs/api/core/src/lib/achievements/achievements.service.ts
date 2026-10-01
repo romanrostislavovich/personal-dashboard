@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Achievement, RARITY_XP } from '@pd/contracts';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { debounceTime, groupBy, mergeMap, Subscription } from 'rxjs';
 import { AppConfig } from '../config/env';
 import { DB, Database } from '../database/database.module';
@@ -18,6 +18,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { UserActivityService } from '../realtime/user-activity.service';
 import { SchedulerService } from '../scheduler/scheduler.service';
+import { ServerActions } from '../sync/server-actions';
 import { UsersService } from '../users/users.service';
 import { AchievementMetric, AchievementTier, tierRarity } from './achievement-metric';
 import { unlockedAchievements } from './achievements.schema';
@@ -30,6 +31,9 @@ interface UnlockedTier {
   tier: AchievementTier;
   index: number;
 }
+
+/** Unlocking is the server's job, and so is taking achievements back (see ServerActions). */
+export const RECOUNT_ACTION = 'achievements.recount';
 
 /** A burst of changes (typing with autosave, several saves) triggers one check. */
 const ACTIVITY_DEBOUNCE_MS = 3_000;
@@ -60,6 +64,7 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     private readonly scheduler: SchedulerService,
     private readonly realtime: RealtimeService,
     private readonly activity: UserActivityService,
+    private readonly actions: ServerActions,
   ) {
     this.isSyncClient = config.get('SYNC_MODE', { infer: true }) === 'client';
     this.timeZone = config.get('APP_TIMEZONE', { infer: true });
@@ -70,6 +75,9 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
   }
 
   onModuleInit(): void {
+    this.actions.register(RECOUNT_ACTION, (userId, args) =>
+      this.recount(userId, String(args['module'])),
+    );
     this.scheduler.register({
       name: 'achievements.evaluate',
       cron: '40 * * * *',
@@ -173,6 +181,49 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     }
 
     return { values, unlocked };
+  }
+
+  /**
+   * Counts a section again after its rules changed: achievements of the module whose goal is
+   * above today's value are taken back (they land in the trash), then the achievements that
+   * count achievements follow. An ordinary check never does this — an achievement stays even
+   * when the value drops; this runs only when the user asks for it.
+   */
+  async recount(userId: string, module: string): Promise<void> {
+    await this.takeBack(
+      userId,
+      this.metrics.filter((m) => m.module === module && !m.countsAchievements),
+    );
+    await this.takeBack(
+      userId,
+      this.metrics.filter((m) => m.countsAchievements),
+    );
+    // What is still earned (or newly earned under the new rules) is unlocked as usual.
+    await this.evaluate(userId);
+  }
+
+  /** Deletes unlocked tiers the metrics no longer reach. A metric that failed is left alone. */
+  private async takeBack(userId: string, metrics: AchievementMetric[]): Promise<void> {
+    const values = new Map<string, number>();
+    await this.measure(userId, metrics, values);
+    const lost = metrics.flatMap((metric) => {
+      const value = values.get(metric.id);
+      return value === undefined
+        ? []
+        : metric.tiers
+            .filter((tier) => value < tier.goal)
+            .map((tier) => achievementId(metric, tier));
+    });
+    if (lost.length > 0) {
+      await this.db
+        .delete(unlockedAchievements)
+        .where(
+          and(
+            eq(unlockedAchievements.userId, userId),
+            inArray(unlockedAchievements.achievementId, lost),
+          ),
+        );
+    }
   }
 
   /** Measures the metrics and saves reached tiers; returns the ones this call inserted. */

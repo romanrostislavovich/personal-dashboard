@@ -7,10 +7,14 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Achievement, ACHIEVEMENT_RARITIES, AchievementRarity } from '@pd/contracts';
 import { LevelCardComponent, RealtimeClient } from '@pd/web-core';
+import { firstValueFrom } from 'rxjs';
 import { AchievementCardComponent } from './achievement-card.component';
 import { AchievementsApi } from './achievements.api';
 
@@ -21,7 +25,15 @@ const RECENT_COUNT = 4;
 @Component({
   selector: 'pd-achievements-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonToggleModule, TranslocoPipe, AchievementCardComponent, LevelCardComponent],
+  imports: [
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatIconModule,
+    MatTooltipModule,
+    TranslocoPipe,
+    AchievementCardComponent,
+    LevelCardComponent,
+  ],
   template: `
     <header class="page-header">
       <h1 class="page-title">{{ 'achievements.title' | transloco }}</h1>
@@ -79,6 +91,17 @@ const RECENT_COUNT = 4;
         <h2 class="group-title">
           {{ group.module + '.title' | transloco }}
           <span class="group-count">{{ group.unlocked }} / {{ group.total }}</span>
+          <!-- After a section's rules change: take back what is not earned today. -->
+          <button
+            matIconButton
+            class="recount"
+            [disabled]="recounting() !== null"
+            [matTooltip]="'achievements.recount' | transloco"
+            [attr.aria-label]="'achievements.recount' | transloco"
+            (click)="recount(group.module)"
+          >
+            <mat-icon>restart_alt</mat-icon>
+          </button>
         </h2>
         <div class="grid">
           @for (achievement of group.items; track achievement.id) {
@@ -163,6 +186,11 @@ const RECENT_COUNT = 4;
       font: 700 1.1rem / 1.3 var(--pd-font-heading);
       margin: 0 0 12px;
     }
+    .recount {
+      align-self: center;
+      margin-left: auto;
+      color: var(--mat-sys-on-surface-variant);
+    }
     .group-count {
       font: 600 0.8rem / 1 var(--pd-font);
       color: var(--mat-sys-on-surface-variant);
@@ -175,7 +203,12 @@ const RECENT_COUNT = 4;
   `,
 })
 export class AchievementsPage {
-  private readonly achievements = inject(AchievementsApi).list();
+  private readonly api = inject(AchievementsApi);
+  private readonly transloco = inject(TranslocoService);
+  private readonly achievements = this.api.list();
+
+  /** The section being counted again. */
+  protected readonly recounting = signal<string | null>(null);
 
   protected readonly filter = signal<Filter>('all');
   protected readonly rarity = signal<AchievementRarity | null>(null);
@@ -228,6 +261,20 @@ export class AchievementsPage {
         untracked(() => this.achievements.reload());
       }
     });
+  }
+
+  protected async recount(module: string): Promise<void> {
+    const section = this.transloco.translate(`${module}.title`);
+    if (!confirm(this.transloco.translate('achievements.recountConfirm', { section }))) {
+      return;
+    }
+    this.recounting.set(module);
+    try {
+      await firstValueFrom(this.api.recount(module));
+    } finally {
+      this.achievements.reload();
+      this.recounting.set(null);
+    }
   }
 
   protected toggleRarity(rarity: AchievementRarity): void {

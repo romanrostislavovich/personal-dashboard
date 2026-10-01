@@ -116,13 +116,19 @@ export class OpenSourceAchievements implements OnModuleInit {
           5,
           '📦',
           { en: 'Portfolio', ru: 'Портфолио' },
-          { en: '5 public repositories of your own', ru: '5 своих публичных репозиториев' },
+          {
+            en: '5 public repositories of your own, forks aside',
+            ru: '5 своих публичных репозиториев, не считая форков',
+          },
         ],
         [
           15,
           '🗂️',
           { en: 'Maintainer', ru: 'Мейнтейнер' },
-          { en: '15 public repositories of your own', ru: '15 своих публичных репозиториев' },
+          {
+            en: '15 public repositories of your own, forks aside',
+            ru: '15 своих публичных репозиториев, не считая форков',
+          },
         ],
       ),
     });
@@ -139,9 +145,16 @@ export class OpenSourceAchievements implements OnModuleInit {
     return row?.total ?? 0;
   }
 
-  /** Achievements are about one's own work: organizations' and hand-added repositories do not count. */
+  /**
+   * Achievements are about one's own work: organizations' and hand-added repositories do not
+   * count, and neither do forks of other people's projects.
+   */
   private own(userId: string) {
-    return and(eq(trackedRepos.userId, userId), eq(trackedRepos.relation, 'owner'));
+    return and(
+      eq(trackedRepos.userId, userId),
+      eq(trackedRepos.relation, 'owner'),
+      eq(trackedRepos.isFork, false),
+    );
   }
 
   private async repoCount(userId: string): Promise<number> {
