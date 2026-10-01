@@ -14,7 +14,12 @@
 - **Birthdays** with reminders
 - **Finance:** wallets (personal / per project), recurring payments, automatic cost import from
   Hetzner Cloud and DeepSeek
-- **Open Source:** GitHub stars history, issues, PRs, releases, npm downloads, alerts
+- **Development:** one section with tabs —
+  - **Open Source:** GitHub stars history, issues, PRs, releases, npm downloads, alerts
+  - **GitHub account:** contribution calendar by year, streaks, commits / PRs / reviews / issues,
+    languages, top repositories, followers; an optional streak reminder in the morning digest
+  - **WakaTime:** coding time per day, project, language and editor; every day is copied to the
+    dashboard, so the history grows past what the free plan keeps
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
 - **Diary:** visual editor over Markdown (the source is a click away) with autosave, mood,
   hashtags, emoji marks on phrases, photos, search, year heatmap, “on this day”, mood insights,
@@ -66,11 +71,8 @@
 - **Activity** — a new section with computer activity tracked by the desktop app: time at the PC
   per day, time per application (and window or site), active vs idle time, daily and weekly
   totals; data stays on your own server
-- **Development** — a new section that groups everything about coding:
-  - **Open Source** — the existing module moves here as a subsection
-  - **GitHub account** — profile statistics: contributions and streaks, commits, PRs, reviews and
-    issues over time, languages, top repositories, followers
-  - **WakaTime** — coding time from WakaTime: per day, project, language and editor
+- **Development: GitLab and Bitbucket** — the same account statistics as for GitHub; the section
+  then moves from tabs to its own submenu
 - **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
 - **Books** — reading list, progress, ratings and notes
 - **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and

@@ -1,0 +1,137 @@
+@let s = stats.value();
+@let connection = settings.value();
+
+<header class="toolbar">
+  <mat-button-toggle-group
+    hideSingleSelectionIndicator
+    [value]="period()"
+    [attr.aria-label]="'development.wakatime.period' | transloco"
+    (change)="period.set($event.value)"
+  >
+    @for (days of periods; track days) {
+      <mat-button-toggle [value]="days">
+        {{ 'development.wakatime.periods.' + days | transloco }}
+      </mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+  <span class="spacer"></span>
+  @if (connection?.lastSyncedAt; as syncedAt) {
+    <span class="hint">
+      {{ 'development.wakatime.syncedAt' | transloco }} {{ syncedAt | date: 'd MMM, HH:mm' }}
+    </span>
+  }
+  <button matButton (click)="sync()" [disabled]="busy() || !connection?.connected">
+    <mat-icon>sync</mat-icon> {{ 'development.wakatime.syncNow' | transloco }}
+  </button>
+</header>
+
+@if (busy()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (connection && !connection.connected) {
+  <section class="setup">
+    <h3>{{ 'development.wakatime.notConnectedTitle' | transloco }}</h3>
+    <p class="hint">{{ 'development.wakatime.notConnectedHint' | transloco }}</p>
+    <a matButton="filled" [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+      {{ 'core.settings.openIntegrations' | transloco }}
+    </a>
+  </section>
+}
+
+@if (connection?.syncError; as syncError) {
+  <p class="error">
+    <mat-icon inline>warning</mat-icon> {{ 'development.wakatime.syncError' | transloco }}:
+    {{ syncError }}
+  </p>
+}
+
+<!-- Saved days stay after a disconnect, so the statistics do not depend on the connection. -->
+@if (s && s.allTime.since) {
+  <mat-card appearance="outlined">
+    <mat-card-content class="stats">
+      <div class="stat">
+        <span class="label">{{ 'development.wakatime.today' | transloco }}</span>
+        <span class="value">{{ s.todaySeconds | pdDuration }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">{{ 'development.wakatime.total' | transloco }}</span>
+        <span class="value">{{ s.totalSeconds | pdDuration }}</span>
+        <span class="sub">
+          {{ 'development.wakatime.activeDays' | transloco: { count: s.activeDays } }}
+        </span>
+      </div>
+      <div class="stat">
+        <span class="label">{{ 'development.wakatime.dailyAverage' | transloco }}</span>
+        <span class="value">{{ s.dailyAverageSeconds | pdDuration }}</span>
+        <span class="sub">{{ 'development.wakatime.dailyAverageHint' | transloco }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">{{ 'development.wakatime.bestDay' | transloco }}</span>
+        @if (s.bestDay; as best) {
+          <span class="value">{{ best.seconds | pdDuration }}</span>
+          <span class="sub">{{ best.day | date: 'd MMM y' }}</span>
+        } @else {
+          <span class="value">—</span>
+        }
+      </div>
+      <div class="stat">
+        <span class="label">{{ 'development.wakatime.allTime' | transloco }}</span>
+        <span class="value">{{ s.allTime.seconds | pdDuration }}</span>
+        <span class="sub">
+          {{ 'development.wakatime.since' | transloco }} {{ s.allTime.since | date: 'd MMM y' }}
+        </span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>{{ 'development.wakatime.chart' | transloco }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="padded">
+      <pd-bar-chart [bars]="bars()" [label]="'development.wakatime.chart' | transloco" />
+    </mat-card-content>
+  </mat-card>
+
+  <div class="columns">
+    <ng-container
+      *ngTemplateOutlet="
+        top;
+        context: { title: 'development.wakatime.projects', items: projects() }
+      "
+    />
+    <ng-container
+      *ngTemplateOutlet="
+        top;
+        context: { title: 'development.wakatime.languages', items: languages() }
+      "
+    />
+    <ng-container
+      *ngTemplateOutlet="top; context: { title: 'development.wakatime.editors', items: editors() }"
+    />
+    <ng-container
+      *ngTemplateOutlet="
+        top;
+        context: { title: 'development.wakatime.operatingSystems', items: systems() }
+      "
+    />
+  </div>
+
+  <p class="hint">{{ 'development.wakatime.historyHint' | transloco }}</p>
+} @else if (connection?.connected && !stats.isLoading()) {
+  <p class="hint">{{ 'development.wakatime.empty' | transloco }}</p>
+}
+
+<ng-template #top let-title="title" let-items="items">
+  @if (items.length) {
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>{{ title | transloco }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="padded">
+        <pd-share-list [items]="items" />
+      </mat-card-content>
+    </mat-card>
+  }
+</ng-template>

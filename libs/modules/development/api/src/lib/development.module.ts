@@ -16,17 +16,30 @@ import { OpenSourceServerActions } from './open-source/open-source.server-action
 import { RepoSyncJob } from './open-source/repo-sync.job';
 import { RepoSyncService } from './open-source/repo-sync.service';
 import { ReposService } from './open-source/repos.service';
+import { WakatimeAchievements } from './wakatime/wakatime.achievements';
+import { WakatimeAiTools } from './wakatime/wakatime.ai-tools';
+import { WakatimeController } from './wakatime/wakatime.controller';
+import { WakatimeDigest } from './wakatime/wakatime.digest';
+import { WakatimeJob } from './wakatime/wakatime.job';
+import { WakatimeServerActions } from './wakatime/wakatime.server-actions';
+import { WakatimeService } from './wakatime/wakatime.service';
 
 /**
  * Everything about coding, one folder per subsection:
  * - `open-source/` — tracked repositories: GitHub stars, forks, issues, PRs, releases, npm downloads;
  * - `github-profile/` — the GitHub account of the token's owner: contributions, streaks, languages;
+ * - `wakatime/` — coding time from WakaTime, copied day by day;
  * - `github/` — the GitHub token and client the subsections share.
  *
  * API: `/api/development/*`.
  */
 @Module({
-  controllers: [GithubController, GithubProfileController, OpenSourceController],
+  controllers: [
+    GithubController,
+    GithubProfileController,
+    OpenSourceController,
+    WakatimeController,
+  ],
   providers: [
     GithubTokenService,
     ReposService,
@@ -42,6 +55,12 @@ import { ReposService } from './open-source/repos.service';
     GithubProfileAiTools,
     GithubProfileDigest,
     GithubProfileServerActions,
+    WakatimeService,
+    WakatimeJob,
+    WakatimeAchievements,
+    WakatimeAiTools,
+    WakatimeDigest,
+    WakatimeServerActions,
   ],
 })
 export class DevelopmentModule {}

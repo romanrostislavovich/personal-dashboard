@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AchievementsService, SchedulerService, UsersService } from '@pd/api-core';
+import { SchedulerService, UsersService } from '@pd/api-core';
 import { GithubTokenService } from '../github/github-token.service';
 import { GithubProfileService } from './github-profile.service';
 
@@ -16,7 +16,6 @@ export class GithubProfileJob implements OnModuleInit {
     private readonly users: UsersService,
     private readonly tokens: GithubTokenService,
     private readonly profiles: GithubProfileService,
-    private readonly achievements: AchievementsService,
   ) {}
 
   onModuleInit(): void {
@@ -36,7 +35,6 @@ export class GithubProfileJob implements OnModuleInit {
       // One user's bad token must not stop the others; the error is saved for the page.
       await this.profiles
         .sync(user.id)
-        .then(() => this.achievements.evaluate(user.id))
         .catch((error) => this.logger.warn(`GitHub profile sync for ${user.id} failed: ${error}`));
     }
   }

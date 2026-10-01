@@ -2,7 +2,8 @@
   "title": "Разработка",
   "tabs": {
     "openSource": "Open Source",
-    "github": "GitHub"
+    "github": "GitHub",
+    "wakatime": "WakaTime"
   },
   "errors": {
     "notFound": "Репозиторий не найден на GitHub",
@@ -85,5 +86,55 @@
   },
   "digestOptions": {
     "streak": "Напоминать о серии контрибуций на GitHub"
+  },
+  "duration": {
+    "hoursMinutes": "{{hours}} ч {{minutes}} мин",
+    "minutes": "{{minutes}} мин"
+  },
+  "widget": {
+    "streak": "Серия на GitHub",
+    "doneToday": "сегодня: {{count}}",
+    "notYetToday": "сегодня пока ничего",
+    "contributions": "Контрибуции",
+    "week": "за 7 дней",
+    "coding": "Кодинг сегодня",
+    "empty": "Подключи GitHub и WakaTime в интеграциях",
+    "open": "Подробнее"
+  },
+  "wakatime": {
+    "period": "Период",
+    "periods": {
+      "7": "7 дней",
+      "30": "30 дней",
+      "365": "Год"
+    },
+    "syncNow": "Обновить",
+    "syncedAt": "Обновлено",
+    "syncError": "Ошибка синхронизации",
+    "notConnectedTitle": "Подключи WakaTime",
+    "notConnectedHint": "WakaTime считает время, которое ты проводишь в редакторе. Добавь его API-ключ в интеграциях — дашборд начнёт копировать твои дни.",
+    "today": "Сегодня",
+    "total": "За период",
+    "activeDays": "дней с кодингом: {{count}}",
+    "dailyAverage": "В день",
+    "dailyAverageHint": "в среднем, по дням с кодингом",
+    "bestDay": "Лучший день",
+    "allTime": "За всё время",
+    "since": "с",
+    "chart": "Время кодинга",
+    "projects": "Проекты",
+    "languages": "Языки",
+    "editors": "Редакторы",
+    "operatingSystems": "Операционные системы",
+    "historyHint": "Бесплатный тариф WakaTime хранит только последние дни, поэтому дашборд копирует каждый день к себе — история копится здесь со дня подключения.",
+    "empty": "Времени кодинга пока нет: WakaTime присылает его в течение часа после начала работы в редакторе.",
+    "key": {
+      "title": "Время кодинга",
+      "hint": "Secret API key из wakatime.com → Settings → Account. Хранится зашифрованным и используется только для чтения времени кодинга.",
+      "label": "Secret API key",
+      "connected": "Подключено: {{username}}",
+      "disconnect": "Отключить",
+      "invalid": "WakaTime не принял ключ"
+    }
   }
 }

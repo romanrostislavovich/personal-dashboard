@@ -20,7 +20,7 @@ single Docker image on your server. Every feature is a module: enable, disable o
 | 📔 Diary        | Visual Markdown editor per day, autosave, mood, #tags, emoji marks on phrases (`==🔥 text==`), photos, search, year heatmap, “on this day”, mood insights; Telegram `/d`, `/mood`, `/today`, photos |
 | 💰 Finance      | Income and expenses per wallet, totals in your main currency (ECB rates), top categories, recurring payments, automatic cost import from Hetzner Cloud and DeepSeek                                 |
 | 🎂 Birthdays    | Countdown and age, reminders N days ahead                                                                                                                                                           |
-| 🐙 Open Source  | GitHub repositories: star history and growth, forks, issues, PRs, releases, npm downloads; alerts on new issues/PRs, releases and star milestones                                                   |
+| 👨‍💻 Development  | Open source repositories (stars, forks, issues, PRs, releases, npm downloads, alerts), your GitHub account (contribution calendar, streaks, languages, followers) and coding time from WakaTime     |
 | 📡 Monitoring   | Uptime checks every 5 minutes, uptime for 24 h / 7 / 30 days, response time chart, SSL expiry; “down / back up” alerts and SSL reminders                                                            |
 | 🎧 Music        | Last.fm listening history, plays per day, top artists / tracks / albums; Spotify “now playing”                                                                                                      |
 | 🎮 Games        | Dota 2 via OpenDota (medal, win rate, matches, heroes) and World of Warcraft via Battle.net (character, item level, achievements)                                                                   |
@@ -90,7 +90,8 @@ stored encrypted (AES-256-GCM with `ENCRYPTION_KEY`) and are never sent back to 
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | Telegram          | Create a bot with [@BotFather](https://t.me/BotFather), set `TELEGRAM_BOT_TOKEN`, then “Connect Telegram”                           |
 | AI                | Add a connection: provider (DeepSeek by default), model, API key. Add several and switch in one click. For full privacy use Ollama  |
-| GitHub            | Optional fine-grained token (read-only) — without it GitHub allows 60 requests per hour                                             |
+| GitHub            | A classic token with `read:user` and `repo` for your account statistics; a read-only one is enough for Open Source alone            |
+| WakaTime          | The secret API key from wakatime.com → Settings → Account; days are copied to the dashboard, so history outlives the free plan      |
 | Hetzner Cloud     | Cost import → a project API token with Read access                                                                                  |
 | DeepSeek costs    | Cost import → an API key; spending is derived from balance changes                                                                  |
 | Last.fm           | Username + API key from [last.fm/api/account/create](https://www.last.fm/api/account/create)                                        |

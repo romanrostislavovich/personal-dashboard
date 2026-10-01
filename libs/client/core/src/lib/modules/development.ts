@@ -4,6 +4,9 @@ import {
   GithubSettings,
   TrackedRepo,
   TrackedRepoInput,
+  WakatimePeriod,
+  WakatimeSettings,
+  WakatimeStats,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -19,6 +22,9 @@ export const DEVELOPMENT_READS = {
   githubProfile: () => apiRequest(`${BASE}/github/profile`),
   /** The contribution calendar of a year. */
   githubContributions: (year: number) => apiRequest(`${BASE}/github/contributions`, { year }),
+  wakatimeSettings: () => apiRequest(`${BASE}/wakatime/settings`),
+  /** Coding time over the last `days` days. */
+  wakatimeStats: (days: WakatimePeriod) => apiRequest(`${BASE}/wakatime/stats`, { days }),
 };
 
 export function developmentApi(api: ApiClient) {
@@ -38,6 +44,14 @@ export function developmentApi(api: ApiClient) {
     githubContributions: (year: number) =>
       api.read<GithubContributionDay[]>(DEVELOPMENT_READS.githubContributions(year)),
     syncGithubProfile: () => api.post<void>(`${BASE}/github/profile/sync`, {}),
+
+    wakatimeSettings: () => api.read<WakatimeSettings>(DEVELOPMENT_READS.wakatimeSettings()),
+    wakatimeStats: (days: WakatimePeriod) =>
+      api.read<WakatimeStats>(DEVELOPMENT_READS.wakatimeStats(days)),
+    /** The key is checked and the days WakaTime still has are copied. */
+    connectWakatime: (apiKey: string) => api.put<void>(`${BASE}/wakatime/key`, { apiKey }),
+    disconnectWakatime: () => api.delete(`${BASE}/wakatime/key`),
+    syncWakatime: () => api.post<void>(`${BASE}/wakatime/sync`, {}),
   };
 }
 

@@ -82,6 +82,10 @@ libs/modules/birthdays/
 
 Request and response types live in `libs/shared/contracts/src/lib/birthdays.ts`.
 
+A module with several subsections keeps a folder per subsection on both sides and one page with
+tabs whose subsections are child routes (`development`: `open-source/`, `github-profile/`,
+`wakatime/` and the shared `github/`; `development.page.ts` holds the tabs).
+
 ## Writing a new module
 
 Say it is `strava`.
@@ -122,7 +126,10 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
      `collect`, registered with `MorningDigestService.register()`. The digest tells only what
      changed since the previous one, so `collect(userId)` returns facts that stay the same until
      there is news (stars, a status, a release tag — not response times or "days until"); `null` —
-     nothing to tell. `always: true` puts the section in every digest (the weather). Example —
+     nothing to tell. `always: true` puts the section in every digest (the weather). `optIn: true`
+     leaves it out until the user ticks it under the digest switch in the AI settings; the
+     checkbox is named by the module's translation `<module>.digestOptions.<rest of the id>`
+     (the GitHub streak reminder, `development.streak`). Example —
      `libs/modules/development/api/src/lib/open-source/open-source.digest.ts`.
    - calls to outside services on a user's request (connect an account, "refresh now"):
      `strava.server-actions.ts` — `ServerActions.register('strava.sync', handler)`, and the

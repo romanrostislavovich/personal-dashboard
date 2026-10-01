@@ -7,6 +7,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 const TABS = [
   { path: 'open-source', labelKey: 'development.tabs.openSource' },
   { path: 'github', labelKey: 'development.tabs.github' },
+  { path: 'wakatime', labelKey: 'development.tabs.wakatime' },
 ] as const;
 
 /** The Development section: a title, the tabs and the subsection under them. */

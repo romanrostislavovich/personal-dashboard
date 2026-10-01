@@ -1,8 +1,8 @@
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
- * Web part of the Development section: open source repositories (GitHub + npm) and the
- * GitHub account.
+ * Web part of the Development section: open source repositories (GitHub + npm), the GitHub
+ * account and coding time from WakaTime.
  * Plugged in at apps/web/src/app/modules.ts.
  */
 export const developmentModule: WebDashboardModule = {
@@ -25,6 +25,10 @@ export const developmentModule: WebDashboardModule = {
           loadComponent: () =>
             import('./github/github-profile.page').then((m) => m.GithubProfilePage),
         },
+        {
+          path: 'wakatime',
+          loadComponent: () => import('./wakatime/wakatime.page').then((m) => m.WakatimePage),
+        },
       ],
     },
   ],
@@ -33,6 +37,11 @@ export const developmentModule: WebDashboardModule = {
     ru: () => import('./i18n/ru.json'),
   },
   widgets: [
+    {
+      id: 'development.summary',
+      size: 'small',
+      loadComponent: () => import('./development.widget').then((m) => m.DevelopmentWidget),
+    },
     {
       id: 'development.open-source',
       size: 'medium',
@@ -45,6 +54,11 @@ export const developmentModule: WebDashboardModule = {
       id: 'development.github-token',
       loadComponent: () =>
         import('./github/github-token.integration').then((m) => m.GithubTokenIntegration),
+    },
+    {
+      id: 'development.wakatime-key',
+      loadComponent: () =>
+        import('./wakatime/wakatime.integration').then((m) => m.WakatimeIntegration),
     },
   ],
 };

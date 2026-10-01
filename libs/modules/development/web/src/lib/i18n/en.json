@@ -2,7 +2,8 @@
   "title": "Development",
   "tabs": {
     "openSource": "Open Source",
-    "github": "GitHub"
+    "github": "GitHub",
+    "wakatime": "WakaTime"
   },
   "errors": {
     "notFound": "Repository not found on GitHub",
@@ -85,5 +86,55 @@
   },
   "digestOptions": {
     "streak": "Remind about the GitHub contribution streak"
+  },
+  "duration": {
+    "hoursMinutes": "{{hours}} h {{minutes}} min",
+    "minutes": "{{minutes}} min"
+  },
+  "widget": {
+    "streak": "GitHub streak",
+    "doneToday": "today: {{count}}",
+    "notYetToday": "nothing today yet",
+    "contributions": "Contributions",
+    "week": "in 7 days",
+    "coding": "Coding today",
+    "empty": "Connect GitHub and WakaTime in the integrations",
+    "open": "Details"
+  },
+  "wakatime": {
+    "period": "Period",
+    "periods": {
+      "7": "7 days",
+      "30": "30 days",
+      "365": "Year"
+    },
+    "syncNow": "Update",
+    "syncedAt": "Updated",
+    "syncError": "Sync error",
+    "notConnectedTitle": "Connect WakaTime",
+    "notConnectedHint": "WakaTime counts the time you spend in the editor. Add its API key in the integrations and the dashboard starts copying your days.",
+    "today": "Today",
+    "total": "In the period",
+    "activeDays": "days with coding: {{count}}",
+    "dailyAverage": "Per day",
+    "dailyAverageHint": "on average, on days with coding",
+    "bestDay": "Best day",
+    "allTime": "All time",
+    "since": "since",
+    "chart": "Coding time",
+    "projects": "Projects",
+    "languages": "Languages",
+    "editors": "Editors",
+    "operatingSystems": "Operating systems",
+    "historyHint": "The free WakaTime plan keeps only the latest days, so the dashboard copies each day and the history grows here from the day of the connection.",
+    "empty": "No coding time yet: WakaTime sends it within an hour after you start working in the editor.",
+    "key": {
+      "title": "Coding time",
+      "hint": "The secret API key from wakatime.com → Settings → Account. It is stored encrypted and used only to read your coding time.",
+      "label": "Secret API key",
+      "connected": "Connected: {{username}}",
+      "disconnect": "Disconnect",
+      "invalid": "WakaTime rejected the key"
+    }
   }
 }
