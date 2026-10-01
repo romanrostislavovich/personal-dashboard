@@ -66,6 +66,11 @@ export class GamesPage {
     await this.run(() => firstValueFrom(this.api.sync(accountId)));
   }
 
+  /** Every account at once; Dota re-reads its whole history, so it takes a few seconds each. */
+  async syncAll(): Promise<void> {
+    await this.run(() => firstValueFrom(this.api.syncAll()));
+  }
+
   async remove(accountId: string): Promise<void> {
     const name = this.accounts.value().find((a) => a.id === accountId)?.displayName;
     if (confirm(this.transloco.translate('games.confirmDelete', { name }))) {

@@ -32,9 +32,17 @@ export const wowCredentialsInputSchema = z.object({
 });
 export type WowCredentialsInput = z.infer<typeof wowCredentialsInputSchema>;
 
+export const openDotaKeyInputSchema = z.object({
+  /** The API key from opendota.com/api-keys. */
+  apiKey: z.string().trim().min(10).max(200),
+});
+export type OpenDotaKeyInput = z.infer<typeof openDotaKeyInputSchema>;
+
 export interface GamesSettings {
   /** Whether the Battle.net app keys are set (needed for WoW). */
   wowCredentials: boolean;
+  /** Whether the OpenDota API key is set: Dota requests are then not bound by the free limit. */
+  openDotaKey: boolean;
 }
 
 // --- Dota 2 ---

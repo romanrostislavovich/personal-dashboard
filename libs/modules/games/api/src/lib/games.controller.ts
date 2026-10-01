@@ -21,10 +21,13 @@ import {
   GameAccountInput,
   gameAccountInputSchema,
   GamesSettings,
+  OpenDotaKeyInput,
+  openDotaKeyInputSchema,
   WowCredentialsInput,
   wowCredentialsInputSchema,
 } from '@pd/contracts';
 import { DotaOverviewService } from './dota/dota-overview.service';
+import { OpenDotaKeyService } from './dota/opendota-key.service';
 import { GameAccountsService } from './game-accounts.service';
 import { WowService } from './wow/wow.service';
 import { GAMES_ACTIONS } from './games.server-actions';
@@ -36,6 +39,7 @@ export class GamesController {
     private readonly accounts: GameAccountsService,
     private readonly wow: WowService,
     private readonly dota: DotaOverviewService,
+    private readonly openDotaKeys: OpenDotaKeyService,
   ) {}
 
   @Get('accounts')
@@ -56,6 +60,13 @@ export class GamesController {
   @HttpCode(204)
   sync(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.actions.run(user.id, GAMES_ACTIONS.syncAccount, { id });
+  }
+
+  /** "Refresh all": every game account now, without waiting for the half-hourly sync. */
+  @Post('sync')
+  @HttpCode(204)
+  syncAll(@CurrentUser() user: AuthUser) {
+    return this.actions.run(user.id, GAMES_ACTIONS.syncAll);
   }
 
   @Delete('accounts/:id')
@@ -83,7 +94,10 @@ export class GamesController {
 
   @Get('settings')
   async settings(@CurrentUser() user: AuthUser): Promise<GamesSettings> {
-    return { wowCredentials: await this.wow.hasCredentials(user.id) };
+    return {
+      wowCredentials: await this.wow.hasCredentials(user.id),
+      openDotaKey: await this.openDotaKeys.has(user.id),
+    };
   }
 
   @Put('wow/credentials')
@@ -93,5 +107,21 @@ export class GamesController {
     @Body(new ZodValidationPipe(wowCredentialsInputSchema)) input: WowCredentialsInput,
   ) {
     return this.wow.saveCredentials(user.id, input);
+  }
+
+  /** Checks the OpenDota API key, saves it and refreshes the accounts with it. */
+  @Put('dota/key')
+  @HttpCode(204)
+  saveOpenDotaKey(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(openDotaKeyInputSchema)) input: OpenDotaKeyInput,
+  ) {
+    return this.actions.run(user.id, GAMES_ACTIONS.saveOpenDotaKey, input);
+  }
+
+  @Delete('dota/key')
+  @HttpCode(204)
+  removeOpenDotaKey(@CurrentUser() user: AuthUser) {
+    return this.openDotaKeys.remove(user.id);
   }
 }

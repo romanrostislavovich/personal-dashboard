@@ -29,7 +29,8 @@
   templates; `/d`, `/mood`, `/today` and photos from Telegram
 - **Music:** Last.fm history and tops, Spotify “now playing”
 - **Games:** Dota 2 (full match history of every mode, via OpenDota) and World of Warcraft (Battle.net);
-  several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO
+  several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO;
+  refreshed every half an hour and with the "Refresh all" button, an optional OpenDota API key
 - **Weather:** today's forecast for your city (Open-Meteo, no API key) with clothing advice —
   on its page, on the home page and in the morning digest; the city comes from the browser's
   location until you pick another

@@ -31,9 +31,14 @@ export function gamesApi(api: ApiClient) {
 
     add: (input: GameAccountInput) => api.post<void>(`${BASE}/accounts`, input),
     sync: (id: string) => api.post<void>(`${BASE}/accounts/${id}/sync`, {}),
+    /** Every game account now, Dota with its whole history. */
+    syncAll: () => api.post<void>(`${BASE}/sync`, {}),
     remove: (id: string) => api.delete(`${BASE}/accounts/${id}`),
     saveWowCredentials: (input: WowCredentialsInput) =>
       api.put<void>(`${BASE}/wow/credentials`, input),
+    /** The key is checked and the Dota accounts are refreshed with it. */
+    saveOpenDotaKey: (apiKey: string) => api.put<void>(`${BASE}/dota/key`, { apiKey }),
+    removeOpenDotaKey: () => api.delete(`${BASE}/dota/key`),
   };
 }
 

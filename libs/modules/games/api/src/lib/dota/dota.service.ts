@@ -12,6 +12,7 @@ import {
 import { and, desc, eq, getTableColumns, gt, isNotNull, sql } from 'drizzle-orm';
 import { dotaMatches, gameAccounts, GameAccountRow } from '../games.schema';
 import { DotaHeroesService } from './dota-heroes.service';
+import { OpenDotaKeyService } from './opendota-key.service';
 import { DotaProfile, openDota, OpenDotaMatch } from './opendota.client';
 import { medalChange } from './steam-id';
 
@@ -56,6 +57,7 @@ export class DotaService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly heroes: DotaHeroesService,
+    private readonly keys: OpenDotaKeyService,
   ) {}
 
   /**
@@ -66,13 +68,21 @@ export class DotaService {
     const accountId = Number(account.externalId);
     const full = fullHistory || isHistoryStale(account);
 
+    const apiKey = await this.keys.get(account.userId);
+
     const [profile, matches] = await Promise.all([
-      openDota.getProfile(accountId),
-      openDota.getMatches(accountId, full ? undefined : SYNC_MATCHES),
+      openDota.getProfile(accountId, apiKey),
+      openDota.getMatches(accountId, full ? undefined : SYNC_MATCHES, apiKey),
     ]);
     await this.saveMatches(account.id, matches);
     if (full) {
-      await this.markHistorySynced(account, profile, matches.length);
+      await this.markHistorySynced(account, profile, matches.length, apiKey);
+    }
+
+    if (fullHistory) {
+      // Asked for by hand: OpenDota re-reads the player from Steam, and what it finds (matches
+      // it missed, a new medal) comes with the next sync.
+      await this.requestRefresh(account, apiKey);
     }
 
     return { profile, rankChange: rankChangeSinceLastSync(account, profile) };
@@ -106,10 +116,18 @@ export class DotaService {
     };
   }
 
+  /** A failed request changes nothing: the next sync simply brings what OpenDota already has. */
+  private async requestRefresh(account: GameAccountRow, apiKey: string | null): Promise<void> {
+    await openDota
+      .requestRefresh(Number(account.externalId), apiKey)
+      .catch((error) => this.logger.warn(`OpenDota refresh failed: ${error}`));
+  }
+
   private async markHistorySynced(
     account: GameAccountRow,
     profile: DotaProfile,
     matchCount: number,
+    apiKey: string | null,
   ): Promise<void> {
     await this.db
       .update(gameAccounts)
@@ -117,9 +135,7 @@ export class DotaService {
       .where(eq(gameAccounts.id, account.id));
     if (matchCount === 0 || profile.historyHidden) {
       // The history may appear after the player enables public match data — ask OpenDota to look.
-      await openDota
-        .requestRefresh(Number(account.externalId))
-        .catch((error) => this.logger.warn(`OpenDota refresh failed: ${error}`));
+      await this.requestRefresh(account, apiKey);
     }
   }
 

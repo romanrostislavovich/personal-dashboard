@@ -5,6 +5,8 @@ const HEROES_MIRROR =
   'https://raw.githubusercontent.com/odota/dotaconstants/master/build/heroes.json';
 
 export class DotaProfileNotFoundError extends Error {}
+/** OpenDota did not accept the API key (mistyped, revoked, out of credit). */
+export class OpenDotaKeyError extends Error {}
 
 export interface DotaProfile {
   personaName: string;
@@ -69,10 +71,18 @@ const MATCH_FIELDS = [
   'leaver_status',
 ] as const;
 
-/** OpenDota is an open API without a key (limit ~60 requests per minute). */
+/**
+ * OpenDota works without a key, with a small shared allowance of requests a day; the user's
+ * own key (`apiKey`, from Settings → Integrations) lifts it. `null` — no key.
+ */
 export const openDota = {
-  async getProfile(accountId: number): Promise<DotaProfile> {
-    const data = await get<RawPlayer>(`/players/${accountId}`);
+  /** Key check: any request answers 400 for a key OpenDota does not know. */
+  async verifyKey(apiKey: string): Promise<void> {
+    await request('GET', '/constants/game_mode', apiKey);
+  },
+
+  async getProfile(accountId: number, apiKey: string | null = null): Promise<DotaProfile> {
+    const data = await get<RawPlayer>(`/players/${accountId}`, apiKey);
     // For a non-existent or private account OpenDota responds without a profile.
     if (!data.profile) {
       throw new DotaProfileNotFoundError(`Dota account ${accountId} not found`);
@@ -91,16 +101,20 @@ export const openDota = {
    * Matches of every mode, newest first; without `limit` — the whole history in one request.
    * `significant=0`: by default OpenDota drops Turbo and other non-standard modes.
    */
-  async getMatches(accountId: number, limit?: number): Promise<OpenDotaMatch[]> {
+  async getMatches(
+    accountId: number,
+    limit?: number,
+    apiKey: string | null = null,
+  ): Promise<OpenDotaMatch[]> {
     const params = new URLSearchParams({ significant: '0' });
     if (limit) {
       params.set('limit', String(limit));
     }
     MATCH_FIELDS.forEach((field) => params.append('project', field));
-    const matches = await get<RawMatch[]>(`/players/${accountId}/matches?${params}`);
-    return matches.map((m) => ({
+    const matches = await get<RawMatch[]>(`/players/${accountId}/matches?${params}`, apiKey);
+    return matches.filter(wasPlayed).map((m) => ({
       matchId: m.match_id,
-      heroId: m.hero_id,
+      heroId: m.hero_id as number,
       // player_slot < 128 means the player is on Radiant.
       won: m.player_slot < 128 === m.radiant_win,
       kills: m.kills,
@@ -123,8 +137,8 @@ export const openDota = {
   },
 
   /** Asks OpenDota to re-download the player's history from Steam (takes minutes to hours). */
-  async requestRefresh(accountId: number): Promise<void> {
-    await request('POST', `/players/${accountId}/refresh`);
+  async requestRefresh(accountId: number, apiKey: string | null = null): Promise<void> {
+    await request('POST', `/players/${accountId}/refresh`, apiKey);
   },
 
   async getHeroes(): Promise<Map<number, HeroInfo>> {
@@ -151,16 +165,42 @@ export function toHeroes(heroes: Record<string, RawHero>): Map<number, HeroInfo>
   );
 }
 
-async function get<T>(path: string): Promise<T> {
-  return (await (await request('GET', path)).json()) as T;
+async function get<T>(path: string, apiKey: string | null = null): Promise<T> {
+  return (await (await request('GET', path, apiKey)).json()) as T;
 }
 
-async function request(method: 'GET' | 'POST', path: string): Promise<Response> {
-  const response = await fetch(API + path, { method });
+async function request(
+  method: 'GET' | 'POST',
+  path: string,
+  apiKey: string | null = null,
+): Promise<Response> {
+  const response = await fetch(withKey(API + path, apiKey), { method });
+  // The key never gets into an error text: it would end up in the log and on the page.
+  if (apiKey && [400, 401, 403].includes(response.status)) {
+    const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    if (/api key/i.test(body?.error ?? '')) {
+      throw new OpenDotaKeyError(`OpenDota: ${body?.error}`);
+    }
+  }
   if (!response.ok) {
     throw new Error(`OpenDota ${response.status}: ${method} ${path.split('?')[0]}`);
   }
   return response;
+}
+
+/**
+ * A record of a game that was really played. Old histories hold broken ones — no hero (the
+ * game ended before the pick) or no winner — which cannot be saved or counted as a loss.
+ */
+export function wasPlayed(match: Pick<RawMatch, 'hero_id' | 'radiant_win'>): boolean {
+  return Boolean(match.hero_id) && typeof match.radiant_win === 'boolean';
+}
+
+/** The address with the key as the `api_key` parameter OpenDota expects. */
+export function withKey(url: string, apiKey: string | null): string {
+  return apiKey
+    ? `${url}${url.includes('?') ? '&' : '?'}api_key=${encodeURIComponent(apiKey)}`
+    : url;
 }
 
 interface RawPlayer {
@@ -169,11 +209,11 @@ interface RawPlayer {
   leaderboard_rank?: number | null;
 }
 
-interface RawMatch {
+export interface RawMatch {
   match_id: number;
   player_slot: number;
   radiant_win: boolean | null;
-  hero_id: number;
+  hero_id: number | null;
   kills: number;
   deaths: number;
   assists: number;

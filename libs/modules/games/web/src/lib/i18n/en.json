@@ -4,6 +4,7 @@
   "empty": "No accounts yet. Add Dota 2 (only a Steam ID is needed) or a WoW character.",
   "synced": "Updated",
   "syncNow": "Update",
+  "syncAll": "Refresh all",
   "minutes": "min",
   "confirmDelete": "Delete {{name}}? Saved matches and achievements will be deleted too.",
   "dota": {
@@ -113,5 +114,13 @@
     "open": "Details"
   },
   "allAccounts": "All accounts",
-  "accountsTitle": "Accounts"
+  "accountsTitle": "Accounts",
+  "opendota": {
+    "title": "Dota 2 statistics",
+    "hint": "Optional. Without a key OpenDota gives a small shared number of requests a day, and matches may come late or not at all. A key from opendota.com/api-keys lifts the limit; one key covers all your Dota accounts.",
+    "label": "API key",
+    "saved": "Key saved (encrypted on the server)",
+    "remove": "Remove the key",
+    "invalid": "OpenDota rejected the key"
+  }
 }

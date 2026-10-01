@@ -87,6 +87,14 @@ export class GameAccountsService {
     await this.syncAccount(row, { fullHistory: true });
   }
 
+  /** "Refresh all": every account of the user, Dota with its whole history. */
+  async syncAllOf(userId: string): Promise<void> {
+    const rows = await this.db.select().from(gameAccounts).where(eq(gameAccounts.userId, userId));
+    for (const row of rows) {
+      await this.syncAccount(row, { fullHistory: true });
+    }
+  }
+
   /** Background sync of all accounts; news goes to notifications. */
   async syncAll(): Promise<void> {
     for (const row of await this.db.select().from(gameAccounts)) {

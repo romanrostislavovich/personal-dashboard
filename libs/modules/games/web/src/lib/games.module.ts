@@ -23,5 +23,9 @@ export const gamesModule: WebDashboardModule = {
       id: 'games.battle-net',
       loadComponent: () => import('./battle-net.integration').then((m) => m.BattleNetIntegration),
     },
+    {
+      id: 'games.opendota',
+      loadComponent: () => import('./opendota.integration').then((m) => m.OpenDotaIntegration),
+    },
   ],
 };

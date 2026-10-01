@@ -42,11 +42,23 @@ export class GamesApi {
     return fromCore(() => this.games.sync(id));
   }
 
+  syncAll() {
+    return fromCore(() => this.games.syncAll());
+  }
+
   remove(id: string) {
     return fromCore(() => this.games.remove(id));
   }
 
   saveWowCredentials(input: WowCredentialsInput) {
     return fromCore(() => this.games.saveWowCredentials(input));
+  }
+
+  saveOpenDotaKey(apiKey: string) {
+    return fromCore(() => this.games.saveOpenDotaKey(apiKey));
+  }
+
+  removeOpenDotaKey() {
+    return fromCore(() => this.games.removeOpenDotaKey());
   }
 }

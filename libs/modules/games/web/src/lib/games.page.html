@@ -1,5 +1,9 @@
 <header class="page-header">
   <h1 class="page-title">{{ 'games.title' | transloco }}</h1>
+  <span class="spacer"></span>
+  <button matButton (click)="syncAll()" [disabled]="busy() || accounts.value().length === 0">
+    <mat-icon>sync</mat-icon> {{ 'games.syncAll' | transloco }}
+  </button>
   <button matButton="filled" (click)="add()" [disabled]="busy()">
     <mat-icon>add</mat-icon> {{ 'games.add' | transloco }}
   </button>
