@@ -35,7 +35,7 @@
     "npmHint": "Определяется сам по package.json; укажи здесь, если он другой",
     "npmPackageShort": "npm-пакет",
     "repos": "Репозитории",
-    "hiddenCount": "скрыто: {{count}}",
+    "ofTotal": "из {{count}}",
     "week": "7 дней",
     "language": "Язык",
     "repository": "Репозиторий",

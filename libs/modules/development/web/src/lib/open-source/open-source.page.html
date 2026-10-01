@@ -25,15 +25,15 @@
 }
 
 @if (repos.value().length > 0) {
-  <!-- Totals across everything that is not hidden -->
+  <!-- Totals of what the filters leave in the table -->
   <mat-card appearance="outlined" class="totals">
     <mat-card-content class="totals-grid">
       <div class="stat">
         <span class="label">{{ 'development.oss.repos' | transloco }}</span>
         <span class="value">{{ totals().repos | number }}</span>
-        @if (hiddenCount() > 0) {
+        @if (totals().repos < repos.value().length) {
           <span class="sub">
-            {{ 'development.oss.hiddenCount' | transloco: { count: hiddenCount() } }}
+            {{ 'development.oss.ofTotal' | transloco: { count: repos.value().length } }}
           </span>
         }
       </div>
@@ -95,7 +95,7 @@
         }
       </mat-select>
     </mat-form-field>
-    <!-- Which kinds are shown: forks and archived by default, hidden ones on request. -->
+    <!-- Which kinds are shown: forks, archived and hidden ones only on request. -->
     <mat-chip-listbox
       multiple
       [value]="filter().kinds"

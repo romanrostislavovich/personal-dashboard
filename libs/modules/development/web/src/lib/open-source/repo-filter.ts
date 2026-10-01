@@ -8,7 +8,7 @@ export interface RepoFilter {
   search: string;
   relation: RepoRelation | null;
   language: string | null;
-  /** Kinds that are shown; hidden repositories are off until asked for. */
+  /** Kinds that are shown; all of them are off until asked for. */
   kinds: RepoKind[];
 }
 
@@ -16,7 +16,7 @@ export const DEFAULT_REPO_FILTER: RepoFilter = {
   search: '',
   relation: null,
   language: null,
-  kinds: ['forks', 'archived'],
+  kinds: [],
 };
 
 export type RepoSortColumn =

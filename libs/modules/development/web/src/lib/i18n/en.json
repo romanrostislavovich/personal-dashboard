@@ -35,7 +35,7 @@
     "npmHint": "Read from package.json by itself; set it here if it is different",
     "npmPackageShort": "npm package",
     "repos": "Repositories",
-    "hiddenCount": "hidden: {{count}}",
+    "ofTotal": "of {{count}}",
     "week": "7 days",
     "language": "Language",
     "repository": "Repository",

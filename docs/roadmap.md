@@ -16,8 +16,8 @@
   Hetzner Cloud and DeepSeek
 - **Development:** one section with tabs —
   - **Open Source:** the public repositories of your GitHub account and its organizations appear
-    by themselves, any other is added by hand; a table with filters (source, language, forks,
-    archived, hidden), stars history, issues, PRs, releases, npm downloads (the package is read
+    by themselves, any other is added by hand; a table with filters (source, language; forks,
+    archived and hidden ones on request) and totals that follow them, stars history, issues, PRs, releases, npm downloads (the package is read
     from package.json); alerts only for the repositories you mark
   - **GitHub account:** contribution calendar by year, streaks, commits / PRs / reviews / issues,
     languages, top repositories, followers; an optional streak reminder in the morning digest

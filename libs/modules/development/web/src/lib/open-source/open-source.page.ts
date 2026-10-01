@@ -94,13 +94,9 @@ export class OpenSourcePage {
   protected readonly rows = computed(() =>
     sortRepos(filterRepos(this.repos.value(), this.filter()), this.sort()),
   );
-  protected readonly hiddenCount = computed(
-    () => this.repos.value().filter((repo) => repo.hidden).length,
-  );
-
-  /** Totals of everything not hidden, whatever the filters show. */
+  /** Totals of the rows in the table: they follow the filters. */
   protected readonly totals = computed(() => {
-    const repos = this.repos.value().filter((repo) => !repo.hidden);
+    const repos = this.rows();
     return {
       repos: repos.length,
       stars: repos.reduce((sum, r) => sum + r.stars, 0),
