@@ -110,6 +110,9 @@
 - **Command palette (Ctrl+K)** — search across modules and quick actions
 - **PWA** — install on a phone, work offline (a cheap mobile app before the real one)
 - **Customizable home page** — order and hide widgets
+- **Section visibility** — turn whole sections on or off in the settings (e.g. hide Fitness if
+  you do not use it): a hidden section disappears from the menu, the home page, the digest and
+  notifications
 - **Telegram buttons** — "Yes / No" to confirm a deletion; quick commands like `/spent 12 coffee`
 
 #### Features
