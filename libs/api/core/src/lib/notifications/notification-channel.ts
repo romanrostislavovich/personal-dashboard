@@ -1,10 +1,22 @@
 import { UserRow } from '../users/users.schema';
 
+/**
+ * A button under a notification (Telegram shows it under the message): "Done", "In an hour".
+ * `action` is `<name>:<payload>` — the name of a handler registered with
+ * `TelegramBotService.registerAction` and what to pass to it; at most 64 bytes together.
+ */
+export interface NotificationAction {
+  label: string;
+  action: string;
+}
+
 export interface Notification {
   title: string;
   body: string;
   /** Source module, for example `birthdays`. Useful for "what goes where" settings. */
   source: string;
+  /** Buttons to answer with; a channel that cannot show them just leaves them out. */
+  actions?: NotificationAction[];
 }
 
 /**

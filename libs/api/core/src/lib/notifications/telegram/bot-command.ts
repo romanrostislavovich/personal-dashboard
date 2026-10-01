@@ -26,6 +26,30 @@ export interface BotCommand {
   handler: (user: UserRow, args: string) => Promise<string>;
 }
 
+/**
+ * What a pressed button answers: a text, or a text plus a question — the user's next message
+ * then goes to `expectText` instead of the assistant ("When to remind?" → "tomorrow 9:00").
+ */
+export type BotActionReply =
+  string | { reply: string; expectText: (user: UserRow, text: string) => Promise<string> };
+
+/**
+ * A handler of buttons under the bot's messages (see NotificationAction). Example:
+ *
+ * ```ts
+ * telegram.registerAction({
+ *   name: 'rem',
+ *   handler: (user, payload) => this.reminders.answer(user, payload),
+ * });
+ * // a button: { label: 'Done', action: 'rem:done:<id>' } → handler(user, 'done:<id>')
+ * ```
+ */
+export interface BotAction {
+  /** Short, Latin letters: it is part of the 64 bytes a button carries. */
+  name: string;
+  handler: (user: UserRow, payload: string) => Promise<BotActionReply>;
+}
+
 /** A photo sent to the bot by a user who has linked Telegram. */
 export interface BotPhoto {
   caption: string;

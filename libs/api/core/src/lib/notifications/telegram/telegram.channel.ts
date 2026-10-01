@@ -13,13 +13,14 @@ export class TelegramChannel implements NotificationChannel {
     return this.bot.isAvailable && user.telegramChatId !== null;
   }
 
-  async send(user: UserRow, { title, body }: Notification): Promise<void> {
+  async send(user: UserRow, { title, body, actions }: Notification): Promise<void> {
     if (!user.telegramChatId) {
       return;
     }
     await this.bot.sendMessage(
       user.telegramChatId,
       `<b>${escapeHtml(title)}</b>\n${escapeHtml(body)}`,
+      actions,
     );
   }
 }
