@@ -6,6 +6,7 @@ import {
   WeatherForecast,
   WeatherLocation,
   WeatherLocationInput,
+  WeatherPreferences,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -45,7 +46,7 @@ export function monitoringApi(api: ApiClient) {
 // --- Weather ---
 
 export const WEATHER_READS = {
-  /** Today's forecast; `null` until a location is chosen. */
+  /** Today in detail and the week ahead; `null` until a location is chosen. */
   forecast: () => apiRequest('/api/weather'),
   places: (q: string) => apiRequest('/api/weather/places', { q }),
   /** The place at the device's location. */
@@ -61,6 +62,9 @@ export function weatherApi(api: ApiClient) {
       api.read<WeatherLocation>(WEATHER_READS.placeAt(latitude, longitude)),
     setLocation: (input: WeatherLocationInput) =>
       api.put<WeatherLocation>('/api/weather/location', input),
+    /** How the user takes the cold: the clothing advice follows it. */
+    setPreferences: (preferences: WeatherPreferences) =>
+      api.put<void>('/api/weather/preferences', preferences),
   };
 }
 

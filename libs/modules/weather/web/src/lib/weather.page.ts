@@ -1,9 +1,13 @@
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { WeatherLocation } from '@pd/contracts';
+import { THERMAL_FEELS, ThermalFeel, WeatherLocation } from '@pd/contracts';
 import { ClothingAdviceComponent } from './clothing-advice.component';
 import { LocationPickerComponent } from './location-picker.component';
 import { WeatherApi } from './weather.api';
@@ -14,9 +18,13 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
   selector: 'pd-weather-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DatePipe,
     MatButtonModule,
     MatCardModule,
+    MatFormFieldModule,
     MatIconModule,
+    MatSelectModule,
+    MatTooltipModule,
     TranslocoPipe,
     ClothingAdviceComponent,
     LocationPickerComponent,
@@ -60,6 +68,20 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
           </mat-card-header>
           <mat-card-content>
             <pd-clothing-advice [advice]="weather.clothing" />
+            <!-- The advice is for an average person until the user says how they take the cold. -->
+            <mat-form-field subscriptSizing="dynamic" class="thermal">
+              <mat-label>{{ 'weather.thermal.label' | transloco }}</mat-label>
+              <mat-select
+                [value]="weather.thermalFeel"
+                (selectionChange)="setThermalFeel($event.value)"
+              >
+                @for (feel of thermalFeels; track feel) {
+                  <mat-option [value]="feel">{{
+                    'weather.thermal.' + feel | transloco
+                  }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
           </mat-card-content>
         </mat-card>
       </div>
@@ -100,6 +122,36 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
             </span>
             <span class="value">{{ hour.temperature }}°</span>
             <span class="rain">💧 {{ hour.precipitationProbability }}%</span>
+          </div>
+        }
+      </div>
+
+      <h2 class="section-title week-title">{{ 'weather.week' | transloco }}</h2>
+      <div class="week">
+        @for (d of weather.days; track d.date) {
+          <div class="day" [class.today]="d.date === weather.today.date">
+            <span class="weekday">
+              {{
+                d.date === weather.today.date
+                  ? ('weather.today' | transloco)
+                  : (d.date | date: 'EEE, d MMM')
+              }}
+            </span>
+            <span class="icon" [matTooltip]="'weather.condition.' + d.condition | transloco">
+              {{ emoji(d.condition, true) }}
+            </span>
+            <span class="value"
+              >{{ d.max }}° <span class="low">{{ d.min }}°</span></span
+            >
+            <span class="rain">
+              💧 {{ d.precipitationProbability }}%
+              @if (d.precipitation > 0) {
+                · {{ d.precipitation }} {{ 'weather.mm' | transloco }}
+              }
+            </span>
+            <span class="wear" [matTooltip]="'weather.outfit.' + d.clothing.outfit | transloco">
+              👕 {{ 'weather.outfitShort.' + d.clothing.outfit | transloco }}
+            </span>
           </div>
         }
       </div>
@@ -202,6 +254,45 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
       font-size: 0.75rem;
       color: var(--mat-sys-on-surface-variant);
     }
+    .thermal {
+      width: min(100%, 320px);
+      margin-top: 16px;
+    }
+    .week-title {
+      margin-top: 24px;
+    }
+    .week {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+    }
+    .day {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      border: 1px solid var(--pd-border);
+      border-radius: var(--pd-radius-small);
+      background: var(--pd-card);
+    }
+    .day.today {
+      border-color: var(--mat-sys-primary);
+    }
+    .weekday {
+      font-size: 0.8rem;
+      color: var(--mat-sys-on-surface-variant);
+      text-transform: capitalize;
+    }
+    .day .icon {
+      font-size: 1.6rem;
+    }
+    .low {
+      font-weight: 400;
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .wear {
+      font-size: 0.8rem;
+    }
   `,
 })
 export class WeatherPage {
@@ -210,6 +301,7 @@ export class WeatherPage {
   protected readonly forecast = this.api.forecast();
   protected readonly emoji = conditionEmoji;
   protected readonly day = isDaytime;
+  protected readonly thermalFeels = THERMAL_FEELS;
   protected readonly locating = signal(false);
   protected readonly locateFailed = signal(false);
 
@@ -225,6 +317,11 @@ export class WeatherPage {
   protected setLocation(location: WeatherLocation): void {
     this.locateFailed.set(false);
     this.api.setLocation(location).subscribe(() => this.forecast.reload());
+  }
+
+  /** The advice of every day is recomputed for the new scale. */
+  protected setThermalFeel(thermalFeel: ThermalFeel): void {
+    this.api.setPreferences({ thermalFeel }).subscribe(() => this.forecast.reload());
   }
 
   protected async useMyLocation(): Promise<void> {

@@ -1,4 +1,11 @@
-import { ClothingAdvice, ClothingExtra, Outfit, WeatherCondition } from '@pd/contracts';
+import {
+  ClothingAdvice,
+  ClothingExtra,
+  Outfit,
+  THERMAL_STEP_DEGREES,
+  ThermalFeel,
+  WeatherCondition,
+} from '@pd/contracts';
 import { isSnow } from './weather-code';
 
 /** The weather during the hours you are likely to be outside. */
@@ -38,8 +45,19 @@ const LIKELY_RAIN_PERCENT = 50;
 const SOME_RAIN_MM = 1;
 const HEAVY_RAIN_MM = 5;
 
-export function clothingAdvice(weather: DaytimeWeather): ClothingAdvice {
-  const { apparentMin, apparentMax, windSpeedMax, uvIndexMax } = weather;
+/**
+ * `thermalFeel` is the user's own scale: someone who is always warm (+2) dresses as if it were
+ * 6° warmer outside, someone who freezes (−2) as if it were 6° colder. It moves everything that
+ * depends on the temperature; rain and sun are the same for everyone.
+ */
+export function clothingAdvice(
+  weather: DaytimeWeather,
+  thermalFeel: ThermalFeel = 0,
+): ClothingAdvice {
+  const { windSpeedMax, uvIndexMax } = weather;
+  const shift = thermalFeel * THERMAL_STEP_DEGREES;
+  const apparentMin = weather.apparentMin + shift;
+  const apparentMax = weather.apparentMax + shift;
   const outfit = OUTFIT_BELOW.find(([below]) => apparentMin < below)?.[1] ?? 'hot';
   const extras = new Set<ClothingExtra>();
 

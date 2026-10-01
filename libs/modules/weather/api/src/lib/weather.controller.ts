@@ -5,6 +5,8 @@ import {
   weatherCoordinatesQuerySchema,
   WeatherLocationInput,
   weatherLocationSchema,
+  WeatherPreferences,
+  weatherPreferencesSchema,
   WeatherSearchQuery,
   weatherSearchQuerySchema,
 } from '@pd/contracts';
@@ -14,7 +16,7 @@ import { WeatherService } from './weather.service';
 export class WeatherController {
   constructor(private readonly weather: WeatherService) {}
 
-  /** Today's forecast, `null` until a location is chosen. */
+  /** Today in detail and the week ahead; `null` until a location is chosen. */
   @Get()
   forecast(@CurrentUser() user: AuthUser) {
     return this.weather.forecast(user.id);
@@ -37,6 +39,16 @@ export class WeatherController {
   @HttpCode(204)
   clearLocation(@CurrentUser() user: AuthUser) {
     return this.weather.clearLocation(user.id);
+  }
+
+  /** How the user takes the cold: the clothing advice follows it. */
+  @Put('preferences')
+  @HttpCode(204)
+  setPreferences(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(weatherPreferencesSchema)) preferences: WeatherPreferences,
+  ) {
+    return this.weather.setThermalFeel(user.id, preferences.thermalFeel);
   }
 
   /** Names the browser's location; the client then saves it as usual. */

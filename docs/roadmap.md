@@ -31,12 +31,14 @@
 - **Games:** Dota 2 (full match history of every mode, via OpenDota) and World of Warcraft (Battle.net);
   several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO;
   refreshed every half an hour and with the "Refresh all" button, an optional OpenDota API key
-- **Weather:** today's forecast for your city (Open-Meteo, no API key) with clothing advice —
+- **Weather:** today's forecast and the week ahead for your city (Open-Meteo, no API key) with
+  clothing advice that follows how you take the cold —
   on its page, on the home page and in the morning digest; the city comes from the browser's
   location until you pick another
 - **Achievements:** 110+ achievements across all modules, rarities, XP and player level
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
-  `/ask` in Telegram, morning digest (the weather and only what changed since the previous one),
+  `/ask` in Telegram, morning digest at the time you choose (the weather and only what changed since the previous
+  one),
   weekly diary summary; several saved connections with their keys — switch the active one in one
   click (chat header, settings, `/model` in Telegram)
 - **Telegram assistant:** free-form messages go to the AI, which can add, edit and delete almost

@@ -33,7 +33,10 @@ type Series<Keys extends readonly string[]> = { time: string[] } & {
   [Key in Keys[number]]: (number | null)[];
 };
 
-/** Open-Meteo forecast for today; times are local to the place (`timezone=auto`). */
+/** Days of the forecast, starting with today. */
+const FORECAST_DAYS = 7;
+
+/** Open-Meteo forecast for a week; times are local to the place (`timezone=auto`). */
 export interface RawForecast {
   current: {
     temperature_2m: number;
@@ -64,7 +67,7 @@ export class OpenMeteoClient {
       latitude: String(latitude),
       longitude: String(longitude),
       timezone: 'auto',
-      forecast_days: '1',
+      forecast_days: String(FORECAST_DAYS),
       current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day',
       hourly: HOURLY.join(','),
       daily: DAILY.join(','),

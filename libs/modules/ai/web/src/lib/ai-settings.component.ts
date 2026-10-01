@@ -92,6 +92,16 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
           >
             {{ 'ai.settings.morningDigest' | transloco }}
           </mat-slide-toggle>
+          <mat-form-field subscriptSizing="dynamic" class="digest-time">
+            <mat-label>{{ 'ai.settings.morningDigestTime' | transloco }}</mat-label>
+            <input
+              matInput
+              type="time"
+              [value]="settings().morningDigestTime"
+              [disabled]="!settings().morningDigest"
+              (change)="saveDigestTime($any($event.target).value)"
+            />
+          </mat-form-field>
           @if (digestOptions().length) {
             <div class="digest-options">
               @for (option of digestOptions(); track option) {
@@ -271,6 +281,11 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
       display: block;
       margin-top: 20px;
     }
+    .digest-time {
+      display: block;
+      width: 180px;
+      margin: 12px 0 0 44px;
+    }
     .digest-options {
       display: flex;
       flex-direction: column;
@@ -360,6 +375,13 @@ export class AiSettingsComponent {
 
   async setMorningDigest(morningDigest: boolean): Promise<void> {
     await this.savePreferences({ morningDigest });
+  }
+
+  /** An emptied field keeps the saved time. */
+  async saveDigestTime(time: string): Promise<void> {
+    if (time) {
+      await this.savePreferences({ morningDigestTime: time });
+    }
   }
 
   async saveSpeechModel(model: string): Promise<void> {

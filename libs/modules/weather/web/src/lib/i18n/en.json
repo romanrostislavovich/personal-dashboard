@@ -13,6 +13,8 @@
   "uv": "UV index",
   "sun": "Sunrise and sunset",
   "hourly": "By the hour",
+  "week": "The week ahead",
+  "today": "Today",
   "mm": "mm",
   "kmh": "km/h",
   "widget": {
@@ -42,6 +44,16 @@
     "summer": "A T-shirt with light trousers or jeans",
     "hot": "Shorts, a T-shirt and light breathable clothes"
   },
+  "outfitShort": {
+    "heavy-winter": "Warmest down jacket",
+    "winter": "Winter jacket",
+    "warm": "Warm coat",
+    "jacket": "Jacket and sweater",
+    "light-jacket": "Light jacket",
+    "long-sleeve": "Long sleeve",
+    "summer": "T-shirt",
+    "hot": "Shorts and T-shirt"
+  },
   "extra": {
     "layers": "Dress in layers — it gets much warmer during the day",
     "umbrella": "Umbrella",
@@ -54,5 +66,13 @@
     "sunglasses": "Sunglasses",
     "sunscreen": "Sunscreen",
     "cap": "A cap or sun hat"
+  },
+  "thermal": {
+    "label": "How I take the cold",
+    "-2": "I freeze a lot — dress me warmer",
+    "-1": "I get cold easily",
+    "0": "Like most people",
+    "1": "I am usually warm",
+    "2": "I am always hot — dress me lighter"
   }
 }

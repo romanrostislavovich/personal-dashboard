@@ -53,3 +53,33 @@ describe('clothingAdvice', () => {
     expect(extras).toEqual(['sunglasses', 'sunscreen', 'cap']);
   });
 });
+
+describe("clothingAdvice with the user's own scale", () => {
+  const cool = { ...mild, apparentMin: 8, apparentMax: 12 };
+
+  it('dresses someone who is always warm two outfits lighter', () => {
+    expect(clothingAdvice(cool).outfit).toBe('jacket');
+    // 8° feels like 14° to them: a light jacket instead of a jacket over a sweater.
+    expect(clothingAdvice(cool, 2).outfit).toBe('light-jacket');
+    expect(clothingAdvice({ ...cool, apparentMin: 11 }, 2).outfit).toBe('long-sleeve');
+  });
+
+  it('dresses someone who freezes warmer and adds the hat earlier', () => {
+    const advice = clothingAdvice(cool, -2);
+    expect(advice.outfit).toBe('warm');
+    expect(advice.extras).toContain('hat');
+  });
+
+  it('leaves rain and sun to the weather', () => {
+    const wetAndSunny = {
+      ...mild,
+      precipitationProbability: 80,
+      uvIndexMax: 7,
+      conditions: ['rain' as const],
+    };
+    for (const feel of [-2, 0, 2] as const) {
+      const { extras } = clothingAdvice(wetAndSunny, feel);
+      expect(extras).toEqual(expect.arrayContaining(['umbrella', 'sunglasses', 'sunscreen']));
+    }
+  });
+});

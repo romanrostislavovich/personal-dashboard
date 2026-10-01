@@ -5,12 +5,15 @@ import {
   AiPreferences,
   AiProvider,
   AiSettings,
+  DEFAULT_DIGEST_TIME,
   DEFAULT_SPEECH_MODEL,
+  LocalDate,
 } from '@pd/contracts';
 import { and, asc, eq } from 'drizzle-orm';
 import { DB, Database } from '../database/database.module';
 import { SecretsService } from '../secrets/secrets.service';
 import { AiConnectionRow, aiConnections, aiSettings } from './ai.schema';
+import { isDigestDue } from './digest-schedule';
 import {
   AiRequestError,
   ChatConnection,
@@ -43,6 +46,7 @@ export class AiConnectionsService {
       activeConnectionId: activeRow(rows, settings?.activeConnectionId)?.id ?? null,
       connections,
       morningDigest: settings?.morningDigest ?? false,
+      morningDigestTime: settings?.morningDigestTime ?? DEFAULT_DIGEST_TIME,
       speechConnectionId: settings?.speechConnectionId ?? null,
       speechModel: settings?.speechModel ?? DEFAULT_SPEECH_MODEL,
       disabledModules: settings?.disabledModules ?? [],
@@ -160,12 +164,25 @@ export class AiConnectionsService {
     return toChatConnection(row, apiKey);
   }
 
-  async usersWithMorningDigest(): Promise<string[]> {
+  /** Users whose morning digest is due: it is on, their time has come, today's is not handled. */
+  async usersWithDigestDue(today: LocalDate, now: string): Promise<string[]> {
     const rows = await this.db
-      .select({ userId: aiSettings.userId })
+      .select({
+        userId: aiSettings.userId,
+        time: aiSettings.morningDigestTime,
+        lastDay: aiSettings.morningDigestDay,
+      })
       .from(aiSettings)
       .where(eq(aiSettings.morningDigest, true));
-    return rows.map((row) => row.userId);
+    return rows.filter((row) => isDigestDue(row, today, now)).map((row) => row.userId);
+  }
+
+  /** Today's digest of the user is handled: the next one goes out tomorrow. */
+  async markDigestDay(userId: string, day: LocalDate): Promise<void> {
+    await this.db
+      .update(aiSettings)
+      .set({ morningDigestDay: day })
+      .where(eq(aiSettings.userId, userId));
   }
 
   private rows(userId: string): Promise<AiConnectionRow[]> {

@@ -43,7 +43,8 @@
     "apiKey": "API key",
     "apiKeySaved": "saved — leave empty to keep it",
     "apiKeyHint": "Stored encrypted on the server. Not needed for Ollama.",
-    "morningDigest": "Morning digest at 08:30: the weather and what changed since yesterday (stars, websites, birthdays, payments, game records, music)",
+    "morningDigest": "Morning digest: the weather and what changed since yesterday (stars, websites, birthdays, payments, game records, music)",
+    "morningDigestTime": "Send at",
     "save": "Save and verify",
     "connectionFailed": "Could not connect: check the URL, model and key"
   },

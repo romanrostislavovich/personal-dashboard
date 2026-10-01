@@ -8,6 +8,7 @@ import { SchedulerService } from '../scheduler/scheduler.service';
 import { UsersService } from '../users/users.service';
 import { AiConnectionsService } from './ai-connections.service';
 import { AiService } from './ai.service';
+import { clockIn } from './digest-schedule';
 import { MorningDigestService } from './morning-digest.service';
 
 /** Telegram limits a message to 4096 characters. */
@@ -25,8 +26,11 @@ const MORNING_DIGEST_INSTRUCTION = [
 ].join(' ');
 
 /**
- * The morning digest at 08:30 for users who enabled it in the AI settings: the weather and
- * what changed since the previous digest (sections come from modules, see DigestSection).
+ * The morning digest for users who enabled it in the AI settings, at the time each of them
+ * chose: the weather and what changed since the previous digest (sections come from modules,
+ * see DigestSection). The job looks every few minutes whose time has come.
+ *
+ * The ids of the job and of its schedule stay as they were when it ran once a day.
  */
 @Injectable()
 export class MorningDigestJob implements OnModuleInit {
@@ -45,13 +49,17 @@ export class MorningDigestJob implements OnModuleInit {
   onModuleInit(): void {
     this.scheduler.register({
       name: 'ai.morning-digest',
-      cron: '30 8 * * *',
+      cron: '*/5 * * * *',
       handler: () => this.sendAll(),
     });
   }
 
   private async sendAll(): Promise<void> {
-    for (const userId of await this.connections.usersWithMorningDigest()) {
+    const timeZone = this.config.get('APP_TIMEZONE', { infer: true });
+    const today = toLocalDate(todayIn(timeZone));
+    for (const userId of await this.connections.usersWithDigestDue(today, clockIn(timeZone))) {
+      // Marked before sending: a failing provider gets one attempt a day, not one every run.
+      await this.connections.markDigestDay(userId, today);
       // One user's failing provider (no balance, a bad key) must not cancel everyone else's digest.
       await this.send(userId).catch((error) =>
         this.logger.warn(`Morning digest failed for ${userId}: ${error}`),

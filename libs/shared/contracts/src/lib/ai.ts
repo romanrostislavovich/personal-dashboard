@@ -37,13 +37,21 @@ export interface AiConnection {
   hasApiKey: boolean;
 }
 
+/** When the morning digest is sent until the user picks another time. */
+export const DEFAULT_DIGEST_TIME = '08:30';
+
 /** A speech-to-text model of OpenAI; any model of the chosen connection works. */
 export const DEFAULT_SPEECH_MODEL = 'gpt-4o-mini-transcribe';
 
 /** `PUT /api/ai/preferences`: only the fields sent are changed. */
 export const aiPreferencesSchema = z.object({
-  /** Morning digest at 08:30 via notifications. */
+  /** The morning digest via notifications. */
   morningDigest: z.boolean().optional(),
+  /** When to send it, `HH:mm` on the server's clock (APP_TIMEZONE). */
+  morningDigestTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:mm')
+    .optional(),
   /**
    * Which saved connection turns Telegram voice messages into text (its `/audio/transcriptions`).
    * `null` — the first OpenAI connection.
@@ -62,6 +70,8 @@ export type AiPreferences = z.infer<typeof aiPreferencesSchema>;
 
 export interface AiSettings {
   morningDigest: boolean;
+  /** `HH:mm` */
+  morningDigestTime: string;
   speechConnectionId: string | null;
   speechModel: string;
   disabledModules: string[];

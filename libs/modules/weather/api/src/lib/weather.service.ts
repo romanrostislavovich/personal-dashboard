@@ -1,17 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DB, Database, UsersService } from '@pd/api-core';
-import { WeatherForecast, WeatherLocation, WeatherLocationInput } from '@pd/contracts';
+import { ThermalFeel, WeatherForecast, WeatherLocation, WeatherLocationInput } from '@pd/contracts';
 import { eq } from 'drizzle-orm';
 import { toForecast } from './forecast';
 import { NominatimClient } from './nominatim.client';
 import { OpenMeteoClient, RawForecast } from './open-meteo.client';
-import { weatherLocations } from './weather.schema';
+import { weatherLocations, weatherSettings } from './weather.schema';
 
 /** Forecasts update hourly; a page, a widget and the digest opened together share one request. */
 const CACHE_MS = 15 * 60 * 1000;
 
 /**
- * The user's location and today's forecast for it. Only reads from Open-Meteo and writes nothing,
+ * The user's location and the forecast for it: today in detail and the week ahead. Only reads from Open-Meteo and writes nothing,
  * so a sync client calls it directly instead of going through the server.
  */
 @Injectable()
@@ -59,10 +59,29 @@ export class WeatherService {
     await this.db.delete(weatherLocations).where(eq(weatherLocations.userId, userId));
   }
 
-  /** Today's forecast for the user's location; `null` until they choose one. */
+  /** The forecast for the user's location; `null` until they choose one. */
   async forecast(userId: string): Promise<WeatherForecast | null> {
     const location = await this.location(userId);
-    return location ? toForecast(await this.rawForecast(location), location) : null;
+    if (!location) {
+      return null;
+    }
+    return toForecast(await this.rawForecast(location), location, await this.thermalFeel(userId));
+  }
+
+  /** How the user takes the cold; "as most people" until they say otherwise. */
+  async thermalFeel(userId: string): Promise<ThermalFeel> {
+    const [row] = await this.db
+      .select()
+      .from(weatherSettings)
+      .where(eq(weatherSettings.userId, userId));
+    return row?.thermalFeel ?? 0;
+  }
+
+  async setThermalFeel(userId: string, thermalFeel: ThermalFeel): Promise<void> {
+    await this.db
+      .insert(weatherSettings)
+      .values({ userId, thermalFeel })
+      .onConflictDoUpdate({ target: weatherSettings.userId, set: { thermalFeel } });
   }
 
   /** Places by name, in the user's language. */

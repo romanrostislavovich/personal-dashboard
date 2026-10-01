@@ -22,6 +22,25 @@ export const weatherCoordinatesQuerySchema = z.object({
 });
 export type WeatherCoordinatesQuery = z.infer<typeof weatherCoordinatesQuerySchema>;
 
+/**
+ * How the user takes the cold, from "I freeze" (−2) to "I am always warm" (+2). The clothing
+ * advice treats every step as `THERMAL_STEP_DEGREES` of extra warmth outside.
+ */
+export const THERMAL_FEELS = [-2, -1, 0, 1, 2] as const;
+export type ThermalFeel = (typeof THERMAL_FEELS)[number];
+export const THERMAL_STEP_DEGREES = 3;
+
+/** `PUT /api/weather/preferences` */
+export const weatherPreferencesSchema = z.object({
+  thermalFeel: z
+    .number()
+    .int()
+    .min(-2)
+    .max(2)
+    .transform((value) => value as ThermalFeel),
+});
+export type WeatherPreferences = z.output<typeof weatherPreferencesSchema>;
+
 export interface WeatherLocation {
   name: string;
   region: string | null;
@@ -79,6 +98,18 @@ export interface ClothingAdvice {
   extras: ClothingExtra[];
 }
 
+/** A day of the week ahead (the first one is today). */
+export interface WeatherDay {
+  date: LocalDate;
+  condition: WeatherCondition;
+  min: number;
+  max: number;
+  precipitationProbability: number;
+  precipitation: number;
+  windSpeedMax: number;
+  clothing: ClothingAdvice;
+}
+
 /** Units: °C, km/h, mm, %. Times are local to the location, `HH:mm`. */
 export interface WeatherForecast {
   location: WeatherLocation;
@@ -113,4 +144,8 @@ export interface WeatherForecast {
   }[];
   /** What to wear during the day (see clothing advice on the backend). */
   clothing: ClothingAdvice;
+  /** Seven days starting with today. */
+  days: WeatherDay[];
+  /** The user's setting the clothing advice was made with. */
+  thermalFeel: ThermalFeel;
 }

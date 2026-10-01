@@ -18,7 +18,11 @@ export class WeatherDigest implements OnModuleInit {
       description:
         "Today's weather (°C, km/h, mm, %) and clothing advice: `outfit` by the coldest " +
         'feels-like temperature of the day and `extras` to take (umbrella, gloves, sunscreen…).',
-      collect: (userId) => this.weather.forecast(userId),
+      // The digest is about today: the week ahead would only change the facts every morning.
+      collect: async (userId) => {
+        const forecast = await this.weather.forecast(userId);
+        return forecast && { ...forecast, days: undefined };
+      },
     });
   }
 }

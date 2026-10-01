@@ -1,7 +1,12 @@
 import { httpResource } from '@angular/common/http';
 import { inject, Injectable, Signal } from '@angular/core';
 import { WEATHER_READS, weatherApi } from '@pd/client-core';
-import { WeatherForecast, WeatherLocation, WeatherLocationInput } from '@pd/contracts';
+import {
+  WeatherForecast,
+  WeatherLocation,
+  WeatherLocationInput,
+  WeatherPreferences,
+} from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
 /** The weather requests of the client core (`@pd/client-core`) for Angular. */
@@ -34,5 +39,10 @@ export class WeatherApi {
 
   setLocation(input: WeatherLocationInput) {
     return fromCore(() => this.weather.setLocation(input));
+  }
+
+  /** How the user takes the cold: the clothing advice follows it. */
+  setPreferences(preferences: WeatherPreferences) {
+    return fromCore(() => this.weather.setPreferences(preferences));
   }
 }

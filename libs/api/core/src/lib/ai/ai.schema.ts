@@ -1,6 +1,7 @@
-import { AiAttachment, DEFAULT_SPEECH_MODEL } from '@pd/contracts';
+import { AiAttachment, DEFAULT_DIGEST_TIME, DEFAULT_SPEECH_MODEL } from '@pd/contracts';
 import {
   boolean,
+  date,
   index,
   jsonb,
   pgTable,
@@ -35,6 +36,10 @@ export const aiSettings = pgTable('ai_settings', {
   // Deleting the active connection leaves none active; the service then picks another.
   activeConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
   morningDigest: boolean().notNull().default(false),
+  /** When the user wants it, `HH:mm` in APP_TIMEZONE. */
+  morningDigestTime: text().notNull().default(DEFAULT_DIGEST_TIME),
+  /** The last day the digest was handled — so it goes out once a day (see isDigestDue). */
+  morningDigestDay: date({ mode: 'string' }),
   // null — the first OpenAI connection transcribes voice messages.
   speechConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
   speechModel: text().notNull().default(DEFAULT_SPEECH_MODEL),
