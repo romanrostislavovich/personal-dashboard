@@ -80,6 +80,22 @@
 - **Science** — a section for science
 - **Psychology** — a section for psychology; how exactly to tie it in is still open (for example
   mood and diary patterns, self-reflection prompts, tests and notes)
+- **Calendar** — Google Calendar / CalDAV: today's meetings in the morning digest, linked to the
+  time tracker and tasks
+- **People (personal CRM)** — grows out of Birthdays: notes about people, when you last talked,
+  reminders like "you have not written to X for a long time"
+- **Health** — your own medical record: blood type, allergies, chronic conditions, vaccinations,
+  operations, doctors and their contacts; medications and when to take them, doctor visits, lab
+  results with charts (a PDF of the results is parsed by the AI, like a bank statement is today)
+- **Documents and deadlines** — passport, insurance, car inspection, warranties, domain renewals,
+  with reminders well in advance (domains can live in Monitoring)
+- **Investments and net worth** — stocks, crypto, deposits; net worth over time on top of the
+  Finance wallets
+- **Bookmarks / read later** — links sent to Telegram are saved, the AI writes a short summary,
+  full-text search
+- **Travel** — a map of countries and cities, trips with their costs from Finance; pairs with the
+  location tracker of the mobile app
+- **Learning** — courses, languages (Duolingo), flashcards with spaced repetition
 
 - **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
   (bank notifications / SMS → transactions), then everything else the phone knows:
@@ -127,7 +143,22 @@
 #### Features
 
 - **Finance:** budgets per category with warnings; a photo of a receipt in Telegram becomes a
-  transaction
+  transaction; a reminder before a free trial ends and when a subscription gets more expensive
+- **Life timeline** — one feed of a day across all modules: diary entry, spending, what was
+  playing, matches, weather, steps; open any day and see how it went
+- **Year in review / monthly "Wrapped"** — top artists, money spent, number of entries, the best
+  month by mood, achievements; the text is written by the AI, shown as a nice page
+- **Yearly goals** — goals whose progress is counted from the modules: "read 20 books", "run
+  500 km", "save X", "100 diary days in a row"
+- **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
+  Cursor can read and change your data directly, without its own chat
+- **Automations "if X, then Y"** — rules across modules: "a site is down → a task in the TODO
+  list", "over budget → a reminder", "no diary entry by 22:00 → a message in Telegram"; plus
+  webhooks and a public API with tokens
+- **Evening check-in in Telegram** — the bot asks "how was your day?", the answer goes to mood and
+  the diary
+- **Games:** Steam, PlayStation and Xbox — playtime and platform achievements
+- **Music and media:** podcasts and YouTube history
 - **Export of all data** — the diary as Markdown (Obsidian-compatible), finance as CSV,
   everything as JSON
 - **Habits** — a habit tracker module, in the digest too
