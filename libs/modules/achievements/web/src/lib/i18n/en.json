@@ -19,6 +19,6 @@
     "epic": "Epic",
     "legendary": "Legendary"
   },
-  "recount": "Count the section again",
-  "recountConfirm": "Count the achievements of “{{section}}” again? The ones whose condition is not met today are taken back (they stay in the trash for 30 days)."
+  "recount": "Recount",
+  "recountConfirm": "Count all achievements again? The ones whose condition is not met today are taken back (they stay in the trash for 30 days)."
 }

@@ -10,7 +10,6 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Achievement, ACHIEVEMENT_RARITIES, AchievementRarity } from '@pd/contracts';
 import { LevelCardComponent, RealtimeClient } from '@pd/web-core';
@@ -29,7 +28,6 @@ const RECENT_COUNT = 4;
     MatButtonModule,
     MatButtonToggleModule,
     MatIconModule,
-    MatTooltipModule,
     TranslocoPipe,
     AchievementCardComponent,
     LevelCardComponent,
@@ -52,6 +50,10 @@ const RECENT_COUNT = 4;
           {{ 'achievements.filter.locked' | transloco }}
         </mat-button-toggle>
       </mat-button-toggle-group>
+      <!-- After the rules of achievements change: take back what is not earned today. -->
+      <button matButton [disabled]="recounting()" (click)="recount()">
+        <mat-icon>restart_alt</mat-icon> {{ 'achievements.recount' | transloco }}
+      </button>
     </header>
 
     <div class="overview">
@@ -91,17 +93,6 @@ const RECENT_COUNT = 4;
         <h2 class="group-title">
           {{ group.module + '.title' | transloco }}
           <span class="group-count">{{ group.unlocked }} / {{ group.total }}</span>
-          <!-- After a section's rules change: take back what is not earned today. -->
-          <button
-            matIconButton
-            class="recount"
-            [disabled]="recounting() !== null"
-            [matTooltip]="'achievements.recount' | transloco"
-            [attr.aria-label]="'achievements.recount' | transloco"
-            (click)="recount(group.module)"
-          >
-            <mat-icon>restart_alt</mat-icon>
-          </button>
         </h2>
         <div class="grid">
           @for (achievement of group.items; track achievement.id) {
@@ -114,6 +105,10 @@ const RECENT_COUNT = 4;
     }
   `,
   styles: `
+    /* The filter and the recount button stay together on the right. */
+    .page-header .page-title {
+      margin-right: auto;
+    }
     .overview {
       display: grid;
       grid-template-columns: minmax(300px, 1.6fr) repeat(4, minmax(0, 1fr));
@@ -186,11 +181,6 @@ const RECENT_COUNT = 4;
       font: 700 1.1rem / 1.3 var(--pd-font-heading);
       margin: 0 0 12px;
     }
-    .recount {
-      align-self: center;
-      margin-left: auto;
-      color: var(--mat-sys-on-surface-variant);
-    }
     .group-count {
       font: 600 0.8rem / 1 var(--pd-font);
       color: var(--mat-sys-on-surface-variant);
@@ -207,8 +197,7 @@ export class AchievementsPage {
   private readonly transloco = inject(TranslocoService);
   private readonly achievements = this.api.list();
 
-  /** The section being counted again. */
-  protected readonly recounting = signal<string | null>(null);
+  protected readonly recounting = signal(false);
 
   protected readonly filter = signal<Filter>('all');
   protected readonly rarity = signal<AchievementRarity | null>(null);
@@ -263,17 +252,16 @@ export class AchievementsPage {
     });
   }
 
-  protected async recount(module: string): Promise<void> {
-    const section = this.transloco.translate(`${module}.title`);
-    if (!confirm(this.transloco.translate('achievements.recountConfirm', { section }))) {
+  protected async recount(): Promise<void> {
+    if (!confirm(this.transloco.translate('achievements.recountConfirm'))) {
       return;
     }
-    this.recounting.set(module);
+    this.recounting.set(true);
     try {
-      await firstValueFrom(this.api.recount(module));
+      await firstValueFrom(this.api.recount());
     } finally {
       this.achievements.reload();
-      this.recounting.set(null);
+      this.recounting.set(false);
     }
   }
 

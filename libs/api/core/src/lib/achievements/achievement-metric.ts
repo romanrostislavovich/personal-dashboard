@@ -29,7 +29,7 @@ export interface AchievementTier {
  *
  * An unlocked achievement never disappears, even if the metric value later drops
  * (for example, repository stars), so a metric may also be a current value. The exception is
- * the user counting a section again after its rules changed (`AchievementsService.recount`).
+ * the user counting the achievements again after the rules changed (`AchievementsService.recount`).
  */
 export interface AchievementMetric {
   /** Unique id prefixed with the module id. */

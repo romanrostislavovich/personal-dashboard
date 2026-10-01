@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 export const ACHIEVEMENT_RARITIES = ['common', 'rare', 'epic', 'legendary'] as const;
 export type AchievementRarity = (typeof ACHIEVEMENT_RARITIES)[number];
 
@@ -49,9 +47,3 @@ export function levelFromXp(xp: number): LevelProgress {
   }
   return { level, xpInLevel: rest, xpForNext: 100 * level };
 }
-
-/** `POST /api/achievements/recount`: the section (module id) to count again. */
-export const achievementsRecountSchema = z.object({
-  module: z.string().trim().min(1).max(50),
-});
-export type AchievementsRecount = z.infer<typeof achievementsRecountSchema>;

@@ -68,7 +68,7 @@ describe('AchievementsService', () => {
     expect(notifications.send).not.toHaveBeenCalled();
   });
 
-  it('takes back achievements a recounted section no longer reaches', async () => {
+  it('takes back achievements that are no longer reached when counted again', async () => {
     const { service, db } = setup('server');
     service.register({
       id: 'test.repos',
@@ -77,14 +77,16 @@ describe('AchievementsService', () => {
       tiers: [{ goal: 5, icon: '📦', title: { en: 'Five' }, description: { en: '5 repos' } }],
     });
     service.register({
-      id: 'other.plays',
+      id: 'other.broken',
       module: 'other',
-      measure: async () => 0,
+      measure: async () => {
+        throw new Error('the outside service is down');
+      },
       tiers: [{ goal: 5, icon: '🎵', title: { en: 'Five' }, description: { en: '5 plays' } }],
     });
-    await service.recount('user', 'test');
-    // Only the section asked for: `test.repos` is below its goal, `test.plays` (25) is not,
-    // and the other module is not touched although its value is below the goal too.
+    await service.recount('user');
+    // One delete for `test.repos` (3 of 5); `test.plays` (25 of 10) stays, and a metric that
+    // could not be measured is left alone.
     expect(db.delete).toHaveBeenCalledTimes(1);
   });
 

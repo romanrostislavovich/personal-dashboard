@@ -13,8 +13,8 @@ export class AchievementsApi {
     return httpResource<Achievement[]>(() => CORE_READS.achievements(), { defaultValue: [] });
   }
 
-  /** Counts a section again; what is not earned today is taken back. */
-  recount(module: string) {
-    return fromCore(() => this.achievements.recount(module));
+  /** Counts all achievements again; what is not earned today is taken back. */
+  recount() {
+    return fromCore(() => this.achievements.recount());
   }
 }

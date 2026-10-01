@@ -75,9 +75,7 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
   }
 
   onModuleInit(): void {
-    this.actions.register(RECOUNT_ACTION, (userId, args) =>
-      this.recount(userId, String(args['module'])),
-    );
+    this.actions.register(RECOUNT_ACTION, (userId) => this.recount(userId));
     this.scheduler.register({
       name: 'achievements.evaluate',
       cron: '40 * * * *',
@@ -184,15 +182,15 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
   }
 
   /**
-   * Counts a section again after its rules changed: achievements of the module whose goal is
-   * above today's value are taken back (they land in the trash), then the achievements that
-   * count achievements follow. An ordinary check never does this — an achievement stays even
-   * when the value drops; this runs only when the user asks for it.
+   * Counts every achievement again after the rules changed: the ones whose goal is above today's
+   * value are taken back (they land in the trash), the achievements that count achievements
+   * after the rest. An ordinary check never does this — an achievement stays even when the
+   * value drops; this runs only when the user asks for it.
    */
-  async recount(userId: string, module: string): Promise<void> {
+  async recount(userId: string): Promise<void> {
     await this.takeBack(
       userId,
-      this.metrics.filter((m) => m.module === module && !m.countsAchievements),
+      this.metrics.filter((m) => !m.countsAchievements),
     );
     await this.takeBack(
       userId,

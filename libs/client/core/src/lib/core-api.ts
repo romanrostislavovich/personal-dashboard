@@ -116,8 +116,8 @@ export function projectsApi(api: ApiClient) {
 export function achievementsApi(api: ApiClient) {
   return {
     list: () => api.read<Achievement[]>(CORE_READS.achievements()),
-    /** Counts a section (module id) again; what is not earned today is taken back. */
-    recount: (module: string) => api.post<void>(`${API_PATHS.achievements}/recount`, { module }),
+    /** Counts all achievements again; what is not earned today is taken back. */
+    recount: () => api.post<void>(`${API_PATHS.achievements}/recount`, {}),
   };
 }
 
