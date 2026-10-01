@@ -32,7 +32,7 @@
     "addTitle": "Add a repository",
     "addHint": "Your public repositories and those of your organizations appear by themselves. Add any other one here.",
     "editNpm": "npm package",
-    "npmHint": "Read from package.json by itself; set it here if it is different",
+    "npmHint": "Found by itself when the package on npm points to this repository; set it here if it was not",
     "npmPackageShort": "npm package",
     "repos": "Repositories",
     "ofTotal": "of {{count}}",

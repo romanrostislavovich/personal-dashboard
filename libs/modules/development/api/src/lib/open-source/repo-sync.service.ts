@@ -5,9 +5,12 @@ import { todayIn, toLocalDate } from '@pd/contracts';
 import { eq, sql } from 'drizzle-orm';
 import { GithubClient, GithubIssue } from '../github/github.client';
 import { RepoSnapshot } from './github-repos.client';
-import { fetchNpmWeeklyDownloads } from './npm.client';
+import { fetchNpmPackageRepo, fetchNpmWeeklyDownloads } from './npm.client';
 import { repoDailyStats, TrackedRepoRow, trackedRepos } from './open-source.schema';
 import { crossedStarMilestone } from './star-stats';
+
+/** How long an answer of the npm registry about a package's repository is trusted. */
+const OWNERSHIP_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** What happened to the repository since the last sync — for notifications. */
 export interface RepoSyncEvents {
@@ -25,6 +28,8 @@ export interface RepoSyncEvents {
 @Injectable()
 export class RepoSyncService {
   private readonly logger = new Logger(RepoSyncService.name);
+  /** `repository|package` → whether npm says the package is published from that repository. */
+  private readonly ownership = new Map<string, { owned: boolean; expiresAt: number }>();
 
   constructor(
     @Inject(DB) private readonly db: Database,
@@ -36,8 +41,10 @@ export class RepoSyncService {
     snapshot: RepoSnapshot,
     github: GithubClient,
   ): Promise<RepoSyncEvents | null> {
-    // A package set by hand wins over the one in package.json (`null` — "it has none").
-    const npmPackage = repo.npmPackageManual ? repo.npmPackage : snapshot.packageName;
+    // A package set by hand wins over the detected one (`null` — "it has none").
+    const npmPackage = repo.npmPackageManual
+      ? repo.npmPackage
+      : await this.detectedPackage(repo, snapshot);
     const stats = {
       stars: snapshot.stars,
       forks: snapshot.forks,
@@ -99,6 +106,36 @@ export class RepoSyncService {
       .update(trackedRepos)
       .set({ syncError: error instanceof Error ? error.message : String(error) })
       .where(eq(trackedRepos.id, repo.id));
+  }
+
+  /**
+   * The package of package.json — only if npm confirms it is published from this repository.
+   * A name alone proves nothing: a fork carries the name of the original, and an app called
+   * `docs` or `website` shares its name with somebody else's package.
+   */
+  private async detectedPackage(
+    repo: TrackedRepoRow,
+    snapshot: RepoSnapshot,
+  ): Promise<string | null> {
+    const candidate = snapshot.packageName;
+    if (!candidate) {
+      return null;
+    }
+    const fullName = snapshot.fullName.toLowerCase();
+    const key = `${fullName}|${candidate}`;
+    const known = this.ownership.get(key);
+    if (known && known.expiresAt > Date.now()) {
+      return known.owned ? candidate : null;
+    }
+    try {
+      const owned = (await fetchNpmPackageRepo(candidate)) === fullName;
+      this.ownership.set(key, { owned, expiresAt: Date.now() + OWNERSHIP_TTL_MS });
+      return owned ? candidate : null;
+    } catch (error) {
+      // npm being down changes nothing: what was accepted before stays.
+      this.logger.warn(`npm registry check of ${candidate} failed: ${error}`);
+      return repo.npmPackage === candidate ? candidate : null;
+    }
   }
 
   /** npm being down must not fail the repository: the last known figure stays. */
