@@ -74,11 +74,12 @@ export class SteamDotaClient extends SteamClient {
 
   /** The result and the numbers of a match; `null` — Steam has no details for it. */
   async getMatchDetails(matchId: number, accountId: number): Promise<SteamMatchDetails | null> {
-    const { result } = await this.get<{ result: RawDetails }>(
+    const { result } = await this.get<{ result?: RawDetails }>(
       '/IDOTA2Match_570/GetMatchDetails/v1/',
       { match_id: String(matchId) },
     );
-    return matchDetails(result, accountId);
+    // Steam is known to answer `{}` for a match it has no details for.
+    return result ? matchDetails(result, accountId) : null;
   }
 }
 

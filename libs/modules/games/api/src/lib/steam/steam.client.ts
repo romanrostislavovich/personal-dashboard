@@ -84,19 +84,28 @@ export class SteamClient {
   async getOwnedGames(steamId: string): Promise<SteamOwnedGame[] | null> {
     const { response } = await this.get<{ response: { games?: RawGame[] } }>(
       '/IPlayerService/GetOwnedGames/v1/',
-      { steamid: steamId, include_appinfo: '1', include_played_free_games: '1' },
+      {
+        steamid: steamId,
+        include_appinfo: '1',
+        // Free games (Dota 2 among them) are left out of the list unless all three are asked for.
+        include_played_free_games: '1',
+        include_free_sub: '1',
+        skip_unvetted_apps: 'false',
+      },
     );
-    if (!response.games) {
-      return null;
-    }
-    return response.games.map((game) => ({
-      appId: game.appid,
-      name: game.name ?? `App ${game.appid}`,
-      iconHash: game.img_icon_url || null,
-      playtimeMinutes: game.playtime_forever ?? 0,
-      playtime2WeeksMinutes: game.playtime_2weeks ?? 0,
-      lastPlayedAt: game.rtime_last_played ? new Date(game.rtime_last_played * 1000) : null,
-    }));
+    return response.games ? response.games.map(toOwnedGame) : null;
+  }
+
+  /**
+   * Games played in the last two weeks. Steam lists free games here even when the library
+   * leaves them out, so the two lists are put together (`mergeGames`).
+   */
+  async getRecentGames(steamId: string): Promise<SteamOwnedGame[]> {
+    const { response } = await this.get<{ response: { games?: RawGame[] } }>(
+      '/IPlayerService/GetRecentlyPlayedGames/v1/',
+      { steamid: steamId },
+    );
+    return (response.games ?? []).map(toOwnedGame);
   }
 
   /** Achievements of a game: how many are unlocked; `null` — the game has none (or hides them). */
@@ -149,8 +158,28 @@ export class SteamClient {
     if (tolerate.includes(response.status)) {
       return null;
     }
-    throw new Error(`Steam ${response.status}: ${path}`);
+    // What was asked (without the key) and what Steam said: a bare status explains nothing.
+    const asked = new URLSearchParams(params).toString();
+    const said = body.split(this.key).join('…').replace(/\s+/g, ' ').trim().slice(0, 200);
+    throw new Error(`Steam ${response.status}: ${path}?${asked}${said ? ` — ${said}` : ''}`);
   }
+}
+
+function toOwnedGame(game: RawGame): SteamOwnedGame {
+  return {
+    appId: game.appid,
+    name: game.name ?? `App ${game.appid}`,
+    iconHash: game.img_icon_url || null,
+    playtimeMinutes: game.playtime_forever ?? 0,
+    playtime2WeeksMinutes: game.playtime_2weeks ?? 0,
+    lastPlayedAt: game.rtime_last_played ? new Date(game.rtime_last_played * 1000) : null,
+  };
+}
+
+/** The library plus the recently played games it does not list. */
+export function mergeGames(owned: SteamOwnedGame[], recent: SteamOwnedGame[]): SteamOwnedGame[] {
+  const known = new Set(owned.map((game) => game.appId));
+  return [...owned, ...recent.filter((game) => !known.has(game.appId))];
 }
 
 // --- Raw Steam API responses (only the fields we use) ---

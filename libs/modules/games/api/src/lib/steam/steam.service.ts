@@ -5,7 +5,13 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { GameAccountRow, steamGames } from '../games.schema';
 import { parseSteamReference } from './steam-id';
 import { SteamKeyService } from './steam-key.service';
-import { SteamClient, SteamOwnedGame, SteamPlayer, SteamRateLimitError } from './steam.client';
+import {
+  mergeGames,
+  SteamClient,
+  SteamOwnedGame,
+  SteamPlayer,
+  SteamRateLimitError,
+} from './steam.client';
 
 /** Achievements are asked per game: this many games a sync, the rest waits for the next one. */
 const ACHIEVEMENT_GAMES_PER_SYNC = 60;
@@ -55,13 +61,15 @@ export class SteamService {
   async sync(account: GameAccountRow): Promise<SteamProfile> {
     const client = await this.client(account.userId);
     const steamId = account.externalId;
-    const [player, level, games] = await Promise.all([
+    const [player, level, games, recent] = await Promise.all([
       client.getPlayer(steamId),
       client.getLevel(steamId),
       client.getOwnedGames(steamId),
+      // An addition to the library: failing to read it is not a reason to fail the sync.
+      client.getRecentGames(steamId).catch(() => []),
     ]);
     if (games) {
-      await this.saveGames(account.id, games);
+      await this.saveGames(account.id, mergeGames(games, recent));
       await this.syncAchievements(account.id, steamId, client);
     }
     return toProfile(player, level, games === null);
