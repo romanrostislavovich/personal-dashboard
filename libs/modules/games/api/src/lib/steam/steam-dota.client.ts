@@ -39,6 +39,8 @@ export interface SteamHistoryPage {
   matches: SteamListedMatch[];
   /** More matches of this query are left after the page. */
   hasMore: boolean;
+  /** Steam did not take the query at all (it does so with the queries by hero). */
+  refused?: boolean;
 }
 
 /** Dota 2 matches straight from Valve (`IDOTA2Match_570` of the Steam Web API). */
@@ -64,7 +66,7 @@ export class SteamDotaClient extends SteamClient {
     );
     if (!answer?.result) {
       if (heroId) {
-        return { matches: [], hasMore: false };
+        return { matches: [], hasMore: false, refused: true };
       }
       throw new Error('Steam match history: an empty answer');
     }

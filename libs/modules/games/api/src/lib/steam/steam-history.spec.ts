@@ -59,6 +59,16 @@ describe('wholeHistory', () => {
     expect(saved).toEqual([500, 500]);
   });
 
+  it('stops asking by hero once Steam refuses such a query', async () => {
+    const { readPage, heroIds, queries } = account([700, 300, 40]);
+    const refusing: HistoryPageReader = async (query) =>
+      query.heroId
+        ? (queries.push(`refused:${query.heroId}`), { matches: [], hasMore: false, refused: true })
+        : readPage(query);
+    expect(await wholeHistory(refusing, heroIds)).toHaveLength(500);
+    expect(queries.filter((query) => query.startsWith('refused'))).toEqual(['refused:1']);
+  });
+
   it('gives nothing for an account without matches', async () => {
     const { readPage, heroIds } = account([]);
     expect(await wholeHistory(readPage, heroIds)).toEqual([]);
