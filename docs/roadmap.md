@@ -117,6 +117,8 @@
 - **Command palette (Ctrl+K)** — search across modules and quick actions
 - **PWA** — install on a phone, work offline (a cheap mobile app before the real one)
 - **Customizable home page** — order and hide widgets
+- **Themes** — light, dark and "follow the system", a few ready-made themes, and customization:
+  accent color, fonts, density; the same theme in web and desktop
 - **Section visibility** — turn whole sections on or off in the settings (e.g. hide Fitness if
   you do not use it): a hidden section disappears from the menu, the home page, the digest and
   notifications
