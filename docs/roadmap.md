@@ -63,6 +63,9 @@
     can be snoozed
   - **TODO list** — tasks with due dates, priorities and checklists; overdue ones in the digest
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
+- **Activity** — a new section with computer activity tracked by the desktop app: time at the PC
+  per day, time per application (and window or site), active vs idle time, daily and weekly
+  totals; data stays on your own server
 - **Development** — a new section that groups everything about coding:
   - **Open Source** — the existing module moves here as a subsection
   - **GitHub account** — profile statistics: contributions and streaks, commits, PRs, reviews and
