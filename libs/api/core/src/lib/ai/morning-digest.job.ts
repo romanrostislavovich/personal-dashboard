@@ -62,7 +62,7 @@ export class MorningDigestJob implements OnModuleInit {
       await this.connections.markDigestDay(userId, today);
       // One user's failing provider (no balance, a bad key) must not cancel everyone else's digest.
       await this.send(userId).catch((error) =>
-        this.logger.warn(`Morning digest failed for ${userId}: ${error}`),
+        this.logger.error(`Morning digest failed for ${userId}: ${error}`),
       );
     }
   }

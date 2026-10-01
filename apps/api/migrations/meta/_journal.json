@@ -225,6 +225,13 @@
       "when": 1790887741589,
       "tag": "0031_dota_from_steam",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790891231418,
+      "tag": "0032_system_log",
+      "breakpoints": true
     }
   ]
 }

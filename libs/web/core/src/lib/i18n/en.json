@@ -218,10 +218,31 @@
     "tabs": {
       "account": "Account",
       "integrations": "Integrations",
-      "data": "Data"
+      "data": "Data",
+      "system": "System"
     },
     "integrationsIntro": "Connections to outside services: where notifications go, where the modules take their data from, which AI answers.",
-    "openIntegrations": "Connect in Settings → Integrations"
+    "openIntegrations": "Connect in Settings → Integrations",
+    "system": {
+      "ownerOnly": "Only the owner of the dashboard sees the system status.",
+      "jobs": "Background jobs",
+      "jobsHint": "What runs by itself and how its last run went",
+      "jobsOnServer": "This is a local copy: background jobs run on the server — open its settings to see them",
+      "noJobs": "No job has run yet.",
+      "seconds": "s",
+      "failedRuns": "Failed runs in a row: {{count}}",
+      "log": "Errors and warnings",
+      "logHint": "What the server wrote in the last 14 days; an error also comes as a notification",
+      "levels": {
+        "all": "All",
+        "error": "Errors",
+        "warn": "Warnings"
+      },
+      "refresh": "Refresh",
+      "clear": "Clear",
+      "since": "Repeats since",
+      "logEmpty": "Nothing here — the server has no complaints."
+    }
   },
   "toast": {
     "achievement": "New achievement!",

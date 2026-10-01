@@ -18,5 +18,6 @@ export * from './lib/diary-marks';
 export * from './lib/diary-text';
 export * from './lib/realtime';
 export * from './lib/sync';
+export * from './lib/system';
 export * from './lib/trash';
 export * from './lib/weather';

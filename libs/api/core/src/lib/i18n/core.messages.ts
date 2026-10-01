@@ -35,6 +35,8 @@ const messages = {
     attachmentEmpty:
       'There is no text in this file — probably a scan. Export the statement as PDF with text or CSV.',
     attachmentFailed: 'Could not read the file. Is it damaged or password-protected?',
+    systemErrorTitle: '⚠️ Dashboard error',
+    systemErrorSeeSettings: 'Details: Settings → System.',
     backupTitle: '🗄️ Backups need attention',
     backupProblems: {
       missing: 'There is no database dump at all.',
@@ -82,6 +84,8 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
     attachmentEmpty:
       'В файле нет текста — похоже, это скан. Выгрузи выписку в PDF с текстом или в CSV.',
     attachmentFailed: 'Не получилось прочитать файл. Он не повреждён и не защищён паролем?',
+    systemErrorTitle: '⚠️ Ошибка в дашборде',
+    systemErrorSeeSettings: 'Подробности: Настройки → Система.',
     backupTitle: '🗄️ С бэкапами что-то не так',
     backupProblems: {
       missing: 'Нет ни одного дампа базы.',
