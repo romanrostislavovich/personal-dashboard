@@ -16,6 +16,8 @@ export interface ScheduledJob {
   /** Cron expression, for example `0 9 * * *` — every day at 09:00 (in APP_TIMEZONE). */
   cron: string;
   handler: () => Promise<void>;
+  /** A job that runs every minute: its runs are not written to the log one by one. */
+  quiet?: boolean;
 }
 
 /**
@@ -67,7 +69,9 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
       await this.boss.createQueue(job.name);
       await this.boss.schedule(job.name, job.cron, null, { tz, missed: 'once' });
       await this.boss.work(job.name, async () => {
-        this.logger.log(`Running job ${job.name}`);
+        if (!job.quiet) {
+          this.logger.log(`Running job ${job.name}`);
+        }
         await this.runs.track(job, job.handler).catch((error) => {
           // An error-level entry: it lands in the system log and is told to the owner.
           this.logger.error(
