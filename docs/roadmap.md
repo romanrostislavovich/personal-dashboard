@@ -76,7 +76,8 @@
 - **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and
   its trend, heart rate; data from smart watches and fitness bands (Apple Health, Google Fit /
   Health Connect, Garmin, Fitbit, Mi Band / Zepp and similar); runs and rides from Strava
-- **SoundCloud** — my own mixes and tracks: plays, likes, reposts and comments
+- **Music: SoundCloud** — an integration of the Music module, next to Last.fm and Spotify: my own
+  mixes and tracks with their plays, likes, reposts and comments
 - **Science** — a section for science
 - **Psychology** — a section for psychology; how exactly to tie it in is still open (for example
   mood and diary patterns, self-reflection prompts, tests and notes)
