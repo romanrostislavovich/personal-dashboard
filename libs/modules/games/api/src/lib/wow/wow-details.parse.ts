@@ -175,7 +175,20 @@ export function parseBracket(name: string, raw: RawBracket | null): WowPvpBracke
   };
 }
 
-const count = (list: unknown): number | null => (Array.isArray(list) ? list.length : null);
+/**
+ * How many there are in an answer. Blizzard leaves the list out when it is empty, so an answer
+ * without the list is zero; no answer at all (`null`) is "this version has no such collection".
+ */
+function count<K extends string>(
+  answer: Partial<Record<K, unknown>> | null,
+  key: K,
+): number | null {
+  if (!answer) {
+    return null;
+  }
+  const list = answer[key];
+  return Array.isArray(list) ? list.length : 0;
+}
 
 export function parseCollections(raw: {
   mounts: { mounts?: unknown } | null;
@@ -186,12 +199,12 @@ export function parseCollections(raw: {
   quests: { quests?: unknown } | null;
 }): WowCollections {
   return {
-    mounts: count(raw.mounts?.mounts),
-    pets: count(raw.pets?.pets),
-    toys: count(raw.toys?.toys),
-    heirlooms: count(raw.heirlooms?.heirlooms),
-    titles: count(raw.titles?.titles),
-    quests: count(raw.quests?.quests),
+    mounts: count(raw.mounts, 'mounts'),
+    pets: count(raw.pets, 'pets'),
+    toys: count(raw.toys, 'toys'),
+    heirlooms: count(raw.heirlooms, 'heirlooms'),
+    titles: count(raw.titles, 'titles'),
+    quests: count(raw.quests, 'quests'),
   };
 }
 

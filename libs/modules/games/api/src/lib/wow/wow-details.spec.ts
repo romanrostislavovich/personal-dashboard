@@ -2,6 +2,7 @@ import { WowDetails } from '@pd/contracts';
 import { fetchDetails } from './wow-details.fetch';
 import {
   bracketName,
+  parseCollections,
   parseItems,
   parseMythic,
   parseProfessions,
@@ -171,6 +172,21 @@ describe('parsing Battle.net answers', () => {
     expect(bracketName('https://eu.api.blizzard.com/x/pvp-bracket/3v3?namespace=profile-eu')).toBe(
       '3v3',
     );
+  });
+});
+
+describe('parseCollections', () => {
+  it('counts an answer without the list as zero, and no answer as unknown', () => {
+    expect(
+      parseCollections({
+        mounts: { mounts: [1, 2] },
+        pets: null,
+        toys: { toys: [] },
+        heirlooms: {},
+        titles: {},
+        quests: { quests: [1] },
+      }),
+    ).toEqual({ mounts: 2, pets: null, toys: 0, heirlooms: 0, titles: 0, quests: 1 });
   });
 });
 
