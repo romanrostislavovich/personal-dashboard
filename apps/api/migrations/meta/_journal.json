@@ -274,6 +274,13 @@
       "when": 1790954944339,
       "tag": "0038_user_layout",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1790966393052,
+      "tag": "0039_wow_details",
+      "breakpoints": true
     }
   ]
 }

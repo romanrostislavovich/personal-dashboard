@@ -5,7 +5,9 @@ import {
   GameAccount,
   GameAccountInput,
   GamesSettings,
+  WowCharacterUpdate,
   WowCredentialsInput,
+  WowToken,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -18,6 +20,8 @@ export const GAMES_READS = {
   dotaOverview: (accountId: string | null) => apiRequest(`${BASE}/dota/overview`, { accountId }),
   dotaMatches: (query: Partial<DotaMatchesQuery>) => apiRequest(`${BASE}/dota/matches`, query),
   settings: () => apiRequest(`${BASE}/settings`),
+  /** The price of the WoW Token with its history, per region. */
+  wowTokens: () => apiRequest(`${BASE}/wow/tokens`),
 };
 
 export function gamesApi(api: ApiClient) {
@@ -39,6 +43,10 @@ export function gamesApi(api: ApiClient) {
     removeSteamKey: () => api.delete(`${BASE}/steam/key`),
     saveWowCredentials: (input: WowCredentialsInput) =>
       api.put<void>(`${BASE}/wow/credentials`, input),
+    wowTokens: () => api.read<WowToken[]>(GAMES_READS.wowTokens()),
+    /** The notifications of one WoW character. */
+    updateWowCharacter: (accountId: string, update: WowCharacterUpdate) =>
+      api.patch<void>(`${BASE}/wow/${accountId}`, update),
     /** The key of one Dota account: it is checked and the account is refreshed with it. */
     saveOpenDotaKey: (accountId: string, apiKey: string) =>
       api.put<void>(`${BASE}/accounts/${accountId}/opendota-key`, { apiKey }),

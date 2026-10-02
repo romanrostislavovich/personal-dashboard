@@ -1,4 +1,5 @@
-import { WowRegion, WowVersion } from '@pd/contracts';
+import { WowDetails, WowRegion, WowVersion } from '@pd/contracts';
+import { fetchDetails } from './wow-details.fetch';
 
 export class BattlenetAuthError extends Error {}
 export class WowCharacterNotFoundError extends Error {}
@@ -95,11 +96,55 @@ export class BattlenetClient {
     await this.accessToken();
   }
 
-  async getProfile(ref: WowCharacterRef): Promise<WowProfile> {
+  /**
+   * The character with everything about it: the summary (a missing character fails here) and
+   * the details, where a part Blizzard does not have is left empty.
+   */
+  async getCharacter(ref: WowCharacterRef): Promise<{ profile: WowProfile; details: WowDetails }> {
     const [summary, media] = await Promise.all([
       this.get<RawCharacter>(ref, ''),
       this.get<RawMedia>(ref, '/character-media').catch(() => null),
     ]);
+    const asset = (key: string) => media?.assets?.find((a) => a.key === key)?.value ?? null;
+    const details = await fetchDetails(
+      {
+        part: (path) => this.get<never>(ref, path).catch(() => null),
+        href: (href) => this.getHref<never>(ref.region, href).catch(() => null),
+      },
+      {
+        name: summary.name,
+        title: summary.active_title?.display_string?.replace('{name}', summary.name) ?? null,
+        faction: summary.faction?.name ?? null,
+        renderUrl: asset('main-raw') ?? asset('main') ?? asset('inset'),
+        guild: summary.guild
+          ? { name: summary.guild.name, href: summary.guild.key?.href ?? null }
+          : null,
+      },
+    );
+    return { profile: this.toProfile(ref, summary, asset('avatar')), details };
+  }
+
+  /** The price of the WoW Token in gold, as the auction house of the region has it now. */
+  async getTokenPrice(region: WowRegion): Promise<{ price: number; updatedAt: Date } | null> {
+    const query = new URLSearchParams({ namespace: `dynamic-${region}` });
+    const raw = await this.getHref<{ price?: number; last_updated_timestamp?: number }>(
+      region,
+      `https://${region}.api.blizzard.com/data/wow/token/index?${query}`,
+    ).catch(() => null);
+    return raw?.price
+      ? {
+          // Blizzard counts in copper: 10,000 to a gold coin.
+          price: Math.round(raw.price / 10_000),
+          updatedAt: new Date(raw.last_updated_timestamp ?? Date.now()),
+        }
+      : null;
+  }
+
+  private toProfile(
+    ref: WowCharacterRef,
+    summary: RawCharacter,
+    avatarUrl: string | null,
+  ): WowProfile {
     return {
       name: summary.name,
       realm: summary.realm.name,
@@ -112,7 +157,7 @@ export class BattlenetClient {
       itemLevel: summary.equipped_item_level ?? null,
       // Classic Era and Anniversary have no achievements.
       achievementPoints: summary.achievement_points ?? 0,
-      avatarUrl: media?.assets?.find((a) => a.key === 'avatar')?.value ?? null,
+      avatarUrl,
       profileUrl:
         ref.version === 'retail'
           ? `https://worldofwarcraft.blizzard.com/character/${ref.region}/${ref.realm}/${ref.name.toLowerCase()}`
@@ -178,6 +223,19 @@ export class BattlenetClient {
     };
   }
 
+  /** An address from one of Blizzard's own answers; the language of the region is added. */
+  private async getHref<T>(region: WowRegion, href: string): Promise<T> {
+    const url = new URL(href);
+    url.searchParams.set('locale', LOCALES[region]);
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${await this.accessToken()}` },
+    });
+    if (!response.ok) {
+      throw new Error(`Battle.net API ${response.status}: ${url.pathname}`);
+    }
+    return (await response.json()) as T;
+  }
+
   private async get<T>(ref: WowCharacterRef, path: string): Promise<T> {
     const name = encodeURIComponent(ref.name.toLowerCase());
     const query = new URLSearchParams({
@@ -234,7 +292,10 @@ interface RawCharacter {
   character_class: { id: number; name: string };
   race: { name: string };
   active_spec?: { name: string };
-  guild?: { name: string };
+  guild?: { name: string; key?: { href?: string } };
+  faction?: { name?: string };
+  /** `{name} the Patient` */
+  active_title?: { display_string?: string };
   equipped_item_level?: number;
   achievement_points?: number;
   last_login_timestamp?: number;

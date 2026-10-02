@@ -20,7 +20,8 @@ export class GamesDigest implements OnModuleInit {
       module: 'games',
       description:
         'Game accounts. Dota 2: medal (rankTier = medal×10+stars, 8 = Immortal), leaderboard ' +
-        'rank, personal records (kind, value, hero). WoW: level, item level, achievement points, ' +
+        'rank, personal records (kind, value, hero). WoW: level, item level, achievement points, Mythic+ rating (rounded down to 100), bosses ' +
+        'killed in the newest raids, mounts collected, ' +
         'latest achievements. Steam: level, hours in games rounded down to a hundred, achievements ' +
         'unlocked. Tell about new records, a new medal, new achievements, a higher ilvl, a new ' +
         'hundred of hours.',
@@ -62,6 +63,15 @@ function progress(account: GameAccount) {
     level: summary.level,
     itemLevel: summary.itemLevel,
     achievementPoints: summary.achievementPoints,
+    // Whole hundreds: the rating moves a little with every key.
+    mythicRating: summary.details?.mythic
+      ? Math.floor(summary.details.mythic.rating / 100) * 100
+      : null,
+    raids: (summary.details?.raids ?? []).slice(0, 2).map((raid) => ({
+      raid: raid.name,
+      killed: Math.max(0, ...raid.modes.map((mode) => mode.killed)),
+    })),
+    mounts: summary.details?.collections.mounts ?? null,
     latestAchievements: summary.recentAchievements
       .slice(0, RECENT_ACHIEVEMENTS)
       .map((achievement) => achievement.name),

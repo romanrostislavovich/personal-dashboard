@@ -187,10 +187,13 @@ export class GameAccountsService {
   }
 
   private async syncWow(row: GameAccountRow): Promise<string[]> {
-    const { profile, newAchievements } = await this.wow.sync(row);
+    const { profile, newAchievements, news } = await this.wow.sync(row);
     await this.saveProfile(row, `${profile.name} — ${profile.realm}`, { ...profile });
     const text = gamesMessages(await this.localeOf(row.userId));
-    return newAchievements.map((a) => text.wowAchievement(profile.name, a.name));
+    return [
+      ...newAchievements.map((a) => text.wowAchievement(profile.name, a.name)),
+      ...news.map((item) => text.wowNews(profile.name, item)),
+    ];
   }
 
   private async saveProfile(

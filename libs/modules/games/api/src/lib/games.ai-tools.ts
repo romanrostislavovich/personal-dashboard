@@ -25,19 +25,29 @@ export class GamesAiTools implements OnModuleInit {
       description:
         'Game accounts (with id). Dota 2: medal (rankTier = medal×10+stars, 8 = Immortal), ' +
         'wins/losses over 30 days, recent matches with heroes and KDA, favourite heroes. ' +
-        'WoW: character, ilvl, achievement points and recent achievements. Steam: level, hours ' +
+        'WoW: character, ilvl, achievement points, recent achievements and `details` — gear ' +
+        'by slot, stats, talents, Mythic+ rating and best runs, raid progress, PvP ratings, ' +
+        'collections (mounts, pets, toys, titles, quests), reputations, professions, guild. ' +
+        'Steam: level, hours ' +
         'in games in total and over two weeks, achievements unlocked, the most played games ' +
         '(the whole library — games_steam_library).',
       parameters: NO_PARAMETERS,
       handler: async (userId) =>
-        (await this.accounts.list(userId)).map((account) =>
-          account.summary?.game === 'steam'
+        (await this.accounts.list(userId)).map((account) => {
+          if (account.summary?.game === 'steam') {
+            return {
+              ...account,
+              summary: { ...account.summary, games: account.summary.games.slice(0, STEAM_TOP) },
+            };
+          }
+          // The chart and the pictures are of no use to the model.
+          return account.summary?.game === 'wow'
             ? {
                 ...account,
-                summary: { ...account.summary, games: account.summary.games.slice(0, STEAM_TOP) },
+                summary: { ...account.summary, history: undefined, avatarUrl: undefined },
               }
-            : account,
-        ),
+            : account;
+        }),
     });
 
     this.ai.registerTool({

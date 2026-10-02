@@ -87,6 +87,7 @@
       <pd-wow-dashboard
         [accounts]="wow()"
         [busy]="busy()"
+        (changed)="accounts.reload()"
         (sync)="sync($event)"
         (remove)="remove($event)"
       />
