@@ -6,52 +6,79 @@ export type HistoryPageReader = (query: {
   heroId?: number;
 }) => Promise<SteamHistoryPage>;
 
+/** A guard against an endless walk: 40 windows of 500 are 20,000 matches. */
+const MAX_WINDOWS = 40;
+
 /**
- * Every match of an account. Steam gives one query 500 matches at most, however it is paged,
- * so a history that long is walked again hero by hero — each hero is a query of its own, and
- * nobody has 500 matches on every hero. When Steam refuses the queries by hero, the walk stops
- * at once: the 500 newest matches are then all it gives, and asking on wastes its request limit.
+ * Every match of an account. Steam gives one query 500 matches at most, so past them the walk
+ * tries two ways further:
+ * 1. a new query that starts below the oldest match it has — window after window;
+ * 2. if Steam gives nothing that way, hero by hero — each hero is a query of its own, and nobody
+ *    has 500 matches on every hero. When Steam refuses the queries by hero, the walk stops at
+ *    once: asking on only wastes its request limit.
  *
- * `save` gets the matches of every query as soon as it is read: the walk takes over a hundred
- * requests, and one of them failing must not lose what the others brought.
+ * `save` gets the matches of every query as soon as it is read: the walk takes many requests,
+ * and one of them failing must not lose what the others brought.
  */
 export async function wholeHistory(
   readPage: HistoryPageReader,
   heroIds: () => Promise<number[]>,
   save: (matches: SteamListedMatch[]) => Promise<void> = async () => undefined,
 ): Promise<SteamListedMatch[]> {
-  const all = (await walk(readPage)).matches;
-  await save(all);
-  if (all.length < STEAM_HISTORY_LIMIT) {
-    return all;
+  const byId = new Map<number, SteamListedMatch>();
+  const keep = async (matches: SteamListedMatch[]) => {
+    if (matches.length > 0) {
+      await save(matches);
+    }
+    for (const match of matches) {
+      byId.set(match.matchId, match);
+    }
+  };
+
+  let window = await walk(readPage, {});
+  await keep(window.matches);
+  if (window.matches.length < STEAM_HISTORY_LIMIT) {
+    return [...byId.values()];
   }
-  const byId = new Map(all.map((match) => [match.matchId, match]));
+
+  // Way 1: the windows below the first one.
+  let windows = 1;
+  while (window.matches.length >= STEAM_HISTORY_LIMIT && windows < MAX_WINDOWS) {
+    window = await walk(readPage, { beforeMatchId: oldest(window.matches) });
+    await keep(window.matches);
+    windows++;
+  }
+  if (windows > 2 || window.matches.length > 0) {
+    return [...byId.values()];
+  }
+
+  // Way 2: Steam gave nothing below the first window.
   for (const heroId of await heroIds()) {
-    const onHero = await walk(readPage, heroId);
+    const onHero = await walk(readPage, { heroId });
     if (onHero.refused) {
       break;
     }
-    await save(onHero.matches);
-    for (const match of onHero.matches) {
-      byId.set(match.matchId, match);
-    }
+    await keep(onHero.matches);
   }
   return [...byId.values()];
 }
 
-/** All pages of one query: the newest matches first, each page continuing the previous one. */
+/** One query: its pages, the newest matches first, until Steam says there are no more. */
 async function walk(
   readPage: HistoryPageReader,
-  heroId?: number,
+  { beforeMatchId, heroId }: { beforeMatchId?: number; heroId?: number },
 ): Promise<{ matches: SteamListedMatch[]; refused: boolean }> {
   const matches: SteamListedMatch[] = [];
-  let beforeMatchId: number | undefined;
   for (;;) {
     const page = await readPage({ beforeMatchId, heroId });
     matches.push(...page.matches);
     if (!page.hasMore || page.matches.length === 0 || matches.length >= STEAM_HISTORY_LIMIT) {
       return { matches, refused: Boolean(page.refused) };
     }
-    beforeMatchId = Math.min(...page.matches.map((match) => match.matchId));
+    beforeMatchId = oldest(page.matches);
   }
+}
+
+function oldest(matches: SteamListedMatch[]): number {
+  return Math.min(...matches.map((match) => match.matchId));
 }

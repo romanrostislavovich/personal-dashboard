@@ -47,6 +47,21 @@ describe('wholeHistory', () => {
     expect(history.length).toBeLessThan(matches.length);
   });
 
+  it('reads past 500 when Steam answers a query that starts below them', async () => {
+    const { matches } = account([1234]);
+    // A Steam whose limit is counted from where the query starts.
+    const windowed: HistoryPageReader = async ({ beforeMatchId }) => {
+      const rest = matches
+        .filter((match) => !beforeMatchId || match.matchId < beforeMatchId)
+        .sort((a, b) => b.matchId - a.matchId);
+      return { matches: rest.slice(0, PAGE), hasMore: rest.length > PAGE };
+    };
+    const history = await wholeHistory(windowed, async () => {
+      throw new Error('heroes are not needed');
+    });
+    expect(history).toHaveLength(1234);
+  });
+
   it('saves every query as it is read, so a later failure loses nothing', async () => {
     const { readPage, heroIds } = account([700, 300]);
     const saved: number[] = [];
@@ -67,6 +82,8 @@ describe('wholeHistory', () => {
         : readPage(query);
     expect(await wholeHistory(refusing, heroIds)).toHaveLength(500);
     expect(queries.filter((query) => query.startsWith('refused'))).toEqual(['refused:1']);
+    // One look below the first 500 before the heroes.
+    expect(queries.filter((query) => query.startsWith('all'))).toHaveLength(6);
   });
 
   it('gives nothing for an account without matches', async () => {

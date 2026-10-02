@@ -7,6 +7,8 @@ import { wholeHistory } from '../steam/steam-history';
 import { SteamKeyError, SteamRateLimitError } from '../steam/steam.client';
 import { DotaHeroesService } from './dota-heroes.service';
 
+/** A pause between the requests of a history walk: Steam asks for no more than one a second. */
+const HISTORY_PAUSE_MS = 1100;
 /** Rows per INSERT: five values each, far below PostgreSQL's limit of 65,535 parameters. */
 const INSERT_CHUNK = 1000;
 /** Details cost a request per match: this many a run, the rest waits for the next sync. */
@@ -45,7 +47,10 @@ export class DotaSteamSource {
     const walkAll = full || !account.steamHistorySyncedAt;
     const matches = walkAll
       ? await wholeHistory(
-          (query) => steam.getMatchHistory(accountId, query),
+          async (query) => {
+            await new Promise((resolve) => setTimeout(resolve, HISTORY_PAUSE_MS));
+            return steam.getMatchHistory(accountId, query);
+          },
           () => this.heroes.ids(),
           (part) => this.saveListed(account.id, part),
         )
