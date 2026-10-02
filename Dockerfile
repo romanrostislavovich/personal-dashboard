@@ -1,4 +1,5 @@
-# One image for everything: NestJS API + the built Angular frontend (the API serves it as static files).
+# One image for everything: NestJS API + the built Angular frontend (the API serves it as static files)
+# + the code of the desktop shell, which installed desktop apps update themselves from.
 # Build and run together with the database: docker compose up -d --build
 #
 # Multi-platform (amd64 + arm64) without emulation: everything is built on the build machine's
@@ -16,7 +17,7 @@ RUN npm ci --ignore-scripts
 
 COPY . .
 # The API build writes package.json and package-lock.json with only its own dependencies next to it.
-RUN npx nx run-many -t build -p api,web
+RUN npx nx run-many -t build -p api,web,desktop
 
 # --- 2. Production dependencies of the API ---
 FROM --platform=$BUILDPLATFORM node:24-alpine AS deps
@@ -28,11 +29,13 @@ RUN npm ci --omit=dev --ignore-scripts
 FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
-    WEB_DIST_PATH=/app/web
+    WEB_DIST_PATH=/app/web \
+    DESKTOP_BUNDLE_PATH=/app/desktop-bundle
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /repo/dist/apps/api ./
 COPY --from=build /repo/dist/apps/web/browser ./web
+COPY --from=build /repo/dist/apps/desktop/bundle ./desktop-bundle
 
 EXPOSE 3300
 USER node
