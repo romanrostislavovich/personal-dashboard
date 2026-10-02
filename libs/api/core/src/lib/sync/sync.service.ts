@@ -151,8 +151,11 @@ export class SyncService implements OnApplicationBootstrap {
   private async verify(request: { schema: string; keyCheck: string }): Promise<void> {
     const own = await this.handshake();
     if (request.schema !== own.schema) {
+      // The usual reason is a deploy of one side only, so the message says how to finish it.
       throw new ConflictException(
-        'The instances run different versions of the dashboard — update both to the same one',
+        'The server and this computer run different versions of the dashboard. Update the one ' +
+          'that is behind: the computer — `docker compose up -d --build app`, the server — ' +
+          '`deploy/deploy.sh`',
       );
     }
     if (request.keyCheck !== own.keyCheck) {

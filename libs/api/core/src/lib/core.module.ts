@@ -1,6 +1,6 @@
 import { Controller, Get, Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { AchievementsController } from './achievements/achievements.controller';
 import { AchievementsService } from './achievements/achievements.service';
@@ -35,6 +35,7 @@ import { SecretsService } from './secrets/secrets.service';
 import { JobRunsService } from './system/job-runs.service';
 import { SystemController } from './system/system.controller';
 import { SystemLogService } from './system/system-log.service';
+import { UnhandledErrorsFilter } from './system/unhandled-errors.filter';
 import { ServerActions } from './sync/server-actions';
 import { SyncClient } from './sync/sync-client.service';
 import { SyncController } from './sync/sync.controller';
@@ -124,6 +125,8 @@ class HealthController {
     BackupService,
     JobRunsService,
     SystemLogService,
+    // Errors nobody caught are logged with their request (see the filter).
+    { provide: APP_FILTER, useClass: UnhandledErrorsFilter },
     // New channels (Discord, e-mail…) are added to this list.
     {
       provide: NOTIFICATION_CHANNELS,

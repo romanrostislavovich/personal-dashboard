@@ -114,7 +114,9 @@ rule and the other is kept in the conflicts ("differs from the other side") — 
 
 ### When something goes wrong
 
-- **"The instances run different versions"** — update both to the same version (migrations must match).
+- **"The server and this computer run different versions"** — one side was updated without the
+  other (migrations must match): run `docker compose up -d --build app` on the computer, or
+  `deploy/deploy.sh` for the server. Until then the sync waits; after 15 minutes it is reported.
 - **"ENCRYPTION_KEY differs"** — set the same key on both.
 - **"The server rejected SYNC_TOKEN"** — the token must be the same on both.
 - **The server database was replaced** — the client notices, downloads everything and sends all of
