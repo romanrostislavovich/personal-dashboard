@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -98,10 +98,12 @@ import { Game, GameAccountInput, WOW_REGIONS, WowRegion } from '@pd/contracts';
 })
 export class AddGameAccountDialog {
   private readonly dialogRef = inject(MatDialogRef<AddGameAccountDialog, GameAccountInput>);
+  /** The game to open on; Dota 2 unless the page asks for another. */
+  private readonly initialGame = inject<Game | null>(MAT_DIALOG_DATA, { optional: true });
 
   protected readonly regions = WOW_REGIONS;
   protected readonly form = inject(NonNullableFormBuilder).group({
-    game: ['dota2' as Game],
+    game: [this.initialGame ?? ('dota2' as Game)],
     steamProfile: ['', Validators.required],
     steamId: ['', Validators.required],
     region: ['eu' as WowRegion],

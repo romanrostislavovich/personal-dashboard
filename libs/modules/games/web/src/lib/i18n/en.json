@@ -107,7 +107,10 @@
       "1": "Open develop.battle.net, sign in with the Battle.net account and go to API Access → Create Client.",
       "2": "Any name; a Redirect URL is required — https://localhost will do; tick nothing else and create.",
       "3": "Copy the Client ID and the Client Secret and paste them here, then add characters on the Games page."
-    }
+    },
+    "addTitle": "Add a character",
+    "addHint": "The Battle.net keys are saved. Now add a character: its region, the realm as in the armory address and its name. Every character is added separately.",
+    "addCharacter": "Add a character"
   },
   "errors": {
     "notFound": "Account not found. For Dota, check that match data is public; for WoW, check region, realm and name.",
