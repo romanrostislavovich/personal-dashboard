@@ -13,6 +13,7 @@ import { AuthService } from '../auth/auth.service';
 import { RealtimeNotifier } from '../realtime/realtime-notifier';
 import { ToastHostComponent } from '../toast/toast-host.component';
 import { DASHBOARD_MODULES } from '../dashboard-module';
+import { LayoutService } from './layout.service';
 
 interface NavItem {
   path: string;
@@ -60,10 +61,16 @@ export class ShellComponent {
     { initialValue: false },
   );
 
-  protected readonly mainNav: NavItem[] = [
+  private readonly modules = inject(DASHBOARD_MODULES);
+  private readonly layout = inject(LayoutService);
+
+  /** The sections the user did not hide (Settings → Appearance). */
+  protected readonly mainNav = computed<NavItem[]>(() => [
     { path: '/', labelKey: 'core.nav.dashboard', icon: 'dashboard' },
-    ...inject(DASHBOARD_MODULES).map((module) => ({ path: `/${module.id}`, ...module.nav })),
-  ];
+    ...this.modules
+      .filter((module) => !this.layout.isHidden(module.id))
+      .map((module) => ({ path: `/${module.id}`, ...module.nav })),
+  ]);
 
   protected readonly bottomNav: NavItem[] = [
     { path: '/projects', labelKey: 'core.nav.projects', icon: 'rocket_launch' },

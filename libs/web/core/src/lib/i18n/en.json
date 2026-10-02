@@ -48,7 +48,30 @@
     },
     "level": "Level {{level}}",
     "xp": "{{current}} / {{next}} XP to the next level",
-    "unlocked": "{{unlocked}} of {{total}} achievements"
+    "unlocked": "{{unlocked}} of {{total}} achievements",
+    "edit": {
+      "start": "Edit",
+      "done": "Done",
+      "hint": "Drag the widgets by the handle, change their size, hide the ones you do not need. It stays on this device.",
+      "reset": "Back to the shared layout",
+      "applyEverywhere": "Apply everywhere",
+      "applied": "The layout is applied on every device",
+      "notApplied": "Could not save the layout. Please try again.",
+      "move": "Drag to move",
+      "hide": "Hide the widget",
+      "show": "Show the widget",
+      "sectionHidden": "the section is hidden",
+      "sizes": {
+        "small": "Small",
+        "medium": "Medium",
+        "large": "Full width"
+      },
+      "sizeLetters": {
+        "small": "S",
+        "medium": "M",
+        "large": "L"
+      }
+    }
   },
   "projects": {
     "title": "Projects",
@@ -290,14 +313,18 @@
       },
       "radius": "Rounded corners",
       "devices": "This device and the others",
-      "own": "This device has a theme of its own.",
-      "shared": "This device shows the theme of the account.",
-      "builtIn": "This device shows the built-in theme.",
-      "devicesHint": "Changes stay on this device. “Apply everywhere” makes this theme the one of the account: every device takes it, their own themes included.",
+      "own": "This device has a look of its own.",
+      "shared": "This device shows the look of the account.",
+      "builtIn": "This device shows the built-in look.",
+      "devicesHint": "Changes of the theme, the sections and the home page stay on this device. “Apply everywhere” makes them the look of the account: every device takes it, their own included.",
       "applyEverywhere": "Apply everywhere",
-      "useAccount": "Back to the theme of the account",
-      "applied": "The theme is applied on every device",
-      "notApplied": "Could not save the theme. Please try again."
+      "useAccount": "Back to the look of the account",
+      "applied": "Applied on every device",
+      "notApplied": "Could not save. Please try again."
+    },
+    "sections": {
+      "title": "Sections",
+      "hint": "A hidden section leaves the menu and the home page. Its data keeps coming and the assistant still sees it."
     }
   },
   "toast": {

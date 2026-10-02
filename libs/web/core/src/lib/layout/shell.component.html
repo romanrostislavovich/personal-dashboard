@@ -11,7 +11,7 @@
     </a>
 
     <nav class="nav">
-      @for (item of mainNav; track item.path) {
+      @for (item of mainNav(); track item.path) {
         <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
       }
     </nav>
