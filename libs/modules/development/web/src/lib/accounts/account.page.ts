@@ -13,18 +13,24 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { CodeProvider } from '@pd/contracts';
 import { errorBody, INTEGRATIONS_LINK, SparklineComponent } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { Bar, BarChartComponent } from '../ui/bar-chart.component';
 import { ContributionHeatmapComponent, HeatmapDay } from '../ui/contribution-heatmap.component';
 import { Share, ShareListComponent } from '../ui/share-list.component';
-import { GithubApi } from './github.api';
+import { AccountsApi } from './accounts.api';
+import { PROVIDER_NAMES } from './providers';
 
-/** The GitHub account of the token's owner: contributions, streaks, languages, repositories. */
+/**
+ * The user's account on a code hosting service: contributions, streaks, languages, repositories.
+ * One page for GitHub, GitLab and Bitbucket — the service comes with the route (`data.provider`);
+ * what a service does not have (Bitbucket: followers, stars) is left out.
+ */
 @Component({
-  selector: 'pd-github-profile-page',
+  selector: 'pd-account-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
@@ -41,25 +47,28 @@ import { GithubApi } from './github.api';
     ContributionHeatmapComponent,
     ShareListComponent,
   ],
-  templateUrl: './github-profile.page.html',
-  styleUrl: './github-profile.page.scss',
+  templateUrl: './account.page.html',
+  styleUrl: './account.page.scss',
 })
-export class GithubProfilePage {
-  private readonly api = inject(GithubApi);
+export class AccountPage {
+  private readonly api = inject(AccountsApi);
   private readonly snackBar = inject(MatSnackBar);
   private readonly transloco = inject(TranslocoService);
   private readonly datePipe = new DatePipe(inject(LOCALE_ID));
 
+  protected readonly provider: CodeProvider = inject(ActivatedRoute).snapshot.data['provider'];
+  protected readonly service = PROVIDER_NAMES[this.provider];
+
   protected readonly settings = this.api.settings();
-  protected readonly profile = this.api.profile();
+  protected readonly profile = this.api.account(this.provider);
   protected readonly busy = signal(false);
-  /** The GitHub token lives in Settings → Integrations (github-token.integration.ts). */
+  /** The tokens live in Settings → Integrations (see `integrations` in development.module.ts). */
   protected readonly integrations = INTEGRATIONS_LINK;
 
   /** The year of the calendar; the current one until the user picks another. */
   private readonly pickedYear = signal<number | null>(null);
   protected readonly year = computed(() => this.pickedYear() ?? new Date().getFullYear());
-  protected readonly contributions = this.api.contributions(this.year);
+  protected readonly contributions = this.api.contributions(this.provider, this.year);
   protected readonly today = new Date().toLocaleDateString('en-CA');
 
   protected readonly yearTotals = computed(
@@ -70,7 +79,7 @@ export class GithubProfilePage {
     this.contributions.value().map(({ day, count }) => ({
       day,
       value: count,
-      label: this.transloco.translate('development.github.contributionsCount', { count }),
+      label: this.transloco.translate('development.account.contributionsCount', { count }),
     })),
   );
 
@@ -117,9 +126,9 @@ export class GithubProfilePage {
   async sync(): Promise<void> {
     this.busy.set(true);
     try {
-      await firstValueFrom(this.api.syncProfile());
+      await firstValueFrom(this.api.sync(this.provider));
     } catch (error) {
-      // GitHub explains itself (an invalid token, a missing permission) — show its words.
+      // The service explains itself (an invalid token, a missing permission) — show its words.
       const message = (errorBody(error) as { message?: string } | null)?.message;
       this.snackBar.open(message ?? this.transloco.translate('development.errors.generic'), 'OK', {
         duration: 8000,

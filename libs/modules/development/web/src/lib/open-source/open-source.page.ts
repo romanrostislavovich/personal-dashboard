@@ -16,7 +16,8 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { REPO_RELATIONS, TrackedRepo, TrackedRepoUpdate } from '@pd/contracts';
 import { errorStatus, INTEGRATIONS_LINK } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
-import { GithubApi } from '../github/github.api';
+import { AccountsApi } from '../accounts/accounts.api';
+import { PROVIDER_NAMES } from '../accounts/providers';
 import { OpenSourceApi } from './open-source.api';
 import { RepoDetailsComponent } from './repo-details.component';
 import {
@@ -25,6 +26,7 @@ import {
   RepoFilter,
   RepoKind,
   repoLanguages,
+  repoProviders,
   RepoSort,
   RepoSortColumn,
   sortRepos,
@@ -77,9 +79,14 @@ export class OpenSourcePage {
   private readonly transloco = inject(TranslocoService);
 
   protected readonly repos = this.api.repos();
-  protected readonly settings = inject(GithubApi).settings();
+  protected readonly settings = inject(AccountsApi).settings();
+  /** No service is connected: there is nothing to read repositories with. */
+  protected readonly tokenMissing = computed(() => {
+    const settings = this.settings.value();
+    return Boolean(settings) && !Object.values(settings ?? {}).some(Boolean);
+  });
   protected readonly busy = signal(false);
-  /** The GitHub token lives in Settings → Integrations (github/github-token.integration.ts). */
+  /** The tokens live in Settings → Integrations (see `integrations` in development.module.ts). */
   protected readonly integrations = INTEGRATIONS_LINK;
 
   protected readonly columns = COLUMNS;
@@ -91,6 +98,9 @@ export class OpenSourcePage {
   protected readonly expanded = signal<string | null>(null);
 
   protected readonly languages = computed(() => repoLanguages(this.repos.value()));
+  /** The services the repositories come from — a filter once there is more than one. */
+  protected readonly providers = computed(() => repoProviders(this.repos.value()));
+  protected readonly providerNames = PROVIDER_NAMES;
   protected readonly rows = computed(() =>
     sortRepos(filterRepos(this.repos.value(), this.filter()), this.sort()),
   );
@@ -130,8 +140,11 @@ export class OpenSourcePage {
   }
 
   protected shortName(repo: TrackedRepo): { owner: string; name: string } {
-    const [owner, name] = repo.fullName.split('/');
-    return { owner, name: name ?? owner };
+    // A GitLab project may sit in nested groups: everything before the last part is the owner.
+    const at = repo.fullName.lastIndexOf('/');
+    return at < 0
+      ? { owner: repo.fullName, name: repo.fullName }
+      : { owner: repo.fullName.slice(0, at), name: repo.fullName.slice(at + 1) };
   }
 
   async add(): Promise<void> {

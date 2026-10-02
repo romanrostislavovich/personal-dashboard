@@ -246,6 +246,13 @@
       "when": 1790892957123,
       "tag": "0034_tasks",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1790930239142,
+      "tag": "0035_gitlab_bitbucket",
+      "breakpoints": true
     }
   ]
 }

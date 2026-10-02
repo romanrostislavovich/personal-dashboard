@@ -84,7 +84,10 @@ Request and response types live in `libs/shared/contracts/src/lib/birthdays.ts`.
 
 A module with several subsections keeps a folder per subsection on both sides and one page with
 tabs whose subsections are child routes (`development`: `open-source/`, `github-profile/`,
-`wakatime/` and the shared `github/`; `development.page.ts` holds the tabs).
+`accounts/`, `wakatime/` and the clients they share — `github/`, `gitlab/`, `bitbucket/`;
+`development.page.ts` holds the tabs). Where several outside services give the same thing, the
+subsection talks to an interface with one implementation per service: `RepoSource` for the
+repositories of Open Source, `AccountSource` for an account and its activity.
 
 ## Writing a new module
 

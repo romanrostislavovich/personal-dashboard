@@ -1,35 +1,10 @@
-import { RepoRelation } from '@pd/contracts';
 import { githubGraphql } from '../github/github-graphql';
+import { AccountRepo, RepoSnapshot } from './repo-source';
 
 /** GitHub returns at most 100 repositories a page; package.json texts make a page heavy. */
 const PAGE_SIZE = 50;
 /** Repositories asked for by name in one request. */
 const LOOKUP_CHUNK = 40;
-
-/** A repository as GitHub sees it now. */
-export interface RepoSnapshot {
-  /** GitHub's id: stays the same when the repository is renamed or moved. */
-  externalId: string;
-  /** `owner/name` */
-  fullName: string;
-  htmlUrl: string;
-  description: string | null;
-  language: string | null;
-  isFork: boolean;
-  isArchived: boolean;
-  stars: number;
-  forks: number;
-  openIssues: number;
-  openPulls: number;
-  pushedAt: string | null;
-  latestRelease: { tag: string; publishedAt: string; htmlUrl: string } | null;
-  /** The `name` of package.json in the root, unless the package is private. */
-  packageName: string | null;
-}
-
-export interface AccountRepo extends RepoSnapshot {
-  relation: Extract<RepoRelation, 'owner' | 'organization'>;
-}
 
 const REPO_FIELDS = `
   id

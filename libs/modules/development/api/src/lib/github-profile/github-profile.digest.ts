@@ -5,7 +5,10 @@ import { GithubProfileService } from './github-profile.service';
 /** Contribution milestones are counted in these steps. */
 const MILESTONE = 500;
 
-/** The GitHub account in the morning digest: followers, milestones and the streak reminder. */
+/**
+ * The GitHub account in the morning digest: followers and milestones. (The streak reminder
+ * counts all services, see accounts.digest.ts.)
+ */
 @Injectable()
 export class GithubProfileDigest implements OnModuleInit {
   constructor(
@@ -29,25 +32,6 @@ export class GithubProfileDigest implements OnModuleInit {
             contributionMilestone: Math.floor(profile.totalContributions / MILESTONE) * MILESTONE,
           }
         );
-      },
-    });
-
-    // Off by default: the user switches it on under the morning digest in the AI settings.
-    this.digest.register({
-      id: 'development.streak',
-      module: 'development',
-      optIn: true,
-      always: true,
-      description:
-        'A reminder about the GitHub contribution streak: `currentStreak` days in a row, ' +
-        '`contributedToday` — whether today already has a contribution. If not, remind in one ' +
-        'line to contribute today so the streak does not break.',
-      collect: async (userId) => {
-        const profile = await this.profiles.profile(userId);
-        // Nothing to lose without a streak.
-        return profile && profile.streak.current > 0
-          ? { currentStreak: profile.streak.current, contributedToday: profile.today > 0 }
-          : null;
       },
     });
   }

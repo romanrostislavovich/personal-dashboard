@@ -1,0 +1,152 @@
+@let s = summary.value();
+
+<header class="toolbar">
+  <button matButton (click)="syncAll()" [disabled]="busy() || !s">
+    <mat-icon>sync</mat-icon> {{ 'development.account.syncNow' | transloco }}
+  </button>
+</header>
+
+@if (busy()) {
+  <mat-progress-bar mode="indeterminate" class="progress" />
+}
+
+<!-- Accounts are read with tokens, so without one there is nothing to show. -->
+@if (!s && !summary.isLoading()) {
+  <section class="setup">
+    <h3>{{ 'development.summary.emptyTitle' | transloco }}</h3>
+    <p class="hint">{{ 'development.summary.emptyHint' | transloco }}</p>
+    <a matButton="filled" [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+      {{ 'core.settings.openIntegrations' | transloco }}
+    </a>
+  </section>
+}
+
+@if (s) {
+  <mat-card appearance="outlined">
+    <mat-card-content class="account">
+      <div class="stats">
+        <div class="stat">
+          <span class="label">{{ 'development.account.currentStreak' | transloco }}</span>
+          <span class="value">🔥 {{ s.streak.current }}</span>
+          <span class="sub">
+            {{ 'development.account.longestStreak' | transloco }}: {{ s.streak.longest }}
+          </span>
+        </div>
+        <div class="stat">
+          <span class="label">{{ 'development.account.today' | transloco }}</span>
+          <span class="value">{{ s.today | number }}</span>
+          <span class="sub"
+            >{{ s.week | number }} {{ 'development.account.perWeek' | transloco }}</span
+          >
+        </div>
+        <div class="stat">
+          <span class="label">{{ 'development.account.totalContributions' | transloco }}</span>
+          <span class="value">{{ s.totalContributions | number }}</span>
+          @if (s.busiestDay; as best) {
+            <span class="sub">
+              {{ 'development.account.busiestDay' | transloco }}: {{ best.count }} ·
+              {{ best.day | date: 'd MMM y' }}
+            </span>
+          }
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- A card per connected service: a click opens its tab. -->
+  <div class="columns">
+    @for (account of s.accounts; track account.provider) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>
+            <a class="name" [routerLink]="['..', account.provider]">{{
+              names[account.provider]
+            }}</a>
+          </mat-card-title>
+          <mat-card-subtitle>&#64;{{ account.login }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content class="padded">
+          <div class="stats">
+            <div class="stat">
+              <span class="label">{{ 'development.account.currentStreak' | transloco }}</span>
+              <span class="value">🔥 {{ account.streak.current }}</span>
+            </div>
+            <div class="stat">
+              <span class="label">{{ 'development.account.today' | transloco }}</span>
+              <span class="value">{{ account.today | number }}</span>
+              <span class="sub">
+                {{ account.week | number }} {{ 'development.account.perWeek' | transloco }}
+              </span>
+            </div>
+            <div class="stat">
+              <span class="label">{{ 'development.account.contributions' | transloco }}</span>
+              <span class="value">{{ account.totalContributions | number }}</span>
+            </div>
+          </div>
+          @if (account.syncError) {
+            <p class="error">
+              <mat-icon inline>warning</mat-icon>
+              {{ 'development.account.syncError' | transloco }}: {{ account.syncError }}
+            </p>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>{{ 'development.summary.calendar' | transloco }}</mat-card-title>
+      <mat-card-subtitle>{{ 'development.summary.calendarHint' | transloco }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-chip-listbox
+        class="years"
+        required
+        hideSingleSelectionIndicator
+        [value]="year()"
+        [attr.aria-label]="'development.account.year' | transloco"
+        (change)="pickYear($event.value)"
+      >
+        @for (y of s.years; track y.year) {
+          <mat-chip-option [value]="y.year">{{ y.year }}</mat-chip-option>
+        }
+      </mat-chip-listbox>
+
+      <pd-contribution-heatmap [year]="year()" [days]="heatmapDays()" [today]="today" />
+
+      @if (yearTotals(); as t) {
+        <div class="stats year-stats">
+          <div class="stat">
+            <span class="label">{{ 'development.account.contributions' | transloco }}</span>
+            <span class="value">{{ t.contributions | number }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ 'development.account.commits' | transloco }}</span>
+            <span class="value">{{ t.commits | number }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ 'development.account.pullRequests' | transloco }}</span>
+            <span class="value">{{ t.pullRequests | number }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ 'development.account.reviews' | transloco }}</span>
+            <span class="value">{{ t.reviews | number }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ 'development.account.issues' | transloco }}</span>
+            <span class="value">{{ t.issues | number }}</span>
+          </div>
+        </div>
+      }
+
+      @if (shares().length > 1) {
+        <h3 class="subtitle">{{ 'development.summary.byService' | transloco }}</h3>
+        <pd-share-list [items]="shares()" />
+      }
+
+      <h3 class="subtitle">{{ 'development.account.byMonth' | transloco }}</h3>
+      <pd-bar-chart [bars]="months()" [label]="'development.account.byMonth' | transloco" />
+    </mat-card-content>
+  </mat-card>
+}

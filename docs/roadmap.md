@@ -15,12 +15,16 @@
 - **Finance:** wallets (personal / per project), recurring payments, automatic cost import from
   Hetzner Cloud and DeepSeek
 - **Development:** one section with tabs —
-  - **Open Source:** the public repositories of your GitHub account and its organizations appear
-    by themselves, any other is added by hand; a table with filters (source, language; forks,
+  - **Open Source:** the public repositories of your GitHub, GitLab and Bitbucket accounts and of
+    their organizations appear by themselves, any other is added by hand; a table with filters (source, language; forks,
     archived and hidden ones on request) and totals that follow them, stars history, issues, PRs, releases, npm downloads (the package of
     package.json, if npm confirms it is published from this repository); alerts only for the repositories you mark
   - **GitHub account:** contribution calendar by year, streaks, commits / PRs / reviews / issues,
     languages, top repositories, followers; an optional streak reminder in the morning digest
+  - **GitLab and Bitbucket accounts:** the same page as for GitHub; the activity calendar is
+    built from GitLab events and from Bitbucket commits and pull requests
+  - **Summary:** all connected accounts as one — a common calendar and streak, the share of
+    each service; the streak reminder of the digest counts all of them
   - **WakaTime:** coding time per day, project, language and editor; every day is copied to the
     dashboard, so the history grows past what the free plan keeps
 - **Tasks:** one section with two tabs —
@@ -84,8 +88,8 @@
 - **Activity** — a new section with computer activity tracked by the desktop app: time at the PC
   per day, time per application (and window or site), active vs idle time, daily and weekly
   totals; data stays on your own server
-- **Development: GitLab and Bitbucket** — the same account statistics as for GitHub; the section
-  then moves from tabs to its own submenu
+- **Development: self-hosted GitLab** — an instance of your own next to gitlab.com (its address
+  with the token); later the tabs of the section may move to their own submenu
 - **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
 - **Books** — reading list, progress, ratings and notes
 - **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and

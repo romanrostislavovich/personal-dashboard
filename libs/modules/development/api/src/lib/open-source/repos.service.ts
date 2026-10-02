@@ -11,6 +11,7 @@ import { AppConfig, DB, Database } from '@pd/api-core';
 import {
   addDays,
   DateParts,
+  RepoProvider,
   todayIn,
   toLocalDate,
   TrackedRepo,
@@ -18,9 +19,6 @@ import {
 } from '@pd/contracts';
 import { and, asc, desc, eq, gte, inArray } from 'drizzle-orm';
 import { z } from 'zod';
-import { GithubClient } from '../github/github.client';
-import { GithubTokenService } from '../github/github-token.service';
-import { GithubReposClient, RepoSnapshot } from './github-repos.client';
 import {
   repoDailyStats,
   RepoDailyStatsRow,
@@ -28,6 +26,8 @@ import {
   trackedRepos,
 } from './open-source.schema';
 import { planRepoList } from './repo-list-plan';
+import { RepoSnapshot, RepoSource } from './repo-source';
+import { RepoSourcesService } from './repo-sources.service';
 import { RepoSyncEvents, RepoSyncService } from './repo-sync.service';
 import { starsDelta } from './star-stats';
 
@@ -37,7 +37,8 @@ type RepoUpdate = z.output<typeof trackedRepoUpdateSchema>;
 
 /**
  * Repositories of the Open Source section. The list builds itself: every sync brings the public
- * repositories of the GitHub account and of its organizations; any other can be added by hand.
+ * repositories of the connected accounts (GitHub, GitLab, Bitbucket) and of their organizations;
+ * any other can be added by hand.
  */
 @Injectable()
 export class ReposService {
@@ -46,7 +47,7 @@ export class ReposService {
   constructor(
     @Inject(DB) private readonly db: Database,
     @Inject(ConfigService) private readonly config: AppConfig,
-    private readonly tokens: GithubTokenService,
+    private readonly sources: RepoSourcesService,
     private readonly repoSync: RepoSyncService,
   ) {}
 
@@ -90,16 +91,25 @@ export class ReposService {
   }
 
   /** Adds a repository by hand — one the account does not bring — and loads it right away. */
-  async add(userId: string, fullName: string, npmPackage: string | null): Promise<void> {
-    const token = await this.requireToken(userId);
-    const [snapshot] = await new GithubReposClient(token).getMany([fullName]);
+  async add(
+    userId: string,
+    provider: RepoProvider,
+    fullName: string,
+    npmPackage: string | null,
+  ): Promise<void> {
+    const source = await this.sources.one(userId, provider);
+    if (!source) {
+      throw new BadRequestException(`The ${provider} token is not set`);
+    }
+    const [snapshot] = await source.getMany([fullName]);
     if (!snapshot) {
-      throw new BadRequestException('Repository not found on GitHub');
+      throw new BadRequestException('Repository not found');
     }
     const [row] = await this.db
       .insert(trackedRepos)
       .values({
         userId,
+        provider,
         relation: 'manual',
         externalId: snapshot.externalId,
         fullName: snapshot.fullName,
@@ -112,7 +122,7 @@ export class ReposService {
     if (!row) {
       throw new ConflictException('Repository is already tracked');
     }
-    await this.repoSync.apply(row, snapshot, new GithubClient(token));
+    await this.repoSync.apply(row, snapshot, source);
   }
 
   /** Hides or shows a repository, switches its notifications, sets its npm package. */
@@ -150,19 +160,35 @@ export class ReposService {
   }
 
   /**
-   * Brings the list in line with the account and refreshes every repository: two or three
-   * GitHub requests for all of them. Returns the news of the repositories with notifications on.
-   * Without a token there is nothing to read with — the list stays as it is.
+   * Brings the list in line with the connected accounts and refreshes every repository.
+   * Returns the news of the repositories with notifications on. A service without a token is
+   * left as it is: there is nothing to read it with.
    */
   async syncAll(userId: string): Promise<RepoSyncEvents[]> {
-    const token = await this.tokens.token(userId);
-    if (!token) {
-      return [];
+    const events: RepoSyncEvents[] = [];
+    let failure: unknown = null;
+    for (const source of await this.sources.all(userId)) {
+      try {
+        events.push(...(await this.syncSource(userId, source)));
+      } catch (error) {
+        // One service being down or its token revoked must not stop the others.
+        this.logger.warn(`Repository sync with ${source.provider} failed: ${error}`);
+        failure ??= error;
+      }
     }
-    const client = new GithubReposClient(token);
-    const rest = new GithubClient(token);
-    const rows = await this.db.select().from(trackedRepos).where(eq(trackedRepos.userId, userId));
-    const plan = planRepoList(rows, await client.listAccount());
+    if (failure) {
+      throw failure;
+    }
+    return events;
+  }
+
+  /** The repositories of one service: a few requests for all of them on GitHub. */
+  private async syncSource(userId: string, source: RepoSource): Promise<RepoSyncEvents[]> {
+    const rows = await this.db
+      .select()
+      .from(trackedRepos)
+      .where(and(eq(trackedRepos.userId, userId), eq(trackedRepos.provider, source.provider)));
+    const plan = planRepoList(rows, await source.listAccount());
 
     if (plan.removed.length > 0) {
       await this.db.delete(trackedRepos).where(
@@ -188,6 +214,7 @@ export class ReposService {
         .insert(trackedRepos)
         .values({
           userId,
+          provider: source.provider,
           relation: repo.relation,
           externalId: repo.externalId,
           fullName: repo.fullName,
@@ -199,20 +226,20 @@ export class ReposService {
         fresh.push({ row, snapshot: repo });
       }
     }
-    const manual = await client.getMany(plan.manual.map((row) => row.fullName));
+    const manual = await source.getMany(plan.manual.map((row) => row.fullName));
     for (const [index, row] of plan.manual.entries()) {
       const snapshot = manual[index];
       if (snapshot) {
         fresh.push({ row, snapshot });
       } else {
-        await this.repoSync.markFailed(row, new Error('Repository not found on GitHub'));
+        await this.repoSync.markFailed(row, new Error('Repository not found'));
       }
     }
 
     const events: RepoSyncEvents[] = [];
     for (const { row, snapshot } of fresh) {
       try {
-        const result = await this.repoSync.apply(row, snapshot, rest);
+        const result = await this.repoSync.apply(row, snapshot, source);
         if (result) {
           events.push(result);
         }
@@ -223,14 +250,6 @@ export class ReposService {
       }
     }
     return events;
-  }
-
-  private async requireToken(userId: string): Promise<string> {
-    const token = await this.tokens.token(userId);
-    if (!token) {
-      throw new BadRequestException('GitHub token is not set');
-    }
-    return token;
   }
 
   private today(): DateParts {

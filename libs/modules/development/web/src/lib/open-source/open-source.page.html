@@ -1,10 +1,8 @@
-@let tokenMissing = settings.value() && !settings.value()?.tokenConfigured;
-
 <header class="toolbar">
-  <button matButton (click)="add()" [disabled]="busy() || tokenMissing">
+  <button matButton (click)="add()" [disabled]="busy() || tokenMissing()">
     <mat-icon>add</mat-icon> {{ 'development.oss.add' | transloco }}
   </button>
-  <button matButton (click)="syncAll()" [disabled]="busy() || tokenMissing">
+  <button matButton (click)="syncAll()" [disabled]="busy() || tokenMissing()">
     <mat-icon>sync</mat-icon> {{ 'development.oss.syncNow' | transloco }}
   </button>
 </header>
@@ -14,9 +12,9 @@
 }
 
 <!-- Repositories are read with the token, so without one the list cannot build itself. -->
-@if (tokenMissing) {
+@if (tokenMissing()) {
   <section class="setup">
-    <h3>{{ 'development.github.noTokenTitle' | transloco }}</h3>
+    <h3>{{ 'development.oss.noTokenTitle' | transloco }}</h3>
     <p class="hint">{{ 'development.oss.noTokenHint' | transloco }}</p>
     <a matButton="filled" [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
       {{ 'core.settings.openIntegrations' | transloco }}
@@ -83,6 +81,20 @@
         }
       </mat-select>
     </mat-form-field>
+    @if (providers().length > 1) {
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>{{ 'development.oss.service' | transloco }}</mat-label>
+        <mat-select
+          [value]="filter().provider"
+          (selectionChange)="setFilter({ provider: $event.value })"
+        >
+          <mat-option [value]="null">{{ 'development.oss.all' | transloco }}</mat-option>
+          @for (provider of providers(); track provider) {
+            <mat-option [value]="provider">{{ providerNames[provider] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
     <mat-form-field subscriptSizing="dynamic">
       <mat-label>{{ 'development.oss.language' | transloco }}</mat-label>
       <mat-select
@@ -148,6 +160,9 @@
                   <span class="owner">{{ short.owner }}/</span><b>{{ short.name }}</b>
                 </span>
               </button>
+              @if (providers().length > 1) {
+                <span class="badge">{{ providerNames[repo.provider] }}</span>
+              }
               @if (repo.isFork) {
                 <span class="badge">{{ 'development.oss.badges.fork' | transloco }}</span>
               }

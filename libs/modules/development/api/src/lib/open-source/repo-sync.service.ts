@@ -3,8 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { AppConfig, DB, Database } from '@pd/api-core';
 import { todayIn, toLocalDate } from '@pd/contracts';
 import { eq, sql } from 'drizzle-orm';
-import { GithubClient, GithubIssue } from '../github/github.client';
-import { RepoSnapshot } from './github-repos.client';
+import { RepoIssue, RepoSnapshot, RepoSource } from './repo-source';
 import { fetchNpmPackageRepo, fetchNpmWeeklyDownloads } from './npm.client';
 import { repoDailyStats, TrackedRepoRow, trackedRepos } from './open-source.schema';
 import { crossedStarMilestone } from './star-stats';
@@ -15,8 +14,8 @@ const OWNERSHIP_TTL_MS = 24 * 60 * 60 * 1000;
 /** What happened to the repository since the last sync — for notifications. */
 export interface RepoSyncEvents {
   fullName: string;
-  newIssues: GithubIssue[];
-  newPulls: GithubIssue[];
+  newIssues: RepoIssue[];
+  newPulls: RepoIssue[];
   newRelease: { tag: string; htmlUrl: string } | null;
   starMilestone: number | null;
 }
@@ -39,7 +38,7 @@ export class RepoSyncService {
   async apply(
     repo: TrackedRepoRow,
     snapshot: RepoSnapshot,
-    github: GithubClient,
+    source: RepoSource,
   ): Promise<RepoSyncEvents | null> {
     // A package set by hand wins over the detected one (`null` — "it has none").
     const npmPackage = repo.npmPackageManual
@@ -91,7 +90,7 @@ export class RepoSyncService {
     if (!repo.notify || !repo.lastSyncedAt) {
       return null;
     }
-    const created = await github.listCreatedSince(snapshot.fullName, repo.lastSyncedAt);
+    const created = await source.listCreatedSince(snapshot.fullName, repo.lastSyncedAt);
     return {
       fullName: snapshot.fullName,
       newIssues: created.filter((item) => !item.isPullRequest),
@@ -112,6 +111,7 @@ export class RepoSyncService {
    * The package of package.json — only if npm confirms it is published from this repository.
    * A name alone proves nothing: a fork carries the name of the original, and an app called
    * `docs` or `website` shares its name with somebody else's package.
+   * (Only GitHub repositories carry a package name here; elsewhere it is set by hand.)
    */
   private async detectedPackage(
     repo: TrackedRepoRow,

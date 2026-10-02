@@ -1,5 +1,5 @@
 import { RepoRelation } from '@pd/contracts';
-import { AccountRepo } from './github-repos.client';
+import { AccountRepo } from './repo-source';
 
 export interface SavedRepo {
   id: string;

@@ -23,9 +23,44 @@ const npmPackageSchema = z
   .transform(npmPackageName)
   .pipe(z.string().min(1).max(214).regex(NPM_NAME, 'Expected an npm package name'));
 
-/** Where repositories come from. GitLab and Bitbucket join here later. */
-export const REPO_PROVIDERS = ['github'] as const;
+/** Where repositories come from. */
+export const REPO_PROVIDERS = ['github', 'gitlab', 'bitbucket'] as const;
 export type RepoProvider = (typeof REPO_PROVIDERS)[number];
+
+const REPO_HOSTS: Record<string, RepoProvider> = {
+  'github.com': 'github',
+  'gitlab.com': 'gitlab',
+  'bitbucket.org': 'bitbucket',
+};
+/** GitLab projects live in groups of any depth: `group/subgroup/name`. */
+const REPO_PATH: Record<RepoProvider, RegExp> = {
+  github: /^[\w.-]+\/[\w.-]+$/,
+  gitlab: /^[\w.-]+(\/[\w.-]+)+$/,
+  bitbucket: /^[\w.-]+\/[\w.-]+$/,
+};
+
+/**
+ * A repository from what the user pasted: its link on GitHub, GitLab or Bitbucket, or the bare
+ * `owner/name` — then the service is `provider` (GitHub unless said otherwise).
+ */
+export function parseRepoReference(
+  value: string,
+  provider: RepoProvider = 'github',
+): { provider: RepoProvider; repo: string } | null {
+  const link = value.trim().match(/^(?:https?:\/\/)?(?:www\.)?([a-z.]+\.[a-z]+)\/(.+)$/i);
+  const host = link ? REPO_HOSTS[link[1].toLowerCase()] : undefined;
+  if (link && !host) {
+    return null;
+  }
+  const repo = (link ? link[2] : value.trim())
+    .split(/[?#]/)[0]
+    // GitLab pages of a project go after `/-/`, Bitbucket ones after `/src/`.
+    .replace(/\/(-|src)\/.*$/, '')
+    .replace(/\/+$/, '')
+    .replace(/\.git$/i, '');
+  const found = host ?? provider;
+  return REPO_PATH[found].test(repo) ? { provider: found, repo } : null;
+}
 
 /**
  * How a repository got into the list: `owner` and `organization` come from the integration
@@ -36,16 +71,23 @@ export const REPO_RELATIONS = ['owner', 'organization', 'manual'] as const;
 export type RepoRelation = (typeof REPO_RELATIONS)[number];
 
 /** Adding a repository by hand — one the integration does not bring by itself. */
-export const trackedRepoInputSchema = z.object({
-  /** `owner/name` or a link https://github.com/owner/name. */
-  repo: z
-    .string()
-    .trim()
-    .transform((value) => value.replace(/^https?:\/\/github\.com\//i, '').replace(/\/+$/, ''))
-    .pipe(z.string().regex(/^[\w.-]+\/[\w.-]+$/, 'Expected owner/name')),
-  /** The npm package of this repository — for download statistics. */
-  npmPackage: npmPackageSchema.nullish(),
-});
+export const trackedRepoInputSchema = z
+  .object({
+    /** A link to the repository on GitHub, GitLab or Bitbucket, or `owner/name`. */
+    repo: z.string().trim().min(1).max(300),
+    /** The service of a bare `owner/name`; a link names its service itself. */
+    provider: z.enum(REPO_PROVIDERS).optional(),
+    /** The npm package of this repository — for download statistics. */
+    npmPackage: npmPackageSchema.nullish(),
+  })
+  .transform((input, context) => {
+    const reference = parseRepoReference(input.repo, input.provider);
+    if (!reference) {
+      context.addIssue({ code: 'custom', path: ['repo'], message: 'Expected owner/name' });
+      return z.NEVER;
+    }
+    return { ...input, ...reference };
+  });
 export type TrackedRepoInput = z.input<typeof trackedRepoInputSchema>;
 
 /** `PATCH /api/development/repos/:id`: only the fields sent change. */
