@@ -60,7 +60,7 @@
     "empty": "Connect Last.fm or Spotify in the Music section",
     "open": "Details"
   },
-  "noSource": "No music source connected yet: connect Last.fm or Spotify to see history, statistics and tops.",
+  "noSource": "No music sources yet: connect Last.fm or Spotify to see your history, statistics and tops.",
   "guide": {
     "lastfm": {
       "1": "Sign up at last.fm and turn on scrobbling in what you listen with (for Spotify: last.fm → Settings → Applications → Spotify).",
@@ -72,6 +72,49 @@
       "2": "As its Redirect URI, add the address of the dashboard plus /api/music/spotify/callback (Spotify does not accept localhost — use 127.0.0.1 locally).",
       "3": "Put the Client ID and the Client Secret into the server's .env as SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET and restart the dashboard.",
       "4": "Press “Connect” here and allow access in Spotify."
+    },
+    "soundcloud": {
+      "1": "Open your profile on soundcloud.com and copy its address — https://soundcloud.com/your-name. That is enough for public tracks.",
+      "2": "For private tracks: sign in to soundcloud.com, open the developer tools (F12) → Application → Cookies → https://soundcloud.com.",
+      "3": "Copy the value of the oauth_token cookie and paste it here as the token.",
+      "4": "The token gives full access to your SoundCloud account: it is stored encrypted on your server and sent only to SoundCloud. It expires when you sign out — then connect again."
     }
+  },
+  "tabs": {
+    "listening": "Listening",
+    "soundcloud": "SoundCloud"
+  },
+  "soundcloud": {
+    "plays": "Plays",
+    "week": "7 days",
+    "perWeek": "in 7 days",
+    "likes": "Likes",
+    "reposts": "Reposts",
+    "comments": "Comments",
+    "followers": "Followers",
+    "tracks": "Tracks",
+    "track": "Track",
+    "published": "Uploaded",
+    "private": "Private",
+    "playsHistory": "Plays of all tracks over 30 days",
+    "trackedSince": "Counted since",
+    "historyCollecting": "Collecting history: SoundCloud gives only the current numbers, so the chart appears from the second day.",
+    "notifyOn": "Notifications on: new comments and play milestones",
+    "notifyOff": "Notifications off for this track",
+    "noTracks": "The profile has no tracks yet.",
+    "emptyTitle": "Connect SoundCloud",
+    "emptyHint": "Your own tracks and mixes with their plays, likes, reposts and comments. Paste the link to your profile in the integrations.",
+    "widgetEmpty": "Connect SoundCloud in the integrations",
+    "connect": {
+      "description": "Your own tracks: plays, likes, reposts, comments",
+      "hint": "Paste the link to your profile. The token is needed only for private tracks.",
+      "profile": "Link to the profile",
+      "token": "Sign-in token (optional)",
+      "withToken": "With a sign-in token: private tracks are counted too.",
+      "withoutToken": "Without a token: only public tracks.",
+      "unofficial": "SoundCloud gives no official access without a request, so the dashboard reads what the SoundCloud site reads. It may stop working when SoundCloud changes the site.",
+      "confirmDisconnect": "Disconnect SoundCloud? The saved history of plays will be deleted."
+    },
+    "synced": "Updated"
   }
 }

@@ -37,7 +37,8 @@
 - **Diary:** visual editor over Markdown (the source is a click away) with autosave, mood,
   hashtags, emoji marks on phrases, photos, search, year heatmap, “on this day”, mood insights,
   templates; `/d`, `/mood`, `/today` and photos from Telegram
-- **Music:** Last.fm history and tops, Spotify “now playing”
+- **Music:** Last.fm history and tops, Spotify “now playing”; your own tracks on SoundCloud —
+  plays, likes, reposts and comments saved day by day, alerts about comments and play milestones
 - **Games:** Steam (several accounts: level, hours and achievements per game), Dota 2 (the 500 latest
   matches of every mode from Steam, complemented by OpenDota) and World of Warcraft (Battle.net);
   several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO;
@@ -97,8 +98,6 @@
 - **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and
   its trend, heart rate; data from smart watches and fitness bands (Apple Health, Google Fit /
   Health Connect, Garmin, Fitbit, Mi Band / Zepp and similar); runs and rides from Strava
-- **Music: SoundCloud** — an integration of the Music module, next to Last.fm and Spotify: my own
-  mixes and tracks with their plays, likes, reposts and comments
 - **Science** — a section for science
 - **Psychology** — a section for psychology; how exactly to tie it in is still open (for example
   mood and diary patterns, self-reflection prompts, tests and notes)

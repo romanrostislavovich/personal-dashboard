@@ -1,64 +1,48 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { MatTabsModule } from '@angular/material/tabs';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { MUSIC_TOP_PERIODS, MusicTopPeriod } from '@pd/contracts';
-import { INTEGRATIONS_LINK, SparklineComponent } from '@pd/web-core';
-import { interval } from 'rxjs';
-import { MusicApi } from './music.api';
-import { NowPlayingComponent } from './now-playing.component';
-import { TopListComponent } from './top-list.component';
 
-/** "Now playing" changes often — refresh every 30 seconds while the page is open. */
-const NOW_PLAYING_REFRESH_MS = 30_000;
+/** Subsections of Music: each is a child route, so a tab has its own address. */
+const TABS = [
+  { path: 'listening', labelKey: 'music.tabs.listening' },
+  { path: 'soundcloud', labelKey: 'music.tabs.soundcloud' },
+] as const;
 
+/** The Music section: a title, the tabs and the subsection under them. */
 @Component({
   selector: 'pd-music-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    DatePipe,
-    DecimalPipe,
-    MatButtonModule,
-    MatCardModule,
-    MatButtonToggleModule,
-    RouterLink,
-    TranslocoPipe,
-    SparklineComponent,
-    NowPlayingComponent,
-    TopListComponent,
-  ],
-  templateUrl: './music.page.html',
-  styleUrl: './music.page.scss',
+  imports: [MatTabsModule, RouterLink, RouterLinkActive, RouterOutlet, TranslocoPipe],
+  template: `
+    <header class="page-header">
+      <h1 class="page-title">{{ 'music.title' | transloco }}</h1>
+    </header>
+
+    <nav mat-tab-nav-bar mat-stretch-tabs="false" [tabPanel]="panel">
+      @for (tab of tabs; track tab.path) {
+        <a
+          mat-tab-link
+          [routerLink]="tab.path"
+          routerLinkActive
+          #link="routerLinkActive"
+          [active]="link.isActive"
+        >
+          {{ tab.labelKey | transloco }}
+        </a>
+      }
+    </nav>
+    <mat-tab-nav-panel #panel class="panel">
+      <router-outlet />
+    </mat-tab-nav-panel>
+  `,
+  styles: `
+    .panel {
+      display: block;
+      padding-top: 16px;
+    }
+  `,
 })
 export class MusicPage {
-  private readonly api = inject(MusicApi);
-
-  /** Last.fm and Spotify are connected in Settings → Integrations (music.integration.ts). */
-  protected readonly integrations = INTEGRATIONS_LINK;
-  protected readonly periods = MUSIC_TOP_PERIODS;
-  protected readonly period = signal<MusicTopPeriod>('7day');
-
-  protected readonly settings = this.api.settings();
-  protected readonly stats = this.api.stats();
-  protected readonly tops = this.api.tops(this.period);
-  protected readonly nowPlaying = this.api.nowPlaying();
-
-  protected readonly hasSource = computed(() => {
-    const settings = this.settings.value();
-    return Boolean(settings?.lastfm.username || settings?.spotify.connected);
-  });
-
-  protected readonly playsPoints = computed(
-    () => this.stats.value()?.playsByDay.map((p) => ({ at: p.day, value: p.plays })) ?? [],
-  );
-
-  constructor() {
-    interval(NOW_PLAYING_REFRESH_MS)
-      .pipe(takeUntilDestroyed())
-      .subscribe(() => this.nowPlaying.reload());
-  }
+  protected readonly tabs = TABS;
 }

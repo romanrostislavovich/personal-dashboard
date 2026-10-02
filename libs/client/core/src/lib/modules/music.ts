@@ -5,6 +5,9 @@ import {
   MusicTopPeriod,
   MusicTops,
   NowPlaying,
+  SoundcloudConnectInput,
+  SoundcloudStats,
+  SoundcloudTrackUpdate,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -16,6 +19,8 @@ export const MUSIC_READS = {
   stats: () => apiRequest(`${BASE}/stats`),
   tops: (period: MusicTopPeriod) => apiRequest(`${BASE}/tops`, { period }),
   nowPlaying: () => apiRequest(`${BASE}/now-playing`),
+  /** The user's own tracks on SoundCloud; `null` — not connected. */
+  soundcloud: () => apiRequest(`${BASE}/soundcloud`),
 };
 
 export function musicApi(api: ApiClient) {
@@ -33,6 +38,16 @@ export function musicApi(api: ApiClient) {
     /** The Spotify sign-in page the user has to open. */
     spotifyConnectUrl: () => api.post<{ url: string }>(`${BASE}/spotify/connect`, {}),
     disconnectSpotify: () => api.delete(`${BASE}/spotify`),
+
+    soundcloud: () => api.read<SoundcloudStats | null>(MUSIC_READS.soundcloud()),
+    /** Finds the profile and loads its tracks right away. */
+    connectSoundcloud: (input: SoundcloudConnectInput) =>
+      api.put<void>(`${BASE}/soundcloud`, input),
+    /** Forgets the profile, its tracks and their history. */
+    disconnectSoundcloud: () => api.delete(`${BASE}/soundcloud`),
+    syncSoundcloud: () => api.post<void>(`${BASE}/soundcloud/sync`, {}),
+    updateSoundcloudTrack: (id: string, update: SoundcloudTrackUpdate) =>
+      api.patch<void>(`${BASE}/soundcloud/tracks/${id}`, update),
   };
 }
 
