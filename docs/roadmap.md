@@ -38,8 +38,8 @@
   hashtags, emoji marks on phrases, photos, search, year heatmap, “on this day”, mood insights,
   templates; `/d`, `/mood`, `/today` and photos from Telegram
 - **Music:** Last.fm history and tops, Spotify “now playing”
-- **Games:** Steam (several accounts: level, hours and achievements per game), Dota 2 (full match
-  history of every mode from Steam, complemented by OpenDota) and World of Warcraft (Battle.net);
+- **Games:** Steam (several accounts: level, hours and achievements per game), Dota 2 (the 500 latest
+  matches of every mode from Steam, complemented by OpenDota) and World of Warcraft (Battle.net);
   several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO;
   refreshed every half an hour and with the "Refresh all" button, an optional OpenDota API key
 - **Weather:** today's forecast and the week ahead for your city (Open-Meteo, no API key) with
