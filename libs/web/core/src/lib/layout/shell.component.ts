@@ -15,6 +15,7 @@ import { RealtimeNotifier } from '../realtime/realtime-notifier';
 import { ToastHostComponent } from '../toast/toast-host.component';
 import { DASHBOARD_MODULES } from '../dashboard-module';
 import { CommandPaletteComponent } from '../palette/command-palette.component';
+import { OfflineService } from '../offline/offline.service';
 import { LayoutService } from './layout.service';
 
 interface NavItem {
@@ -50,6 +51,7 @@ export class ShellComponent {
   }
 
   private readonly dialog = inject(MatDialog);
+  protected readonly offline = inject(OfflineService);
 
   /** Ctrl+K (⌘K on a Mac) from anywhere opens the command palette. */
   @HostListener('document:keydown', ['$event'])

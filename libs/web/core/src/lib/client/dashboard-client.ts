@@ -16,6 +16,7 @@ export const DASHBOARD_CLIENT = new InjectionToken<DashboardClient>('DashboardCl
       storage: browserStorage(),
       // The refresh token stays in an httpOnly cookie: page scripts (an XSS) cannot read it.
       refreshTokenIn: 'cookie',
+      fetch: pastServiceWorker,
     });
   },
 });
@@ -28,3 +29,17 @@ function forgetLegacyToken(): void {
     // Storage is blocked: nothing was kept there either.
   }
 }
+
+/**
+ * The service worker saves answers of the API for offline use; the stream of live events is
+ * not an answer to save, so it goes around the worker (`ngsw-bypass`).
+ */
+const pastServiceWorker: typeof fetch = (input, init) => {
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  return url.includes('/api/events')
+    ? fetch(input, {
+        ...init,
+        headers: { ...(init?.headers as Record<string, string>), 'ngsw-bypass': 'true' },
+      })
+    : fetch(input, init);
+};

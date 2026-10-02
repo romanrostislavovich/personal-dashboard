@@ -28,6 +28,21 @@
       }
     </nav>
 
+    <!-- Without a connection, or with changes that have not reached the server yet. -->
+    @if (!offline.online() || auth.offline() || offline.pending() > 0) {
+      <div class="offline" role="status">
+        <mat-icon>{{ offline.pending() > 0 ? 'cloud_upload' : 'cloud_off' }}</mat-icon>
+        <span>
+          @if (!offline.online() || auth.offline()) {
+            {{ 'core.offline.offline' | transloco }}
+          }
+          @if (offline.pending() > 0) {
+            {{ 'core.offline.pending' | transloco: { count: offline.pending() } }}
+          }
+        </span>
+      </div>
+    }
+
     @if (auth.user(); as user) {
       <div class="user">
         <span class="avatar" aria-hidden="true">{{ initials() }}</span>

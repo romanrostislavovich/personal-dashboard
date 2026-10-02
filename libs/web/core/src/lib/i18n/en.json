@@ -352,5 +352,17 @@
       "dark": "Dark theme",
       "system": "Theme as on the device"
     }
+  },
+  "offline": {
+    "offline": "No connection.",
+    "pending": "Waiting to be sent: {{count}}.",
+    "savedTitle": "Saved on this device",
+    "savedText": "There is no connection: it will be sent when the server answers.",
+    "sentTitle": "Sent to the server",
+    "sentText": "Changes made offline: {{count}}.",
+    "refusedTitle": "The server refused some changes",
+    "refusedText": "Changes made offline that were not accepted: {{count}}.",
+    "updateReady": "A new version of the dashboard is ready.",
+    "reload": "Reload"
   }
 }

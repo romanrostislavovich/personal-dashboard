@@ -30,6 +30,10 @@ single Docker image on your server. Every feature is a module: enable, disable o
 
 The UI, notifications and AI answers are available in **English** and **Russian**.
 
+Everyday comfort: a command palette (Ctrl+K) that opens any page and searches all your data,
+themes (light / dark, any accent colour, fonts, density), a home page you arrange yourself, and an
+installable app (PWA) that opens offline and sends your changes when the connection is back.
+
 Security: short-lived access tokens with the refresh token in an httpOnly cookie, a list of signed-in
 devices, two-factor sign-in (an authenticator app, recovery codes), throttled sign-in, a 30-day trash
 for everything deleted (by you or by the AI), an AI action log and per-module switches of what the

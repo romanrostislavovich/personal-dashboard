@@ -7,11 +7,15 @@ import {
 } from '@pd/contracts';
 import { ApiClient } from './api-client';
 import { API_PATHS, authApi, projectsApi } from './core-api';
+import { Outbox } from './outbox';
 import { ClientPlatform } from './platform';
 import { RealtimeConnection } from './realtime';
 import { Session } from './session';
 
 /** Signing in either finishes or asks for a code from the authenticator app. */
+/** The profile as last seen, for starting without a connection. */
+const USER_KEY = 'pd.user';
+
 export type SignInResult =
   { status: 'signed-in'; user: CurrentUser } | { status: 'code-required'; challengeToken: string };
 
@@ -26,7 +30,8 @@ export type SignInResult =
 export function createDashboardClient(platform: ClientPlatform) {
   const refreshTokenIn = platform.refreshTokenIn ?? 'storage';
   const session = new Session(platform.storage, refreshTokenIn);
-  const api = new ApiClient(platform, session);
+  const outbox = new Outbox(platform.storage);
+  const api = new ApiClient(platform, session, outbox);
   const auth = authApi(api);
   const realtime = new RealtimeConnection(api, session, platform.fetch);
   /** Tells the server where the refresh token should go. */
@@ -34,12 +39,15 @@ export function createDashboardClient(platform: ClientPlatform) {
 
   const started = async (response: LoginResponse): Promise<CurrentUser> => {
     await session.start(response.accessToken, response.refreshToken);
+    await platform.storage.set(USER_KEY, JSON.stringify(response.user));
     return response.user;
   };
 
   return {
     session,
     api,
+    /** Changes made offline that wait to be sent; `api.flushOutbox()` sends them. */
+    outbox,
     auth,
     projects: projectsApi(api),
     realtime,
@@ -67,9 +75,30 @@ export function createDashboardClient(platform: ClientPlatform) {
      */
     async restoreSession(): Promise<CurrentUser | null> {
       try {
-        return (await api.refresh())?.user ?? null;
+        const result = await api.refresh();
+        if (result) {
+          await platform.storage.set(USER_KEY, JSON.stringify(result.user));
+        } else {
+          // The server ended the session: nothing to go on with offline either.
+          await platform.storage.remove(USER_KEY);
+        }
+        return result?.user ?? null;
       } catch {
-        return null; // No connection: signed out for now, the page offers to sign in.
+        return null; // No connection: see `offlineUser`.
+      }
+    },
+
+    /**
+     * The user this device was signed in as when the server could last be reached — for opening
+     * the app without a connection: saved data is shown, changes wait in the outbox. `null` —
+     * signed out, or never signed in here.
+     */
+    async offlineUser(): Promise<CurrentUser | null> {
+      try {
+        const text = await platform.storage.get(USER_KEY);
+        return text ? (JSON.parse(text) as CurrentUser) : null;
+      } catch {
+        return null;
       }
     },
 
@@ -77,6 +106,7 @@ export function createDashboardClient(platform: ClientPlatform) {
     async signOut(): Promise<void> {
       const refreshToken = await session.refreshToken();
       await api.post(API_PATHS.logout, refreshToken ? { refreshToken } : {}).catch(() => undefined);
+      await platform.storage.remove(USER_KEY);
       await session.end();
     },
   };

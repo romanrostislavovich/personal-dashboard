@@ -23,12 +23,20 @@ export class AuthService {
 
   readonly token = signal<string | null>(this.client.session.token);
   readonly user = signal<CurrentUser | null>(null);
-  readonly isLoggedIn = computed(() => this.token() !== null);
+  /**
+   * The app was opened without a connection: the user is the one last signed in on this device,
+   * there is no access token, pages show what the service worker has saved and changes wait in
+   * the outbox (see OfflineService).
+   */
+  readonly offline = signal(false);
+  readonly isLoggedIn = computed(() => this.token() !== null || this.offline());
 
   constructor() {
     const unsubscribe = this.client.session.subscribe((token) => {
       this.token.set(token);
-      if (token === null) {
+      if (token !== null) {
+        this.offline.set(false);
+      } else {
         this.user.set(null);
         void this.router.navigateByUrl('/login');
       }
@@ -62,7 +70,24 @@ export class AuthService {
 
   /** A new access token after a 401 from `HttpClient`; `null` — the session is over. */
   async refreshToken(): Promise<string | null> {
-    return (await this.client.api.refresh().catch(() => null))?.accessToken ?? null;
+    // `undefined` — no answer (still offline); `null` — the server ended the session.
+    const result = await this.client.api.refresh().catch(() => undefined);
+    if (result === null && this.offline()) {
+      this.leaveOffline();
+    }
+    return result?.accessToken ?? null;
+  }
+
+  /** The connection may be back: turns an offline start into a real session. */
+  async reconnect(): Promise<void> {
+    if (this.offline()) {
+      const result = await this.client.api.refresh().catch(() => undefined);
+      if (result) {
+        this.signedIn(result.user);
+      } else if (result === null) {
+        this.leaveOffline();
+      }
+    }
   }
 
   /** Loads the profile using the saved token (on app start). */
@@ -70,6 +95,13 @@ export class AuthService {
     const user = await this.client.restoreSession();
     if (user) {
       this.signedIn(user);
+      return;
+    }
+    // No connection, but this device was signed in: open with what is saved.
+    const remembered = await this.client.offlineUser();
+    if (remembered) {
+      this.user.set(remembered);
+      this.offline.set(true);
     }
   }
 
@@ -82,7 +114,18 @@ export class AuthService {
   }
 
   logout(): void {
+    if (this.offline()) {
+      // There is no session to end: its change would not be noticed (see the constructor).
+      this.leaveOffline();
+    }
+    void forgetSavedData();
     void this.client.signOut();
+  }
+
+  private leaveOffline(): void {
+    this.offline.set(false);
+    this.user.set(null);
+    void this.router.navigateByUrl('/login');
   }
 
   private signedIn(user: CurrentUser): void {
@@ -105,5 +148,20 @@ export class AuthService {
         // Not worth an error on screen: the next opening tries again.
         .catch(() => undefined);
     }
+  }
+}
+
+/**
+ * The answers the service worker saved for offline use belong to the user who signed out:
+ * the next one must not see them.
+ */
+async function forgetSavedData(): Promise<void> {
+  try {
+    const names = await globalThis.caches?.keys();
+    await Promise.all(
+      (names ?? []).filter((name) => name.includes(':data:')).map((name) => caches.delete(name)),
+    );
+  } catch {
+    // No cache storage (an old browser, a private window): nothing was saved.
   }
 }

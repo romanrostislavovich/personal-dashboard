@@ -82,4 +82,63 @@ describe('resolveLocale', () => {
     expect(resolveLocale(null, ['de-DE', 'ru-RU'])).toBe('ru');
     expect(resolveLocale('fr', ['de'])).toBe('en');
   });
+
+  it('keeps a change made offline and sends it when the server answers again', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(json({ accessToken: 'a1', user: { id: 'u1' } }))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce(json({ id: 't1' }, 201));
+    const client = createDashboardClient({
+      baseUrl: '',
+      storage: memoryStorage(),
+      fetch,
+      refreshTokenIn: 'cookie',
+    });
+    await client.signIn({ email: 'a@b.c', password: 'x' });
+
+    // No connection: the call does not fail, the task waits.
+    expect(await client.api.post('/api/tasks', { title: 'milk' })).toBeUndefined();
+    expect(await client.outbox.pending()).toBe(1);
+
+    expect(await client.api.flushOutbox()).toMatchObject({ sent: 1, left: 0 });
+    const [url, init] = fetch.mock.calls[2] as [string, RequestInit];
+    expect(url).toBe('/api/tasks');
+    expect(JSON.parse(init.body as string)).toEqual({ title: 'milk' });
+  });
+
+  it('does not queue what needs an answer: reads and outside services fail offline', async () => {
+    const fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    const client = createDashboardClient({ baseUrl: '', storage: memoryStorage(), fetch });
+    await expect(client.api.get('/api/tasks')).rejects.toThrow('Failed to fetch');
+    await expect(client.api.post('/api/ai/chat', {})).rejects.toThrow('Failed to fetch');
+    expect(await client.outbox.pending()).toBe(0);
+  });
+
+  it('remembers the user for a start without a connection, until signed out', async () => {
+    const storage = memoryStorage();
+    const online = vi
+      .fn()
+      .mockResolvedValueOnce(json({ accessToken: 'a1', user: { id: 'u1', displayName: 'R' } }));
+    const first = createDashboardClient({
+      baseUrl: '',
+      storage,
+      fetch: online,
+      refreshTokenIn: 'cookie',
+    });
+    await first.restoreSession();
+
+    const offline = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    const later = createDashboardClient({
+      baseUrl: '',
+      storage,
+      fetch: offline,
+      refreshTokenIn: 'cookie',
+    });
+    expect(await later.restoreSession()).toBeNull();
+    expect(await later.offlineUser()).toEqual({ id: 'u1', displayName: 'R' });
+
+    await later.signOut();
+    expect(await later.offlineUser()).toBeNull();
+  });
 });
