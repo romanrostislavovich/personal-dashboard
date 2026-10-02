@@ -21,8 +21,8 @@ interface RawCreated {
 
 /**
  * The Bitbucket account behind the credentials. Bitbucket has no activity calendar, followers or
- * stars, so the calendar is built here: the user's commits, pull requests and issues in every
- * repository they can see.
+ * stars, so the calendar is built here: the user's commits and pull requests in every repository
+ * they can see. (Bitbucket retired its issue tracker: the API of issues answers 410.)
  */
 export class BitbucketAccountSource implements AccountSource {
   constructor(
@@ -67,10 +67,7 @@ export class BitbucketAccountSource implements AccountSource {
         continue;
       }
       events.push(...(await this.commits(repo, me.uuid, since)));
-      events.push(...(await this.created(repo, 'pullrequests', 'author', me.uuid, since)));
-      if (repo.has_issues) {
-        events.push(...(await this.created(repo, 'issues', 'reporter', me.uuid, since)));
-      }
+      events.push(...(await this.pullRequests(repo, me.uuid, since)));
     }
     return events;
   }
@@ -105,30 +102,25 @@ export class BitbucketAccountSource implements AccountSource {
       }));
   }
 
-  /** Pull requests or issues the user created. */
-  private async created(
+  /** Pull requests the user opened. */
+  private async pullRequests(
     repo: RawBitbucketRepo,
-    list: 'pullrequests' | 'issues',
-    by: 'author' | 'reporter',
     uuid: string,
     since: Date | null,
   ): Promise<ActivityEvent[]> {
     const conditions = [
-      `${by}.uuid=${quoted(uuid)}`,
+      `author.uuid=${quoted(uuid)}`,
       ...(since ? [`created_on>=${since.toISOString()}`] : []),
       // Without a state Bitbucket lists only the open pull requests.
-      ...(list === 'pullrequests'
-        ? ['(state="OPEN" OR state="MERGED" OR state="DECLINED" OR state="SUPERSEDED")']
-        : []),
+      '(state="OPEN" OR state="MERGED" OR state="DECLINED" OR state="SUPERSEDED")',
     ];
-    const rows = await this.bitbucket.all<RawCreated>(`/repositories/${repo.full_name}/${list}`, {
-      q: conditions.join(' AND '),
-      pagelen: '50',
-      fields: 'values.created_on,next',
-    });
+    const rows = await this.bitbucket.all<RawCreated>(
+      `/repositories/${repo.full_name}/pullrequests`,
+      { q: conditions.join(' AND '), pagelen: '50', fields: 'values.created_on,next' },
+    );
     return rows.map((row) => ({
       at: new Date(row.created_on),
-      kind: list === 'pullrequests' ? 'pullRequest' : 'issue',
+      kind: 'pullRequest',
       contributions: 1,
       amount: 1,
     }));

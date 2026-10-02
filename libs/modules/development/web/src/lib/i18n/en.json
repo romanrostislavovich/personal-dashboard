@@ -3,14 +3,18 @@
   "tabs": {
     "openSource": "Open Source",
     "github": "GitHub",
-    "wakatime": "WakaTime"
+    "wakatime": "WakaTime",
+    "summary": "Summary",
+    "gitlab": "GitLab",
+    "bitbucket": "Bitbucket"
   },
   "errors": {
-    "notFound": "Repository not found on GitHub",
+    "notFound": "Repository not found — or its service is not connected",
     "duplicate": "This repository is already tracked",
     "invalidToken": "GitHub rejected the token",
     "generic": "Something went wrong. Please try again.",
-    "npmName": "This does not look like an npm package name"
+    "npmName": "This does not look like an npm package name",
+    "tokenRejected": "{{service}} rejected the token"
   },
   "oss": {
     "syncNow": "Update",
@@ -25,7 +29,7 @@
     "historyCollecting": "Collecting history: the chart appears from the second day.",
     "lastPush": "Last push",
     "syncError": "Sync error",
-    "repo": "Repository (owner/name or link)",
+    "repo": "Repository (a link or owner/name)",
     "npmPackage": "npm package (optional)",
     "confirmDelete": "Stop tracking {{name}}? Its history will be deleted.",
     "add": "Add a repository",
@@ -65,14 +69,17 @@
     "openRepo": "Open the repository",
     "remove": "Stop tracking",
     "nothingFound": "Nothing matches the filters.",
-    "empty": "No repositories yet — press “Update” to load them from GitHub.",
-    "noTokenHint": "Public repositories are read with your personal access token: add it in the integrations and the list builds itself.",
+    "empty": "No repositories yet — press “Update” to read them from the connected services.",
+    "noTokenHint": "Repositories are read with your token: add one in the integrations and your public repositories appear by themselves.",
     "widget": {
       "title": "Open Source",
       "week": "7 days",
-      "empty": "Your public repositories appear here once GitHub is connected",
+      "empty": "Your public repositories appear here once GitHub, GitLab or Bitbucket is connected",
       "open": "Details"
-    }
+    },
+    "repoHint": "A link to GitHub, GitLab or Bitbucket; a bare owner/name means GitHub",
+    "service": "Service",
+    "noTokenTitle": "Connect GitHub, GitLab or Bitbucket"
   },
   "github": {
     "token": {
@@ -86,14 +93,16 @@
         "2": "Tick the scopes read:user, repo and read:org; the expiration is up to you (the token has to be replaced when it runs out).",
         "3": "Copy the token — GitHub shows it only once — and paste it here."
       }
-    },
+    }
+  },
+  "account": {
     "syncNow": "Update",
     "syncedAt": "Updated",
     "syncError": "Sync error",
-    "noTokenTitle": "Connect GitHub",
-    "noTokenHint": "The account is read with your personal access token: add it in the integrations and the statistics load by themselves.",
+    "noTokenTitle": "Connect {{service}}",
+    "noTokenHint": "The account is read with your token: add it in the integrations and the statistics load by themselves.",
     "notLoaded": "Nothing loaded yet — press “Update”.",
-    "since": "on GitHub since",
+    "since": "on {{service}} since",
     "currentStreak": "Current streak, days",
     "longestStreak": "Longest",
     "today": "Today",
@@ -108,7 +117,7 @@
     "contributions": "Contributions",
     "contributionsCount": "contributions: {{count}}",
     "commits": "Commits",
-    "pullRequests": "Pull requests",
+    "pullRequests": "Pull / merge requests",
     "reviews": "Reviews",
     "issues": "Issues",
     "restricted": "Including {{count}} in private repositories the token cannot see into: give it the “repo” permission to split them into commits, PRs and reviews.",
@@ -118,27 +127,31 @@
     "topRepos": "Top repositories",
     "private": "Private",
     "followersHistory": "Followers over 90 days",
-    "historyCollecting": "Collecting history: the chart appears from the second day."
+    "historyCollecting": "Collecting history: the chart appears from the second day.",
+    "calendarHint": {
+      "gitlab": "Built from your GitLab events, the way GitLab draws its own calendar; GitLab keeps events for three years.",
+      "bitbucket": "Bitbucket has no activity calendar: it is built here from your commits and pull requests in the repositories the token can see."
+    }
   },
   "heatmap": {
     "less": "Less",
     "more": "More"
   },
   "digestOptions": {
-    "streak": "Remind about the GitHub contribution streak"
+    "streak": "Remind about the contribution streak (GitHub, GitLab, Bitbucket)"
   },
   "duration": {
     "hoursMinutes": "{{hours}} h {{minutes}} min",
     "minutes": "{{minutes}} min"
   },
   "widget": {
-    "streak": "GitHub streak",
+    "streak": "Streak, days",
     "doneToday": "today: {{count}}",
     "notYetToday": "nothing today yet",
     "contributions": "Contributions",
     "week": "in 7 days",
     "coding": "Coding today",
-    "empty": "Connect GitHub and WakaTime in the integrations",
+    "empty": "Connect GitHub, GitLab, Bitbucket or WakaTime in the integrations",
     "open": "Details"
   },
   "wakatime": {
@@ -179,6 +192,38 @@
         "1": "Install the WakaTime plugin in your editor (wakatime.com/plugins) and sign in: it starts counting the time by itself.",
         "2": "Open wakatime.com → Settings → Account and copy the Secret API Key.",
         "3": "Paste it here. The last week is copied at once, and the history grows from then on."
+      }
+    }
+  },
+  "summary": {
+    "emptyTitle": "Connect GitHub, GitLab or Bitbucket",
+    "emptyHint": "The summary adds up your activity on every connected service: one calendar, one streak.",
+    "calendar": "Contributions on all services",
+    "calendarHint": "A day counts what was done on GitHub, GitLab and Bitbucket together",
+    "byService": "By service"
+  },
+  "gitlab": {
+    "token": {
+      "title": "GitLab token (gitlab.com)",
+      "hint": "A personal access token with the “read_api” and “read_user” scopes: it loads your account with its activity (private projects too) and your public projects with those of your groups.",
+      "guide": {
+        "1": "GitLab → your avatar → Edit profile → Access tokens → Add new token.",
+        "2": "Tick the scopes read_api and read_user; the expiration is up to you (GitLab allows a year at most — the token has to be replaced when it runs out).",
+        "3": "Copy the token — GitLab shows it only once — and paste it here."
+      }
+    }
+  },
+  "bitbucket": {
+    "token": {
+      "title": "Bitbucket: e-mail and API token",
+      "hint": "Bitbucket signs in with the e-mail of your Atlassian account and an API token. It loads your repositories, and your commits and pull requests in them — the activity calendar is built from those.",
+      "email": "Atlassian account e-mail",
+      "label": "API token",
+      "guide": {
+        "1": "Atlassian account → Security → API tokens → Create API token with scopes.",
+        "2": "Choose the app Bitbucket and tick the read scopes: account, workspace, repository and pull request.",
+        "3": "Copy the token — it is shown only once.",
+        "4": "Enter here the e-mail you sign in to Atlassian with and the token."
       }
     }
   }

@@ -72,7 +72,7 @@ export class GitlabRepoSource implements RepoSource {
       description: project.description || null,
       language,
       isFork: Boolean(project.forked_from_project),
-      isArchived: project.archived,
+      isArchived: Boolean(project.archived),
       stars: project.star_count,
       forks: project.forks_count,
       openIssues: project.open_issues_count ?? 0,

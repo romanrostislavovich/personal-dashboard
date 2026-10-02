@@ -1,0 +1,217 @@
+@let p = profile.value();
+
+<header class="toolbar">
+  @if (p?.lastSyncedAt; as syncedAt) {
+    <span class="synced">
+      {{ 'development.account.syncedAt' | transloco }} {{ syncedAt | date: 'd MMM, HH:mm' }}
+    </span>
+  }
+  <button matButton (click)="sync()" [disabled]="busy() || !settings.value()?.[provider]">
+    <mat-icon>sync</mat-icon> {{ 'development.account.syncNow' | transloco }}
+  </button>
+</header>
+
+@if (busy()) {
+  <mat-progress-bar mode="indeterminate" class="progress" />
+}
+
+<!-- The account is read with the token, so without one there is nothing to show. -->
+@if (settings.value() && !settings.value()?.[provider]) {
+  <section class="setup">
+    <h3>{{ 'development.account.noTokenTitle' | transloco: { service } }}</h3>
+    <p class="hint">{{ 'development.account.noTokenHint' | transloco }}</p>
+    <a matButton="filled" [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+      {{ 'core.settings.openIntegrations' | transloco }}
+    </a>
+  </section>
+} @else if (!p && !profile.isLoading()) {
+  <p class="hint">{{ 'development.account.notLoaded' | transloco }}</p>
+}
+
+@if (p) {
+  @if (p.syncError) {
+    <p class="error">
+      <mat-icon inline>warning</mat-icon> {{ 'development.account.syncError' | transloco }}:
+      {{ p.syncError }}
+    </p>
+  }
+
+  <mat-card appearance="outlined">
+    <mat-card-content class="account">
+      @if (p.avatarUrl; as avatar) {
+        <img class="avatar" [src]="avatar" alt="" width="72" height="72" />
+      }
+      <div class="who">
+        <a class="name" [href]="p.htmlUrl" target="_blank" rel="noopener">{{
+          p.name || p.login
+        }}</a>
+        <span class="hint">
+          &#64;{{ p.login }} · {{ 'development.account.since' | transloco: { service } }}
+          {{ p.joinedAt | date: 'LLLL y' }}
+        </span>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <span class="label">{{ 'development.account.currentStreak' | transloco }}</span>
+          <span class="value">🔥 {{ p.streak.current }}</span>
+          <span class="sub">
+            {{ 'development.account.longestStreak' | transloco }}: {{ p.streak.longest }}
+          </span>
+        </div>
+        <div class="stat">
+          <span class="label">{{ 'development.account.today' | transloco }}</span>
+          <span class="value">{{ p.today | number }}</span>
+          <span class="sub"
+            >{{ p.week | number }} {{ 'development.account.perWeek' | transloco }}</span
+          >
+        </div>
+        <div class="stat">
+          <span class="label">{{ 'development.account.totalContributions' | transloco }}</span>
+          <span class="value">{{ p.totalContributions | number }}</span>
+          @if (p.busiestDay; as best) {
+            <span class="sub">
+              {{ 'development.account.busiestDay' | transloco }}: {{ best.count }} ·
+              {{ best.day | date: 'd MMM y' }}
+            </span>
+          }
+        </div>
+        @if (p.followers !== null) {
+          <div class="stat">
+            <span class="label">{{ 'development.account.followers' | transloco }}</span>
+            <span class="value">{{ p.followers | number }}</span>
+            <span class="sub">
+              {{ 'development.account.following' | transloco }}: {{ p.following | number }}
+            </span>
+          </div>
+        }
+        <div class="stat">
+          <span class="label">{{ 'development.account.repos' | transloco }}</span>
+          <span class="value">{{ p.repos | number }}</span>
+          @if (p.totalStars !== null) {
+            <span class="sub">⭐ {{ p.totalStars | number }}</span>
+          }
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>{{ 'development.account.calendar' | transloco }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-chip-listbox
+        class="years"
+        required
+        hideSingleSelectionIndicator
+        [value]="year()"
+        [attr.aria-label]="'development.account.year' | transloco"
+        (change)="pickYear($event.value)"
+      >
+        @for (y of p.years; track y.year) {
+          <mat-chip-option [value]="y.year">{{ y.year }}</mat-chip-option>
+        }
+      </mat-chip-listbox>
+
+      <pd-contribution-heatmap [year]="year()" [days]="heatmapDays()" [today]="today" />
+      @if (provider !== 'github') {
+        <p class="hint">{{ 'development.account.calendarHint.' + provider | transloco }}</p>
+      }
+
+      @if (yearTotals(); as t) {
+        <div class="stats year-stats">
+          <div class="stat">
+            <span class="label">{{ 'development.account.contributions' | transloco }}</span>
+            <span class="value">{{ t.contributions | number }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ 'development.account.commits' | transloco }}</span>
+            <span class="value">{{ t.commits | number }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ 'development.account.pullRequests' | transloco }}</span>
+            <span class="value">{{ t.pullRequests | number }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ 'development.account.reviews' | transloco }}</span>
+            <span class="value">{{ t.reviews | number }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ 'development.account.issues' | transloco }}</span>
+            <span class="value">{{ t.issues | number }}</span>
+          </div>
+        </div>
+        @if (t.restricted > 0) {
+          <p class="hint">
+            {{ 'development.account.restricted' | transloco: { count: t.restricted } }}
+          </p>
+        }
+      }
+
+      <h3 class="subtitle">{{ 'development.account.byMonth' | transloco }}</h3>
+      <pd-bar-chart [bars]="months()" [label]="'development.account.byMonth' | transloco" />
+    </mat-card-content>
+  </mat-card>
+
+  <div class="columns">
+    @if (languages().length) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ 'development.account.languages' | transloco }}</mat-card-title>
+          <mat-card-subtitle>{{
+            'development.account.languagesHint' | transloco
+          }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content class="padded">
+          <pd-share-list [items]="languages()" />
+        </mat-card-content>
+      </mat-card>
+    }
+
+    @if (p.topRepos.length) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ 'development.account.topRepos' | transloco }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="padded">
+          <ul class="repos">
+            @for (repo of p.topRepos; track repo.fullName) {
+              <li>
+                <a [href]="repo.htmlUrl" target="_blank" rel="noopener">{{ repo.fullName }}</a>
+                @if (repo.isPrivate) {
+                  <mat-icon inline [attr.aria-label]="'development.account.private' | transloco">
+                    lock
+                  </mat-icon>
+                }
+                <span class="hint">{{ repo.language }}</span>
+                @if (p.totalStars !== null) {
+                  <span class="figures"
+                    >⭐ {{ repo.stars | number }} · 🍴 {{ repo.forks | number }}</span
+                  >
+                }
+              </li>
+            }
+          </ul>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    @if (provider === 'github') {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ 'development.account.followersHistory' | transloco }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="padded">
+          @if (followersHistory().length > 1) {
+            <pd-sparkline
+              [points]="followersHistory()"
+              [label]="'development.account.followersHistory' | transloco"
+            />
+          } @else {
+            <p class="hint">{{ 'development.account.historyCollecting' | transloco }}</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+}

@@ -1,0 +1,22 @@
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.form mat-form-field {
+  flex: 1;
+  min-width: 220px;
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.ok {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mat-sys-primary);
+}

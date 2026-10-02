@@ -1,7 +1,13 @@
 import {
+  BitbucketTokenInput,
+  CodeAccount,
+  CodeAccountsSettings,
+  CodeAccountsSummary,
+  CodeProvider,
   GithubContributionDay,
   GithubProfile,
   GithubSettings,
+  TokenProvider,
   TrackedRepo,
   TrackedRepoInput,
   TrackedRepoUpdate,
@@ -23,6 +29,18 @@ export const DEVELOPMENT_READS = {
   githubProfile: () => apiRequest(`${BASE}/github/profile`),
   /** The contribution calendar of a year. */
   githubContributions: (year: number) => apiRequest(`${BASE}/github/contributions`, { year }),
+  /** Which code hosting services are connected. */
+  accountsSettings: () => apiRequest(`${BASE}/accounts/settings`),
+  /** The account on a service; `null` until the first sync. */
+  account: (provider: CodeProvider) => apiRequest(`${BASE}/accounts/${provider}/profile`),
+  /** The activity calendar of a year on a service. */
+  accountContributions: (provider: CodeProvider, year: number) =>
+    apiRequest(`${BASE}/accounts/${provider}/contributions`, { year }),
+  /** All connected accounts as one; `null` — none is connected. */
+  accountsSummary: () => apiRequest(`${BASE}/accounts/summary`),
+  /** The common calendar of a year. */
+  summaryContributions: (year: number) =>
+    apiRequest(`${BASE}/accounts/summary/contributions`, { year }),
   wakatimeSettings: () => apiRequest(`${BASE}/wakatime/settings`),
   /** Coding time over the last `days` days. */
   wakatimeStats: (days: WakatimePeriod) => apiRequest(`${BASE}/wakatime/stats`, { days }),
@@ -47,6 +65,25 @@ export function developmentApi(api: ApiClient) {
     githubContributions: (year: number) =>
       api.read<GithubContributionDay[]>(DEVELOPMENT_READS.githubContributions(year)),
     syncGithubProfile: () => api.post<void>(`${BASE}/github/profile/sync`, {}),
+
+    accountsSettings: () => api.read<CodeAccountsSettings>(DEVELOPMENT_READS.accountsSettings()),
+    account: (provider: CodeProvider) =>
+      api.read<CodeAccount | null>(DEVELOPMENT_READS.account(provider)),
+    accountContributions: (provider: CodeProvider, year: number) =>
+      api.read<GithubContributionDay[]>(DEVELOPMENT_READS.accountContributions(provider, year)),
+    accountsSummary: () =>
+      api.read<CodeAccountsSummary | null>(DEVELOPMENT_READS.accountsSummary()),
+    summaryContributions: (year: number) =>
+      api.read<GithubContributionDay[]>(DEVELOPMENT_READS.summaryContributions(year)),
+    syncAccount: (provider: CodeProvider) =>
+      api.post<void>(`${BASE}/accounts/${provider}/sync`, {}),
+    /** The token is checked and the account it belongs to is loaded. */
+    saveGitlabToken: (token: string) => api.put<void>(`${BASE}/accounts/gitlab/token`, { token }),
+    saveBitbucketToken: (input: BitbucketTokenInput) =>
+      api.put<void>(`${BASE}/accounts/bitbucket/token`, input),
+    /** Disconnects GitLab or Bitbucket and forgets its account. */
+    removeAccountToken: (provider: TokenProvider) =>
+      api.delete(`${BASE}/accounts/${provider}/token`),
 
     wakatimeSettings: () => api.read<WakatimeSettings>(DEVELOPMENT_READS.wakatimeSettings()),
     wakatimeStats: (days: WakatimePeriod) =>

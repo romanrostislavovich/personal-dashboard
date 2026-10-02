@@ -1,8 +1,10 @@
+import { CODE_PROVIDERS } from '@pd/contracts';
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
- * Web part of the Development section: open source repositories (GitHub + npm), the GitHub
- * account and coding time from WakaTime.
+ * Web part of the Development section: open source repositories (GitHub, GitLab, Bitbucket and
+ * npm), the accounts on these services — each on its own and all together — and coding time
+ * from WakaTime.
  * Plugged in at apps/web/src/app/modules.ts.
  */
 export const developmentModule: WebDashboardModule = {
@@ -16,15 +18,20 @@ export const developmentModule: WebDashboardModule = {
       children: [
         { path: '', pathMatch: 'full', redirectTo: 'open-source' },
         {
+          path: 'summary',
+          loadComponent: () => import('./accounts/summary.page').then((m) => m.SummaryPage),
+        },
+        {
           path: 'open-source',
           loadComponent: () =>
             import('./open-source/open-source.page').then((m) => m.OpenSourcePage),
         },
-        {
-          path: 'github',
-          loadComponent: () =>
-            import('./github/github-profile.page').then((m) => m.GithubProfilePage),
-        },
+        // One page for every service: which one comes with the route.
+        ...CODE_PROVIDERS.map((provider) => ({
+          path: provider,
+          data: { provider },
+          loadComponent: () => import('./accounts/account.page').then((m) => m.AccountPage),
+        })),
         {
           path: 'wakatime',
           loadComponent: () => import('./wakatime/wakatime.page').then((m) => m.WakatimePage),
@@ -54,6 +61,16 @@ export const developmentModule: WebDashboardModule = {
       id: 'development.github-token',
       loadComponent: () =>
         import('./github/github-token.integration').then((m) => m.GithubTokenIntegration),
+    },
+    {
+      id: 'development.gitlab-token',
+      loadComponent: () =>
+        import('./accounts/gitlab-token.integration').then((m) => m.GitlabTokenIntegration),
+    },
+    {
+      id: 'development.bitbucket-token',
+      loadComponent: () =>
+        import('./accounts/bitbucket-token.integration').then((m) => m.BitbucketTokenIntegration),
     },
     {
       id: 'development.wakatime-key',

@@ -3,14 +3,18 @@
   "tabs": {
     "openSource": "Open Source",
     "github": "GitHub",
-    "wakatime": "WakaTime"
+    "wakatime": "WakaTime",
+    "summary": "Сводка",
+    "gitlab": "GitLab",
+    "bitbucket": "Bitbucket"
   },
   "errors": {
-    "notFound": "Репозиторий не найден на GitHub",
+    "notFound": "Репозиторий не найден — или его сервис не подключён",
     "duplicate": "Этот репозиторий уже отслеживается",
     "invalidToken": "GitHub не принял токен",
     "generic": "Что-то пошло не так. Попробуй ещё раз.",
-    "npmName": "Не похоже на имя npm-пакета"
+    "npmName": "Не похоже на имя npm-пакета",
+    "tokenRejected": "{{service}} не принял токен"
   },
   "oss": {
     "syncNow": "Обновить",
@@ -25,7 +29,7 @@
     "historyCollecting": "История собирается: график появится со второго дня.",
     "lastPush": "Последний push",
     "syncError": "Ошибка синхронизации",
-    "repo": "Репозиторий (owner/name или ссылка)",
+    "repo": "Репозиторий (ссылка или owner/name)",
     "npmPackage": "npm-пакет (необязательно)",
     "confirmDelete": "Перестать отслеживать {{name}}? История будет удалена.",
     "add": "Добавить репозиторий",
@@ -65,14 +69,17 @@
     "openRepo": "Открыть репозиторий",
     "remove": "Перестать отслеживать",
     "nothingFound": "Под фильтры ничего не подходит.",
-    "empty": "Репозиториев пока нет — нажми «Обновить», чтобы загрузить их с GitHub.",
-    "noTokenHint": "Публичные репозитории читаются по твоему personal access token: добавь его в интеграциях — список соберётся сам.",
+    "empty": "Репозиториев пока нет — нажми «Обновить», чтобы прочитать их с подключённых сервисов.",
+    "noTokenHint": "Репозитории читаются по твоему токену: добавь его в интеграциях — публичные репозитории появятся сами.",
     "widget": {
       "title": "Open Source",
       "week": "за 7 дн.",
-      "empty": "Твои публичные репозитории появятся здесь после подключения GitHub",
+      "empty": "Твои публичные репозитории появятся здесь после подключения GitHub, GitLab или Bitbucket",
       "open": "Подробнее"
-    }
+    },
+    "repoHint": "Ссылка на GitHub, GitLab или Bitbucket; просто owner/name — это GitHub",
+    "service": "Сервис",
+    "noTokenTitle": "Подключи GitHub, GitLab или Bitbucket"
   },
   "github": {
     "token": {
@@ -86,14 +93,16 @@
         "2": "Отметь права read:user, repo и read:org; срок действия — на твой выбор (когда истечёт, токен нужно заменить).",
         "3": "Скопируй токен — GitHub показывает его один раз — и вставь сюда."
       }
-    },
+    }
+  },
+  "account": {
     "syncNow": "Обновить",
     "syncedAt": "Обновлено",
     "syncError": "Ошибка синхронизации",
-    "noTokenTitle": "Подключи GitHub",
-    "noTokenHint": "Аккаунт читается по твоему personal access token: добавь его в интеграциях — статистика загрузится сама.",
+    "noTokenTitle": "Подключи {{service}}",
+    "noTokenHint": "Аккаунт читается по твоему токену: добавь его в интеграциях — статистика загрузится сама.",
     "notLoaded": "Пока ничего не загружено — нажми «Обновить».",
-    "since": "на GitHub с",
+    "since": "на {{service}} с",
     "currentStreak": "Текущая серия, дней",
     "longestStreak": "Рекорд",
     "today": "Сегодня",
@@ -108,7 +117,7 @@
     "contributions": "Контрибуции",
     "contributionsCount": "контрибуций: {{count}}",
     "commits": "Коммиты",
-    "pullRequests": "Pull requests",
+    "pullRequests": "Pull / merge requests",
     "reviews": "Ревью",
     "issues": "Issues",
     "restricted": "Из них {{count}} — в приватных репозиториях, куда токен не видит: дай ему право «repo», чтобы разложить их на коммиты, PR и ревью.",
@@ -118,27 +127,31 @@
     "topRepos": "Топ репозиториев",
     "private": "Приватный",
     "followersHistory": "Подписчики за 90 дней",
-    "historyCollecting": "История собирается: график появится со второго дня."
+    "historyCollecting": "История собирается: график появится со второго дня.",
+    "calendarHint": {
+      "gitlab": "Построен по твоим событиям в GitLab — так же, как GitLab рисует свой календарь; события GitLab хранит три года.",
+      "bitbucket": "У Bitbucket нет календаря активности: он построен здесь по твоим коммитам и pull request’ам в репозиториях, которые видит токен."
+    }
   },
   "heatmap": {
     "less": "Меньше",
     "more": "Больше"
   },
   "digestOptions": {
-    "streak": "Напоминать о серии контрибуций на GitHub"
+    "streak": "Напоминать о серии контрибуций (GitHub, GitLab, Bitbucket)"
   },
   "duration": {
     "hoursMinutes": "{{hours}} ч {{minutes}} мин",
     "minutes": "{{minutes}} мин"
   },
   "widget": {
-    "streak": "Серия на GitHub",
+    "streak": "Серия, дней",
     "doneToday": "сегодня: {{count}}",
     "notYetToday": "сегодня пока ничего",
     "contributions": "Контрибуции",
     "week": "за 7 дней",
     "coding": "Кодинг сегодня",
-    "empty": "Подключи GitHub и WakaTime в интеграциях",
+    "empty": "Подключи GitHub, GitLab, Bitbucket или WakaTime в интеграциях",
     "open": "Подробнее"
   },
   "wakatime": {
@@ -179,6 +192,38 @@
         "1": "Установи плагин WakaTime в свой редактор (wakatime.com/plugins) и войди: время начнёт считаться само.",
         "2": "Открой wakatime.com → Settings → Account и скопируй Secret API Key.",
         "3": "Вставь его сюда. Последняя неделя скопируется сразу, дальше история копится здесь."
+      }
+    }
+  },
+  "summary": {
+    "emptyTitle": "Подключи GitHub, GitLab или Bitbucket",
+    "emptyHint": "Сводка складывает твою активность на всех подключённых сервисах: один календарь, одна серия.",
+    "calendar": "Контрибуции на всех сервисах",
+    "calendarHint": "День считает всё, что сделано на GitHub, GitLab и Bitbucket вместе",
+    "byService": "По сервисам"
+  },
+  "gitlab": {
+    "token": {
+      "title": "Токен GitLab (gitlab.com)",
+      "hint": "Personal access token с правами «read_api» и «read_user»: по нему загружаются твой аккаунт с активностью (включая приватные проекты) и твои публичные проекты вместе с проектами твоих групп.",
+      "guide": {
+        "1": "GitLab → аватар → Edit profile → Access tokens → Add new token.",
+        "2": "Отметь права read_api и read_user; срок действия — на твой выбор (GitLab даёт максимум год — когда истечёт, токен нужно заменить).",
+        "3": "Скопируй токен — GitLab показывает его один раз — и вставь сюда."
+      }
+    }
+  },
+  "bitbucket": {
+    "token": {
+      "title": "Bitbucket: e-mail и API-токен",
+      "hint": "Bitbucket входит по e-mail твоего аккаунта Atlassian и API-токену. По ним загружаются твои репозитории и твои коммиты и pull request’ы в них — из них строится календарь активности.",
+      "email": "E-mail аккаунта Atlassian",
+      "label": "API-токен",
+      "guide": {
+        "1": "Аккаунт Atlassian → Security → API tokens → Create API token with scopes.",
+        "2": "Выбери приложение Bitbucket и отметь права на чтение: account, workspace, repository и pull request.",
+        "3": "Скопируй токен — он показывается один раз.",
+        "4": "Введи здесь e-mail, под которым входишь в Atlassian, и токен."
       }
     }
   }

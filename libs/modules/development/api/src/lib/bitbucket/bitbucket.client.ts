@@ -115,7 +115,6 @@ export interface RawBitbucketRepo {
   is_private: boolean;
   language: string | null;
   size?: number;
-  has_issues?: boolean;
   updated_on: string | null;
   parent?: unknown;
   owner?: { uuid?: string };

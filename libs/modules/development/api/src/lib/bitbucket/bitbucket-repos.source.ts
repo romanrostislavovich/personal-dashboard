@@ -9,7 +9,6 @@ interface RawItem {
   created_on: string;
   links?: { html?: { href: string } };
   author?: { display_name?: string };
-  reporter?: { display_name?: string };
 }
 
 /** Public Bitbucket repositories for the Open Source section. */
@@ -47,44 +46,34 @@ export class BitbucketRepoSource implements RepoSource {
     return found;
   }
 
+  /** New pull requests only: Bitbucket retired its issue tracker. */
   async listCreatedSince(fullName: string, since: Date): Promise<RepoIssue[]> {
-    const base = `/repositories/${fullName}`;
-    const created = `created_on>${since.toISOString()}`;
-    const [issues, pulls] = await Promise.all([
-      this.page(`${base}/issues`, created),
-      this.page(
-        `${base}/pullrequests`,
-        `${created} AND (state="OPEN" OR state="MERGED" OR state="DECLINED")`,
-      ),
-    ]);
-    const item = (raw: RawItem, isPullRequest: boolean): RepoIssue => ({
+    const page = await this.bitbucket.get<{ values?: RawItem[] }>(
+      `/repositories/${fullName}/pullrequests`,
+      {
+        q: `created_on>${since.toISOString()} AND (state="OPEN" OR state="MERGED" OR state="DECLINED")`,
+        pagelen: NEW_ITEMS,
+      },
+    );
+    return (page?.values ?? []).map((raw) => ({
       title: raw.title,
       htmlUrl: raw.links?.html?.href ?? `https://bitbucket.org/${fullName}`,
-      author: (isPullRequest ? raw.author : raw.reporter)?.display_name ?? 'unknown',
+      author: raw.author?.display_name ?? 'unknown',
       createdAt: raw.created_on,
-      isPullRequest,
-    });
-    return [...issues.map((raw) => item(raw, false)), ...pulls.map((raw) => item(raw, true))];
-  }
-
-  private async page(path: string, q: string): Promise<RawItem[]> {
-    const page = await this.bitbucket.get<{ values?: RawItem[] }>(path, { q, pagelen: NEW_ITEMS });
-    return page?.values ?? [];
+      isPullRequest: true,
+    }));
   }
 
   /**
-   * Bitbucket has no stars and no releases: its watchers stand for the stars. The counters are
-   * a request each.
+   * Bitbucket has no stars, no releases and no issues any more: its watchers stand for the
+   * stars. The counters are a request each.
    */
   private async snapshot(repo: RawBitbucketRepo): Promise<RepoSnapshot> {
     const base = `/repositories/${repo.full_name}`;
-    const [watchers, forks, openPulls, openIssues] = await Promise.all([
+    const [watchers, forks, openPulls] = await Promise.all([
       this.bitbucket.count(`${base}/watchers`),
       this.bitbucket.count(`${base}/forks`),
       this.bitbucket.count(`${base}/pullrequests`, { state: 'OPEN' }),
-      repo.has_issues
-        ? this.bitbucket.count(`${base}/issues`, { q: '(state="new" OR state="open")' })
-        : 0,
     ]);
     return {
       externalId: repo.uuid,
@@ -96,7 +85,7 @@ export class BitbucketRepoSource implements RepoSource {
       isArchived: false,
       stars: watchers,
       forks,
-      openIssues,
+      openIssues: 0,
       openPulls,
       pushedAt: repo.updated_on,
       latestRelease: null,

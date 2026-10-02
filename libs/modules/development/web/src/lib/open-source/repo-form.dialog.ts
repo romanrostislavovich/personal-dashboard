@@ -10,7 +10,7 @@ import { firstValueFrom } from 'rxjs';
 import { errorStatus } from '@pd/web-core';
 import { OpenSourceApi } from './open-source.api';
 
-/** Errors the server explains: not on GitHub, already in the list, a wrong package name. */
+/** Errors the server explains: not found, already in the list, a wrong package name. */
 const ERROR_KEYS: Record<number, string> = {
   400: 'development.errors.notFound',
   409: 'development.errors.duplicate',
@@ -45,6 +45,7 @@ const ERROR_KEYS: Record<number, string> = {
           <mat-form-field>
             <mat-label>{{ 'development.oss.repo' | transloco }}</mat-label>
             <input matInput formControlName="repo" placeholder="owner/name" />
+            <mat-hint>{{ 'development.oss.repoHint' | transloco }}</mat-hint>
           </mat-form-field>
         }
         <mat-form-field>

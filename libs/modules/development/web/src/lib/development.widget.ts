@@ -5,11 +5,14 @@ import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { WakatimePeriod } from '@pd/contracts';
-import { GithubApi } from './github/github.api';
+import { AccountsApi } from './accounts/accounts.api';
 import { DurationPipe } from './ui/duration.pipe';
 import { WakatimeApi } from './wakatime/wakatime.api';
 
-/** Home widget: the GitHub streak and contributions, coding time today and over the week. */
+/**
+ * Home widget: the streak and the contributions across GitHub, GitLab and Bitbucket, coding time
+ * today and over the week.
+ */
 @Component({
   selector: 'pd-development-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,7 +56,7 @@ import { WakatimeApi } from './wakatime/wakatime.api';
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/development/github">{{
+        <a matButton routerLink="/development/summary">{{
           'development.widget.open' | transloco
         }}</a>
       </mat-card-actions>
@@ -94,10 +97,10 @@ import { WakatimeApi } from './wakatime/wakatime.api';
   `,
 })
 export class DevelopmentWidget {
-  protected readonly profile = inject(GithubApi).profile();
+  protected readonly profile = inject(AccountsApi).summary();
   protected readonly coding = inject(WakatimeApi).stats(signal<WakatimePeriod>(7));
 
-  /** Neither GitHub nor WakaTime gave anything yet. */
+  /** Neither the code hosting services nor WakaTime gave anything yet. */
   protected isEmpty(): boolean {
     const loaded = !this.profile.isLoading() && !this.coding.isLoading();
     return loaded && !this.profile.value() && !this.coding.value()?.allTime.since;

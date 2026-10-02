@@ -103,7 +103,7 @@ export interface RawGitlabProject {
   web_url: string;
   description: string | null;
   visibility: string;
-  archived: boolean;
+  archived?: boolean;
   star_count: number;
   forks_count: number;
   /** Absent when the project has its issues switched off. */
