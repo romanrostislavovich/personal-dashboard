@@ -1,4 +1,11 @@
-import { buildStats, daysOf, matchProject, UsageRow } from './activity-stats';
+import {
+  buildRecords,
+  buildStats,
+  daysOf,
+  longestRun,
+  matchProject,
+  UsageRow,
+} from './activity-stats';
 
 const projects = [
   { projectId: 'p1', name: 'Dashboard', patterns: ['Dashboard', 'personal-dashboard'] },
@@ -81,5 +88,38 @@ describe('buildStats', () => {
       { id: 'd2', name: 'Laptop', seconds: 600 },
     ]);
     expect(stats.titles[1]).toMatchObject({ app: 'chrome', title: 'YouTube', seconds: 1800 });
+  });
+});
+
+describe('buildRecords', () => {
+  const records = buildRecords(
+    [
+      { day: '2026-09-30', app: 'code', seconds: 7200 },
+      { day: '2026-10-01', app: 'code', seconds: 3600 },
+      { day: '2026-10-01', app: 'chrome', seconds: 1800 },
+      { day: '2026-10-03', app: 'wow', seconds: 600 },
+    ],
+    new Map([['chrome', 'development']]),
+  );
+
+  it("adds up the time in total and per category, the user's choice first", () => {
+    expect(records.totalSeconds).toBe(13200);
+    expect(records.byCategory.get('development')).toBe(12600);
+    expect(records.byCategory.get('games')).toBe(600);
+    expect(records.apps).toBe(3);
+  });
+
+  it('finds the days, the streak and the best days', () => {
+    expect(records.activeDays).toBe(3);
+    expect(records.longestStreak).toBe(2);
+    expect(records.bestDaySeconds).toBe(7200);
+    expect(records.bestDevelopmentDaySeconds).toBe(7200);
+  });
+});
+
+describe('longestRun', () => {
+  it('counts days in a row across a month border', () => {
+    expect(longestRun(['2026-10-01', '2026-09-30', '2026-09-29', '2026-10-05'])).toBe(3);
+    expect(longestRun([])).toBe(0);
   });
 });
