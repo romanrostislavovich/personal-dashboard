@@ -3,6 +3,7 @@ export * from './lib/time-zone';
 export * from './lib/recurrence';
 export * from './lib/streaks';
 export * from './lib/auth';
+export * from './lib/theme';
 export * from './lib/projects';
 export * from './lib/notifications';
 export * from './lib/birthdays';

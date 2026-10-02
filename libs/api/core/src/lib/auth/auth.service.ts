@@ -182,7 +182,14 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   async updateProfile(userId: string, changes: ProfileUpdate): Promise<CurrentUser> {
-    return toCurrentUser(await this.users.update(userId, changes));
+    const { theme, ...rest } = changes;
+    return toCurrentUser(
+      await this.users.update(userId, {
+        ...rest,
+        // The time tells the devices this theme is newer than their own (see `resolveTheme`).
+        ...(theme ? { theme: { theme, everywhereAt: new Date().toISOString() } } : {}),
+      }),
+    );
   }
 
   /** A new password signs every other device out: whoever knew the old one is out too. */
@@ -247,5 +254,6 @@ function toCurrentUser(user: UserRow): CurrentUser {
     displayName: user.displayName,
     locale: user.locale,
     timeZone: user.timeZone,
+    theme: user.theme,
   };
 }

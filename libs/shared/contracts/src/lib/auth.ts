@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AccountTheme, themeSchema } from './theme';
 import { isValidTimeZone } from './time-zone';
 
 /**
@@ -99,6 +100,8 @@ export interface CurrentUser {
    * `null` — never opened in a browser yet; the server's zone is used.
    */
   timeZone: string | null;
+  /** The look applied on every device; `null` — never set, the built-in one. */
+  theme: AccountTheme | null;
 }
 
 /** Languages of the UI, notifications and AI answers. A new language = translations in every module. */
@@ -119,6 +122,8 @@ export const profileUpdateSchema = z.object({
   locale: z.enum(SUPPORTED_LOCALES).optional(),
   /** Sent by the client itself when the device's zone differs from the saved one. */
   timeZone: z.string().max(64).refine(isValidTimeZone, 'Unknown time zone').optional(),
+  /** "Apply everywhere": becomes the theme of the account and overrides the devices' own. */
+  theme: themeSchema.optional(),
 });
 export type ProfileUpdate = z.infer<typeof profileUpdateSchema>;
 

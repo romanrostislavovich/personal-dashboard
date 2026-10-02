@@ -11,5 +11,6 @@ export * from './lib/i18n/language';
 export * from './lib/dashboard/level-card.component';
 export * from './lib/realtime/realtime.client';
 export * from './lib/toast/toast.service';
+export * from './lib/theme/theme.service';
 export * from './lib/client/dashboard-client';
 export * from './lib/client/core-requests';

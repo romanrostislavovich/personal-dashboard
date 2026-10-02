@@ -12,13 +12,14 @@ import { SecuritySettingsComponent } from './security-settings.component';
 import { SyncSettingsComponent } from './sync-settings.component';
 import { SystemSettingsComponent } from './system-settings.component';
 import { TelegramSettingsComponent } from './telegram-settings.component';
+import { ThemeSettingsComponent } from './theme-settings.component';
 import { TrashSettingsComponent } from './trash-settings.component';
 
 /** Tabs of the page, as `?tab=` names them: module pages link to `integrations`. */
-const TABS = ['account', 'integrations', 'data', 'system'] as const;
+const TABS = ['account', 'appearance', 'integrations', 'data', 'system'] as const;
 
 /**
- * Settings: the account, every connection to an outside service (Telegram and what the modules
+ * Settings: the account, the look (theme), every connection to an outside service (Telegram and what the modules
  * register as `integrations`), the data (sync, backups, trash) and how the instance itself is
  * doing (background jobs, the log of errors).
  */
@@ -36,6 +37,7 @@ const TABS = ['account', 'integrations', 'data', 'system'] as const;
     SyncSettingsComponent,
     SystemSettingsComponent,
     TelegramSettingsComponent,
+    ThemeSettingsComponent,
   ],
   template: `
     <h1 class="page-title">{{ 'core.settings.title' | transloco }}</h1>
@@ -51,6 +53,12 @@ const TABS = ['account', 'integrations', 'data', 'system'] as const;
           <pd-profile-settings />
           <pd-password-settings />
           <pd-security-settings />
+        </div>
+      </mat-tab>
+
+      <mat-tab [label]="'core.settings.tabs.appearance' | transloco">
+        <div class="grid">
+          <pd-theme-settings />
         </div>
       </mat-tab>
 
