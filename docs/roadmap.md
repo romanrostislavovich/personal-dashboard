@@ -53,7 +53,7 @@
   clothing advice that follows how you take the cold —
   on its page, on the home page and in the morning digest; the city comes from the browser's
   location until you pick another
-- **Achievements:** 110+ achievements across all modules, rarities, XP and player level
+- **Achievements:** 340+ achievements across all modules, rarities, XP and player level
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
   `/ask` in Telegram, morning digest at the time you choose (the weather and only what changed since the previous
   one),

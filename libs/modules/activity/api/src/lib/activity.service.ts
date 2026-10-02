@@ -19,8 +19,15 @@ import {
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gte, lt, sql } from 'drizzle-orm';
-import { buildStats, categoryOf, ProjectPatterns, UsageRow } from './activity-stats';
+import { and, asc, desc, eq, gte, lt, SQL, sql } from 'drizzle-orm';
+import {
+  ActivityRecords,
+  buildRecords,
+  buildStats,
+  categoryOf,
+  ProjectPatterns,
+  UsageRow,
+} from './activity-stats';
 import {
   activityApps,
   ActivityDeviceRow,
@@ -31,6 +38,22 @@ import {
 } from './activity.schema';
 
 const DEFAULT_IDLE_MINUTES = 5;
+/** The hours of the user's own clock the achievements call night and early morning. */
+const NIGHT_ENDS_AT = 5;
+const MORNING_ENDS_AT = 8;
+
+/** Everything recorded, in the numbers the achievements look at. */
+export interface ActivityAllTime extends ActivityRecords {
+  /** From midnight to five in the morning. */
+  nightSeconds: number;
+  /** From five to eight in the morning. */
+  earlySeconds: number;
+  weekendSeconds: number;
+  /** Time whose window title matched one of the projects. */
+  projectSeconds: number;
+  /** Trackers registered. */
+  devices: number;
+}
 /** Rows per INSERT: eight values each, far below PostgreSQL's limit of 65,535 parameters. */
 const INSERT_CHUNK = 500;
 /** A span is a few minutes long (the tracker cuts it); anything longer is a clock gone wrong. */
@@ -241,22 +264,54 @@ export class ActivityService {
     }));
   }
 
-  /** Seconds recorded in all time, per category — the metrics of the achievements. */
-  async lifetime(
-    userId: string,
-  ): Promise<{ total: number; byCategory: Map<ActivityCategory, number> }> {
+  /**
+   * The numbers of everything recorded — what the achievements look at: totals, days and
+   * streaks, and the time at night, early in the morning, on weekends and on projects.
+   */
+  async records(userId: string): Promise<ActivityAllTime> {
+    const timeZone = await this.timeZone(userId);
+    const s = activitySpans;
+    const local = sql`(${s.startedAt} AT TIME ZONE ${timeZone})`;
     const rows = await this.db
-      .select({ app: activitySpans.app, seconds: sql<number>`sum(${activitySpans.seconds})::int` })
-      .from(activitySpans)
-      .where(eq(activitySpans.userId, userId))
-      .groupBy(activitySpans.app);
-    const categories = await this.chosenCategories(userId);
-    const byCategory = new Map<ActivityCategory, number>();
-    for (const row of rows) {
-      const category = categoryOf(row.app, categories);
-      byCategory.set(category, (byCategory.get(category) ?? 0) + row.seconds);
-    }
-    return { total: rows.reduce((sum, row) => sum + row.seconds, 0), byCategory };
+      .select({
+        day: sql<LocalDate>`to_char(${local}, 'YYYY-MM-DD')`,
+        app: s.app,
+        seconds: sql<number>`sum(${s.seconds})::int`,
+      })
+      .from(s)
+      .where(eq(s.userId, userId))
+      .groupBy(sql`1`, s.app);
+
+    const hour = sql`extract(hour from ${local})`;
+    const sum = (condition: SQL) =>
+      sql<number>`coalesce(sum(${s.seconds}) filter (where ${condition}), 0)::int`;
+    // A project is recognized by its name and rules anywhere in the window title.
+    const patterns = (await this.projectPatterns(userId))
+      .flatMap((project) => project.patterns)
+      .map((pattern) => pattern.trim())
+      .filter((pattern) => pattern.length >= 2)
+      .map((pattern) => `%${pattern.replace(/[\\%_]/g, '\\$&')}%`);
+    const [times] = await this.db
+      .select({
+        night: sum(sql`${hour} < ${NIGHT_ENDS_AT}`),
+        early: sum(sql`${hour} >= ${NIGHT_ENDS_AT} and ${hour} < ${MORNING_ENDS_AT}`),
+        weekend: sum(sql`extract(isodow from ${local}) >= 6`),
+        projects: patterns.length
+          ? sum(sql`${s.title} ilike any (${sql.param(patterns)}::text[])`)
+          : sql<number>`0`,
+      })
+      .from(s)
+      .where(eq(s.userId, userId));
+    const devices = await this.db.$count(activityDevices, eq(activityDevices.userId, userId));
+
+    return {
+      ...buildRecords(rows, await this.chosenCategories(userId)),
+      nightSeconds: times?.night ?? 0,
+      earlySeconds: times?.early ?? 0,
+      weekendSeconds: times?.weekend ?? 0,
+      projectSeconds: times?.projects ?? 0,
+      devices,
+    };
   }
 
   /** Seconds at the computer on the user's today — for the widget and the digest. */

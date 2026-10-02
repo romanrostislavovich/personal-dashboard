@@ -138,3 +138,68 @@ export function buildStats(
     titles: [...byTitle.values()].sort(descending).slice(0, TOP_TITLES),
   };
 }
+
+/** Time of one program on one day: what the records of all time are made of. */
+export interface DayAppRow {
+  day: LocalDate;
+  app: string;
+  seconds: number;
+}
+
+/** The numbers the achievements look at, over everything recorded. */
+export interface ActivityRecords {
+  totalSeconds: number;
+  byCategory: Map<ActivityCategory, number>;
+  /** Days with anything recorded. */
+  activeDays: number;
+  /** The most days in a row with anything recorded. */
+  longestStreak: number;
+  /** The longest day. */
+  bestDaySeconds: number;
+  /** The most time in development tools within one day. */
+  bestDevelopmentDaySeconds: number;
+  /** Different programs seen. */
+  apps: number;
+}
+
+export function buildRecords(
+  rows: DayAppRow[],
+  categories: ReadonlyMap<string, ActivityCategory | null>,
+): ActivityRecords {
+  const byDay = new Map<LocalDate, number>();
+  const developmentByDay = new Map<LocalDate, number>();
+  const byCategory = new Map<ActivityCategory, number>();
+  const apps = new Set<string>();
+  for (const row of rows) {
+    const category = categoryOf(row.app, categories);
+    addTo(byDay, row.day, row.seconds);
+    addTo(byCategory, category, row.seconds);
+    if (category === 'development') {
+      addTo(developmentByDay, row.day, row.seconds);
+    }
+    apps.add(row.app);
+  }
+  return {
+    totalSeconds: rows.reduce((sum, row) => sum + row.seconds, 0),
+    byCategory,
+    activeDays: byDay.size,
+    longestStreak: longestRun([...byDay.keys()]),
+    bestDaySeconds: Math.max(0, ...byDay.values()),
+    bestDevelopmentDaySeconds: Math.max(0, ...developmentByDay.values()),
+    apps: apps.size,
+  };
+}
+
+/** The most days in a row among the given ones. */
+export function longestRun(days: LocalDate[]): number {
+  let longest = 0;
+  let run = 0;
+  let previous: LocalDate | null = null;
+  for (const day of [...new Set(days)].sort()) {
+    const follows = previous && toLocalDate(addDays(parseLocalDate(previous), 1)) === day;
+    run = follows ? run + 1 : 1;
+    longest = Math.max(longest, run);
+    previous = day;
+  }
+  return longest;
+}

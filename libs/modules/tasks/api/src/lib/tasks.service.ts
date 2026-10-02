@@ -2,7 +2,10 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { DB, Database, isUniqueViolation, UsersService } from '@pd/api-core';
 import { projects } from '@pd/api-core/schema';
 import {
+  computeStreaks,
+  LocalDate,
   nextRepeat,
+  parseLocalDate,
   Task,
   taskInputSchema,
   TaskList,
@@ -12,6 +15,9 @@ import {
 import { and, asc, desc, eq, gt, inArray, isNull, min, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { reminders, taskLists, TaskRow, tasks } from './tasks.schema';
+
+/** The highest of TASK_PRIORITIES. */
+const TOP_PRIORITY = 3;
 
 /** Done tasks stay on the page for this long; older ones are kept but not listed. */
 const DONE_SHOWN_DAYS = 30;
@@ -173,6 +179,35 @@ export class TasksService {
       tasks,
       and(eq(tasks.userId, userId), sql`${tasks.completedAt} IS NOT NULL`),
     );
+  }
+
+  /** Done tasks by the user's own days — for the achievements. */
+  async completionRecords(
+    userId: string,
+  ): Promise<{ bestDay: number; longestStreak: number; onTime: number; urgent: number }> {
+    const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
+    const local = sql`(${tasks.completedAt} AT TIME ZONE ${timeZone})`;
+    const rows = await this.db
+      .select({
+        day: sql<LocalDate>`to_char(${local}, 'YYYY-MM-DD')`,
+        done: sql<number>`count(*)::int`,
+        // Done on the day it was due or earlier.
+        onTime: sql<number>`count(*) filter (where ${tasks.dueDate} >= ${local}::date)::int`,
+        urgent: sql<number>`count(*) filter (where ${tasks.priority} = ${TOP_PRIORITY})::int`,
+      })
+      .from(tasks)
+      .where(and(eq(tasks.userId, userId), sql`${tasks.completedAt} IS NOT NULL`))
+      .groupBy(sql`1`);
+    const today = zonedDateTime(new Date(), timeZone).date;
+    return {
+      bestDay: Math.max(0, ...rows.map((row) => row.done)),
+      longestStreak: computeStreaks(
+        rows.map((row) => row.day),
+        parseLocalDate(today),
+      ).longest,
+      onTime: rows.reduce((sum, row) => sum + row.onTime, 0),
+      urgent: rows.reduce((sum, row) => sum + row.urgent, 0),
+    };
   }
 
   /** A list or a project of somebody else must not be attached to a task. */
