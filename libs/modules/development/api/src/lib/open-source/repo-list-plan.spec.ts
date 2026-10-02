@@ -1,4 +1,5 @@
-import { AccountRepo, packageNameFrom } from './github-repos.client';
+import { packageNameFrom } from './github-repos.client';
+import { AccountRepo } from './repo-source';
 import { planRepoList, SavedRepo } from './repo-list-plan';
 
 function accountRepo(externalId: string, fullName: string): AccountRepo {

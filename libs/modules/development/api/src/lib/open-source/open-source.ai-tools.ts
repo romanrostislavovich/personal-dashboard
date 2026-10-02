@@ -20,7 +20,8 @@ export class OpenSourceAiTools implements OnModuleInit {
       name: 'github_repos',
       module: 'development',
       description:
-        "Open source repositories: the user's own public ones (`relation: owner`), those of " +
+        "Open source repositories from GitHub, GitLab and Bitbucket (`provider`): the user's " +
+        'own public ones (`relation: owner`), those of ' +
         'their organizations (`organization`) and ones added by hand (`manual`). For each: id, ' +
         'stars and growth over 7/30 days, forks, open issues and PRs, language, latest release, ' +
         'weekly npm downloads, whether it is a fork, archived, hidden, has notifications on.',
@@ -34,12 +35,18 @@ export class OpenSourceAiTools implements OnModuleInit {
       module: 'development',
       writes: true,
       description:
-        "Adds a GitHub repository that is not the user's own (theirs appear by themselves): " +
-        'stars, issues, releases, npm downloads.',
+        "Adds a repository that is not the user's own (theirs appear by themselves) from " +
+        'GitHub, GitLab or Bitbucket: stars, issues, releases, npm downloads. The service must ' +
+        'be connected.',
       parameters: {
         type: 'object',
         properties: {
-          repo: { type: 'string', description: 'owner/name or a github.com link' },
+          repo: {
+            type: 'string',
+            description:
+              'A link to the repository on github.com, gitlab.com or bitbucket.org; a bare ' +
+              'owner/name means GitHub',
+          },
           npmPackage: { type: 'string', description: 'npm package name, if it is published' },
         },
         required: ['repo'],

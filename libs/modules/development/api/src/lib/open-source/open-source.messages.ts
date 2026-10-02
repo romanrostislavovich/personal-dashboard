@@ -27,7 +27,7 @@ function body(events: RepoSyncEvents[], t: Labels): string {
 /** Module notification texts; the language is picked by `user.locale`. */
 const messages = {
   en: {
-    title: '🐙 GitHub',
+    title: '📦 Open Source',
     body: (events: RepoSyncEvents[]) =>
       body(events, {
         stars: (n) => `${n} stars!`,
@@ -38,7 +38,7 @@ const messages = {
       }),
   },
   ru: {
-    title: '🐙 GitHub',
+    title: '📦 Open Source',
     body: (events: RepoSyncEvents[]) =>
       body(events, {
         stars: (n) => `${n} звёзд!`,
