@@ -90,6 +90,8 @@
   totals; data stays on your own server
 - **Development: self-hosted GitLab** — an instance of your own next to gitlab.com (its address
   with the token); later the tabs of the section may move to their own submenu
+- **Dota 2: the whole match history** — the Steam Web API gives only the 500 latest matches;
+  the rest needs the Dota 2 Game Coordinator (a sign-in to Steam from the server)
 - **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
 - **Books** — reading list, progress, ratings and notes
 - **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and
