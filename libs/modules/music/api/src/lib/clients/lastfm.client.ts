@@ -5,8 +5,19 @@ const API = 'https://ws.audioscrobbler.com/2.0/';
 /** Last.fm error codes: https://www.last.fm/api/errorcodes */
 const INVALID_API_KEY = 10;
 const USER_NOT_FOUND = 6;
+/** "Try again later": operation failed, service offline, temporary error, rate limit. */
+const TEMPORARY = [8, 11, 16, 29];
+const TIMEOUT_MS = 20_000;
+const RETRY_AFTER_MS = 1500;
 
 export class LastfmAuthError extends Error {}
+/** Last.fm is having trouble of its own; the same request works a little later. */
+export class LastfmUnavailableError extends Error {}
+
+/** Whether a Last.fm answer is a failure on its side that is worth trying again. */
+export function isTemporary(status: number, code: number | undefined): boolean {
+  return status >= 500 || status === 429 || (code !== undefined && TEMPORARY.includes(code));
+}
 
 type TopKind = 'artists' | 'tracks' | 'albums';
 
@@ -87,7 +98,20 @@ export class LastfmClient {
     }));
   }
 
+  /** One method of the API; a failure on Last.fm's side is tried once more before giving up. */
   private async call<T>(method: string, params: Record<string, string> = {}): Promise<T> {
+    try {
+      return await this.request<T>(method, params);
+    } catch (error) {
+      if (!(error instanceof LastfmUnavailableError)) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, RETRY_AFTER_MS));
+      return this.request<T>(method, params);
+    }
+  }
+
+  private async request<T>(method: string, params: Record<string, string>): Promise<T> {
     const query = new URLSearchParams({
       method,
       user: this.username,
@@ -95,12 +119,24 @@ export class LastfmClient {
       format: 'json',
       ...params,
     });
-    const response = await fetch(`${API}?${query}`, {
-      headers: { 'User-Agent': 'personal-dashboard' },
-    });
-    const data = (await response.json()) as T & { error?: number; message?: string };
+    type Answer = T & { error?: number; message?: string };
+    let response: Response;
+    let data: Answer;
+    try {
+      response = await fetch(`${API}?${query}`, {
+        headers: { 'User-Agent': 'personal-dashboard' },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+      data = (await response.json()) as Answer;
+    } catch {
+      // No connection, a timeout, or an error page instead of JSON.
+      throw new LastfmUnavailableError(`Last.fm ${method}: no answer`);
+    }
     if (data.error === INVALID_API_KEY || data.error === USER_NOT_FOUND) {
       throw new LastfmAuthError(data.message ?? 'Last.fm authentication failed');
+    }
+    if (isTemporary(response.status, data.error)) {
+      throw new LastfmUnavailableError(`Last.fm ${method}: ${data.message ?? response.status}`);
     }
     if (!response.ok || data.error) {
       throw new Error(`Last.fm ${method}: ${data.message ?? response.status}`);
