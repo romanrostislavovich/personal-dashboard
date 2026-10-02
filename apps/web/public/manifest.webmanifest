@@ -1,0 +1,25 @@
+{
+  "name": "Personal Dashboard",
+  "short_name": "Dashboard",
+  "description": "Your own data in one place: tasks, diary, finance, code, music, games.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#151316",
+  "theme_color": "#151316",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Tasks", "url": "/tasks/todo" },
+    { "name": "Diary", "url": "/diary" },
+    { "name": "Finance", "url": "/finance" }
+  ]
+}

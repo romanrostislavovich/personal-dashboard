@@ -76,6 +76,13 @@
 - **Themes:** light, dark or as the device, six ready-made accents or a colour of your own, a
   black background for OLED screens, font, density, corner radius and the glow; every device
   may keep a theme of its own, "Apply everywhere" makes one the theme of the account
+- **Command palette (Ctrl+K):** one field opens any page, switches the theme, adds a task from the
+  typed text and searches the data of every module
+- **Installable app (PWA):** installs on a phone or a computer; opens without a connection with
+  the data seen before; changes of your own records made offline are sent when the server
+  answers again; a new version is offered with a "Reload" button
+- **Your own home page and menu:** widgets are dragged into place, resized and hidden; whole
+  sections are hidden from the menu; per device, "Apply everywhere" makes it the account's
 - **Self-monitoring:** Settings → System shows the background jobs with their last runs and the
   server's errors and warnings of the last 14 days; a failed job, a failing sync or AI provider
   and any unhandled error are also reported to Telegram
@@ -148,13 +155,11 @@
 
 #### Everyday comfort
 
-- **Command palette (Ctrl+K)** — search across modules and quick actions
-- **PWA** — install on a phone, work offline (a cheap mobile app before the real one)
-- **Customizable home page** — order and hide widgets
-- **Section visibility** — turn whole sections on or off in the settings (e.g. hide Fitness if
-  you do not use it): a hidden section disappears from the menu, the home page, the digest and
-  notifications
-- **Telegram buttons** — "Yes / No" to confirm a deletion; quick commands like `/spent 12 coffee`
+- **Push notifications** — in the browser, the desktop app and on phones, next to Telegram;
+  switched off per kind of notification or all at once
+- **Hidden sections in the digest and notifications** — today hiding a section only takes it out
+  of the menu and the home page
+- **Telegram:** "Yes / No" buttons to confirm a deletion; quick commands like `/spent 12 coffee`
 
 #### Features
 
@@ -183,7 +188,6 @@
   all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you
   were sad, you listened to this music and did that"
 - **AI memory** — facts about the user the assistant keeps between conversations
-- **AI reminders** — "remind me on Friday to call mum" becomes a scheduled job
 
 ### Ideas
 
@@ -192,7 +196,7 @@
 - More cost providers: DigitalOcean, AWS Cost Explorer, Vercel, OpenAI and Anthropic usage
 - GitHub repository traffic (views / clones), npm downloads history
 - Notification settings: which module sends what and where
-- Channels: Discord, e-mail, web push (browser notifications when the tab is closed)
+- Channels: Discord, e-mail
 - AI: native Anthropic API, streaming answers
 - Roles and sharing for multi-user setups
 - A module generator and more language translations

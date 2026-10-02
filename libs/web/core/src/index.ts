@@ -12,5 +12,7 @@ export * from './lib/dashboard/level-card.component';
 export * from './lib/realtime/realtime.client';
 export * from './lib/toast/toast.service';
 export * from './lib/theme/theme.service';
+export * from './lib/layout/layout.service';
+export * from './lib/offline/offline.service';
 export * from './lib/client/dashboard-client';
 export * from './lib/client/core-requests';

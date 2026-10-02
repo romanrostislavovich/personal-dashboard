@@ -129,6 +129,10 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
      changes nothing and the model asks the user; the call runs when repeated after the user's reply.
      Edits take the record id and only the fields to change (`changedFields`, `findById`).
      Never expose secrets (API keys, tokens) through tools — they are set up in the dashboard.
+   - search: `strava.search.ts` — `SearchService.register({ module, search(userId, query) })`
+     returns what of the module's data matches (`SearchHit`: a title, a line under it, the page it
+     opens); the command palette asks all modules through `/api/search` (example —
+     `libs/modules/tasks/api/src/lib/tasks.search.ts`).
    - morning digest: `strava.digest.ts` — a section with `id`, `module`, `description` and
      `collect`, registered with `MorningDigestService.register()`. The digest tells only what
      changed since the previous one, so `collect(userId)` returns facts that stay the same until
@@ -148,7 +152,9 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
 5. **Frontend:** `strava.api.ts` wraps the requests of the client core for Angular (reads as
    `httpResource(() => STRAVA_READS.x())`, writes as `fromCore(() => this.strava.y())`, example —
    `libs/modules/birthdays/web/src/lib/birthdays.api.ts`); export a `WebDashboardModule` with `id`,
-   menu item, routes, translations (`en` and `ru`), widgets and integrations.
+   menu item, routes, translations (`en` and `ru`), widgets and integrations. `commands` add lines
+   to the command palette: a page inside the section (`url`) or an action on the typed text
+   (`loadAction`, example — `libs/modules/tasks/web/src/lib/tasks.commands.ts`).
 6. **Enable** the module in `apps/api/src/modules.ts` and `apps/web/src/app/modules.ts`.
 7. **Restart `npm run dev`**: the bundlers read the `@pd/*` aliases from `tsconfig.base.json` only on start.
 
@@ -246,6 +252,12 @@ To add a service (e.g. DigitalOcean):
   the device's one on sign-in, `UsersService.timeZoneOf(user)` gives it (falls back to
   `APP_TIMEZONE`); moments are stored in UTC, `zonedToUtc()` / `zonedDateTime()` in contracts
   convert.
+- **Offline:** the service worker (`apps/web/ngsw-config.json`) keeps the app and the answers of
+  `GET /api/**` it has seen; without a connection the app starts as the user last signed in on the
+  device. A change of the user's own records is put into the outbox of the client core
+  (`libs/client/core/src/lib/outbox.ts`) and sent later — the call resolves with `undefined`, so a
+  page must not depend on the answer of such a write. Which writes may wait is listed there
+  (`QUEUEABLE`): add a module's own records to it, never a request that needs an outside service.
 - **Theme:** the built-in look is in `apps/web/src/styles.scss`; `ThemeService` (`@pd/web-core`)
   changes it at run time by setting CSS variables and classes on `<html>`. A component never
   hard-codes a colour, a font or a corner: it uses `--mat-sys-*` and `--pd-*` variables, and then

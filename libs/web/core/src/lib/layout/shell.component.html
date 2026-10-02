@@ -10,8 +10,14 @@
       <span class="brand-name">{{ 'core.appName' | transloco }}</span>
     </a>
 
+    <button type="button" class="search" (click)="openPalette()">
+      <mat-icon>search</mat-icon>
+      <span>{{ 'core.palette.open' | transloco }}</span>
+      <kbd>Ctrl K</kbd>
+    </button>
+
     <nav class="nav">
-      @for (item of mainNav; track item.path) {
+      @for (item of mainNav(); track item.path) {
         <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
       }
     </nav>
@@ -21,6 +27,21 @@
         <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
       }
     </nav>
+
+    <!-- Without a connection, or with changes that have not reached the server yet. -->
+    @if (!offline.online() || auth.offline() || offline.pending() > 0) {
+      <div class="offline" role="status">
+        <mat-icon>{{ offline.pending() > 0 ? 'cloud_upload' : 'cloud_off' }}</mat-icon>
+        <span>
+          @if (!offline.online() || auth.offline()) {
+            {{ 'core.offline.offline' | transloco }}
+          }
+          @if (offline.pending() > 0) {
+            {{ 'core.offline.pending' | transloco: { count: offline.pending() } }}
+          }
+        </span>
+      </div>
+    }
 
     @if (auth.user(); as user) {
       <div class="user">
@@ -62,6 +83,14 @@
         </button>
         <span class="logo small"><mat-icon>bolt</mat-icon></span>
         <span class="brand-name">{{ 'core.appName' | transloco }}</span>
+        <button
+          matIconButton
+          class="mobile-search"
+          [attr.aria-label]="'core.palette.open' | transloco"
+          (click)="openPalette()"
+        >
+          <mat-icon>search</mat-icon>
+        </button>
       </header>
     }
 

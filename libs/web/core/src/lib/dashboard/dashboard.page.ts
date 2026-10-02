@@ -1,97 +1,75 @@
+import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
 import { DatePipe, NgComponentOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal, Type } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { ArrangedWidget, arrangeWidgets, WIDGET_SIZES, WidgetSize } from '@pd/contracts';
 import { AuthService } from '../auth/auth.service';
-import { DASHBOARD_MODULES, DashboardWidget } from '../dashboard-module';
+import { DASHBOARD_MODULES } from '../dashboard-module';
+import { LayoutService } from '../layout/layout.service';
 import { LevelCardComponent } from './level-card.component';
 
-interface LoadedWidget extends DashboardWidget {
+interface ShownWidget extends ArrangedWidget {
   component: Type<unknown>;
 }
 
-/** Home: a greeting with the player level and a grid of widgets from all enabled modules. */
+/**
+ * Home: a greeting with the player level and a grid of widgets from all enabled modules.
+ * "Edit" turns the grid into an editor: widgets are dragged into place, resized and hidden;
+ * the result is the layout of this device (LayoutService).
+ */
 @Component({
   selector: 'pd-dashboard-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, NgComponentOutlet, TranslocoPipe, LevelCardComponent],
-  template: `
-    <header class="hero">
-      <div>
-        <p class="date">{{ today | date: 'EEEE, d MMMM' }}</p>
-        <h1 class="greeting">
-          {{ 'core.dashboard.greeting.' + partOfDay() | transloco: { name: firstName() } }}
-        </h1>
-      </div>
-      <pd-level-card />
-    </header>
-
-    <div class="grid">
-      @for (widget of widgets(); track widget.id) {
-        <section class="widget" [class]="widget.size ?? 'medium'">
-          <ng-container *ngComponentOutlet="widget.component" />
-        </section>
-      }
-    </div>
-  `,
-  styles: `
-    .hero {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 20px;
-      margin-bottom: 28px;
-    }
-    .hero pd-level-card {
-      flex: 0 1 340px;
-    }
-    .date {
-      margin: 0 0 6px;
-      font: 600 0.8rem / 1.2 var(--pd-font);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--mat-sys-primary);
-    }
-    .greeting {
-      margin: 0;
-      font: 800 clamp(1.6rem, 3vw, 2.3rem) / 1.15 var(--pd-font-heading);
-      letter-spacing: -0.02em;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
-      gap: 18px;
-      /* Narrow widgets fill the gaps left by wide ones. */
-      grid-auto-flow: dense;
-    }
-    .widget {
-      display: flex;
-      flex-direction: column;
-    }
-    /* Cards in a row share the same height. */
-    .widget > ::ng-deep * {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-    .widget > ::ng-deep * > .mat-mdc-card {
-      flex: 1;
-    }
-    .widget.large {
-      grid-column: 1 / -1;
-    }
-    @media (min-width: 1000px) {
-      .widget.medium {
-        grid-column: span 2;
-      }
-    }
-  `,
+  imports: [
+    CdkDrag,
+    CdkDragHandle,
+    CdkDropList,
+    DatePipe,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    NgComponentOutlet,
+    TranslocoPipe,
+    LevelCardComponent,
+  ],
+  templateUrl: './dashboard.page.html',
+  styleUrl: './dashboard.page.scss',
 })
 export class DashboardPage {
   private readonly auth = inject(AuthService);
+  private readonly layout = inject(LayoutService);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly transloco = inject(TranslocoService);
 
   protected readonly today = new Date();
-  protected readonly widgets = signal<LoadedWidget[]>([]);
+  protected readonly editing = signal(false);
+  protected readonly busy = signal(false);
+  protected readonly isOwn = this.layout.isOwn;
+  protected readonly sizes = WIDGET_SIZES;
+
+  private readonly declared = inject(DASHBOARD_MODULES).flatMap((module) => module.widgets ?? []);
+  private readonly components = signal(new Map<string, Type<unknown>>());
+
+  /** Every widget in the order of the layout, hidden ones included (the editor shows them). */
+  private readonly arranged = computed<ShownWidget[]>(() => {
+    const components = this.components();
+    return arrangeWidgets(
+      this.declared.map(({ id, size }) => ({ id, size: size ?? 'medium' })),
+      this.layout.layout(),
+    ).flatMap((widget) => {
+      const component = components.get(widget.id);
+      return component ? [{ ...widget, component }] : [];
+    });
+  });
+
+  /** What the grid shows: all widgets while editing, the visible ones otherwise. */
+  protected readonly widgets = computed(() =>
+    this.editing() ? this.arranged() : this.arranged().filter((widget) => !widget.hidden),
+  );
 
   protected readonly firstName = computed(
     () => this.auth.user()?.displayName.trim().split(/\s+/)[0] ?? '',
@@ -106,9 +84,65 @@ export class DashboardPage {
   });
 
   constructor() {
-    const widgets = inject(DASHBOARD_MODULES).flatMap((module) => module.widgets ?? []);
-    Promise.all(
-      widgets.map(async (widget) => ({ ...widget, component: await widget.loadComponent() })),
-    ).then((loaded) => this.widgets.set(loaded));
+    void Promise.all(
+      this.declared.map(async (widget) => [widget.id, await widget.loadComponent()] as const),
+    ).then((loaded) => this.components.set(new Map(loaded)));
+  }
+
+  /** A widget of a hidden section is shown again by showing the section (Settings → Appearance). */
+  protected sectionHidden(widget: ArrangedWidget): boolean {
+    return this.layout.isHidden(widget.id.split('.')[0]);
+  }
+
+  protected drop(event: CdkDragDrop<unknown>): void {
+    const widgets = [...this.arranged()];
+    const [moved] = widgets.splice(event.previousIndex, 1);
+    widgets.splice(event.currentIndex, 0, moved);
+    this.save(widgets);
+  }
+
+  protected resize(widget: ArrangedWidget, size: WidgetSize): void {
+    this.save(this.arranged().map((w) => (w.id === widget.id ? { ...w, size } : w)));
+  }
+
+  protected toggleHidden(widget: ArrangedWidget): void {
+    this.save(this.arranged().map((w) => (w.id === widget.id ? { ...w, hidden: !w.hidden } : w)));
+  }
+
+  /** Back to the layout of the account (or the built-in one). */
+  protected reset(): void {
+    this.layout.useAccountLayout();
+  }
+
+  protected async applyEverywhere(): Promise<void> {
+    this.busy.set(true);
+    try {
+      await this.layout.applyEverywhere();
+      this.snackBar.open(this.transloco.translate('core.dashboard.edit.applied'), 'OK', {
+        duration: 4000,
+      });
+    } catch {
+      this.snackBar.open(this.transloco.translate('core.dashboard.edit.notApplied'), 'OK', {
+        duration: 6000,
+      });
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /**
+   * The whole list goes into the layout. A widget hidden only because its section is hidden is
+   * saved as shown: it comes back with the section.
+   */
+  private save(widgets: ArrangedWidget[]): void {
+    const kept = new Map(this.layout.layout().widgets.map((widget) => [widget.id, widget]));
+    const declared = new Map(this.declared.map((widget) => [widget.id, widget.size ?? 'medium']));
+    this.layout.update({
+      widgets: widgets.map((widget) => ({
+        id: widget.id,
+        hidden: this.sectionHidden(widget) ? (kept.get(widget.id)?.hidden ?? false) : widget.hidden,
+        size: widget.size === declared.get(widget.id) ? null : widget.size,
+      })),
+    });
   }
 }

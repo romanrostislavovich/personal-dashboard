@@ -1,0 +1,101 @@
+<header class="hero">
+  <div>
+    <p class="date">{{ today | date: 'EEEE, d MMMM' }}</p>
+    <h1 class="greeting">
+      {{ 'core.dashboard.greeting.' + partOfDay() | transloco: { name: firstName() } }}
+    </h1>
+  </div>
+  <pd-level-card />
+</header>
+
+<div class="toolbar">
+  @if (editing()) {
+    <span class="hint">{{ 'core.dashboard.edit.hint' | transloco }}</span>
+    @if (isOwn()) {
+      <button matButton (click)="reset()">
+        {{ 'core.dashboard.edit.reset' | transloco }}
+      </button>
+    }
+    <button matButton (click)="applyEverywhere()" [disabled]="busy()">
+      {{ 'core.dashboard.edit.applyEverywhere' | transloco }}
+    </button>
+    <button matButton="filled" (click)="editing.set(false)">
+      <mat-icon>check</mat-icon> {{ 'core.dashboard.edit.done' | transloco }}
+    </button>
+  } @else {
+    <button matButton (click)="editing.set(true)">
+      <mat-icon>dashboard_customize</mat-icon> {{ 'core.dashboard.edit.start' | transloco }}
+    </button>
+  }
+</div>
+
+<!-- Dragging is on only while editing; the order of the grid is the order of the layout. -->
+<div
+  class="grid"
+  [class.editing]="editing()"
+  cdkDropList
+  cdkDropListOrientation="mixed"
+  [cdkDropListDisabled]="!editing()"
+  (cdkDropListDropped)="drop($event)"
+>
+  @for (widget of widgets(); track widget.id) {
+    <section
+      class="widget"
+      [class]="widget.size"
+      [class.hidden]="widget.hidden"
+      cdkDrag
+      [cdkDragDisabled]="!editing()"
+    >
+      @if (editing()) {
+        <div class="controls">
+          <button
+            matIconButton
+            cdkDragHandle
+            class="handle"
+            [matTooltip]="'core.dashboard.edit.move' | transloco"
+            [attr.aria-label]="'core.dashboard.edit.move' | transloco"
+          >
+            <mat-icon>drag_indicator</mat-icon>
+          </button>
+          <span class="sizes" role="radiogroup">
+            @for (size of sizes; track size) {
+              <button
+                type="button"
+                class="size"
+                role="radio"
+                [class.selected]="widget.size === size"
+                [attr.aria-checked]="widget.size === size"
+                [attr.aria-label]="'core.dashboard.edit.sizes.' + size | transloco"
+                [matTooltip]="'core.dashboard.edit.sizes.' + size | transloco"
+                (click)="resize(widget, size)"
+              >
+                {{ 'core.dashboard.edit.sizeLetters.' + size | transloco }}
+              </button>
+            }
+          </span>
+          @if (sectionHidden(widget)) {
+            <span class="hint">{{ 'core.dashboard.edit.sectionHidden' | transloco }}</span>
+          } @else {
+            <button
+              matIconButton
+              [matTooltip]="
+                (widget.hidden ? 'core.dashboard.edit.show' : 'core.dashboard.edit.hide')
+                  | transloco
+              "
+              [attr.aria-label]="
+                (widget.hidden ? 'core.dashboard.edit.show' : 'core.dashboard.edit.hide')
+                  | transloco
+              "
+              (click)="toggleHidden(widget)"
+            >
+              <mat-icon>{{ widget.hidden ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          }
+        </div>
+      }
+      <div class="body">
+        <ng-container *ngComponentOutlet="widget.component" />
+      </div>
+    </section>
+  }
+</div>

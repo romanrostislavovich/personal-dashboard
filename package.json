@@ -40,6 +40,7 @@
     "@angular/material": "^22.2.0",
     "@angular/platform-browser": "22.2.0",
     "@angular/router": "22.2.0",
+    "@angular/service-worker": "^22.2.0",
     "@jsverse/transloco": "^8.4.0",
     "@material/material-color-utilities": "^0.4.0",
     "@nestjs/common": "^12.1.1",
@@ -137,7 +138,9 @@
   },
   "overrides": {
     "nx": {
-      "smol-toml": "1.9.0"
+      "smol-toml": "1.9.0",
+      "axios": "1.20.0",
+      "brace-expansion": "5.0.12"
     },
     "sockjs": {
       "uuid": "11.1.1"

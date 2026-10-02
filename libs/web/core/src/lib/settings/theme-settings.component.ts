@@ -18,11 +18,13 @@ import {
   THEME_RADIUS,
   ThemePreset,
 } from '@pd/contracts';
+import { LayoutService } from '../layout/layout.service';
 import { ThemeService } from '../theme/theme.service';
 
 /**
  * The look of the dashboard. Every change shows at once and stays on this device; "apply
- * everywhere" makes it the theme of the account, which the other devices then take.
+ * everywhere" makes it the look of the account — the theme together with the layout (hidden
+ * sections, the home page) — which the other devices then take.
  */
 @Component({
   selector: 'pd-theme-settings',
@@ -160,15 +162,15 @@ import { ThemeService } from '../theme/theme.service';
         <mat-card-title>{{ 'core.settings.theme.devices' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <p>{{ (theme.isOwn() ? 'core.settings.theme.own' : status()) | transloco }}</p>
+        <p>{{ (isOwn() ? 'core.settings.theme.own' : status()) | transloco }}</p>
         <p class="hint">{{ 'core.settings.theme.devicesHint' | transloco }}</p>
       </mat-card-content>
       <mat-card-actions>
         <button matButton="filled" (click)="applyEverywhere()" [disabled]="busy()">
           {{ 'core.settings.theme.applyEverywhere' | transloco }}
         </button>
-        @if (theme.isOwn()) {
-          <button matButton (click)="theme.useAccountTheme()">
+        @if (isOwn()) {
+          <button matButton (click)="useAccount()">
             {{ 'core.settings.theme.useAccount' | transloco }}
           </button>
         }
@@ -243,6 +245,8 @@ import { ThemeService } from '../theme/theme.service';
 })
 export class ThemeSettingsComponent {
   protected readonly theme = inject(ThemeService);
+  /** Hidden sections and the home page: kept per device the same way, applied together. */
+  private readonly layout = inject(LayoutService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly transloco = inject(TranslocoService);
 
@@ -254,10 +258,20 @@ export class ThemeSettingsComponent {
   protected readonly radius = THEME_RADIUS;
   protected readonly busy = signal(false);
 
-  /** What a device without its own theme shows. */
+  /** This device differs from the account in the theme or in the layout. */
+  protected readonly isOwn = computed(() => this.theme.isOwn() || this.layout.isOwn());
+
+  /** What a device without its own look shows. */
   protected readonly status = computed(() =>
-    this.theme.account() ? 'core.settings.theme.shared' : 'core.settings.theme.builtIn',
+    this.theme.account() || this.layout.account()
+      ? 'core.settings.theme.shared'
+      : 'core.settings.theme.builtIn',
   );
+
+  protected useAccount(): void {
+    this.theme.useAccountTheme();
+    this.layout.useAccountLayout();
+  }
 
   protected pick(preset: ThemePreset): void {
     this.theme.update({ preset, accent: null });
@@ -271,6 +285,7 @@ export class ThemeSettingsComponent {
     this.busy.set(true);
     try {
       await this.theme.applyEverywhere();
+      await this.layout.applyEverywhere();
       this.snackBar.open(this.transloco.translate('core.settings.theme.applied'), 'OK', {
         duration: 4000,
       });

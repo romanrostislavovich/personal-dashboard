@@ -43,6 +43,38 @@ export const developmentModule: WebDashboardModule = {
     en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
+  commands: [
+    {
+      id: 'development.summary',
+      labelKey: 'development.tabs.summary',
+      icon: 'insights',
+      url: '/development/summary',
+    },
+    {
+      id: 'development.github',
+      labelKey: 'development.tabs.github',
+      icon: 'code',
+      url: '/development/github',
+    },
+    {
+      id: 'development.gitlab',
+      labelKey: 'development.tabs.gitlab',
+      icon: 'code',
+      url: '/development/gitlab',
+    },
+    {
+      id: 'development.bitbucket',
+      labelKey: 'development.tabs.bitbucket',
+      icon: 'code',
+      url: '/development/bitbucket',
+    },
+    {
+      id: 'development.wakatime',
+      labelKey: 'development.tabs.wakatime',
+      icon: 'timer',
+      url: '/development/wakatime',
+    },
+  ],
   widgets: [
     {
       id: 'development.summary',

@@ -8,6 +8,7 @@ import { map } from 'rxjs';
 import { DASHBOARD_MODULES } from '../dashboard-module';
 import { PasswordSettingsComponent } from './password-settings.component';
 import { ProfileSettingsComponent } from './profile-settings.component';
+import { SectionsSettingsComponent } from './sections-settings.component';
 import { SecuritySettingsComponent } from './security-settings.component';
 import { SyncSettingsComponent } from './sync-settings.component';
 import { SystemSettingsComponent } from './system-settings.component';
@@ -32,6 +33,7 @@ const TABS = ['account', 'appearance', 'integrations', 'data', 'system'] as cons
     TranslocoPipe,
     ProfileSettingsComponent,
     PasswordSettingsComponent,
+    SectionsSettingsComponent,
     SecuritySettingsComponent,
     TrashSettingsComponent,
     SyncSettingsComponent,
@@ -59,6 +61,7 @@ const TABS = ['account', 'appearance', 'integrations', 'data', 'system'] as cons
       <mat-tab [label]="'core.settings.tabs.appearance' | transloco">
         <div class="grid">
           <pd-theme-settings />
+          <pd-sections-settings />
         </div>
       </mat-tab>
 

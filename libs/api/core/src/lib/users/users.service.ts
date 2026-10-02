@@ -70,7 +70,7 @@ export class UsersService {
   async update(
     userId: string,
     changes: Partial<
-      Pick<UserRow, 'displayName' | 'locale' | 'passwordHash' | 'timeZone' | 'theme'>
+      Pick<UserRow, 'displayName' | 'locale' | 'passwordHash' | 'timeZone' | 'theme' | 'layout'>
     >,
   ): Promise<UserRow> {
     const [user] = await this.db.update(users).set(changes).where(eq(users.id, userId)).returning();

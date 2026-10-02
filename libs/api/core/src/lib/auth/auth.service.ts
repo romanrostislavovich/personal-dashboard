@@ -182,12 +182,14 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   async updateProfile(userId: string, changes: ProfileUpdate): Promise<CurrentUser> {
-    const { theme, ...rest } = changes;
+    const { theme, layout, ...rest } = changes;
+    // The time tells the devices this is newer than their own (see `resolveTheme`).
+    const everywhereAt = new Date().toISOString();
     return toCurrentUser(
       await this.users.update(userId, {
         ...rest,
-        // The time tells the devices this theme is newer than their own (see `resolveTheme`).
-        ...(theme ? { theme: { theme, everywhereAt: new Date().toISOString() } } : {}),
+        ...(theme ? { theme: { theme, everywhereAt } } : {}),
+        ...(layout ? { layout: { layout, everywhereAt } } : {}),
       }),
     );
   }
@@ -255,5 +257,6 @@ function toCurrentUser(user: UserRow): CurrentUser {
     locale: user.locale,
     timeZone: user.timeZone,
     theme: user.theme,
+    layout: user.layout,
   };
 }

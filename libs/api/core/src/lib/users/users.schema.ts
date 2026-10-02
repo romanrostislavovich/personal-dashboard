@@ -1,4 +1,4 @@
-import { AccountTheme } from '@pd/contracts';
+import { AccountLayout, AccountTheme } from '@pd/contracts';
 import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
@@ -15,6 +15,8 @@ export const users = pgTable('users', {
   timeZone: text(),
   /** The look applied on every device (see `resolveTheme`); `null` — the built-in one. */
   theme: jsonb().$type<AccountTheme>(),
+  /** Hidden sections and the home page as arranged on every device (see `resolveLayout`). */
+  layout: jsonb().$type<AccountLayout>(),
   telegramChatId: text(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
