@@ -1,0 +1,111 @@
+@let s = stats.value();
+
+<header class="toolbar">
+  <mat-button-toggle-group
+    hideSingleSelectionIndicator
+    [value]="days()"
+    [attr.aria-label]="'activity.period' | transloco"
+    (change)="days.set($event.value)"
+  >
+    @for (period of periods; track period) {
+      <mat-button-toggle [value]="period">
+        {{ 'activity.periods.' + period | transloco }}
+      </mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+  @if (devices.value().length > 1) {
+    <mat-form-field subscriptSizing="dynamic" class="device">
+      <mat-label>{{ 'activity.device' | transloco }}</mat-label>
+      <mat-select [value]="deviceId()" (valueChange)="deviceId.set($event)">
+        <mat-option [value]="null">{{ 'activity.allDevices' | transloco }}</mat-option>
+        @for (device of devices.value(); track device.id) {
+          <mat-option [value]="device.id">{{ device.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+</header>
+
+@if (!devices.isLoading() && !devices.value().length) {
+  <section class="setup">
+    <h3>{{ 'activity.setup.title' | transloco }}</h3>
+    <p class="hint">{{ 'activity.setup.hint' | transloco }}</p>
+    <a matButton="filled" routerLink="../settings">{{ 'activity.setup.open' | transloco }}</a>
+  </section>
+} @else if (s) {
+  <mat-card appearance="outlined">
+    <mat-card-content class="stats">
+      <div class="stat">
+        <span class="label">{{ 'activity.total' | transloco }}</span>
+        <span class="value">{{ s.totalSeconds | pdDuration }}</span>
+        @if (days() > 1) {
+          <span class="sub">{{ 'activity.activeDays' | transloco: { count: activeDays() } }}</span>
+        }
+      </div>
+      @if (days() > 1) {
+        <div class="stat">
+          <span class="label">{{ 'activity.dailyAverage' | transloco }}</span>
+          <span class="value">{{ dailyAverage() | pdDuration }}</span>
+          <span class="sub">{{ 'activity.dailyAverageHint' | transloco }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">{{ 'activity.bestDay' | transloco }}</span>
+          @if (bestDay(); as best) {
+            <span class="value">{{ best.seconds | pdDuration }}</span>
+            <span class="sub">{{ best.day | date: 'd MMM y' }}</span>
+          } @else {
+            <span class="value">—</span>
+          }
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  @if (days() > 1) {
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>{{ 'activity.chart' | transloco }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="padded">
+        <pd-bar-chart [bars]="bars()" [label]="'activity.chart' | transloco" />
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (s.totalSeconds === 0) {
+    <p class="hint">{{ 'activity.empty' | transloco }}</p>
+  }
+
+  <div class="columns">
+    <ng-container
+      *ngTemplateOutlet="top; context: { title: 'activity.byCategory', items: categories() }"
+    />
+    <ng-container *ngTemplateOutlet="top; context: { title: 'activity.byApp', items: apps() }" />
+    <ng-container
+      *ngTemplateOutlet="top; context: { title: 'activity.byProject', items: projects() }"
+    />
+    @if (byDevice().length > 1) {
+      <ng-container
+        *ngTemplateOutlet="top; context: { title: 'activity.byDevice', items: byDevice() }"
+      />
+    }
+    <ng-container
+      *ngTemplateOutlet="top; context: { title: 'activity.byTitle', items: titles() }"
+    />
+  </div>
+
+  <pd-activity-day-timeline [deviceId]="deviceId()" />
+}
+
+<ng-template #top let-title="title" let-items="items">
+  @if (items.length) {
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>{{ title | transloco }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="padded">
+        <pd-share-list [items]="items" />
+      </mat-card-content>
+    </mat-card>
+  }
+</ng-template>

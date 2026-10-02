@@ -1,0 +1,99 @@
+import { projects, users } from '@pd/api-core/schema';
+import { ActivityCategory, ActivityPlatform } from '@pd/contracts';
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
+
+/** A tracker the user installed: the desktop shell on a computer, later an app on a phone. */
+export const activityDevices = pgTable('activity_devices', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text().notNull(),
+  platform: text().$type<ActivityPlatform>().notNull(),
+  /** SHA-256 of the token the device reports with; the token itself is shown once. */
+  tokenHash: text().notNull().unique(),
+  lastSeenAt: timestamp({ withTimezone: true }),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * A stretch of time one window was in front. A tracker cuts a long stretch into pieces of a
+ * few minutes, so a row never spans more than that — a day's total is a plain sum.
+ */
+export const activitySpans = pgTable(
+  'activity_spans',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    deviceId: uuid()
+      .notNull()
+      .references(() => activityDevices.id, { onDelete: 'cascade' }),
+    /** The name of the process, lower case: what a program is recognized by. */
+    app: text().notNull(),
+    /** The name people know it by; the process name when the system gave none. */
+    appName: text().notNull(),
+    title: text().notNull(),
+    startedAt: timestamp({ withTimezone: true }).notNull(),
+    endedAt: timestamp({ withTimezone: true }).notNull(),
+    seconds: integer().notNull(),
+  },
+  (table) => [
+    // A batch sent twice (the answer was lost) does not double the time.
+    unique().on(table.deviceId, table.startedAt),
+    index().on(table.userId, table.startedAt),
+  ],
+);
+
+/** What the user decided about a program: its category, or not to record it at all. */
+export const activityApps = pgTable(
+  'activity_apps',
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    app: text().notNull(),
+    /** `null` — the default one (see `defaultActivityCategory`). */
+    category: text().$type<ActivityCategory>(),
+    excluded: boolean().notNull().default(false),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.app] })],
+);
+
+/** Time whose window title contains the pattern belongs to the project. */
+export const activityProjectRules = pgTable(
+  'activity_project_rules',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    projectId: uuid()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    pattern: text().notNull(),
+  },
+  (table) => [unique().on(table.userId, table.projectId, table.pattern)],
+);
+
+export const activitySettings = pgTable('activity_settings', {
+  userId: uuid()
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  /** No input for this long means the user is away. */
+  idleMinutes: integer().notNull().default(5),
+});
+
+export type ActivityDeviceRow = typeof activityDevices.$inferSelect;
+export type ActivitySpanRow = typeof activitySpans.$inferSelect;

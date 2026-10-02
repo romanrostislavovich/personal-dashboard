@@ -364,5 +364,9 @@
     "refusedText": "Изменений без связи, которые не приняты: {{count}}.",
     "updateReady": "Готова новая версия дашборда.",
     "reload": "Обновить"
+  },
+  "duration": {
+    "hoursMinutes": "{{hours}} ч {{minutes}} мин",
+    "minutes": "{{minutes}} мин"
   }
 }

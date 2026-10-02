@@ -34,6 +34,8 @@
       "@pd/games-web": ["./libs/modules/games/web/src/index.ts"],
       "@pd/achievements-web": ["./libs/modules/achievements/web/src/index.ts"],
       "@pd/ai-web": ["./libs/modules/ai/web/src/index.ts"],
+      "@pd/activity-api": ["./libs/modules/activity/api/src/index.ts"],
+      "@pd/activity-web": ["./libs/modules/activity/web/src/index.ts"],
       "@pd/tasks-api": ["./libs/modules/tasks/api/src/index.ts"],
       "@pd/tasks-web": ["./libs/modules/tasks/web/src/index.ts"],
       "@pd/weather-api": ["./libs/modules/weather/api/src/index.ts"],

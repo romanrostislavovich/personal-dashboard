@@ -140,10 +140,6 @@
   "digestOptions": {
     "streak": "Remind about the contribution streak (GitHub, GitLab, Bitbucket)"
   },
-  "duration": {
-    "hoursMinutes": "{{hours}} h {{minutes}} min",
-    "minutes": "{{minutes}} min"
-  },
   "widget": {
     "streak": "Streak, days",
     "doneToday": "today: {{count}}",
