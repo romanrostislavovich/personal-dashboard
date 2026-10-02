@@ -30,8 +30,19 @@ public static class ActiveWindow {
   [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr window, out RECT rect);
   [DllImport("user32.dll")] static extern IntPtr MonitorFromWindow(IntPtr window, uint flags);
   [DllImport("user32.dll")] static extern bool GetMonitorInfo(IntPtr monitor, ref MONITORINFO info);
+  [DllImport("user32.dll")] static extern IntPtr HungWindowFromGhostWindow(IntPtr ghost);
 
-  public static IntPtr Handle() { return GetForegroundWindow(); }
+  // A program that stopped answering is covered by a stand-in window of the system (dwm,
+  // "... (Not Responding)"): the time belongs to the program under it, not to dwm.
+  public static IntPtr Handle() {
+    var window = GetForegroundWindow();
+    try {
+      var hung = HungWindowFromGhostWindow(window);
+      return hung != IntPtr.Zero ? hung : window;
+    } catch (EntryPointNotFoundException) {
+      return window;
+    }
+  }
 
   public static string Title(IntPtr window) {
     var text = new StringBuilder(512);
