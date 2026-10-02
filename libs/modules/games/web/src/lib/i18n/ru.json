@@ -90,9 +90,9 @@
   },
   "wow": {
     "region": "Регион",
-    "realm": "Реалм (slug)",
+    "realm": "Мир",
     "character": "Имя персонажа",
-    "realmHint": "Slug реалма — как в адресе armory: «Гордунни» → gordunni, «Howling Fjord» → howling-fjord",
+    "realmHint": "Мир так, как он называется в игре, — «Гордунни», «Ревущий фьорд». Если он не найдётся, в ошибке будет список миров этой версии.",
     "achievementPoints": "Очки достижений",
     "achievements": "Достижений",
     "recentAchievements": "Последние достижения",
@@ -110,13 +110,22 @@
     },
     "addTitle": "Добавь персонажа",
     "addHint": "Ключи Battle.net сохранены. Теперь добавь персонажа: регион, реалм как в адресе armory и имя. Каждый персонаж добавляется отдельно.",
-    "addCharacter": "Добавить персонажа"
+    "addCharacter": "Добавить персонажа",
+    "version": "Версия игры",
+    "versions": {
+      "retail": "World of Warcraft (актуальная)",
+      "anniversary": "Classic Anniversary",
+      "era": "Classic Era, Hardcore, Season of Discovery",
+      "progression": "Classic: Cataclysm, Mists of Pandaria"
+    },
+    "classic": "Classic"
   },
   "errors": {
     "notFound": "Аккаунт не найден. Для Dota проверь, что статистика матчей открыта; для WoW — регион, реалм и имя.",
     "duplicate": "Этот аккаунт уже добавлен",
     "invalidCredentials": "Battle.net не принял ключи",
-    "generic": "Что-то пошло не так. Если добавляешь WoW — сначала сохрани ключи Battle.net."
+    "generic": "Что-то пошло не так. Если добавляешь WoW — сначала сохрани ключи Battle.net.",
+    "realmNotFound": "В этой версии игры нет такого мира. Её миры: {{realms}}"
   },
   "widget": {
     "dota30": "30 дней: {{wins}}–{{losses}}",

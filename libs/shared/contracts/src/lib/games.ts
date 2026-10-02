@@ -6,6 +6,14 @@ export type Game = (typeof GAMES)[number];
 export const WOW_REGIONS = ['eu', 'us', 'kr', 'tw'] as const;
 export type WowRegion = (typeof WOW_REGIONS)[number];
 
+/**
+ * The versions of the game, each with realms and characters of its own: the current game
+ * (`retail`), Classic Anniversary, Classic Era (with Hardcore and Season of Discovery) and
+ * Classic of the later expansions (Cataclysm, Mists of Pandaria).
+ */
+export const WOW_VERSIONS = ['retail', 'anniversary', 'era', 'progression'] as const;
+export type WowVersion = (typeof WOW_VERSIONS)[number];
+
 export const gameAccountInputSchema = z.discriminatedUnion('game', [
   z.object({
     game: z.literal('dota2'),
@@ -20,12 +28,9 @@ export const gameAccountInputSchema = z.discriminatedUnion('game', [
   z.object({
     game: z.literal('wow'),
     region: z.enum(WOW_REGIONS),
-    /** Realm slug: "Гордунни" → `gordunni`, "Howling Fjord" → `howling-fjord`. */
-    realm: z
-      .string()
-      .trim()
-      .toLowerCase()
-      .regex(/^[a-z0-9-]+$/, 'Expected a realm slug like "howling-fjord"'),
+    version: z.enum(WOW_VERSIONS).default('retail'),
+    /** The realm as the game shows it ("Гордунни", "Howling Fjord") or its slug (`gordunni`). */
+    realm: z.string().trim().min(2).max(60),
     name: z.string().trim().min(2).max(12),
   }),
 ]);
@@ -309,6 +314,8 @@ export interface WowAchievement {
 
 export interface WowSummary {
   game: 'wow';
+  /** `retail` for characters saved before Classic was supported. */
+  version: WowVersion;
   name: string;
   realm: string;
   level: number;
@@ -322,7 +329,8 @@ export interface WowSummary {
   achievementPoints: number;
   totalAchievements: number;
   avatarUrl: string | null;
-  profileUrl: string;
+  /** The character's page on Blizzard's site; `null` — Classic has no such page. */
+  profileUrl: string | null;
   lastLoginAt: string | null;
   recentAchievements: WowAchievement[];
 }

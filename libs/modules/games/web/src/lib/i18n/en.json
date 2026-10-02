@@ -90,9 +90,9 @@
   },
   "wow": {
     "region": "Region",
-    "realm": "Realm (slug)",
+    "realm": "Realm",
     "character": "Character name",
-    "realmHint": "Realm slug as in the armory URL: “Howling Fjord” → howling-fjord",
+    "realmHint": "The realm as the game shows it — “Гордунни”, “Howling Fjord”. If it is not found, the error lists the realms of this version.",
     "achievementPoints": "Achievement points",
     "achievements": "Achievements",
     "recentAchievements": "Recent achievements",
@@ -110,13 +110,22 @@
     },
     "addTitle": "Add a character",
     "addHint": "The Battle.net keys are saved. Now add a character: its region, the realm as in the armory address and its name. Every character is added separately.",
-    "addCharacter": "Add a character"
+    "addCharacter": "Add a character",
+    "version": "Version of the game",
+    "versions": {
+      "retail": "World of Warcraft (current)",
+      "anniversary": "Classic Anniversary",
+      "era": "Classic Era, Hardcore, Season of Discovery",
+      "progression": "Classic: Cataclysm, Mists of Pandaria"
+    },
+    "classic": "Classic"
   },
   "errors": {
     "notFound": "Account not found. For Dota, check that match data is public; for WoW, check region, realm and name.",
     "duplicate": "This account is already added",
     "invalidCredentials": "Battle.net rejected the keys",
-    "generic": "Something went wrong. If you are adding WoW, save the Battle.net keys first."
+    "generic": "Something went wrong. If you are adding WoW, save the Battle.net keys first.",
+    "realmNotFound": "There is no such realm in this version of the game. Its realms: {{realms}}"
   },
   "widget": {
     "dota30": "30 days: {{wins}}–{{losses}}",

@@ -80,14 +80,20 @@ interface Character {
                 <img class="avatar" [src]="s.avatarUrl" alt="" />
               }
               <div class="who">
-                <a class="name" [href]="s.profileUrl" target="_blank" rel="noopener">{{
-                  s.name
-                }}</a>
+                @if (s.profileUrl; as url) {
+                  <a class="name" [href]="url" target="_blank" rel="noopener">{{ s.name }}</a>
+                } @else {
+                  <!-- Classic: Blizzard's site has no page for the character. -->
+                  <span class="name">{{ s.name }}</span>
+                }
                 <span class="muted"
                   >{{ s.level }} {{ s.raceName }} {{ s.specName ?? '' }} {{ s.className }}</span
                 >
                 <span class="muted">
                   {{ s.realm }}
+                  @if (s.version !== 'retail') {
+                    · {{ 'games.wow.versions.' + s.version | transloco }}
+                  }
                   @if (s.guild) {
                     · &lt;{{ s.guild }}&gt;
                   }
