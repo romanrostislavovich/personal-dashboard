@@ -32,7 +32,7 @@ export class WindowWatcher {
     this.stopped = false;
     // PowerShell cannot run a file from inside the app's archive: the script is copied out.
     const script = join(app.getPath('userData'), 'active-window.ps1');
-    writeFileSync(script, readFileSync(join(__dirname, '..', 'assets', 'active-window.ps1')));
+    writeFileSync(script, readFileSync(join(__dirname, 'assets', 'active-window.ps1')));
 
     const child = spawn(
       'powershell.exe',

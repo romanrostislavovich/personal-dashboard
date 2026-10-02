@@ -3,12 +3,14 @@ import { join } from 'node:path';
 import { ActivityTracker } from './activity/tracker';
 import { loadSettings, saveSettings } from './settings-store';
 import { createTray } from './tray';
+import { AppUpdater } from './update/updater';
 
 /**
  * Desktop shell for the dashboard. The dashboard itself is the web app from the server;
  * the shell adds what a browser tab lacks:
- * a tray icon, start with the system, running "in the background", system notifications and
- * the activity tracker (./activity): which program is in front and for how long.
+ * a tray icon, start with the system, running "in the background", system notifications,
+ * the activity tracker (./activity): which program is in front and for how long, and updates
+ * of the shell itself (./update): this file is the start of the bundle the loader runs.
  *
  * Server address: the DASHBOARD_URL variable (handy for development)
  * or the one saved in settings; if there is none, the connection screen is shown.
@@ -24,8 +26,13 @@ let refreshTray: () => void = () => undefined;
 
 const serverUrl = (): string | null => process.env['DASHBOARD_URL'] ?? loadSettings().serverUrl;
 const tracker = new ActivityTracker(serverUrl, () => refreshTray());
+const updater = new AppUpdater(
+  serverUrl,
+  () => refreshTray(),
+  () => installUpdateWhenOutOfSight(),
+);
 
-const startHidden = process.argv.includes('--hidden');
+let startHidden = process.argv.includes('--hidden');
 
 if (!app.requestSingleInstanceLock()) {
   // Already running — the second instance just exits and the first one restores its window.
@@ -36,20 +43,35 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 function bootstrap(): void {
+  startHidden = cameBackFromUpdate() || startHidden;
   app.setAppUserModelId(APP_ID);
   registerIpc();
-  startWithSystemByDefault();
+  applyStartWithSystem(loadSettings().startWithSystem);
   mainWindow = createWindow();
   refreshTray = createTray({
     show: showWindow,
     changeServer: openSetup,
     quit: quitApp,
+    startWithSystem: {
+      enabled: () => loadSettings().startWithSystem,
+      set: (enabled) => {
+        saveSettings({ ...loadSettings(), startWithSystem: enabled });
+        applyStartWithSystem(enabled);
+      },
+    },
+    update: {
+      state: () => updater.state,
+      version: () => updater.version,
+      check: () => void updater.check(),
+      install: installUpdate,
+    },
     activity: {
       status: () => tracker.status(),
       pause: (minutes) => tracker.pause(minutes),
     },
   });
   tracker.start();
+  updater.start();
   openDashboard();
 }
 
@@ -74,6 +96,7 @@ function createWindow(): BrowserWindow {
     if (!isQuitting) {
       event.preventDefault();
       window.hide();
+      installUpdateWhenOutOfSight();
     }
   });
 
@@ -95,15 +118,51 @@ function createWindow(): BrowserWindow {
 
 /**
  * The app is meant to run all the time (the tracker, notifications), so it starts with the
- * system unless the user said otherwise: switched on once, the tray menu switches it off.
+ * system unless the user switched that off in the tray. Told to the system on every start:
+ * it remembers the path of the program, which a reinstall may change.
  */
-function startWithSystemByDefault(): void {
-  const settings = loadSettings();
-  if (!settings.autostartDecided && app.isPackaged) {
+function applyStartWithSystem(enabled: boolean): void {
+  if (app.isPackaged) {
     // --hidden: on autostart go straight to the tray, without a window.
-    app.setLoginItemSettings({ openAtLogin: true, args: ['--hidden'] });
-    saveSettings({ ...settings, autostartDecided: true });
+    app.setLoginItemSettings({ openAtLogin: enabled, args: ['--hidden'] });
   }
+}
+
+/** The previous run ended to install an update: this one starts in the tray, once. */
+function cameBackFromUpdate(): boolean {
+  const settings = loadSettings();
+  if (!settings.startHiddenOnce) {
+    return false;
+  }
+  saveSettings({ ...settings, startHiddenOnce: false });
+  return true;
+}
+
+/**
+ * A downloaded update is switched to without getting in the way: at once while the window is
+ * in the tray, otherwise when it is closed there. A quit does it too — the next start runs
+ * the new code.
+ */
+function installUpdateWhenOutOfSight(): void {
+  if (updater.state.kind === 'ready' && !mainWindow?.isVisible()) {
+    installUpdate();
+  }
+}
+
+/** Restarts into the downloaded update; what the tracker has recorded is sent first. */
+function installUpdate(): void {
+  if (updater.state.kind !== 'ready') {
+    return;
+  }
+  // A window that was open stays open in the new version; one in the tray stays there.
+  saveSettings({ ...loadSettings(), startHiddenOnce: !mainWindow?.isVisible() });
+  isQuitting = true;
+  void Promise.race([tracker.stop(), new Promise((resolve) => setTimeout(resolve, 3000))]).then(
+    () => {
+      app.relaunch();
+      app.quit();
+    },
+  );
 }
 
 function openDashboard(): void {

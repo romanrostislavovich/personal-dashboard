@@ -6,7 +6,8 @@
 - PostgreSQL + Drizzle with automatic migrations, pg-boss for background jobs
 - JWT auth, optional registration, profile and password change
 - Telegram notifications and bot commands, live events (SSE): web toasts and native desktop notifications
-- Desktop app (tray, autostart, server selection), a single Docker image, CI
+- Desktop app (tray, autostart, server selection, updates itself from the server without an
+  installer), a single Docker image, CI
 - English and Russian for the UI, notifications, achievements and AI answers
 
 ## ✅ Modules

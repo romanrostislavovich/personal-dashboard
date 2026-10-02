@@ -42,17 +42,17 @@ Apps (`apps/*`) are thin hosts with no business logic — only the list of enabl
 
 ## Key decisions
 
-| Decision                             | Why                                                                                                                         |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| **Nx monorepo**                      | Angular and Nest in one repository, shared types, module boundaries checked by the linter                                   |
-| **zod contracts** (`@pd/contracts`)  | one schema gives both the TS type for the frontend and validation on the backend (`ZodValidationPipe`)                      |
-| **Drizzle ORM**                      | tables are defined in TS next to the module (`*.schema.ts`), not in one big file; SQL migrations are human-readable         |
-| **pg-boss** for background jobs      | the queue and cron live in the same PostgreSQL — no Redis; missed runs are caught up                                        |
-| **Notifications through channels**   | a module calls `notifications.send()` and does not know where the message goes; Telegram is the first `NotificationChannel` |
-| **Everything is scoped by `userId`** | multiple users are supported without any schema changes                                                                     |
-| **One Docker image**                 | the API serves the built frontend — self-hosting with one command                                                           |
-| **Electron as a thin shell**         | the desktop app loads the same web app from the server (or localhost) and adds tray, autostart and background running       |
-| **i18n via Transloco**               | each module keeps its translations (`i18n/en.json`, `i18n/ru.json`); the core merges them into one dictionary               |
+| Decision                             | Why                                                                                                                                                                                                                                  |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Nx monorepo**                      | Angular and Nest in one repository, shared types, module boundaries checked by the linter                                                                                                                                            |
+| **zod contracts** (`@pd/contracts`)  | one schema gives both the TS type for the frontend and validation on the backend (`ZodValidationPipe`)                                                                                                                               |
+| **Drizzle ORM**                      | tables are defined in TS next to the module (`*.schema.ts`), not in one big file; SQL migrations are human-readable                                                                                                                  |
+| **pg-boss** for background jobs      | the queue and cron live in the same PostgreSQL — no Redis; missed runs are caught up                                                                                                                                                 |
+| **Notifications through channels**   | a module calls `notifications.send()` and does not know where the message goes; Telegram is the first `NotificationChannel`                                                                                                          |
+| **Everything is scoped by `userId`** | multiple users are supported without any schema changes                                                                                                                                                                              |
+| **One Docker image**                 | the API serves the built frontend — self-hosting with one command                                                                                                                                                                    |
+| **Electron as a thin shell**         | the desktop app loads the same web app from the server (or localhost) and adds tray, autostart and background running; its own code is a bundle the server hands out, so it updates without an installer (`apps/desktop/src/update`) |
+| **i18n via Transloco**               | each module keeps its translations (`i18n/en.json`, `i18n/ru.json`); the core merges them into one dictionary                                                                                                                        |
 
 ## Anatomy of a module
 

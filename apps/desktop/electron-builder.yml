@@ -7,8 +7,11 @@ artifactName: personal-dashboard-${version}-${os}-${arch}.${ext}
 directories:
   app: dist/apps/desktop
   output: dist/desktop-installers
+# The shell has no dependencies at run time (apps/desktop/build.mjs bundles its code), so the
+# modules of the whole workspace stay out of the installer.
 files:
   - '**/*'
+  - '!node_modules'
 win:
   target: nsis
   icon: apps/desktop/src/assets/icon.png
