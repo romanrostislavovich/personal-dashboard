@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { LocalDate } from './local-date';
+import { SoundcloudSettings } from './soundcloud';
 
 export const lastfmSettingsInputSchema = z.object({
   username: z.string().trim().min(2).max(50),
@@ -34,6 +35,7 @@ export interface MusicSettings {
     available: boolean;
     connected: boolean;
   };
+  soundcloud: SoundcloudSettings;
 }
 
 export interface NowPlaying {

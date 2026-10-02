@@ -21,6 +21,7 @@ import {
 import { z } from 'zod';
 import { LastfmHistoryImport } from './lastfm-history.import';
 import { LastfmService } from './lastfm.service';
+import { SoundcloudService } from './soundcloud/soundcloud.service';
 import { SpotifyService } from './spotify.service';
 import { MUSIC_ACTIONS } from './music.server-actions';
 
@@ -31,6 +32,7 @@ export class MusicController {
     private readonly lastfm: LastfmService,
     private readonly history: LastfmHistoryImport,
     private readonly spotify: SpotifyService,
+    private readonly soundcloud: SoundcloudService,
   ) {}
 
   @Get('settings')
@@ -53,6 +55,7 @@ export class MusicController {
         available: this.spotify.isAvailable,
         connected: await this.spotify.isConnected(user.id),
       },
+      soundcloud: await this.soundcloud.settings(user.id),
     };
   }
 
