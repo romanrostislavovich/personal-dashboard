@@ -12,16 +12,18 @@ directories:
 files:
   - '**/*'
   - '!node_modules'
+# The icon of the installers is its own large file: macOS wants at least 512 px, while the one
+# the app shows at run time (src/assets/icon.png) travels with every update and stays small.
 win:
   target: nsis
-  icon: apps/desktop/src/assets/icon.png
+  icon: apps/desktop/icon.png
 mac:
   target: dmg
-  icon: apps/desktop/src/assets/icon.png
+  icon: apps/desktop/icon.png
 linux:
   target: AppImage
   category: Utility
-  icon: apps/desktop/src/assets/icon.png
+  icon: apps/desktop/icon.png
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
