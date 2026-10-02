@@ -154,7 +154,7 @@
 - **Section visibility** — turn whole sections on or off in the settings (e.g. hide Fitness if
   you do not use it): a hidden section disappears from the menu, the home page, the digest and
   notifications
-- **Telegram buttons** — "Yes / No" to confirm a deletion; quick commands like `/spent 12 coffee`
+- **Telegram:** "Yes / No" buttons to confirm a deletion; quick commands like `/spent 12 coffee`
 
 #### Features
 
@@ -183,7 +183,6 @@
   all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you
   were sad, you listened to this music and did that"
 - **AI memory** — facts about the user the assistant keeps between conversations
-- **AI reminders** — "remind me on Friday to call mum" becomes a scheduled job
 
 ### Ideas
 

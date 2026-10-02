@@ -41,6 +41,8 @@ flags, or relax a peer range that is behind, while the parent has no fixed relea
 entry once its parent ships the fix (check with `npm ls <package>` and `npm audit`):
 
 - `nx` → `smol-toml`: nx pins 1.6.1 (DoS on malformed TOML).
+- `nx` → `axios`, `brace-expansion`: nx pins axios 1.18 and brace-expansion 5.0.9, both with
+  known advisories (prototype pollution, ReDoS). Build tooling only — neither reaches the app.
 - `sockjs` → `uuid`: sockjs (via webpack-dev-server) is unmaintained and asks for uuid 8; it only
   calls `v4()`, which uuid 11 still has.
 - `@nx/nest` → `@nestjs/common`, `@nestjs/core`: @nx/nest 23.2 still declares NestJS below 12 as a
