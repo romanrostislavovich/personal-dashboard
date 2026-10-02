@@ -25,6 +25,7 @@ single Docker image on your server. Every feature is a module: enable, disable o
 | 📡 Monitoring   | Uptime checks every 5 minutes, uptime for 24 h / 7 / 30 days, response time chart, SSL expiry; “down / back up” alerts and SSL reminders                                                                                                                                                                                                                    |
 | 🎧 Music        | Last.fm listening history, plays per day, top artists / tracks / albums; Spotify “now playing”; your own SoundCloud tracks with plays, likes, reposts and comments day by day                                                                                                                                                                               |
 | 🎮 Games        | Steam (level, hours and achievements per game across your accounts), Dota 2 (the 500 latest matches from Steam, complemented by OpenDota: medal, win rate, heroes) and World of Warcraft via Battle.net (characters of the current game and Classic: gear, talents, Mythic+, raids, PvP, collections, achievements, the WoW Token price)                    |
+| ⏱️ Activity     | Time at the computer, recorded by the desktop app: programs and windows, categories, projects, the day window by window; a pause and programs never recorded                                                                                                                                                                                                |
 | 🏆 Achievements | 42 personal achievements across all modules, with tiers and progress                                                                                                                                                                                                                                                                                        |
 | 🚀 Projects     | Your websites and services — finance, monitoring and AI refer to them                                                                                                                                                                                                                                                                                       |
 
@@ -79,7 +80,12 @@ Prebuilt images (amd64 and arm64) are published to GitHub Container Registry on 
 
 Installers for Windows, macOS and Linux are attached to [GitHub Releases](../../releases). On the
 first start the app asks for the server URL — your server or a local Docker (`http://localhost:3300`).
-The tray menu has “Start with the system” and “Change server”.
+The tray menu has “Start with the system” and “Change server”. The app starts with the system
+(switch it off in the tray) and stays in the tray when its window is closed.
+
+On Windows it can also record the time at the computer for the Activity section: switch it on in
+Activity → Setup. The tracker notes which program and window is in front, sends it to your server
+every minute and keeps it on the computer while there is no connection; the tray menu pauses it.
 
 ```bash
 npm run dev:desktop           # Electron on top of the dev server

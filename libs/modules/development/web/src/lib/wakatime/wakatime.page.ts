@@ -15,11 +15,15 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { WAKATIME_PERIODS, WakatimePeriod, WakatimeShare } from '@pd/contracts';
-import { INTEGRATIONS_LINK } from '@pd/web-core';
+import {
+  Bar,
+  BarChartComponent,
+  DurationPipe,
+  INTEGRATIONS_LINK,
+  Share,
+  ShareListComponent,
+} from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
-import { Bar, BarChartComponent } from '../ui/bar-chart.component';
-import { DurationPipe } from '../ui/duration.pipe';
-import { Share, ShareListComponent } from '../ui/share-list.component';
 import { WakatimeApi } from './wakatime.api';
 
 /** Bars of the chart: a day each up to a month, then months — a year of days is unreadable. */

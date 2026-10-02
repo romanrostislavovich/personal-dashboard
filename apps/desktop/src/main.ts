@@ -1,12 +1,14 @@
 import { app, BrowserWindow, ipcMain, Notification, shell } from 'electron';
 import { join } from 'node:path';
+import { ActivityTracker } from './activity/tracker';
 import { loadSettings, saveSettings } from './settings-store';
 import { createTray } from './tray';
 
 /**
  * Desktop shell for the dashboard. The dashboard itself is the web app from the server;
  * the shell adds what a browser tab lacks:
- * a tray icon, start with the system, running "in the background" and system notifications.
+ * a tray icon, start with the system, running "in the background", system notifications and
+ * the activity tracker (./activity): which program is in front and for how long.
  *
  * Server address: the DASHBOARD_URL variable (handy for development)
  * or the one saved in settings; if there is none, the connection screen is shown.
@@ -17,6 +19,11 @@ const APP_ID = 'com.romanrostislavovich.personal-dashboard';
 
 let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
+/** Rebuilds the tray menu: the tracker's status is a part of it. */
+let refreshTray: () => void = () => undefined;
+
+const serverUrl = (): string | null => process.env['DASHBOARD_URL'] ?? loadSettings().serverUrl;
+const tracker = new ActivityTracker(serverUrl, () => refreshTray());
 
 const startHidden = process.argv.includes('--hidden');
 
@@ -31,8 +38,18 @@ if (!app.requestSingleInstanceLock()) {
 function bootstrap(): void {
   app.setAppUserModelId(APP_ID);
   registerIpc();
+  startWithSystemByDefault();
   mainWindow = createWindow();
-  createTray({ show: showWindow, changeServer: openSetup, quit: quitApp });
+  refreshTray = createTray({
+    show: showWindow,
+    changeServer: openSetup,
+    quit: quitApp,
+    activity: {
+      status: () => tracker.status(),
+      pause: (minutes) => tracker.pause(minutes),
+    },
+  });
+  tracker.start();
   openDashboard();
 }
 
@@ -76,10 +93,23 @@ function createWindow(): BrowserWindow {
   return window;
 }
 
+/**
+ * The app is meant to run all the time (the tracker, notifications), so it starts with the
+ * system unless the user said otherwise: switched on once, the tray menu switches it off.
+ */
+function startWithSystemByDefault(): void {
+  const settings = loadSettings();
+  if (!settings.autostartDecided && app.isPackaged) {
+    // --hidden: on autostart go straight to the tray, without a window.
+    app.setLoginItemSettings({ openAtLogin: true, args: ['--hidden'] });
+    saveSettings({ ...settings, autostartDecided: true });
+  }
+}
+
 function openDashboard(): void {
-  const serverUrl = process.env['DASHBOARD_URL'] ?? loadSettings().serverUrl;
-  if (serverUrl) {
-    mainWindow?.loadURL(serverUrl);
+  const url = serverUrl();
+  if (url) {
+    mainWindow?.loadURL(url);
   } else {
     openSetup();
   }
@@ -98,6 +128,14 @@ function registerIpc(): void {
     saveSettings({ ...loadSettings(), serverUrl: url });
     openDashboard();
   });
+
+  // The Activity section of the dashboard switches the tracker of this computer on and off.
+  ipcMain.handle('activity:status', () => tracker.status());
+  ipcMain.handle('activity:enable', (_event, device: { id: string; token: string }) =>
+    tracker.enable(device),
+  );
+  ipcMain.handle('activity:disable', () => tracker.disable());
+  ipcMain.handle('activity:pause', (_event, minutes: number | null) => tracker.pause(minutes));
 
   // The dashboard asks for a system notification; a click opens the window on the given page.
   ipcMain.on(
@@ -135,7 +173,10 @@ function showWindow(): void {
 
 function quitApp(): void {
   isQuitting = true;
-  app.quit();
+  // What the tracker has recorded is sent before the app goes; a slow server is not waited for.
+  void Promise.race([tracker.stop(), new Promise((resolve) => setTimeout(resolve, 3000))]).then(
+    () => app.quit(),
+  );
 }
 
 // The app lives in the tray, so closing all windows does not quit it.

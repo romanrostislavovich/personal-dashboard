@@ -364,5 +364,9 @@
     "refusedText": "Changes made offline that were not accepted: {{count}}.",
     "updateReady": "A new version of the dashboard is ready.",
     "reload": "Reload"
+  },
+  "duration": {
+    "hoursMinutes": "{{hours}} h {{minutes}} min",
+    "minutes": "{{minutes}} min"
   }
 }

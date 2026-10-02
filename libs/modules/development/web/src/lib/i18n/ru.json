@@ -140,10 +140,6 @@
   "digestOptions": {
     "streak": "Напоминать о серии контрибуций (GitHub, GitLab, Bitbucket)"
   },
-  "duration": {
-    "hoursMinutes": "{{hours}} ч {{minutes}} мин",
-    "minutes": "{{minutes}} мин"
-  },
   "widget": {
     "streak": "Серия, дней",
     "doneToday": "сегодня: {{count}}",

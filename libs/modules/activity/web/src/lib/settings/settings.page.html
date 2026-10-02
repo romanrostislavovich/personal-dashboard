@@ -1,0 +1,120 @@
+<pd-activity-tracker-card (changed)="apps.reload()" />
+
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-icon mat-card-avatar>hourglass_empty</mat-icon>
+    <mat-card-title>{{ 'activity.idle.title' | transloco }}</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p class="hint">{{ 'activity.idle.hint' | transloco }}</p>
+    @if (settings.value(); as current) {
+      <mat-form-field subscriptSizing="dynamic" class="narrow">
+        <mat-label>{{ 'activity.idle.label' | transloco }}</mat-label>
+        <mat-select [value]="current.idleMinutes" (valueChange)="setIdle($event)">
+          @for (minutes of idleOptions; track minutes) {
+            <mat-option [value]="minutes">
+              {{ 'activity.idle.minutes' | transloco: { count: minutes } }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+  </mat-card-content>
+</mat-card>
+
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-icon mat-card-avatar>folder_special</mat-icon>
+    <mat-card-title>{{ 'activity.rules.title' | transloco }}</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p class="hint">{{ 'activity.rules.hint' | transloco }}</p>
+    @if (projects.value().length) {
+      <form class="rule-form" (submit)="$event.preventDefault(); addRule()">
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ 'activity.rules.project' | transloco }}</mat-label>
+          <mat-select [value]="ruleProject()" (valueChange)="ruleProject.set($event)">
+            @for (project of projects.value(); track project.id) {
+              <mat-option [value]="project.id">{{ project.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ 'activity.rules.pattern' | transloco }}</mat-label>
+          <input
+            matInput
+            maxlength="100"
+            [value]="rulePattern()"
+            (input)="rulePattern.set($any($event.target).value)"
+          />
+        </mat-form-field>
+        <button matButton="filled" type="submit" [disabled]="!canAddRule()">
+          {{ 'core.actions.add' | transloco }}
+        </button>
+      </form>
+    } @else if (!projects.isLoading()) {
+      <p class="hint">{{ 'activity.rules.noProjects' | transloco }}</p>
+    }
+    <ul class="rows">
+      @for (rule of rulesShown(); track rule.id) {
+        <li>
+          <span class="name">«{{ rule.pattern }}» → {{ rule.project }}</span>
+          <button
+            matIconButton
+            [matTooltip]="'core.actions.delete' | transloco"
+            [attr.aria-label]="'core.actions.delete' | transloco"
+            (click)="removeRule(rule.id)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </li>
+      }
+    </ul>
+  </mat-card-content>
+</mat-card>
+
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-icon mat-card-avatar>apps</mat-icon>
+    <mat-card-title>{{ 'activity.apps.title' | transloco }}</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p class="hint">{{ 'activity.apps.hint' | transloco }}</p>
+    <ul class="rows">
+      @for (app of apps.value(); track app.app) {
+        <li [class.excluded]="app.excluded">
+          <span class="name">
+            {{ app.name }}
+            @if (app.name.toLowerCase() !== app.app) {
+              <span class="hint">{{ app.app }}</span>
+            }
+          </span>
+          <mat-form-field subscriptSizing="dynamic" class="category">
+            <mat-select
+              [value]="app.category"
+              [disabled]="app.excluded"
+              [attr.aria-label]="'activity.apps.category' | transloco"
+              (valueChange)="setCategory(app, $event)"
+            >
+              @for (category of categories; track category) {
+                <mat-option [value]="category">
+                  {{ 'activity.categories.' + category | transloco }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-slide-toggle
+            [checked]="!app.excluded"
+            [matTooltip]="'activity.apps.record' | transloco"
+            [attr.aria-label]="'activity.apps.record' | transloco"
+            (change)="setExcluded(app, !$event.checked)"
+          />
+        </li>
+      } @empty {
+        @if (!apps.isLoading()) {
+          <li class="hint">{{ 'activity.apps.empty' | transloco }}</li>
+        }
+      }
+    </ul>
+  </mat-card-content>
+</mat-card>

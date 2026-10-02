@@ -45,6 +45,10 @@
   a point of history a day and alerts about a better rating, a boss kill, a new mount);
   several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO;
   refreshed every half an hour and with the "Refresh all" button, an optional OpenDota API key
+- **Activity:** time at the computer, recorded by the desktop app (Windows): which program and
+  window was in front and for how long, away time left out; per day, program, category, project
+  (by the window title) and device; a pause, programs never recorded, the day window by window;
+  sent to your server by itself, kept on the computer while there is no connection
 - **Weather:** today's forecast and the week ahead for your city (Open-Meteo, no API key) with
   clothing advice that follows how you take the cold —
   on its page, on the home page and in the morning digest; the city comes from the browser's
@@ -98,9 +102,8 @@
 
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
-- **Activity** — a new section with computer activity tracked by the desktop app: time at the PC
-  per day, time per application (and window or site), active vs idle time, daily and weekly
-  totals; data stays on your own server
+- **Activity: more trackers** — the tracker of the desktop app watches windows on Windows only;
+  macOS and Linux, and the same tracker on a phone (time per app), report to the same section
 - **Development: self-hosted GitLab** — an instance of your own next to gitlab.com (its address
   with the token); later the tabs of the section may move to their own submenu
 - **Dota 2: the whole match history** — the Steam Web API gives only the 500 latest matches;

@@ -206,7 +206,9 @@ export class ActivityService {
       })
       .from(s)
       .where(this.within(userId, period, timeZone))
-      .groupBy(day, s.deviceId, s.app, s.title);
+      // By position: the time zone is a parameter, and PostgreSQL does not see the same
+      // expression with another parameter number as the one selected.
+      .groupBy(sql`1`, s.deviceId, s.app, s.title);
 
     const devices = await this.db
       .select({ id: activityDevices.id, name: activityDevices.name })

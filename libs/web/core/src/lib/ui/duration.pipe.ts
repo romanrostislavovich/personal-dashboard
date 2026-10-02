@@ -18,7 +18,7 @@ export class DurationPipe implements PipeTransform {
   transform(seconds: number | null | undefined): string {
     const { hours, minutes } = durationParts(seconds ?? 0);
     return this.transloco.translate(
-      hours > 0 ? 'development.duration.hoursMinutes' : 'development.duration.minutes',
+      hours > 0 ? 'core.duration.hoursMinutes' : 'core.duration.minutes',
       { hours, minutes },
     );
   }
