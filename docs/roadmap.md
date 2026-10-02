@@ -34,8 +34,8 @@
   hashtags, emoji marks on phrases, photos, search, year heatmap, “on this day”, mood insights,
   templates; `/d`, `/mood`, `/today` and photos from Telegram
 - **Music:** Last.fm history and tops, Spotify “now playing”
-- **Games:** Steam (several accounts: level, hours and achievements per game), Dota 2 (full match
-  history of every mode from Steam, complemented by OpenDota) and World of Warcraft (Battle.net);
+- **Games:** Steam (several accounts: level, hours and achievements per game), Dota 2 (the 500 latest
+  matches of every mode from Steam, complemented by OpenDota) and World of Warcraft (Battle.net);
   several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO;
   refreshed every half an hour and with the "Refresh all" button, an optional OpenDota API key
 - **Weather:** today's forecast and the week ahead for your city (Open-Meteo, no API key) with
@@ -86,6 +86,8 @@
   totals; data stays on your own server
 - **Development: GitLab and Bitbucket** — the same account statistics as for GitHub; the section
   then moves from tabs to its own submenu
+- **Dota 2: the whole match history** — the Steam Web API gives only the 500 latest matches;
+  the rest needs the Dota 2 Game Coordinator (a sign-in to Steam from the server)
 - **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
 - **Books** — reading list, progress, ratings and notes
 - **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and
