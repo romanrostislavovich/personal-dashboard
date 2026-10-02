@@ -6,6 +6,7 @@ import {
   HttpCode,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -25,8 +26,11 @@ import {
   openDotaKeyInputSchema,
   SteamKeyInput,
   steamKeyInputSchema,
+  WowCharacterUpdate,
+  wowCharacterUpdateSchema,
   WowCredentialsInput,
   wowCredentialsInputSchema,
+  WowToken,
 } from '@pd/contracts';
 import { DotaOverviewService } from './dota/dota-overview.service';
 import { OpenDotaKeyService } from './dota/opendota-key.service';
@@ -115,6 +119,23 @@ export class GamesController {
     @Body(new ZodValidationPipe(wowCredentialsInputSchema)) input: WowCredentialsInput,
   ) {
     return this.wow.saveCredentials(user.id, input);
+  }
+
+  /** The price of the WoW Token with its history, per region of the user's characters. */
+  @Get('wow/tokens')
+  wowTokens(@CurrentUser() user: AuthUser): Promise<WowToken[]> {
+    return this.wow.tokens(user.id);
+  }
+
+  /** Switches the notifications of one character. */
+  @Patch('wow/:accountId')
+  @HttpCode(204)
+  updateWowCharacter(
+    @CurrentUser() user: AuthUser,
+    @Param('accountId', ParseUUIDPipe) accountId: string,
+    @Body(new ZodValidationPipe(wowCharacterUpdateSchema)) update: WowCharacterUpdate,
+  ): Promise<void> {
+    return this.wow.setNotify(user.id, accountId, update.notify);
   }
 
   /** Checks the Steam Web API key, saves it and refreshes the accounts with it. */

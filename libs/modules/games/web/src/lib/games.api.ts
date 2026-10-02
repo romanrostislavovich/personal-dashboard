@@ -8,7 +8,9 @@ import {
   GameAccount,
   GameAccountInput,
   GamesSettings,
+  WowCharacterUpdate,
   WowCredentialsInput,
+  WowToken,
 } from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
@@ -60,6 +62,15 @@ export class GamesApi {
 
   saveWowCredentials(input: WowCredentialsInput) {
     return fromCore(() => this.games.saveWowCredentials(input));
+  }
+
+  /** The price of the WoW Token with its history, per region. */
+  wowTokens() {
+    return httpResource<WowToken[]>(() => GAMES_READS.wowTokens(), { defaultValue: [] });
+  }
+
+  updateWowCharacter(accountId: string, update: WowCharacterUpdate) {
+    return fromCore(() => this.games.updateWowCharacter(accountId, update));
   }
 
   saveOpenDotaKey(accountId: string, apiKey: string) {

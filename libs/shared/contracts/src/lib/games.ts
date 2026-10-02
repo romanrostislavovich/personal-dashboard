@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { WowDetails, WowHistoryPoint } from './wow-details';
 
 export const GAMES = ['dota2', 'wow', 'steam'] as const;
 export type Game = (typeof GAMES)[number];
@@ -333,6 +334,12 @@ export interface WowSummary {
   profileUrl: string | null;
   lastLoginAt: string | null;
   recentAchievements: WowAchievement[];
+  /** Gear, talents, Mythic+, raids, PvP, collections…; `null` until the next sync. */
+  details: WowDetails | null;
+  /** The last 90 days, one point a day, oldest first. */
+  history: WowHistoryPoint[];
+  /** Tell about the character's news (on unless switched off). */
+  notify: boolean;
 }
 
 export interface GameAccount {
