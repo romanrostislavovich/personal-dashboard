@@ -15,7 +15,7 @@ import { OpenDotaKeyService } from './dota/opendota-key.service';
 import { parseDotaAccountId } from './dota/steam-id';
 import { gameAccounts, GameAccountRow } from './games.schema';
 import { gamesMessages } from './games.messages';
-import { WowCharacterNotFoundError } from './wow/battlenet.client';
+import { WowCharacterNotFoundError, WowRealmNotFoundError } from './wow/battlenet.client';
 import { SteamProfileNotFoundError } from './steam/steam.client';
 import { SteamService } from './steam/steam.service';
 import { toWowExternalId, WowService } from './wow/wow.service';
@@ -233,6 +233,17 @@ export class GameAccountsService {
       }
       return { externalId: String(accountId), displayName: String(accountId) };
     }
-    return { externalId: toWowExternalId(input), displayName: `${input.name} — ${input.realm}` };
+    // The realm is typed the way the game shows it; Blizzard's API wants its slug.
+    const client = await this.wow.clientFor(userId);
+    const realm = await client.resolveRealm(input, input.realm).catch((error) => {
+      if (error instanceof WowRealmNotFoundError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    });
+    return {
+      externalId: toWowExternalId({ ...input, realm: realm.slug }),
+      displayName: `${input.name} — ${realm.name}`,
+    };
   }
 }

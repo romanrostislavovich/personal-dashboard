@@ -8,7 +8,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Game, GameAccountInput, WOW_REGIONS, WowRegion } from '@pd/contracts';
+import {
+  Game,
+  GameAccountInput,
+  WOW_REGIONS,
+  WOW_VERSIONS,
+  WowRegion,
+  WowVersion,
+} from '@pd/contracts';
 
 /** Adding a game account: a Steam profile, a Steam ID for Dota or region/realm/name for WoW. */
 @Component({
@@ -47,6 +54,16 @@ import { Game, GameAccountInput, WOW_REGIONS, WowRegion } from '@pd/contracts';
             <mat-hint>{{ 'games.dota.steamIdHint' | transloco }}</mat-hint>
           </mat-form-field>
         } @else {
+          <mat-form-field>
+            <mat-label>{{ 'games.wow.version' | transloco }}</mat-label>
+            <mat-select formControlName="version">
+              @for (version of versions; track version) {
+                <mat-option [value]="version">
+                  {{ 'games.wow.versions.' + version | transloco }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
           <div class="row">
             <mat-form-field>
               <mat-label>{{ 'games.wow.region' | transloco }}</mat-label>
@@ -58,7 +75,7 @@ import { Game, GameAccountInput, WOW_REGIONS, WowRegion } from '@pd/contracts';
             </mat-form-field>
             <mat-form-field>
               <mat-label>{{ 'games.wow.realm' | transloco }}</mat-label>
-              <input matInput formControlName="realm" placeholder="howling-fjord" />
+              <input matInput formControlName="realm" />
             </mat-form-field>
           </div>
           <mat-form-field>
@@ -102,11 +119,13 @@ export class AddGameAccountDialog {
   private readonly initialGame = inject<Game | null>(MAT_DIALOG_DATA, { optional: true });
 
   protected readonly regions = WOW_REGIONS;
+  protected readonly versions = WOW_VERSIONS;
   protected readonly form = inject(NonNullableFormBuilder).group({
     game: [this.initialGame ?? ('dota2' as Game)],
     steamProfile: ['', Validators.required],
     steamId: ['', Validators.required],
     region: ['eu' as WowRegion],
+    version: ['retail' as WowVersion],
     realm: ['', Validators.required],
     name: ['', Validators.required],
   });
@@ -132,7 +151,7 @@ export class AddGameAccountDialog {
     const input: Record<Game, GameAccountInput> = {
       steam: { game: 'steam', steamId: v.steamProfile },
       dota2: { game: 'dota2', steamId: v.steamId },
-      wow: { game: 'wow', region: v.region, realm: v.realm, name: v.name },
+      wow: { game: 'wow', region: v.region, version: v.version, realm: v.realm, name: v.name },
     };
     this.dialogRef.close(input[v.game]);
   }

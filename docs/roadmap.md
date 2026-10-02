@@ -40,7 +40,7 @@
 - **Music:** Last.fm history and tops, Spotify “now playing”; your own tracks on SoundCloud —
   plays, likes, reposts and comments saved day by day, alerts about comments and play milestones
 - **Games:** Steam (several accounts: level, hours and achievements per game), Dota 2 (the 500 latest
-  matches of every mode from Steam, complemented by OpenDota) and World of Warcraft (Battle.net);
+  matches of every mode from Steam, complemented by OpenDota) and World of Warcraft (Battle.net; the current game and Classic);
   several accounts per game with a combined view in the spirit of Dotabuff and Raider.IO;
   refreshed every half an hour and with the "Refresh all" button, an optional OpenDota API key
 - **Weather:** today's forecast and the week ahead for your city (Open-Meteo, no API key) with

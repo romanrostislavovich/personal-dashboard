@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { DB, Database, SecretsService } from '@pd/api-core';
-import { WowCredentialsInput, WowRegion, WowSummary } from '@pd/contracts';
+import { WowCredentialsInput, WowRegion, WowSummary, WowVersion } from '@pd/contracts';
 import { desc, eq, sql } from 'drizzle-orm';
 import { GameAccountRow, wowAchievements } from '../games.schema';
 import {
@@ -104,6 +104,7 @@ export class WowService {
 
     return {
       game: 'wow',
+      version: parseRef(account.externalId).version,
       ...profile,
       // Profiles saved before the class id was stored get it with the next sync.
       classId: profile.classId ?? null,
@@ -117,12 +118,21 @@ export class WowService {
   }
 }
 
-/** A WoW account's `externalId` is stored as `region/realm/name`. */
+/**
+ * A WoW account's `externalId` is `region/realm/name` for the current game (as it always was)
+ * and `region/realm/name/version` for a Classic one.
+ */
 export function toWowExternalId(ref: WowCharacterRef): string {
-  return `${ref.region}/${ref.realm}/${ref.name.toLowerCase()}`;
+  const id = `${ref.region}/${ref.realm}/${ref.name.toLowerCase()}`;
+  return ref.version === 'retail' ? id : `${id}/${ref.version}`;
 }
 
-function parseRef(externalId: string): WowCharacterRef {
-  const [region, realm, name] = externalId.split('/');
-  return { region: region as WowRegion, realm, name };
+export function parseRef(externalId: string): WowCharacterRef {
+  const [region, realm, name, version] = externalId.split('/');
+  return {
+    region: region as WowRegion,
+    realm,
+    name,
+    version: (version as WowVersion | undefined) ?? 'retail',
+  };
 }

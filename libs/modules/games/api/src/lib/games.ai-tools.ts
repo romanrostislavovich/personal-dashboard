@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, findById, idParameters, NO_PARAMETERS, ServerActions } from '@pd/api-core';
-import { GAMES, gameAccountInputSchema, WOW_REGIONS } from '@pd/contracts';
+import { GAMES, gameAccountInputSchema, WOW_REGIONS, WOW_VERSIONS } from '@pd/contracts';
 import { DotaOverviewService } from './dota/dota-overview.service';
 import { GameAccountsService } from './game-accounts.service';
 import { GAMES_ACTIONS } from './games.server-actions';
@@ -98,9 +98,17 @@ export class GamesAiTools implements OnModuleInit {
               'Steam: Steam ID64, a profile link or the custom profile name',
           },
           region: { type: 'string', enum: [...WOW_REGIONS], description: 'WoW' },
+          version: {
+            type: 'string',
+            enum: [...WOW_VERSIONS],
+            description:
+              'WoW: the version of the game the character is in — retail (the current game, ' +
+              'the default), anniversary (Classic Anniversary), era (Classic Era, Hardcore, ' +
+              'Season of Discovery), progression (Cataclysm / Mists of Pandaria Classic)',
+          },
           realm: {
             type: 'string',
-            description: 'WoW realm slug: "Гордунни" → gordunni, "Howling Fjord" → howling-fjord',
+            description: 'WoW realm as the game shows it ("Гордунни", "Howling Fjord") or its slug',
           },
           name: { type: 'string', description: 'WoW character name' },
         },
