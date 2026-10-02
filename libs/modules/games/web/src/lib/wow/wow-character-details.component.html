@@ -1,0 +1,271 @@
+@let c = character();
+@let d = details();
+
+@if (!d) {
+  <p class="muted">{{ 'games.wow.details.notLoaded' | transloco }}</p>
+} @else {
+  <mat-tab-group mat-stretch-tabs="false" animationDuration="0ms">
+    <mat-tab [label]="'games.wow.details.overview' | transloco">
+      <div class="tab overview">
+        @if (d.renderUrl; as render) {
+          <img class="render" [src]="render" alt="" loading="lazy" />
+        }
+        <div class="sheet">
+          @if (d.title) {
+            <p class="title">{{ d.title }}</p>
+          }
+          <p class="muted">
+            @if (d.faction) {
+              {{ d.faction }}
+            }
+            @if (d.guild; as guild) {
+              · &lt;{{ guild.name }}&gt;
+              @if (guild.members !== null) {
+                · {{ 'games.wow.details.members' | transloco: { count: guild.members } }}
+              }
+              @if (guild.rank !== null) {
+                · {{ 'games.wow.details.rank' | transloco: { rank: guild.rank } }}
+              }
+            }
+          </p>
+
+          @if (stats().length) {
+            <dl class="stats">
+              @for (stat of stats(); track stat.key) {
+                <div>
+                  <dt>
+                    {{
+                      stat.key === 'power' && stat.power
+                        ? stat.power
+                        : ('games.wow.stats.' + stat.key | transloco)
+                    }}
+                  </dt>
+                  <dd>{{ stat.value | number }}{{ stat.percent ? '%' : '' }}</dd>
+                </div>
+              }
+            </dl>
+          }
+
+          @if (itemLevelHistory().length > 1) {
+            <h4>{{ 'games.wow.details.itemLevelHistory' | transloco }}</h4>
+            <pd-sparkline
+              [points]="itemLevelHistory()"
+              [label]="'games.wow.details.itemLevelHistory' | transloco"
+            />
+          }
+
+          @if (d.professions.length) {
+            <h4>{{ 'games.wow.details.professions' | transloco }}</h4>
+            <ul class="plain">
+              @for (profession of d.professions; track profession.name) {
+                <li>
+                  <b>{{ profession.name }}</b>
+                  @for (tier of profession.tiers; track tier.name) {
+                    <span class="muted">{{ tier.name }} {{ tier.skill }}/{{ tier.max }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+    @if (d.items.length) {
+      <mat-tab [label]="'games.wow.details.gear' | transloco">
+        <ul class="tab gear">
+          @for (item of d.items; track item.slot + item.name) {
+            <li>
+              <span class="slot">{{ item.slot }}</span>
+              <span class="item">
+                <b [style.color]="qualityColor(item.quality)">{{ item.name }}</b>
+                @for (line of item.enchants; track line) {
+                  <span class="muted">{{ line }}</span>
+                }
+                @for (gem of item.gems; track $index) {
+                  <span class="muted"><mat-icon inline>diamond</mat-icon> {{ gem }}</span>
+                }
+              </span>
+              <span class="level">{{ item.level ?? '' }}</span>
+            </li>
+          }
+        </ul>
+      </mat-tab>
+    }
+
+    @if (d.specs.length) {
+      <mat-tab [label]="'games.wow.details.talents' | transloco">
+        <div class="tab">
+          @for (spec of d.specs; track spec.name) {
+            <section class="spec">
+              <h4>
+                {{ spec.name }}
+                @if (spec.active) {
+                  <span class="badge">{{ 'games.wow.details.active' | transloco }}</span>
+                }
+              </h4>
+              @if (spec.talents.length) {
+                <p class="chips">
+                  @for (talent of spec.talents; track talent) {
+                    <span>{{ talent }}</span>
+                  }
+                </p>
+              } @else {
+                <p class="muted">{{ 'games.wow.details.noTalents' | transloco }}</p>
+              }
+            </section>
+          }
+        </div>
+      </mat-tab>
+    }
+
+    @if (d.mythic; as mythic) {
+      <mat-tab label="Mythic+">
+        <div class="tab">
+          <p class="big">
+            {{ mythic.rating | number }}
+            <span class="muted">{{ 'games.wow.details.rating' | transloco }}</span>
+          </p>
+          @if (ratingHistory().length > 1) {
+            <pd-sparkline [points]="ratingHistory()" label="Mythic+" />
+          }
+          @if (mythic.runs.length) {
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ 'games.wow.details.dungeon' | transloco }}</th>
+                  <th class="numeric">{{ 'games.wow.details.key' | transloco }}</th>
+                  <th class="numeric">{{ 'games.wow.details.time' | transloco }}</th>
+                  <th class="numeric">{{ 'games.wow.details.rating' | transloco }}</th>
+                  <th class="numeric">{{ 'games.wow.details.date' | transloco }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (run of mythic.runs; track run.dungeon) {
+                  <tr>
+                    <td>{{ run.dungeon }}</td>
+                    <td class="numeric">
+                      +{{ run.level }}
+                      @if (!run.timed) {
+                        <mat-icon
+                          inline
+                          class="late"
+                          [attr.aria-label]="'games.wow.details.overTime' | transloco"
+                          >timer_off</mat-icon
+                        >
+                      }
+                    </td>
+                    <td class="numeric">{{ duration(run.durationMs) }}</td>
+                    <td class="numeric">{{ run.rating ?? '—' }}</td>
+                    <td class="numeric">{{ run.completedAt | date: 'd MMM y' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </mat-tab>
+    }
+
+    @if (d.raids.length) {
+      <mat-tab [label]="'games.wow.details.raids' | transloco">
+        <ul class="tab plain">
+          @for (raid of d.raids; track raid.expansion + raid.name) {
+            <li>
+              <b>{{ raid.name }}</b>
+              <span class="muted">{{ raid.expansion }}</span>
+              <span class="modes">
+                @for (mode of raid.modes; track mode.difficulty) {
+                  <span [class.cleared]="mode.total > 0 && mode.killed === mode.total">
+                    {{ mode.difficulty }} {{ mode.killed }}/{{ mode.total }}
+                  </span>
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      </mat-tab>
+    }
+
+    @if (d.pvp; as pvp) {
+      <mat-tab label="PvP">
+        <div class="tab">
+          <dl class="stats">
+            @if (pvp.honorLevel !== null) {
+              <div>
+                <dt>{{ 'games.wow.details.honorLevel' | transloco }}</dt>
+                <dd>{{ pvp.honorLevel | number }}</dd>
+              </div>
+            }
+            @if (pvp.honorableKills !== null) {
+              <div>
+                <dt>{{ 'games.wow.details.honorableKills' | transloco }}</dt>
+                <dd>{{ pvp.honorableKills | number }}</dd>
+              </div>
+            }
+          </dl>
+          @if (pvp.brackets.length) {
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ 'games.wow.details.bracket' | transloco }}</th>
+                  <th class="numeric">{{ 'games.wow.details.rating' | transloco }}</th>
+                  <th class="numeric">{{ 'games.wow.details.played' | transloco }}</th>
+                  <th class="numeric">{{ 'games.wow.details.won' | transloco }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (bracket of pvp.brackets; track bracket.bracket) {
+                  <tr>
+                    <td>{{ bracket.bracket }}</td>
+                    <td class="numeric">{{ bracket.rating | number }}</td>
+                    <td class="numeric">{{ bracket.played | number }}</td>
+                    <td class="numeric">{{ bracket.won | number }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="muted">{{ 'games.wow.details.noBrackets' | transloco }}</p>
+          }
+        </div>
+      </mat-tab>
+    }
+
+    @if (collections().length) {
+      <mat-tab [label]="'games.wow.details.collections' | transloco">
+        <div class="tab">
+          <dl class="stats">
+            @for (collection of collections(); track collection.key) {
+              <div>
+                <dt>{{ 'games.wow.collections.' + collection.key | transloco }}</dt>
+                <dd>{{ collection.value | number }}</dd>
+              </div>
+            }
+          </dl>
+        </div>
+      </mat-tab>
+    }
+
+    @if (d.reputations.length) {
+      <mat-tab [label]="'games.wow.details.reputations' | transloco">
+        <ul class="tab plain two">
+          @for (reputation of d.reputations; track reputation.faction) {
+            <li>
+              <b>{{ reputation.faction }}</b>
+              <span class="muted">
+                {{ reputation.standing }}
+                @if (reputation.max) {
+                  · {{ reputation.value | number }}/{{ reputation.max | number }}
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      </mat-tab>
+    }
+  </mat-tab-group>
+}
+
+<!-- The name is on the card above; this keeps the block tied to it for screen readers. -->
+<span class="sr-only">{{ c.name }}</span>

@@ -1,0 +1,206 @@
+:host {
+  display: block;
+  padding: 4px 16px 16px;
+  border-radius: var(--pd-radius);
+  border: 1px solid var(--pd-border);
+  background: var(--pd-card);
+}
+
+.tab {
+  padding-top: 16px;
+}
+
+.muted {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+h4 {
+  margin: 18px 0 8px;
+  font: 700 0.95rem / 1.3 var(--pd-font-heading);
+}
+
+.overview {
+  display: grid;
+  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.render {
+  width: 100%;
+  border-radius: var(--pd-radius-small);
+}
+
+.title {
+  margin: 0 0 4px;
+  font: 700 1.1rem / 1.3 var(--pd-font-heading);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin: 12px 0 0;
+
+  div {
+    padding: 8px 10px;
+    border-radius: var(--pd-radius-small);
+    background: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+  }
+
+  dt {
+    font: var(--mat-sys-label-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 2px 0 0;
+    font: 700 1.05rem / 1.2 var(--pd-font-heading);
+  }
+}
+
+.plain,
+.gear {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plain li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.plain.two {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.gear li {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.slot {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.level {
+  font: 700 1rem / 1.2 var(--pd-font-heading);
+}
+
+.spec h4 {
+  margin-top: 0;
+}
+
+.badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font: var(--mat-sys-label-small);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 16px;
+
+  span {
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--mat-sys-outline-variant);
+    font: var(--mat-sys-body-small);
+  }
+}
+
+.big {
+  margin: 0 0 8px;
+  font: 800 1.8rem / 1.1 var(--pd-font-heading);
+}
+
+table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font: var(--mat-sys-body-medium);
+}
+
+th {
+  padding: 4px 8px;
+  text-align: left;
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+td {
+  padding: 6px 8px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+// A key finished over the timer.
+.late {
+  color: var(--mat-sys-error);
+}
+
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: auto;
+
+  span {
+    padding: 1px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--mat-sys-outline-variant);
+    font: var(--mat-sys-body-small);
+  }
+
+  // Every boss of the difficulty is dead.
+  .cleared {
+    border-color: transparent;
+    background: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
