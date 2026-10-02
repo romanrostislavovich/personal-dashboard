@@ -281,6 +281,13 @@
       "when": 1790966393052,
       "tag": "0039_wow_details",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1790970594620,
+      "tag": "0040_activity",
+      "breakpoints": true
     }
   ]
 }

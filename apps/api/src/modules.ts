@@ -5,6 +5,7 @@ import { GamesModule } from '@pd/games-api';
 import { DevelopmentModule } from '@pd/development-api';
 import { MonitoringModule } from '@pd/monitoring-api';
 import { MusicModule } from '@pd/music-api';
+import { ActivityModule } from '@pd/activity-api';
 import { TasksModule } from '@pd/tasks-api';
 import { WeatherModule } from '@pd/weather-api';
 
@@ -14,6 +15,7 @@ import { WeatherModule } from '@pd/weather-api';
  */
 export const enabledModules = [
   TasksModule,
+  ActivityModule,
   BirthdaysModule,
   FinanceModule,
   DevelopmentModule,
