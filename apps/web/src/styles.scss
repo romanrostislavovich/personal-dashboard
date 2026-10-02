@@ -1,7 +1,9 @@
 @use '@angular/material' as mat;
 
-// Material 3 theme: violet + cyan accents, Inter for text, Manrope for headings.
-// Light/dark follows the system setting.
+// Material 3 theme: violet + cyan accents, Inter for text, Manrope for headings; light or dark
+// follows the system setting. This is the built-in look — the user's theme (ThemeService in
+// @pd/web-core) changes it at run time by setting the variables below on <html>: the colour
+// tokens of another accent, `color-scheme`, the fonts, the radius, and the classes at the end.
 html {
   color-scheme: light dark;
   @include mat.theme(
@@ -10,10 +12,11 @@ html {
         primary: mat.$violet-palette,
         tertiary: mat.$cyan-palette,
       ),
+      // Variables, not names: the font of the theme reaches every Material text style.
       typography: (
-        plain-family: 'Inter, Roboto, sans-serif',
-        brand-family: 'Manrope, Inter, sans-serif',
-      ),
+          plain-family: var(--pd-font),
+          brand-family: var(--pd-font-heading),
+        ),
       density: 0,
     )
   );
@@ -48,6 +51,15 @@ html {
   );
 }
 
+// The compact theme: Material's own controls two steps denser.
+html.pd-compact {
+  @include mat.theme(
+    (
+      density: -2,
+    )
+  );
+}
+
 html,
 body {
   height: 100%;
@@ -71,6 +83,11 @@ body {
     var(--mat-sys-surface);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
+}
+
+// The theme without the glow: a plain background.
+html.pd-no-glow body {
+  background: var(--mat-sys-surface);
 }
 
 a {

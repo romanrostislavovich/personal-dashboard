@@ -73,6 +73,9 @@
   (row counts and hashes) every 6 hours and reports a difference, "Resync everything" mends it;
   a conflicts screen (both versions side by side, bring either back); `deploy.sh --rollback`
   (the previous image and the database from before the update)
+- **Themes:** light, dark or as the device, six ready-made accents or a colour of your own, a
+  black background for OLED screens, font, density, corner radius and the glow; every device
+  may keep a theme of its own, "Apply everywhere" makes one the theme of the account
 - **Self-monitoring:** Settings → System shows the background jobs with their last runs and the
   server's errors and warnings of the last 14 days; a failed job, a failing sync or AI provider
   and any unhandled error are also reported to Telegram
@@ -148,8 +151,6 @@
 - **Command palette (Ctrl+K)** — search across modules and quick actions
 - **PWA** — install on a phone, work offline (a cheap mobile app before the real one)
 - **Customizable home page** — order and hide widgets
-- **Themes** — light, dark and "follow the system", a few ready-made themes, and customization:
-  accent color, fonts, density; the same theme in web and desktop
 - **Section visibility** — turn whole sections on or off in the settings (e.g. hide Fitness if
   you do not use it): a hidden section disappears from the menu, the home page, the digest and
   notifications

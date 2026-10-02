@@ -246,6 +246,10 @@ To add a service (e.g. DigitalOcean):
   the device's one on sign-in, `UsersService.timeZoneOf(user)` gives it (falls back to
   `APP_TIMEZONE`); moments are stored in UTC, `zonedToUtc()` / `zonedDateTime()` in contracts
   convert.
+- **Theme:** the built-in look is in `apps/web/src/styles.scss`; `ThemeService` (`@pd/web-core`)
+  changes it at run time by setting CSS variables and classes on `<html>`. A component never
+  hard-codes a colour, a font or a corner: it uses `--mat-sys-*` and `--pd-*` variables, and then
+  follows any theme by itself.
 - **Money:** `numeric(14,2)`; totals are converted into the user's main currency at the ECB rate of
   each transaction's day (Frankfurter; today's rate from open.er-api for a currency the ECB lacks),
   kept as they are otherwise (`finance/currency`).
