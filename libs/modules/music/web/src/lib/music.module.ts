@@ -26,6 +26,14 @@ export const musicModule: WebDashboardModule = {
     en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
+  commands: [
+    {
+      id: 'music.soundcloud',
+      labelKey: 'music.tabs.soundcloud',
+      icon: 'cloud',
+      url: '/music/soundcloud',
+    },
+  ],
   widgets: [
     {
       id: 'music.now-playing',

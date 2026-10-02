@@ -10,6 +10,12 @@
       <span class="brand-name">{{ 'core.appName' | transloco }}</span>
     </a>
 
+    <button type="button" class="search" (click)="openPalette()">
+      <mat-icon>search</mat-icon>
+      <span>{{ 'core.palette.open' | transloco }}</span>
+      <kbd>Ctrl K</kbd>
+    </button>
+
     <nav class="nav">
       @for (item of mainNav(); track item.path) {
         <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
@@ -62,6 +68,14 @@
         </button>
         <span class="logo small"><mat-icon>bolt</mat-icon></span>
         <span class="brand-name">{{ 'core.appName' | transloco }}</span>
+        <button
+          matIconButton
+          class="mobile-search"
+          [attr.aria-label]="'core.palette.open' | transloco"
+          (click)="openPalette()"
+        >
+          <mat-icon>search</mat-icon>
+        </button>
       </header>
     }
 

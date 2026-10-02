@@ -24,6 +24,7 @@ import {
   TwoFactorLogin,
   TwoFactorSetup,
   TwoFactorStatus,
+  SearchHit,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from './api-client';
 
@@ -60,6 +61,7 @@ export const API_PATHS = {
   syncConflict: (id: string) => `/api/sync/conflicts/${encodeURIComponent(id)}`,
   syncParked: '/api/sync/parked',
   syncParkedDiscard: '/api/sync/parked/discard',
+  search: '/api/search',
   systemStatus: '/api/system/status',
   systemLog: '/api/system/log',
   trash: '/api/trash',
@@ -69,6 +71,8 @@ export const API_PATHS = {
 /** Read requests of the core (see ApiRequest). */
 export const CORE_READS = {
   projects: () => apiRequest(API_PATHS.projects),
+  /** Search across all modules (the command palette). */
+  search: (q: string) => apiRequest(API_PATHS.search, { q }),
   achievements: () => apiRequest(API_PATHS.achievements),
   notificationSettings: () => apiRequest(API_PATHS.notificationSettings),
   syncStatus: () => apiRequest(API_PATHS.syncStatus),
@@ -104,6 +108,13 @@ export function authApi(api: ApiClient) {
       api.post<RecoveryCodes>(`${API_PATHS.twoFactor}/enable`, { code }),
     disableTwoFactor: (input: TwoFactorDisable) =>
       api.post<void>(`${API_PATHS.twoFactor}/disable`, input),
+  };
+}
+
+/** Search across the data of every module — what the command palette shows under "Found". */
+export function searchApi(api: ApiClient) {
+  return {
+    search: (query: string) => api.read<SearchHit[]>(CORE_READS.search(query)),
   };
 }
 

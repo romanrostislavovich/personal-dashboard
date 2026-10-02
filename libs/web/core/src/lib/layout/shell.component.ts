@@ -1,8 +1,9 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, HostListener, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -13,6 +14,7 @@ import { AuthService } from '../auth/auth.service';
 import { RealtimeNotifier } from '../realtime/realtime-notifier';
 import { ToastHostComponent } from '../toast/toast-host.component';
 import { DASHBOARD_MODULES } from '../dashboard-module';
+import { CommandPaletteComponent } from '../palette/command-palette.component';
 import { LayoutService } from './layout.service';
 
 interface NavItem {
@@ -45,6 +47,32 @@ export class ShellComponent {
   constructor() {
     // Live events (new achievements, notifications) while the dashboard is open.
     inject(RealtimeNotifier).start();
+  }
+
+  private readonly dialog = inject(MatDialog);
+
+  /** Ctrl+K (⌘K on a Mac) from anywhere opens the command palette. */
+  @HostListener('document:keydown', ['$event'])
+  protected onKey(event: KeyboardEvent): void {
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      this.openPalette();
+    }
+  }
+
+  protected openPalette(): void {
+    if (
+      this.dialog.openDialogs.some((d) => d.componentInstance instanceof CommandPaletteComponent)
+    ) {
+      return;
+    }
+    this.dialog.open(CommandPaletteComponent, {
+      width: '640px',
+      maxWidth: '94vw',
+      position: { top: '12vh' },
+      autoFocus: 'first-tabbable',
+      panelClass: 'pd-palette-panel',
+    });
   }
 
   /** "Roman Rostislavovich" → "RR"; a single word gives its first two letters. */

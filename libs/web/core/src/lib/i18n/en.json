@@ -336,5 +336,21 @@
       "epic": "Epic",
       "legendary": "Legendary"
     }
+  },
+  "palette": {
+    "open": "Search",
+    "placeholder": "Go to a page, search, or type a task…",
+    "nothing": "Nothing found.",
+    "failed": "It did not work",
+    "groups": {
+      "actions": "Actions",
+      "pages": "Pages",
+      "found": "Found"
+    },
+    "mode": {
+      "light": "Light theme",
+      "dark": "Dark theme",
+      "system": "Theme as on the device"
+    }
   }
 }

@@ -11,6 +11,7 @@ export * from './lib/users/users.service';
 export * from './lib/projects/projects.schema';
 export * from './lib/projects/projects.service';
 export * from './lib/scheduler/scheduler.service';
+export * from './lib/search/search.service';
 export { SystemLogger } from './lib/system/system-logger';
 export * from './lib/secrets/secrets.service';
 export * from './lib/notifications/notification-channel';

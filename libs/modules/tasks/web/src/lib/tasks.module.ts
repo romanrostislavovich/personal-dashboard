@@ -26,6 +26,20 @@ export const tasksModule: WebDashboardModule = {
     en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
+  commands: [
+    {
+      id: 'tasks.add',
+      labelKey: 'tasks.commands.add',
+      icon: 'add_task',
+      loadAction: () => import('./tasks.commands').then((m) => m.addTask),
+    },
+    {
+      id: 'tasks.reminders',
+      labelKey: 'tasks.tabs.reminders',
+      icon: 'notifications',
+      url: '/tasks/reminders',
+    },
+  ],
   widgets: [
     {
       id: 'tasks.today',

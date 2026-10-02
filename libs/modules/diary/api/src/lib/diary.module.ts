@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DiarySearch } from './diary.search';
 import { DiaryAchievements } from './diary.achievements';
 import { DiaryAiTools } from './diary.ai-tools';
 import { DiaryDigest } from './diary.digest';
@@ -16,6 +17,7 @@ import { DiaryService } from './diary.service';
 @Module({
   controllers: [DiaryController],
   providers: [
+    DiarySearch,
     DiaryService,
     DiaryPhotosService,
     DiarySummaryService,

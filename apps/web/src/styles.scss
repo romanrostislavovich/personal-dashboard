@@ -160,3 +160,8 @@ h3 {
     'GRAD' 0,
     'opsz' 24;
 }
+
+// The command palette (Ctrl+K): a dialog without the usual padding, its list goes edge to edge.
+.pd-palette-panel .mat-mdc-dialog-surface {
+  overflow: hidden;
+}

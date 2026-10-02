@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { OpenSourceSearch } from './open-source/open-source.search';
 import { AccountTokensService } from './accounts/account-tokens.service';
 import { AccountsAchievements } from './accounts/accounts.achievements';
 import { AccountsAiTools } from './accounts/accounts.ai-tools';
@@ -55,6 +56,7 @@ import { WakatimeService } from './wakatime/wakatime.service';
     WakatimeController,
   ],
   providers: [
+    OpenSourceSearch,
     GithubTokenService,
     AccountTokensService,
     AccountsService,

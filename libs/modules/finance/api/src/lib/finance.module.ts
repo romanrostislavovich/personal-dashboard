@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { FinanceSearch } from './finance.search';
 import { CostSourcesController } from './cost-sources/cost-sources.controller';
 import { CostSourcesJob } from './cost-sources/cost-sources.job';
 import { CostSourcesService } from './cost-sources/cost-sources.service';
@@ -22,6 +23,7 @@ import { TransactionsService } from './transactions/transactions.service';
 @Module({
   controllers: [FinanceController, CostSourcesController],
   providers: [
+    FinanceSearch,
     TransactionsService,
     ExchangeRatesService,
     FinanceSettingsService,

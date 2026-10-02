@@ -1,4 +1,4 @@
-import { InjectionToken, Provider, Type } from '@angular/core';
+import { InjectionToken, Injector, Provider, Type } from '@angular/core';
 import { Routes } from '@angular/router';
 import { Translation } from '@jsverse/transloco';
 
@@ -22,11 +22,27 @@ export interface WebDashboardModule {
   translations: Record<string, () => Promise<{ default: Translation }>>;
   /** Widgets for the home page. */
   widgets?: DashboardWidget[];
+  /** What the command palette (Ctrl+K) offers besides the section itself. */
+  commands?: DashboardCommand[];
   /**
    * Connections to outside services (tokens, accounts, API keys). They are all shown in one
    * place — Settings → Integrations — not on the module's pages.
    */
   integrations?: DashboardIntegration[];
+}
+
+/**
+ * A line of the command palette: a page inside the section (`url`), or an action on the text
+ * typed into the palette (`loadAction`) — "Add a task: buy milk".
+ */
+export interface DashboardCommand {
+  /** Unique: `<module>.<command>`. */
+  id: string;
+  labelKey: string;
+  icon: string;
+  url?: string;
+  /** Loaded when first used; does its work with the text and the app's injector. */
+  loadAction?: () => Promise<(text: string, injector: Injector) => Promise<void>>;
 }
 
 /** A self-contained card (or a few) that connects a module to an outside service. */
