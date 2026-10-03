@@ -170,7 +170,7 @@ export class ActivityTracker {
 
   private takeHealth(): void {
     if (this.store.deviceId) {
-      this.pendingHealth = this.health.collect();
+      void this.health.collect().then((snapshot) => (this.pendingHealth = snapshot));
     }
   }
 

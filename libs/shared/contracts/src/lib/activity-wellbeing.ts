@@ -105,6 +105,64 @@ export interface ActivityLimit extends ActivityLimitInput {
 
 // --- Health of the computers ---
 
+const name = z.string().trim().max(200);
+
+/**
+ * What Windows tells a normal user beyond the basics (no administrator rights, no drivers):
+ * every part is optional — a system that does not give it leaves it out.
+ */
+export const activitySystemSchema = z.object({
+  /** ACPI thermal zones: a board sensor, not the processor's cores. */
+  thermal: z
+    .array(
+      z.object({
+        name,
+        celsius: z.number().min(-50).max(200),
+        /** The system is slowing the processor down to cool it. */
+        throttling: z.boolean(),
+      }),
+    )
+    .max(10)
+    .optional(),
+  /** Processor speed against its base, percent: well under 100 under load — held back. */
+  cpuPerformance: z.number().min(0).max(1000).optional(),
+  gpuLoad: z.number().min(0).max(100).optional(),
+  gpuName: name.optional(),
+  battery: z
+    .object({
+      charge: z.number().int().min(0).max(100),
+      onAc: z.boolean(),
+      /** mWh; as when new and now — their ratio is the battery's health. */
+      designCapacity: z.number().int().min(0).optional(),
+      fullCapacity: z.number().int().min(0).optional(),
+    })
+    .optional(),
+  network: z
+    .object({ ssid: name, signal: z.number().min(0).max(100), rateMbps: z.number().min(0) })
+    .optional(),
+  physicalDisks: z
+    .array(z.object({ name, media: name, health: name }))
+    .max(20)
+    .optional(),
+  os: z.object({ name, build: name, bootedAt: moment }).optional(),
+  defender: z
+    .object({
+      enabled: z.boolean(),
+      realtime: z.boolean(),
+      signatureAgeDays: z.number().int().min(0).max(100_000),
+    })
+    .optional(),
+  topCpu: z
+    .array(z.object({ name, percent: z.number().min(0) }))
+    .max(10)
+    .optional(),
+  topMemory: z
+    .array(z.object({ name, bytes: z.number().min(0) }))
+    .max(10)
+    .optional(),
+});
+export type ActivitySystem = z.infer<typeof activitySystemSchema>;
+
 /** What a desktop app reports about its computer every few minutes. */
 export const activityHealthSchema = z.object({
   at: moment,
@@ -124,6 +182,8 @@ export const activityHealthSchema = z.object({
       }),
     )
     .max(30),
+  /** The rest, when the system tells it (a newer desktop app, on Windows). */
+  system: activitySystemSchema.optional(),
 });
 export type ActivityHealthInput = z.infer<typeof activityHealthSchema>;
 
@@ -132,9 +192,20 @@ export interface ActivityComputer {
   name: string;
   lastSeenAt: string | null;
   latest: ActivityHealthInput | null;
-  /** The last day, oldest first. */
-  history: { at: string; cpu: number; memory: number }[];
+  /** The last day, oldest first; `null` — not reported then. */
+  history: {
+    at: string;
+    cpu: number;
+    memory: number;
+    gpu: number | null;
+    /** The warmest thermal zone. */
+    celsius: number | null;
+    battery: number | null;
+  }[];
 }
+
+/** A computer not restarted for this long is reported: updates wait for a restart. */
+export const ACTIVITY_REBOOT_DAYS = 14;
 
 /** A disk with less free space than this share is reported. */
 export const ACTIVITY_LOW_DISK_SHARE = 0.1;
