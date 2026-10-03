@@ -241,6 +241,11 @@ function registerIpc(): void {
         tracker.focus.hold();
         return;
       }
+      // A call is going on: the notification waits too.
+      if (tracker.inMeeting) {
+        tracker.holdDuringMeeting();
+        return;
+      }
       notify(title, body, () => {
         showWindow();
         if (route) {

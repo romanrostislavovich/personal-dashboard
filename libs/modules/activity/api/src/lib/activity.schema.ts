@@ -119,6 +119,8 @@ export const activitySettings = pgTable('activity_settings', {
   shortBreakMinutes: integer().notNull().default(5),
   longBreakMinutes: integer().notNull().default(15),
   roundsBeforeLongBreak: integer().notNull().default(4),
+  /** Window titles with any of these words are recorded without the title. */
+  privateWords: text().array().notNull().default([]),
 });
 
 /** "No more than this much a day": in games, at the computer at all, in one program. */

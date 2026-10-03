@@ -20,5 +20,10 @@ export function noticeText(notice: TrackerNotice): { title: string; body: string
         title: 'Перерыв окончен',
         body: 'Нажмите, чтобы начать следующий фокус.',
       };
+    case 'meeting-ended':
+      return {
+        title: 'Звонок закончился',
+        body: `Пока он шёл, пришло уведомлений: ${notice.held}. Они в дашборде.`,
+      };
   }
 }

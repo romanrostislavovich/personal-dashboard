@@ -15,6 +15,10 @@ export interface TrackerConfig {
   focus: FocusSettings;
   /** Time in these during a focus session is a distraction. */
   distractingApps: string[];
+  /** Window titles with any of these words are recorded without the title. */
+  privateWords: string[];
+  /** Programs that are calls (Zoom). */
+  meetingApps: string[];
 }
 
 interface StoredState {
@@ -43,6 +47,8 @@ const DEFAULTS: StoredState = {
       roundsBeforeLongBreak: 4,
     },
     distractingApps: [],
+    privateWords: [],
+    meetingApps: [],
   },
   queue: [],
   focusQueue: [],

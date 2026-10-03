@@ -309,6 +309,13 @@
       "when": 1791041780473,
       "tag": "0043_computer_details_drop",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791051175614,
+      "tag": "0044_activity_private_words",
+      "breakpoints": true
     }
   ]
 }

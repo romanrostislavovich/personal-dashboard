@@ -4,6 +4,7 @@ import { BreakReminder } from './break-reminder';
 import { FocusPhase, FocusSession, FocusStatus, FocusTimer } from './focus-timer';
 import { HealthCollector, HealthSnapshot } from './health';
 import { Span, SpanBuilder, WindowSample } from './span-builder';
+import { isMeeting, isPrivateWindow } from './window-rules';
 import { SAMPLE_SECONDS, WindowWatcher } from './window-watcher';
 
 /** What waits is sent this often. */
@@ -17,12 +18,16 @@ const FOCUS_BATCH = 50;
 /** How often the state of the computer (disks, load) is taken. */
 const HEALTH_MS = 5 * 60_000;
 const FIRST_HEALTH_MS = 20_000;
+/** A call is still on this long after its window left the front. */
+const MEETING_GRACE_MS = 2 * 60_000;
 
 /** What the tracker tells the user; the shell shows it as a system notification. */
 export type TrackerNotice =
   | { kind: 'break'; minutes: number }
   | { kind: 'focus-ended'; next: FocusPhase; held: number; minutes: number }
-  | { kind: 'break-ended' };
+  | { kind: 'break-ended' }
+  /** A call ended; `held` — notifications that waited for it. */
+  | { kind: 'meeting-ended'; held: number };
 
 export interface TrackerStatus {
   /** The system is one the tracker can watch windows on (Windows). */
@@ -52,6 +57,9 @@ export class ActivityTracker {
   private readonly watcher = new WindowWatcher((sample) => this.onSample(sample));
   private locked = false;
   private uploading = false;
+  /** A call is in front (or was a moment ago): the app keeps quiet. */
+  private meetingUntil = 0;
+  private heldInMeeting = 0;
   private readonly breaks = new BreakReminder((minutes) => this.notice({ kind: 'break', minutes }));
   private readonly health = new HealthCollector();
   /** The latest state of the computer, sent with the next upload. */
@@ -174,7 +182,8 @@ export class ActivityTracker {
     }
   }
 
-  private onSample(sample: WindowSample | null): void {
+  private onSample(observed: WindowSample | null): void {
+    let sample = observed;
     const now = Date.now();
     const config = this.store.config;
     const idleMs = powerMonitor.getSystemIdleTime() * 1000;
@@ -183,9 +192,14 @@ export class ActivityTracker {
       breakMinutes: config.breakMinutes,
       quiet: this.focus.working,
     });
+    this.followMeeting(sample, now);
     if (!sample || this.locked || this.paused || isExcluded(sample, config)) {
       this.keep(this.spans.feed(null, now));
       return;
+    }
+    // A private window: the program is recorded, its title never leaves the computer.
+    if (isPrivateWindow(sample.title, config.privateWords)) {
+      sample = { ...sample, title: '' };
     }
     if (
       idleMs < config.idleMinutes * 60_000 &&
@@ -209,6 +223,35 @@ export class ActivityTracker {
       }
     }
     this.keep(this.spans.feed(sample, now));
+  }
+
+  /** A call is going on: notifications wait (see `holdDuringMeeting`). */
+  get inMeeting(): boolean {
+    return Date.now() < this.meetingUntil;
+  }
+
+  /** A notification arrived during a call: counted, told about when the call ends. */
+  holdDuringMeeting(): void {
+    this.heldInMeeting++;
+  }
+
+  /**
+   * A call stays "on" a little after its window leaves the front: switching to a document
+   * during a call is still the call.
+   */
+  private followMeeting(sample: WindowSample | null, now: number): void {
+    const config = this.store.config;
+    if (sample && !this.locked && isMeeting(sample.app, sample.title, config.meetingApps)) {
+      this.meetingUntil = now + MEETING_GRACE_MS;
+      return;
+    }
+    if (this.meetingUntil && now >= this.meetingUntil) {
+      this.meetingUntil = 0;
+      if (this.heldInMeeting) {
+        this.notice({ kind: 'meeting-ended', held: this.heldInMeeting });
+      }
+      this.heldInMeeting = 0;
+    }
   }
 
   private close(): void {
@@ -269,6 +312,10 @@ export class ActivityTracker {
             distractingApps: Array.isArray(config.distractingApps)
               ? config.distractingApps
               : known.distractingApps,
+            privateWords: Array.isArray(config.privateWords)
+              ? config.privateWords
+              : known.privateWords,
+            meetingApps: Array.isArray(config.meetingApps) ? config.meetingApps : known.meetingApps,
           });
         }
         this.store.dequeue(batch.length);

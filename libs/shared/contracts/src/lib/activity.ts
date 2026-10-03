@@ -16,6 +16,7 @@ export const ACTIVITY_CATEGORIES = [
   'design',
   'games',
   'media',
+  'meetings',
   'system',
   'other',
 ] as const;
@@ -112,8 +113,26 @@ const KNOWN_APPS: Record<ActivityCategory, string[]> = {
     'mmc',
     'regedit',
   ],
+  meetings: ['zoom', 'webex', 'ciscocollabhost', 'skypeforbusiness'],
   other: [],
 };
+
+/**
+ * A call in a program that also does other things: Google Meet in a browser, a meeting or a
+ * call of Teams, a call of Telegram. Such time is a meeting whatever the program's category.
+ * (The desktop app has the same rule in activity/meetings.ts: it keeps quiet during a call.)
+ */
+export function isMeetingTitle(title: string): boolean {
+  return MEETING_TITLES.some((pattern) => pattern.test(title));
+}
+
+const MEETING_TITLES = [
+  /^meet\s*[-–—]|google meet/i,
+  /zoom (meeting|webinar)/i,
+  /\b(meeting|call)\b.*\|\s*microsoft teams/i,
+  /(собрание|звонок|вызов).*\|\s*microsoft teams/i,
+  /^(telegram\s+)?(call|звонок)$/i,
+];
 
 const CATEGORY_OF = new Map(
   ACTIVITY_CATEGORIES.flatMap((category) => KNOWN_APPS[category].map((app) => [app, category])),
@@ -212,6 +231,10 @@ export interface ActivityDeviceConfig {
   focus: ActivityFocusSettings;
   /** Programs that count as a distraction during a focus session (games, messengers, video). */
   distractingApps: string[];
+  /** Window titles with any of these words are recorded without the title. */
+  privateWords: string[];
+  /** Programs that are calls (Zoom): the app keeps quiet while one is in front. */
+  meetingApps: string[];
 }
 
 // --- Settings, programs, project rules ---
@@ -221,6 +244,11 @@ export const activitySettingsSchema = z
     idleMinutes: z.number().int().min(1).max(60),
     /** Remind to take a break after this long without one; `0` — never. */
     breakMinutes: z.number().int().min(0).max(240),
+    /**
+     * Words of window titles that are never recorded (a bank, a doctor's site): the program is,
+     * its title is not. Private windows of browsers are left out the same way anyway.
+     */
+    privateWords: z.array(z.string().trim().min(2).max(60)).max(50),
   })
   .extend(activityFocusSettingsSchema.shape);
 export type ActivitySettings = z.infer<typeof activitySettingsSchema>;

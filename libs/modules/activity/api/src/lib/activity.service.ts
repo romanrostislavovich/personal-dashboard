@@ -48,6 +48,7 @@ const DEFAULT_SETTINGS: ActivitySettings = {
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   roundsBeforeLongBreak: 4,
+  privateWords: [],
 };
 /** The hours of the user's own clock the achievements call night and early morning. */
 const NIGHT_ENDS_AT = 5;
@@ -146,6 +147,8 @@ export class ActivityService {
         roundsBeforeLongBreak: settings.roundsBeforeLongBreak,
       },
       distractingApps: appsOfCategories(apps, ACTIVITY_DISTRACTING_CATEGORIES),
+      privateWords: settings.privateWords,
+      meetingApps: appsOfCategories(apps, ['meetings']),
     };
   }
 
@@ -164,6 +167,7 @@ export class ActivityService {
           shortBreakMinutes: row.shortBreakMinutes,
           longBreakMinutes: row.longBreakMinutes,
           roundsBeforeLongBreak: row.roundsBeforeLongBreak,
+          privateWords: row.privateWords,
         }
       : DEFAULT_SETTINGS;
   }
@@ -298,7 +302,7 @@ export class ActivityService {
       app: row.app,
       name: row.appName,
       title: row.title,
-      category: categoryOf(row.app, categories),
+      category: categoryOf(row.app, categories, row.title),
       deviceId: row.deviceId,
     }));
   }
