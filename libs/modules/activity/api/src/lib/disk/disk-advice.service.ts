@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiService, UsersService } from '@pd/api-core';
 import { DiskAction, DiskAdvice, DiskReport, DiskSafety, DiskSuggestion } from '@pd/contracts';
-import { mustNotTrash, reportPaths, ruleAdvice } from './disk-rules';
+import { fixOf, mustNotTrash, reportPaths, ruleAdvice } from './disk-rules';
 
 const ACTIONS: DiskAction[] = ['trash', 'command', 'tool', 'review'];
 const SAFETIES: DiskSafety[] = ['safe', 'check', 'risky'];
@@ -9,8 +9,9 @@ const MAX_SUGGESTIONS = 25;
 const GB = 1024 ** 3;
 
 const INSTRUCTION = `You help free space on a full Windows disk. You get a JSON report: the disk's
-size and free space, its biggest folders and files (paths, bytes, files inside, last change) and
-places known to grow ("known") with the built-in advice for them ("rules").
+size and free space, its biggest folders and files (paths, bytes, files inside, last change),
+places known to grow ("known") with the built-in advice for them ("rules"), and the other disks
+of the computer with their free space ("otherDisks").
 
 Answer with JSON only, no other text:
 {"summary": "two sentences: what takes the space and how much can be freed",
@@ -20,14 +21,23 @@ Answer with JSON only, no other text:
 
 Rules:
 - Use only paths that are in the report, written exactly the same.
+- Look through ALL the big folders and files, not only the known places: name what each one is
+  (a game, an IDE, a program's data, a model file of a browser…) and say what to do with it.
+  For a file a program downloads again by itself (for example the on-device AI model of Chrome
+  in OptGuideOnDeviceModel) say how to switch that off first.
+- When another disk has far more free space, suggest moving big programs, games and their
+  data there ("tool"), with the exact way: Steam — Settings → Storage → move; Battle.net — the
+  game's settings → Locate/Install on another disk; Spotify — Settings → Storage → change the
+  location; Docker Desktop — Settings → Resources → Disk image location; for others — reinstall
+  to the other disk. Name the disk to move to.
 - "trash" (the app moves it to the Recycle Bin) only for things that are rebuilt by themselves
   or plainly leftovers: caches, temp files, crash dumps, old installers, logs, build outputs
   (node_modules, bin/obj, target, dist) of projects untouched for months.
 - Never "trash" the system, programs, virtual disks (.vhdx), games' own folders or the user's
   documents, photos, projects: for those "review" with a reason, or a "tool"/"command".
 - "safe" — rebuilt by itself; "check" — most likely unneeded, look first; "risky" — the user's own data.
-- Prefer a few big wins over many small ones; at most ${MAX_SUGGESTIONS} suggestions, biggest first.
-- Mention when a game or a program can be moved to another disk instead.`;
+- Write sizes in gigabytes with one decimal ("GB", in Russian "ГБ"), never GiB/ГиБ.
+- Prefer big wins over many small ones; at most ${MAX_SUGGESTIONS} suggestions, biggest first.`;
 
 /**
  * Advice on what to delete from a full disk. The AI reads the report of the desktop app; its
@@ -108,6 +118,7 @@ export function parseAdvice(answer: string, report: DiskReport): DiskAdvice | nu
         safety,
         reason: String(item['reason'] ?? '').slice(0, 500),
         how: typeof item['how'] === 'string' && item['how'] ? item['how'].slice(0, 300) : null,
+        fix: fixOf(report, path),
       },
     ];
   });

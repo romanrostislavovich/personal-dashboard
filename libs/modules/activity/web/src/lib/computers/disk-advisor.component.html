@@ -1,19 +1,8 @@
-@if (disk) {
-  @let s = status();
+@let s = status();
+@let disk = this.disk();
+@if (disk && (s.state !== 'idle' || advice())) {
   <section>
     <h3>{{ 'activity.disk.title' | transloco }}</h3>
-    <div class="mounts">
-      @for (d of disks(); track d.mount) {
-        <button
-          [matButton]="d.free / d.total < lowShare ? 'filled' : 'outlined'"
-          [disabled]="s.state === 'scanning' || thinking()"
-          (click)="scan(d.mount)"
-        >
-          <mat-icon>search</mat-icon>
-          {{ 'activity.disk.analyze' | transloco: { mount: d.mount } }}
-        </button>
-      }
-    </div>
 
     @if (s.state === 'scanning') {
       <mat-progress-bar mode="indeterminate" />
@@ -44,8 +33,10 @@
       </p>
       <ul class="suggestions">
         @for (item of a.suggestions; track item.path) {
-          <li [class]="item.safety">
-            @if (item.action === 'trash') {
+          @let outcome = outcomes().get(item.path);
+          @let busy = working() === item.path || working() === '*';
+          <li [class]="item.safety" [class.done]="outcome?.ok">
+            @if (item.action === 'trash' && !outcome?.ok) {
               <mat-checkbox
                 [checked]="picked().has(item.path)"
                 [attr.aria-label]="item.path"
@@ -54,18 +45,22 @@
             } @else {
               <mat-icon class="kind">
                 {{
-                  item.action === 'command'
-                    ? 'terminal'
-                    : item.action === 'tool'
-                      ? 'build'
-                      : 'visibility'
+                  outcome?.ok
+                    ? 'check_circle'
+                    : item.action === 'command'
+                      ? 'terminal'
+                      : item.action === 'tool'
+                        ? 'build'
+                        : 'visibility'
                 }}
               </mat-icon>
             }
             <div class="body">
               <div class="head">
                 <span class="path">{{ item.path }}</span>
-                <span class="size">{{ item.bytes / gb | number: '1.1-1' }} GB</span>
+                <span class="size">
+                  {{ item.bytes / gb | number: '1.1-1' }} {{ 'activity.disk.gb' | transloco }}
+                </span>
               </div>
               <span class="safety">{{ 'activity.disk.safety.' + item.safety | transloco }}</span>
               <span class="reason">{{ item.reason }}</span>
@@ -84,6 +79,31 @@
                   }
                 </span>
               }
+              @if (outcome; as o) {
+                <span class="outcome" [class.error]="!o.ok">{{ o.text }}</span>
+              }
+              @if (!outcome?.ok) {
+                <div class="actions">
+                  @if (item.action === 'trash') {
+                    <button matButton="tonal" [disabled]="busy" (click)="trashOne(item)">
+                      <mat-icon>delete</mat-icon> {{ 'activity.disk.toBin' | transloco }}
+                    </button>
+                  }
+                  @if (item.fix && disk.fix) {
+                    <button matButton="tonal" [disabled]="busy" (click)="fix(item)">
+                      <mat-icon>{{
+                        item.fix === 'storage-settings' ? 'settings' : 'cleaning_services'
+                      }}</mat-icon>
+                      {{ 'activity.disk.fixes.' + item.fix + '.button' | transloco }}
+                    </button>
+                  }
+                  @if (disk.reveal) {
+                    <button matButton [disabled]="busy" (click)="reveal(item)">
+                      <mat-icon>folder_open</mat-icon> {{ 'activity.disk.reveal' | transloco }}
+                    </button>
+                  }
+                </div>
+              }
             </div>
           </li>
         } @empty {
@@ -91,26 +111,31 @@
         }
       </ul>
       @if (picked().size) {
-        <button matButton="filled" (click)="trash()">
+        <button matButton="filled" [disabled]="working() !== null" (click)="trashPicked()">
           <mat-icon>delete</mat-icon>
           {{ 'activity.disk.trash' | transloco: { gb: (pickedBytes() / gb | number: '1.1-1') } }}
         </button>
       }
     }
 
-    @if (results(); as r) {
-      <div class="results">
-        @for (result of r; track result.path) {
-          @if (!result.ok) {
-            <p class="error">
-              {{ result.path }}: {{ 'activity.disk.reasons.' + result.reason | transloco }}
-            </p>
-          }
+    @if (trashed() || binMessage()) {
+      <div class="bin">
+        @if (trashed()) {
+          <p class="hint">{{ 'activity.disk.emptyBin' | transloco }}</p>
         }
-        <p class="hint">{{ 'activity.disk.emptyBin' | transloco }}</p>
-        <button matButton (click)="openRecycleBin()">
-          <mat-icon>delete_sweep</mat-icon> {{ 'activity.disk.openBin' | transloco }}
-        </button>
+        @if (binMessage(); as message) {
+          <p class="hint">{{ message }}</p>
+        }
+        <div class="actions">
+          <button matButton (click)="openRecycleBin()">
+            <mat-icon>delete_outline</mat-icon> {{ 'activity.disk.openBin' | transloco }}
+          </button>
+          @if (trashed() && disk.emptyRecycleBin) {
+            <button matButton="filled" (click)="emptyRecycleBin()">
+              <mat-icon>delete_sweep</mat-icon> {{ 'activity.disk.emptyBinButton' | transloco }}
+            </button>
+          }
+        </div>
       </div>
     }
   </section>

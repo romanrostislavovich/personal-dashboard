@@ -4,6 +4,7 @@ import { noticeText } from './activity/notices';
 import { ActivityTracker, TrackerNotice } from './activity/tracker';
 import { loadSettings, saveSettings } from './settings-store';
 import { DiskCleaner } from './disk/disk-cleaner';
+import { DiskFix } from './disk/disk-fixes';
 import { createTray } from './tray';
 import { AppUpdater } from './update/updater';
 
@@ -225,6 +226,9 @@ function registerIpc(): void {
     disk.trash(Array.isArray(paths) ? paths.filter((path) => typeof path === 'string') : []),
   );
   ipcMain.handle('disk:open-recycle-bin', () => disk.openRecycleBin());
+  ipcMain.handle('disk:empty-recycle-bin', () => disk.emptyRecycleBin());
+  ipcMain.handle('disk:fix', (_event, fix: DiskFix) => disk.fix(fix));
+  ipcMain.handle('disk:reveal', (_event, path: string) => disk.reveal(String(path)));
 
   // The dashboard asks for a system notification; a click opens the window on the given page.
   ipcMain.on(

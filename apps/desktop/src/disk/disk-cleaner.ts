@@ -2,6 +2,7 @@ import { app, shell } from 'electron';
 import { existsSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { DiskFix, emptyRecycleBin, FixResult, runFix } from './disk-fixes';
 import { isProtected } from './disk-guard';
 import { DiskReport, ScanProgress, scanDisk } from './disk-scan';
 
@@ -90,9 +91,28 @@ export class DiskCleaner {
     return results;
   }
 
-  /** The Recycle Bin of Windows: emptying it is the user's own step. */
+  /** The Recycle Bin of Windows, to look into before emptying it. */
   openRecycleBin(): void {
     void shell.openExternal('shell:RecycleBinFolder');
+  }
+
+  /** Empties the Recycle Bin of the scanned disk, for good — confirmed on the page. */
+  emptyRecycleBin(): Promise<FixResult> {
+    const mount = this.status.state === 'done' ? this.status.report.mount : '';
+    return emptyRecycleBin(mount);
+  }
+
+  /** One of the app's own cleanups (a package cache, Docker): the page names it, the app runs it. */
+  fix(fix: DiskFix): Promise<FixResult> {
+    return runFix(fix);
+  }
+
+  /** Shows a path of the last report in Explorer. */
+  reveal(path: string): void {
+    const real = this.known.get(path);
+    if (real && existsSync(real)) {
+      shell.showItemInFolder(real);
+    }
   }
 }
 

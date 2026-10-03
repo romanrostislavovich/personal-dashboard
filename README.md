@@ -93,7 +93,9 @@ Activity → Setup.
 
 When a disk fills up, Activity → Computers analyzes it on request: the app scans the disk
 (about a minute), the AI — or built-in rules without one — says what can go and why, with the
-exact command for Docker, npm and the like, and what you tick is moved to the Recycle Bin. The
+exact command for Docker, npm and the like, and what to move to another disk. Buttons move
+items to the Recycle Bin (and empty it), run the app's own cleanup for npm, pip, NuGet and Docker,
+or show a path in Explorer. The
 AI sees paths and sizes only, with your profile folder written as `%USERPROFILE%`; the system,
 programs and virtual disks are never deleted, whatever the advice.
 
