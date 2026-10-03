@@ -93,6 +93,23 @@ export const financeSettings = pgTable('finance_settings', {
   mainCurrency: text(),
 });
 
+/** A monthly limit of a category (`*` — all expenses), in the main currency. */
+export const financeBudgets = pgTable(
+  'finance_budgets',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    category: text().notNull(),
+    limit: numeric({ precision: 14, scale: 2, mode: 'number' }).notNull(),
+    /** The months (`YYYY-MM`) the 80% and the 100% of the limit were reported: once a month. */
+    warnedMonth: text(),
+    exceededMonth: text(),
+  },
+  (table) => [unique().on(table.userId, table.category)],
+);
+
 export type TransactionRow = typeof transactions.$inferSelect;
 export type RecurringPaymentRow = typeof recurringPayments.$inferSelect;
 export type CostSourceRow = typeof costSources.$inferSelect;

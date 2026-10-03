@@ -106,6 +106,9 @@
 
 ### Planned
 
+- **Habits** — a habit tracker module, in the digest too
+- **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
+  Cursor can read and change your data directly, without its own chat
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
 - **Desktop: quick input from anywhere** — a global shortcut opens a small window over every
@@ -193,8 +196,6 @@
   month by mood, achievements; the text is written by the AI, shown as a nice page
 - **Yearly goals** — goals whose progress is counted from the modules: "read 20 books", "run
   500 km", "save X", "100 diary days in a row"
-- **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
-  Cursor can read and change your data directly, without its own chat
 - **Automations "if X, then Y"** — rules across modules: "a site is down → a task in the TODO
   list", "over budget → a reminder", "no diary entry by 22:00 → a message in Telegram"; plus
   webhooks and a public API with tokens
@@ -204,7 +205,6 @@
 - **Music and media:** podcasts and YouTube history
 - **Export of all data** — the diary as Markdown (Obsidian-compatible), finance as CSV,
   everything as JSON
-- **Habits** — a habit tracker module, in the digest too
 - **Insights across modules** — mood on days with a run, what was playing on bad days (through AI
   tools or core insights: modules do not depend on each other). The AI looks for such links across
   all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you

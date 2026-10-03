@@ -185,3 +185,29 @@ export interface CostSource {
   /** Imported for the current month. */
   currentMonth: { amount: number; currency: string } | null;
 }
+
+// --- Budgets ---
+
+/** The category of a budget for all expenses of the month together. */
+export const BUDGET_TOTAL = '*';
+
+/** A monthly limit of a category (or of all expenses, `BUDGET_TOTAL`), in the main currency. */
+export const budgetInputSchema = z.object({
+  category: z.string().trim().min(1).max(50),
+  limit: z.number().positive().max(1_000_000_000),
+});
+export type BudgetInput = z.infer<typeof budgetInputSchema>;
+
+/** `PUT /api/finance/budgets`: the whole set at once. */
+export const budgetsSchema = z.object({ budgets: z.array(budgetInputSchema).max(100) });
+export type Budgets = z.infer<typeof budgetsSchema>;
+
+export interface Budget extends BudgetInput {
+  id: string;
+  /** Spent in the month, in the main currency. */
+  spent: number;
+  currency: string;
+}
+
+export const budgetQuerySchema = z.object({ month: z.string().regex(/^\d{4}-\d{2}$/) });
+export type BudgetQuery = z.infer<typeof budgetQuerySchema>;

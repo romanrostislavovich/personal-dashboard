@@ -26,6 +26,48 @@ export class TransactionsService {
     private readonly settings: FinanceSettingsService,
   ) {}
 
+  private readonly listeners: ((userId: string) => Promise<void>)[] = [];
+
+  /** Called after transactions of a user were created or changed (budgets check themselves). */
+  onChange(listener: (userId: string) => Promise<void>): void {
+    this.listeners.push(listener);
+  }
+
+  /** Expenses of a period per category, in the main currency (each at the rate of its day). */
+  async expensesInMain(
+    userId: string,
+    period: { from: string; to: string },
+  ): Promise<{ mainCurrency: string; byCategory: Map<string, number> }> {
+    const rows = await this.db
+      .select({
+        amount: transactions.amount,
+        currency: transactions.currency,
+        category: transactions.category,
+        day: transactions.occurredOn,
+      })
+      .from(transactions)
+      .where(and(this.filter(userId, period), eq(transactions.kind, 'expense')));
+    const main = await this.settings.mainCurrency(userId);
+    const { values } = await this.convert(
+      rows,
+      main,
+      (r) => r.amount,
+      (r) => r.day,
+    );
+    const byCategory = new Map<string, number>();
+    rows.forEach((row, index) =>
+      byCategory.set(row.category, (byCategory.get(row.category) ?? 0) + (values[index] ?? 0)),
+    );
+    return { mainCurrency: main, byCategory };
+  }
+
+  private changed(userId: string): void {
+    for (const listener of this.listeners) {
+      // A failing listener (a notification) must not fail the transaction that was saved.
+      void listener(userId).catch(() => undefined);
+    }
+  }
+
   async list(userId: string, query: TransactionQuery): Promise<Transaction[]> {
     const rows = await this.db
       .select()
@@ -56,6 +98,7 @@ export class TransactionsService {
       .values({ userId, ...input })
       .returning();
     const [transaction] = await this.withMainAmounts(userId, [row]);
+    this.changed(userId);
     return transaction;
   }
 
@@ -72,6 +115,7 @@ export class TransactionsService {
       .insert(transactions)
       .values(inputs.map((input) => ({ userId, ...input })))
       .returning();
+    this.changed(userId);
     return this.withMainAmounts(userId, rows);
   }
 
@@ -88,6 +132,7 @@ export class TransactionsService {
       throw new NotFoundException();
     }
     const [transaction] = await this.withMainAmounts(userId, [row]);
+    this.changed(userId);
     return transaction;
   }
 
@@ -272,7 +317,14 @@ export class TransactionsService {
     );
   }
 
-  private filter(userId: string, { from, to, scope }: TransactionQuery): SQL | undefined {
+  private filter(
+    userId: string,
+    {
+      from,
+      to,
+      scope,
+    }: Pick<TransactionQuery, 'from' | 'to'> & { scope?: TransactionQuery['scope'] },
+  ): SQL | undefined {
     return and(
       eq(transactions.userId, userId),
       gte(transactions.occurredOn, from),

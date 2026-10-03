@@ -330,6 +330,13 @@
       "when": 1791052167176,
       "tag": "0046_activity_summary",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791054550334,
+      "tag": "0047_finance_budgets",
+      "breakpoints": true
     }
   ]
 }

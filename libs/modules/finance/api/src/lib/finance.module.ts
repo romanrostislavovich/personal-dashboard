@@ -15,6 +15,7 @@ import { FinanceServerActions } from './finance.server-actions';
 import { RecurringPaymentsJob } from './recurring/recurring-payments.job';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
 import { TransactionsService } from './transactions/transactions.service';
+import { BudgetsService } from './budgets/budgets.service';
 
 /**
  * Finance: personal and project income/expenses, recurring payments
@@ -25,6 +26,7 @@ import { TransactionsService } from './transactions/transactions.service';
   providers: [
     FinanceSearch,
     TransactionsService,
+    BudgetsService,
     ExchangeRatesService,
     FinanceSettingsService,
     RecurringPaymentsService,

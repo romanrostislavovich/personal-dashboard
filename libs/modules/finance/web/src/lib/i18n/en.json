@@ -130,5 +130,15 @@
     "rates": "Other currencies are converted at the European Central Bank rate of each transaction’s day.",
     "approximate": "{{currencies}}: at today’s rate (the ECB does not publish it).",
     "missing": "{{currencies}}: no rate, left out of the totals."
+  },
+  "budgets": {
+    "title": "Budgets",
+    "subtitle": "Monthly limits in the main currency: a warning at 80%, and when one is spent",
+    "empty": "No budgets yet: set a monthly limit for a category or for all expenses.",
+    "category": "Category",
+    "limit": "Limit a month",
+    "total": "All expenses",
+    "add": "Category",
+    "addTotal": "All expenses"
   }
 }

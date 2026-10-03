@@ -12,6 +12,11 @@ import {
 } from '@nestjs/common';
 import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
 import {
+  Budget,
+  BudgetQuery,
+  budgetQuerySchema,
+  Budgets,
+  budgetsSchema,
   FinanceSettingsInput,
   financeSettingsSchema,
   recurringPaymentInputSchema,
@@ -20,6 +25,7 @@ import {
   TransactionQuery,
   transactionQuerySchema,
 } from '@pd/contracts';
+import { BudgetsService } from './budgets/budgets.service';
 import { FinanceSettingsService } from './currency/finance-settings.service';
 import {
   RecurringPaymentsService,
@@ -33,6 +39,7 @@ export class FinanceController {
     private readonly transactions: TransactionsService,
     private readonly recurring: RecurringPaymentsService,
     private readonly settings: FinanceSettingsService,
+    private readonly budgetsService: BudgetsService,
   ) {}
 
   // --- Settings: the main currency ---
@@ -83,6 +90,25 @@ export class FinanceController {
     @Query(new ZodValidationPipe(transactionQuerySchema)) query: TransactionQuery,
   ) {
     return this.transactions.cashFlowInMain(user.id, query);
+  }
+
+  /** The budgets with what was spent in a month. */
+  @Get('budgets')
+  budgets(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(budgetQuerySchema)) query: BudgetQuery,
+  ): Promise<Budget[]> {
+    return this.budgetsService.list(user.id, query.month);
+  }
+
+  /** The whole set of budgets at once. */
+  @Put('budgets')
+  @HttpCode(204)
+  saveBudgets(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(budgetsSchema)) body: Budgets,
+  ): Promise<void> {
+    return this.budgetsService.save(user.id, body.budgets);
   }
 
   @Post('transactions')
