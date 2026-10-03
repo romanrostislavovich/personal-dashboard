@@ -30,6 +30,18 @@ describe('dueChargeDate', () => {
     expect(dueChargeDate(endOfMonth, { year: 2026, month: 2, day: 28 })).toBe('2026-02-28');
   });
 
+  it('charges a yearly payment only in its month', () => {
+    const yearly = { ...payment, period: 'year' as const, monthOfYear: 11 };
+    expect(dueChargeDate(yearly, { year: 2026, month: 10, day: 20 })).toBeNull();
+    expect(dueChargeDate(yearly, { year: 2026, month: 11, day: 10 })).toBe('2026-11-10');
+  });
+
+  it('charges nothing before a free trial ends', () => {
+    const trial = { ...payment, trialEndsOn: '2026-10-15' };
+    expect(dueChargeDate(trial, { year: 2026, month: 10, day: 12 })).toBeNull();
+    expect(dueChargeDate(trial, { year: 2026, month: 11, day: 10 })).toBe('2026-11-10');
+  });
+
   it('skips inactive payments', () => {
     expect(
       dueChargeDate({ ...payment, isActive: false }, { year: 2026, month: 9, day: 10 }),

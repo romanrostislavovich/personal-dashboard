@@ -17,6 +17,8 @@ import {
 import { z } from 'zod';
 import { CostSourcesService } from './cost-sources/cost-sources.service';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
+import { SubscriptionsService } from './recurring/subscriptions.service';
+import { GoalsService } from './goals/goals.service';
 import { TransactionsService } from './transactions/transactions.service';
 
 /** Period schema + an optional "wallet". */
@@ -50,6 +52,12 @@ const RECURRING_FIELDS = {
   name: { type: 'string', description: 'What is paid: "Hetzner CX22", "Spotify"' },
   ...MONEY_FIELDS,
   dayOfMonth: { type: 'number', description: 'Day of the month to charge, 1–31' },
+  period: { type: 'string', enum: ['month', 'year'], description: 'Every month or once a year' },
+  monthOfYear: { type: 'number', description: 'For a yearly payment: its month, 1–12' },
+  trialEndsOn: {
+    type: 'string',
+    description: 'YYYY-MM-DD: a free trial ends this day; nothing is charged before it',
+  },
   isActive: { type: 'boolean', description: 'false — paused' },
 } as const;
 
@@ -66,8 +74,8 @@ const batchArgs = z.object({
 });
 
 /**
- * AI access to finance: totals, transactions, recurring payments, cost sources;
- * adding, editing and deleting them (assistant).
+ * AI access to finance: totals, transactions, recurring payments and subscriptions, savings
+ * goals, cost sources; adding, editing and deleting them (assistant).
  */
 @Injectable()
 export class FinanceAiTools implements OnModuleInit {
@@ -76,6 +84,8 @@ export class FinanceAiTools implements OnModuleInit {
     private readonly transactions: TransactionsService,
     private readonly recurring: RecurringPaymentsService,
     private readonly costSources: CostSourcesService,
+    private readonly subscriptions: SubscriptionsService,
+    private readonly goals: GoalsService,
   ) {}
 
   onModuleInit(): void {
@@ -83,6 +93,30 @@ export class FinanceAiTools implements OnModuleInit {
     this.registerTransactionWriteTools();
     this.registerRecurringTools();
     this.registerCostSourceTools();
+    this.registerPlanningTools();
+  }
+
+  /** What the subscriptions cost together and how the savings goals are going. */
+  private registerPlanningTools(): void {
+    this.ai.registerTool({
+      name: 'finance_subscriptions',
+      module: 'finance',
+      description:
+        'What the active recurring payments cost together a month and a year in the main ' +
+        'currency, and repeating charges in the transactions that look like subscriptions.',
+      parameters: NO_PARAMETERS,
+      handler: (userId) => this.subscriptions.summary(userId),
+    });
+
+    this.ai.registerTool({
+      name: 'finance_savings_goals',
+      module: 'finance',
+      description:
+        'Savings goals: target, saved so far, deadline, how much to put aside a month and the ' +
+        'pace so far.',
+      parameters: NO_PARAMETERS,
+      handler: (userId) => this.goals.list(userId),
+    });
   }
 
   /** The summary and the list of transactions. */
@@ -219,7 +253,8 @@ export class FinanceAiTools implements OnModuleInit {
       module: 'finance',
       writes: true,
       description:
-        'Adds a monthly payment (a server, a domain, a subscription): on its day it becomes an ' +
+        'Adds a monthly or yearly payment (a server, a domain, a subscription): on its day it ' +
+        'becomes an ' +
         "expense automatically. If this month's day has passed, the first charge is next month.",
       parameters: {
         type: 'object',
@@ -245,12 +280,16 @@ export class FinanceAiTools implements OnModuleInit {
       handler: async (userId, args) => {
         const current = await find(userId, args);
         const { name, amount, currency, category, dayOfMonth, projectId, isActive } = current;
+        const { period, monthOfYear, trialEndsOn } = current;
         const input = recurringPaymentInputSchema.parse({
           name,
           amount,
           currency,
           category,
           dayOfMonth,
+          period,
+          monthOfYear,
+          trialEndsOn,
           projectId,
           isActive,
           ...changedFields(args),

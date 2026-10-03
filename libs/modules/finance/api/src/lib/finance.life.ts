@@ -1,19 +1,31 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { LifeService } from '@pd/api-core';
+import { LifeService, UsersService } from '@pd/api-core';
 import { LifeCard, LifeEvent } from '@pd/contracts';
+import { financeMessages } from './finance.messages';
+import { FinanceReportsService } from './reports/finance-reports.service';
 import { TransactionsService } from './transactions/transactions.service';
 
-/** Finance in the life timeline (the money of a day) and in the summaries (spent, earned). */
+/**
+ * Finance in the life timeline (the money of a day), in the summaries (spent, earned) and in the
+ * message about a month (the short version of the AI's review).
+ */
 @Injectable()
 export class FinanceLife implements OnModuleInit {
   constructor(
     private readonly life: LifeService,
     private readonly transactions: TransactionsService,
+    private readonly reports: FinanceReportsService,
+    private readonly users: UsersService,
   ) {}
 
   onModuleInit(): void {
     this.life.register({
       module: 'finance',
+      monthNote: async (userId, month) => {
+        const summary = await this.reports.summaryOf(userId, month);
+        const locale = (await this.users.findById(userId))?.locale ?? 'en';
+        return summary ? financeMessages(locale).reportNote(summary) : null;
+      },
       day: async (userId, day): Promise<LifeEvent[]> => {
         const summary = await this.transactions.summary(userId, { from: day, to: day });
         const main = summary.inMain;

@@ -1,10 +1,21 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig, DB, Database, ProjectsService } from '@pd/api-core';
-import { DateParts, RecurringPayment, recurringPaymentInputSchema, todayIn } from '@pd/contracts';
-import { and, asc, eq } from 'drizzle-orm';
+import {
+  DateParts,
+  RecurringPayment,
+  recurringPaymentInputSchema,
+  todayIn,
+  toLocalDate,
+} from '@pd/contracts';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { RecurringPaymentRow, recurringPayments, transactions } from '../finance.schema';
+import {
+  RecurringPaymentRow,
+  recurringPayments,
+  recurringPrices,
+  transactions,
+} from '../finance.schema';
 import { dueChargeDate } from './due-charge-date';
 
 export type ValidRecurringPaymentInput = z.output<typeof recurringPaymentInputSchema>;
@@ -18,12 +29,29 @@ export class RecurringPaymentsService {
   ) {}
 
   async list(userId: string): Promise<RecurringPayment[]> {
-    const rows = await this.db
+    const [rows, prices] = await Promise.all([
+      this.rows(userId),
+      this.db
+        .select()
+        .from(recurringPrices)
+        .where(eq(recurringPrices.userId, userId))
+        .orderBy(desc(recurringPrices.changedOn)),
+    ]);
+    return rows.map((row) =>
+      toRecurringPayment(
+        row,
+        prices.filter((price) => price.recurringPaymentId === row.id),
+      ),
+    );
+  }
+
+  /** The rows as they are, with the fields the jobs need (trial reminder, noticed price). */
+  rows(userId: string): Promise<RecurringPaymentRow[]> {
+    return this.db
       .select()
       .from(recurringPayments)
       .where(eq(recurringPayments.userId, userId))
       .orderBy(asc(recurringPayments.dayOfMonth), asc(recurringPayments.name));
-    return rows.map(toRecurringPayment);
   }
 
   async create(userId: string, input: ValidRecurringPaymentInput): Promise<RecurringPayment> {
@@ -35,9 +63,9 @@ export class RecurringPaymentsService {
     const lastChargedOn = dueChargeDate({ ...input, lastChargedOn: null }, this.today());
     const [row] = await this.db
       .insert(recurringPayments)
-      .values({ userId, ...input, lastChargedOn })
+      .values({ userId, ...normalized(input), lastChargedOn })
       .returning();
-    return toRecurringPayment(row);
+    return toRecurringPayment(row, []);
   }
 
   async update(
@@ -48,21 +76,43 @@ export class RecurringPaymentsService {
     if (input.projectId) {
       await this.projects.assertOwned(userId, input.projectId);
     }
-    const [row] = await this.db
-      .update(recurringPayments)
-      .set(input)
-      .where(and(eq(recurringPayments.id, id), eq(recurringPayments.userId, userId)))
-      .returning();
-    if (!row) {
+    const [current] = await this.db
+      .select()
+      .from(recurringPayments)
+      .where(and(eq(recurringPayments.id, id), eq(recurringPayments.userId, userId)));
+    if (!current) {
       throw new NotFoundException();
     }
-    return toRecurringPayment(row);
+    await this.db.transaction(async (tx) => {
+      // A new price keeps the old one in the history ("was 9.99 until October").
+      if (current.amount !== input.amount) {
+        await tx.insert(recurringPrices).values({
+          userId,
+          recurringPaymentId: id,
+          amount: current.amount,
+          changedOn: toLocalDate(this.today()),
+        });
+      }
+      await tx
+        .update(recurringPayments)
+        .set({ ...normalized(input), noticedAmount: null })
+        .where(eq(recurringPayments.id, id));
+    });
+    return (await this.list(userId)).find((payment) => payment.id === id) as RecurringPayment;
   }
 
   async remove(userId: string, id: string): Promise<void> {
     await this.db
       .delete(recurringPayments)
       .where(and(eq(recurringPayments.id, id), eq(recurringPayments.userId, userId)));
+  }
+
+  /** Remembers what was reported, so each fact is told once. */
+  async markNoticed(
+    id: string,
+    fields: { trialNotifiedFor?: string; noticedAmount?: number },
+  ): Promise<void> {
+    await this.db.update(recurringPayments).set(fields).where(eq(recurringPayments.id, id));
   }
 
   /** Makes all of the user's due payments and returns the ones made. */
@@ -98,12 +148,24 @@ export class RecurringPaymentsService {
     return charged;
   }
 
-  private today(): DateParts {
+  today(): DateParts {
     return todayIn(this.config.get('APP_TIMEZONE', { infer: true }));
   }
 }
 
-function toRecurringPayment(row: RecurringPaymentRow): RecurringPayment {
+/** A monthly payment has no month of the year. */
+function normalized(input: ValidRecurringPaymentInput) {
+  return {
+    ...input,
+    monthOfYear: input.period === 'year' ? (input.monthOfYear ?? null) : null,
+    trialEndsOn: input.trialEndsOn ?? null,
+  };
+}
+
+function toRecurringPayment(
+  row: RecurringPaymentRow,
+  prices: { amount: number; changedOn: string }[],
+): RecurringPayment {
   return {
     id: row.id,
     name: row.name,
@@ -111,8 +173,12 @@ function toRecurringPayment(row: RecurringPaymentRow): RecurringPayment {
     currency: row.currency,
     category: row.category,
     dayOfMonth: row.dayOfMonth,
+    period: row.period,
+    monthOfYear: row.monthOfYear,
+    trialEndsOn: row.trialEndsOn,
     projectId: row.projectId,
     isActive: row.isActive,
     lastChargedOn: row.lastChargedOn,
+    priceHistory: prices.map(({ amount, changedOn }) => ({ amount, changedOn })),
   };
 }

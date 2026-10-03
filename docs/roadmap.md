@@ -112,6 +112,11 @@
 ### Planned
 
 - **Habits** — a habit tracker module, in the digest too
+- **Sleep, steps, weight** — the first part of Fitness: from Google Fit / Health Connect or typed
+  in by hand, shown in Life and in the morning digest
+- **Push notifications in the PWA** — on a phone without Telegram (see Everyday comfort)
+- **Export and import of all data** — one archive (JSON plus CSV for finance, Markdown for the
+  diary) and its import back into an empty or another instance
 - **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
   Cursor can read and change your data directly, without its own chat
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
@@ -192,20 +197,13 @@
 
 #### Features
 
-- **Finance:** a reminder before a free trial ends and when a subscription gets more expensive
 - **Life: more** — weather and steps in the day feed, achievements and the best month by mood
   in the summaries, a yearly story from the AI
-- **Yearly goals** — goals whose progress is counted from the modules: "read 20 books", "run
-  500 km", "save X", "100 diary days in a row"
-- **Automations "if X, then Y"** — rules across modules: "a site is down → a task in the TODO
-  list", "over budget → a reminder", "no diary entry by 22:00 → a message in Telegram"; plus
-  webhooks and a public API with tokens
+- **Automations: webhooks and a public API** with tokens
 - **Evening check-in in Telegram** — the bot asks "how was your day?", the answer goes to mood and
   the diary
 - **Games:** PlayStation and Xbox — playtime and platform achievements
 - **Music and media:** podcasts and YouTube history
-- **Export of all data** — the diary as Markdown (Obsidian-compatible), finance as CSV,
-  everything as JSON
 - **Insights across modules** — mood on days with a run, what was playing on bad days (through AI
   tools or core insights: modules do not depend on each other). The AI looks for such links across
   all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you

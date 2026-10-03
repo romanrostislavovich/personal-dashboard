@@ -3,8 +3,13 @@ import {
   BudgetInput,
   CostSource,
   CostSourceInput,
+  FinanceReport,
   FinanceSettings,
   FinanceSettingsInput,
+  GoalContribution,
+  SavingsGoal,
+  SavingsGoalInput,
+  Subscriptions,
   FinanceSummary,
   MainCashFlow,
   MonthCashFlow,
@@ -35,6 +40,12 @@ export const FINANCE_READS = {
   costSources: () => apiRequest(`${BASE}/cost-sources`),
   /** The budgets with what was spent in a month (`YYYY-MM`). */
   budgets: (month: string) => apiRequest(`${BASE}/budgets`, { month }),
+  /** What the subscriptions cost together, and charges that look like ones. */
+  subscriptions: () => apiRequest(`${BASE}/subscriptions`),
+  goals: () => apiRequest(`${BASE}/goals`),
+  goalContributions: (id: string) => apiRequest(`${BASE}/goals/${id}/contributions`),
+  /** The AI's kept review of a month (`YYYY-MM`): `{ report: null }` — not written yet. */
+  report: (month: string) => apiRequest(`${BASE}/reports`, { month }),
 };
 
 export function financeApi(api: ApiClient) {
@@ -71,6 +82,22 @@ export function financeApi(api: ApiClient) {
     addCostSource: (input: CostSourceInput) => api.post<void>(`${BASE}/cost-sources`, input),
     syncCostSource: (id: string) => api.post<void>(`${BASE}/cost-sources/${id}/sync`, {}),
     removeCostSource: (id: string) => api.delete(`${BASE}/cost-sources/${id}`),
+
+    /** "Not a subscription": the charge is not suggested again. */
+    dismissSubscription: (key: string) => api.post<void>(`${BASE}/subscriptions/dismiss`, { key }),
+    saveGoal: (input: SavingsGoalInput, id?: string) =>
+      id
+        ? api.put<SavingsGoal>(`${BASE}/goals/${id}`, input)
+        : api.post<SavingsGoal>(`${BASE}/goals`, input),
+    removeGoal: (id: string) => api.delete(`${BASE}/goals/${id}`),
+    /** Money added to a goal by hand (negative — taken out). */
+    contribute: (id: string, input: GoalContribution) =>
+      api.post<SavingsGoal>(`${BASE}/goals/${id}/contributions`, input),
+    removeContribution: (goalId: string, id: string) =>
+      api.delete(`${BASE}/goals/${goalId}/contributions/${id}`),
+    /** Writes (or writes again) the AI's review of a month. */
+    writeReport: (month: string) =>
+      api.post<{ report: FinanceReport | null }>(`${BASE}/reports`, { month }),
   };
 }
 

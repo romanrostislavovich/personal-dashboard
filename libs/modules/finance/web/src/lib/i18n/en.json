@@ -20,7 +20,8 @@
   "tabs": {
     "overview": "Overview",
     "transactions": "Transactions",
-    "recurring": "Recurring payments"
+    "recurring": "Subscriptions and payments",
+    "goals": "Goals"
   },
   "transaction": {
     "add": "Add transaction",
@@ -37,9 +38,24 @@
     "dayHint": "31 = last day of the month",
     "active": "Active",
     "everyMonth": "on day {{day}} monthly",
-    "hint": "Once a month on the charge day an expense is created automatically and you get a notification.",
+    "hint": "On its day a payment becomes an expense by itself and a notification comes. A yearly one — once a year in its month; nothing is charged before a free trial ends.",
     "empty": "No recurring payments",
-    "confirmDelete": "Delete payment “{{name}}”? Transactions it created will stay."
+    "confirmDelete": "Delete payment “{{name}}”? Transactions it created will stay.",
+    "period": "How often",
+    "monthly": "Every month",
+    "yearly": "Once a year",
+    "monthOfYear": "Month",
+    "trialEndsOn": "Free trial until",
+    "trialHint": "A reminder 3 days before",
+    "everyYear": "yearly, {{date}}",
+    "trialUntil": "trial until {{date}}",
+    "priceWas": "Was {{amount}} until {{date}}",
+    "perMonth": "Subscriptions a month:",
+    "perYear": "a year:",
+    "suggestions": "Looks like subscriptions",
+    "suggestionsHint": "Charged once a month at about the same price — add them to keep track",
+    "seen": "{{count}} months",
+    "notSubscription": "Not a subscription"
   },
   "widget": {
     "title": "Finance",
@@ -149,5 +165,40 @@
     "spentTotal": "Spent",
     "topCategory": "mostly on {{category}}",
     "earnedTotal": "Earned"
+  },
+  "goals": {
+    "add": "New goal",
+    "edit": "Edit the goal",
+    "hint": "What is saved counts by itself from the wallet (income minus expenses since the start) plus what you add by hand.",
+    "name": "What for",
+    "namePlaceholder": "A trip, a new laptop, a safety cushion…",
+    "target": "How much",
+    "startedOn": "Counting from",
+    "deadline": "By (optional)",
+    "wallet": "Money comes from",
+    "walletHint": "What is left in this wallet since the start counts towards the goal",
+    "byHand": "Only what I add by hand",
+    "until": "by {{date}}",
+    "done": "Reached 🎉",
+    "needed": "Put aside {{amount}} a month",
+    "pace": "saving {{amount}} a month so far",
+    "split": "wallet {{wallet}} · by hand {{added}}",
+    "contribute": "Add money",
+    "putIn": "Put in",
+    "takeOut": "Take out",
+    "day": "Day",
+    "history": "Added by hand",
+    "noHistory": "Nothing added by hand yet.",
+    "empty": "No goals yet: what are you saving for?",
+    "confirmDelete": "Delete the goal \"{{name}}\"?"
+  },
+  "report": {
+    "title": "The month by the AI",
+    "subtitle": "Where the money went, what changed and where to save",
+    "written": "Written {{date}}",
+    "write": "Review the month",
+    "rewrite": "Write again",
+    "nothing": "No transactions this month.",
+    "error": "The AI could not write it: check the AI connection in Settings, or whether finance is hidden from it."
   }
 }

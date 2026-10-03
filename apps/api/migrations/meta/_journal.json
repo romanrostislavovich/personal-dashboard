@@ -351,6 +351,13 @@
       "when": 1791055973802,
       "tag": "0049_life_months",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791062627161,
+      "tag": "0050_finance_subscriptions_goals_reports",
+      "breakpoints": true
     }
   ]
 }

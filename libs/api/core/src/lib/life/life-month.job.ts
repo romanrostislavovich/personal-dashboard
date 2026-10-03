@@ -94,9 +94,11 @@ export class LifeMonthJob implements OnModuleInit {
             .complete(userId, INSTRUCTION, JSON.stringify({ month, cards: forAi }))
             .catch(() => '')
         : '';
+    const notes = await this.life.monthNotes(userId, month);
+    const body = [story, ...notes].filter(Boolean).join('\n\n').slice(0, TELEGRAM_LIMIT);
     await this.notifications.send(userId, {
       title: text.lifeMonthTitle(month),
-      body: `${story ? `${story.slice(0, TELEGRAM_LIMIT)}\n\n` : ''}${text.lifeMonthLink} ${link}`,
+      body: `${body ? `${body}\n\n` : ''}${text.lifeMonthLink} ${link}`,
       source: 'life',
     });
   }
