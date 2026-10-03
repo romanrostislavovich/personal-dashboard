@@ -5,6 +5,7 @@ import {
   ActivityStats,
   addDays,
   defaultActivityCategory,
+  isMeetingTitle,
   knownActivityApps,
   LocalDate,
   parseLocalDate,
@@ -52,8 +53,10 @@ export function matchProject(title: string, projects: ProjectPatterns[]): string
 export function categoryOf(
   app: string,
   chosen: ReadonlyMap<string, ActivityCategory | null>,
+  title = '',
 ): ActivityCategory {
-  return chosen.get(app) ?? defaultActivityCategory(app);
+  // A call in a browser or a messenger is a meeting, whatever the program is for.
+  return isMeetingTitle(title) ? 'meetings' : (chosen.get(app) ?? defaultActivityCategory(app));
 }
 
 /** Every day from `from` to `to`, both included. */
@@ -94,7 +97,7 @@ export function buildStats(
   for (const row of rows) {
     addTo(byDay, row.day, row.seconds);
     addTo(byDevice, row.deviceId, row.seconds);
-    addTo(byCategory, categoryOf(row.app, context.categories), row.seconds);
+    addTo(byCategory, categoryOf(row.app, context.categories, row.title), row.seconds);
     const app = byApp.get(row.app) ?? { name: row.appName, seconds: 0 };
     app.seconds += row.seconds;
     byApp.set(row.app, app);

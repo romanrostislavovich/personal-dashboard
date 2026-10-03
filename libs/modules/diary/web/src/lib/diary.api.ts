@@ -95,6 +95,11 @@ export class DiaryApi {
     return fromCore(() => this.diary.removePhoto(id));
   }
 
+  /** One entry, once (a command adding to it); pages follow it with `entry`. */
+  loadEntry(day: LocalDate) {
+    return fromCore(() => this.diary.entry(day));
+  }
+
   save(day: LocalDate, input: DiaryEntryInput) {
     return fromCore(() => this.diary.save(day, input));
   }

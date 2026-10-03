@@ -43,6 +43,8 @@ export interface DashboardCommand {
   url?: string;
   /** Loaded when first used; does its work with the text and the app's injector. */
   loadAction?: () => Promise<(text: string, injector: Injector) => Promise<void>>;
+  /** The same for a picture (a screenshot captured by the desktop app). */
+  loadImageAction?: () => Promise<(image: File, injector: Injector) => Promise<void>>;
 }
 
 /** A self-contained card (or a few) that connects a module to an outside service. */

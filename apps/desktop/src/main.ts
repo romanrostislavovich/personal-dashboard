@@ -1,10 +1,13 @@
 import { app, BrowserWindow, ipcMain, Notification, shell } from 'electron';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { noticeText } from './activity/notices';
 import { ActivityTracker, TrackerNotice } from './activity/tracker';
 import { loadSettings, saveSettings } from './settings-store';
+import { Capture } from './capture/capture';
 import { DiskCleaner } from './disk/disk-cleaner';
 import { DiskFix } from './disk/disk-fixes';
+import { StatementWatch } from './downloads/statement-watch';
 import { createTray } from './tray';
 import { AppUpdater } from './update/updater';
 
@@ -30,6 +33,15 @@ let refreshTray: () => void = () => undefined;
 const serverUrl = (): string | null => process.env['DASHBOARD_URL'] ?? loadSettings().serverUrl;
 const tracker = new ActivityTracker(serverUrl, () => refreshTray(), showNotice);
 const disk = new DiskCleaner();
+/** Ctrl+Alt+C / Ctrl+Alt+S from any program: text or a screenshot to a task or the diary. */
+const capture = new Capture(serverUrl, (title, body) => notify(title, body, showWindow));
+/** A bank statement saved to Downloads: offered for import into Finance through the AI. */
+const statements = new StatementWatch((statement) =>
+  notify('Похоже на выписку банка', `${statement.name} — импортировать в Финансы?`, () => {
+    showWindow();
+    mainWindow?.webContents.send('desktop:navigate', `/ai?statement=${statement.id}`);
+  }),
+);
 /** The project and note of the last focus session: "next round" goes on with them. */
 let lastFocus: { projectId: string | null; note: string | null } = { projectId: null, note: null };
 /** While a focus part or a break runs, the tray shows the minutes left. */
@@ -89,6 +101,8 @@ function bootstrap(): void {
     }
   }, TRAY_COUNTDOWN_MS);
   tracker.start();
+  statements.start();
+  capture.register();
   updater.start();
   openDashboard();
 }
@@ -229,6 +243,25 @@ function registerIpc(): void {
   ipcMain.handle('disk:empty-recycle-bin', () => disk.emptyRecycleBin());
   ipcMain.handle('disk:fix', (_event, fix: DiskFix) => disk.fix(fix));
   ipcMain.handle('disk:reveal', (_event, path: string) => disk.reveal(String(path)));
+  ipcMain.handle('capture:pending', () => capture.current());
+  ipcMain.handle('capture:close', () => capture.close());
+  ipcMain.handle('region:image', () => capture.overlayImage());
+  ipcMain.handle(
+    'region:done',
+    (_event, rect: { x: number; y: number; width: number; height: number } | null) =>
+      capture.regionDone(
+        rect && [rect.x, rect.y, rect.width, rect.height].every(Number.isFinite) ? rect : null,
+      ),
+  );
+  ipcMain.handle('downloads:take', async (_event, id: string) => {
+    const statement = statements.get(String(id));
+    if (!statement) {
+      return null;
+    }
+    // Only a file the watch found and the user clicked on reaches the page.
+    const content = await readFile(statement.path).catch(() => null);
+    return content ? { name: statement.name, base64: content.toString('base64') } : null;
+  });
   ipcMain.handle('disk:keep-advice', (_event, advice: unknown) => disk.keepAdvice(advice));
   ipcMain.handle('disk:dismiss', () => disk.dismiss());
 
@@ -239,6 +272,11 @@ function registerIpc(): void {
       // A focus part is quiet: the notification waits, and its end says how many there were.
       if (tracker.focus.working) {
         tracker.focus.hold();
+        return;
+      }
+      // A call is going on: the notification waits too.
+      if (tracker.inMeeting) {
+        tracker.holdDuringMeeting();
         return;
       }
       notify(title, body, () => {
@@ -294,6 +332,8 @@ function quitApp(): void {
     () => app.quit(),
   );
 }
+
+app.on('will-quit', () => capture.unregister());
 
 // The app lives in the tray, so closing all windows does not quit it.
 app.on('window-all-closed', () => undefined);

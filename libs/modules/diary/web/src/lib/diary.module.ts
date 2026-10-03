@@ -11,6 +11,20 @@ export const diaryModule: WebDashboardModule = {
     en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
+  commands: [
+    {
+      id: 'diary.append',
+      labelKey: 'diary.commands.append',
+      icon: 'edit_note',
+      loadAction: () => import('./diary.commands').then((m) => m.appendToDiary),
+    },
+    {
+      id: 'diary.photo',
+      labelKey: 'diary.commands.photo',
+      icon: 'add_photo_alternate',
+      loadImageAction: () => import('./diary.commands').then((m) => m.photoToDiary),
+    },
+  ],
   widgets: [
     {
       id: 'diary.today',

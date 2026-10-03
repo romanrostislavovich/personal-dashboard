@@ -108,6 +108,14 @@
 
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
+- **Desktop: quick input from anywhere** — a global shortcut opens a small window over every
+  program: a task, a reminder, an expense, a diary note, without switching to the dashboard
+- **Desktop: "now playing" from Windows** — what plays in any player (Spotify, YouTube in a
+  browser, Yandex Music, VLC) goes to the music history, even without Last.fm
+- **Desktop: game sessions** — the tracker sees a game start and quit: sessions per game
+  ("WoW yesterday 21:10–00:40"), and the game's statistics refreshed right after it closes
+- **Desktop: a panel in the tray** — a click shows today's tasks, the next reminder, the time at
+  the computer and the focus timer in a small window
 - **Activity: more trackers** — the tracker of the desktop app watches windows on Windows only;
   macOS and Linux, and the same tracker on a phone (time per app), report to the same section
 - **Desktop: imports from Downloads** — the desktop app watches the Downloads folder and offers

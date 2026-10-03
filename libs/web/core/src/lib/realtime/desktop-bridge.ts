@@ -12,8 +12,24 @@ export interface DesktopBridge {
   activity?: DesktopActivity;
   /** The focus timer (Pomodoro) of this computer (absent in an older shell). */
   focus?: DesktopFocus;
+  /** What a shortcut captured (text or a screenshot), for the capture window. */
+  capture?: DesktopCapture;
+  /** Files the app found in Downloads (bank statements), handed over on a click. */
+  downloads?: DesktopDownloads;
   /** Disk cleanup of this computer (absent in an older shell). */
   disk?: DesktopDisk;
+}
+
+export interface DesktopCapture {
+  /** The last capture: copied text, or a PNG of a piece of the screen. */
+  pending(): Promise<{ kind: 'text'; text: string } | { kind: 'image'; base64: string } | null>;
+  /** Closes the capture window. */
+  close(): Promise<void>;
+}
+
+export interface DesktopDownloads {
+  /** The file of a notification about a statement; `null` — gone, or not one the app found. */
+  take(id: string): Promise<{ name: string; base64: string } | null>;
 }
 
 /** Scans a disk of this computer and moves what the user picked to the Recycle Bin. */

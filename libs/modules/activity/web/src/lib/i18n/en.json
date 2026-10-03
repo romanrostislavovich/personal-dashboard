@@ -40,6 +40,7 @@
     "design": "Design",
     "games": "Games",
     "media": "Music and video",
+    "meetings": "Meetings",
     "system": "System",
     "other": "Other"
   },
@@ -154,7 +155,13 @@
     "signatures": "definitions {{days}} d old",
     "topCpu": "Busiest now",
     "topMemory": "Most memory",
-    "mb": "MB"
+    "mb": "MB",
+    "outages": "Connection",
+    "outagesWeek": "Outages in the last week: {{count}}, {{minutes}} min in all",
+    "outage": {
+      "internet": "no internet",
+      "server": "the server did not answer"
+    }
   },
   "wellbeing": {
     "title": "Breaks, limits and focus",
@@ -171,7 +178,8 @@
     "focusMinutes": "Focus",
     "shortBreakMinutes": "Break",
     "longBreakMinutes": "Long break",
-    "roundsBeforeLongBreak": "Rounds before it"
+    "roundsBeforeLongBreak": "Rounds before it",
+    "summary": "Summary of the day at"
   },
   "disk": {
     "title": "Free up space",
@@ -234,5 +242,11 @@
     "scannedAt": "Scan of {{mount}} from",
     "stale": "This scan is old: the disk has likely changed since. Scan it again with the button in the disk's row.",
     "close": "Close"
+  },
+  "privacy": {
+    "title": "Privacy",
+    "hint": "Windows whose title contains one of these words are recorded without the title: only the program. Private windows of browsers (Incognito, InPrivate, private browsing) are always recorded this way.",
+    "word": "A word or a site",
+    "add": "Add"
   }
 }

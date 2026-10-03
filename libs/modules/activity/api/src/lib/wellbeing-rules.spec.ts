@@ -1,4 +1,5 @@
 import {
+  alertKey,
   buildFocusStats,
   computerWarnings,
   LimitRow,
@@ -150,5 +151,43 @@ describe('computerWarnings', () => {
     expect(
       kinds(computerWarnings(reading(system), [hot, hot], { reboot: '2026-10-13' }, '2026-10-20')),
     ).toEqual(['heat', 'reboot']);
+  });
+});
+
+describe('battery warnings', () => {
+  const reading = (designCapacity: number, fullCapacity: number) => ({
+    at: '2026-10-20T12:00:00Z',
+    cpu: 10,
+    memoryUsed: 1,
+    memoryTotal: 2,
+    uptimeSeconds: 1,
+    disks: [],
+    system: { battery: { charge: 100, onAc: true, designCapacity, fullCapacity } },
+  });
+  const kinds = (warnings: { kind: string }[]) => warnings.map((warning) => warning.kind);
+
+  it('speaks of a full battery on mains power for most of a week, weekly', () => {
+    const week = { readings: 1500, full: 1400 };
+    expect(kinds(computerWarnings(reading(100, 90), [], {}, '2026-10-20', week))).toEqual([
+      'batteryFull',
+    ]);
+    expect(
+      kinds(
+        computerWarnings(reading(100, 90), [], { batteryFull: '2026-10-16' }, '2026-10-20', week),
+      ),
+    ).toEqual([]);
+    expect(
+      kinds(computerWarnings(reading(100, 90), [], {}, '2026-10-20', { readings: 100, full: 100 })),
+    ).toEqual([]);
+  });
+
+  it('speaks of each health threshold once, the lowest crossed', () => {
+    const warnings = computerWarnings(reading(41428, 26000), [], {}, '2026-10-20');
+    expect(warnings).toEqual([{ kind: 'batteryHealth', percent: 63, below: 70 }]);
+    expect(alertKey(warnings[0])).toBe('battery70');
+    expect(
+      computerWarnings(reading(41428, 26000), [], { battery70: '2026-01-01' }, '2026-10-20'),
+    ).toEqual([]);
+    expect(computerWarnings(reading(41428, 34346), [], {}, '2026-10-20')).toEqual([]);
   });
 });

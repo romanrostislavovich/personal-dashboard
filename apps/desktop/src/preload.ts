@@ -32,6 +32,19 @@ contextBridge.exposeInMainWorld('desktop', {
       ipcRenderer.invoke('focus:start', options),
     stop: (): Promise<void> => ipcRenderer.invoke('focus:stop'),
   },
+  capture: {
+    pending: (): Promise<unknown> => ipcRenderer.invoke('capture:pending'),
+    close: (): Promise<void> => ipcRenderer.invoke('capture:close'),
+  },
+  /** The full-screen picture to draw the rectangle of a screenshot on (assets/region.html). */
+  region: {
+    image: (): Promise<string | null> => ipcRenderer.invoke('region:image'),
+    done: (rect: { x: number; y: number; width: number; height: number } | null): Promise<void> =>
+      ipcRenderer.invoke('region:done', rect),
+  },
+  downloads: {
+    take: (id: string): Promise<unknown> => ipcRenderer.invoke('downloads:take', id),
+  },
   disk: {
     status: (): Promise<unknown> => ipcRenderer.invoke('disk:status'),
     scan: (mount: string): Promise<void> => ipcRenderer.invoke('disk:scan', mount),

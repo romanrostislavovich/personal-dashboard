@@ -15,6 +15,12 @@ export function buildAppRoutes(modules: WebDashboardModule[]): Routes {
       loadComponent: () => import('./auth/register.page').then((m) => m.RegisterPage),
     },
     {
+      // A small window of the desktop app: what a shortcut captured, without the menu.
+      path: 'capture',
+      canActivate: [authGuard],
+      loadComponent: () => import('./capture/capture.page').then((m) => m.CapturePage),
+    },
+    {
       path: '',
       component: ShellComponent,
       canActivate: [authGuard],

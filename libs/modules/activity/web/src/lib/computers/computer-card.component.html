@@ -163,6 +163,31 @@
         }
       </section>
 
+      @if (c.outages.length) {
+        <section>
+          <h3>{{ 'activity.computers.outages' | transloco }}</h3>
+          <p class="sub">
+            {{
+              'activity.computers.outagesWeek'
+                | transloco: { count: c.outages.length, minutes: outageMinutes() }
+            }}
+          </p>
+          <ul class="facts">
+            @for (outage of c.outages.slice(0, 8); track outage.startedAt) {
+              <li class="warn">
+                <mat-icon inline>{{
+                  outage.kind === 'internet' ? 'wifi_off' : 'cloud_off'
+                }}</mat-icon>
+                {{ outage.startedAt | date: 'd MMM, HH:mm' }}–{{ outage.endedAt | date: 'HH:mm' }}
+                <span class="sub">
+                  {{ 'activity.computers.outage.' + outage.kind | transloco }}
+                </span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
       @if (s?.network || s?.defender) {
         <section class="facts-row">
           @if (s?.network; as n) {

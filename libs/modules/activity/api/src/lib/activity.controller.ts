@@ -85,6 +85,7 @@ export class ActivityController {
     if (body.health) {
       await this.wellbeing.saveHealth(device, body.health);
     }
+    await this.wellbeing.saveOutages(device, body.outages ?? []);
     if (saved > 0) {
       await this.wellbeing.checkLimits(device.userId);
     }

@@ -89,6 +89,7 @@
     "open": "All tasks"
   },
   "commands": {
-    "add": "Add a task"
+    "add": "Add a task",
+    "remindInHour": "Remind in an hour"
   }
 }

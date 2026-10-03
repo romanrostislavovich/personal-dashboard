@@ -14,6 +14,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
@@ -25,7 +26,13 @@ import {
   AiConversation,
   AiConversationDetail,
 } from '@pd/contracts';
-import { INTEGRATIONS_LINK, MarkdownPipe, errorBody, errorStatus } from '@pd/web-core';
+import {
+  desktopBridge,
+  INTEGRATIONS_LINK,
+  MarkdownPipe,
+  errorBody,
+  errorStatus,
+} from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
 
@@ -68,6 +75,7 @@ export class AiPage {
   protected readonly settings = this.api.settings();
   protected readonly suggestions = SUGGESTION_KEYS;
   /** The open conversation; it is stored on the server and shared with Telegram. */
+  private readonly router = inject(Router);
   protected readonly conversationId = signal<string | null>(null);
   protected readonly history = signal<ChatEntry[]>([]);
   /** Earlier conversations, loaded when the menu opens. */
@@ -95,7 +103,35 @@ export class AiPage {
       inject(Router).navigate([], { queryParams: {}, replaceUrl: true });
     }
     // The question goes to the current conversation, so it waits until that is loaded.
-    void this.loadCurrent().then(() => (question ? this.send(question) : undefined));
+    const loaded = this.loadCurrent().then(() => (question ? this.send(question) : undefined));
+    // A bank statement the desktop app found in Downloads: /ai?statement=<id>, also while open.
+    inject(ActivatedRoute)
+      .queryParamMap.pipe(takeUntilDestroyed())
+      .subscribe((params) => {
+        const statement = params.get('statement');
+        if (statement) {
+          void this.router.navigate([], { queryParams: {}, replaceUrl: true });
+          void loaded.then(() => this.importStatement(statement));
+        }
+      });
+  }
+
+  /** Attaches the statement and asks the AI to show what it found before recording it. */
+  private async importStatement(id: string): Promise<void> {
+    const file = await desktopBridge()?.downloads?.take(id);
+    if (!file) {
+      return;
+    }
+    const bytes = Uint8Array.from(atob(file.base64), (char) => char.charCodeAt(0));
+    this.uploading.set(true);
+    try {
+      await this.readFile(new File([bytes], file.name));
+    } finally {
+      this.uploading.set(false);
+    }
+    if (this.attachments().length) {
+      await this.send(this.transloco.translate('ai.importStatement', { name: file.name }));
+    }
   }
 
   /** Source caption: "Diary", "Finance"… — module names from their translations. */

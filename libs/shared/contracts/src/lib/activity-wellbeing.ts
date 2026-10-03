@@ -192,6 +192,8 @@ export interface ActivityComputer {
   name: string;
   lastSeenAt: string | null;
   latest: ActivityHealthInput | null;
+  /** The last week, newest first. */
+  outages: Omit<ActivityOutage, 'id'>[];
   /** The last day, oldest first; `null` — not reported then. */
   history: {
     at: string;
@@ -206,6 +208,19 @@ export interface ActivityComputer {
 
 /** A computer not restarted for this long is reported: updates wait for a restart. */
 export const ACTIVITY_REBOOT_DAYS = 14;
+
+/**
+ * A time the computer could not reach the server: `internet` — no connection at all (Windows'
+ * own check failed too); `server` — the internet worked, the dashboard did not answer.
+ */
+export const activityOutageSchema = z.object({
+  /** Made by the app: an outage sent twice is saved once. */
+  id: z.uuid(),
+  kind: z.enum(['internet', 'server']),
+  startedAt: moment,
+  endedAt: moment,
+});
+export type ActivityOutage = z.infer<typeof activityOutageSchema>;
 
 /** A disk with less free space than this share is reported. */
 export const ACTIVITY_LOW_DISK_SHARE = 0.1;

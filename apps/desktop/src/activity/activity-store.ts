@@ -2,6 +2,7 @@ import { app, safeStorage } from 'electron';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FocusSession, FocusSettings } from './focus-timer';
+import { Outage } from './outages';
 import { Span } from './span-builder';
 
 /** What the server tells the tracker (ActivityDeviceConfig in contracts). */
@@ -15,6 +16,10 @@ export interface TrackerConfig {
   focus: FocusSettings;
   /** Time in these during a focus session is a distraction. */
   distractingApps: string[];
+  /** Window titles with any of these words are recorded without the title. */
+  privateWords: string[];
+  /** Programs that are calls (Zoom). */
+  meetingApps: string[];
 }
 
 interface StoredState {
@@ -25,6 +30,8 @@ interface StoredState {
   queue: Span[];
   /** Focus sessions not sent yet. */
   focusQueue: FocusSession[];
+  /** Outages not sent yet: they are told once the server answers again. */
+  outageQueue: Outage[];
   /** The tracker is paused until this moment (ms); `0` — until resumed by hand. */
   pausedUntil: number | null;
 }
@@ -43,9 +50,12 @@ const DEFAULTS: StoredState = {
       roundsBeforeLongBreak: 4,
     },
     distractingApps: [],
+    privateWords: [],
+    meetingApps: [],
   },
   queue: [],
   focusQueue: [],
+  outageQueue: [],
   pausedUntil: null,
 };
 /** A guard for a computer that stays offline for weeks: the oldest spans give way. */
@@ -123,6 +133,21 @@ export class ActivityStore {
   /** Drops the sessions that have reached the server. */
   dequeueFocus(ids: ReadonlySet<string>): void {
     this.state.focusQueue = this.state.focusQueue.filter((session) => !ids.has(session.id));
+    this.save();
+  }
+
+  get outageQueue(): readonly Outage[] {
+    return this.state.outageQueue;
+  }
+
+  enqueueOutage(outage: Outage): void {
+    // A computer offline for long keeps the last hundred.
+    this.state.outageQueue = [...this.state.outageQueue, outage].slice(-100);
+    this.save();
+  }
+
+  dequeueOutages(ids: ReadonlySet<string>): void {
+    this.state.outageQueue = this.state.outageQueue.filter((outage) => !ids.has(outage.id));
     this.save();
   }
 

@@ -7,6 +7,7 @@ import {
   ActivityHealthInput,
   ActivityLimit,
   ActivityLimitInput,
+  ActivityOutage,
   ActivityPeriod,
   addDays,
   LocalDate,
@@ -23,10 +24,18 @@ import {
   activityFocusSessions,
   activityHealth,
   activityLimits,
+  activityOutages,
   activitySpans,
 } from './activity.schema';
 import { ActivityService } from './activity.service';
-import { buildFocusStats, computerWarnings, reachedLimits } from './wellbeing-rules';
+import {
+  alertKey,
+  BatteryWeek,
+  buildFocusStats,
+  computerWarnings,
+  ComputerWarning,
+  reachedLimits,
+} from './wellbeing-rules';
 
 /** Health snapshots older than this are deleted (activity.jobs.ts). */
 export const HEALTH_KEEP_DAYS = 30;
@@ -298,41 +307,92 @@ export class WellbeingService {
       recent.map((row) => row.system),
       device.alertedOn,
       day,
+      health.system?.battery ? await this.batteryWeek(device.id) : null,
     );
     if (!warnings.length) {
       return;
     }
     const text = activityMessages((await this.users.findById(device.userId))?.locale);
-    const gb = (bytes: number) => (bytes / 1024 ** 3).toFixed(1);
     for (const warning of warnings) {
-      const message =
-        warning.kind === 'disk'
-          ? {
-              title: text.diskTitle(device.name),
-              body: text.diskBody(
-                warning.disks
-                  .map((disk) => `${disk.mount} ${gb(disk.free)} ${text.gigabytes}`)
-                  .join(', '),
-              ),
-            }
-          : warning.kind === 'diskHealth'
-            ? {
-                title: text.diskHealthTitle(device.name),
-                body: text.diskHealthBody(warning.disks.join(', ')),
-              }
-            : warning.kind === 'heat'
-              ? { title: text.heatTitle(device.name), body: text.heatBody }
-              : { title: text.rebootTitle(device.name), body: text.rebootBody(warning.days) };
+      const message = this.warningText(text, device.name, warning);
       await this.notifications.send(device.userId, { ...message, source: 'activity' });
     }
     const alertedOn = { ...device.alertedOn };
     for (const warning of warnings) {
-      alertedOn[warning.kind] = day;
+      alertedOn[alertKey(warning)] = day;
     }
     await this.db
       .update(activityDevices)
       .set({ alertedOn })
       .where(eq(activityDevices.id, device.id));
+  }
+
+  private warningText(
+    text: ReturnType<typeof activityMessages>,
+    computer: string,
+    warning: ComputerWarning,
+  ): { title: string; body: string } {
+    const gb = (bytes: number) => (bytes / 1024 ** 3).toFixed(1);
+    switch (warning.kind) {
+      case 'disk':
+        return {
+          title: text.diskTitle(computer),
+          body: text.diskBody(
+            warning.disks
+              .map((disk) => `${disk.mount} ${gb(disk.free)} ${text.gigabytes}`)
+              .join(', '),
+          ),
+        };
+      case 'diskHealth':
+        return {
+          title: text.diskHealthTitle(computer),
+          body: text.diskHealthBody(warning.disks.join(', ')),
+        };
+      case 'heat':
+        return { title: text.heatTitle(computer), body: text.heatBody };
+      case 'reboot':
+        return { title: text.rebootTitle(computer), body: text.rebootBody(warning.days) };
+      case 'batteryFull':
+        return { title: text.batteryFullTitle(computer), body: text.batteryFullBody };
+      case 'batteryHealth':
+        return {
+          title: text.batteryHealthTitle(computer),
+          body: text.batteryHealthBody(warning.percent),
+        };
+    }
+  }
+
+  /** How often the battery sat full on mains power in the last week. */
+  private async batteryWeek(deviceId: string): Promise<BatteryWeek> {
+    const h = activityHealth;
+    const [row] = await this.db
+      .select({
+        readings: sql<number>`count(*) filter (where ${h.system} -> 'battery' is not null)::int`,
+        full: sql<number>`count(*) filter (where (${h.system} -> 'battery' ->> 'onAc')::boolean and (${h.system} -> 'battery' ->> 'charge')::int >= 98)::int`,
+      })
+      .from(h)
+      .where(and(eq(h.deviceId, deviceId), gte(h.at, new Date(Date.now() - 7 * DAY_MS))));
+    return { readings: row?.readings ?? 0, full: row?.full ?? 0 };
+  }
+
+  /** The times the computer could not reach the server, sent once it could again. */
+  async saveOutages(device: ActivityDeviceRow, outages: ActivityOutage[]): Promise<void> {
+    if (!outages.length) {
+      return;
+    }
+    await this.db
+      .insert(activityOutages)
+      .values(
+        outages.map((outage) => ({
+          id: outage.id,
+          userId: device.userId,
+          deviceId: device.id,
+          kind: outage.kind,
+          startedAt: new Date(outage.startedAt),
+          endedAt: new Date(outage.endedAt),
+        })),
+      )
+      .onConflictDoNothing();
   }
 
   /** Every computer with its latest state and the last day of load and memory. */
@@ -351,6 +411,20 @@ export class WellbeingService {
     return Promise.all(
       devices.map(async (device) => {
         const history = rows.filter((row) => row.deviceId === device.id);
+        const outages = await this.db
+          .select({
+            kind: activityOutages.kind,
+            startedAt: activityOutages.startedAt,
+            endedAt: activityOutages.endedAt,
+          })
+          .from(activityOutages)
+          .where(
+            and(
+              eq(activityOutages.deviceId, device.id),
+              gte(activityOutages.startedAt, new Date(Date.now() - 7 * DAY_MS)),
+            ),
+          )
+          .orderBy(desc(activityOutages.startedAt));
         // A computer that was off all day still shows what it said last.
         const [last] = history.length
           ? [history[history.length - 1]]
@@ -375,6 +449,11 @@ export class WellbeingService {
                 ...(last.system ? { system: last.system } : {}),
               }
             : null,
+          outages: outages.map((outage) => ({
+            kind: outage.kind,
+            startedAt: outage.startedAt.toISOString(),
+            endedAt: outage.endedAt.toISOString(),
+          })),
           history: history.map((row) => {
             const zones = row.system?.thermal ?? [];
             return {
@@ -393,8 +472,8 @@ export class WellbeingService {
 
   /** Called once a day: health is for the recent past, not forever. */
   async deleteOldHealth(): Promise<void> {
-    await this.db
-      .delete(activityHealth)
-      .where(lt(activityHealth.at, new Date(Date.now() - HEALTH_KEEP_DAYS * DAY_MS)));
+    const before = new Date(Date.now() - HEALTH_KEEP_DAYS * DAY_MS);
+    await this.db.delete(activityHealth).where(lt(activityHealth.at, before));
+    await this.db.delete(activityOutages).where(lt(activityOutages.startedAt, before));
   }
 }
