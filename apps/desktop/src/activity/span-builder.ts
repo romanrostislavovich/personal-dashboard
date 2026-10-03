@@ -1,3 +1,6 @@
+/** The longest window title the server keeps (ACTIVITY_TITLE_MAX in libs/shared/contracts). */
+const TITLE_MAX = 500;
+
 /** The window in front at one moment, as the watcher sees it. */
 export interface WindowSample {
   /** The name of the process (`chrome`). */
@@ -65,7 +68,8 @@ function toSpan(sample: WindowSample, startedAt: number, endedAt: number): Span 
   return {
     app: sample.app,
     appName: sample.name,
-    title: sample.title,
+    // What the server keeps (ACTIVITY_TITLE_MAX in contracts); longer is cut there anyway.
+    title: sample.title.slice(0, TITLE_MAX),
     startedAt: new Date(startedAt).toISOString(),
     endedAt: new Date(endedAt).toISOString(),
   };

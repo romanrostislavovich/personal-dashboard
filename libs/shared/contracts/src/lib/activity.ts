@@ -148,14 +148,23 @@ export interface ActivityDeviceCreated extends ActivityDevice {
 
 const moment = z.iso.datetime({ offset: true });
 
+/** The longest window title kept; what a tracker sends beyond it is cut, not refused. */
+export const ACTIVITY_TITLE_MAX = 500;
+
+/**
+ * Text cut to a length instead of being refused: one long window title must not stop a
+ * tracker's whole queue (it would send the same batch again and again).
+ */
+const cut = (max: number) => z.string().transform((text) => text.slice(0, max));
+
 /** A stretch of time one window was in front. */
 export const activitySpanSchema = z
   .object({
     /** The name of the process (`chrome`, `Code`): what a program is recognized by. */
-    app: z.string().trim().min(1).max(120),
+    app: z.string().trim().min(1).pipe(cut(120)),
     /** The name people know it by ("Google Chrome"), when the system tells it. */
-    appName: z.string().trim().max(200).nullish(),
-    title: z.string().max(500),
+    appName: z.string().trim().pipe(cut(200)).nullish(),
+    title: cut(ACTIVITY_TITLE_MAX),
     startedAt: moment,
     endedAt: moment,
   })
