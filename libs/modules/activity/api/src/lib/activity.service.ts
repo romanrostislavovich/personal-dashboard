@@ -9,7 +9,9 @@ import {
   ActivityPeriod,
   ActivityProjectRule,
   ActivityProjectRuleInput,
+  ACTIVITY_DISTRACTING_CATEGORIES,
   ActivitySettings,
+  ActivitySettingsUpdate,
   ActivitySpanInput,
   ActivityStats,
   ActivityTimelineEntry,
@@ -22,6 +24,7 @@ import {
 import { and, asc, desc, eq, gte, lt, SQL, sql } from 'drizzle-orm';
 import {
   ActivityRecords,
+  appsOfCategories,
   buildRecords,
   buildStats,
   categoryOf,
@@ -38,7 +41,14 @@ import {
   activitySpans,
 } from './activity.schema';
 
-const DEFAULT_IDLE_MINUTES = 5;
+const DEFAULT_SETTINGS: ActivitySettings = {
+  idleMinutes: 5,
+  breakMinutes: 60,
+  focusMinutes: 25,
+  shortBreakMinutes: 5,
+  longBreakMinutes: 15,
+  roundsBeforeLongBreak: 4,
+};
 /** The hours of the user's own clock the achievements call night and early morning. */
 const NIGHT_ENDS_AT = 5;
 const MORNING_ENDS_AT = 8;
@@ -110,7 +120,10 @@ export class ActivityService {
     return saved;
   }
 
-  /** What a tracker has to know: when the user is "away" and what not to record. */
+  /**
+   * What a tracker has to know: when the user is "away", what not to record, when to suggest
+   * a break, the focus timer and what distracts from it.
+   */
   async config(userId: string): Promise<ActivityDeviceConfig> {
     const apps = await this.db
       .select({
@@ -120,10 +133,19 @@ export class ActivityService {
       })
       .from(activityApps)
       .where(eq(activityApps.userId, userId));
+    const settings = await this.settings(userId);
     return {
-      idleMinutes: (await this.settings(userId)).idleMinutes,
+      idleMinutes: settings.idleMinutes,
       excludedApps: apps.filter((row) => row.excluded).map((row) => row.app),
       watchApps: watchedApps(apps),
+      breakMinutes: settings.breakMinutes,
+      focus: {
+        focusMinutes: settings.focusMinutes,
+        shortBreakMinutes: settings.shortBreakMinutes,
+        longBreakMinutes: settings.longBreakMinutes,
+        roundsBeforeLongBreak: settings.roundsBeforeLongBreak,
+      },
+      distractingApps: appsOfCategories(apps, ACTIVITY_DISTRACTING_CATEGORIES),
     };
   }
 
@@ -134,10 +156,21 @@ export class ActivityService {
       .select()
       .from(activitySettings)
       .where(eq(activitySettings.userId, userId));
-    return { idleMinutes: row?.idleMinutes ?? DEFAULT_IDLE_MINUTES };
+    return row
+      ? {
+          idleMinutes: row.idleMinutes,
+          breakMinutes: row.breakMinutes,
+          focusMinutes: row.focusMinutes,
+          shortBreakMinutes: row.shortBreakMinutes,
+          longBreakMinutes: row.longBreakMinutes,
+          roundsBeforeLongBreak: row.roundsBeforeLongBreak,
+        }
+      : DEFAULT_SETTINGS;
   }
 
-  async saveSettings(userId: string, settings: ActivitySettings): Promise<void> {
+  /** Only the fields sent change. */
+  async saveSettings(userId: string, update: ActivitySettingsUpdate): Promise<void> {
+    const settings = { ...(await this.settings(userId)), ...update };
     await this.db
       .insert(activitySettings)
       .values({ userId, ...settings })
@@ -342,7 +375,7 @@ export class ActivityService {
     );
   }
 
-  private async chosenCategories(userId: string): Promise<Map<string, ActivityCategory | null>> {
+  async chosenCategories(userId: string): Promise<Map<string, ActivityCategory | null>> {
     const rows = await this.db
       .select({ app: activityApps.app, category: activityApps.category })
       .from(activityApps)
@@ -363,7 +396,7 @@ export class ActivityService {
     }));
   }
 
-  private async timeZone(userId: string): Promise<string> {
+  async timeZone(userId: string): Promise<string> {
     return this.users.timeZoneOf(await this.users.findById(userId));
   }
 }

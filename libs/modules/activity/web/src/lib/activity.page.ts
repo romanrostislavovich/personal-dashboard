@@ -6,6 +6,8 @@ import { TranslocoPipe } from '@jsverse/transloco';
 /** Subsections of Activity: each is a child route, so a tab has its own address. */
 const TABS = [
   { path: 'overview', labelKey: 'activity.tabs.overview' },
+  { path: 'focus', labelKey: 'activity.tabs.focus' },
+  { path: 'computers', labelKey: 'activity.tabs.computers' },
   { path: 'settings', labelKey: 'activity.tabs.settings' },
 ] as const;
 

@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, Notification, shell } from 'electron';
 import { join } from 'node:path';
-import { ActivityTracker } from './activity/tracker';
+import { noticeText } from './activity/notices';
+import { ActivityTracker, TrackerNotice } from './activity/tracker';
 import { loadSettings, saveSettings } from './settings-store';
 import { createTray } from './tray';
 import { AppUpdater } from './update/updater';
@@ -25,7 +26,11 @@ let isQuitting = false;
 let refreshTray: () => void = () => undefined;
 
 const serverUrl = (): string | null => process.env['DASHBOARD_URL'] ?? loadSettings().serverUrl;
-const tracker = new ActivityTracker(serverUrl, () => refreshTray());
+const tracker = new ActivityTracker(serverUrl, () => refreshTray(), showNotice);
+/** The project and note of the last focus session: "next round" goes on with them. */
+let lastFocus: { projectId: string | null; note: string | null } = { projectId: null, note: null };
+/** While a focus part or a break runs, the tray shows the minutes left. */
+const TRAY_COUNTDOWN_MS = 30_000;
 const updater = new AppUpdater(
   serverUrl,
   () => refreshTray(),
@@ -69,7 +74,17 @@ function bootstrap(): void {
       status: () => tracker.status(),
       pause: (minutes) => tracker.pause(minutes),
     },
+    focus: {
+      status: () => tracker.focusStatus(),
+      start: () => startFocus(lastFocus),
+      stop: () => tracker.focus.stop(),
+    },
   });
+  setInterval(() => {
+    if (tracker.focus.status().phase !== 'idle') {
+      refreshTray();
+    }
+  }, TRAY_COUNTDOWN_MS);
   tracker.start();
   updater.start();
   openDashboard();
@@ -195,28 +210,56 @@ function registerIpc(): void {
   );
   ipcMain.handle('activity:disable', () => tracker.disable());
   ipcMain.handle('activity:pause', (_event, minutes: number | null) => tracker.pause(minutes));
+  ipcMain.handle('focus:status', () => tracker.focusStatus());
+  ipcMain.handle(
+    'focus:start',
+    (_event, options: { projectId?: string | null; note?: string | null } = {}) =>
+      startFocus({ projectId: options.projectId ?? null, note: options.note ?? null }),
+  );
+  ipcMain.handle('focus:stop', () => tracker.focus.stop());
 
   // The dashboard asks for a system notification; a click opens the window on the given page.
   ipcMain.on(
     'desktop:notify',
     (_event, { title, body, route }: { title: string; body: string; route?: string }) => {
-      if (!Notification.isSupported()) {
+      // A focus part is quiet: the notification waits, and its end says how many there were.
+      if (tracker.focus.working) {
+        tracker.focus.hold();
         return;
       }
-      const notification = new Notification({
-        title,
-        body,
-        icon: join(__dirname, 'assets', 'icon.png'),
-      });
-      notification.on('click', () => {
+      notify(title, body, () => {
         showWindow();
         if (route) {
           mainWindow?.webContents.send('desktop:navigate', route);
         }
       });
-      notification.show();
     },
   );
+}
+
+function notify(title: string, body: string, onClick: () => void): void {
+  if (!Notification.isSupported()) {
+    return;
+  }
+  const notification = new Notification({
+    title,
+    body,
+    icon: join(__dirname, 'assets', 'icon.png'),
+  });
+  notification.on('click', onClick);
+  notification.show();
+}
+
+/** What the tracker has to say: a break is due, a focus part or a break has ended. */
+function showNotice(notice: TrackerNotice): void {
+  const { title, body } = noticeText(notice);
+  notify(title, body, () => (notice.kind === 'break-ended' ? startFocus(lastFocus) : showWindow()));
+  refreshTray();
+}
+
+function startFocus(options: { projectId: string | null; note: string | null }): void {
+  lastFocus = options;
+  tracker.startFocus(options);
 }
 
 function showWindow(): void {

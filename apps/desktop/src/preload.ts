@@ -5,7 +5,8 @@ import { contextBridge, ipcRenderer } from 'electron';
  * - the setup page (setup.html) reads and saves the server address;
  * - the dashboard shows native system notifications and opens a page when one is clicked
  *   (see DesktopBridge in the web core);
- * - the Activity section switches the tracker of this computer on and off.
+ * - the Activity section switches the tracker of this computer on and off and runs focus
+ *   sessions.
  */
 contextBridge.exposeInMainWorld('desktop', {
   getServerUrl: (): Promise<string | null> => ipcRenderer.invoke('settings:get-server-url'),
@@ -24,5 +25,11 @@ contextBridge.exposeInMainWorld('desktop', {
     pause: (minutes: number | null): Promise<void> => ipcRenderer.invoke('activity:pause', minutes),
     platform: process.platform,
     hostname: process.env['COMPUTERNAME'] ?? process.env['HOSTNAME'] ?? '',
+  },
+  focus: {
+    status: (): Promise<unknown> => ipcRenderer.invoke('focus:status'),
+    start: (options: { projectId?: string | null; note?: string | null }): Promise<void> =>
+      ipcRenderer.invoke('focus:start', options),
+    stop: (): Promise<void> => ipcRenderer.invoke('focus:stop'),
   },
 });

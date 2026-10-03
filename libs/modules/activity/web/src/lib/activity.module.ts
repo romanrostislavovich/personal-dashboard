@@ -19,6 +19,14 @@ export const activityModule: WebDashboardModule = {
           loadComponent: () => import('./overview/overview.page').then((m) => m.OverviewPage),
         },
         {
+          path: 'focus',
+          loadComponent: () => import('./focus/focus.page').then((m) => m.FocusPage),
+        },
+        {
+          path: 'computers',
+          loadComponent: () => import('./computers/computers.page').then((m) => m.ComputersPage),
+        },
+        {
           path: 'settings',
           loadComponent: () => import('./settings/settings.page').then((m) => m.SettingsPage),
         },
@@ -30,6 +38,12 @@ export const activityModule: WebDashboardModule = {
     ru: () => import('./i18n/ru.json'),
   },
   commands: [
+    {
+      id: 'activity.focus',
+      labelKey: 'activity.commands.focus',
+      icon: 'timer',
+      url: '/activity/focus',
+    },
     {
       id: 'activity.settings',
       labelKey: 'activity.commands.settings',

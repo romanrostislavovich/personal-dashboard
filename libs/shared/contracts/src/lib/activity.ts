@@ -1,4 +1,10 @@
 import { z } from 'zod';
+import {
+  activityFocusSessionSchema,
+  ActivityFocusSettings,
+  activityFocusSettingsSchema,
+  activityHealthSchema,
+} from './activity-wellbeing';
 import { LocalDate } from './local-date';
 
 /** What a program is for: the groups the Activity section adds time up by. */
@@ -179,7 +185,13 @@ export const activitySpanSchema = z
   .refine((span) => span.endedAt > span.startedAt, 'A span ends after it starts');
 export type ActivitySpanInput = z.infer<typeof activitySpanSchema>;
 
-export const activityIngestSchema = z.object({ spans: z.array(activitySpanSchema).max(500) });
+export const activityIngestSchema = z.object({
+  spans: z.array(activitySpanSchema).max(500),
+  /** Focus sessions that ended since the last upload. */
+  focus: z.array(activityFocusSessionSchema).max(50).optional(),
+  /** The computer's state now (disks, load), every few minutes. */
+  health: activityHealthSchema.optional(),
+});
 export type ActivityIngest = z.infer<typeof activityIngestSchema>;
 
 /** What a tracker needs to know from the server; asked with every upload. */
@@ -194,14 +206,35 @@ export interface ActivityDeviceConfig {
    * a game without input is the user gone.
    */
   watchApps: string[];
+  /** Remind to take a break after this long at the computer without one; `0` — never. */
+  breakMinutes: number;
+  /** The timer of the focus sessions. */
+  focus: ActivityFocusSettings;
+  /** Programs that count as a distraction during a focus session (games, messengers, video). */
+  distractingApps: string[];
 }
 
 // --- Settings, programs, project rules ---
 
-export const activitySettingsSchema = z.object({
-  idleMinutes: z.number().int().min(1).max(60),
-});
+export const activitySettingsSchema = z
+  .object({
+    idleMinutes: z.number().int().min(1).max(60),
+    /** Remind to take a break after this long without one; `0` — never. */
+    breakMinutes: z.number().int().min(0).max(240),
+  })
+  .extend(activityFocusSettingsSchema.shape);
 export type ActivitySettings = z.infer<typeof activitySettingsSchema>;
+
+/** `PUT /api/activity/settings`: only the fields sent change. */
+export const activitySettingsUpdateSchema = activitySettingsSchema.partial();
+export type ActivitySettingsUpdate = z.infer<typeof activitySettingsUpdateSchema>;
+
+/** Categories whose programs count as a distraction during a focus session. */
+export const ACTIVITY_DISTRACTING_CATEGORIES: readonly ActivityCategory[] = [
+  'games',
+  'communication',
+  'media',
+];
 
 /** `PATCH /api/activity/apps/:app`: only the fields sent change. */
 export const activityAppUpdateSchema = z.object({

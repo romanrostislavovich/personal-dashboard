@@ -49,7 +49,10 @@
 - **Activity:** time at the computer, recorded by the desktop app (Windows): which program and
   window was in front and for how long, away time left out; per day, program, category, project
   (by the window title) and device; a pause, programs never recorded, the day window by window;
-  sent to your server by itself, kept on the computer while there is no connection
+  sent to your server by itself, kept on the computer while there is no connection; focus
+  sessions (Pomodoro) from the tray or the page, with distractions noted, a streak and
+  achievements; reminders to take a break; daily limits on games, the whole day or a program;
+  the disks, load and memory of every computer, with a warning when a disk runs out of space
 - **Weather:** today's forecast and the week ahead for your city (Open-Meteo, no API key) with
   clothing advice that follows how you take the cold —
   on its page, on the home page and in the morning digest; the city comes from the browser's
@@ -105,6 +108,9 @@
 - **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
 - **Activity: more trackers** — the tracker of the desktop app watches windows on Windows only;
   macOS and Linux, and the same tracker on a phone (time per app), report to the same section
+- **Desktop: imports from Downloads** — the desktop app watches the Downloads folder and offers
+  to import what it recognizes: a bank statement (PDF/CSV) into Finance through the AI parser,
+  photos into the diary, and so on; nothing is imported without a click
 - **Development: self-hosted GitLab** — an instance of your own next to gitlab.com (its address
   with the token); later the tabs of the section may move to their own submenu
 - **Dota 2: the whole match history** — the Steam Web API gives only the 500 latest matches;

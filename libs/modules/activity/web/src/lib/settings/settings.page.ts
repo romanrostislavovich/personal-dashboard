@@ -13,6 +13,7 @@ import { ProjectsApi } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { ActivityApi } from '../activity.api';
 import { TrackerCardComponent } from '../tracker-card.component';
+import { WellbeingSettingsComponent } from './wellbeing-settings.component';
 
 const IDLE_MINUTES = [1, 2, 3, 5, 10, 15, 30, 60];
 
@@ -34,6 +35,7 @@ const IDLE_MINUTES = [1, 2, 3, 5, 10, 15, 30, 60];
     MatTooltipModule,
     TranslocoPipe,
     TrackerCardComponent,
+    WellbeingSettingsComponent,
   ],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',

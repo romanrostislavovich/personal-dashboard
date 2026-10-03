@@ -1,6 +1,7 @@
 import { app, safeStorage } from 'electron';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { FocusSession, FocusSettings } from './focus-timer';
 import { Span } from './span-builder';
 
 /** What the server tells the tracker (ActivityDeviceConfig in contracts). */
@@ -9,6 +10,11 @@ export interface TrackerConfig {
   excludedApps: string[];
   /** Full-screen windows of these count without input, for a while (ActivityDeviceConfig). */
   watchApps: string[];
+  /** Remind to take a break after this long without one; `0` — never. */
+  breakMinutes: number;
+  focus: FocusSettings;
+  /** Time in these during a focus session is a distraction. */
+  distractingApps: string[];
 }
 
 interface StoredState {
@@ -17,14 +23,29 @@ interface StoredState {
   config: TrackerConfig;
   /** Spans not sent yet. */
   queue: Span[];
+  /** Focus sessions not sent yet. */
+  focusQueue: FocusSession[];
   /** The tracker is paused until this moment (ms); `0` — until resumed by hand. */
   pausedUntil: number | null;
 }
 
 const DEFAULTS: StoredState = {
   device: null,
-  config: { idleMinutes: 5, excludedApps: [], watchApps: [] },
+  config: {
+    idleMinutes: 5,
+    excludedApps: [],
+    watchApps: [],
+    breakMinutes: 60,
+    focus: {
+      focusMinutes: 25,
+      shortBreakMinutes: 5,
+      longBreakMinutes: 15,
+      roundsBeforeLongBreak: 4,
+    },
+    distractingApps: [],
+  },
   queue: [],
+  focusQueue: [],
   pausedUntil: null,
 };
 /** A guard for a computer that stays offline for weeks: the oldest spans give way. */
@@ -32,7 +53,8 @@ const MAX_QUEUE = 50_000;
 
 /**
  * What the tracker keeps between launches, as JSON in the user folder next to settings.json:
- * the device's token, the settings from the server and the spans waiting to be sent.
+ * the device's token, the settings from the server and the spans and focus sessions waiting
+ * to be sent.
  */
 export class ActivityStore {
   private state: StoredState = this.load();
@@ -86,6 +108,21 @@ export class ActivityStore {
   /** Drops the first `count` spans: they have reached the server. */
   dequeue(count: number): void {
     this.state.queue = this.state.queue.slice(count);
+    this.save();
+  }
+
+  get focusQueue(): readonly FocusSession[] {
+    return this.state.focusQueue;
+  }
+
+  enqueueFocus(session: FocusSession): void {
+    this.state.focusQueue = [...this.state.focusQueue, session];
+    this.save();
+  }
+
+  /** Drops the sessions that have reached the server. */
+  dequeueFocus(ids: ReadonlySet<string>): void {
+    this.state.focusQueue = this.state.focusQueue.filter((session) => !ids.has(session.id));
     this.save();
   }
 
