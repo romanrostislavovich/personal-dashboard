@@ -222,5 +222,9 @@
         "4": "Enter here the e-mail you sign in to Atlassian with and the token."
       }
     }
+  },
+  "life": {
+    "day": "{{count}} contributions",
+    "total": "Contributions"
   }
 }

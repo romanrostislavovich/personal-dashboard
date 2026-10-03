@@ -229,5 +229,10 @@
       "3": "Paste it here, then add your profiles on the Games page — one key reads all of them.",
       "4": "For data to come: in the Steam profile make “Game details” public, in Dota 2 turn on “Expose Public Match Data”."
     }
+  },
+  "life": {
+    "dotaDay": "Dota 2: {{matches}} matches, {{wins}} won",
+    "dotaMatches": "Dota 2 matches",
+    "dotaWins": "{{wins}} won ({{rate}}%)"
   }
 }

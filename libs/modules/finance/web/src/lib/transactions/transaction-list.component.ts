@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
   model,
   output,
@@ -19,6 +20,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LocalDate, toLocalDate, Transaction, TransactionKind } from '@pd/contracts';
 import { todayLocalDate } from '@pd/web-core';
+import { FinanceApi } from '../finance.api';
 import { categoryIcon } from '../overview/category-icon';
 import { CategoryFilter, groupByDay } from '../overview/finance-stats';
 
@@ -57,6 +59,11 @@ export class TransactionListComponent {
   readonly category = model<CategoryFilter | null>(null);
   readonly edit = output<Transaction>();
   readonly remove = output<Transaction>();
+  private readonly api = inject(FinanceApi);
+
+  protected openReceipt(transaction: Transaction): void {
+    void this.api.openReceipt(transaction.id);
+  }
 
   protected readonly search = signal('');
   protected readonly kind = signal<TransactionKind | ''>('');

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { FinanceLife } from './finance.life';
 import { FinanceSearch } from './finance.search';
 import { CostSourcesController } from './cost-sources/cost-sources.controller';
 import { CostSourcesJob } from './cost-sources/cost-sources.job';
@@ -15,6 +16,8 @@ import { FinanceServerActions } from './finance.server-actions';
 import { RecurringPaymentsJob } from './recurring/recurring-payments.job';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
 import { TransactionsService } from './transactions/transactions.service';
+import { BudgetsService } from './budgets/budgets.service';
+import { ReceiptsService } from './receipts/receipts.service';
 
 /**
  * Finance: personal and project income/expenses, recurring payments
@@ -23,8 +26,11 @@ import { TransactionsService } from './transactions/transactions.service';
 @Module({
   controllers: [FinanceController, CostSourcesController],
   providers: [
+    FinanceLife,
     FinanceSearch,
     TransactionsService,
+    BudgetsService,
+    ReceiptsService,
     ExchangeRatesService,
     FinanceSettingsService,
     RecurringPaymentsService,

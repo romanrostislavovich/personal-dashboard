@@ -22,6 +22,7 @@ import {
   BotAction,
   BotCommand,
   BotDocumentHandler,
+  BotPhotoChoice,
   BotPhotoHandler,
   BotTextHandler,
   BotVoice,
@@ -58,6 +59,15 @@ interface PendingLink {
  * 2. Opens the `t.me/<bot>?start=<code>` link and presses Start.
  * 3. The bot receives `/start <code>` and saves the chat id for the user.
  */
+/** A photo waits this long for the user to say where it goes. */
+const PENDING_PHOTO_TTL_MS = 30 * 60_000;
+
+interface PendingPhoto {
+  caption: string;
+  fileId: string;
+  expiresAt: number;
+}
+
 @Injectable()
 export class TelegramBotService implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly logger = new Logger(TelegramBotService.name);
@@ -68,7 +78,9 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   private readonly actions: BotAction[] = [];
   /** Chats the bot asked something: the next message there is the answer. */
   private readonly expectedText = new Map<string, ExpectedText>();
-  private photoHandler: BotPhotoHandler | null = null;
+  private readonly photoHandlers: { choice: BotPhotoChoice; handler: BotPhotoHandler }[] = [];
+  /** Photos waiting for the user to say where they go (with several photo handlers). */
+  private readonly pendingPhotos = new Map<string, PendingPhoto>();
   private documentHandler: BotDocumentHandler | null = null;
   private textHandler: BotTextHandler | null = null;
   private voiceTranscriber: BotVoiceTranscriber | null = null;
@@ -84,6 +96,10 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     this.token = config.get('TELEGRAM_BOT_TOKEN', { infer: true });
     this.isSyncClient = config.get('SYNC_MODE', { infer: true }) === 'client';
     this.bot = this.token ? new Bot(this.token) : null;
+    this.actions.push({
+      name: 'pho',
+      handler: (user, payload) => this.onPhotoChoice(user, payload),
+    });
   }
 
   get isAvailable(): boolean {
@@ -106,8 +122,8 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   }
 
   /** A module that accepts photos from the chat (see BotPhotoHandler). */
-  registerPhotoHandler(handler: BotPhotoHandler): void {
-    this.photoHandler ??= handler;
+  registerPhotoHandler(handler: BotPhotoHandler, choice: BotPhotoChoice): void {
+    this.photoHandlers.push({ choice, handler });
   }
 
   /** Who turns voice messages into text (see BotVoiceTranscriber). */
@@ -294,20 +310,69 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     return this.textHandler ? this.textHandler(user, text) : '';
   }
 
-  /** Photos and documents from an unlinked chat are ignored silently. */
+  /**
+   * Photos and documents from an unlinked chat are ignored silently. With one photo handler it
+   * takes the photo; with several the bot asks with buttons where the photo goes.
+   */
   private async onPhoto(ctx: Filter<Context, 'message:photo'>): Promise<void> {
-    const handler = this.photoHandler;
     const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
-    if (!handler || !user) {
+    if (!this.photoHandlers.length || !user) {
       return;
     }
     const largest = ctx.message.photo[ctx.message.photo.length - 1];
-    const reply = await handler(user, {
-      caption: ctx.message.caption ?? '',
+    const photo = { caption: ctx.message.caption ?? '', fileId: largest.file_id };
+    if (this.photoHandlers.length === 1) {
+      await this.answer(
+        ctx,
+        user,
+        await this.handlePhoto(user, this.photoHandlers[0].handler, photo),
+      );
+      return;
+    }
+    const token = randomBytes(6).toString('base64url');
+    this.dropOldPhotos();
+    this.pendingPhotos.set(token, { ...photo, expiresAt: Date.now() + PENDING_PHOTO_TTL_MS });
+    const keyboard = new InlineKeyboard();
+    for (const { choice } of this.photoHandlers) {
+      keyboard.text(
+        user.locale === 'ru' ? choice.label.ru : choice.label.en,
+        `pho:${token}:${choice.id}`,
+      );
+    }
+    await ctx.reply(coreMessages(user.locale).telegramPhotoWhere, { reply_markup: keyboard });
+  }
+
+  /** A button of the "where does this photo go" question. */
+  private async onPhotoChoice(user: UserRow, payload: string): Promise<string> {
+    const [token, id] = payload.split(':');
+    const photo = this.pendingPhotos.get(token);
+    const target = this.photoHandlers.find((entry) => entry.choice.id === id);
+    if (!photo || !target || photo.expiresAt < Date.now()) {
+      return coreMessages(user.locale).telegramPhotoExpired;
+    }
+    this.pendingPhotos.delete(token);
+    return this.handlePhoto(user, target.handler, photo);
+  }
+
+  private handlePhoto(
+    user: UserRow,
+    handler: BotPhotoHandler,
+    photo: { caption: string; fileId: string },
+  ): Promise<string> {
+    return handler(user, {
+      caption: photo.caption,
       mimeType: 'image/jpeg',
-      download: () => this.downloadFile(largest.file_id),
+      download: () => this.downloadFile(photo.fileId),
     });
-    await this.answer(ctx, user, reply);
+  }
+
+  private dropOldPhotos(): void {
+    const now = Date.now();
+    for (const [token, photo] of this.pendingPhotos) {
+      if (photo.expiresAt < now) {
+        this.pendingPhotos.delete(token);
+      }
+    }
   }
 
   private async onDocument(ctx: Filter<Context, 'message:document'>): Promise<void> {
@@ -338,8 +403,11 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     return user ?? null;
   }
 
+  /** An empty reply: the handler has answered on its own (a message with buttons). */
   private async answer(ctx: Context, user: UserRow, reply: string): Promise<void> {
-    await ctx.reply(reply);
+    if (reply) {
+      await ctx.reply(reply);
+    }
     this.activity.touched(user.id);
   }
 

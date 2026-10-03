@@ -6,4 +6,5 @@ export * from './lib/secrets/secrets.schema';
 export * from './lib/achievements/achievements.schema';
 export * from './lib/achievements/active-days.schema';
 export * from './lib/ai/ai.schema';
+export * from './lib/life/life.schema';
 export * from './lib/sync/sync.schema';

@@ -43,6 +43,9 @@ export const DEFAULT_DIGEST_TIME = '08:30';
 /** A speech-to-text model of OpenAI; any model of the chosen connection works. */
 export const DEFAULT_SPEECH_MODEL = 'gpt-4o-mini-transcribe';
 
+/** A model of OpenAI that reads pictures (receipts); any model of the chosen connection works. */
+export const DEFAULT_VISION_MODEL = 'gpt-4o-mini';
+
 /** `PUT /api/ai/preferences`: only the fields sent are changed. */
 export const aiPreferencesSchema = z.object({
   /** The morning digest via notifications. */
@@ -59,6 +62,12 @@ export const aiPreferencesSchema = z.object({
   speechConnectionId: z.uuid().nullable().optional(),
   speechModel: z.string().trim().min(1).max(100).optional(),
   /**
+   * Which saved connection reads pictures (receipts from Telegram); `null` — the first OpenAI
+   * connection. DeepSeek, for one, sees no pictures.
+   */
+  visionConnectionId: z.uuid().nullable().optional(),
+  visionModel: z.string().trim().min(1).max(100).optional(),
+  /**
    * Modules whose data never goes to the AI provider: no assistant tools, no digest sections,
    * no diary summaries.
    */
@@ -74,6 +83,8 @@ export interface AiSettings {
   morningDigestTime: string;
   speechConnectionId: string | null;
   speechModel: string;
+  visionConnectionId: string | null;
+  visionModel: string;
   disabledModules: string[];
   digestOptIns: string[];
   /** At least one connection exists — the AI features work. */

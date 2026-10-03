@@ -91,5 +91,9 @@
   "commands": {
     "add": "Добавить задачу",
     "remindInHour": "Напомнить через час"
+  },
+  "life": {
+    "done": "Сделано {{count}}: {{titles}}",
+    "doneTotal": "Задач выполнено"
   }
 }

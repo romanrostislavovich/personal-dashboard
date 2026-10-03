@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ActivityLife } from './activity.life';
 import { ActivityAchievements } from './activity.achievements';
 import { ActivityAiTools } from './activity.ai-tools';
 import { ActivityController } from './activity.controller';
@@ -19,6 +20,7 @@ import { WellbeingService } from './wellbeing.service';
 @Module({
   controllers: [ActivityController],
   providers: [
+    ActivityLife,
     ActivityService,
     DevicesService,
     ActivityAchievements,

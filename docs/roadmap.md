@@ -14,7 +14,12 @@
 
 - **Birthdays** with reminders
 - **Finance:** wallets (personal / per project), recurring payments, automatic cost import from
-  Hetzner Cloud and DeepSeek
+  Hetzner Cloud and DeepSeek; monthly budgets per category or for everything, with a warning at
+  80% and when spent; a photo of a receipt in Telegram becomes an expense (read by an AI with
+  vision), the photo kept with it
+- **Life:** one feed of a day across every module (the diary entry, spending, tasks done, time at
+  the computer, music, contributions, matches, birthdays) and the summaries of a month or a year;
+  on the 1st the AI writes a short story of the past month to Telegram with a link to its page
 - **Development:** one section with tabs —
   - **Open Source:** the public repositories of your GitHub, GitLab and Bitbucket accounts and of
     their organizations appear by themselves, any other is added by hand; a table with filters (source, language; forks,
@@ -106,8 +111,11 @@
 
 ### Planned
 
+- **Habits** — a habit tracker module, in the digest too
+- **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
+  Cursor can read and change your data directly, without its own chat
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
-- **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
+- **Time tracker** — track time per project or task (focus sessions are done, see Activity)
 - **Desktop: quick input from anywhere** — a global shortcut opens a small window over every
   program: a task, a reminder, an expense, a diary note, without switching to the dashboard
 - **Desktop: "now playing" from Windows** — what plays in any player (Spotify, YouTube in a
@@ -118,9 +126,8 @@
   the computer and the focus timer in a small window
 - **Activity: more trackers** — the tracker of the desktop app watches windows on Windows only;
   macOS and Linux, and the same tracker on a phone (time per app), report to the same section
-- **Desktop: imports from Downloads** — the desktop app watches the Downloads folder and offers
-  to import what it recognizes: a bank statement (PDF/CSV) into Finance through the AI parser,
-  photos into the diary, and so on; nothing is imported without a click
+- **Desktop: more imports from Downloads** — bank statements are offered already; next: photos
+  into the diary and other files the app recognizes; nothing is imported without a click
 - **Development: self-hosted GitLab** — an instance of your own next to gitlab.com (its address
   with the token); later the tabs of the section may move to their own submenu
 - **Dota 2: the whole match history** — the Steam Web API gives only the 500 latest matches;
@@ -185,16 +192,11 @@
 
 #### Features
 
-- **Finance:** budgets per category with warnings; a photo of a receipt in Telegram becomes a
-  transaction; a reminder before a free trial ends and when a subscription gets more expensive
-- **Life timeline** — one feed of a day across all modules: diary entry, spending, what was
-  playing, matches, weather, steps; open any day and see how it went
-- **Year in review / monthly "Wrapped"** — top artists, money spent, number of entries, the best
-  month by mood, achievements; the text is written by the AI, shown as a nice page
+- **Finance:** a reminder before a free trial ends and when a subscription gets more expensive
+- **Life: more** — weather and steps in the day feed, achievements and the best month by mood
+  in the summaries, a yearly story from the AI
 - **Yearly goals** — goals whose progress is counted from the modules: "read 20 books", "run
   500 km", "save X", "100 diary days in a row"
-- **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
-  Cursor can read and change your data directly, without its own chat
 - **Automations "if X, then Y"** — rules across modules: "a site is down → a task in the TODO
   list", "over budget → a reminder", "no diary entry by 22:00 → a message in Telegram"; plus
   webhooks and a public API with tokens
@@ -204,7 +206,6 @@
 - **Music and media:** podcasts and YouTube history
 - **Export of all data** — the diary as Markdown (Obsidian-compatible), finance as CSV,
   everything as JSON
-- **Habits** — a habit tracker module, in the digest too
 - **Insights across modules** — mood on days with a run, what was playing on bad days (through AI
   tools or core insights: modules do not depend on each other). The AI looks for such links across
   all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you

@@ -2,6 +2,8 @@ import { httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { FINANCE_READS, financeApi } from '@pd/client-core';
 import {
+  Budget,
+  BudgetInput,
   CostSource,
   CostSourceInput,
   FinanceSettings,
@@ -94,5 +96,19 @@ export class FinanceApi {
 
   removeCostSource(id: string) {
     return fromCore(() => this.finance.removeCostSource(id));
+  }
+
+  budgets(month: () => string) {
+    return httpResource<Budget[]>(() => FINANCE_READS.budgets(month()), { defaultValue: [] });
+  }
+
+  saveBudgets(budgets: BudgetInput[]) {
+    return fromCore(() => this.finance.saveBudgets(budgets));
+  }
+
+  /** Opens the photo of a transaction's receipt in a new tab. */
+  async openReceipt(id: string): Promise<void> {
+    const blob = await this.finance.receipt(id);
+    window.open(URL.createObjectURL(blob), '_blank');
   }
 }

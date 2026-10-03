@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { BirthdaysLife } from './birthdays.life';
 import { BirthdaysSearch } from './birthdays.search';
 import { BirthdaysAiTools } from './birthdays.ai-tools';
 import { BirthdaysDigest } from './birthdays.digest';
@@ -11,6 +12,7 @@ import { BirthdaysService } from './birthdays.service';
 @Module({
   controllers: [BirthdaysController],
   providers: [
+    BirthdaysLife,
     BirthdaysSearch,
     BirthdaysService,
     BirthdayRemindersJob,

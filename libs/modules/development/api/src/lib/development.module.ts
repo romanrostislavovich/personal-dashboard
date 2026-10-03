@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DevelopmentLife } from './development.life';
 import { OpenSourceSearch } from './open-source/open-source.search';
 import { AccountTokensService } from './accounts/account-tokens.service';
 import { AccountsAchievements } from './accounts/accounts.achievements';
@@ -56,6 +57,7 @@ import { WakatimeService } from './wakatime/wakatime.service';
     WakatimeController,
   ],
   providers: [
+    DevelopmentLife,
     OpenSourceSearch,
     GithubTokenService,
     AccountTokensService,

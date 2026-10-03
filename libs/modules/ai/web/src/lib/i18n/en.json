@@ -103,5 +103,9 @@
       "3": "Press “Add a connection”, choose Ollama and type the name of the model; no key is needed, and nothing leaves your machine."
     }
   },
-  "importStatement": "Import the operations of this bank statement ({{name}}) into Finance. First list what you found — date, amount, description, category — and wait for my confirmation; record only after I say yes."
+  "importStatement": "Import the operations of this bank statement ({{name}}) into Finance. First list what you found — date, amount, description, category — and wait for my confirmation; record only after I say yes.",
+  "vision": {
+    "title": "Pictures (receipts)",
+    "hint": "A photo of a receipt in Telegram becomes an expense: a model that sees pictures reads it — OpenAI gpt-4o-mini, for one (DeepSeek sees none). Each receipt is a paid request."
+  }
 }

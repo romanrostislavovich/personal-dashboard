@@ -9,11 +9,11 @@ import {
   TransactionInput,
   TransactionQuery,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gte, isNull, lte, sql, SQL, sum } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, lte, SQL, sql, sum } from 'drizzle-orm';
 import { Converted, round } from '../currency/conversion';
 import { ExchangeRatesService } from '../currency/exchange-rates.service';
 import { FinanceSettingsService } from '../currency/finance-settings.service';
-import { TransactionRow, transactions } from '../finance.schema';
+import { financeReceipts, TransactionRow, transactions } from '../finance.schema';
 
 const TOP_CATEGORIES_LIMIT = 5;
 
@@ -25,6 +25,48 @@ export class TransactionsService {
     private readonly rates: ExchangeRatesService,
     private readonly settings: FinanceSettingsService,
   ) {}
+
+  private readonly listeners: ((userId: string) => Promise<void>)[] = [];
+
+  /** Called after transactions of a user were created or changed (budgets check themselves). */
+  onChange(listener: (userId: string) => Promise<void>): void {
+    this.listeners.push(listener);
+  }
+
+  /** Expenses of a period per category, in the main currency (each at the rate of its day). */
+  async expensesInMain(
+    userId: string,
+    period: { from: string; to: string },
+  ): Promise<{ mainCurrency: string; byCategory: Map<string, number> }> {
+    const rows = await this.db
+      .select({
+        amount: transactions.amount,
+        currency: transactions.currency,
+        category: transactions.category,
+        day: transactions.occurredOn,
+      })
+      .from(transactions)
+      .where(and(this.filter(userId, period), eq(transactions.kind, 'expense')));
+    const main = await this.settings.mainCurrency(userId);
+    const { values } = await this.convert(
+      rows,
+      main,
+      (r) => r.amount,
+      (r) => r.day,
+    );
+    const byCategory = new Map<string, number>();
+    rows.forEach((row, index) =>
+      byCategory.set(row.category, (byCategory.get(row.category) ?? 0) + (values[index] ?? 0)),
+    );
+    return { mainCurrency: main, byCategory };
+  }
+
+  private changed(userId: string): void {
+    for (const listener of this.listeners) {
+      // A failing listener (a notification) must not fail the transaction that was saved.
+      void listener(userId).catch(() => undefined);
+    }
+  }
 
   async list(userId: string, query: TransactionQuery): Promise<Transaction[]> {
     const rows = await this.db
@@ -56,6 +98,7 @@ export class TransactionsService {
       .values({ userId, ...input })
       .returning();
     const [transaction] = await this.withMainAmounts(userId, [row]);
+    this.changed(userId);
     return transaction;
   }
 
@@ -72,6 +115,7 @@ export class TransactionsService {
       .insert(transactions)
       .values(inputs.map((input) => ({ userId, ...input })))
       .returning();
+    this.changed(userId);
     return this.withMainAmounts(userId, rows);
   }
 
@@ -88,6 +132,7 @@ export class TransactionsService {
       throw new NotFoundException();
     }
     const [transaction] = await this.withMainAmounts(userId, [row]);
+    this.changed(userId);
     return transaction;
   }
 
@@ -257,7 +302,20 @@ export class TransactionsService {
       (r) => r.amount,
       (r) => r.occurredOn,
     );
-    return rows.map((row, index) => toTransaction(row, values[index]));
+    const withReceipt = new Set(
+      (
+        await this.db
+          .select({ id: financeReceipts.transactionId })
+          .from(financeReceipts)
+          .where(
+            inArray(
+              financeReceipts.transactionId,
+              rows.map((row) => row.id),
+            ),
+          )
+      ).map((receipt) => receipt.id),
+    );
+    return rows.map((row, index) => toTransaction(row, values[index], withReceipt.has(row.id)));
   }
 
   private convert<T extends { currency: string }>(
@@ -272,7 +330,14 @@ export class TransactionsService {
     );
   }
 
-  private filter(userId: string, { from, to, scope }: TransactionQuery): SQL | undefined {
+  private filter(
+    userId: string,
+    {
+      from,
+      to,
+      scope,
+    }: Pick<TransactionQuery, 'from' | 'to'> & { scope?: TransactionQuery['scope'] },
+  ): SQL | undefined {
     return and(
       eq(transactions.userId, userId),
       gte(transactions.occurredOn, from),
@@ -283,7 +348,11 @@ export class TransactionsService {
   }
 }
 
-function toTransaction(row: TransactionRow, mainAmount: number | null): Transaction {
+function toTransaction(
+  row: TransactionRow,
+  mainAmount: number | null,
+  hasReceipt = false,
+): Transaction {
   return {
     id: row.id,
     kind: row.kind,
@@ -296,5 +365,6 @@ function toTransaction(row: TransactionRow, mainAmount: number | null): Transact
     recurringPaymentId: row.recurringPaymentId,
     costSourceId: row.costSourceId,
     mainAmount,
+    hasReceipt,
   };
 }

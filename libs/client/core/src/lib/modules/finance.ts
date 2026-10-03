@@ -1,4 +1,6 @@
 import {
+  Budget,
+  BudgetInput,
   CostSource,
   CostSourceInput,
   FinanceSettings,
@@ -31,6 +33,8 @@ export const FINANCE_READS = {
   settings: () => apiRequest(`${BASE}/settings`),
   recurringPayments: () => apiRequest(`${BASE}/recurring-payments`),
   costSources: () => apiRequest(`${BASE}/cost-sources`),
+  /** The budgets with what was spent in a month (`YYYY-MM`). */
+  budgets: (month: string) => apiRequest(`${BASE}/budgets`, { month }),
 };
 
 export function financeApi(api: ApiClient) {
@@ -41,6 +45,11 @@ export function financeApi(api: ApiClient) {
     cashFlow: (query: TransactionQuery) => api.read<MonthCashFlow[]>(FINANCE_READS.cashFlow(query)),
     cashFlowInMain: (query: TransactionQuery) =>
       api.read<MainCashFlow>(FINANCE_READS.cashFlowInMain(query)),
+    budgets: (month: string) => api.read<Budget[]>(FINANCE_READS.budgets(month)),
+    /** The photo of a transaction's receipt, for an object URL. */
+    receipt: (id: string) => api.blob(`${BASE}/transactions/${id}/receipt`),
+    /** The whole set of budgets at once. */
+    saveBudgets: (budgets: BudgetInput[]) => api.put<void>(`${BASE}/budgets`, { budgets }),
     settings: () => api.read<FinanceSettings>(FINANCE_READS.settings()),
     /** `mainCurrency: null` — the currency used most. */
     saveSettings: (input: FinanceSettingsInput) =>

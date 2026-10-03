@@ -48,6 +48,7 @@ import {
 } from './recurring-payment-form.dialog';
 import { TransactionFormData, TransactionFormDialog } from './transaction-form.dialog';
 import { TransactionListComponent } from './transactions/transaction-list.component';
+import { BudgetsCardComponent } from './budgets/budgets-card.component';
 
 const DEFAULT_CURRENCY = 'EUR';
 /** How many months the cash flow chart shows, the selected one being the last. */
@@ -102,6 +103,7 @@ function inMain(transactions: Transaction[], main: string): Transaction[] {
     CategoryBreakdownComponent,
     UpcomingPaymentsComponent,
     TransactionListComponent,
+    BudgetsCardComponent,
   ],
   templateUrl: './finance.page.html',
   styleUrl: './finance.page.scss',
@@ -152,6 +154,12 @@ export class FinancePage {
   protected readonly recurringPayments = this.api.recurringPayments();
 
   protected readonly monthDate = computed(() => monthAsDate(this.month()));
+  /** `YYYY-MM` of the selected month: the budgets are monthly. */
+  protected readonly monthKey = computed(() => monthKey(this.month()));
+  /** Categories used in the month, suggested for a new budget. */
+  protected readonly knownCategories = computed(() =>
+    [...new Set(this.transactions.value().map((t) => t.category))].sort(),
+  );
   protected readonly isCurrentMonth = computed(
     () => monthKey(this.month()) === monthKey(currentMonth()),
   );

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MusicLife } from './music.life';
 import { MusicSearch } from './music.search';
 import { MusicAiTools } from './music.ai-tools';
 import { MusicDigest } from './music.digest';
@@ -26,6 +27,7 @@ import { SpotifyService } from './spotify.service';
 @Module({
   controllers: [MusicController, SoundcloudController],
   providers: [
+    MusicLife,
     MusicSearch,
     LastfmService,
     LastfmHistoryImport,

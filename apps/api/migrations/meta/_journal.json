@@ -330,6 +330,27 @@
       "when": 1791052167176,
       "tag": "0046_activity_summary",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791054550334,
+      "tag": "0047_finance_budgets",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791055506166,
+      "tag": "0048_finance_receipts_vision",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1791055973802,
+      "tag": "0049_life_months",
+      "breakpoints": true
     }
   ]
 }
