@@ -1,6 +1,6 @@
-import { DiskReport } from '@pd/contracts';
+import { DiskReport, diskReportSchema } from '@pd/contracts';
 import { parseAdvice } from './disk-advice.service';
-import { mustNotTrash, ruleAdvice } from './disk-rules';
+import { fixOf, mustNotTrash, ruleAdvice } from './disk-rules';
 
 const GB = 1024 ** 3;
 const report: DiskReport = {
@@ -88,5 +88,40 @@ describe('parseAdvice', () => {
 
   it('gives up on an answer that is not JSON', () => {
     expect(parseAdvice('I cannot help with that.', report)).toBeNull();
+  });
+});
+
+describe('fixes', () => {
+  it('gives the app its own cleanup for a known place, never for anything else', () => {
+    expect(fixOf(report, '%USERPROFILE%\\AppData\\Local\\npm-cache')).toBe('npm-cache');
+    expect(fixOf(report, '%USERPROFILE%\\AppData\\Local\\Temp')).toBeNull();
+    expect(fixOf(report, '%USERPROFILE%\\projects\\old\\node_modules')).toBeNull();
+    expect(ruleAdvice(report).map((item) => item.fix)).toEqual([null, 'npm-cache']);
+  });
+
+  it('attaches the fix to the advice of the AI by the path, not by what the AI says', () => {
+    const answer = JSON.stringify({
+      summary: 'npm',
+      suggestions: [
+        {
+          path: '%USERPROFILE%\\AppData\\Local\\npm-cache',
+          action: 'command',
+          safety: 'safe',
+          reason: 'r',
+          fix: 'docker-prune',
+        },
+      ],
+    });
+    expect(parseAdvice(answer, report)?.suggestions[0].fix).toBe('npm-cache');
+  });
+});
+
+describe('diskReportSchema', () => {
+  it('takes the other disks of the computer', () => {
+    const result = diskReportSchema.safeParse({
+      ...report,
+      otherDisks: [{ mount: 'D:', total: 256 * GB, free: 187 * GB }],
+    });
+    expect(result.success).toBe(true);
   });
 });

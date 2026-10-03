@@ -1,4 +1,11 @@
-import { DiskAction, DiskKnownPlace, DiskReport, DiskSafety, DiskSuggestion } from '@pd/contracts';
+import {
+  DiskAction,
+  DiskFix,
+  DiskKnownPlace,
+  DiskReport,
+  DiskSafety,
+  DiskSuggestion,
+} from '@pd/contracts';
 
 const MB = 1024 ** 2;
 
@@ -168,6 +175,23 @@ const PLACES: Record<
   },
 };
 
+/** What the app can do with a button for a known place (DISK_FIXES). */
+const FIXES: Partial<Record<DiskKnownPlace, DiskFix>> = {
+  'npm-cache': 'npm-cache',
+  'yarn-cache': 'yarn-cache',
+  'pip-cache': 'pip-cache',
+  'nuget-cache': 'nuget-cache',
+  'docker-data': 'docker-prune',
+  'windows-old': 'storage-settings',
+  'windows-update-cache': 'storage-settings',
+};
+
+/** The fix of a path that is a known place of the report. */
+export function fixOf(report: DiskReport, path: string): DiskFix | null {
+  const place = report.known.find((known) => known.path === path)?.place;
+  return (place && FIXES[place]) ?? null;
+}
+
 /** The advice without the AI: the known places worth more than a little. */
 export function ruleAdvice(report: DiskReport, locale: string | null = 'en'): DiskSuggestion[] {
   const lang: keyof Text = locale === 'ru' ? 'ru' : 'en';
@@ -182,6 +206,7 @@ export function ruleAdvice(report: DiskReport, locale: string | null = 'en'): Di
         safety: rule.safety,
         reason: rule.reason[lang],
         how: rule.how?.[lang] ?? null,
+        fix: FIXES[place.place] ?? null,
       };
     })
     .sort((a, b) => b.bytes - a.bytes);

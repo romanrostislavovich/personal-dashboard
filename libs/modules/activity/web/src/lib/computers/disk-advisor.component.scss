@@ -9,12 +9,6 @@ h3 {
   font: var(--mat-sys-title-small);
 }
 
-.mounts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .hint {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
@@ -119,5 +113,33 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  gap: 6px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.outcome {
+  font: var(--mat-sys-body-small);
+  color: var(--pd-success);
+  white-space: pre-wrap;
+}
+
+.done .path,
+.done .reason {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.done .kind {
+  color: var(--pd-success);
+}
+
+.bin {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
 }

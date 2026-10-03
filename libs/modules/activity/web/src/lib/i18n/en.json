@@ -195,6 +195,41 @@
       "unknown": "not in the last scan — scan again",
       "missing": "no longer there",
       "failed": "Windows did not move it (in use, or too big for the Recycle Bin)"
+    },
+    "gb": "GB",
+    "toBin": "To the Recycle Bin",
+    "reveal": "Show in Explorer",
+    "moved": "Moved to the Recycle Bin.",
+    "done": "Done.",
+    "fixFailed": "Did not work",
+    "confirmEmpty": "Empty the Recycle Bin of {{mount}}? The files in it are deleted for good.",
+    "emptied": "The Recycle Bin is empty: the space is free.",
+    "emptyBinButton": "Empty the Recycle Bin",
+    "fixes": {
+      "npm-cache": {
+        "button": "Clear",
+        "confirm": "Clear the npm cache? Packages are downloaded again when needed."
+      },
+      "yarn-cache": {
+        "button": "Clear",
+        "confirm": "Clear the Yarn cache? Packages are downloaded again when needed."
+      },
+      "pip-cache": {
+        "button": "Clear",
+        "confirm": "Clear the pip cache? Packages are downloaded again when needed."
+      },
+      "nuget-cache": {
+        "button": "Clear",
+        "confirm": "Clear the NuGet caches? Packages are restored on the next build."
+      },
+      "docker-prune": {
+        "button": "Clean up Docker",
+        "confirm": "Remove all Docker images not used by a container, stopped containers, unused networks and the build cache? Volumes stay. Docker Desktop must be running. Images are downloaded again when needed."
+      },
+      "storage-settings": {
+        "button": "Open the settings",
+        "confirm": ""
+      }
     }
   }
 }

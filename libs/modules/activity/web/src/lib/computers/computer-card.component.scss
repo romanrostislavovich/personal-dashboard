@@ -50,7 +50,7 @@ h3 {
 
   li {
     display: grid;
-    grid-template-columns: 32px minmax(0, 1fr) auto;
+    grid-template-columns: 32px minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 10px;
   }
@@ -128,4 +128,8 @@ h3 {
     margin: 0;
     padding-left: 20px;
   }
+}
+
+.analyze {
+  margin: -8px 0;
 }

@@ -37,5 +37,8 @@ contextBridge.exposeInMainWorld('desktop', {
     scan: (mount: string): Promise<void> => ipcRenderer.invoke('disk:scan', mount),
     trash: (paths: string[]): Promise<unknown> => ipcRenderer.invoke('disk:trash', paths),
     openRecycleBin: (): Promise<void> => ipcRenderer.invoke('disk:open-recycle-bin'),
+    emptyRecycleBin: (): Promise<unknown> => ipcRenderer.invoke('disk:empty-recycle-bin'),
+    fix: (fix: string): Promise<unknown> => ipcRenderer.invoke('disk:fix', fix),
+    reveal: (path: string): Promise<void> => ipcRenderer.invoke('disk:reveal', path),
   },
 });

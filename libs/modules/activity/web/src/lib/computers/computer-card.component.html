@@ -132,9 +132,22 @@
                         }
                 }}
               </span>
+              @if (advisor.disk()) {
+                <button
+                  matIconButton
+                  class="analyze"
+                  [disabled]="advisor.busy()"
+                  [matTooltip]="'activity.disk.analyze' | transloco: { mount: disk.mount }"
+                  [attr.aria-label]="'activity.disk.analyze' | transloco: { mount: disk.mount }"
+                  (click)="advisor.scan(disk.mount)"
+                >
+                  <mat-icon>troubleshoot</mat-icon>
+                </button>
+              }
             </li>
           }
         </ul>
+        <pd-activity-disk-advisor #advisor="diskAdvisor" [disks]="l.disks" [active]="isThis()" />
         @if (s?.physicalDisks?.length) {
           <ul class="facts">
             @for (disk of s?.physicalDisks; track disk.name) {
@@ -149,10 +162,6 @@
           </ul>
         }
       </section>
-
-      @if (isThis()) {
-        <pd-activity-disk-advisor [disks]="l.disks" />
-      }
 
       @if (s?.network || s?.defender) {
         <section class="facts-row">

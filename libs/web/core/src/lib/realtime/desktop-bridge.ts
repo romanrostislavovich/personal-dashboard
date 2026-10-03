@@ -1,4 +1,4 @@
-import { DiskReport } from '@pd/contracts';
+import { DiskFix, DiskReport } from '@pd/contracts';
 /**
  * What the desktop app (Electron preload) adds to the page as `window.desktop`.
  * In a regular browser it is absent.
@@ -24,6 +24,18 @@ export interface DesktopDisk {
   /** Only paths of the last report; protected ones (the system, programs) always stay. */
   trash(paths: string[]): Promise<DesktopTrashResult[]>;
   openRecycleBin(): Promise<void>;
+  /** For good: the page confirms it first. Absent in an older shell. */
+  emptyRecycleBin?(): Promise<DesktopFixResult>;
+  /** One of the app's own cleanups (DISK_FIXES); absent in an older shell. */
+  fix?(fix: DiskFix): Promise<DesktopFixResult>;
+  /** Shows a path of the last scan in Explorer. */
+  reveal?(path: string): Promise<void>;
+}
+
+export interface DesktopFixResult {
+  ok: boolean;
+  /** The end of what the command printed. */
+  output: string;
 }
 
 export type DesktopDiskStatus =

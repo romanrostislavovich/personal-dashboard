@@ -53,6 +53,11 @@ export const diskReportSchema = z.object({
     )
     .max(60),
   known: z.array(z.object({ place: z.enum(DISK_KNOWN_PLACES), path: diskPath, bytes })).max(60),
+  /** The other disks of the computer: where a big program or game could move. */
+  otherDisks: z
+    .array(z.object({ mount: z.string().min(1).max(20), total: bytes, free: bytes }))
+    .max(30)
+    .optional(),
 });
 export type DiskReport = z.infer<typeof diskReportSchema>;
 
@@ -66,6 +71,20 @@ export type DiskAction = 'trash' | 'command' | 'tool' | 'review';
 /** `safe` — rebuilt by itself (caches); `check` — likely unneeded, but look first; `risky` — yours. */
 export type DiskSafety = 'safe' | 'check' | 'risky';
 
+/**
+ * A cleanup the desktop app can do itself with a button — a command of its own, never text
+ * from the AI: clear a package cache, prune Docker, open the storage settings of Windows.
+ */
+export const DISK_FIXES = [
+  'npm-cache',
+  'yarn-cache',
+  'pip-cache',
+  'nuget-cache',
+  'docker-prune',
+  'storage-settings',
+] as const;
+export type DiskFix = (typeof DISK_FIXES)[number];
+
 export interface DiskSuggestion {
   path: string;
   bytes: number;
@@ -74,6 +93,8 @@ export interface DiskSuggestion {
   reason: string;
   /** For `command` and `tool`: what to run or open. */
   how: string | null;
+  /** The app can do it with a button. */
+  fix: DiskFix | null;
 }
 
 export interface DiskAdvice {
