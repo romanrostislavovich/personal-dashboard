@@ -5,7 +5,12 @@ import {
   ActivityHealthInput,
   ActivityLimitKind,
   ActivityPlatform,
+  ActivitySystem,
+  LocalDate,
 } from '@pd/contracts';
+
+/** The warnings a computer can send (see WellbeingService.saveHealth). */
+export type ComputerAlert = 'disk' | 'diskHealth' | 'heat' | 'reboot';
 import {
   bigint,
   boolean,
@@ -33,8 +38,11 @@ export const activityDevices = pgTable('activity_devices', {
   /** SHA-256 of the token the device reports with; the token itself is shown once. */
   tokenHash: text().notNull().unique(),
   lastSeenAt: timestamp({ withTimezone: true }),
-  /** The day a disk running out of space was last reported: once a day is enough. */
-  diskAlertedOn: date({ mode: 'string' }),
+  /**
+   * The day each warning about the computer was last sent (a disk running out of space or
+   * failing, overheating, no restart for long): once a day is enough.
+   */
+  alertedOn: jsonb().$type<Partial<Record<ComputerAlert, LocalDate>>>().notNull().default({}),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -167,6 +175,8 @@ export const activityHealth = pgTable(
     memoryTotal: bigint({ mode: 'number' }).notNull(),
     uptimeSeconds: integer().notNull(),
     disks: jsonb().$type<ActivityHealthInput['disks']>().notNull(),
+    /** Temperature, battery, network, the system… — what the computer told beyond the basics. */
+    system: jsonb().$type<ActivitySystem>(),
   },
   (table) => [primaryKey({ columns: [table.deviceId, table.at] })],
 );

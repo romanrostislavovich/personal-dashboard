@@ -26,7 +26,7 @@ import {
   activitySpans,
 } from './activity.schema';
 import { ActivityService } from './activity.service';
-import { buildFocusStats, lowDisks, reachedLimits } from './wellbeing-rules';
+import { buildFocusStats, computerWarnings, reachedLimits } from './wellbeing-rules';
 
 /** Health snapshots older than this are deleted (activity.jobs.ts). */
 export const HEALTH_KEEP_DAYS = 30;
@@ -270,6 +270,12 @@ export class WellbeingService {
   // --- Health of the computers ---
 
   async saveHealth(device: ActivityDeviceRow, health: ActivityHealthInput): Promise<void> {
+    const recent = await this.db
+      .select({ system: activityHealth.system })
+      .from(activityHealth)
+      .where(eq(activityHealth.deviceId, device.id))
+      .orderBy(desc(activityHealth.at))
+      .limit(2);
     await this.db
       .insert(activityHealth)
       .values({
@@ -281,27 +287,51 @@ export class WellbeingService {
         memoryTotal: health.memoryTotal,
         uptimeSeconds: health.uptimeSeconds,
         disks: health.disks,
+        system: health.system ?? null,
       })
       .onConflictDoNothing();
 
-    const low = lowDisks(health);
     const timeZone = await this.activity.timeZone(device.userId);
     const day = new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date());
-    if (!low.length || device.diskAlertedOn === day) {
+    const warnings = computerWarnings(
+      health,
+      recent.map((row) => row.system),
+      device.alertedOn,
+      day,
+    );
+    if (!warnings.length) {
       return;
     }
     const text = activityMessages((await this.users.findById(device.userId))?.locale);
     const gb = (bytes: number) => (bytes / 1024 ** 3).toFixed(1);
-    await this.notifications.send(device.userId, {
-      title: text.diskTitle(device.name),
-      body: text.diskBody(
-        low.map((disk) => `${disk.mount} ${gb(disk.free)} ${text.gigabytes}`).join(', '),
-      ),
-      source: 'activity',
-    });
+    for (const warning of warnings) {
+      const message =
+        warning.kind === 'disk'
+          ? {
+              title: text.diskTitle(device.name),
+              body: text.diskBody(
+                warning.disks
+                  .map((disk) => `${disk.mount} ${gb(disk.free)} ${text.gigabytes}`)
+                  .join(', '),
+              ),
+            }
+          : warning.kind === 'diskHealth'
+            ? {
+                title: text.diskHealthTitle(device.name),
+                body: text.diskHealthBody(warning.disks.join(', ')),
+              }
+            : warning.kind === 'heat'
+              ? { title: text.heatTitle(device.name), body: text.heatBody }
+              : { title: text.rebootTitle(device.name), body: text.rebootBody(warning.days) };
+      await this.notifications.send(device.userId, { ...message, source: 'activity' });
+    }
+    const alertedOn = { ...device.alertedOn };
+    for (const warning of warnings) {
+      alertedOn[warning.kind] = day;
+    }
     await this.db
       .update(activityDevices)
-      .set({ diskAlertedOn: day })
+      .set({ alertedOn })
       .where(eq(activityDevices.id, device.id));
   }
 
@@ -342,13 +372,20 @@ export class WellbeingService {
                 memoryTotal: last.memoryTotal,
                 uptimeSeconds: last.uptimeSeconds,
                 disks: last.disks,
+                ...(last.system ? { system: last.system } : {}),
               }
             : null,
-          history: history.map((row) => ({
-            at: row.at.toISOString(),
-            cpu: Math.round(row.cpu),
-            memory: Math.round((row.memoryUsed / row.memoryTotal) * 100),
-          })),
+          history: history.map((row) => {
+            const zones = row.system?.thermal ?? [];
+            return {
+              at: row.at.toISOString(),
+              cpu: Math.round(row.cpu),
+              memory: Math.round((row.memoryUsed / row.memoryTotal) * 100),
+              gpu: row.system?.gpuLoad ?? null,
+              celsius: zones.length ? Math.max(...zones.map((zone) => zone.celsius)) : null,
+              battery: row.system?.battery?.charge ?? null,
+            };
+          }),
         };
       }),
     );

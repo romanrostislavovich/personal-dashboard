@@ -1,5 +1,7 @@
 import {
   ACTIVITY_LOW_DISK_SHARE,
+  ACTIVITY_REBOOT_DAYS,
+  ActivitySystem,
   ActivityCategory,
   ActivityFocusStats,
   ActivityHealthInput,
@@ -9,6 +11,7 @@ import {
   parseLocalDate,
 } from '@pd/contracts';
 import { daysOf } from './activity-stats';
+import { ComputerAlert } from './activity.schema';
 
 // The rules of focus sessions, daily limits and computer health — without a database.
 
@@ -95,4 +98,57 @@ export function buildFocusStats(
       .sort((a, b) => b.seconds - a.seconds),
     streak: computeStreaks(completedDaysEver, parseLocalDate(today)),
   };
+}
+
+/** Readings in a row the system must report throttling for: one hot moment is not overheating. */
+const HEAT_READINGS = 3;
+/** A reminder to restart repeats after this many days, not every day. */
+const REBOOT_REPEAT_DAYS = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export type ComputerWarning =
+  | { kind: 'disk'; disks: ActivityHealthInput['disks'] }
+  | { kind: 'diskHealth'; disks: string[] }
+  | { kind: 'heat' }
+  | { kind: 'reboot'; days: number };
+
+/**
+ * The warnings a reading of a computer gives, not sent yet today (`recent` — the readings
+ * before it, newest first; `alertedOn` — when each warning was last sent).
+ */
+export function computerWarnings(
+  health: ActivityHealthInput,
+  recent: (ActivitySystem | null)[],
+  alertedOn: Partial<Record<ComputerAlert, LocalDate>>,
+  day: LocalDate,
+): ComputerWarning[] {
+  const warnings: ComputerWarning[] = [];
+  const low = lowDisks(health);
+  if (low.length) {
+    warnings.push({ kind: 'disk', disks: low });
+  }
+  const failing = (health.system?.physicalDisks ?? [])
+    .filter((disk) => ['Warning', 'Unhealthy'].includes(disk.health))
+    .map((disk) => disk.name);
+  if (failing.length) {
+    warnings.push({ kind: 'diskHealth', disks: failing });
+  }
+  const hot = (system: ActivitySystem | null | undefined) =>
+    !!system?.thermal?.some((zone) => zone.throttling);
+  const readings = [health.system, ...recent].slice(0, HEAT_READINGS);
+  if (readings.length === HEAT_READINGS && readings.every(hot)) {
+    warnings.push({ kind: 'heat' });
+  }
+  const bootedAt = health.system?.os?.bootedAt;
+  const days = bootedAt ? Math.floor((Date.parse(health.at) - Date.parse(bootedAt)) / DAY_MS) : 0;
+  if (days >= ACTIVITY_REBOOT_DAYS) {
+    warnings.push({ kind: 'reboot', days });
+  }
+  return warnings.filter((warning) => {
+    const last = alertedOn[warning.kind];
+    if (warning.kind === 'reboot' && last) {
+      return Date.parse(day) - Date.parse(last) >= REBOOT_REPEAT_DAYS * DAY_MS;
+    }
+    return last !== day;
+  });
 }

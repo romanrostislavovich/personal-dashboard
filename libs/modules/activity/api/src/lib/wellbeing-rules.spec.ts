@@ -1,4 +1,10 @@
-import { buildFocusStats, LimitRow, lowDisks, reachedLimits } from './wellbeing-rules';
+import {
+  buildFocusStats,
+  computerWarnings,
+  LimitRow,
+  lowDisks,
+  reachedLimits,
+} from './wellbeing-rules';
 
 describe('reachedLimits', () => {
   const limit = (kind: LimitRow['kind'], minutes: number, app: string | null = null) =>
@@ -96,5 +102,53 @@ describe('buildFocusStats', () => {
 
   it('counts the days in a row with a completed session', () => {
     expect(stats.streak).toEqual({ current: 3, longest: 3 });
+  });
+});
+
+describe('computerWarnings', () => {
+  const hot = { thermal: [{ name: 'TZ00', celsius: 95, throttling: true }] };
+  const cool = { thermal: [{ name: 'TZ00', celsius: 40, throttling: false }] };
+  const reading = (system: object) => ({
+    at: '2026-10-20T12:00:00Z',
+    cpu: 10,
+    memoryUsed: 1,
+    memoryTotal: 2,
+    uptimeSeconds: 1,
+    disks: [{ mount: 'C:', total: 100, free: 50 }],
+    system,
+  });
+  const kinds = (warnings: { kind: string }[]) => warnings.map((warning) => warning.kind);
+
+  it('warns about heat only after three hot readings in a row', () => {
+    expect(kinds(computerWarnings(reading(hot), [hot, hot], {}, '2026-10-20'))).toEqual(['heat']);
+    expect(kinds(computerWarnings(reading(hot), [hot, cool], {}, '2026-10-20'))).toEqual([]);
+    expect(kinds(computerWarnings(reading(hot), [hot], {}, '2026-10-20'))).toEqual([]);
+  });
+
+  it('warns about a failing disk and a long uptime', () => {
+    const system = {
+      physicalDisks: [
+        { name: 'SSD', media: 'SSD', health: 'Warning' },
+        { name: 'HDD', media: 'HDD', health: 'Healthy' },
+      ],
+      os: { name: 'Windows', build: '26200', bootedAt: '2026-10-01T09:00:00Z' },
+    };
+    const warnings = computerWarnings(reading(system), [], {}, '2026-10-20');
+    expect(warnings).toEqual([
+      { kind: 'diskHealth', disks: ['SSD'] },
+      { kind: 'reboot', days: 19 },
+    ]);
+  });
+
+  it('sends a warning once a day, a restart reminder once a week', () => {
+    const system = {
+      ...hot,
+      os: { name: 'Windows', build: '26200', bootedAt: '2026-10-01T09:00:00Z' },
+    };
+    const sent = { heat: '2026-10-20', reboot: '2026-10-16' };
+    expect(kinds(computerWarnings(reading(system), [hot, hot], sent, '2026-10-20'))).toEqual([]);
+    expect(
+      kinds(computerWarnings(reading(system), [hot, hot], { reboot: '2026-10-13' }, '2026-10-20')),
+    ).toEqual(['heat', 'reboot']);
   });
 });

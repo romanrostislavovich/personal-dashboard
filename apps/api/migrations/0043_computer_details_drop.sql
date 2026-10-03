@@ -1,0 +1,1 @@
+ALTER TABLE "activity_devices" DROP COLUMN "disk_alerted_on";
