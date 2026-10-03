@@ -121,7 +121,9 @@
     "notFound": "Ничего не найдено",
     "clearFilters": "Сбросить фильтры",
     "actions": "Действия",
-    "recurring": "Регулярный платёж"
+    "recurring": "Регулярный платёж",
+    "receipt": "Записано по чеку",
+    "openReceipt": "Чек"
   },
   "main": {
     "all": "Всё в {{currency}}",

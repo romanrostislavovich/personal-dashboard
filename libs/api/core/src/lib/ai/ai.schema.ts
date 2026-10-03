@@ -1,4 +1,9 @@
-import { AiAttachment, DEFAULT_DIGEST_TIME, DEFAULT_SPEECH_MODEL } from '@pd/contracts';
+import {
+  AiAttachment,
+  DEFAULT_DIGEST_TIME,
+  DEFAULT_SPEECH_MODEL,
+  DEFAULT_VISION_MODEL,
+} from '@pd/contracts';
 import {
   boolean,
   date,
@@ -43,6 +48,9 @@ export const aiSettings = pgTable('ai_settings', {
   // null — the first OpenAI connection transcribes voice messages.
   speechConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
   speechModel: text().notNull().default(DEFAULT_SPEECH_MODEL),
+  // null — the first OpenAI connection reads pictures (receipts).
+  visionConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
+  visionModel: text().notNull().default(DEFAULT_VISION_MODEL),
   /** Modules the AI does not see (see AiPreferences.disabledModules). */
   disabledModules: text().array().notNull().default([]),
   /** Opt-in digest sections the user switched on (see DigestSection.optIn). */

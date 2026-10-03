@@ -337,6 +337,13 @@
       "when": 1791054550334,
       "tag": "0047_finance_budgets",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791055506166,
+      "tag": "0048_finance_receipts_vision",
+      "breakpoints": true
     }
   ]
 }

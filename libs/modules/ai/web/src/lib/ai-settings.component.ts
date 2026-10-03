@@ -162,6 +162,31 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
             </mat-form-field>
           </div>
 
+          <h3 class="section">📷 {{ 'ai.vision.title' | transloco }}</h3>
+          <p class="hint">{{ 'ai.vision.hint' | transloco }}</p>
+          <div class="speech">
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>{{ 'ai.speech.connection' | transloco }}</mat-label>
+              <mat-select
+                [value]="settings().visionConnectionId"
+                (selectionChange)="savePreferences({ visionConnectionId: $event.value })"
+              >
+                <mat-option [value]="null">{{ 'ai.speech.auto' | transloco }}</mat-option>
+                @for (c of settings().connections; track c.id) {
+                  <mat-option [value]="c.id">{{ c.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>{{ 'ai.settings.model' | transloco }}</mat-label>
+              <input
+                matInput
+                [value]="settings().visionModel"
+                (change)="saveVisionModel($any($event.target).value)"
+              />
+            </mat-form-field>
+          </div>
+
           <h3 class="section">👁️ {{ 'ai.privacy.title' | transloco }}</h3>
           <p class="hint">{{ 'ai.privacy.hint' | transloco }}</p>
           <div class="modules">
@@ -408,6 +433,12 @@ export class AiSettingsComponent {
   async saveSpeechModel(model: string): Promise<void> {
     if (model.trim()) {
       await this.savePreferences({ speechModel: model.trim() });
+    }
+  }
+
+  async saveVisionModel(model: string): Promise<void> {
+    if (model.trim()) {
+      await this.savePreferences({ visionModel: model.trim() });
     }
   }
 

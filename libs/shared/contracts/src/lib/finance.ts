@@ -34,6 +34,8 @@ export interface Transaction {
   recurringPaymentId: string | null;
   /** Set if the transaction is a monthly amount imported from a cost source (Hetzner, DeepSeek…). */
   costSourceId: string | null;
+  /** A photo of its receipt is kept (`GET /api/finance/transactions/:id/receipt`). */
+  hasReceipt: boolean;
   /**
    * The amount in the main currency at the rate of its day (see FinanceConversion); `null` — no
    * rate for this currency.

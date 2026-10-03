@@ -59,10 +59,18 @@ export interface BotPhoto {
 }
 
 /**
- * Handles photos sent to the bot (the diary saves them to today's entry).
- * Returns the bot reply. Only one module can own photos — the first registered handler.
+ * Handles photos sent to the bot (the diary saves them to today's entry, finance reads a
+ * receipt). Returns the bot reply. With several handlers the bot asks with buttons where a
+ * photo goes — `BotPhotoChoice` is the button.
  */
 export type BotPhotoHandler = (user: UserRow, photo: BotPhoto) => Promise<string>;
+
+/** A button of the "where does this photo go" question. */
+export interface BotPhotoChoice {
+  /** Short, Latin letters: it is part of the button's 64 bytes. */
+  id: string;
+  label: { en: string; ru: string };
+}
 
 /** A file sent to the bot as a document (not as a compressed photo). */
 export interface BotDocument {

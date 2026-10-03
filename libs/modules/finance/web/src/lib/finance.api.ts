@@ -105,4 +105,10 @@ export class FinanceApi {
   saveBudgets(budgets: BudgetInput[]) {
     return fromCore(() => this.finance.saveBudgets(budgets));
   }
+
+  /** Opens the photo of a transaction's receipt in a new tab. */
+  async openReceipt(id: string): Promise<void> {
+    const blob = await this.finance.receipt(id);
+    window.open(URL.createObjectURL(blob), '_blank');
+  }
 }

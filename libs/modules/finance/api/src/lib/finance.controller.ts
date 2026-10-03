@@ -9,7 +9,9 @@ import {
   Post,
   Put,
   Query,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
 import {
   Budget,
@@ -26,6 +28,7 @@ import {
   transactionQuerySchema,
 } from '@pd/contracts';
 import { BudgetsService } from './budgets/budgets.service';
+import { ReceiptsService } from './receipts/receipts.service';
 import { FinanceSettingsService } from './currency/finance-settings.service';
 import {
   RecurringPaymentsService,
@@ -40,6 +43,7 @@ export class FinanceController {
     private readonly recurring: RecurringPaymentsService,
     private readonly settings: FinanceSettingsService,
     private readonly budgetsService: BudgetsService,
+    private readonly receipts: ReceiptsService,
   ) {}
 
   // --- Settings: the main currency ---
@@ -90,6 +94,19 @@ export class FinanceController {
     @Query(new ZodValidationPipe(transactionQuerySchema)) query: TransactionQuery,
   ) {
     return this.transactions.cashFlowInMain(user.id, query);
+  }
+
+  /** The photo of a transaction's receipt (sent to the Telegram bot). */
+  @Get('transactions/:id/receipt')
+  async receipt(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res() response: Response,
+  ): Promise<void> {
+    const { data, mimeType } = await this.receipts.photo(user.id, id);
+    response.setHeader('Content-Type', mimeType);
+    response.setHeader('Cache-Control', 'private, max-age=86400');
+    response.send(data);
   }
 
   /** The budgets with what was spent in a month. */

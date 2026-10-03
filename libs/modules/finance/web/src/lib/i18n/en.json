@@ -121,7 +121,9 @@
     "notFound": "Nothing found",
     "clearFilters": "Reset filters",
     "actions": "Actions",
-    "recurring": "Recurring payment"
+    "recurring": "Recurring payment",
+    "receipt": "Recorded from a receipt",
+    "openReceipt": "The receipt"
   },
   "main": {
     "all": "Everything in {{currency}}",

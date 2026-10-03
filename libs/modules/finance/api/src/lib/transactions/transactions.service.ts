@@ -9,11 +9,11 @@ import {
   TransactionInput,
   TransactionQuery,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gte, isNull, lte, sql, SQL, sum } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, lte, SQL, sql, sum } from 'drizzle-orm';
 import { Converted, round } from '../currency/conversion';
 import { ExchangeRatesService } from '../currency/exchange-rates.service';
 import { FinanceSettingsService } from '../currency/finance-settings.service';
-import { TransactionRow, transactions } from '../finance.schema';
+import { financeReceipts, TransactionRow, transactions } from '../finance.schema';
 
 const TOP_CATEGORIES_LIMIT = 5;
 
@@ -302,7 +302,20 @@ export class TransactionsService {
       (r) => r.amount,
       (r) => r.occurredOn,
     );
-    return rows.map((row, index) => toTransaction(row, values[index]));
+    const withReceipt = new Set(
+      (
+        await this.db
+          .select({ id: financeReceipts.transactionId })
+          .from(financeReceipts)
+          .where(
+            inArray(
+              financeReceipts.transactionId,
+              rows.map((row) => row.id),
+            ),
+          )
+      ).map((receipt) => receipt.id),
+    );
+    return rows.map((row, index) => toTransaction(row, values[index], withReceipt.has(row.id)));
   }
 
   private convert<T extends { currency: string }>(
@@ -335,7 +348,11 @@ export class TransactionsService {
   }
 }
 
-function toTransaction(row: TransactionRow, mainAmount: number | null): Transaction {
+function toTransaction(
+  row: TransactionRow,
+  mainAmount: number | null,
+  hasReceipt = false,
+): Transaction {
   return {
     id: row.id,
     kind: row.kind,
@@ -348,5 +365,6 @@ function toTransaction(row: TransactionRow, mainAmount: number | null): Transact
     recurringPaymentId: row.recurringPaymentId,
     costSourceId: row.costSourceId,
     mainAmount,
+    hasReceipt,
   };
 }

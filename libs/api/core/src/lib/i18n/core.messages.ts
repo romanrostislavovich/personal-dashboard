@@ -25,6 +25,8 @@ const messages = {
     modelUsage: 'Send the number from the list: /model 2. The list: /model',
     modelSwitched: (name: string, model: string) => `✅ Now answering: ${name} (${model})`,
     telegramFileTooLarge: 'The file is larger than 20 MB — Telegram does not let bots download it.',
+    telegramPhotoWhere: 'Where does this photo go?',
+    telegramPhotoExpired: 'The photo is no longer waiting: send it again.',
     voiceNotConfigured:
       'To understand voice messages, add an OpenAI connection in the dashboard: Settings → Integrations ' +
       '(DeepSeek has no speech recognition).',
@@ -74,6 +76,8 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
     modelUsage: 'Отправь номер из списка: /model 2. Список: /model',
     modelSwitched: (name: string, model: string) => `✅ Теперь отвечает: ${name} (${model})`,
     telegramFileTooLarge: 'Файл больше 20 МБ — Telegram не даёт ботам скачивать такие.',
+    telegramPhotoWhere: 'Куда отправить это фото?',
+    telegramPhotoExpired: 'Фото уже не ждёт: пришлите его ещё раз.',
     voiceNotConfigured:
       'Чтобы понимать голосовые, добавь подключение OpenAI в дашборде: Настройки → Интеграции ' +
       '(у DeepSeek нет распознавания речи).',

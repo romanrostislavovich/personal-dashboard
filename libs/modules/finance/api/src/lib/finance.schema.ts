@@ -2,6 +2,7 @@ import { projects, users } from '@pd/api-core/schema';
 import { COST_PROVIDERS, TRANSACTION_KINDS } from '@pd/contracts';
 import {
   boolean,
+  customType,
   date,
   jsonb,
   numeric,
@@ -91,6 +92,23 @@ export const financeSettings = pgTable('finance_settings', {
     .references(() => users.id, { onDelete: 'cascade' }),
   /** Totals are converted into it; `null` — the currency used most. */
   mainCurrency: text(),
+});
+
+/** Binary data (PostgreSQL `bytea`) as a Node.js Buffer. */
+const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
+
+/** The photo of a receipt a transaction was recorded from (sent to the Telegram bot). */
+export const financeReceipts = pgTable('finance_receipts', {
+  /** One receipt per transaction; it goes with the transaction. */
+  transactionId: uuid()
+    .primaryKey()
+    .references(() => transactions.id, { onDelete: 'cascade' }),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  data: bytea().notNull(),
+  mimeType: text().notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
 /** A monthly limit of a category (`*` — all expenses), in the main currency. */

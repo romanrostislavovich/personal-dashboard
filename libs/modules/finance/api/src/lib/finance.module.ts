@@ -16,6 +16,7 @@ import { RecurringPaymentsJob } from './recurring/recurring-payments.job';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
 import { TransactionsService } from './transactions/transactions.service';
 import { BudgetsService } from './budgets/budgets.service';
+import { ReceiptsService } from './receipts/receipts.service';
 
 /**
  * Finance: personal and project income/expenses, recurring payments
@@ -27,6 +28,7 @@ import { BudgetsService } from './budgets/budgets.service';
     FinanceSearch,
     TransactionsService,
     BudgetsService,
+    ReceiptsService,
     ExchangeRatesService,
     FinanceSettingsService,
     RecurringPaymentsService,

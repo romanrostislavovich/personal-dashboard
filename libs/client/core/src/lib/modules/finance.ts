@@ -46,6 +46,8 @@ export function financeApi(api: ApiClient) {
     cashFlowInMain: (query: TransactionQuery) =>
       api.read<MainCashFlow>(FINANCE_READS.cashFlowInMain(query)),
     budgets: (month: string) => api.read<Budget[]>(FINANCE_READS.budgets(month)),
+    /** The photo of a transaction's receipt, for an object URL. */
+    receipt: (id: string) => api.blob(`${BASE}/transactions/${id}/receipt`),
     /** The whole set of budgets at once. */
     saveBudgets: (budgets: BudgetInput[]) => api.put<void>(`${BASE}/budgets`, { budgets }),
     settings: () => api.read<FinanceSettings>(FINANCE_READS.settings()),
