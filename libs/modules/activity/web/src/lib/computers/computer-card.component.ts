@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ACTIVITY_LOW_DISK_SHARE, ActivityComputer } from '@pd/contracts';
 import { DurationPipe, SparklineComponent, SparklinePoint } from '@pd/web-core';
+import { DiskAdvisorComponent } from './disk-advisor.component';
 
 const GB = 1024 ** 3;
 const MB = 1024 ** 2;
@@ -23,12 +24,15 @@ type Series = 'cpu' | 'memory' | 'gpu' | 'celsius' | 'battery';
     TranslocoPipe,
     DurationPipe,
     SparklineComponent,
+    DiskAdvisorComponent,
   ],
   templateUrl: './computer-card.component.html',
   styleUrl: './computer-card.component.scss',
 })
 export class ComputerCardComponent {
   readonly computer = input.required<ActivityComputer>();
+  /** The page is opened in the desktop app of this very computer: its disks can be cleaned. */
+  readonly isThis = input(false);
 
   protected readonly gb = GB;
   protected readonly mb = MB;

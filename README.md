@@ -91,6 +91,12 @@ games and messengers is noted), reminds to take a break after an hour at the com
 the computer's disks and load; daily limits (games, the whole day, one program) are set in
 Activity → Setup.
 
+When a disk fills up, Activity → Computers analyzes it on request: the app scans the disk
+(about a minute), the AI — or built-in rules without one — says what can go and why, with the
+exact command for Docker, npm and the like, and what you tick is moved to the Recycle Bin. The
+AI sees paths and sizes only, with your profile folder written as `%USERPROFILE%`; the system,
+programs and virtual disks are never deleted, whatever the advice.
+
 The app updates itself. Its own code is a few small files that every server hands out together
 with the dashboard (`/desktop-updates`): the app compares them with what it runs, downloads a
 newer version, checks it against the hashes of its manifest and restarts into it while its window

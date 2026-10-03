@@ -12,6 +12,8 @@ import {
   ActivitySettingsUpdate,
   ActivityStats,
   ActivityComputer,
+  DiskAdvice,
+  DiskReport,
   ActivityFocusStats,
   ActivityLimit,
   ActivityLimitInput,
@@ -69,6 +71,8 @@ export function activityApi(api: ApiClient) {
     /** The whole set of daily limits at once. */
     saveLimits: (limits: ActivityLimitInput[]) => api.put<void>(`${BASE}/limits`, { limits }),
     computers: () => api.read<ActivityComputer[]>(ACTIVITY_READS.computers()),
+    /** What to delete from a full disk, from what the desktop app's scan found. */
+    diskAdvice: (report: DiskReport) => api.post<DiskAdvice>(`${BASE}/disk-advice`, report),
   };
 }
 

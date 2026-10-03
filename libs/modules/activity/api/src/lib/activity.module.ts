@@ -6,6 +6,7 @@ import { ActivityDigest } from './activity.digest';
 import { ActivityJobs } from './activity.jobs';
 import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
+import { DiskAdviceService } from './disk/disk-advice.service';
 import { WellbeingService } from './wellbeing.service';
 
 /**
@@ -24,6 +25,7 @@ import { WellbeingService } from './wellbeing.service';
     ActivityDigest,
     ActivityJobs,
     WellbeingService,
+    DiskAdviceService,
   ],
 })
 export class ActivityModule {}

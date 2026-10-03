@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { desktopBridge } from '@pd/web-core';
 import { ActivityApi } from '../activity.api';
 import { ComputerCardComponent } from './computer-card.component';
 
@@ -10,7 +11,10 @@ import { ComputerCardComponent } from './computer-card.component';
   imports: [TranslocoPipe, ComputerCardComponent],
   template: `
     @for (computer of computers.value(); track computer.deviceId) {
-      <pd-activity-computer-card [computer]="computer" />
+      <pd-activity-computer-card
+        [computer]="computer"
+        [isThis]="computer.deviceId === thisDevice()"
+      />
     } @empty {
       @if (!computers.isLoading()) {
         <p class="hint">{{ 'activity.computers.empty' | transloco }}</p>
@@ -34,4 +38,12 @@ import { ComputerCardComponent } from './computer-card.component';
 })
 export class ComputersPage {
   protected readonly computers = inject(ActivityApi).computers();
+  /** The device of the desktop app the page is opened in; `null` in a browser. */
+  protected readonly thisDevice = signal<string | null>(null);
+
+  constructor() {
+    void desktopBridge()
+      ?.activity?.status()
+      .then((status) => this.thisDevice.set(status.deviceId));
+  }
 }

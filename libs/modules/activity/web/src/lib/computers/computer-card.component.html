@@ -150,6 +150,10 @@
         }
       </section>
 
+      @if (isThis()) {
+        <pd-activity-disk-advisor [disks]="l.disks" />
+      }
+
       @if (s?.network || s?.defender) {
         <section class="facts-row">
           @if (s?.network; as n) {
