@@ -121,6 +121,27 @@
 ### Planned
 
 - **Habits** — a habit tracker module, in the digest too
+- **Finance: the bank directly (open banking)** — transactions come from the bank every day
+  (GoCardless Bank Account Data: free in the EU, mBank, PKO, Revolut), no statements needed;
+  budgets, subscriptions and rules pick them up
+- **Sleep from the computer** — the last activity at night and the first in the morning give an
+  estimate ("slept ~6 h, went to bed at 2:40"), a weekly trend, in Life; the phone refines it later
+- **Weekly review on Sunday** — the AI sums up the week across the sections and asks 2–3
+  questions; the answers go to the diary, the main thing of the next week to the tasks
+- **Challenges of the week** — every Monday three personal challenges from the user's own data
+  ("2 focus sessions a day", "at most 10 h of games", "5 diary entries"), a result and XP at the end
+- **Tilt detector** — three Dota losses in a row or two hours of games after midnight → a gentle
+  "maybe enough?"; win rate by the time of day and after N matches in a row
+- **Notification centre and quiet hours** — the history of every notification with filters;
+  nothing at night, one summary in the morning; minor ones gathered into one message an hour
+- **A public /now page** — a link to share: what I listen to, play and work on, my GitHub; the
+  user picks what is shown
+- **Wishlist with price watch** — a link to a product, its price checked daily, a message when
+  it drops; can feed a savings goal
+- **Encrypted off-site backup** — the daily dump encrypted and sent to Backblaze B2 or S3, so the
+  data outlives the server
+- **Desktop: voice notes** — a shortcut, speak, the text (speech recognition) goes to the diary or
+  a task
 - **Sleep, steps, weight** — the first part of Fitness: from Google Fit / Health Connect or typed
   in by hand, shown in Life and in the morning digest
 - **Push notifications in the PWA** — on a phone without Telegram (see Everyday comfort)
