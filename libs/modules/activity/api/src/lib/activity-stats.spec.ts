@@ -5,6 +5,7 @@ import {
   longestRun,
   matchProject,
   UsageRow,
+  watchedApps,
 } from './activity-stats';
 
 const projects = [
@@ -121,5 +122,24 @@ describe('longestRun', () => {
   it('counts days in a row across a month border', () => {
     expect(longestRun(['2026-10-01', '2026-09-30', '2026-09-29', '2026-10-05'])).toBe(3);
     expect(longestRun([])).toBe(0);
+  });
+});
+
+describe('watchedApps', () => {
+  const watched = watchedApps([
+    { app: 'wow', category: null },
+    { app: 'chrome', category: 'development' },
+    { app: 'kinopoisk', category: 'media' },
+  ]);
+
+  it("takes players and browsers, the user's categories first", () => {
+    expect(watched).toContain('vlc'); // Well known, not seen yet.
+    expect(watched).toContain('kinopoisk'); // Made a player by the user.
+    expect(watched).toContain('firefox');
+    expect(watched).not.toContain('chrome'); // Made a development tool by the user.
+  });
+
+  it('never takes a game: a game without input is the user gone', () => {
+    expect(watched).not.toContain('wow');
   });
 });

@@ -5,6 +5,8 @@ import { WindowWatcher } from './window-watcher';
 
 /** What waits is sent this often. */
 const UPLOAD_MS = 60_000;
+/** A film without input counts this long at most: longer, the user has fallen asleep. */
+const WATCH_WITHOUT_INPUT_MS = 3 * 60 * 60 * 1000;
 /** The server takes this many spans at a time (see activityIngestSchema). */
 const BATCH = 500;
 
@@ -120,11 +122,20 @@ export class ActivityTracker {
       return;
     }
     // No keyboard or mouse for a while means the user went away — at the moment the input
-    // stopped. A full-screen window is the exception: a film or a game needs no input.
+    // stopped. A film is the exception: a full-screen player or browser needs no input, for a
+    // few hours. A game is not: a game left running without input is the user gone (asleep).
     const idleMs = powerMonitor.getSystemIdleTime() * 1000;
-    if (idleMs >= config.idleMinutes * 60_000 && !sample.fullscreen) {
-      this.keep(this.spans.feed(null, now - idleMs));
-      return;
+    if (idleMs >= config.idleMinutes * 60_000) {
+      const watching =
+        sample.fullscreen &&
+        config.watchApps.includes(sample.app.toLowerCase()) &&
+        idleMs < WATCH_WITHOUT_INPUT_MS;
+      if (!watching) {
+        // Past the limit of a film, the time up to now has been counted already.
+        const since = sample.fullscreen && idleMs >= WATCH_WITHOUT_INPUT_MS ? now : now - idleMs;
+        this.keep(this.spans.feed(null, since));
+        return;
+      }
     }
     this.keep(this.spans.feed(sample, now));
   }
@@ -170,6 +181,7 @@ export class ActivityTracker {
           this.store.setConfig({
             idleMinutes: config.idleMinutes,
             excludedApps: config.excludedApps,
+            watchApps: Array.isArray(config.watchApps) ? config.watchApps : [],
           });
         }
         this.store.dequeue(batch.length);

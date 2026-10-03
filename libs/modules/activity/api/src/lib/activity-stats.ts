@@ -1,9 +1,11 @@
 import {
   ACTIVITY_CATEGORIES,
+  ACTIVITY_WATCH_CATEGORIES,
   ActivityCategory,
   ActivityStats,
   addDays,
   defaultActivityCategory,
+  knownActivityApps,
   LocalDate,
   parseLocalDate,
   toLocalDate,
@@ -202,4 +204,22 @@ export function longestRun(days: LocalDate[]): number {
     previous = day;
   }
   return longest;
+}
+
+/**
+ * The programs one watches (ActivityDeviceConfig.watchApps): the seen ones by their category,
+ * the user's or the default one, and the well-known players and browsers not seen yet.
+ */
+export function watchedApps(seen: { app: string; category: ActivityCategory | null }[]): string[] {
+  const watched = new Set(
+    ACTIVITY_WATCH_CATEGORIES.flatMap((category) => knownActivityApps(category)),
+  );
+  for (const row of seen) {
+    if (ACTIVITY_WATCH_CATEGORIES.includes(row.category ?? defaultActivityCategory(row.app))) {
+      watched.add(row.app);
+    } else {
+      watched.delete(row.app);
+    }
+  }
+  return [...watched].sort();
 }

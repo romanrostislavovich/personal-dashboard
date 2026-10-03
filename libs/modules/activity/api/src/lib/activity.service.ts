@@ -27,6 +27,7 @@ import {
   categoryOf,
   ProjectPatterns,
   UsageRow,
+  watchedApps,
 } from './activity-stats';
 import {
   activityApps,
@@ -111,13 +112,18 @@ export class ActivityService {
 
   /** What a tracker has to know: when the user is "away" and what not to record. */
   async config(userId: string): Promise<ActivityDeviceConfig> {
-    const excluded = await this.db
-      .select({ app: activityApps.app })
+    const apps = await this.db
+      .select({
+        app: activityApps.app,
+        category: activityApps.category,
+        excluded: activityApps.excluded,
+      })
       .from(activityApps)
-      .where(and(eq(activityApps.userId, userId), eq(activityApps.excluded, true)));
+      .where(eq(activityApps.userId, userId));
     return {
       idleMinutes: (await this.settings(userId)).idleMinutes,
-      excludedApps: excluded.map((row) => row.app),
+      excludedApps: apps.filter((row) => row.excluded).map((row) => row.app),
+      watchApps: watchedApps(apps),
     };
   }
 

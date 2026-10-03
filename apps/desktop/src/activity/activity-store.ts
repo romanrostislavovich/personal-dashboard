@@ -7,6 +7,8 @@ import { Span } from './span-builder';
 export interface TrackerConfig {
   idleMinutes: number;
   excludedApps: string[];
+  /** Full-screen windows of these count without input, for a while (ActivityDeviceConfig). */
+  watchApps: string[];
 }
 
 interface StoredState {
@@ -21,7 +23,7 @@ interface StoredState {
 
 const DEFAULTS: StoredState = {
   device: null,
-  config: { idleMinutes: 5, excludedApps: [] },
+  config: { idleMinutes: 5, excludedApps: [], watchApps: [] },
   queue: [],
   pausedUntil: null,
 };
@@ -105,7 +107,9 @@ export class ActivityStore {
       return { ...DEFAULTS };
     }
     try {
-      return { ...DEFAULTS, ...(JSON.parse(readFileSync(this.path(), 'utf8')) as StoredState) };
+      const stored = JSON.parse(readFileSync(this.path(), 'utf8')) as StoredState;
+      // A config saved by an older version lacks the newer fields.
+      return { ...DEFAULTS, ...stored, config: { ...DEFAULTS.config, ...stored.config } };
     } catch {
       return { ...DEFAULTS };
     }
