@@ -143,3 +143,13 @@ h3 {
   flex-direction: column;
   gap: 6px;
 }
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spacer {
+  flex: 1;
+}

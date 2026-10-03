@@ -1,4 +1,4 @@
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -28,6 +28,8 @@ import { ActivityApi } from '../activity.api';
 
 const GB = 1024 ** 3;
 const POLL_MS = 1000;
+/** A scan older than this no longer tells how the disk is: the AI is not asked about it. */
+const FRESH_MS = 10 * 60_000;
 
 /** What happened to one suggestion: moved, cleaned, or why not. */
 type Outcome = { ok: boolean; text: string };
@@ -42,6 +44,7 @@ type Outcome = { ok: boolean; text: string };
   exportAs: 'diskAdvisor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DatePipe,
     DecimalPipe,
     MatButtonModule,
     MatCheckboxModule,
@@ -182,6 +185,30 @@ export class DiskAdvisorComponent {
     }
   }
 
+  /** Closes the panel; the next analysis starts from a new scan. */
+  protected async dismiss(): Promise<void> {
+    await this.disk()?.dismiss?.();
+    this.advice.set(null);
+    this.outcomes.set(new Map());
+    this.picked.set(new Set());
+    this.trashed.set(false);
+    this.binMessage.set(null);
+    this.status.set({ state: 'idle' });
+  }
+
+  /** The scan the panel shows, and whether it is too old to ask the AI about. */
+  protected readonly scanned = computed(() => {
+    const status = this.status();
+    if (status.state !== 'done' || !status.scannedAt) {
+      return null;
+    }
+    return {
+      at: status.scannedAt,
+      mount: status.report.mount,
+      stale: !this.advice() && Date.now() - Date.parse(status.scannedAt) >= FRESH_MS,
+    };
+  });
+
   protected async copy(text: string): Promise<void> {
     await navigator.clipboard.writeText(text);
   }
@@ -240,7 +267,12 @@ export class DiskAdvisorComponent {
     } else {
       this.stopPolling();
     }
-    if (status.state === 'done' && !this.advice() && !this.thinking()) {
+    if (status.state !== 'done' || this.advice() || this.thinking()) {
+      return;
+    }
+    if (status.advice) {
+      this.advice.set(status.advice);
+    } else if (!status.scannedAt || Date.now() - Date.parse(status.scannedAt) < FRESH_MS) {
       await this.ask(status);
     }
   }
@@ -249,7 +281,9 @@ export class DiskAdvisorComponent {
     this.thinking.set(true);
     try {
       const otherDisks = this.disks().filter((disk) => disk.mount !== status.report.mount);
-      this.advice.set(await firstValueFrom(this.api.diskAdvice({ ...status.report, otherDisks })));
+      const advice = await firstValueFrom(this.api.diskAdvice({ ...status.report, otherDisks }));
+      this.advice.set(advice);
+      await this.disk()?.keepAdvice?.(advice);
     } finally {
       this.thinking.set(false);
     }

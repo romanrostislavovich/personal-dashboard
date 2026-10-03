@@ -2,7 +2,29 @@
 @let disk = this.disk();
 @if (disk && (s.state !== 'idle' || advice())) {
   <section>
-    <h3>{{ 'activity.disk.title' | transloco }}</h3>
+    <header class="title">
+      <h3>{{ 'activity.disk.title' | transloco }}</h3>
+      @if (scanned(); as sc) {
+        <span class="hint">
+          {{ 'activity.disk.scannedAt' | transloco: { mount: sc.mount } }}
+          {{ sc.at | date: 'd MMM, HH:mm' }}
+        </span>
+      }
+      <span class="spacer"></span>
+      @if (s.state !== 'scanning' && !thinking()) {
+        <button
+          matIconButton
+          [matTooltip]="'activity.disk.close' | transloco"
+          [attr.aria-label]="'activity.disk.close' | transloco"
+          (click)="dismiss()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </header>
+    @if (scanned()?.stale) {
+      <p class="hint">{{ 'activity.disk.stale' | transloco }}</p>
+    }
 
     @if (s.state === 'scanning') {
       <mat-progress-bar mode="indeterminate" />

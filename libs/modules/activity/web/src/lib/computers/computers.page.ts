@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { desktopBridge } from '@pd/web-core';
 import { ActivityApi } from '../activity.api';
 import { ComputerCardComponent } from './computer-card.component';
+
+const REFRESH_MS = 60_000;
 
 /** The computers with a tracker: their state now and over the last day. */
 @Component({
@@ -42,6 +44,9 @@ export class ComputersPage {
   protected readonly thisDevice = signal<string | null>(null);
 
   constructor() {
+    // Computers report every few minutes: the page follows without a reload.
+    const refresh = setInterval(() => this.computers.reload(), REFRESH_MS);
+    inject(DestroyRef).onDestroy(() => clearInterval(refresh));
     void desktopBridge()
       ?.activity?.status()
       .then((status) => this.thisDevice.set(status.deviceId));

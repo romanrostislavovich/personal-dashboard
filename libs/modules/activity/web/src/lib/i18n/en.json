@@ -230,6 +230,9 @@
         "button": "Open the settings",
         "confirm": ""
       }
-    }
+    },
+    "scannedAt": "Scan of {{mount}} from",
+    "stale": "This scan is old: the disk has likely changed since. Scan it again with the button in the disk's row.",
+    "close": "Close"
   }
 }

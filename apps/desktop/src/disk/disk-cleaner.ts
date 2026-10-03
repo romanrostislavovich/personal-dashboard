@@ -10,7 +10,13 @@ export type DiskScanStatus =
   | { state: 'idle' }
   | { state: 'scanning'; mount: string; progress: ScanProgress }
   /** The report as the AI may see it: the profile folder written as %USERPROFILE%. */
-  | { state: 'done'; report: DiskReport }
+  | {
+      state: 'done';
+      report: DiskReport;
+      scannedAt: string;
+      /** The advice the page got for this report: shown again instead of asking anew. */
+      advice: unknown;
+    }
   | { state: 'error'; message: string };
 
 export interface TrashResult {
@@ -59,7 +65,12 @@ export class DiskCleaner {
           ]),
         );
         this.containers = new Set(report.known.map((place) => place.path));
-        this.status = { state: 'done', report: withHiddenProfile(report) };
+        this.status = {
+          state: 'done',
+          report: withHiddenProfile(report),
+          scannedAt: new Date().toISOString(),
+          advice: null,
+        };
       })
       .catch((error: Error) => (this.status = { state: 'error', message: error.message }));
   }
@@ -89,6 +100,22 @@ export class DiskCleaner {
       }
     }
     return results;
+  }
+
+  /** The page got advice for the report: it outlives a reload of the page. */
+  keepAdvice(advice: unknown): void {
+    if (this.status.state === 'done') {
+      this.status = { ...this.status, advice };
+    }
+  }
+
+  /** The user closed the panel: the next analysis starts from a new scan. */
+  dismiss(): void {
+    if (this.status.state !== 'scanning') {
+      this.status = { state: 'idle' };
+      this.known = new Map();
+      this.containers = new Set();
+    }
   }
 
   /** The Recycle Bin of Windows, to look into before emptying it. */
