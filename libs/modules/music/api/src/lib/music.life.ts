@@ -1,10 +1,13 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DB, Database, LifeService, localDaysRange, UsersService } from '@pd/api-core';
 import { LifeCard, LifeEvent } from '@pd/contracts';
-import { and, count, desc, eq, gte, lt } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, lt } from 'drizzle-orm';
 import { scrobbles } from './music.schema';
 
-/** What was listened to: the plays of a day and of a period, with the top artist. */
+/** Leaders sharing the first place are all shown, up to this many. */
+const TOP_ARTISTS = 3;
+
+/** What was listened to: the plays of a day and of a period, with the top artists. */
 @Injectable()
 export class MusicLife implements OnModuleInit {
   constructor(
@@ -17,14 +20,14 @@ export class MusicLife implements OnModuleInit {
     this.life.register({
       module: 'music',
       day: async (userId, day): Promise<LifeEvent[]> => {
-        const { plays, artist } = await this.listened(userId, { from: day, to: day });
+        const { plays, artist, topPlays } = await this.listened(userId, { from: day, to: day });
         return plays
           ? [
               {
                 module: 'music',
                 icon: 'headphones',
                 key: 'music.life.day',
-                params: { plays, artist },
+                params: { plays, artist, topPlays },
                 at: null,
                 link: '/music',
               },
@@ -32,7 +35,7 @@ export class MusicLife implements OnModuleInit {
           : [];
       },
       period: async (userId, period): Promise<LifeCard[]> => {
-        const { plays, artist } = await this.listened(userId, period);
+        const { plays, artist, topPlays } = await this.listened(userId, period);
         return plays
           ? [
               {
@@ -42,7 +45,7 @@ export class MusicLife implements OnModuleInit {
                 value: plays,
                 format: 'number',
                 detailKey: 'music.life.topArtist',
-                detailParams: { artist },
+                detailParams: { artist, topPlays },
               },
             ]
           : [];
@@ -61,13 +64,16 @@ export class MusicLife implements OnModuleInit {
       lt(scrobbles.playedAt, end),
     );
     const [total] = await this.db.select({ plays: count() }).from(scrobbles).where(where);
-    const [top] = await this.db
+    const top = await this.db
       .select({ artist: scrobbles.artist, plays: count() })
       .from(scrobbles)
       .where(where)
       .groupBy(scrobbles.artist)
-      .orderBy(desc(count()))
-      .limit(1);
-    return { plays: total?.plays ?? 0, artist: top?.artist ?? '' };
+      .orderBy(desc(count()), asc(scrobbles.artist))
+      .limit(TOP_ARTISTS);
+    // A tie is common on a varied day: picking one of the leaders would be arbitrary.
+    const topPlays = top[0]?.plays ?? 0;
+    const leaders = top.filter((row) => row.plays === topPlays).map((row) => row.artist);
+    return { plays: total?.plays ?? 0, artist: leaders.join(', '), topPlays };
   }
 }

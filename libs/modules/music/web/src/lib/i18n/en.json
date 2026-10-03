@@ -118,8 +118,8 @@
     "synced": "Updated"
   },
   "life": {
-    "day": "{{plays}} songs, mostly {{artist}}",
+    "day": "{{plays}} songs, most of all {{artist}} ({{topPlays}})",
     "plays": "Songs listened to",
-    "topArtist": "most of all {{artist}}"
+    "topArtist": "most of all {{artist}} ({{topPlays}})"
   }
 }
