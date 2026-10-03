@@ -110,7 +110,25 @@ export type ComputerWarning =
   | { kind: 'disk'; disks: ActivityHealthInput['disks'] }
   | { kind: 'diskHealth'; disks: string[] }
   | { kind: 'heat' }
-  | { kind: 'reboot'; days: number };
+  | { kind: 'reboot'; days: number }
+  | { kind: 'batteryFull' }
+  | { kind: 'batteryHealth'; percent: number; below: 80 | 70 | 60 };
+
+/** The readings of the last week: how often the battery sat full on mains power. */
+export interface BatteryWeek {
+  readings: number;
+  full: number;
+}
+
+/** A week of readings every 5 minutes, at least a day's worth of them, mostly full and plugged in. */
+const BATTERY_FULL_MIN_READINGS = 200;
+const BATTERY_FULL_SHARE = 0.8;
+const BATTERY_THRESHOLDS = [60, 70, 80] as const;
+
+/** The key a warning is remembered by in `alertedOn`. */
+export function alertKey(warning: ComputerWarning): ComputerAlert {
+  return warning.kind === 'batteryHealth' ? `battery${warning.below}` : warning.kind;
+}
 
 /**
  * The warnings a reading of a computer gives, not sent yet today (`recent` — the readings
@@ -121,6 +139,7 @@ export function computerWarnings(
   recent: (ActivitySystem | null)[],
   alertedOn: Partial<Record<ComputerAlert, LocalDate>>,
   day: LocalDate,
+  batteryWeek: BatteryWeek | null = null,
 ): ComputerWarning[] {
   const warnings: ComputerWarning[] = [];
   const low = lowDisks(health);
@@ -144,10 +163,29 @@ export function computerWarnings(
   if (days >= ACTIVITY_REBOOT_DAYS) {
     warnings.push({ kind: 'reboot', days });
   }
+  if (
+    batteryWeek &&
+    batteryWeek.readings >= BATTERY_FULL_MIN_READINGS &&
+    batteryWeek.full / batteryWeek.readings >= BATTERY_FULL_SHARE
+  ) {
+    warnings.push({ kind: 'batteryFull' });
+  }
+  const battery = health.system?.battery;
+  if (battery?.designCapacity && battery.fullCapacity) {
+    const percent = Math.round((battery.fullCapacity / battery.designCapacity) * 100);
+    // The lowest threshold crossed: falling from 83% to 65% speaks once, of 70.
+    const below = BATTERY_THRESHOLDS.find((threshold) => percent < threshold);
+    if (below) {
+      warnings.push({ kind: 'batteryHealth', percent, below });
+    }
+  }
   return warnings.filter((warning) => {
-    const last = alertedOn[warning.kind];
-    if (warning.kind === 'reboot' && last) {
+    const last = alertedOn[alertKey(warning)];
+    if ((warning.kind === 'reboot' || warning.kind === 'batteryFull') && last) {
       return Date.parse(day) - Date.parse(last) >= REBOOT_REPEAT_DAYS * DAY_MS;
+    }
+    if (warning.kind === 'batteryHealth') {
+      return !last; // Each threshold once, ever.
     }
     return last !== day;
   });

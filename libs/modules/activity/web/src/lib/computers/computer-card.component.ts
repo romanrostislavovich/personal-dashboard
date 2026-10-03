@@ -56,6 +56,16 @@ export class ComputerCardComponent {
       : null;
   });
 
+  /** All the outages of the week together, minutes. */
+  protected readonly outageMinutes = computed(() =>
+    Math.round(
+      this.computer().outages.reduce(
+        (sum, outage) => sum + Date.parse(outage.endedAt) - Date.parse(outage.startedAt),
+        0,
+      ) / 60_000,
+    ),
+  );
+
   /** Capacity now against when new, percent. */
   protected readonly batteryHealth = computed(() => {
     const battery = this.system()?.battery;

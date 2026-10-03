@@ -155,7 +155,13 @@
     "signatures": "definitions {{days}} d old",
     "topCpu": "Busiest now",
     "topMemory": "Most memory",
-    "mb": "MB"
+    "mb": "MB",
+    "outages": "Connection",
+    "outagesWeek": "Outages in the last week: {{count}}, {{minutes}} min in all",
+    "outage": {
+      "internet": "no internet",
+      "server": "the server did not answer"
+    }
   },
   "wellbeing": {
     "title": "Breaks, limits and focus",

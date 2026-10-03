@@ -316,6 +316,13 @@
       "when": 1791051175614,
       "tag": "0044_activity_private_words",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791051577129,
+      "tag": "0045_activity_outages",
+      "breakpoints": true
     }
   ]
 }

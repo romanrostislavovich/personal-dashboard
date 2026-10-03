@@ -4,6 +4,7 @@ import {
   ActivityFocusSettings,
   activityFocusSettingsSchema,
   activityHealthSchema,
+  activityOutageSchema,
 } from './activity-wellbeing';
 import { LocalDate } from './local-date';
 
@@ -210,6 +211,8 @@ export const activityIngestSchema = z.object({
   focus: z.array(activityFocusSessionSchema).max(50).optional(),
   /** The computer's state now (disks, load), every few minutes. */
   health: activityHealthSchema.optional(),
+  /** Times the server could not be reached, sent once it can be again. */
+  outages: z.array(activityOutageSchema).max(100).optional(),
 });
 export type ActivityIngest = z.infer<typeof activityIngestSchema>;
 

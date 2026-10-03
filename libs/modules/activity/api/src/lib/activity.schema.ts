@@ -10,7 +10,17 @@ import {
 } from '@pd/contracts';
 
 /** The warnings a computer can send (see WellbeingService.saveHealth). */
-export type ComputerAlert = 'disk' | 'diskHealth' | 'heat' | 'reboot';
+export type ComputerAlert =
+  | 'disk'
+  | 'diskHealth'
+  | 'heat'
+  | 'reboot'
+  /** Kept at a full charge on mains power most of the week. */
+  | 'batteryFull'
+  /** The battery's health fell under 80, 70, 60%: each said once. */
+  | 'battery80'
+  | 'battery70'
+  | 'battery60';
 import {
   bigint,
   boolean,
@@ -185,3 +195,22 @@ export const activityHealth = pgTable(
 
 export type ActivityDeviceRow = typeof activityDevices.$inferSelect;
 export type ActivitySpanRow = typeof activitySpans.$inferSelect;
+
+/** A time a computer could not reach the server (no internet, or the server down). */
+export const activityOutages = pgTable(
+  'activity_outages',
+  {
+    /** Made by the app: an outage sent twice is saved once. */
+    id: uuid().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    deviceId: uuid()
+      .notNull()
+      .references(() => activityDevices.id, { onDelete: 'cascade' }),
+    kind: text().$type<'internet' | 'server'>().notNull(),
+    startedAt: timestamp({ withTimezone: true }).notNull(),
+    endedAt: timestamp({ withTimezone: true }).notNull(),
+  },
+  (table) => [index().on(table.deviceId, table.startedAt)],
+);

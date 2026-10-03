@@ -30,6 +30,15 @@ const messages = {
     rebootTitle: (computer: string) => `🔄 ${computer} has not been restarted for long`,
     rebootBody: (days: number) =>
       `It has been running for ${days} days without a restart: Windows updates wait for one.`,
+    batteryFullTitle: (computer: string) => `🔋 ${computer}: the battery sits at 100%`,
+    batteryFullBody:
+      'The laptop has been on mains power at a full charge most of the week, and that wears a ' +
+      'battery out fastest. Most laptops can stop charging at about 80%: Lenovo Vantage — ' +
+      'Conservation mode; MyASUS — Battery Health Charging; Dell Power Manager — Primarily AC use; ' +
+      'HP — Adaptive Battery Optimizer; Huawei PC Manager — Smart charge.',
+    batteryHealthTitle: (computer: string) => `🔋 ${computer}: the battery is wearing out`,
+    batteryHealthBody: (percent: number) =>
+      `It holds ${percent}% of the charge it held when new. Under 60% a replacement is worth thinking about.`,
   },
   ru: {
     limitTitle: '⏳ Дневной лимит',
@@ -52,6 +61,15 @@ const messages = {
     rebootTitle: (computer: string) => `🔄 ${computer} давно не перезагружался`,
     rebootBody: (days: number) =>
       `Работает без перезагрузки уже ${days} дн.: обновления Windows ждут её.`,
+    batteryFullTitle: (computer: string) => `🔋 ${computer}: батарея всё время на 100%`,
+    batteryFullBody:
+      'Ноутбук почти всю неделю от сети на полном заряде — так батарея изнашивается быстрее ' +
+      'всего. Большинство ноутбуков умеют останавливать зарядку на ~80%: Lenovo Vantage — ' +
+      'режим сохранения батареи; MyASUS — Battery Health Charging; Dell Power Manager — ' +
+      'Primarily AC use; HP — Adaptive Battery Optimizer; Huawei PC Manager — умная зарядка.',
+    batteryHealthTitle: (computer: string) => `🔋 ${computer}: батарея изнашивается`,
+    batteryHealthBody: (percent: number) =>
+      `Она держит ${percent}% от заряда, который держала новой. Ниже 60% стоит задуматься о замене.`,
   },
 };
 

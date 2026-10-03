@@ -3,6 +3,7 @@ import { ActivityStore, TrackerConfig } from './activity-store';
 import { BreakReminder } from './break-reminder';
 import { FocusPhase, FocusSession, FocusStatus, FocusTimer } from './focus-timer';
 import { HealthCollector, HealthSnapshot } from './health';
+import { OutageWatch } from './outages';
 import { Span, SpanBuilder, WindowSample } from './span-builder';
 import { isMeeting, isPrivateWindow } from './window-rules';
 import { SAMPLE_SECONDS, WindowWatcher } from './window-watcher';
@@ -59,6 +60,7 @@ export class ActivityTracker {
   private uploading = false;
   /** A call is in front (or was a moment ago): the app keeps quiet. */
   private meetingUntil = 0;
+  private readonly outages = new OutageWatch((outage) => this.store.enqueueOutage(outage));
   private heldInMeeting = 0;
   private readonly breaks = new BreakReminder((minutes) => this.notice({ kind: 'break', minutes }));
   private readonly health = new HealthCollector();
@@ -91,6 +93,7 @@ export class ActivityTracker {
     powerMonitor.on('suspend', () => {
       this.close();
       this.breaks.reset();
+      this.outages.forget();
     });
     setInterval(() => void this.upload(), UPLOAD_MS);
     setInterval(() => this.takeHealth(), HEALTH_MS);
@@ -281,6 +284,7 @@ export class ActivityTracker {
         const batch = this.store.queue.slice(0, BATCH);
         const focus = first ? this.store.focusQueue.slice(0, FOCUS_BATCH) : [];
         const health = first ? this.pendingHealth : null;
+        const outages = first ? this.store.outageQueue.slice() : [];
         first = false;
         const response = await net.fetch(new URL('/api/activity/device/spans', server).href, {
           method: 'POST',
@@ -289,6 +293,7 @@ export class ActivityTracker {
             spans: batch,
             ...(focus.length ? { focus } : {}),
             ...(health ? { health } : {}),
+            ...(outages.length ? { outages } : {}),
           }),
         });
         if (response.status === 401) {
@@ -297,8 +302,13 @@ export class ActivityTracker {
           return;
         }
         if (!response.ok) {
+          // The server answers, but with an error (a restart, a deploy): it is down for us.
+          if (response.status >= 500) {
+            await this.outages.failed();
+          }
           return;
         }
+        this.outages.succeeded();
         const config = (await response.json()) as Partial<TrackerConfig>;
         if (typeof config.idleMinutes === 'number' && Array.isArray(config.excludedApps)) {
           const known = this.store.config;
@@ -320,13 +330,15 @@ export class ActivityTracker {
         }
         this.store.dequeue(batch.length);
         this.store.dequeueFocus(new Set(focus.map((session) => session.id)));
+        this.store.dequeueOutages(new Set(outages.map((outage) => outage.id)));
         if (health && this.pendingHealth === health) {
           this.pendingHealth = null;
         }
         this.onChange();
       } while (this.store.queue.length >= BATCH);
     } catch {
-      // No connection: the spans wait in the store.
+      // No connection: the spans wait in the store, the outage is noted.
+      await this.outages.failed();
     } finally {
       this.uploading = false;
     }
