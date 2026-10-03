@@ -9,6 +9,28 @@ export interface DesktopBridge {
   onNavigate?(callback: (route: string) => void): void;
   /** The activity tracker of this computer (absent in an older shell). */
   activity?: DesktopActivity;
+  /** The focus timer (Pomodoro) of this computer (absent in an older shell). */
+  focus?: DesktopFocus;
+}
+
+/** The focus timer of the desktop shell; sessions go to the server with the tracker's data. */
+export interface DesktopFocus {
+  status(): Promise<DesktopFocusStatus>;
+  start(options: { projectId?: string | null; note?: string | null }): Promise<void>;
+  /** Stops a focus part or skips a break. */
+  stop(): Promise<void>;
+}
+
+export interface DesktopFocusStatus {
+  phase: 'idle' | 'focus' | 'short-break' | 'long-break';
+  /** When the current part ends (ISO). */
+  endsAt: string | null;
+  round: number;
+  roundsBeforeLongBreak: number;
+  projectId: string | null;
+  note: string | null;
+  /** A focus session needs tracking enabled on this computer. */
+  available: boolean;
 }
 
 /** The tracker of the desktop shell: which program is in front and for how long. */

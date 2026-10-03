@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AchievementsService, achievementTiers, AchievementTierTuple } from '@pd/api-core';
 import { ActivityCategory } from '@pd/contracts';
 import { ActivityAllTime, ActivityService } from './activity.service';
+import { WellbeingService } from './wellbeing.service';
 
 const HOUR = 3600;
 /** One check measures every metric: they share the numbers instead of asking again each. */
@@ -22,6 +23,7 @@ export class ActivityAchievements implements OnModuleInit {
   constructor(
     private readonly achievements: AchievementsService,
     private readonly activity: ActivityService,
+    private readonly wellbeing: WellbeingService,
   ) {}
 
   onModuleInit(): void {
@@ -382,6 +384,63 @@ export class ActivityAchievements implements OnModuleInit {
       ],
     ]);
 
+    this.focusMetric('activity.focus-sessions', (records) => records.sessions, [
+      [
+        1,
+        '🍅',
+        { en: 'The first tomato', ru: 'Первый помидор' },
+        { en: 'The first focus session completed', ru: 'Первая завершённая фокус-сессия' },
+      ],
+      [
+        25,
+        '🎯',
+        { en: 'Focused', ru: 'Собранный' },
+        { en: '25 focus sessions completed', ru: '25 завершённых фокус-сессий' },
+      ],
+      [
+        100,
+        '🧘',
+        { en: 'Zen', ru: 'Дзен' },
+        { en: '100 focus sessions completed', ru: '100 завершённых фокус-сессий' },
+      ],
+      [
+        500,
+        '🥷',
+        { en: 'Master of attention', ru: 'Мастер внимания' },
+        { en: '500 focus sessions completed', ru: '500 завершённых фокус-сессий' },
+      ],
+    ]);
+
+    this.focusMetric('activity.focus-hours', (records) => hours(records.seconds), [
+      [
+        10,
+        '⏱️',
+        { en: 'Ten hours of focus', ru: 'Десять часов фокуса' },
+        { en: '10 hours in focus sessions', ru: '10 часов в фокус-сессиях' },
+      ],
+      [
+        100,
+        '🔭',
+        { en: 'Deep focus', ru: 'Глубокое погружение' },
+        { en: '100 hours in focus sessions', ru: '100 часов в фокус-сессиях' },
+      ],
+    ]);
+
+    this.focusMetric('activity.focus-streak', (records) => records.longestStreak, [
+      [
+        5,
+        '🔥',
+        { en: 'Focus habit', ru: 'Привычка к фокусу' },
+        { en: 'A focus session 5 days in a row', ru: 'Фокус-сессия 5 дней подряд' },
+      ],
+      [
+        30,
+        '🏔️',
+        { en: 'Unbreakable', ru: 'Несгибаемый' },
+        { en: 'A focus session 30 days in a row', ru: 'Фокус-сессия 30 дней подряд' },
+      ],
+    ]);
+
     this.metric('activity.devices', (records) => records.devices, [
       [
         2,
@@ -401,6 +460,19 @@ export class ActivityAchievements implements OnModuleInit {
       id,
       module: 'activity',
       measure: async (userId) => value(await this.records(userId)),
+      tiers: achievementTiers(...tiers),
+    });
+  }
+
+  private focusMetric(
+    id: string,
+    value: (records: { sessions: number; seconds: number; longestStreak: number }) => number,
+    tiers: AchievementTierTuple[],
+  ): void {
+    this.achievements.register({
+      id,
+      module: 'activity',
+      measure: async (userId) => value(await this.wellbeing.focusRecords(userId)),
       tiers: achievementTiers(...tiers),
     });
   }

@@ -7,6 +7,7 @@ export * from './lib/theme';
 export * from './lib/layout';
 export * from './lib/search';
 export * from './lib/activity';
+export * from './lib/activity-wellbeing';
 export * from './lib/projects';
 export * from './lib/notifications';
 export * from './lib/birthdays';

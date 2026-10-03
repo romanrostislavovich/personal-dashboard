@@ -1,5 +1,6 @@
 import { app, Menu, MenuItemConstructorOptions, nativeImage, Tray } from 'electron';
 import { join } from 'node:path';
+import { FocusStatus } from './activity/focus-timer';
 import { TrackerStatus } from './activity/tracker';
 import { UpdateState } from './update/updater';
 
@@ -18,6 +19,12 @@ export interface TrayActions {
     check: () => void;
     /** Restarts into the downloaded update. */
     install: () => void;
+  };
+  focus: {
+    status: () => FocusStatus & { available: boolean };
+    start: () => void;
+    /** Stops a focus part or skips a break. */
+    stop: () => void;
   };
   activity: {
     status: () => TrackerStatus;
@@ -38,16 +45,20 @@ export function createTray(actions: TrayActions): () => void {
 
   const refresh = () => {
     const status = actions.activity.status();
+    const focus = actions.focus.status();
     tray.setToolTip(
-      status.deviceId && !status.paused
-        ? 'Personal Dashboard — активность записывается'
-        : 'Personal Dashboard',
+      focus.phase === 'focus'
+        ? 'Personal Dashboard — идёт фокус'
+        : status.deviceId && !status.paused
+          ? 'Personal Dashboard — активность записывается'
+          : 'Personal Dashboard',
     );
     tray.setContextMenu(
       Menu.buildFromTemplate([
         { label: 'Открыть', click: actions.show },
         { type: 'separator' },
         ...activityItems(status, actions.activity.pause),
+        ...focusItems(actions.focus),
         { type: 'separator' },
         {
           label: 'Запускать вместе с системой',
@@ -100,6 +111,32 @@ function updateItems(update: TrayActions['update']): MenuItemConstructorOptions[
       ];
     case 'idle':
       return [version, { label: 'Проверить обновления', click: update.check }];
+  }
+}
+
+/** The focus timer: start a session, or the minutes left and a way to stop. */
+function focusItems(focus: TrayActions['focus']): MenuItemConstructorOptions[] {
+  const status = focus.status();
+  if (!status.available) {
+    return [];
+  }
+  const left = status.endsAt
+    ? Math.max(1, Math.ceil((Date.parse(status.endsAt) - Date.now()) / 60_000))
+    : 0;
+  switch (status.phase) {
+    case 'focus':
+      return [
+        { label: `Фокус: осталось ${left} мин`, enabled: false },
+        { label: 'Остановить фокус', click: focus.stop },
+      ];
+    case 'short-break':
+    case 'long-break':
+      return [
+        { label: `Перерыв: осталось ${left} мин`, enabled: false },
+        { label: 'Пропустить перерыв', click: focus.stop },
+      ];
+    case 'idle':
+      return [{ label: 'Начать фокус', click: focus.start }];
   }
 }
 

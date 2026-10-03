@@ -11,7 +11,12 @@ import {
   ActivityProjectRule,
   ActivityProjectRuleInput,
   ActivitySettings,
+  ActivitySettingsUpdate,
   ActivityStats,
+  ActivityComputer,
+  ActivityFocusStats,
+  ActivityLimit,
+  ActivityLimitInput,
   ActivityTimelineEntry,
 } from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
@@ -53,7 +58,7 @@ export class ActivityApi {
     return httpResource<ActivitySettings>(() => ACTIVITY_READS.settings());
   }
 
-  saveSettings(settings: ActivitySettings) {
+  saveSettings(settings: ActivitySettingsUpdate) {
     return fromCore(() => this.activity.saveSettings(settings));
   }
 
@@ -77,5 +82,27 @@ export class ActivityApi {
 
   removeRule(id: string) {
     return fromCore(() => this.activity.removeRule(id));
+  }
+
+  focus(period: () => ActivityPeriod) {
+    return httpResource<ActivityFocusStats>(() => ACTIVITY_READS.focus(period()));
+  }
+
+  removeFocus(id: string) {
+    return fromCore(() => this.activity.removeFocus(id));
+  }
+
+  limits() {
+    return httpResource<ActivityLimit[]>(() => ACTIVITY_READS.limits(), { defaultValue: [] });
+  }
+
+  saveLimits(limits: ActivityLimitInput[]) {
+    return fromCore(() => this.activity.saveLimits(limits));
+  }
+
+  computers() {
+    return httpResource<ActivityComputer[]>(() => ACTIVITY_READS.computers(), {
+      defaultValue: [],
+    });
   }
 }

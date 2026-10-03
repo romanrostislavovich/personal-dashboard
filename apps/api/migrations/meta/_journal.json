@@ -288,6 +288,13 @@
       "when": 1790970594620,
       "tag": "0040_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1791038679731,
+      "tag": "0041_activity_wellbeing",
+      "breakpoints": true
     }
   ]
 }

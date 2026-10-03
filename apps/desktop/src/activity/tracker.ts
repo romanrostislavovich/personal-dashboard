@@ -1,7 +1,10 @@
 import { net, powerMonitor } from 'electron';
 import { ActivityStore, TrackerConfig } from './activity-store';
+import { BreakReminder } from './break-reminder';
+import { FocusPhase, FocusSession, FocusStatus, FocusTimer } from './focus-timer';
+import { HealthCollector, HealthSnapshot } from './health';
 import { Span, SpanBuilder, WindowSample } from './span-builder';
-import { WindowWatcher } from './window-watcher';
+import { SAMPLE_SECONDS, WindowWatcher } from './window-watcher';
 
 /** What waits is sent this often. */
 const UPLOAD_MS = 60_000;
@@ -9,6 +12,17 @@ const UPLOAD_MS = 60_000;
 const WATCH_WITHOUT_INPUT_MS = 3 * 60 * 60 * 1000;
 /** The server takes this many spans at a time (see activityIngestSchema). */
 const BATCH = 500;
+/** And this many focus sessions. */
+const FOCUS_BATCH = 50;
+/** How often the state of the computer (disks, load) is taken. */
+const HEALTH_MS = 5 * 60_000;
+const FIRST_HEALTH_MS = 20_000;
+
+/** What the tracker tells the user; the shell shows it as a system notification. */
+export type TrackerNotice =
+  | { kind: 'break'; minutes: number }
+  | { kind: 'focus-ended'; next: FocusPhase; held: number; minutes: number }
+  | { kind: 'break-ended' };
 
 export interface TrackerStatus {
   /** The system is one the tracker can watch windows on (Windows). */
@@ -26,8 +40,11 @@ export interface TrackerStatus {
  * of the app is connected to, with the token of this device.
  *
  * Nothing is recorded while the tracker is paused, while the user is away (no input for the
- * configured minutes, unless the window is full-screen — a video, a game), for an excluded
- * program, when the screen is locked, and before tracking is enabled in the dashboard.
+ * configured minutes; a full-screen film counts for a while), for an excluded program, when
+ * the screen is locked, and before tracking is enabled in the dashboard.
+ *
+ * Along the way it reminds to take a break, runs the focus timer (and notes what distracts
+ * from it) and takes the state of the computer every few minutes — all sent with the spans.
  */
 export class ActivityTracker {
   private readonly store = new ActivityStore();
@@ -35,18 +52,42 @@ export class ActivityTracker {
   private readonly watcher = new WindowWatcher((sample) => this.onSample(sample));
   private locked = false;
   private uploading = false;
+  private readonly breaks = new BreakReminder((minutes) => this.notice({ kind: 'break', minutes }));
+  private readonly health = new HealthCollector();
+  /** The latest state of the computer, sent with the next upload. */
+  private pendingHealth: HealthSnapshot | null = null;
+  readonly focus = new FocusTimer(() => this.store.config.focus, {
+    session: (session: FocusSession) => this.store.enqueueFocus(session),
+    phaseEnded: (ended, next, held) => {
+      const settings = this.store.config.focus;
+      const minutes =
+        next === 'long-break' ? settings.longBreakMinutes : settings.shortBreakMinutes;
+      this.notice(
+        ended === 'focus' ? { kind: 'focus-ended', next, held, minutes } : { kind: 'break-ended' },
+      );
+    },
+    changed: () => this.onChange(),
+  });
 
   constructor(
     private readonly serverUrl: () => string | null,
     /** Called when the status changes — the tray menu shows it. */
     private readonly onChange: () => void,
+    /** A reminder to take a break, the end of a focus part. */
+    private readonly notice: (notice: TrackerNotice) => void,
   ) {}
 
   start(): void {
     powerMonitor.on('lock-screen', () => this.setLocked(true));
     powerMonitor.on('unlock-screen', () => this.setLocked(false));
-    powerMonitor.on('suspend', () => this.close());
+    powerMonitor.on('suspend', () => {
+      this.close();
+      this.breaks.reset();
+    });
     setInterval(() => void this.upload(), UPLOAD_MS);
+    setInterval(() => this.takeHealth(), HEALTH_MS);
+    // The first reading soon after the start: the load needs a moment to be measured.
+    setTimeout(() => this.takeHealth(), FIRST_HEALTH_MS);
     if (this.store.deviceId) {
       this.watcher.start();
     }
@@ -88,11 +129,23 @@ export class ActivityTracker {
     this.onChange();
   }
 
-  /** Before the app quits: the open span is saved and what waits is sent. */
+  /** Before the app quits: the open span and focus part are saved and what waits is sent. */
   async stop(): Promise<void> {
     this.watcher.stop();
     this.close();
+    this.focus.stop();
     await this.upload();
+  }
+
+  focusStatus(): FocusStatus & { available: boolean } {
+    return { ...this.focus.status(), available: !!this.store.deviceId };
+  }
+
+  /** A focus session needs a device to report to: tracking enabled on this computer. */
+  startFocus(options: { projectId?: string | null; note?: string | null } = {}): void {
+    if (this.store.deviceId) {
+      this.focus.start(options);
+    }
   }
 
   private get paused(): boolean {
@@ -111,20 +164,38 @@ export class ActivityTracker {
     this.locked = locked;
     if (locked) {
       this.close();
+      this.breaks.reset();
+    }
+  }
+
+  private takeHealth(): void {
+    if (this.store.deviceId) {
+      this.pendingHealth = this.health.collect();
     }
   }
 
   private onSample(sample: WindowSample | null): void {
     const now = Date.now();
     const config = this.store.config;
+    const idleMs = powerMonitor.getSystemIdleTime() * 1000;
+    this.breaks.tick(now, idleMs, {
+      away: this.locked || this.paused,
+      breakMinutes: config.breakMinutes,
+      quiet: this.focus.working,
+    });
     if (!sample || this.locked || this.paused || isExcluded(sample, config)) {
       this.keep(this.spans.feed(null, now));
       return;
     }
+    if (
+      idleMs < config.idleMinutes * 60_000 &&
+      config.distractingApps.includes(sample.app.toLowerCase())
+    ) {
+      this.focus.distraction(sample.app.toLowerCase(), sample.name ?? sample.app, SAMPLE_SECONDS);
+    }
     // No keyboard or mouse for a while means the user went away — at the moment the input
     // stopped. A film is the exception: a full-screen player or browser needs no input, for a
     // few hours. A game is not: a game left running without input is the user gone (asleep).
-    const idleMs = powerMonitor.getSystemIdleTime() * 1000;
     if (idleMs >= config.idleMinutes * 60_000) {
       const watching =
         sample.fullscreen &&
@@ -161,12 +232,21 @@ export class ActivityTracker {
     this.uploading = true;
     try {
       // An empty batch is sent too: it is how a new exclusion or idle time reaches the tracker.
+      // Focus sessions and the computer's state go with the first batch.
+      let first = true;
       do {
         const batch = this.store.queue.slice(0, BATCH);
+        const focus = first ? this.store.focusQueue.slice(0, FOCUS_BATCH) : [];
+        const health = first ? this.pendingHealth : null;
+        first = false;
         const response = await net.fetch(new URL('/api/activity/device/spans', server).href, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Device ${token}` },
-          body: JSON.stringify({ spans: batch }),
+          body: JSON.stringify({
+            spans: batch,
+            ...(focus.length ? { focus } : {}),
+            ...(health ? { health } : {}),
+          }),
         });
         if (response.status === 401) {
           // The device was removed in the dashboard: this computer no longer reports.
@@ -178,13 +258,24 @@ export class ActivityTracker {
         }
         const config = (await response.json()) as Partial<TrackerConfig>;
         if (typeof config.idleMinutes === 'number' && Array.isArray(config.excludedApps)) {
+          const known = this.store.config;
           this.store.setConfig({
             idleMinutes: config.idleMinutes,
             excludedApps: config.excludedApps,
             watchApps: Array.isArray(config.watchApps) ? config.watchApps : [],
+            breakMinutes:
+              typeof config.breakMinutes === 'number' ? config.breakMinutes : known.breakMinutes,
+            focus: config.focus ?? known.focus,
+            distractingApps: Array.isArray(config.distractingApps)
+              ? config.distractingApps
+              : known.distractingApps,
           });
         }
         this.store.dequeue(batch.length);
+        this.store.dequeueFocus(new Set(focus.map((session) => session.id)));
+        if (health && this.pendingHealth === health) {
+          this.pendingHealth = null;
+        }
         this.onChange();
       } while (this.store.queue.length >= BATCH);
     } catch {

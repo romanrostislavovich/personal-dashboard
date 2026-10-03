@@ -16,6 +16,11 @@ import { AuthUser, CurrentUser, Public, ZodValidationPipe } from '@pd/api-core';
 import {
   ActivityApp,
   ActivityAppUpdate,
+  ActivityComputer,
+  ActivityFocusStats,
+  ActivityLimit,
+  ActivityLimits,
+  activityLimitsSchema,
   activityAppUpdateSchema,
   ActivityDayQuery,
   activityDaySchema,
@@ -34,12 +39,14 @@ import {
   ActivityProjectRuleInput,
   activityProjectRuleInputSchema,
   ActivitySettings,
-  activitySettingsSchema,
+  ActivitySettingsUpdate,
+  activitySettingsUpdateSchema,
   ActivityStats,
   ActivityTimelineEntry,
 } from '@pd/contracts';
 import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
+import { WellbeingService } from './wellbeing.service';
 
 /**
  * Time at the computer. Two kinds of callers:
@@ -52,11 +59,15 @@ export class ActivityController {
   constructor(
     private readonly activity: ActivityService,
     private readonly devices: DevicesService,
+    private readonly wellbeing: WellbeingService,
   ) {}
 
   // --- A tracker ---
 
-  /** Saves what the tracker recorded; answers with its settings, so one request does both. */
+  /**
+   * Saves what the tracker recorded (spans, ended focus sessions, the computer's state) and
+   * answers with its settings, so one request does both.
+   */
   @Public()
   @Post('device/spans')
   async ingest(
@@ -65,6 +76,13 @@ export class ActivityController {
   ): Promise<ActivityDeviceConfig & { saved: number }> {
     const device = await this.devices.authenticate(authorization);
     const saved = await this.activity.ingest(device, body.spans);
+    await this.wellbeing.saveFocus(device, body.focus ?? []);
+    if (body.health) {
+      await this.wellbeing.saveHealth(device, body.health);
+    }
+    if (saved > 0) {
+      await this.wellbeing.checkLimits(device.userId);
+    }
     return { saved, ...(await this.activity.config(device.userId)) };
   }
 
@@ -130,7 +148,7 @@ export class ActivityController {
   @HttpCode(204)
   saveSettings(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(activitySettingsSchema)) settings: ActivitySettings,
+    @Body(new ZodValidationPipe(activitySettingsUpdateSchema)) settings: ActivitySettingsUpdate,
   ): Promise<void> {
     return this.activity.saveSettings(user.id, settings);
   }
@@ -164,6 +182,45 @@ export class ActivityController {
     @Body(new ZodValidationPipe(activityProjectRuleInputSchema)) input: ActivityProjectRuleInput,
   ): Promise<void> {
     return this.activity.addRule(user.id, input);
+  }
+
+  /** Focus sessions of a period with their totals. */
+  @Get('focus')
+  focus(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(activityPeriodSchema)) period: ActivityPeriod,
+  ): Promise<ActivityFocusStats> {
+    return this.wellbeing.focusStats(user.id, period);
+  }
+
+  @Delete('focus/:id')
+  @HttpCode(204)
+  removeFocus(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.wellbeing.removeFocus(user.id, id);
+  }
+
+  @Get('limits')
+  limits(@CurrentUser() user: AuthUser): Promise<ActivityLimit[]> {
+    return this.wellbeing.limits(user.id);
+  }
+
+  /** The whole set of daily limits at once. */
+  @Put('limits')
+  @HttpCode(204)
+  saveLimits(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(activityLimitsSchema)) body: ActivityLimits,
+  ): Promise<void> {
+    return this.wellbeing.saveLimits(user.id, body.limits);
+  }
+
+  /** The computers with their latest state and the last day of load. */
+  @Get('computers')
+  computers(@CurrentUser() user: AuthUser): Promise<ActivityComputer[]> {
+    return this.wellbeing.computers(user.id);
   }
 
   @Delete('rules/:id')

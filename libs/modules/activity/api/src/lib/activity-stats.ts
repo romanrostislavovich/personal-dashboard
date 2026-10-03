@@ -207,19 +207,25 @@ export function longestRun(days: LocalDate[]): number {
 }
 
 /**
- * The programs one watches (ActivityDeviceConfig.watchApps): the seen ones by their category,
- * the user's or the default one, and the well-known players and browsers not seen yet.
+ * The programs of some categories, for the tracker: the seen ones by their category, the
+ * user's or the default one, and the well-known programs of those categories not seen yet.
  */
-export function watchedApps(seen: { app: string; category: ActivityCategory | null }[]): string[] {
-  const watched = new Set(
-    ACTIVITY_WATCH_CATEGORIES.flatMap((category) => knownActivityApps(category)),
-  );
+export function appsOfCategories(
+  seen: { app: string; category: ActivityCategory | null }[],
+  categories: readonly ActivityCategory[],
+): string[] {
+  const found = new Set(categories.flatMap((category) => knownActivityApps(category)));
   for (const row of seen) {
-    if (ACTIVITY_WATCH_CATEGORIES.includes(row.category ?? defaultActivityCategory(row.app))) {
-      watched.add(row.app);
+    if (categories.includes(row.category ?? defaultActivityCategory(row.app))) {
+      found.add(row.app);
     } else {
-      watched.delete(row.app);
+      found.delete(row.app);
     }
   }
-  return [...watched].sort();
+  return [...found].sort();
+}
+
+/** The programs one watches (ActivityDeviceConfig.watchApps): players and browsers. */
+export function watchedApps(seen: { app: string; category: ActivityCategory | null }[]): string[] {
+  return appsOfCategories(seen, ACTIVITY_WATCH_CATEGORIES);
 }

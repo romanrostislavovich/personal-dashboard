@@ -1,10 +1,20 @@
 import { projects, users } from '@pd/api-core/schema';
-import { ActivityCategory, ActivityPlatform } from '@pd/contracts';
 import {
+  ActivityCategory,
+  ActivityFocusSessionInput,
+  ActivityHealthInput,
+  ActivityLimitKind,
+  ActivityPlatform,
+} from '@pd/contracts';
+import {
+  bigint,
   boolean,
+  date,
   index,
   integer,
+  jsonb,
   pgTable,
+  real,
   primaryKey,
   text,
   timestamp,
@@ -23,6 +33,8 @@ export const activityDevices = pgTable('activity_devices', {
   /** SHA-256 of the token the device reports with; the token itself is shown once. */
   tokenHash: text().notNull().unique(),
   lastSeenAt: timestamp({ withTimezone: true }),
+  /** The day a disk running out of space was last reported: once a day is enough. */
+  diskAlertedOn: date({ mode: 'string' }),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -93,7 +105,71 @@ export const activitySettings = pgTable('activity_settings', {
     .references(() => users.id, { onDelete: 'cascade' }),
   /** No input for this long means the user is away. */
   idleMinutes: integer().notNull().default(5),
+  /** Remind to take a break after this long without one; `0` — never. */
+  breakMinutes: integer().notNull().default(60),
+  focusMinutes: integer().notNull().default(25),
+  shortBreakMinutes: integer().notNull().default(5),
+  longBreakMinutes: integer().notNull().default(15),
+  roundsBeforeLongBreak: integer().notNull().default(4),
 });
+
+/** "No more than this much a day": in games, at the computer at all, in one program. */
+export const activityLimits = pgTable('activity_limits', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  kind: text().$type<ActivityLimitKind>().notNull(),
+  /** The program of an `app` limit. */
+  app: text(),
+  minutes: integer().notNull(),
+  /** The day the limit was last reported as reached: once a day. */
+  notifiedOn: date({ mode: 'string' }),
+});
+
+/** A focus session (Pomodoro) of a desktop app: its work part, and what distracted from it. */
+export const activityFocusSessions = pgTable(
+  'activity_focus_sessions',
+  {
+    /** Made by the app: a session sent twice is saved once. */
+    id: uuid().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    deviceId: uuid()
+      .notNull()
+      .references(() => activityDevices.id, { onDelete: 'cascade' }),
+    projectId: uuid().references(() => projects.id, { onDelete: 'set null' }),
+    note: text(),
+    startedAt: timestamp({ withTimezone: true }).notNull(),
+    endedAt: timestamp({ withTimezone: true }).notNull(),
+    plannedMinutes: integer().notNull(),
+    focusSeconds: integer().notNull(),
+    completed: boolean().notNull(),
+    distractions: jsonb().$type<ActivityFocusSessionInput['distractions']>().notNull(),
+  },
+  (table) => [index().on(table.userId, table.startedAt)],
+);
+
+/** The state of a computer every few minutes: load, memory, disks. Kept for a month. */
+export const activityHealth = pgTable(
+  'activity_health',
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    deviceId: uuid()
+      .notNull()
+      .references(() => activityDevices.id, { onDelete: 'cascade' }),
+    at: timestamp({ withTimezone: true }).notNull(),
+    cpu: real().notNull(),
+    memoryUsed: bigint({ mode: 'number' }).notNull(),
+    memoryTotal: bigint({ mode: 'number' }).notNull(),
+    uptimeSeconds: integer().notNull(),
+    disks: jsonb().$type<ActivityHealthInput['disks']>().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.deviceId, table.at] })],
+);
 
 export type ActivityDeviceRow = typeof activityDevices.$inferSelect;
 export type ActivitySpanRow = typeof activitySpans.$inferSelect;
