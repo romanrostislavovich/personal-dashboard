@@ -2,7 +2,9 @@
   "title": "Life",
   "tabs": {
     "day": "Day",
-    "summary": "Summary"
+    "summary": "Summary",
+    "goals": "Goals",
+    "ask": "Ask"
   },
   "day": "Day",
   "previous": "The day before",
@@ -13,5 +15,48 @@
   "month": "Month",
   "year": "Year",
   "hours": "{{value}} h",
-  "nothing": "Nothing recorded in this period."
+  "nothing": "Nothing recorded in this period.",
+  "story": {
+    "title": "The story by the AI",
+    "written": "Written {{date}}",
+    "write": "Tell the story",
+    "rewrite": "Write again",
+    "nothing": "Nothing to tell about this period yet.",
+    "error": "The AI could not write it: check the AI connection in Settings."
+  },
+  "goals": {
+    "add": "New goal",
+    "edit": "Edit the goal",
+    "name": "Goal",
+    "namePlaceholder": "300 days with a diary entry, read 20 books…",
+    "metric": "Counted from",
+    "metricHint": "The numbers of the summaries, from 1 January to today",
+    "manual": "By hand",
+    "direction": "Which way",
+    "atLeast": "at least",
+    "atMost": "at most",
+    "target": "Target",
+    "status": {
+      "done": "Done 🎉",
+      "onTrack": "On track",
+      "behind": "Behind",
+      "failed": "Missed"
+    },
+    "expected": "By now at an even pace: {{value}}",
+    "setProgress": "Set progress",
+    "empty": "No goals for this year yet.",
+    "confirmDelete": "Delete the goal \"{{title}}\"?",
+    "ofYear": "Goals of the year: {{done}} of {{total}} done"
+  },
+  "ask": {
+    "command": "Ask about my life",
+    "label": "Ask about your life",
+    "placeholder": "When was I in Prague?",
+    "submit": "Ask",
+    "hint": "The AI searches the diary, transactions, music, activity and games, and links the days it found.",
+    "example1": "When did I last write about the sea?",
+    "example2": "What did I spend the most on in September?",
+    "example3": "What was I listening to on my best days?",
+    "error": "The AI could not answer: check the AI connection in Settings."
+  }
 }

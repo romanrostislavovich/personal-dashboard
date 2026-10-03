@@ -374,5 +374,8 @@
     "text": "Captured text",
     "image": "Captured screenshot",
     "close": "Close"
+  },
+  "life": {
+    "achievements": "Achievements unlocked"
   }
 }

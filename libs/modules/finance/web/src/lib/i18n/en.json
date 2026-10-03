@@ -164,7 +164,8 @@
     "earned": "Earned {{amount}} {{currency}}",
     "spentTotal": "Spent",
     "topCategory": "mostly on {{category}}",
-    "earnedTotal": "Earned"
+    "earnedTotal": "Earned",
+    "savedTotal": "Left over (income − expenses)"
   },
   "goals": {
     "add": "New goal",

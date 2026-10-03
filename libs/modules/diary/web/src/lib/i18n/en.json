@@ -141,6 +141,21 @@
     "entries": "Diary entries",
     "words": "{{words}} words",
     "mood": "Average mood",
-    "moodDays": "over {{days}} days"
+    "moodDays": "over {{days}} days",
+    "bestMonth": "Best month by mood",
+    "months": {
+      "1": "January {{year}}",
+      "2": "February {{year}}",
+      "3": "March {{year}}",
+      "4": "April {{year}}",
+      "5": "May {{year}}",
+      "6": "June {{year}}",
+      "7": "July {{year}}",
+      "8": "August {{year}}",
+      "9": "September {{year}}",
+      "10": "October {{year}}",
+      "11": "November {{year}}",
+      "12": "December {{year}}"
+    }
   }
 }

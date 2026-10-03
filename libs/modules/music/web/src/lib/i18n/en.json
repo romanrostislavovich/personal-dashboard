@@ -120,6 +120,7 @@
   "life": {
     "day": "{{plays}} songs, most of all {{artist}} ({{topPlays}})",
     "plays": "Songs listened to",
-    "topArtist": "most of all {{artist}} ({{topPlays}})"
+    "topArtist": "most of all {{artist}} ({{topPlays}})",
+    "topArtists": "top: {{artists}}"
   }
 }

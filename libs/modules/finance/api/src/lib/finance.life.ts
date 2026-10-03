@@ -86,6 +86,14 @@ export class FinanceLife implements OnModuleInit {
             format: 'money',
             currency: main.mainCurrency,
           },
+          {
+            module: 'finance',
+            icon: 'account_balance',
+            key: 'finance.life.savedTotal',
+            value: main.balance,
+            format: 'money',
+            currency: main.mainCurrency,
+          },
         ];
       },
     });

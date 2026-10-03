@@ -34,6 +34,9 @@ import { SchedulerService } from './scheduler/scheduler.service';
 import { LifeMonthJob } from './life/life-month.job';
 import { LifeController } from './life/life.controller';
 import { LifeService } from './life/life.service';
+import { AchievementsLife } from './life/achievements.life';
+import { LifeGoalsService } from './life/life-goals.service';
+import { LifeStoriesService } from './life/life-stories.service';
 import { SearchController } from './search/search.controller';
 import { SearchService } from './search/search.service';
 import { SecretsService } from './secrets/secrets.service';
@@ -102,6 +105,9 @@ class HealthController {
     SearchService,
     LifeService,
     LifeMonthJob,
+    AchievementsLife,
+    LifeGoalsService,
+    LifeStoriesService,
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_INTERCEPTOR, useClass: UserActivityInterceptor },
     AuthService,

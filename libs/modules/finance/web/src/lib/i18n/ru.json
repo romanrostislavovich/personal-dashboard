@@ -164,7 +164,8 @@
     "earned": "Заработано {{amount}} {{currency}}",
     "spentTotal": "Потрачено",
     "topCategory": "больше всего на {{category}}",
-    "earnedTotal": "Заработано"
+    "earnedTotal": "Заработано",
+    "savedTotal": "Осталось (доходы − расходы)"
   },
   "goals": {
     "add": "Новая цель",

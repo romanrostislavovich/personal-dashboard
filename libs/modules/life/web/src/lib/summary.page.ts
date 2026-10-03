@@ -8,6 +8,9 @@ import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CORE_READS } from '@pd/client-core';
 import { LifeSummary } from '@pd/contracts';
+import { RouterLink } from '@angular/router';
+import { LifeApi } from './life.api';
+import { StoryCardComponent } from './story-card.component';
 
 /** "Wrapped": the numbers of every module for a month or a year. */
 @Component({
@@ -20,6 +23,8 @@ import { LifeSummary } from '@pd/contracts';
     MatButtonToggleModule,
     MatCardModule,
     MatIconModule,
+    RouterLink,
+    StoryCardComponent,
     TranslocoPipe,
   ],
   template: `
@@ -53,6 +58,15 @@ import { LifeSummary } from '@pd/contracts';
         />
       }
     </header>
+
+    @if (kind() === 'year' && goals.value().length) {
+      <a class="goals-link" routerLink="/life/goals" [queryParams]="{ year: year() }">
+        <mat-icon>flag</mat-icon>
+        {{ 'life.goals.ofYear' | transloco: { done: goalsDone(), total: goals.value().length } }}
+      </a>
+    }
+
+    <pd-story-card [period]="storyPeriod()" />
 
     <div class="cards">
       @for (card of cards(); track card.key) {
@@ -134,6 +148,14 @@ import { LifeSummary } from '@pd/contracts';
     .value {
       font: var(--mat-sys-headline-medium);
     }
+    .goals-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--mat-sys-primary);
+      text-decoration: none;
+      font: var(--mat-sys-label-large);
+    }
     .detail,
     .hint {
       font: var(--mat-sys-body-small);
@@ -146,12 +168,18 @@ export class SummaryPage {
   protected readonly thisMonth = `${this.now.getFullYear()}-${String(this.now.getMonth() + 1).padStart(2, '0')}`;
   protected readonly thisYear = this.now.getFullYear();
 
-  protected readonly kind = signal<'month' | 'year'>('month');
-  /** `/life/summary?month=2026-09` (the link of the monthly message) opens that month. */
-  protected readonly month = signal(
-    inject(ActivatedRoute).snapshot.queryParamMap.get('month') ?? this.thisMonth,
+  private readonly query = inject(ActivatedRoute).snapshot.queryParamMap;
+  /** `?month=2026-09` and `?year=2026` (the links of the messages on the 1st) open that period. */
+  protected readonly kind = signal<'month' | 'year'>(this.query.get('year') ? 'year' : 'month');
+  protected readonly month = signal(this.query.get('month') ?? this.thisMonth);
+  protected readonly year = signal(Number(this.query.get('year')) || this.thisYear);
+  protected readonly storyPeriod = computed(() =>
+    this.kind() === 'year' ? String(this.year()) : this.month(),
   );
-  protected readonly year = signal(this.thisYear);
+  protected readonly goals = inject(LifeApi).goals(this.year);
+  protected readonly goalsDone = computed(
+    () => this.goals.value().filter((goal) => goal.status === 'done').length,
+  );
 
   private readonly period = computed(() => {
     if (this.kind() === 'year') {

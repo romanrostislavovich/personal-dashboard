@@ -27,7 +27,10 @@ const messages = {
     telegramFileTooLarge: 'The file is larger than 20 MB — Telegram does not let bots download it.',
     telegramPhotoWhere: 'Where does this photo go?',
     lifeMonthTitle: (month: string) => `🎁 Your ${month}`,
-    lifeMonthLink: 'Every number of the month:',
+    lifeMonthLink: 'Every number:',
+    lifeYearTitle: (year: string) => `🎆 Your ${year}`,
+    lifeGoalDoneTitle: (title: string) => `🎯 Goal of the year reached: ${title}`,
+    lifeGoalDoneBody: 'All the goals:',
     telegramPhotoExpired: 'The photo is no longer waiting: send it again.',
     voiceNotConfigured:
       'To understand voice messages, add an OpenAI connection in the dashboard: Settings → Integrations ' +
@@ -80,7 +83,10 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
     telegramFileTooLarge: 'Файл больше 20 МБ — Telegram не даёт ботам скачивать такие.',
     telegramPhotoWhere: 'Куда отправить это фото?',
     lifeMonthTitle: (month: string) => `🎁 Итоги ${month}`,
-    lifeMonthLink: 'Все цифры месяца:',
+    lifeMonthLink: 'Все цифры:',
+    lifeYearTitle: (year: string) => `🎆 Ваш ${year} год`,
+    lifeGoalDoneTitle: (title: string) => `🎯 Цель года выполнена: ${title}`,
+    lifeGoalDoneBody: 'Все цели:',
     telegramPhotoExpired: 'Фото уже не ждёт: пришлите его ещё раз.',
     voiceNotConfigured:
       'Чтобы понимать голосовые, добавь подключение OpenAI в дашборде: Настройки → Интеграции ' +
