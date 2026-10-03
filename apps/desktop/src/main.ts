@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { noticeText } from './activity/notices';
 import { ActivityTracker, TrackerNotice } from './activity/tracker';
 import { loadSettings, saveSettings } from './settings-store';
+import { DiskCleaner } from './disk/disk-cleaner';
 import { createTray } from './tray';
 import { AppUpdater } from './update/updater';
 
@@ -27,6 +28,7 @@ let refreshTray: () => void = () => undefined;
 
 const serverUrl = (): string | null => process.env['DASHBOARD_URL'] ?? loadSettings().serverUrl;
 const tracker = new ActivityTracker(serverUrl, () => refreshTray(), showNotice);
+const disk = new DiskCleaner();
 /** The project and note of the last focus session: "next round" goes on with them. */
 let lastFocus: { projectId: string | null; note: string | null } = { projectId: null, note: null };
 /** While a focus part or a break runs, the tray shows the minutes left. */
@@ -217,6 +219,12 @@ function registerIpc(): void {
       startFocus({ projectId: options.projectId ?? null, note: options.note ?? null }),
   );
   ipcMain.handle('focus:stop', () => tracker.focus.stop());
+  ipcMain.handle('disk:status', () => disk.current());
+  ipcMain.handle('disk:scan', (_event, mount: string) => disk.scan(mount));
+  ipcMain.handle('disk:trash', (_event, paths: string[]) =>
+    disk.trash(Array.isArray(paths) ? paths.filter((path) => typeof path === 'string') : []),
+  );
+  ipcMain.handle('disk:open-recycle-bin', () => disk.openRecycleBin());
 
   // The dashboard asks for a system notification; a click opens the window on the given page.
   ipcMain.on(

@@ -172,5 +172,29 @@
     "shortBreakMinutes": "Break",
     "longBreakMinutes": "Long break",
     "roundsBeforeLongBreak": "Rounds before it"
+  },
+  "disk": {
+    "title": "Free up space",
+    "analyze": "Analyze {{mount}}",
+    "scanning": "Scanning {{mount}}: {{files}} files, {{gb}} GB so far…",
+    "thinking": "The AI is looking at what was found…",
+    "failed": "The scan failed",
+    "nothing": "Nothing worth deleting was found.",
+    "safety": {
+      "safe": "Safe: it is rebuilt by itself",
+      "check": "Most likely not needed — have a look first",
+      "risky": "Your own data — only you know"
+    },
+    "copy": "Copy the command",
+    "trash": "Move to the Recycle Bin ({{gb}} GB)",
+    "confirm": "Move these to the Recycle Bin?",
+    "emptyBin": "The space is freed when the Recycle Bin is emptied.",
+    "openBin": "Open the Recycle Bin",
+    "reasons": {
+      "protected": "protected (the system, programs or a virtual disk) — left as it is",
+      "unknown": "not in the last scan — scan again",
+      "missing": "no longer there",
+      "failed": "Windows did not move it (in use, or too big for the Recycle Bin)"
+    }
   }
 }

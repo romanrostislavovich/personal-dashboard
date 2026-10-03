@@ -5,8 +5,8 @@ import { contextBridge, ipcRenderer } from 'electron';
  * - the setup page (setup.html) reads and saves the server address;
  * - the dashboard shows native system notifications and opens a page when one is clicked
  *   (see DesktopBridge in the web core);
- * - the Activity section switches the tracker of this computer on and off and runs focus
- *   sessions.
+ * - the Activity section switches the tracker of this computer on and off, runs focus
+ *   sessions and cleans up its disks (scan, move to the Recycle Bin).
  */
 contextBridge.exposeInMainWorld('desktop', {
   getServerUrl: (): Promise<string | null> => ipcRenderer.invoke('settings:get-server-url'),
@@ -31,5 +31,11 @@ contextBridge.exposeInMainWorld('desktop', {
     start: (options: { projectId?: string | null; note?: string | null }): Promise<void> =>
       ipcRenderer.invoke('focus:start', options),
     stop: (): Promise<void> => ipcRenderer.invoke('focus:stop'),
+  },
+  disk: {
+    status: (): Promise<unknown> => ipcRenderer.invoke('disk:status'),
+    scan: (mount: string): Promise<void> => ipcRenderer.invoke('disk:scan', mount),
+    trash: (paths: string[]): Promise<unknown> => ipcRenderer.invoke('disk:trash', paths),
+    openRecycleBin: (): Promise<void> => ipcRenderer.invoke('disk:open-recycle-bin'),
   },
 });

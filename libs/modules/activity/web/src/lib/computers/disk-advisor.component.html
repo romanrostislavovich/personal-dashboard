@@ -1,0 +1,117 @@
+@if (disk) {
+  @let s = status();
+  <section>
+    <h3>{{ 'activity.disk.title' | transloco }}</h3>
+    <div class="mounts">
+      @for (d of disks(); track d.mount) {
+        <button
+          [matButton]="d.free / d.total < lowShare ? 'filled' : 'outlined'"
+          [disabled]="s.state === 'scanning' || thinking()"
+          (click)="scan(d.mount)"
+        >
+          <mat-icon>search</mat-icon>
+          {{ 'activity.disk.analyze' | transloco: { mount: d.mount } }}
+        </button>
+      }
+    </div>
+
+    @if (s.state === 'scanning') {
+      <mat-progress-bar mode="indeterminate" />
+      <p class="hint">
+        {{
+          'activity.disk.scanning'
+            | transloco
+              : {
+                  mount: s.mount,
+                  files: (s.progress.files | number: '1.0-0'),
+                  gb: (s.progress.bytes / gb | number: '1.0-0'),
+                }
+        }}
+      </p>
+    } @else if (s.state === 'error') {
+      <p class="error">{{ 'activity.disk.failed' | transloco }}: {{ s.message }}</p>
+    } @else if (thinking()) {
+      <mat-progress-bar mode="indeterminate" />
+      <p class="hint">{{ 'activity.disk.thinking' | transloco }}</p>
+    }
+
+    @if (advice(); as a) {
+      <p class="summary">
+        @if (a.byAi) {
+          <mat-icon inline>auto_awesome</mat-icon>
+        }
+        {{ a.summary }}
+      </p>
+      <ul class="suggestions">
+        @for (item of a.suggestions; track item.path) {
+          <li [class]="item.safety">
+            @if (item.action === 'trash') {
+              <mat-checkbox
+                [checked]="picked().has(item.path)"
+                [attr.aria-label]="item.path"
+                (change)="toggle(item, $event.checked)"
+              />
+            } @else {
+              <mat-icon class="kind">
+                {{
+                  item.action === 'command'
+                    ? 'terminal'
+                    : item.action === 'tool'
+                      ? 'build'
+                      : 'visibility'
+                }}
+              </mat-icon>
+            }
+            <div class="body">
+              <div class="head">
+                <span class="path">{{ item.path }}</span>
+                <span class="size">{{ item.bytes / gb | number: '1.1-1' }} GB</span>
+              </div>
+              <span class="safety">{{ 'activity.disk.safety.' + item.safety | transloco }}</span>
+              <span class="reason">{{ item.reason }}</span>
+              @if (item.how; as how) {
+                <span class="how">
+                  <code>{{ how }}</code>
+                  @if (item.action === 'command') {
+                    <button
+                      matIconButton
+                      [matTooltip]="'activity.disk.copy' | transloco"
+                      [attr.aria-label]="'activity.disk.copy' | transloco"
+                      (click)="copy(how)"
+                    >
+                      <mat-icon>content_copy</mat-icon>
+                    </button>
+                  }
+                </span>
+              }
+            </div>
+          </li>
+        } @empty {
+          <li class="hint">{{ 'activity.disk.nothing' | transloco }}</li>
+        }
+      </ul>
+      @if (picked().size) {
+        <button matButton="filled" (click)="trash()">
+          <mat-icon>delete</mat-icon>
+          {{ 'activity.disk.trash' | transloco: { gb: (pickedBytes() / gb | number: '1.1-1') } }}
+        </button>
+      }
+    }
+
+    @if (results(); as r) {
+      <div class="results">
+        @for (result of r; track result.path) {
+          @if (!result.ok) {
+            <p class="error">
+              {{ result.path }}: {{ 'activity.disk.reasons.' + result.reason | transloco }}
+            </p>
+          }
+        }
+        <p class="hint">{{ 'activity.disk.emptyBin' | transloco }}</p>
+        <button matButton (click)="openRecycleBin()">
+          <mat-icon>delete_sweep</mat-icon> {{ 'activity.disk.openBin' | transloco }}
+        </button>
+      </div>
+    }
+  </section>
+}

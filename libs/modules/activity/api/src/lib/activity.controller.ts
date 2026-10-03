@@ -17,6 +17,9 @@ import {
   ActivityApp,
   ActivityAppUpdate,
   ActivityComputer,
+  DiskAdvice,
+  DiskReport,
+  diskReportSchema,
   ActivityFocusStats,
   ActivityLimit,
   ActivityLimits,
@@ -46,6 +49,7 @@ import {
 } from '@pd/contracts';
 import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
+import { DiskAdviceService } from './disk/disk-advice.service';
 import { WellbeingService } from './wellbeing.service';
 
 /**
@@ -60,6 +64,7 @@ export class ActivityController {
     private readonly activity: ActivityService,
     private readonly devices: DevicesService,
     private readonly wellbeing: WellbeingService,
+    private readonly diskAdvice: DiskAdviceService,
   ) {}
 
   // --- A tracker ---
@@ -221,6 +226,19 @@ export class ActivityController {
   @Get('computers')
   computers(@CurrentUser() user: AuthUser): Promise<ActivityComputer[]> {
     return this.wellbeing.computers(user.id);
+  }
+
+  /**
+   * What to delete from a full disk: the desktop app sends what its scan found (paths and
+   * sizes), the AI — or the built-in rules — answers.
+   */
+  @Post('disk-advice')
+  @HttpCode(200)
+  advise(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(diskReportSchema)) report: DiskReport,
+  ): Promise<DiskAdvice> {
+    return this.diskAdvice.advise(user.id, report);
   }
 
   @Delete('rules/:id')

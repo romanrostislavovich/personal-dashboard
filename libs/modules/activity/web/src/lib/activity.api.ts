@@ -14,6 +14,7 @@ import {
   ActivitySettingsUpdate,
   ActivityStats,
   ActivityComputer,
+  DiskReport,
   ActivityFocusStats,
   ActivityLimit,
   ActivityLimitInput,
@@ -98,6 +99,10 @@ export class ActivityApi {
 
   saveLimits(limits: ActivityLimitInput[]) {
     return fromCore(() => this.activity.saveLimits(limits));
+  }
+
+  diskAdvice(report: DiskReport) {
+    return fromCore(() => this.activity.diskAdvice(report));
   }
 
   computers() {

@@ -1,3 +1,4 @@
+import { DiskReport } from '@pd/contracts';
 /**
  * What the desktop app (Electron preload) adds to the page as `window.desktop`.
  * In a regular browser it is absent.
@@ -11,6 +12,30 @@ export interface DesktopBridge {
   activity?: DesktopActivity;
   /** The focus timer (Pomodoro) of this computer (absent in an older shell). */
   focus?: DesktopFocus;
+  /** Disk cleanup of this computer (absent in an older shell). */
+  disk?: DesktopDisk;
+}
+
+/** Scans a disk of this computer and moves what the user picked to the Recycle Bin. */
+export interface DesktopDisk {
+  status(): Promise<DesktopDiskStatus>;
+  /** `C:` — runs in the background; `status()` tells the progress. */
+  scan(mount: string): Promise<void>;
+  /** Only paths of the last report; protected ones (the system, programs) always stay. */
+  trash(paths: string[]): Promise<DesktopTrashResult[]>;
+  openRecycleBin(): Promise<void>;
+}
+
+export type DesktopDiskStatus =
+  | { state: 'idle' }
+  | { state: 'scanning'; mount: string; progress: { files: number; bytes: number } }
+  | { state: 'done'; report: DiskReport }
+  | { state: 'error'; message: string };
+
+export interface DesktopTrashResult {
+  path: string;
+  ok: boolean;
+  reason?: 'protected' | 'unknown' | 'missing' | 'failed';
 }
 
 /** The focus timer of the desktop shell; sessions go to the server with the tracker's data. */
