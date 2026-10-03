@@ -42,5 +42,8 @@
     "title": "Upcoming birthdays",
     "empty": "Nobody in the next month",
     "all": "All"
+  },
+  "life": {
+    "day": "Birthday: {{names}}"
   }
 }

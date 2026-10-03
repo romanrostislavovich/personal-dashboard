@@ -26,6 +26,8 @@ const messages = {
     modelSwitched: (name: string, model: string) => `✅ Now answering: ${name} (${model})`,
     telegramFileTooLarge: 'The file is larger than 20 MB — Telegram does not let bots download it.',
     telegramPhotoWhere: 'Where does this photo go?',
+    lifeMonthTitle: (month: string) => `🎁 Your ${month}`,
+    lifeMonthLink: 'Every number of the month:',
     telegramPhotoExpired: 'The photo is no longer waiting: send it again.',
     voiceNotConfigured:
       'To understand voice messages, add an OpenAI connection in the dashboard: Settings → Integrations ' +
@@ -77,6 +79,8 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
     modelSwitched: (name: string, model: string) => `✅ Теперь отвечает: ${name} (${model})`,
     telegramFileTooLarge: 'Файл больше 20 МБ — Telegram не даёт ботам скачивать такие.',
     telegramPhotoWhere: 'Куда отправить это фото?',
+    lifeMonthTitle: (month: string) => `🎁 Итоги ${month}`,
+    lifeMonthLink: 'Все цифры месяца:',
     telegramPhotoExpired: 'Фото уже не ждёт: пришлите его ещё раз.',
     voiceNotConfigured:
       'Чтобы понимать голосовые, добавь подключение OpenAI в дашборде: Настройки → Интеграции ' +

@@ -142,5 +142,12 @@
     "total": "All expenses",
     "add": "Category",
     "addTotal": "All expenses"
+  },
+  "life": {
+    "spent": "Spent {{amount}} {{currency}} · mostly on {{top}}",
+    "earned": "Earned {{amount}} {{currency}}",
+    "spentTotal": "Spent",
+    "topCategory": "mostly on {{category}}",
+    "earnedTotal": "Earned"
   }
 }

@@ -1,0 +1,17 @@
+{
+  "title": "Life",
+  "tabs": {
+    "day": "Day",
+    "summary": "Summary"
+  },
+  "day": "Day",
+  "previous": "The day before",
+  "next": "The day after",
+  "open": "Open",
+  "empty": "Nothing recorded on this day.",
+  "period": "Period",
+  "month": "Month",
+  "year": "Year",
+  "hours": "{{value}} h",
+  "nothing": "Nothing recorded in this period."
+}

@@ -142,5 +142,12 @@
     "total": "Все траты",
     "add": "Категория",
     "addTotal": "Все траты"
+  },
+  "life": {
+    "spent": "Потрачено {{amount}} {{currency}} · больше всего на {{top}}",
+    "earned": "Заработано {{amount}} {{currency}}",
+    "spentTotal": "Потрачено",
+    "topCategory": "больше всего на {{category}}",
+    "earnedTotal": "Заработано"
   }
 }

@@ -344,6 +344,13 @@
       "when": 1791055506166,
       "tag": "0048_finance_receipts_vision",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1791055973802,
+      "tag": "0049_life_months",
+      "breakpoints": true
     }
   ]
 }

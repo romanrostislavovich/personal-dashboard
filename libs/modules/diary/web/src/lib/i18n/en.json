@@ -134,5 +134,13 @@
   "commands": {
     "append": "To the diary",
     "photo": "A photo for the diary"
+  },
+  "life": {
+    "entry": "{{excerpt}}",
+    "entryMood": "Mood {{mood}}/5 · {{excerpt}}",
+    "entries": "Diary entries",
+    "words": "{{words}} words",
+    "mood": "Average mood",
+    "moodDays": "over {{days}} days"
   }
 }

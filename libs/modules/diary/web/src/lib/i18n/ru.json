@@ -134,5 +134,13 @@
   "commands": {
     "append": "В дневник",
     "photo": "Фото в дневник"
+  },
+  "life": {
+    "entry": "{{excerpt}}",
+    "entryMood": "Настроение {{mood}}/5 · {{excerpt}}",
+    "entries": "Записей в дневнике",
+    "words": "{{words}} слов",
+    "mood": "Среднее настроение",
+    "moodDays": "за {{days}} дн."
   }
 }

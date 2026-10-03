@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TasksLife } from './tasks.life';
 import { TasksSearch } from './tasks.search';
 import { RemindersService } from './reminders.service';
 import { TasksAchievements } from './tasks.achievements';
@@ -15,6 +16,7 @@ import { TasksService } from './tasks.service';
 @Module({
   controllers: [TasksController],
   providers: [
+    TasksLife,
     TasksSearch,
     TasksService,
     RemindersService,

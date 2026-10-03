@@ -248,5 +248,13 @@
     "hint": "Windows whose title contains one of these words are recorded without the title: only the program. Private windows of browsers (Incognito, InPrivate, private browsing) are always recorded this way.",
     "word": "A word or a site",
     "add": "Add"
+  },
+  "life": {
+    "day": "{{hours}} h at the computer, mostly {{app}}",
+    "dayFocus": "{{hours}} h at the computer, mostly {{app}} · {{focus}} focus sessions",
+    "total": "At the computer",
+    "topApp": "mostly {{app}}",
+    "focus": "In focus",
+    "focusSessions": "{{count}} sessions"
   }
 }

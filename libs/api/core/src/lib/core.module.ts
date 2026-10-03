@@ -31,6 +31,9 @@ import { TelegramChannel } from './notifications/telegram/telegram.channel';
 import { ProjectsController } from './projects/projects.controller';
 import { ProjectsService } from './projects/projects.service';
 import { SchedulerService } from './scheduler/scheduler.service';
+import { LifeMonthJob } from './life/life-month.job';
+import { LifeController } from './life/life.controller';
+import { LifeService } from './life/life.service';
 import { SearchController } from './search/search.controller';
 import { SearchService } from './search/search.service';
 import { SecretsService } from './secrets/secrets.service';
@@ -93,9 +96,12 @@ class HealthController {
     SyncController,
     SystemController,
     SearchController,
+    LifeController,
   ],
   providers: [
     SearchService,
+    LifeService,
+    LifeMonthJob,
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_INTERCEPTOR, useClass: UserActivityInterceptor },
     AuthService,
@@ -154,6 +160,7 @@ class HealthController {
     MorningDigestService,
     // For the command palette: modules register their search via register().
     SearchService,
+    LifeService,
     // For actions that reach outside services: they run on the server (see ServerActions).
     ServerActions,
   ],

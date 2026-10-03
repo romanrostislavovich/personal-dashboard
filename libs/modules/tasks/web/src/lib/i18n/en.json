@@ -91,5 +91,9 @@
   "commands": {
     "add": "Add a task",
     "remindInHour": "Remind in an hour"
+  },
+  "life": {
+    "done": "Done {{count}}: {{titles}}",
+    "doneTotal": "Tasks done"
   }
 }

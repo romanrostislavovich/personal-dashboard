@@ -80,6 +80,10 @@ export const CORE_READS = {
   syncParked: () => apiRequest(API_PATHS.syncParked),
   /** Background jobs and the log of errors; only the owner may read it. */
   systemStatus: () => apiRequest(API_PATHS.systemStatus),
+  /** A day across every module (the life timeline). */
+  lifeDay: (day: string) => apiRequest('/api/life/day', { day }),
+  /** The numbers of every module for a period (a month, a year). */
+  lifeSummary: (from: string, to: string) => apiRequest('/api/life/summary', { from, to }),
 };
 
 /** Signing in and the profile. Signing in does not start the session — see `DashboardClient`. */
