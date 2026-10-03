@@ -178,7 +178,8 @@
     "focusMinutes": "Focus",
     "shortBreakMinutes": "Break",
     "longBreakMinutes": "Long break",
-    "roundsBeforeLongBreak": "Rounds before it"
+    "roundsBeforeLongBreak": "Rounds before it",
+    "summary": "Summary of the day at"
   },
   "disk": {
     "title": "Free up space",

@@ -12,6 +12,7 @@ import { firstValueFrom } from 'rxjs';
 import { ActivityApi } from '../activity.api';
 
 const BREAK_MINUTES = [0, 30, 45, 50, 60, 90, 120];
+const SUMMARY_TIMES = ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
 const GAME_LIMITS = [0, 30, 60, 90, 120, 180, 240, 300, 360];
 const TOTAL_LIMITS = [0, 240, 360, 480, 600, 720, 840];
 const APP_LIMITS = [15, 30, 45, 60, 90, 120, 180, 240];
@@ -58,6 +59,18 @@ const FOCUS = {
                       minutes ? (minutes * 60 | pdDuration) : ('activity.wellbeing.off' | transloco)
                     }}
                   </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>{{ 'activity.wellbeing.summary' | transloco }}</mat-label>
+              <mat-select
+                [value]="current.summaryTime"
+                (valueChange)="save({ summaryTime: $event })"
+              >
+                <mat-option [value]="null">{{ 'activity.wellbeing.off' | transloco }}</mat-option>
+                @for (time of summaryTimes; track time) {
+                  <mat-option [value]="time">{{ time }}</mat-option>
                 }
               </mat-select>
             </mat-form-field>
@@ -184,6 +197,7 @@ export class WellbeingSettingsComponent {
   private readonly api = inject(ActivityApi);
 
   protected readonly breakOptions = BREAK_MINUTES;
+  protected readonly summaryTimes = SUMMARY_TIMES;
   protected readonly gameOptions = GAME_LIMITS;
   protected readonly totalOptions = TOTAL_LIMITS;
   protected readonly appOptions = APP_LIMITS;

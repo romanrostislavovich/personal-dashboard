@@ -178,7 +178,8 @@
     "focusMinutes": "Фокус",
     "shortBreakMinutes": "Перерыв",
     "longBreakMinutes": "Длинный перерыв",
-    "roundsBeforeLongBreak": "Раундов до него"
+    "roundsBeforeLongBreak": "Раундов до него",
+    "summary": "Итог дня в"
   },
   "disk": {
     "title": "Освободить место",

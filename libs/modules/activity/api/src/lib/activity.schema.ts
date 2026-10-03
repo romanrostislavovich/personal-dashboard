@@ -131,6 +131,10 @@ export const activitySettings = pgTable('activity_settings', {
   roundsBeforeLongBreak: integer().notNull().default(4),
   /** Window titles with any of these words are recorded without the title. */
   privateWords: text().array().notNull().default([]),
+  /** The summary of the day: when (`HH:mm`, the user's own clock; `null` — never)... */
+  summaryTime: text().default('21:00'),
+  /** ...and the last day it was handled (sent, or there was nothing to sum up). */
+  summarySentOn: date({ mode: 'string' }),
 });
 
 /** "No more than this much a day": in games, at the computer at all, in one program. */

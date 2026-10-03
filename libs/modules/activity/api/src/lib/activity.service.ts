@@ -49,6 +49,7 @@ const DEFAULT_SETTINGS: ActivitySettings = {
   longBreakMinutes: 15,
   roundsBeforeLongBreak: 4,
   privateWords: [],
+  summaryTime: '21:00',
 };
 /** The hours of the user's own clock the achievements call night and early morning. */
 const NIGHT_ENDS_AT = 5;
@@ -168,6 +169,7 @@ export class ActivityService {
           longBreakMinutes: row.longBreakMinutes,
           roundsBeforeLongBreak: row.roundsBeforeLongBreak,
           privateWords: row.privateWords,
+          summaryTime: row.summaryTime,
         }
       : DEFAULT_SETTINGS;
   }

@@ -4,6 +4,7 @@ import { ActivityAiTools } from './activity.ai-tools';
 import { ActivityController } from './activity.controller';
 import { ActivityDigest } from './activity.digest';
 import { ActivityJobs } from './activity.jobs';
+import { EveningSummaryJob } from './evening-summary.job';
 import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
 import { DiskAdviceService } from './disk/disk-advice.service';
@@ -26,6 +27,7 @@ import { WellbeingService } from './wellbeing.service';
     ActivityJobs,
     WellbeingService,
     DiskAdviceService,
+    EveningSummaryJob,
   ],
 })
 export class ActivityModule {}

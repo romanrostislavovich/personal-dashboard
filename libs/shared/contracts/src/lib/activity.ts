@@ -252,6 +252,11 @@ export const activitySettingsSchema = z
      * its title is not. Private windows of browsers are left out the same way anyway.
      */
     privateWords: z.array(z.string().trim().min(2).max(60)).max(50),
+    /** The summary of the day comes at this time of the user's day (`HH:mm`); `null` — never. */
+    summaryTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .nullable(),
   })
   .extend(activityFocusSettingsSchema.shape);
 export type ActivitySettings = z.infer<typeof activitySettingsSchema>;
