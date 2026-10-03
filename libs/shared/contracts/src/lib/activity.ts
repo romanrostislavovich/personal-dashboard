@@ -113,6 +113,14 @@ const CATEGORY_OF = new Map(
   ACTIVITY_CATEGORIES.flatMap((category) => KNOWN_APPS[category].map((app) => [app, category])),
 );
 
+/** Categories where a full-screen window without input is still the user at it: a film. */
+export const ACTIVITY_WATCH_CATEGORIES: readonly ActivityCategory[] = ['media', 'browsing'];
+
+/** The well-known programs of a category (process names, lower case). */
+export function knownActivityApps(category: ActivityCategory): readonly string[] {
+  return KNOWN_APPS[category];
+}
+
 /** The category of a program until the user gives it another: known programs, `other` for the rest. */
 export function defaultActivityCategory(app: string): ActivityCategory {
   return CATEGORY_OF.get(app.toLowerCase()) ?? 'other';
@@ -176,10 +184,16 @@ export type ActivityIngest = z.infer<typeof activityIngestSchema>;
 
 /** What a tracker needs to know from the server; asked with every upload. */
 export interface ActivityDeviceConfig {
-  /** No input for this long means the user is away (unless a window is full-screen). */
+  /** No input for this long means the user is away. */
   idleMinutes: number;
   /** Programs never recorded (process names, lower case). */
   excludedApps: string[];
+  /**
+   * Programs one watches (players, browsers — ACTIVITY_WATCH_CATEGORIES): a full-screen window
+   * of one of them counts without input, for a few hours at most. A game is not among them:
+   * a game without input is the user gone.
+   */
+  watchApps: string[];
 }
 
 // --- Settings, programs, project rules ---

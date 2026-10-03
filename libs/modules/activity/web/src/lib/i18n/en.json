@@ -63,7 +63,7 @@
   },
   "idle": {
     "title": "When you are away",
-    "hint": "No keyboard or mouse input for this long means you have left; the time is not counted. A full-screen window (a video, a game) counts as activity anyway.",
+    "hint": "No keyboard or mouse input for this long means you have left; the time is not counted. A full-screen video in a player or a browser counts as activity anyway, for up to 3 hours; a game left without input does not.",
     "label": "Away after",
     "minutes": "{{count}} min"
   },
