@@ -1,10 +1,12 @@
 import { app, BrowserWindow, ipcMain, Notification, shell } from 'electron';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { noticeText } from './activity/notices';
 import { ActivityTracker, TrackerNotice } from './activity/tracker';
 import { loadSettings, saveSettings } from './settings-store';
 import { DiskCleaner } from './disk/disk-cleaner';
 import { DiskFix } from './disk/disk-fixes';
+import { StatementWatch } from './downloads/statement-watch';
 import { createTray } from './tray';
 import { AppUpdater } from './update/updater';
 
@@ -30,6 +32,13 @@ let refreshTray: () => void = () => undefined;
 const serverUrl = (): string | null => process.env['DASHBOARD_URL'] ?? loadSettings().serverUrl;
 const tracker = new ActivityTracker(serverUrl, () => refreshTray(), showNotice);
 const disk = new DiskCleaner();
+/** A bank statement saved to Downloads: offered for import into Finance through the AI. */
+const statements = new StatementWatch((statement) =>
+  notify('Похоже на выписку банка', `${statement.name} — импортировать в Финансы?`, () => {
+    showWindow();
+    mainWindow?.webContents.send('desktop:navigate', `/ai?statement=${statement.id}`);
+  }),
+);
 /** The project and note of the last focus session: "next round" goes on with them. */
 let lastFocus: { projectId: string | null; note: string | null } = { projectId: null, note: null };
 /** While a focus part or a break runs, the tray shows the minutes left. */
@@ -89,6 +98,7 @@ function bootstrap(): void {
     }
   }, TRAY_COUNTDOWN_MS);
   tracker.start();
+  statements.start();
   updater.start();
   openDashboard();
 }
@@ -229,6 +239,15 @@ function registerIpc(): void {
   ipcMain.handle('disk:empty-recycle-bin', () => disk.emptyRecycleBin());
   ipcMain.handle('disk:fix', (_event, fix: DiskFix) => disk.fix(fix));
   ipcMain.handle('disk:reveal', (_event, path: string) => disk.reveal(String(path)));
+  ipcMain.handle('downloads:take', async (_event, id: string) => {
+    const statement = statements.get(String(id));
+    if (!statement) {
+      return null;
+    }
+    // Only a file the watch found and the user clicked on reaches the page.
+    const content = await readFile(statement.path).catch(() => null);
+    return content ? { name: statement.name, base64: content.toString('base64') } : null;
+  });
   ipcMain.handle('disk:keep-advice', (_event, advice: unknown) => disk.keepAdvice(advice));
   ipcMain.handle('disk:dismiss', () => disk.dismiss());
 

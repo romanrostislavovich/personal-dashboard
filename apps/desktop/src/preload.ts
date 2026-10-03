@@ -32,6 +32,9 @@ contextBridge.exposeInMainWorld('desktop', {
       ipcRenderer.invoke('focus:start', options),
     stop: (): Promise<void> => ipcRenderer.invoke('focus:stop'),
   },
+  downloads: {
+    take: (id: string): Promise<unknown> => ipcRenderer.invoke('downloads:take', id),
+  },
   disk: {
     status: (): Promise<unknown> => ipcRenderer.invoke('disk:status'),
     scan: (mount: string): Promise<void> => ipcRenderer.invoke('disk:scan', mount),

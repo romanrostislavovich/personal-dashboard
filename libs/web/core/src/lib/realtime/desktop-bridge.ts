@@ -12,8 +12,15 @@ export interface DesktopBridge {
   activity?: DesktopActivity;
   /** The focus timer (Pomodoro) of this computer (absent in an older shell). */
   focus?: DesktopFocus;
+  /** Files the app found in Downloads (bank statements), handed over on a click. */
+  downloads?: DesktopDownloads;
   /** Disk cleanup of this computer (absent in an older shell). */
   disk?: DesktopDisk;
+}
+
+export interface DesktopDownloads {
+  /** The file of a notification about a statement; `null` — gone, or not one the app found. */
+  take(id: string): Promise<{ name: string; base64: string } | null>;
 }
 
 /** Scans a disk of this computer and moves what the user picked to the Recycle Bin. */
