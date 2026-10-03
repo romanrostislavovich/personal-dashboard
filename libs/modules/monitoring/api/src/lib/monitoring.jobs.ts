@@ -1,5 +1,10 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { NotificationsService, SchedulerService, UsersService } from '@pd/api-core';
+import {
+  AutomationsService,
+  NotificationsService,
+  SchedulerService,
+  UsersService,
+} from '@pd/api-core';
 import { CheckerService } from './checker.service';
 import { monitoringMessages } from './monitoring.messages';
 import { isSslReminderDay } from './state/monitor-state';
@@ -18,6 +23,7 @@ export class MonitoringJobs implements OnModuleInit {
     private readonly users: UsersService,
     private readonly checker: CheckerService,
     private readonly notifications: NotificationsService,
+    private readonly automations: AutomationsService,
   ) {}
 
   onModuleInit(): void {
@@ -45,6 +51,11 @@ export class MonitoringJobs implements OnModuleInit {
             : text.recoveredBody(notice, event.downtimeMs),
         source: 'monitoring',
       });
+      await this.automations.emit(
+        notice.userId,
+        event.type === 'down' ? 'monitoring.down' : 'monitoring.up',
+        { site: notice.projectName, url: notice.url, error: notice.error ?? '' },
+      );
     }
   }
 

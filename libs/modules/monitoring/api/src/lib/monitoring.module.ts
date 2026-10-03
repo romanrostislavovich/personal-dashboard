@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MonitoringAutomations } from './monitoring.automations';
 import { MonitoringSearch } from './monitoring.search';
 import { MonitoringAiTools } from './monitoring.ai-tools';
 import { MonitoringDigest } from './monitoring.digest';
@@ -15,6 +16,7 @@ import { MonitorsService } from './monitors.service';
 @Module({
   controllers: [MonitoringController],
   providers: [
+    MonitoringAutomations,
     MonitoringSearch,
     MonitorsService,
     CheckerService,

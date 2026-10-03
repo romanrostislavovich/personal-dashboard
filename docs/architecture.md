@@ -69,6 +69,8 @@ libs/modules/birthdays/
     birthdays.achievements.ts    achievements of the module
     birthdays.ai-tools.ts        data the AI assistant can request
     birthdays.digest.ts          its section of the morning digest
+    birthdays.life.ts            its events of a day and numbers of a period (Life)
+    *.automations.ts             its triggers and actions for the rules "if X, then Y"
     *.server-actions.ts          actions that call outside services (see below; birthdays has none)
     next-birthday.ts (+ .spec)   pure logic — easy to test
     birthdays.module.ts          Nest module
@@ -238,6 +240,16 @@ To add a service (e.g. DigitalOcean):
   client copies the newest dump to the computer (`BACKUP_COPY_DIR`).
 - **AI:** `AiService` — any OpenAI-compatible API; `ask()` is a dialogue with module tools
   (function-calling loop in `tool-loop.ts`), `complete()` is a single request without tools.
+- **Life:** `LifeService` — modules register what they can tell (`*.life.ts`): the events of a
+  day, the numbers (cards) of a period and a line of their own for the message of a month
+  (`monthNote`, e.g. the finance review). The goals of a year are counted from the same cards
+  (`LifeGoalsService`), the AI's stories of a month or a year are kept (`LifeStoriesService`),
+  and `LifeMonthJob` sends the summaries on the 1st.
+- **Automations:** `AutomationsService` — modules register triggers (an event they `emit`, or a
+  `check` of time asked every 5 minutes with the user's clock) and actions (`*.automations.ts`);
+  the user joins them into rules in Settings → Automations, by hand or from a sentence the AI
+  turns into a rule (`draft`). A rule runs at most 20 times a day (a timed one once), its last
+  error is kept; modules still never call each other — the core joins them.
 - **Auth:** a global `AuthGuard`; public endpoints are marked with `@Public()`. See Security below.
 - **Trash:** `TrashService` — a trigger on every table of `public` keeps deleted rows in the
   `trash` schema for 30 days (not synced: each instance keeps what was deleted on it); one

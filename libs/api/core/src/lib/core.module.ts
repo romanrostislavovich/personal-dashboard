@@ -34,6 +34,9 @@ import { SchedulerService } from './scheduler/scheduler.service';
 import { LifeMonthJob } from './life/life-month.job';
 import { LifeController } from './life/life.controller';
 import { LifeService } from './life/life.service';
+import { AutomationsController } from './automations/automations.controller';
+import { AutomationsService } from './automations/automations.service';
+import { CoreAutomations } from './automations/core.automations';
 import { AchievementsLife } from './life/achievements.life';
 import { LifeGoalsService } from './life/life-goals.service';
 import { LifeStoriesService } from './life/life-stories.service';
@@ -100,11 +103,14 @@ class HealthController {
     SystemController,
     SearchController,
     LifeController,
+    AutomationsController,
   ],
   providers: [
     SearchService,
     LifeService,
     LifeMonthJob,
+    AutomationsService,
+    CoreAutomations,
     AchievementsLife,
     LifeGoalsService,
     LifeStoriesService,
@@ -167,6 +173,7 @@ class HealthController {
     // For the command palette: modules register their search via register().
     SearchService,
     LifeService,
+    AutomationsService,
     // For actions that reach outside services: they run on the server (see ServerActions).
     ServerActions,
   ],

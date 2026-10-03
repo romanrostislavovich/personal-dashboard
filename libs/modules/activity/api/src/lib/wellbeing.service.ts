@@ -1,5 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database, NotificationsService, ProjectsService, UsersService } from '@pd/api-core';
+import {
+  AutomationsService,
+  DB,
+  Database,
+  NotificationsService,
+  ProjectsService,
+  UsersService,
+} from '@pd/api-core';
 import {
   ActivityComputer,
   ActivityFocusSessionInput,
@@ -54,6 +61,7 @@ export class WellbeingService {
     private readonly notifications: NotificationsService,
     private readonly projects: ProjectsService,
     private readonly users: UsersService,
+    private readonly automations: AutomationsService,
   ) {}
 
   // --- Focus sessions ---
@@ -268,6 +276,10 @@ export class WellbeingService {
                   limitSeconds,
                 ),
         source: 'activity',
+      });
+      await this.automations.emit(userId, 'activity.limit', {
+        what: limit.kind === 'app' ? (names.get(limit.app ?? '') ?? limit.app ?? '') : limit.kind,
+        minutes: String(limit.minutes),
       });
       await this.db
         .update(activityLimits)

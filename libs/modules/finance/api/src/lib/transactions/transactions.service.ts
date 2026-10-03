@@ -27,6 +27,12 @@ export class TransactionsService {
   ) {}
 
   private readonly listeners: ((userId: string) => Promise<void>)[] = [];
+  private readonly createdListeners: ((userId: string, created: Transaction[]) => void)[] = [];
+
+  /** Called with the new transactions (rules "if an expense over…" look at them). */
+  onCreated(listener: (userId: string, created: Transaction[]) => void): void {
+    this.createdListeners.push(listener);
+  }
 
   /** Called after transactions of a user were created or changed (budgets check themselves). */
   onChange(listener: (userId: string) => Promise<void>): void {
@@ -99,6 +105,7 @@ export class TransactionsService {
       .returning();
     const [transaction] = await this.withMainAmounts(userId, [row]);
     this.changed(userId);
+    this.createdListeners.forEach((listener) => listener(userId, [transaction]));
     return transaction;
   }
 
@@ -116,7 +123,9 @@ export class TransactionsService {
       .values(inputs.map((input) => ({ userId, ...input })))
       .returning();
     this.changed(userId);
-    return this.withMainAmounts(userId, rows);
+    const created = await this.withMainAmounts(userId, rows);
+    this.createdListeners.forEach((listener) => listener(userId, created));
+    return created;
   }
 
   async update(userId: string, id: string, input: TransactionInput): Promise<Transaction> {

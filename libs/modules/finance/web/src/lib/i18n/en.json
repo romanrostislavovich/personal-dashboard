@@ -201,5 +201,17 @@
     "rewrite": "Write again",
     "nothing": "No transactions this month.",
     "error": "The AI could not write it: check the AI connection in Settings, or whether finance is hidden from it."
+  },
+  "automations": {
+    "expense": "An expense is recorded",
+    "min": "From the amount (main currency)",
+    "category": "Only the category",
+    "budget": "A budget is running out",
+    "level": "When",
+    "levels": {
+      "any": "80% or spent",
+      "warned": "80% spent",
+      "exceeded": "Spent"
+    }
   }
 }

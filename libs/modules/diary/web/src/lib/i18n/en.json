@@ -157,5 +157,11 @@
       "11": "November {{year}}",
       "12": "December {{year}}"
     }
+  },
+  "automations": {
+    "noEntryBy": "No diary entry by a time",
+    "time": "Time",
+    "append": "Add a line to today's entry",
+    "text": "Text"
   }
 }

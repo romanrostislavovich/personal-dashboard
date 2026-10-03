@@ -1,6 +1,8 @@
 import {
   Achievement,
   AuthConfig,
+  AutomationRule,
+  AutomationRuleInput,
   LifeAnswer,
   LifeGoal,
   LifeGoalInput,
@@ -93,6 +95,9 @@ export const CORE_READS = {
   lifeMetrics: () => apiRequest('/api/life/metrics'),
   /** The AI's kept story of `YYYY-MM` or `YYYY`: `{ story: null }` — not written yet. */
   lifeStory: (period: string) => apiRequest('/api/life/story', { period }),
+  automations: () => apiRequest('/api/automations'),
+  /** The triggers and actions the modules registered. */
+  automationsCatalog: () => apiRequest('/api/automations/catalog'),
 };
 
 /** Signing in and the profile. Signing in does not start the session — see `DashboardClient`. */
@@ -121,6 +126,19 @@ export function authApi(api: ApiClient) {
       api.post<RecoveryCodes>(`${API_PATHS.twoFactor}/enable`, { code }),
     disableTwoFactor: (input: TwoFactorDisable) =>
       api.post<void>(`${API_PATHS.twoFactor}/disable`, input),
+  };
+}
+
+/** Rules "if X, then Y" across the modules. */
+export function automationsApi(api: ApiClient) {
+  return {
+    save: (input: AutomationRuleInput, id?: string) =>
+      id
+        ? api.put<AutomationRule>(`/api/automations/${id}`, input)
+        : api.post<AutomationRule>('/api/automations', input),
+    remove: (id: string) => api.delete(`/api/automations/${id}`),
+    /** A sentence → a rule filled in by the AI, to check and save (not saved). */
+    draft: (text: string) => api.post<AutomationRuleInput>('/api/automations/draft', { text }),
   };
 }
 

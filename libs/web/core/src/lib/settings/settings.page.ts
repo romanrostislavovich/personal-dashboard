@@ -15,9 +15,10 @@ import { SystemSettingsComponent } from './system-settings.component';
 import { TelegramSettingsComponent } from './telegram-settings.component';
 import { ThemeSettingsComponent } from './theme-settings.component';
 import { TrashSettingsComponent } from './trash-settings.component';
+import { AutomationsSettingsComponent } from '../automations/automations-settings.component';
 
 /** Tabs of the page, as `?tab=` names them: module pages link to `integrations`. */
-const TABS = ['account', 'appearance', 'integrations', 'data', 'system'] as const;
+const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 'system'] as const;
 
 /**
  * Settings: the account, the look (theme), every connection to an outside service (Telegram and what the modules
@@ -36,6 +37,7 @@ const TABS = ['account', 'appearance', 'integrations', 'data', 'system'] as cons
     SectionsSettingsComponent,
     SecuritySettingsComponent,
     TrashSettingsComponent,
+    AutomationsSettingsComponent,
     SyncSettingsComponent,
     SystemSettingsComponent,
     TelegramSettingsComponent,
@@ -73,6 +75,12 @@ const TABS = ['account', 'appearance', 'integrations', 'data', 'system'] as cons
             <ng-container *ngComponentOutlet="integration.component" />
           }
         </div>
+      </mat-tab>
+
+      <mat-tab [label]="'core.settings.tabs.automations' | transloco">
+        <ng-template matTabContent>
+          <pd-automations-settings />
+        </ng-template>
       </mat-tab>
 
       <mat-tab [label]="'core.settings.tabs.data' | transloco">

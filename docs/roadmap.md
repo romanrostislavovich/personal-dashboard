@@ -16,10 +16,19 @@
 - **Finance:** wallets (personal / per project), recurring payments, automatic cost import from
   Hetzner Cloud and DeepSeek; monthly budgets per category or for everything, with a warning at
   80% and when spent; a photo of a receipt in Telegram becomes an expense (read by an AI with
-  vision), the photo kept with it
+  vision), the photo kept with it; subscriptions — monthly or yearly, a free trial with a
+  reminder, the old prices, a higher charge in the bank reported, repeating charges suggested as
+  subscriptions; savings goals counted from a wallet and money added by hand; the AI's review of a
+  month (where the money went, what changed, where to save)
 - **Life:** one feed of a day across every module (the diary entry, spending, tasks done, time at
-  the computer, music, contributions, matches, birthdays) and the summaries of a month or a year;
-  on the 1st the AI writes a short story of the past month to Telegram with a link to its page
+  the computer, music, contributions, matches, birthdays) and the summaries of a month or a year
+  (the best month by mood, the top artists, what was left over, achievements); the AI's story of
+  a month or a year, sent on the 1st with the finance review; goals of a year counted from the
+  modules or by hand; "Ask" — the AI searches one's own history and links the days it found
+- **Automations:** rules "if X, then Y" across the modules (a site went down, an expense over an
+  amount, a budget running out, no diary entry by a time, overdue tasks, a daily limit, every day
+  at a time → a message, a task, a reminder, a line in the diary), made by hand or from a
+  sentence the AI turns into a rule
 - **Development:** one section with tabs —
   - **Open Source:** the public repositories of your GitHub, GitLab and Bitbucket accounts and of
     their organizations appear by themselves, any other is added by hand; a table with filters (source, language; forks,
@@ -197,8 +206,9 @@
 
 #### Features
 
-- **Life: more** — weather and steps in the day feed, achievements and the best month by mood
-  in the summaries, a yearly story from the AI
+- **Life: more** — weather and steps in the day feed
+- **Automations: more triggers and actions** — matches, a new release, a birthday today; a
+  transaction or a diary mood as an action
 - **Automations: webhooks and a public API** with tokens
 - **Evening check-in in Telegram** — the bot asks "how was your day?", the answer goes to mood and
   the diary
