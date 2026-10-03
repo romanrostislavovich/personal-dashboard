@@ -118,8 +118,8 @@
     "synced": "Обновлено"
   },
   "life": {
-    "day": "{{plays}} песен, больше всего {{artist}}",
+    "day": "{{plays}} песен, больше всего {{artist}} ({{topPlays}})",
     "plays": "Прослушано песен",
-    "topArtist": "больше всего {{artist}}"
+    "topArtist": "больше всего {{artist}} ({{topPlays}})"
   }
 }
