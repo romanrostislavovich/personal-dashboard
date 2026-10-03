@@ -229,6 +229,8 @@ function registerIpc(): void {
   ipcMain.handle('disk:empty-recycle-bin', () => disk.emptyRecycleBin());
   ipcMain.handle('disk:fix', (_event, fix: DiskFix) => disk.fix(fix));
   ipcMain.handle('disk:reveal', (_event, path: string) => disk.reveal(String(path)));
+  ipcMain.handle('disk:keep-advice', (_event, advice: unknown) => disk.keepAdvice(advice));
+  ipcMain.handle('disk:dismiss', () => disk.dismiss());
 
   // The dashboard asks for a system notification; a click opens the window on the given page.
   ipcMain.on(

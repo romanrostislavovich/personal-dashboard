@@ -1,4 +1,4 @@
-import { DiskFix, DiskReport } from '@pd/contracts';
+import { DiskAdvice, DiskFix, DiskReport } from '@pd/contracts';
 /**
  * What the desktop app (Electron preload) adds to the page as `window.desktop`.
  * In a regular browser it is absent.
@@ -30,6 +30,10 @@ export interface DesktopDisk {
   fix?(fix: DiskFix): Promise<DesktopFixResult>;
   /** Shows a path of the last scan in Explorer. */
   reveal?(path: string): Promise<void>;
+  /** Keeps the advice with the scan, so a reloaded page does not ask the AI again. */
+  keepAdvice?(advice: DiskAdvice): Promise<void>;
+  /** Forgets the scan: the panel closes. */
+  dismiss?(): Promise<void>;
 }
 
 export interface DesktopFixResult {
@@ -41,7 +45,14 @@ export interface DesktopFixResult {
 export type DesktopDiskStatus =
   | { state: 'idle' }
   | { state: 'scanning'; mount: string; progress: { files: number; bytes: number } }
-  | { state: 'done'; report: DiskReport }
+  | {
+      state: 'done';
+      report: DiskReport;
+      /** When the scan finished (absent in an older shell). */
+      scannedAt?: string;
+      /** The advice already got for this report, kept by the app across page reloads. */
+      advice?: DiskAdvice | null;
+    }
   | { state: 'error'; message: string };
 
 export interface DesktopTrashResult {
