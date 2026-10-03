@@ -91,6 +91,12 @@ games and messengers is noted), reminds to take a break after an hour at the com
 the computer's disks and load; daily limits (games, the whole day, one program) are set in
 Activity → Setup.
 
+More from the tray app: Ctrl+Alt+C sends the copied text, and Ctrl+Alt+S a piece of the screen,
+to a task, a reminder or the diary; a bank statement saved to Downloads is offered for import into
+Finance through the AI; calls (Zoom, Teams, Google Meet) count as meetings and keep
+notifications quiet; private browser windows and your private words are recorded without their
+titles; a summary of the day comes at 21:00; internet outages and battery care show up too.
+
 When a disk fills up, Activity → Computers analyzes it on request: the app scans the disk
 (about a minute), the AI — or built-in rules without one — says what can go and why, with the
 exact command for Docker, npm and the like, and what to move to another disk. Buttons move

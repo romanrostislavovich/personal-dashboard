@@ -368,5 +368,11 @@
   "duration": {
     "hoursMinutes": "{{hours}} ч {{minutes}} мин",
     "minutes": "{{minutes}} мин"
+  },
+  "capture": {
+    "nothing": "Ничего не захвачено.",
+    "text": "Захваченный текст",
+    "image": "Захваченный скриншот",
+    "close": "Закрыть"
   }
 }

@@ -130,5 +130,9 @@
     "typeWord": "To confirm, type “{{word}}”:",
     "word": "delete",
     "confirm": "Delete everything"
+  },
+  "commands": {
+    "append": "To the diary",
+    "photo": "A photo for the diary"
   }
 }

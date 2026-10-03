@@ -34,6 +34,12 @@ export const tasksModule: WebDashboardModule = {
       loadAction: () => import('./tasks.commands').then((m) => m.addTask),
     },
     {
+      id: 'tasks.remind-in-hour',
+      labelKey: 'tasks.commands.remindInHour',
+      icon: 'alarm',
+      loadAction: () => import('./tasks.commands').then((m) => m.remindInHour),
+    },
+    {
       id: 'tasks.reminders',
       labelKey: 'tasks.tabs.reminders',
       icon: 'notifications',

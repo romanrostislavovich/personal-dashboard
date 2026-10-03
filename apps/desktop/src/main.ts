@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { noticeText } from './activity/notices';
 import { ActivityTracker, TrackerNotice } from './activity/tracker';
 import { loadSettings, saveSettings } from './settings-store';
+import { Capture } from './capture/capture';
 import { DiskCleaner } from './disk/disk-cleaner';
 import { DiskFix } from './disk/disk-fixes';
 import { StatementWatch } from './downloads/statement-watch';
@@ -32,6 +33,8 @@ let refreshTray: () => void = () => undefined;
 const serverUrl = (): string | null => process.env['DASHBOARD_URL'] ?? loadSettings().serverUrl;
 const tracker = new ActivityTracker(serverUrl, () => refreshTray(), showNotice);
 const disk = new DiskCleaner();
+/** Ctrl+Alt+C / Ctrl+Alt+S from any program: text or a screenshot to a task or the diary. */
+const capture = new Capture(serverUrl, (title, body) => notify(title, body, showWindow));
 /** A bank statement saved to Downloads: offered for import into Finance through the AI. */
 const statements = new StatementWatch((statement) =>
   notify('Похоже на выписку банка', `${statement.name} — импортировать в Финансы?`, () => {
@@ -99,6 +102,7 @@ function bootstrap(): void {
   }, TRAY_COUNTDOWN_MS);
   tracker.start();
   statements.start();
+  capture.register();
   updater.start();
   openDashboard();
 }
@@ -239,6 +243,16 @@ function registerIpc(): void {
   ipcMain.handle('disk:empty-recycle-bin', () => disk.emptyRecycleBin());
   ipcMain.handle('disk:fix', (_event, fix: DiskFix) => disk.fix(fix));
   ipcMain.handle('disk:reveal', (_event, path: string) => disk.reveal(String(path)));
+  ipcMain.handle('capture:pending', () => capture.current());
+  ipcMain.handle('capture:close', () => capture.close());
+  ipcMain.handle('region:image', () => capture.overlayImage());
+  ipcMain.handle(
+    'region:done',
+    (_event, rect: { x: number; y: number; width: number; height: number } | null) =>
+      capture.regionDone(
+        rect && [rect.x, rect.y, rect.width, rect.height].every(Number.isFinite) ? rect : null,
+      ),
+  );
   ipcMain.handle('downloads:take', async (_event, id: string) => {
     const statement = statements.get(String(id));
     if (!statement) {
@@ -318,6 +332,8 @@ function quitApp(): void {
     () => app.quit(),
   );
 }
+
+app.on('will-quit', () => capture.unregister());
 
 // The app lives in the tray, so closing all windows does not quit it.
 app.on('window-all-closed', () => undefined);
