@@ -1,10 +1,10 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CORE_READS } from '@pd/client-core';
 import { LifeDay } from '@pd/contracts';
@@ -127,7 +127,10 @@ import { todayLocalDate } from '@pd/web-core';
 })
 export class DayPage {
   protected readonly today = todayLocalDate();
-  protected readonly day = signal(this.today);
+  /** `/life/day?day=2026-10-03` (links of the AI's answers) opens that day. */
+  protected readonly day = signal(
+    validDay(inject(ActivatedRoute).snapshot.queryParamMap.get('day'), this.today),
+  );
   protected readonly timeline = httpResource<LifeDay>(() => CORE_READS.lifeDay(this.day()));
   protected readonly events = computed(() => this.timeline.value()?.events ?? []);
 
@@ -143,4 +146,8 @@ export class DayPage {
     const pad = (value: number) => String(value).padStart(2, '0');
     this.pick(`${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`);
   }
+}
+
+function validDay(value: string | null, today: string): string {
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) && value <= today ? value : today;
 }

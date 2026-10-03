@@ -256,5 +256,8 @@
     "topApp": "больше всего {{app}}",
     "focus": "В фокусе",
     "focusSessions": "сессий: {{count}}"
+  },
+  "automations": {
+    "limit": "Достигнут дневной лимит"
   }
 }

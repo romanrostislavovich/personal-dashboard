@@ -1,5 +1,5 @@
 import { projects, users } from '@pd/api-core/schema';
-import { COST_PROVIDERS, TRANSACTION_KINDS } from '@pd/contracts';
+import { COST_PROVIDERS, RECURRING_PERIODS, TRANSACTION_KINDS } from '@pd/contracts';
 import {
   boolean,
   customType,
@@ -16,6 +16,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 export const transactionKind = pgEnum('finance_transaction_kind', TRANSACTION_KINDS);
+export const recurringPeriod = pgEnum('finance_recurring_period', RECURRING_PERIODS);
 
 /**
  * Recurring payments: servers, domains, subscriptions.
@@ -33,10 +34,45 @@ export const recurringPayments = pgTable('finance_recurring_payments', {
   currency: text().notNull(),
   category: text().notNull(),
   dayOfMonth: smallint().notNull(),
+  period: recurringPeriod().notNull().default('month'),
+  /** 1–12: the month of a yearly charge. */
+  monthOfYear: smallint(),
+  trialEndsOn: date({ mode: 'string' }),
+  /** The trial end the reminder was sent for: once per date. */
+  trialNotifiedFor: date({ mode: 'string' }),
+  /** A higher price seen in the transactions and reported: once per price. */
+  noticedAmount: numeric({ precision: 14, scale: 2, mode: 'number' }),
   isActive: boolean().notNull().default(true),
   lastChargedOn: date({ mode: 'string' }),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
+
+/** The earlier prices of a recurring payment: a row each time its amount changes. */
+export const recurringPrices = pgTable('finance_recurring_prices', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  recurringPaymentId: uuid()
+    .notNull()
+    .references(() => recurringPayments.id, { onDelete: 'cascade' }),
+  /** The price before the change. */
+  amount: numeric({ precision: 14, scale: 2, mode: 'number' }).notNull(),
+  changedOn: date({ mode: 'string' }).notNull(),
+});
+
+/** Repeating charges the user said are not subscriptions (by their lower-case note). */
+export const subscriptionDismissals = pgTable(
+  'finance_subscription_dismissals',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    key: text().notNull(),
+  },
+  (table) => [unique().on(table.userId, table.key)],
+);
 
 export const costProvider = pgEnum('finance_cost_provider', COST_PROVIDERS);
 
@@ -128,6 +164,56 @@ export const financeBudgets = pgTable(
   (table) => [unique().on(table.userId, table.category)],
 );
 
+/** Saving up for something: a target, maybe a date, and where the money comes from. */
+export const savingsGoals = pgTable('finance_goals', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text().notNull(),
+  target: numeric({ precision: 14, scale: 2, mode: 'number' }).notNull(),
+  currency: text().notNull(),
+  deadline: date({ mode: 'string' }),
+  /** `personal`, a project id, or `null` — only what is added by hand. */
+  wallet: text(),
+  startedOn: date({ mode: 'string' }).notNull(),
+  /** When the target was reached and reported. */
+  reachedAt: timestamp({ withTimezone: true }),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Money added to a goal (or taken out) by hand, in the goal's currency. */
+export const goalContributions = pgTable('finance_goal_contributions', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  goalId: uuid()
+    .notNull()
+    .references(() => savingsGoals.id, { onDelete: 'cascade' }),
+  amount: numeric({ precision: 14, scale: 2, mode: 'number' }).notNull(),
+  note: text(),
+  occurredOn: date({ mode: 'string' }).notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+/** The AI's report of a month: kept, so it is written once and can be read again. */
+export const financeReports = pgTable(
+  'finance_reports',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    month: text().notNull(),
+    summary: text().notNull(),
+    text: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [unique().on(table.userId, table.month)],
+);
+
 export type TransactionRow = typeof transactions.$inferSelect;
 export type RecurringPaymentRow = typeof recurringPayments.$inferSelect;
 export type CostSourceRow = typeof costSources.$inferSelect;
+export type SavingsGoalRow = typeof savingsGoals.$inferSelect;

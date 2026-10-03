@@ -61,11 +61,13 @@ export class DiaryLife implements OnModuleInit {
                   key: 'diary.life.mood',
                   value: Math.round((moods.reduce((a, b) => a + b, 0) / moods.length) * 10) / 10,
                   format: 'number' as const,
+                  aggregate: 'average' as const,
                   detailKey: 'diary.life.moodDays',
                   detailParams: { days: moods.length },
                 },
               ]
             : []),
+          ...bestMonth(entries),
         ];
       },
     });
@@ -73,6 +75,40 @@ export class DiaryLife implements OnModuleInit {
 }
 
 /** Plain text without the markdown marks; lines are joined with a dot so they do not run together. */
+/** At least this many rated days make a month worth comparing. */
+const BEST_MONTH_DAYS = 5;
+
+/** The month with the best average mood, when the period spans several months. */
+function bestMonth(entries: { day: string; mood: number | null }[]): LifeCard[] {
+  const months = new Map<string, number[]>();
+  for (const entry of entries) {
+    if (entry.mood !== null) {
+      const month = entry.day.slice(0, 7);
+      months.set(month, [...(months.get(month) ?? []), entry.mood]);
+    }
+  }
+  const ranked = [...months]
+    .filter(([, moods]) => moods.length >= BEST_MONTH_DAYS)
+    .map(([month, moods]) => ({ month, mood: moods.reduce((a, b) => a + b, 0) / moods.length }))
+    .sort((a, b) => b.mood - a.mood);
+  if (ranked.length < 2) {
+    return [];
+  }
+  const [year, number] = ranked[0].month.split('-');
+  return [
+    {
+      module: 'diary',
+      icon: 'sentiment_very_satisfied',
+      key: 'diary.life.bestMonth',
+      value: Math.round(ranked[0].mood * 10) / 10,
+      format: 'number',
+      aggregate: 'average',
+      detailKey: `diary.life.months.${Number(number)}`,
+      detailParams: { year },
+    },
+  ];
+}
+
 function excerpt(markdown: string): string {
   const text = markdown
     .split('\n')

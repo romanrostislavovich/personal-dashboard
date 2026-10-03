@@ -1,6 +1,12 @@
 import {
   Achievement,
   AuthConfig,
+  AutomationRule,
+  AutomationRuleInput,
+  LifeAnswer,
+  LifeGoal,
+  LifeGoalInput,
+  LifeStory,
   CurrentUser,
   LoginRequest,
   LoginResponse,
@@ -84,6 +90,14 @@ export const CORE_READS = {
   lifeDay: (day: string) => apiRequest('/api/life/day', { day }),
   /** The numbers of every module for a period (a month, a year). */
   lifeSummary: (from: string, to: string) => apiRequest('/api/life/summary', { from, to }),
+  lifeGoals: (year: number) => apiRequest('/api/life/goals', { year }),
+  /** What a goal of a year can be counted from. */
+  lifeMetrics: () => apiRequest('/api/life/metrics'),
+  /** The AI's kept story of `YYYY-MM` or `YYYY`: `{ story: null }` — not written yet. */
+  lifeStory: (period: string) => apiRequest('/api/life/story', { period }),
+  automations: () => apiRequest('/api/automations'),
+  /** The triggers and actions the modules registered. */
+  automationsCatalog: () => apiRequest('/api/automations/catalog'),
 };
 
 /** Signing in and the profile. Signing in does not start the session — see `DashboardClient`. */
@@ -112,6 +126,38 @@ export function authApi(api: ApiClient) {
       api.post<RecoveryCodes>(`${API_PATHS.twoFactor}/enable`, { code }),
     disableTwoFactor: (input: TwoFactorDisable) =>
       api.post<void>(`${API_PATHS.twoFactor}/disable`, input),
+  };
+}
+
+/** Rules "if X, then Y" across the modules. */
+export function automationsApi(api: ApiClient) {
+  return {
+    save: (input: AutomationRuleInput, id?: string) =>
+      id
+        ? api.put<AutomationRule>(`/api/automations/${id}`, input)
+        : api.post<AutomationRule>('/api/automations', input),
+    remove: (id: string) => api.delete(`/api/automations/${id}`),
+    /** A sentence → a rule filled in by the AI, to check and save (not saved). */
+    draft: (text: string) => api.post<AutomationRuleInput>('/api/automations/draft', { text }),
+  };
+}
+
+/** The Life section: goals of a year, the AI's stories, questions about one's own life. */
+export function lifeApi(api: ApiClient) {
+  return {
+    saveGoal: (input: LifeGoalInput, id?: string) =>
+      id
+        ? api.put<LifeGoal>(`/api/life/goals/${id}`, input)
+        : api.post<LifeGoal>('/api/life/goals', input),
+    /** The progress of a goal counted by hand. */
+    setProgress: (id: string, value: number) =>
+      api.put<LifeGoal>(`/api/life/goals/${id}/progress`, { value }),
+    removeGoal: (id: string) => api.delete(`/api/life/goals/${id}`),
+    /** Writes (or writes again) the AI's story of `YYYY-MM` or `YYYY`. */
+    writeStory: (period: string) =>
+      api.post<{ story: LifeStory | null }>('/api/life/story', { period }),
+    /** "When was I in Prague?" — answered by the AI with links to the days. */
+    ask: (question: string) => api.post<LifeAnswer>('/api/life/ask', { question }),
   };
 }
 

@@ -6,6 +6,9 @@ import { scrobbles } from './music.schema';
 
 /** Leaders sharing the first place are all shown, up to this many. */
 const TOP_ARTISTS = 3;
+/** A period this long (a year) lists its top artists instead of the leader. */
+const LONG_PERIOD_DAYS = 62;
+const YEAR_TOP = 5;
 
 /** What was listened to: the plays of a day and of a period, with the top artists. */
 @Injectable()
@@ -35,7 +38,9 @@ export class MusicLife implements OnModuleInit {
           : [];
       },
       period: async (userId, period): Promise<LifeCard[]> => {
-        const { plays, artist, topPlays } = await this.listened(userId, period);
+        const { plays, artist, topPlays, top } = await this.listened(userId, period);
+        const long =
+          Date.parse(period.to) - Date.parse(period.from) > LONG_PERIOD_DAYS * 86_400_000;
         return plays
           ? [
               {
@@ -44,8 +49,12 @@ export class MusicLife implements OnModuleInit {
                 key: 'music.life.plays',
                 value: plays,
                 format: 'number',
-                detailKey: 'music.life.topArtist',
-                detailParams: { artist, topPlays },
+                ...(long
+                  ? {
+                      detailKey: 'music.life.topArtists',
+                      detailParams: { artists: top.map((row) => row.artist).join(', ') },
+                    }
+                  : { detailKey: 'music.life.topArtist', detailParams: { artist, topPlays } }),
               },
             ]
           : [];
@@ -70,10 +79,13 @@ export class MusicLife implements OnModuleInit {
       .where(where)
       .groupBy(scrobbles.artist)
       .orderBy(desc(count()), asc(scrobbles.artist))
-      .limit(TOP_ARTISTS);
+      .limit(Math.max(TOP_ARTISTS, YEAR_TOP));
     // A tie is common on a varied day: picking one of the leaders would be arbitrary.
     const topPlays = top[0]?.plays ?? 0;
-    const leaders = top.filter((row) => row.plays === topPlays).map((row) => row.artist);
-    return { plays: total?.plays ?? 0, artist: leaders.join(', '), topPlays };
+    const leaders = top
+      .filter((row) => row.plays === topPlays)
+      .slice(0, TOP_ARTISTS)
+      .map((row) => row.artist);
+    return { plays: total?.plays ?? 0, artist: leaders.join(', '), topPlays, top };
   }
 }

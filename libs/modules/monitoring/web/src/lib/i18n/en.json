@@ -29,5 +29,10 @@
     "title": "Monitoring",
     "empty": "Add websites in the Monitoring section",
     "open": "Details"
+  },
+  "automations": {
+    "down": "A site went down",
+    "up": "A site is back up",
+    "site": "Only the site (part of its name or address)"
   }
 }

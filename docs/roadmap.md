@@ -16,10 +16,19 @@
 - **Finance:** wallets (personal / per project), recurring payments, automatic cost import from
   Hetzner Cloud and DeepSeek; monthly budgets per category or for everything, with a warning at
   80% and when spent; a photo of a receipt in Telegram becomes an expense (read by an AI with
-  vision), the photo kept with it
+  vision), the photo kept with it; subscriptions — monthly or yearly, a free trial with a
+  reminder, the old prices, a higher charge in the bank reported, repeating charges suggested as
+  subscriptions; savings goals counted from a wallet and money added by hand; the AI's review of a
+  month (where the money went, what changed, where to save)
 - **Life:** one feed of a day across every module (the diary entry, spending, tasks done, time at
-  the computer, music, contributions, matches, birthdays) and the summaries of a month or a year;
-  on the 1st the AI writes a short story of the past month to Telegram with a link to its page
+  the computer, music, contributions, matches, birthdays) and the summaries of a month or a year
+  (the best month by mood, the top artists, what was left over, achievements); the AI's story of
+  a month or a year, sent on the 1st with the finance review; goals of a year counted from the
+  modules or by hand; "Ask" — the AI searches one's own history and links the days it found
+- **Automations:** rules "if X, then Y" across the modules (a site went down, an expense over an
+  amount, a budget running out, no diary entry by a time, overdue tasks, a daily limit, every day
+  at a time → a message, a task, a reminder, a line in the diary), made by hand or from a
+  sentence the AI turns into a rule
 - **Development:** one section with tabs —
   - **Open Source:** the public repositories of your GitHub, GitLab and Bitbucket accounts and of
     their organizations appear by themselves, any other is added by hand; a table with filters (source, language; forks,
@@ -112,6 +121,11 @@
 ### Planned
 
 - **Habits** — a habit tracker module, in the digest too
+- **Sleep, steps, weight** — the first part of Fitness: from Google Fit / Health Connect or typed
+  in by hand, shown in Life and in the morning digest
+- **Push notifications in the PWA** — on a phone without Telegram (see Everyday comfort)
+- **Export and import of all data** — one archive (JSON plus CSV for finance, Markdown for the
+  diary) and its import back into an empty or another instance
 - **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
   Cursor can read and change your data directly, without its own chat
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
@@ -192,20 +206,14 @@
 
 #### Features
 
-- **Finance:** a reminder before a free trial ends and when a subscription gets more expensive
-- **Life: more** — weather and steps in the day feed, achievements and the best month by mood
-  in the summaries, a yearly story from the AI
-- **Yearly goals** — goals whose progress is counted from the modules: "read 20 books", "run
-  500 km", "save X", "100 diary days in a row"
-- **Automations "if X, then Y"** — rules across modules: "a site is down → a task in the TODO
-  list", "over budget → a reminder", "no diary entry by 22:00 → a message in Telegram"; plus
-  webhooks and a public API with tokens
+- **Life: more** — weather and steps in the day feed
+- **Automations: more triggers and actions** — matches, a new release, a birthday today; a
+  transaction or a diary mood as an action
+- **Automations: webhooks and a public API** with tokens
 - **Evening check-in in Telegram** — the bot asks "how was your day?", the answer goes to mood and
   the diary
 - **Games:** PlayStation and Xbox — playtime and platform achievements
 - **Music and media:** podcasts and YouTube history
-- **Export of all data** — the diary as Markdown (Obsidian-compatible), finance as CSV,
-  everything as JSON
 - **Insights across modules** — mood on days with a run, what was playing on bad days (through AI
   tools or core insights: modules do not depend on each other). The AI looks for such links across
   all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you

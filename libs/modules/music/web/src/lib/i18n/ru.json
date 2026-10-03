@@ -120,6 +120,7 @@
   "life": {
     "day": "{{plays}} песен, больше всего {{artist}} ({{topPlays}})",
     "plays": "Прослушано песен",
-    "topArtist": "больше всего {{artist}} ({{topPlays}})"
+    "topArtist": "больше всего {{artist}} ({{topPlays}})",
+    "topArtists": "топ: {{artists}}"
   }
 }

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { FinanceAutomations } from './finance.automations';
 import { FinanceLife } from './finance.life';
 import { FinanceSearch } from './finance.search';
 import { CostSourcesController } from './cost-sources/cost-sources.controller';
@@ -18,14 +19,19 @@ import { RecurringPaymentsService } from './recurring/recurring-payments.service
 import { TransactionsService } from './transactions/transactions.service';
 import { BudgetsService } from './budgets/budgets.service';
 import { ReceiptsService } from './receipts/receipts.service';
+import { SubscriptionsService } from './recurring/subscriptions.service';
+import { GoalsService } from './goals/goals.service';
+import { FinanceReportsService } from './reports/finance-reports.service';
 
 /**
- * Finance: personal and project income/expenses, recurring payments
- * and automatic cost import from services (Hetzner, DeepSeek). API: `/api/finance/*`.
+ * Finance: personal and project income/expenses, recurring payments and subscriptions, budgets,
+ * savings goals, the AI's monthly review and automatic cost import from services (Hetzner,
+ * DeepSeek). API: `/api/finance/*`.
  */
 @Module({
   controllers: [FinanceController, CostSourcesController],
   providers: [
+    FinanceAutomations,
     FinanceLife,
     FinanceSearch,
     TransactionsService,
@@ -35,6 +41,9 @@ import { ReceiptsService } from './receipts/receipts.service';
     FinanceSettingsService,
     RecurringPaymentsService,
     RecurringPaymentsJob,
+    SubscriptionsService,
+    GoalsService,
+    FinanceReportsService,
     CostSourcesService,
     CostSourcesJob,
     // Cost providers: a new service = a new class here + an id in COST_PROVIDERS.

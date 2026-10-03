@@ -129,6 +129,8 @@
 
       <pd-budgets-card [month]="monthKey()" [categories]="knownCategories()" />
 
+      <pd-report-card [month]="monthKey()" />
+
       <div class="row">
         <mat-card appearance="outlined">
           <mat-card-header>
@@ -185,7 +187,7 @@
     </div>
   </mat-tab>
 
-  <!-- Recurring payments: servers, domains, subscriptions -->
+  <!-- Subscriptions and other recurring payments: servers, domains -->
   <mat-tab [label]="'finance.tabs.recurring' | transloco">
     <div class="tab-actions">
       <p class="hint">{{ 'finance.recurring.hint' | transloco }}</p>
@@ -193,14 +195,69 @@
         <mat-icon>add</mat-icon> {{ 'finance.recurring.add' | transloco }}
       </button>
     </div>
+    @if (subscriptions.value(); as subs) {
+      @if (subs.perMonth > 0) {
+        <p class="subscription-totals">
+          {{ 'finance.recurring.perMonth' | transloco }}
+          <b>{{ subs.perMonth | currency: subs.currency }}</b> ·
+          {{ 'finance.recurring.perYear' | transloco }}
+          <b>{{ subs.perYear | currency: subs.currency : 'symbol' : '1.0-0' }}</b>
+        </p>
+      }
+      @if (subs.suggestions.length) {
+        <mat-card appearance="outlined" class="suggestions">
+          <mat-card-header>
+            <mat-card-title>{{ 'finance.recurring.suggestions' | transloco }}</mat-card-title>
+            <mat-card-subtitle>{{
+              'finance.recurring.suggestionsHint' | transloco
+            }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-list>
+            @for (s of subs.suggestions; track s.key) {
+              <mat-list-item>
+                <mat-icon matListItemIcon>lightbulb</mat-icon>
+                <span matListItemTitle>{{ s.name }}</span>
+                <span matListItemLine>
+                  {{ 'finance.recurring.everyMonth' | transloco: { day: s.dayOfMonth } }} ·
+                  {{ 'finance.recurring.seen' | transloco: { count: s.months.length } }} ·
+                  {{ s.category }}
+                </span>
+                <div matListItemMeta class="meta">
+                  <span class="amount">{{ s.amount | currency: s.currency }}</span>
+                  <button matButton (click)="addSuggestion(s)">
+                    {{ 'core.actions.add' | transloco }}
+                  </button>
+                  <button
+                    matIconButton
+                    [matTooltip]="'finance.recurring.notSubscription' | transloco"
+                    [attr.aria-label]="'finance.recurring.notSubscription' | transloco"
+                    (click)="dismissSuggestion(s)"
+                  >
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </mat-list-item>
+            }
+          </mat-list>
+        </mat-card>
+      }
+    }
     <mat-card appearance="outlined">
       <mat-list>
         @for (p of recurringPayments.value(); track p.id) {
           <mat-list-item [class.inactive]="!p.isActive">
             <mat-icon matListItemIcon>{{ p.isActive ? 'event_repeat' : 'pause_circle' }}</mat-icon>
-            <span matListItemTitle>{{ p.name }}</span>
+            <span matListItemTitle>
+              {{ p.name }}
+              @if (p.trialEndsOn && p.trialEndsOn >= today) {
+                <span class="badge">{{
+                  'finance.recurring.trialUntil'
+                    | transloco: { date: (p.trialEndsOn | date: 'd MMM') }
+                }}</span>
+              }
+            </span>
             <span matListItemLine>
-              {{ 'finance.recurring.everyMonth' | transloco: { day: p.dayOfMonth } }} ·
+              {{ chargeDay(p) }} ·
               {{
                 p.projectId
                   ? projectNames().get(p.projectId)
@@ -209,6 +266,20 @@
               · {{ p.category }}
             </span>
             <div matListItemMeta class="meta">
+              @if (p.priceHistory[0]; as was) {
+                <mat-icon
+                  class="price-up"
+                  [matTooltip]="
+                    'finance.recurring.priceWas'
+                      | transloco
+                        : {
+                            amount: (was.amount | currency: p.currency),
+                            date: (was.changedOn | date: 'd MMM y'),
+                          }
+                  "
+                  >{{ was.amount < p.amount ? 'trending_up' : 'trending_down' }}</mat-icon
+                >
+              }
               <span class="amount">{{ p.amount | currency: p.currency }}</span>
               <button matIconButton (click)="openRecurringForm(p)">
                 <mat-icon>edit</mat-icon>
@@ -223,5 +294,10 @@
         }
       </mat-list>
     </mat-card>
+  </mat-tab>
+
+  <!-- Savings goals -->
+  <mat-tab [label]="'finance.tabs.goals' | transloco">
+    <pd-goals-tab [projects]="projects.value()" [currency]="currency()" />
   </mat-tab>
 </mat-tab-group>

@@ -101,3 +101,29 @@
 .padded {
   padding: 16px;
 }
+
+.subscription-totals {
+  margin: 0 0 12px;
+  color: var(--mat-sys-on-surface-variant);
+
+  b {
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+.suggestions {
+  margin-bottom: 16px;
+}
+
+.badge {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+  font: var(--mat-sys-label-small);
+}
+
+.price-up {
+  color: var(--mat-sys-on-surface-variant);
+}

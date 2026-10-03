@@ -250,7 +250,8 @@
       "integrations": "Integrations",
       "data": "Data",
       "system": "System",
-      "appearance": "Appearance"
+      "appearance": "Appearance",
+      "automations": "Automations"
     },
     "integrationsIntro": "Connections to outside services: where notifications go, where the modules take their data from, which AI answers.",
     "openIntegrations": "Connect in Settings → Integrations",
@@ -374,5 +375,46 @@
     "text": "Captured text",
     "image": "Captured screenshot",
     "close": "Close"
+  },
+  "life": {
+    "achievements": "Achievements unlocked"
+  },
+  "automations": {
+    "daily": "Every day at a time",
+    "time": "Time",
+    "weekday": "Day",
+    "weekdays": {
+      "any": "Every day",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "7": "Sunday"
+    },
+    "notify": "Send me a message",
+    "text": "Text",
+    "title": "Rules \"if X, then Y\"",
+    "intro": "When something happens in one section, something is done in another. Rules run on the server, at most 20 times a day each.",
+    "describe": "Describe a rule",
+    "describePlaceholder": "If a site goes down, add a task to fix it",
+    "compose": "Compose",
+    "composeHint": "The AI fills in the rule; you check it and save.",
+    "composeError": "The AI could not make a rule",
+    "add": "New rule",
+    "edit": "The rule",
+    "name": "Name",
+    "when": "When",
+    "then": "Then",
+    "variables": "The text may use:",
+    "active": "On",
+    "fired": "Ran {{count}} times, last {{date}}",
+    "never": "Not run yet",
+    "error": "Last run failed: {{error}}",
+    "empty": "No rules yet.",
+    "confirmDelete": "Delete the rule \"{{name}}\"?",
+    "any": "—",
+    "general": "General"
   }
 }

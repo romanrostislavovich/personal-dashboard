@@ -256,5 +256,8 @@
     "topApp": "mostly {{app}}",
     "focus": "In focus",
     "focusSessions": "{{count}} sessions"
+  },
+  "automations": {
+    "limit": "A daily limit is reached"
   }
 }

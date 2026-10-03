@@ -1,5 +1,5 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, NotificationsService, UsersService } from '@pd/api-core';
+import { AutomationsService, DB, Database, NotificationsService, UsersService } from '@pd/api-core';
 import { Budget, BudgetInput, zonedDateTime } from '@pd/contracts';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { financeMessages } from '../finance.messages';
@@ -18,6 +18,7 @@ export class BudgetsService implements OnModuleInit {
     private readonly transactions: TransactionsService,
     private readonly notifications: NotificationsService,
     private readonly users: UsersService,
+    private readonly automations: AutomationsService,
   ) {}
 
   onModuleInit(): void {
@@ -98,6 +99,13 @@ export class BudgetsService implements OnModuleInit {
           alert.level === 'exceeded' ? text.budgetExceededTitle(name) : text.budgetWarnTitle(name),
         body: text.budgetBody(round(alert.spent), alert.budget.limit, mainCurrency),
         source: 'finance',
+      });
+      await this.automations.emit(userId, 'finance.budget', {
+        level: alert.level,
+        category: name,
+        spent: round(alert.spent).toFixed(2),
+        limit: alert.budget.limit.toFixed(2),
+        currency: mainCurrency,
       });
       await this.db
         .update(financeBudgets)

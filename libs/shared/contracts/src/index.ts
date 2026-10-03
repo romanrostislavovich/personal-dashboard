@@ -10,6 +10,7 @@ export * from './lib/activity';
 export * from './lib/activity-wellbeing';
 export * from './lib/activity-disk';
 export * from './lib/life';
+export * from './lib/automations';
 export * from './lib/projects';
 export * from './lib/notifications';
 export * from './lib/birthdays';

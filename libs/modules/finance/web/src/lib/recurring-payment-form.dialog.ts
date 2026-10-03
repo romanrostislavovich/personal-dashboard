@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,11 +8,20 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { DatePipe } from '@angular/common';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Project, RecurringPayment, RecurringPaymentInput } from '@pd/contracts';
 
+/** January … December, for the month of a yearly payment. */
+const MONTHS = Array.from({ length: 12 }, (_, index) => ({
+  value: index + 1,
+  date: new Date(2000, index, 1),
+}));
+
 export interface RecurringPaymentFormData {
   payment: RecurringPayment | null;
+  /** Fields of a new payment filled in advance (a suggested subscription). */
+  draft?: Partial<RecurringPaymentInput>;
   projects: Project[];
   categories: string[];
   defaults: { currency: string; projectId: string | null };
@@ -29,6 +39,7 @@ export interface RecurringPaymentFormData {
     MatAutocompleteModule,
     MatSlideToggleModule,
     MatButtonModule,
+    DatePipe,
     TranslocoPipe,
   ],
   template: `
@@ -56,6 +67,32 @@ export interface RecurringPaymentFormData {
             <mat-label>{{ 'finance.currency' | transloco }}</mat-label>
             <input matInput formControlName="currency" maxlength="3" />
           </mat-form-field>
+        </div>
+
+        <div class="row">
+          <mat-form-field>
+            <mat-label>{{ 'finance.recurring.period' | transloco }}</mat-label>
+            <mat-select formControlName="period">
+              <mat-option value="month">{{ 'finance.recurring.monthly' | transloco }}</mat-option>
+              <mat-option value="year">{{ 'finance.recurring.yearly' | transloco }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          @if (period() === 'year') {
+            <mat-form-field>
+              <mat-label>{{ 'finance.recurring.monthOfYear' | transloco }}</mat-label>
+              <mat-select formControlName="monthOfYear">
+                @for (month of months; track month.value) {
+                  <mat-option [value]="month.value">{{ month.date | date: 'LLLL' }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          } @else {
+            <mat-form-field>
+              <mat-label>{{ 'finance.recurring.trialEndsOn' | transloco }}</mat-label>
+              <input matInput type="date" formControlName="trialEndsOn" />
+              <mat-hint>{{ 'finance.recurring.trialHint' | transloco }}</mat-hint>
+            </mat-form-field>
+          }
         </div>
 
         <div class="row">
@@ -123,9 +160,13 @@ export class RecurringPaymentFormDialog {
     MatDialogRef<RecurringPaymentFormDialog, RecurringPaymentInput>,
   );
 
-  private readonly initial = this.data.payment;
+  protected readonly months = MONTHS;
+  private readonly initial = this.data.payment ?? this.data.draft ?? null;
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: [this.initial?.name ?? '', Validators.required],
+    period: [(this.initial?.period ?? 'month') as 'month' | 'year'],
+    monthOfYear: [this.initial?.monthOfYear ?? new Date().getMonth() + 1],
+    trialEndsOn: [this.initial?.trialEndsOn ?? ''],
     amount: [
       this.initial?.amount ?? (null as number | null),
       [Validators.required, Validators.min(0.01)],
@@ -139,16 +180,24 @@ export class RecurringPaymentFormDialog {
       this.initial?.dayOfMonth ?? 1,
       [Validators.required, Validators.min(1), Validators.max(31)],
     ],
-    projectId: [(this.initial ? this.initial.projectId : this.data.defaults.projectId) ?? ''],
+    projectId: [
+      (this.data.payment ? this.data.payment.projectId : this.data.defaults.projectId) ?? '',
+    ],
     isActive: [this.initial?.isActive ?? true],
+  });
+  protected readonly period = toSignal(this.form.controls.period.valueChanges, {
+    initialValue: this.form.controls.period.value,
   });
 
   save(): void {
     const value = this.form.getRawValue();
+    const yearly = value.period === 'year';
     this.dialogRef.close({
       ...value,
       amount: Number(value.amount),
       currency: value.currency.toUpperCase(),
+      monthOfYear: yearly ? value.monthOfYear : null,
+      trialEndsOn: !yearly && value.trialEndsOn ? value.trialEndsOn : null,
       projectId: value.projectId || null,
     });
   }

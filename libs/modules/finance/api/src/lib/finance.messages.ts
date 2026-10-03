@@ -28,6 +28,18 @@ const messages = {
       'No AI connection here sees pictures. Add an OpenAI one (gpt-4o-mini) in Settings → Integrations → AI.',
     receiptUnreadable:
       'Could not read a receipt on this photo. Try a sharper one, the whole receipt in view.',
+    priceRiseTitle: (name: string) => `📈 ${name} got more expensive`,
+    priceRiseBody: (was: number, now: number, currency: string) =>
+      `The bank charged ${now.toFixed(2)} ${currency} instead of ${was.toFixed(2)}. ` +
+      'Update the price in Finance → Subscriptions if it stays.',
+    trialTitle: (name: string) => `⏳ The free trial of ${name} ends soon`,
+    trialBody: (ends: string, amount: number, currency: string) =>
+      `It ends on ${ends}; after that ${amount.toFixed(2)} ${currency} will be charged. ` +
+      'Cancel it now if you do not need it.',
+    goalReachedTitle: (name: string) => `🎉 Goal reached: ${name}`,
+    goalReachedBody: (saved: number, currency: string) =>
+      `${saved.toFixed(2)} ${currency} saved. Well done!`,
+    reportNote: (summary: string) => `💰 Money: ${summary}`,
   },
   ru: {
     chargedTitle: '💸 Регулярные платежи',
@@ -46,6 +58,18 @@ const messages = {
       'Нет подключения ИИ, которое видит картинки. Добавьте OpenAI (gpt-4o-mini) в Настройках → Интеграции → ИИ.',
     receiptUnreadable:
       'Не получилось прочитать чек на этом фото. Попробуйте почётче, чтобы чек был виден целиком.',
+    priceRiseTitle: (name: string) => `📈 ${name} подорожала`,
+    priceRiseBody: (was: number, now: number, currency: string) =>
+      `Банк списал ${now.toFixed(2)} ${currency} вместо ${was.toFixed(2)}. ` +
+      'Если цена теперь такая, обновите её в Финансах → Подписки.',
+    trialTitle: (name: string) => `⏳ Скоро кончится пробный период ${name}`,
+    trialBody: (ends: string, amount: number, currency: string) =>
+      `Он заканчивается ${ends}, потом спишут ${amount.toFixed(2)} ${currency}. ` +
+      'Если не нужно — отмените сейчас.',
+    goalReachedTitle: (name: string) => `🎉 Цель достигнута: ${name}`,
+    goalReachedBody: (saved: number, currency: string) =>
+      `Накоплено ${saved.toFixed(2)} ${currency}. Отлично!`,
+    reportNote: (summary: string) => `💰 Деньги: ${summary}`,
   },
 };
 

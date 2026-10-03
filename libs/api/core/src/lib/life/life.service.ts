@@ -19,6 +19,8 @@ export interface LifeSource {
   module: string;
   day?(userId: string, day: LocalDate): Promise<LifeEvent[]>;
   period?(userId: string, period: { from: LocalDate; to: LocalDate }): Promise<LifeCard[]>;
+  /** A line of its own for the message about a month (`YYYY-MM`), e.g. the finance review. */
+  monthNote?(userId: string, month: string): Promise<string | null>;
 }
 
 /**
@@ -62,6 +64,21 @@ export class LifeService {
         ),
       )
     ).flat();
+  }
+
+  /** The modules' own lines about a month, for the message on the 1st. */
+  async monthNotes(userId: string, month: string): Promise<string[]> {
+    const notes = await Promise.all(
+      this.sources.map((source) =>
+        source.monthNote
+          ? this.safely(source.module, async () => {
+              const note = await source.monthNote?.(userId, month);
+              return note ? [note] : [];
+            })
+          : [],
+      ),
+    );
+    return notes.flat();
   }
 
   private visible(hidden: string[]): LifeSource[] {

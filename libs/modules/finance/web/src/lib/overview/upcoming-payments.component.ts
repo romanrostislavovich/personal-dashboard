@@ -95,9 +95,16 @@ export class UpcomingPaymentsComponent {
   readonly month = input.required<Month>();
 
   protected readonly upcoming = computed(() => {
-    const { from } = monthRange(this.month());
+    const { from, to } = monthRange(this.month());
+    // A yearly payment only in its month; a free trial ending after this month costs nothing yet.
     return this.payments()
-      .filter((p) => p.isActive && (!p.lastChargedOn || p.lastChargedOn < from))
+      .filter(
+        (p) =>
+          p.isActive &&
+          (!p.lastChargedOn || p.lastChargedOn < from) &&
+          (p.period !== 'year' || p.monthOfYear === this.month().month) &&
+          (!p.trialEndsOn || p.trialEndsOn <= to),
+      )
       .sort((a, b) => a.dayOfMonth - b.dayOfMonth);
   });
 

@@ -36,6 +36,8 @@ export interface LifeCard {
   /** A line under the number: a translation key with its params. */
   detailKey?: string;
   detailParams?: Record<string, string | number>;
+  /** `average` — a mean (mood), not a total: a goal on it is not split over the year. */
+  aggregate?: 'sum' | 'average';
 }
 
 export interface LifeSummary {
@@ -51,3 +53,80 @@ export type LifeDayQuery = z.infer<typeof lifeDayQuerySchema>;
 
 export const lifeSummaryQuerySchema = z.object({ from: LOCAL_DATE, to: LOCAL_DATE });
 export type LifeSummaryQuery = z.infer<typeof lifeSummaryQuerySchema>;
+
+// --- Goals of a year ---
+
+export const LIFE_GOAL_DIRECTIONS = ['atLeast', 'atMost'] as const;
+export type LifeGoalDirection = (typeof LIFE_GOAL_DIRECTIONS)[number];
+
+export const lifeGoalInputSchema = z.object({
+  title: z.string().trim().min(1).max(100),
+  year: z.number().int().min(2000).max(2100),
+  /**
+   * The key of a summary card counted by the modules (`diary.life.entries`, `music.life.plays`);
+   * `null` — the progress is set by hand.
+   */
+  metric: z.string().trim().max(100).nullish(),
+  target: z.number().positive().max(1_000_000_000_000),
+  /** "Read at least 20 books" or "spend at most 3000 on cafes". */
+  direction: z.enum(LIFE_GOAL_DIRECTIONS).default('atLeast'),
+});
+export type LifeGoalInput = z.input<typeof lifeGoalInputSchema>;
+
+export type LifeGoalStatus = 'done' | 'onTrack' | 'behind' | 'failed';
+
+export interface LifeGoal {
+  id: string;
+  title: string;
+  year: number;
+  metric: string | null;
+  target: number;
+  direction: LifeGoalDirection;
+  /** Where it is now: counted by the module, or set by hand. */
+  value: number;
+  format: LifeCard['format'];
+  currency?: string;
+  icon: string;
+  /** Where it should be today at an even pace (for an average — the target itself). */
+  expected: number;
+  status: LifeGoalStatus;
+}
+
+/** What a goal can be counted from: the summary cards the modules give. */
+export interface LifeMetric {
+  key: string;
+  module: string;
+  icon: string;
+  format: LifeCard['format'];
+  currency?: string;
+}
+
+export const lifeGoalProgressSchema = z.object({ value: z.number().min(0).max(1_000_000_000_000) });
+export type LifeGoalProgress = z.infer<typeof lifeGoalProgressSchema>;
+
+export const lifeGoalsQuerySchema = z.object({ year: z.coerce.number().int().min(2000).max(2100) });
+export type LifeGoalsQuery = z.infer<typeof lifeGoalsQuerySchema>;
+
+// --- The AI's story of a month or a year ---
+
+/** `YYYY` or `YYYY-MM`. */
+export const lifeStoryQuerySchema = z.object({
+  period: z.string().regex(/^\d{4}(-(0[1-9]|1[0-2]))?$/),
+});
+export type LifeStoryQuery = z.infer<typeof lifeStoryQuerySchema>;
+
+export interface LifeStory {
+  period: string;
+  text: string;
+  createdAt: string;
+}
+
+// --- Asking about one's own life ---
+
+export const lifeAskSchema = z.object({ question: z.string().trim().min(2).max(500) });
+export type LifeAsk = z.infer<typeof lifeAskSchema>;
+
+export interface LifeAnswer {
+  /** Markdown with links to the days and pages it is about. */
+  answer: string;
+}

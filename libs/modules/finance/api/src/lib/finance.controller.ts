@@ -12,6 +12,7 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { z } from 'zod';
 import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
 import {
   Budget,
@@ -19,8 +20,15 @@ import {
   budgetQuerySchema,
   Budgets,
   budgetsSchema,
+  FinanceReportQuery,
+  financeReportQuerySchema,
   FinanceSettingsInput,
   financeSettingsSchema,
+  GoalContribution,
+  goalContributionSchema,
+  savingsGoalInputSchema,
+  SubscriptionDismiss,
+  subscriptionDismissSchema,
   recurringPaymentInputSchema,
   TransactionInput,
   transactionInputSchema,
@@ -28,6 +36,9 @@ import {
   transactionQuerySchema,
 } from '@pd/contracts';
 import { BudgetsService } from './budgets/budgets.service';
+import { GoalsService } from './goals/goals.service';
+import { SubscriptionsService } from './recurring/subscriptions.service';
+import { FinanceReportsService } from './reports/finance-reports.service';
 import { ReceiptsService } from './receipts/receipts.service';
 import { FinanceSettingsService } from './currency/finance-settings.service';
 import {
@@ -35,6 +46,8 @@ import {
   ValidRecurringPaymentInput,
 } from './recurring/recurring-payments.service';
 import { TransactionsService } from './transactions/transactions.service';
+
+type ValidGoalInput = z.output<typeof savingsGoalInputSchema>;
 
 @Controller('finance')
 export class FinanceController {
@@ -44,6 +57,9 @@ export class FinanceController {
     private readonly settings: FinanceSettingsService,
     private readonly budgetsService: BudgetsService,
     private readonly receipts: ReceiptsService,
+    private readonly subscriptions: SubscriptionsService,
+    private readonly goals: GoalsService,
+    private readonly reports: FinanceReportsService,
   ) {}
 
   // --- Settings: the main currency ---
@@ -179,5 +195,97 @@ export class FinanceController {
   @HttpCode(204)
   removeRecurring(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.recurring.remove(user.id, id);
+  }
+
+  // --- Subscriptions ---
+
+  /** What the subscriptions cost together and charges that look like ones. */
+  @Get('subscriptions')
+  subscriptionsSummary(@CurrentUser() user: AuthUser) {
+    return this.subscriptions.summary(user.id);
+  }
+
+  /** "Not a subscription": the charge is not suggested again. */
+  @Post('subscriptions/dismiss')
+  @HttpCode(204)
+  dismissSubscription(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(subscriptionDismissSchema)) body: SubscriptionDismiss,
+  ) {
+    return this.subscriptions.dismiss(user.id, body.key);
+  }
+
+  // --- Savings goals ---
+
+  @Get('goals')
+  listGoals(@CurrentUser() user: AuthUser) {
+    return this.goals.list(user.id);
+  }
+
+  @Post('goals')
+  createGoal(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(savingsGoalInputSchema)) input: ValidGoalInput,
+  ) {
+    return this.goals.create(user.id, input);
+  }
+
+  @Put('goals/:id')
+  updateGoal(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(savingsGoalInputSchema)) input: ValidGoalInput,
+  ) {
+    return this.goals.update(user.id, id, input);
+  }
+
+  @Delete('goals/:id')
+  @HttpCode(204)
+  removeGoal(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.goals.remove(user.id, id);
+  }
+
+  @Get('goals/:id/contributions')
+  goalContributions(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.goals.contributions(user.id, id);
+  }
+
+  @Post('goals/:id/contributions')
+  contribute(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(goalContributionSchema)) input: GoalContribution,
+  ) {
+    return this.goals.contribute(user.id, id, input);
+  }
+
+  @Delete('goals/:id/contributions/:contributionId')
+  @HttpCode(204)
+  removeContribution(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('contributionId', ParseUUIDPipe) contributionId: string,
+  ) {
+    return this.goals.removeContribution(user.id, id, contributionId);
+  }
+
+  // --- The AI's review of a month ---
+
+  /** The kept review of a month; `report: null` — not written yet. */
+  @Get('reports')
+  async report(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(financeReportQuerySchema)) query: FinanceReportQuery,
+  ) {
+    return { report: await this.reports.get(user.id, query.month) };
+  }
+
+  /** Writes (or writes again) the review of a month. */
+  @Post('reports')
+  async writeReport(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(financeReportQuerySchema)) body: FinanceReportQuery,
+  ) {
+    return { report: await this.reports.generate(user.id, body.month) };
   }
 }
