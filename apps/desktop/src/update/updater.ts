@@ -123,13 +123,18 @@ export class AppUpdater {
 
   /**
    * The address of the bundle on the server the app is connected to. Code is taken only over
-   * HTTPS or from this computer: plain HTTP could be changed on the way.
+   * HTTPS (plain HTTP could be changed on the way), so a server saved as `http://…` is asked
+   * over HTTPS all the same; this computer itself (a local instance) is the one exception.
    */
   private feed(): string | null {
     try {
       const url = new URL(this.serverUrl() ?? '');
       const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-      return url.protocol === 'https:' || local ? url.origin + UPDATES_PATH : null;
+      if (!local && url.protocol === 'http:') {
+        url.protocol = 'https:';
+        url.port = '';
+      }
+      return url.origin + UPDATES_PATH;
     } catch {
       return null;
     }
