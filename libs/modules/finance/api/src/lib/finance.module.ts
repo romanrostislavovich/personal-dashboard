@@ -22,14 +22,17 @@ import { ReceiptsService } from './receipts/receipts.service';
 import { SubscriptionsService } from './recurring/subscriptions.service';
 import { GoalsService } from './goals/goals.service';
 import { FinanceReportsService } from './reports/finance-reports.service';
+import { WishlistController } from './wishlist/wishlist.controller';
+import { WishlistJob } from './wishlist/wishlist.job';
+import { WishlistService } from './wishlist/wishlist.service';
 
 /**
  * Finance: personal and project income/expenses, recurring payments and subscriptions, budgets,
- * savings goals, the AI's monthly review and automatic cost import from services (Hetzner,
- * DeepSeek). API: `/api/finance/*`.
+ * savings goals, a wishlist with price watch, the AI's monthly review and automatic cost import
+ * from services (Hetzner, DeepSeek). API: `/api/finance/*`.
  */
 @Module({
-  controllers: [FinanceController, CostSourcesController],
+  controllers: [FinanceController, CostSourcesController, WishlistController],
   providers: [
     FinanceAutomations,
     FinanceLife,
@@ -43,6 +46,8 @@ import { FinanceReportsService } from './reports/finance-reports.service';
     RecurringPaymentsJob,
     SubscriptionsService,
     GoalsService,
+    WishlistService,
+    WishlistJob,
     FinanceReportsService,
     CostSourcesService,
     CostSourcesJob,

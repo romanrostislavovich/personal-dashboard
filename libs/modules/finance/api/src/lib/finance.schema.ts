@@ -213,7 +213,48 @@ export const financeReports = pgTable(
   (table) => [unique().on(table.userId, table.month)],
 );
 
+/** Something to buy one day: the price of its page in a shop is read every day. */
+export const wishes = pgTable('finance_wishes', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  url: text().notNull(),
+  name: text().notNull(),
+  note: text(),
+  imageUrl: text(),
+  /** The last price known: read from the page or typed in by hand. */
+  price: numeric({ precision: 14, scale: 2, mode: 'number' }),
+  currency: text(),
+  /** The price before the last change. */
+  previousPrice: numeric({ precision: 14, scale: 2, mode: 'number' }),
+  checkedAt: timestamp({ withTimezone: true }),
+  /** Why the last check gave no price; `null` — it did. */
+  checkError: text(),
+  boughtAt: timestamp({ withTimezone: true }),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+/** The price of a wish day by day: one point a day, the last one read that day. */
+export const wishPrices = pgTable(
+  'finance_wish_prices',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    wishId: uuid()
+      .notNull()
+      .references(() => wishes.id, { onDelete: 'cascade' }),
+    day: date({ mode: 'string' }).notNull(),
+    price: numeric({ precision: 14, scale: 2, mode: 'number' }).notNull(),
+    currency: text().notNull(),
+  },
+  (table) => [unique().on(table.wishId, table.day)],
+);
+
 export type TransactionRow = typeof transactions.$inferSelect;
 export type RecurringPaymentRow = typeof recurringPayments.$inferSelect;
 export type CostSourceRow = typeof costSources.$inferSelect;
 export type SavingsGoalRow = typeof savingsGoals.$inferSelect;
+export type WishRow = typeof wishes.$inferSelect;

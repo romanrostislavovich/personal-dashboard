@@ -18,6 +18,8 @@ import {
   Transaction,
   TransactionInput,
   TransactionQuery,
+  Wish,
+  WishInput,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -44,6 +46,9 @@ export const FINANCE_READS = {
   subscriptions: () => apiRequest(`${BASE}/subscriptions`),
   goals: () => apiRequest(`${BASE}/goals`),
   goalContributions: (id: string) => apiRequest(`${BASE}/goals/${id}/contributions`),
+  wishlist: () => apiRequest(`${BASE}/wishlist`),
+  /** The price of a wish day by day. */
+  wishPrices: (id: string) => apiRequest(`${BASE}/wishlist/${id}/prices`),
   /** The AI's kept review of a month (`YYYY-MM`): `{ report: null }` — not written yet. */
   report: (month: string) => apiRequest(`${BASE}/reports`, { month }),
 };
@@ -95,6 +100,16 @@ export function financeApi(api: ApiClient) {
       api.post<SavingsGoal>(`${BASE}/goals/${id}/contributions`, input),
     removeContribution: (goalId: string, id: string) =>
       api.delete(`${BASE}/goals/${goalId}/contributions/${id}`),
+    /** A new wish reads its page in the shop: the name, the picture and the first price. */
+    saveWish: (input: WishInput, id?: string) =>
+      id
+        ? api.put<Wish>(`${BASE}/wishlist/${id}`, input)
+        : api.post<Wish>(`${BASE}/wishlist`, input),
+    removeWish: (id: string) => api.delete(`${BASE}/wishlist/${id}`),
+    /** Reads the price again without waiting for the morning. */
+    checkWish: (id: string) => api.post<Wish>(`${BASE}/wishlist/${id}/check`, {}),
+    setWishBought: (id: string, bought: boolean) =>
+      api.put<Wish>(`${BASE}/wishlist/${id}/bought`, { bought }),
     /** Writes (or writes again) the AI's review of a month. */
     writeReport: (month: string) =>
       api.post<{ report: FinanceReport | null }>(`${BASE}/reports`, { month }),

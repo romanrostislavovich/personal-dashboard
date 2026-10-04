@@ -21,6 +21,9 @@ import {
   Transaction,
   TransactionInput,
   TransactionQuery,
+  Wish,
+  WishInput,
+  WishPricePoint,
 } from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
@@ -157,6 +160,38 @@ export class FinanceApi {
 
   writeReport(month: string) {
     return fromCore(() => this.finance.writeReport(month));
+  }
+
+  // --- Wishlist ---
+
+  wishlist() {
+    return httpResource<Wish[]>(() => FINANCE_READS.wishlist(), { defaultValue: [] });
+  }
+
+  wishPrices(id: () => string | null) {
+    return httpResource<WishPricePoint[]>(
+      () => {
+        const wish = id();
+        return wish ? FINANCE_READS.wishPrices(wish) : undefined;
+      },
+      { defaultValue: [] },
+    );
+  }
+
+  saveWish(input: WishInput, id?: string) {
+    return fromCore(() => this.finance.saveWish(input, id));
+  }
+
+  removeWish(id: string) {
+    return fromCore(() => this.finance.removeWish(id));
+  }
+
+  checkWish(id: string) {
+    return fromCore(() => this.finance.checkWish(id));
+  }
+
+  setWishBought(id: string, bought: boolean) {
+    return fromCore(() => this.finance.setWishBought(id, bought));
   }
 
   /** Opens the photo of a transaction's receipt in a new tab. */

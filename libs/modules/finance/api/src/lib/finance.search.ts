@@ -2,9 +2,12 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { contains, DB, Database, SEARCH_LIMIT, SearchService } from '@pd/api-core';
 import { SearchHit } from '@pd/contracts';
 import { and, desc, eq, or } from 'drizzle-orm';
-import { recurringPayments, transactions } from './finance.schema';
+import { recurringPayments, transactions, wishes } from './finance.schema';
 
-/** Transactions and recurring payments for the command palette: by the note, the category and the name. */
+/**
+ * Transactions, recurring payments and wishes for the command palette: by the note, the category
+ * and the name.
+ */
 @Injectable()
 export class FinanceSearch implements OnModuleInit {
   constructor(
@@ -36,6 +39,11 @@ export class FinanceSearch implements OnModuleInit {
       .from(recurringPayments)
       .where(and(eq(recurringPayments.userId, userId), contains(recurringPayments.name, query)))
       .limit(SEARCH_LIMIT);
+    const wished = await this.db
+      .select()
+      .from(wishes)
+      .where(and(eq(wishes.userId, userId), contains(wishes.name, query)))
+      .limit(SEARCH_LIMIT);
     return [
       ...found.map((row) => ({
         module: 'finance',
@@ -50,6 +58,16 @@ export class FinanceSearch implements OnModuleInit {
         title: row.name,
         subtitle: row.category,
         url: '/finance',
+      })),
+      ...wished.map((row) => ({
+        module: 'finance',
+        kind: 'wish',
+        title: row.name,
+        subtitle:
+          row.price === null
+            ? new URL(row.url).hostname
+            : `${row.price.toFixed(2)} ${row.currency}`,
+        url: '/finance?tab=wishlist',
       })),
     ];
   }
