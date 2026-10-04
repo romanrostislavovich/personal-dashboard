@@ -64,7 +64,10 @@ if (!app.requestSingleInstanceLock()) {
 
 function bootstrap(): void {
   startHidden = cameBackFromUpdate() || startHidden;
-  app.setAppUserModelId(APP_ID);
+  // Run from the sources the shell is another app to Windows: for a notification Electron puts
+  // an "Electron" shortcut into the Start menu, and under the installed app's id Windows would
+  // take the name and the icon of the installed app from that shortcut.
+  app.setAppUserModelId(app.isPackaged ? APP_ID : `${APP_ID}.dev`);
   registerIpc();
   applyStartWithSystem(loadSettings().startWithSystem);
   mainWindow = createWindow();
@@ -82,7 +85,13 @@ function bootstrap(): void {
     update: {
       state: () => updater.state,
       version: () => updater.version,
-      check: () => void updater.check(),
+      checkedAt: () => updater.checkedAt,
+      // The shell is one thing, the dashboard it shows another (the page's service worker
+      // keeps its own copy): the button asks for both.
+      check: () => {
+        void updater.check();
+        mainWindow?.webContents.send('desktop:check-update');
+      },
       install: installUpdate,
     },
     activity: {

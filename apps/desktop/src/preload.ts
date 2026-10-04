@@ -17,6 +17,9 @@ contextBridge.exposeInMainWorld('desktop', {
   onNavigate: (callback: (route: string) => void): void => {
     ipcRenderer.on('desktop:navigate', (_event, route: string) => callback(route));
   },
+  onCheckUpdate: (callback: () => void): void => {
+    ipcRenderer.on('desktop:check-update', () => callback());
+  },
   activity: {
     status: (): Promise<unknown> => ipcRenderer.invoke('activity:status'),
     enable: (device: { id: string; token: string }): Promise<void> =>

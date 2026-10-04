@@ -16,6 +16,9 @@ export interface TrayActions {
     state: () => UpdateState;
     /** The code that is running. */
     version: () => string;
+    /** When the server last answered a check. */
+    checkedAt: () => Date | null;
+    /** Asks the server for a newer shell, and the page for a newer dashboard. */
     check: () => void;
     /** Restarts into the downloaded update. */
     install: () => void;
@@ -109,8 +112,15 @@ function updateItems(update: TrayActions['update']): MenuItemConstructorOptions[
         { label: 'Обновления: сервер не ответил', enabled: false },
         { label: 'Проверить ещё раз', click: update.check },
       ];
-    case 'idle':
-      return [version, { label: 'Проверить обновления', click: update.check }];
+    case 'idle': {
+      const checkedAt = update.checkedAt();
+      const time = checkedAt?.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+      return [
+        version,
+        ...(time ? [{ label: `Обновлений нет (проверено в ${time})`, enabled: false }] : []),
+        { label: 'Проверить обновления', click: update.check },
+      ];
+    }
   }
 }
 
