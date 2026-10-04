@@ -372,6 +372,13 @@
       "when": 1791064143585,
       "tag": "0052_automation_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1791138518813,
+      "tag": "0053_finance_wishlist",
+      "breakpoints": true
     }
   ]
 }

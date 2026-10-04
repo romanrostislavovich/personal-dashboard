@@ -21,7 +21,8 @@
     "overview": "Overview",
     "transactions": "Transactions",
     "recurring": "Subscriptions and payments",
-    "goals": "Goals"
+    "goals": "Goals",
+    "wishlist": "Wishlist"
   },
   "transaction": {
     "add": "Add transaction",
@@ -193,6 +194,36 @@
     "empty": "No goals yet: what are you saving for?",
     "confirmDelete": "Delete the goal \"{{name}}\"?"
   },
+  "wishlist": {
+    "add": "New wish",
+    "edit": "Edit the wish",
+    "hint": "Paste a link to a product in a shop: its price is read from the page every morning, and you get a message when it changes.",
+    "url": "Link to the product",
+    "urlHint": "The page of the product itself, not a search or a category",
+    "name": "Name",
+    "nameHint": "Empty — the name from the page",
+    "price": "Price",
+    "priceHint": "Only when the page does not tell it: the shop’s own price replaces it",
+    "note": "Note",
+    "empty": "Nothing here yet: what would you like to buy?",
+    "adding": "Reading the page…",
+    "noPrice": "No price yet",
+    "was": "was {{amount}}",
+    "range": "lowest {{lowest}} · highest {{highest}}",
+    "lowestNow": "The lowest price so far",
+    "checked": "checked {{date}}",
+    "unreadable": "The shop’s page does not tell the price ({{error}}), so it is not watched: keep it up to date by hand with “Edit”.",
+    "history": "Price history",
+    "noHistory": "The chart appears after the second day.",
+    "check": "Check now",
+    "open": "Open in the shop",
+    "bought": "Bought",
+    "markBought": "Bought it",
+    "unmarkBought": "Want it again",
+    "confirmDelete": "Delete \"{{name}}\" from the wishlist?",
+    "widgetTitle": "Wishlist",
+    "widgetEmpty": "Add a product to watch its price."
+  },
   "report": {
     "title": "The month by the AI",
     "subtitle": "Where the money went, what changed and where to save",
@@ -212,6 +243,13 @@
       "any": "80% or spent",
       "warned": "80% spent",
       "exceeded": "Spent"
+    },
+    "wishPrice": "A price in the wishlist changed",
+    "direction": "Which way",
+    "directions": {
+      "any": "Any change",
+      "down": "Cheaper",
+      "up": "More expensive"
     }
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
   AiService,
+  ServerActions,
   changedFields,
   findById,
   idParameters,
@@ -8,6 +9,7 @@ import {
   PERIOD_PARAMETERS,
 } from '@pd/api-core';
 import {
+  wishInputSchema,
   recurringPaymentInputSchema,
   Transaction,
   TRANSACTION_KINDS,
@@ -20,6 +22,8 @@ import { RecurringPaymentsService } from './recurring/recurring-payments.service
 import { SubscriptionsService } from './recurring/subscriptions.service';
 import { GoalsService } from './goals/goals.service';
 import { TransactionsService } from './transactions/transactions.service';
+import { FINANCE_ACTIONS } from './finance.server-actions';
+import { WishlistService } from './wishlist/wishlist.service';
 
 /** Period schema + an optional "wallet". */
 const QUERY_PARAMETERS = {
@@ -75,7 +79,7 @@ const batchArgs = z.object({
 
 /**
  * AI access to finance: totals, transactions, recurring payments and subscriptions, savings
- * goals, cost sources; adding, editing and deleting them (assistant).
+ * goals, the wishlist, cost sources; adding, editing and deleting them (assistant).
  */
 @Injectable()
 export class FinanceAiTools implements OnModuleInit {
@@ -86,6 +90,8 @@ export class FinanceAiTools implements OnModuleInit {
     private readonly costSources: CostSourcesService,
     private readonly subscriptions: SubscriptionsService,
     private readonly goals: GoalsService,
+    private readonly wishlist: WishlistService,
+    private readonly actions: ServerActions,
   ) {}
 
   onModuleInit(): void {
@@ -94,6 +100,52 @@ export class FinanceAiTools implements OnModuleInit {
     this.registerRecurringTools();
     this.registerCostSourceTools();
     this.registerPlanningTools();
+    this.registerWishlistTools();
+  }
+
+  /** The wishlist: reading it, adding a product by its link, marking one bought. */
+  private registerWishlistTools(): void {
+    this.ai.registerTool({
+      name: 'finance_wishlist',
+      module: 'finance',
+      description:
+        'The wishlist — products the user wants to buy: id, name, link, the current price in the ' +
+        'shop, the price before the last change, the lowest and the highest seen, whether bought.',
+      parameters: NO_PARAMETERS,
+      handler: (userId) => this.wishlist.list(userId),
+    });
+
+    this.ai.registerTool({
+      name: 'finance_add_wish',
+      module: 'finance',
+      writes: true,
+      description:
+        'Adds a product to the wishlist by the link to its page in a shop; its price is then ' +
+        'read from the page every day and a change is reported. The name is taken from the page ' +
+        'unless given. Pass `price` and `currency` only when the user names the price.',
+      parameters: {
+        type: 'object',
+        properties: {
+          url: { type: 'string', description: 'The link to the product page' },
+          name: { type: 'string' },
+          note: { type: 'string' },
+          price: { type: 'number' },
+          currency: { type: 'string', description: 'ISO 4217: EUR, USD, PLN…' },
+        },
+        required: ['url'],
+      },
+      handler: (userId, args) =>
+        this.actions.run(userId, FINANCE_ACTIONS.addWish, wishInputSchema.parse(args)),
+    });
+
+    this.ai.registerTool({
+      name: 'finance_wish_bought',
+      module: 'finance',
+      writes: true,
+      description: 'Marks a product of the wishlist as bought: its price is not watched any more.',
+      parameters: idParameters('Wish id from finance_wishlist'),
+      handler: (userId, args) => this.wishlist.setBought(userId, idArgs.parse(args).id, true),
+    });
   }
 
   /** What the subscriptions cost together and how the savings goals are going. */

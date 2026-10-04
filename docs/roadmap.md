@@ -19,7 +19,9 @@
   vision), the photo kept with it; subscriptions — monthly or yearly, a free trial with a
   reminder, the old prices, a higher charge in the bank reported, repeating charges suggested as
   subscriptions; savings goals counted from a wallet and money added by hand; the AI's review of a
-  month (where the money went, what changed, where to save)
+  month (where the money went, what changed, where to save); a wishlist — a link to a product in
+  a shop, its price read from the page every morning and kept day by day, a message when it
+  changes (the price is typed in by hand for a shop that does not tell it)
 - **Life:** one feed of a day across every module (the diary entry, spending, tasks done, time at
   the computer, music, contributions, matches, birthdays) and the summaries of a month or a year
   (the best month by mood, the top artists, what was left over, achievements); the AI's story of
@@ -136,8 +138,8 @@
   nothing at night, one summary in the morning; minor ones gathered into one message an hour
 - **A public /now page** — a link to share: what I listen to, play and work on, my GitHub; the
   user picks what is shown
-- **Wishlist with price watch** — a link to a product, its price checked daily, a message when
-  it drops; can feed a savings goal
+- **Wishlist: more** — a wish feeds a savings goal; shops that turn a server away (Media Expert,
+  Decathlon, Amazon, Allegro) through their APIs or the desktop app's browser
 - **Encrypted off-site backup** — the daily dump encrypted and sent to Backblaze B2 or S3, so the
   data outlives the server
 - **Desktop: voice notes** — a shortcut, speak, the text (speech recognition) goes to the diary or

@@ -3,8 +3,12 @@ import { MorningDigestService, UsersService } from '@pd/api-core';
 import { zonedDateTime } from '@pd/contracts';
 import { BudgetsService } from './budgets/budgets.service';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
+import { WishlistService } from './wishlist/wishlist.service';
 
-/** The morning digest: recurring payments charged, added or changed, and the budgets of the month. */
+/**
+ * The morning digest: recurring payments charged, added or changed, the budgets of the month and
+ * the prices of the wishlist.
+ */
 @Injectable()
 export class FinanceDigest implements OnModuleInit {
   constructor(
@@ -12,6 +16,7 @@ export class FinanceDigest implements OnModuleInit {
     private readonly recurring: RecurringPaymentsService,
     private readonly budgets: BudgetsService,
     private readonly users: UsersService,
+    private readonly wishlist: WishlistService,
   ) {}
 
   onModuleInit(): void {
@@ -62,6 +67,21 @@ export class FinanceDigest implements OnModuleInit {
             dayOfMonth,
             lastChargedOn,
           })),
+    });
+    this.digest.register({
+      id: 'finance.wishlist',
+      module: 'finance',
+      description:
+        'The wishlist: products the user wants to buy with their current price in a shop. ' +
+        'Tell whose price went down or up since the previous digest and by how much.',
+      collect: async (userId) => {
+        const wanted = (await this.wishlist.list(userId)).filter(
+          (wish) => !wish.boughtAt && wish.price !== null,
+        );
+        return wanted.length
+          ? wanted.map(({ name, price, currency }) => ({ name, price, currency }))
+          : null;
+      },
     });
   }
 }

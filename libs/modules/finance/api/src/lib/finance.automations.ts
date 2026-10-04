@@ -2,7 +2,10 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AutomationsService } from '@pd/api-core';
 import { TransactionsService } from './transactions/transactions.service';
 
-/** Finance in the rules "if X, then Y": an expense over an amount, a budget at 80% or spent. */
+/**
+ * Finance in the rules "if X, then Y": an expense over an amount, a budget at 80% or spent, a
+ * changed price in the wishlist.
+ */
 @Injectable()
 export class FinanceAutomations implements OnModuleInit {
   constructor(
@@ -48,6 +51,31 @@ export class FinanceAutomations implements OnModuleInit {
       variables: ['category', 'spent', 'limit', 'currency'],
       matches: (params, vars) =>
         !params['level'] || params['level'] === 'any' || params['level'] === vars['level'],
+    });
+    this.automations.registerTrigger({
+      id: 'finance.wish-price',
+      module: 'finance',
+      labelKey: 'finance.automations.wishPrice',
+      description:
+        'The price of a product in the wishlist changed: `direction` down — it got cheaper, ' +
+        'up — more expensive',
+      params: [
+        {
+          name: 'direction',
+          type: 'select',
+          labelKey: 'finance.automations.direction',
+          options: [
+            { value: 'any', labelKey: 'finance.automations.directions.any' },
+            { value: 'down', labelKey: 'finance.automations.directions.down' },
+            { value: 'up', labelKey: 'finance.automations.directions.up' },
+          ],
+        },
+      ],
+      variables: ['name', 'price', 'was', 'currency', 'url'],
+      matches: (params, vars) =>
+        !params['direction'] ||
+        params['direction'] === 'any' ||
+        params['direction'] === vars['direction'],
     });
 
     this.transactions.onCreated((userId, created) => {

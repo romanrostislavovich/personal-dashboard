@@ -17,6 +17,11 @@ export const financeModule: WebDashboardModule = {
       size: 'medium',
       loadComponent: () => import('./finance-summary.widget').then((m) => m.FinanceSummaryWidget),
     },
+    {
+      id: 'finance.wishlist',
+      size: 'medium',
+      loadComponent: () => import('./wishlist/wishlist.widget').then((m) => m.WishlistWidget),
+    },
   ],
   integrations: [
     {

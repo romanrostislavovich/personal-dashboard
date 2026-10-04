@@ -20,7 +20,7 @@ import {
   TransactionInput,
   TransactionQuery,
 } from '@pd/contracts';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
   currentMonth,
@@ -53,6 +53,7 @@ import { TransactionListComponent } from './transactions/transaction-list.compon
 import { BudgetsCardComponent } from './budgets/budgets-card.component';
 import { GoalsTabComponent } from './goals/goals-tab.component';
 import { ReportCardComponent } from './reports/report-card.component';
+import { WishlistTabComponent } from './wishlist/wishlist-tab.component';
 
 const DEFAULT_CURRENCY = 'EUR';
 /** How many months the cash flow chart shows, the selected one being the last. */
@@ -64,7 +65,11 @@ enum Tab {
   Transactions,
   Recurring,
   Goals,
+  Wishlist,
 }
+
+/** `?tab=` of a link from the home page or the search. */
+const TAB_BY_NAME: Record<string, Tab> = { goals: Tab.Goals, wishlist: Tab.Wishlist };
 
 /** The overview's "everything in the main currency" view. */
 const ALL_IN_MAIN = '*';
@@ -110,6 +115,7 @@ function inMain(transactions: Transaction[], main: string): Transaction[] {
     BudgetsCardComponent,
     GoalsTabComponent,
     ReportCardComponent,
+    WishlistTabComponent,
   ],
   templateUrl: './finance.page.html',
   styleUrl: './finance.page.scss',
@@ -139,7 +145,9 @@ export class FinancePage {
   protected readonly allInMain = ALL_IN_MAIN;
 
   protected readonly Tab = Tab;
-  protected readonly tab = signal(Tab.Overview);
+  protected readonly tab = signal(
+    TAB_BY_NAME[inject(ActivatedRoute).snapshot.queryParamMap.get('tab') ?? ''] ?? Tab.Overview,
+  );
   /** A category clicked in the overview filters the transactions tab. */
   protected readonly categoryFilter = signal<CategoryFilter | null>(null);
   protected readonly recentCount = RECENT_TRANSACTIONS;

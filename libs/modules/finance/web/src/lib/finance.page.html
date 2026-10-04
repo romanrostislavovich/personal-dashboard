@@ -300,4 +300,9 @@
   <mat-tab [label]="'finance.tabs.goals' | transloco">
     <pd-goals-tab [projects]="projects.value()" [currency]="currency()" />
   </mat-tab>
+
+  <!-- Things to buy one day, their prices watched -->
+  <mat-tab [label]="'finance.tabs.wishlist' | transloco">
+    <pd-wishlist-tab [currency]="currency()" />
+  </mat-tab>
 </mat-tab-group>

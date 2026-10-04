@@ -9,6 +9,12 @@ const html = (text: string) =>
 const list = (payments: RecurringPayment[]) =>
   payments.map((p) => `• ${p.name}: ${p.amount.toFixed(2)} ${p.currency}`).join('\n');
 
+/** "1899.00 → 1699.00 PLN (−10.5%)". */
+const priceChange = (was: number, now: number, currency: string) => {
+  const percent = (Math.abs(now - was) / was) * 100;
+  return `${was.toFixed(2)} → ${now.toFixed(2)} ${currency} (${now < was ? '−' : '+'}${percent.toFixed(1)}%)`;
+};
+
 /** Module notification texts; the language is picked by `user.locale`. */
 const messages = {
   en: {
@@ -40,6 +46,12 @@ const messages = {
     goalReachedBody: (saved: number, currency: string) =>
       `${saved.toFixed(2)} ${currency} saved. Well done!`,
     reportNote: (summary: string) => `💰 Money: ${summary}`,
+    wishCheaperTitle: (name: string) => `📉 Cheaper: ${name}`,
+    wishPricierTitle: (name: string) => `📈 More expensive: ${name}`,
+    wishPriceBody: (was: number, now: number, currency: string, isLowest: boolean, url: string) =>
+      `${priceChange(was, now, currency)}\n` +
+      (isLowest ? 'The lowest price since you added it.\n' : '') +
+      url,
   },
   ru: {
     chargedTitle: '💸 Регулярные платежи',
@@ -70,6 +82,12 @@ const messages = {
     goalReachedBody: (saved: number, currency: string) =>
       `Накоплено ${saved.toFixed(2)} ${currency}. Отлично!`,
     reportNote: (summary: string) => `💰 Деньги: ${summary}`,
+    wishCheaperTitle: (name: string) => `📉 Подешевело: ${name}`,
+    wishPricierTitle: (name: string) => `📈 Подорожало: ${name}`,
+    wishPriceBody: (was: number, now: number, currency: string, isLowest: boolean, url: string) =>
+      `${priceChange(was, now, currency)}\n` +
+      (isLowest ? 'Самая низкая цена с момента добавления.\n' : '') +
+      url,
   },
 };
 

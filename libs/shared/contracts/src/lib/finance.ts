@@ -326,3 +326,47 @@ export interface FinanceReport {
 
 export const financeReportQuerySchema = z.object({ month: monthKey });
 export type FinanceReportQuery = z.infer<typeof financeReportQuerySchema>;
+
+// --- Wishlist ---
+
+export const wishInputSchema = z.object({
+  /** The product's page in a shop: its price is read from there every day. */
+  url: z.url({ protocol: /^https?$/ }).max(2000),
+  /** Empty — the name the page gives. */
+  name: z.string().trim().max(200).nullish(),
+  note: z.string().trim().max(500).nullish(),
+  /** The price typed in by hand: used while the page does not tell one. */
+  price: z.number().positive().max(1_000_000_000).nullish(),
+  currency: z.string().trim().length(3).toUpperCase().nullish(),
+});
+export type WishInput = z.input<typeof wishInputSchema>;
+
+export interface Wish {
+  id: string;
+  url: string;
+  name: string;
+  note: string | null;
+  imageUrl: string | null;
+  /** The last price known; `null` — never read and not typed in. */
+  price: number | null;
+  currency: string | null;
+  /** The price before the last change; `null` — it has not changed yet. */
+  previousPrice: number | null;
+  /** The lowest and the highest price seen. */
+  lowestPrice: number | null;
+  highestPrice: number | null;
+  checkedAt: string | null;
+  /** Why the last check gave no price (`HTTP 403`, `no-price`); `null` — it did. */
+  checkError: string | null;
+  boughtAt: string | null;
+  createdAt: string;
+}
+
+/** The price of a wish on a day. */
+export interface WishPricePoint {
+  day: LocalDate;
+  price: number;
+}
+
+export const wishBoughtSchema = z.object({ bought: z.boolean() });
+export type WishBought = z.infer<typeof wishBoughtSchema>;
