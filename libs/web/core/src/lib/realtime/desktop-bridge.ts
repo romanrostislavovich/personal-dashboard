@@ -8,6 +8,8 @@ export interface DesktopBridge {
   notify?(notification: { title: string; body: string; route?: string }): void;
   /** Called when a system notification was clicked. */
   onNavigate?(callback: (route: string) => void): void;
+  /** Called when "Check for updates" is pressed in the tray (absent in an older shell). */
+  onCheckUpdate?(callback: () => void): void;
   /** The activity tracker of this computer (absent in an older shell). */
   activity?: DesktopActivity;
   /** The focus timer (Pomodoro) of this computer (absent in an older shell). */

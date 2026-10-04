@@ -41,6 +41,7 @@ export class AppUpdater {
   private readonly running = readBundle(__dirname);
   private readonly store = new BundleStore(join(app.getPath('userData'), 'updates'));
   private busy = false;
+  private checked: Date | null = null;
 
   constructor(
     private readonly serverUrl: () => string | null,
@@ -51,6 +52,11 @@ export class AppUpdater {
 
   get state(): UpdateState {
     return this.current;
+  }
+
+  /** When the server last answered a check: the tray shows that "no updates" is fresh. */
+  get checkedAt(): Date | null {
+    return this.checked;
   }
 
   /** The code that is running, for the tray: the first characters of its fingerprint. */
@@ -77,7 +83,9 @@ export class AppUpdater {
     this.busy = true;
     this.set({ kind: 'checking' });
     try {
-      this.set(await this.update(base, this.running));
+      const state = await this.update(base, this.running);
+      this.checked = new Date();
+      this.set(state);
     } catch {
       // No connection, or a server that is being restarted: the next check tries again.
       this.set({ kind: 'error' });
