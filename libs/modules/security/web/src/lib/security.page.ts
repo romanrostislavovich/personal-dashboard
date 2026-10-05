@@ -152,6 +152,14 @@ const ICONS: Record<SecuritySeverity, string> = {
                 {{ finding.fix }}
               </span>
             </p>
+            @if (finding.covers.length) {
+              <p class="hint">{{ 'security.covers' | transloco }}</p>
+              <ul class="covered">
+                @for (covered of finding.covers; track covered.id) {
+                  <li>{{ covered.title }}</li>
+                }
+              </ul>
+            }
             @if (finding.guide && shown() === finding.id) {
               <div class="guide">
                 <div class="markdown" [innerHTML]="finding.guide | markdown"></div>
@@ -333,6 +341,12 @@ const ICONS: Record<SecuritySeverity, string> = {
       margin: 8px 0;
       overflow-wrap: anywhere;
     }
+    .covered {
+      margin: 4px 0 8px;
+      padding-left: 20px;
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-body-small);
+    }
     .guide {
       margin-top: 12px;
       padding-top: 4px;
@@ -388,7 +402,10 @@ export class SecurityPage {
   /** What runs now: the key of its text (`scanning`, `investigating`). */
   protected readonly busy = signal<'scanning' | 'investigating' | null>(null);
 
-  private readonly findings = computed(() => this.status.value()?.findings ?? []);
+  /** A finding of the rules the AI's one covers is shown under it, not on its own. */
+  private readonly findings = computed(() =>
+    (this.status.value()?.findings ?? []).filter((f) => !f.coveredBy),
+  );
   protected readonly open = computed(() => this.findings().filter((f) => f.status === 'open'));
   protected readonly ignored = computed(() =>
     this.findings().filter((f) => f.status === 'ignored'),

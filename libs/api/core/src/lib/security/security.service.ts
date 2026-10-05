@@ -15,6 +15,7 @@ import { AiConnectionsService } from '../ai/ai-connections.service';
 import { DB, Database } from '../database/database.module';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
+import { Coverage, coverage } from './finding-coverage';
 import { FoundProblem, Inspection, SecuritySource } from './security-source';
 import { securityMessages } from './security.messages';
 import {
@@ -31,7 +32,11 @@ const REPORTS_KEPT = 30;
 export const AI_SOURCE = 'ai';
 
 /** A problem with the area it belongs to: what a source's inspection or the AI gives. */
-export type AreaProblem = FoundProblem & { area: SecurityArea };
+export type AreaProblem = FoundProblem & {
+  area: SecurityArea;
+  /** An AI finding: the keys of the rules' findings it is about. */
+  covers?: string[];
+};
 
 /**
  * The security agent's memory: what was found, what the user chose to ignore, the settings.
@@ -122,13 +127,13 @@ export class SecurityService {
     const fresh: SecurityFindingRow[] = [];
     const seen = new Set<string>();
 
-    for (const { key: ownKey, area, severity, title, details, fix } of problems) {
+    for (const { key: ownKey, area, severity, title, details, fix, covers = [] } of problems) {
       const key = prefix + ownKey;
       if (seen.has(key)) {
         continue;
       }
       seen.add(key);
-      const text = { area, severity, title, details, fix, lastSeenAt: now };
+      const text = { area, severity, title, details, fix, covers, lastSeenAt: now };
       const row = known.find((item) => item.key === key);
       if (!row) {
         const [created] = await this.db
@@ -190,7 +195,7 @@ export class SecurityService {
       .where(eq(securitySettings.userId, userId));
     const ai = await this.connections.settings(userId);
     return {
-      findings: rows.map(toFinding).sort(bySeverity),
+      findings: toFindings(rows).sort(bySeverity),
       areas: SECURITY_AREAS.map((area) => ({
         area,
         available: settings?.areas.includes(area) ?? false,
@@ -290,7 +295,13 @@ function toSettings(
   return { aiEnabled: row?.aiEnabled ?? true, connectionId: row?.connectionId ?? null };
 }
 
-export function toFinding(row: SecurityFindingRow): SecurityFinding {
+/** The findings as the page shows them: the rules' ones folded under the AI's where it covers them. */
+export function toFindings(rows: SecurityFindingRow[]): SecurityFinding[] {
+  const folded = coverage(rows);
+  return rows.map((row) => ({ ...toFinding(row), ...(folded.get(row.id) as Coverage) }));
+}
+
+function toFinding(row: SecurityFindingRow): Omit<SecurityFinding, 'coveredBy' | 'covers'> {
   return {
     id: row.id,
     area: row.area,
