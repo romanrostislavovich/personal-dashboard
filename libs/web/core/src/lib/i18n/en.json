@@ -215,6 +215,24 @@
       "signOut": "Sign out this device",
       "signOutOthers": "Sign out everywhere else"
     },
+    "data": {
+      "title": "Export and import",
+      "subtitle": "Everything you keep here as one file",
+      "exportHint": "A ZIP with all your records (JSON), the transactions as CSV, the diary as Markdown and the photos. Passwords and the tokens of integrations are never in it.",
+      "export": "Export everything",
+      "import": "Import an archive",
+      "exporting": "Collecting the archive…",
+      "reading": "Reading the archive…",
+      "importing": "Adding the records…",
+      "preview": "The archive of {{date}} would add {{added}} records; {{existing}} are here already and stay as they are.",
+      "applied": "Added {{added}} records from the archive of {{date}}; {{existing}} were here already.",
+      "apply": "Import",
+      "unknown": "Left out — this dashboard has no such sections: {{tables}}",
+      "notArchive": "This is not an archive of a dashboard, or it is damaged.",
+      "otherAccount": "This archive is already imported into another account of this dashboard.",
+      "gone": "The uploaded archive is gone: pick the file again.",
+      "failed": "It did not work. Nothing was changed."
+    },
     "trash": {
       "title": "Trash",
       "subtitle": "Deleted in the last 30 days — by you or by the AI assistant",

@@ -183,6 +183,15 @@ export class AiConnectionsService {
     };
   }
 
+  /** One saved connection by its id (the security agent may have its own); null — gone. */
+  async connection(userId: string, id: string): Promise<ChatConnection | null> {
+    const row = (await this.rows(userId)).find((item) => item.id === id);
+    if (!row) {
+      return null;
+    }
+    return toChatConnection(row, await this.secrets.get(userId, apiKeySecret(row.id)));
+  }
+
   /** The connection AI requests go through; null — AI is not configured. */
   async active(userId: string): Promise<ChatConnection | null> {
     const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));

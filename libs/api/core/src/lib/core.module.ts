@@ -16,6 +16,15 @@ import { AiService } from './ai/ai.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthGuard } from './auth/auth.guard';
 import { TrashController } from './trash/trash.controller';
+import { DataController } from './data-export/data.controller';
+import { CoreSecuritySources } from './security/core.security-sources';
+import { SecurityAgent } from './security/security-agent.service';
+import { SecurityController } from './security/security.controller';
+import { SecurityJobs } from './security/security.jobs';
+import { SecurityService } from './security/security.service';
+import { SignInLog } from './security/sign-in-log.service';
+import { DataExportService } from './data-export/data-export.service';
+import { DataImportService } from './data-export/data-import.service';
 import { TrashService } from './trash/trash.service';
 import { SessionsService } from './auth/sessions.service';
 import { TwoFactorService } from './auth/two-factor.service';
@@ -94,6 +103,8 @@ class HealthController {
     HealthController,
     AuthController,
     TrashController,
+    DataController,
+    SecurityController,
     ProjectsController,
     NotificationsController,
     AchievementsController,
@@ -119,6 +130,13 @@ class HealthController {
     AuthService,
     SessionsService,
     TrashService,
+    DataExportService,
+    DataImportService,
+    SignInLog,
+    SecurityService,
+    SecurityAgent,
+    SecurityJobs,
+    CoreSecuritySources,
     TwoFactorService,
     UsersService,
     ProjectsService,
@@ -171,6 +189,8 @@ class HealthController {
     // For the morning digest: modules add their sections via register().
     MorningDigestService,
     // For the command palette: modules register their search via register().
+    SecurityService,
+    DataExportService,
     SearchService,
     LifeService,
     AutomationsService,

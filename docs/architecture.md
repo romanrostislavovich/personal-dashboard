@@ -72,6 +72,8 @@ libs/modules/birthdays/
     birthdays.life.ts            its events of a day and numbers of a period (Life)
     *.automations.ts             its triggers and actions for the rules "if X, then Y"
     *.server-actions.ts          actions that call outside services (see below; birthdays has none)
+    *.export.ts                  copies of its data to read with other programs (CSV, Markdown)
+    *.security.ts                what the security agent can see through the module
     next-birthday.ts (+ .spec)   pure logic — easy to test
     birthdays.module.ts          Nest module
   web/src/lib/
@@ -251,6 +253,24 @@ To add a service (e.g. DigitalOcean):
   turns into a rule (`draft`). A rule runs at most 20 times a day (a timed one once), its last
   error is kept; modules still never call each other — the core joins them.
 - **Auth:** a global `AuthGuard`; public endpoints are marked with `@Public()`. See Security below.
+- **Export and import:** `DataExportService` writes everything a user keeps as a ZIP while it
+  is read from the database; the tables come from the catalog, so a module's tables are exported
+  with no code — a table with `user_id` is the user's own, any other through the row it
+  references (`export-catalog.ts`). A module may add copies to read with other programs in
+  `<module>.export.ts` (`DataExportService.register`: CSV, Markdown). `DataImportService` adds
+  what is missing and trusts nothing in the file: only exported tables, every row becomes the
+  importing user's, a row is taken only with what it references being theirs. `users`,
+  `user_secrets` and the security agent's tables are never exported.
+- **Security agent:** `SecurityService` asks its sources and keeps the findings (a stable key:
+  seen again — the same row, gone — resolved, "I know" — ignored). The core's sources are the
+  dashboard and the server (`deploy/security-scan.sh` writes `SECURITY_DIR/host.json` on the
+  host every hour); a module adds one in `<module>.security.ts`
+  (`SecurityService.registerSource`: facts for the AI and the problems its own rules see —
+  example: `libs/modules/activity/api/src/lib/activity.security.ts`). `SecurityAgent` is the AI
+  half: a tool loop with one read-only tool a source and `security_report_finding`. It shares
+  nothing with the assistant — not the tools, not the conversation, optionally not the
+  connection — and the rules' findings never pass through the model. Sign-ins are journaled in
+  `auth.sign_ins` (`SignInLog`). Only the owner of the instance sees the section.
 - **Trash:** `TrashService` — a trigger on every table of `public` keeps deleted rows in the
   `trash` schema for 30 days (not synced: each instance keeps what was deleted on it); one
   transaction is one item, restored with everything deleted along with it. A table whose deletions

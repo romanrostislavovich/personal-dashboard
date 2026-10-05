@@ -15,6 +15,7 @@ import { SystemSettingsComponent } from './system-settings.component';
 import { TelegramSettingsComponent } from './telegram-settings.component';
 import { ThemeSettingsComponent } from './theme-settings.component';
 import { TrashSettingsComponent } from './trash-settings.component';
+import { DataSettingsComponent } from './data-settings.component';
 import { AutomationsSettingsComponent } from '../automations/automations-settings.component';
 
 /** Tabs of the page, as `?tab=` names them: module pages link to `integrations`. */
@@ -22,7 +23,7 @@ const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 's
 
 /**
  * Settings: the account, the look (theme), every connection to an outside service (Telegram and what the modules
- * register as `integrations`), the data (sync, backups, trash) and how the instance itself is
+ * register as `integrations`), the data (sync, backups, export and import, trash) and how the instance itself is
  * doing (background jobs, the log of errors).
  */
 @Component({
@@ -37,6 +38,7 @@ const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 's
     SectionsSettingsComponent,
     SecuritySettingsComponent,
     TrashSettingsComponent,
+    DataSettingsComponent,
     AutomationsSettingsComponent,
     SyncSettingsComponent,
     SystemSettingsComponent,
@@ -86,6 +88,7 @@ const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 's
       <mat-tab [label]="'core.settings.tabs.data' | transloco">
         <div class="grid">
           <pd-sync-settings />
+          <pd-data-settings />
           <pd-trash-settings />
         </div>
       </mat-tab>

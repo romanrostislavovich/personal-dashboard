@@ -37,8 +37,11 @@ services:
       API_PORT: 3300
       # The dumps of the backup job: watched, reported on and handed to the sync client.
       BACKUP_DIR: /backups
+      # The hourly report of security-scan.sh about the server itself, for the security agent.
+      SECURITY_DIR: /security
     volumes:
       - ./backups:/backups:ro
+      - ./security:/security:ro
     depends_on:
       db:
         condition: service_healthy

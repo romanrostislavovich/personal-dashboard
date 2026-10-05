@@ -1,0 +1,59 @@
+{
+  "title": "Security",
+  "scan": "Check now",
+  "investigate": "Investigate with AI",
+  "scanning": "Checking the dashboard, the server, the computers and the repository…",
+  "investigating": "The AI is looking around: a minute or two…",
+  "checked": "Checked {{date}}",
+  "neverChecked": "Nothing has been checked yet: press “Check now”.",
+  "readOnly": "The agent only looks and tells — it changes nothing by itself.",
+  "ownerOnly": "The security agent reports to the owner of this dashboard only.",
+  "areas": {
+    "app": "The dashboard",
+    "host": "The server",
+    "desktop": "Computers",
+    "repo": "The repository"
+  },
+  "areaChecked": "checked",
+  "areaHints": {
+    "app": "not checked yet",
+    "host": "no report: the server’s scan is installed by deploy.sh on the next deploy",
+    "desktop": "no computer with the desktop app is registered (Activity → Setup)",
+    "repo": "name the repository in the settings below; needs a GitHub token in Integrations"
+  },
+  "report": "The agent’s report",
+  "open": "To deal with: {{count}}",
+  "nothing": "Nothing found. Everything checked is in order.",
+  "severity": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "info": "For information"
+  },
+  "origin": {
+    "rules": "by a rule",
+    "ai": "by the AI"
+  },
+  "since": "since {{date}}",
+  "ignore": "I know, leave it",
+  "ignored": "Known and left as is: {{count}}",
+  "watchAgain": "Report again",
+  "resolved": "Fixed: {{count}}",
+  "resolvedOn": "gone since {{date}}",
+  "noAi": "No AI connection: add one in Settings → Integrations, or the rules alone keep checking.",
+  "aiFailed": "The AI provider did not answer (a wrong key, no credit, or it is down). The findings of the rules are not affected.",
+  "failed": "It did not work. Try again in a minute.",
+  "settings": {
+    "title": "Settings of the agent",
+    "ai": "The AI investigates every morning",
+    "aiHint": "Without it the rules still check every hour. The AI sees only what the checks collect — never your diary, finances or other records — and has no way to change anything.",
+    "connection": "The model of the agent",
+    "assistant": "The same as the assistant",
+    "connectionHint": "A connection of its own keeps the agent apart from the assistant",
+    "repository": "Repository on GitHub",
+    "repositoryHint": "owner/name — its security workflow and alerts are watched",
+    "saved": "Saved.",
+    "invalid": "The repository must look like owner/name."
+  }
+}

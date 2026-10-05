@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { FinanceAutomations } from './finance.automations';
 import { FinanceLife } from './finance.life';
+import { FinanceExport } from './finance.export';
 import { FinanceSearch } from './finance.search';
 import { CostSourcesController } from './cost-sources/cost-sources.controller';
 import { CostSourcesJob } from './cost-sources/cost-sources.job';
@@ -36,6 +37,7 @@ import { WishlistService } from './wishlist/wishlist.service';
   providers: [
     FinanceAutomations,
     FinanceLife,
+    FinanceExport,
     FinanceSearch,
     TransactionsService,
     BudgetsService,

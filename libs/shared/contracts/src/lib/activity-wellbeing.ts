@@ -152,6 +152,22 @@ export const activitySystemSchema = z.object({
       signatureAgeDays: z.number().int().min(0).max(100_000),
     })
     .optional(),
+  /** How the computer is protected, for the security agent (absent in an older shell). */
+  protection: z
+    .object({
+      /** The profiles of the Windows firewall: Domain, Private, Public. */
+      firewall: z.array(z.object({ profile: name, enabled: z.boolean() })).max(5),
+      /** The system disk is encrypted (BitLocker or device encryption). */
+      diskEncrypted: z.boolean(),
+      daysSinceUpdate: z.number().int().min(0).max(100_000),
+      restartPending: z.boolean(),
+      /** A locking screen saver or an inactivity limit; sleep with a password is not seen. */
+      locksWhenIdle: z.boolean(),
+      /** User Account Control. */
+      uac: z.boolean(),
+    })
+    .partial()
+    .optional(),
   topCpu: z
     .array(z.object({ name, percent: z.number().min(0) }))
     .max(10)

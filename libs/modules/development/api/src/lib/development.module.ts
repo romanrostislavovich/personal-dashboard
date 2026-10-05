@@ -12,6 +12,7 @@ import { AccountsService } from './accounts/accounts.service';
 import { CodeAccountsService } from './accounts/code-accounts.service';
 import { GithubController } from './github/github.controller';
 import { GithubTokenService } from './github/github-token.service';
+import { DevelopmentSecurity } from './development.security';
 import { GithubProfileAchievements } from './github-profile/github-profile.achievements';
 import { GithubProfileAiTools } from './github-profile/github-profile.ai-tools';
 import { GithubProfileController } from './github-profile/github-profile.controller';
@@ -60,6 +61,7 @@ import { WakatimeService } from './wakatime/wakatime.service';
     DevelopmentLife,
     OpenSourceSearch,
     GithubTokenService,
+    DevelopmentSecurity,
     AccountTokensService,
     AccountsService,
     CodeAccountsService,

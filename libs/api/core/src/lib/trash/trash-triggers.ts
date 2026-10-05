@@ -17,6 +17,7 @@ const NOT_TRASHED = new Set([
   'monitoring_check_results',
   'ai_actions',
   'morning_digest_snapshots',
+  'security_reports',
 ]);
 
 /**
