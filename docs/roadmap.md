@@ -137,6 +137,11 @@
 ### Planned
 
 - **Habits** — a habit tracker module, in the digest too
+- **Better monitoring through links between modules** — what one module knows shown where
+  another needs it, first Activity and Development: Activity already tells which project the
+  time at the computer went to (by the window title), Development knows its repositories and
+  commits — so a project shows its hours next to its commits, and a day of work is one picture.
+  Modules still do not depend on each other: the core joins them
 - **Finance: the bank directly (open banking)** — transactions come from the bank every day
   (GoCardless Bank Account Data: free in the EU, mBank, PKO, Revolut), no statements needed;
   budgets, subscriptions and rules pick them up
