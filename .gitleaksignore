@@ -1,0 +1,5 @@
+# Findings of gitleaks (.github/workflows/security.yml) that were looked at and are not secrets.
+# One line a finding: its fingerprint, as `gitleaks git --verbose` prints it.
+
+# A placeholder for unit tests ("test-encryption-key-…"): nothing is encrypted with it.
+78ea4dd194424a78b816f15a691ffc963024fcbf:libs/api/core/test-env.mts:generic-api-key:9
