@@ -30,6 +30,7 @@ import { UsersService } from '../users/users.service';
 import { LoginThrottle, throttleKeys } from './login-throttle';
 import { ClientMeta, SessionsService } from './sessions.service';
 import { TwoFactorService } from './two-factor.service';
+import { SignInLog } from '../security/sign-in-log.service';
 
 const BCRYPT_ROUNDS = 12;
 /** Access tokens are short: a stolen one is useless soon, the refresh token gives new ones. */
@@ -62,6 +63,7 @@ export class AuthService implements OnApplicationBootstrap {
     private readonly jwt: JwtService,
     private readonly sessions: SessionsService,
     private readonly twoFactor: TwoFactorService,
+    private readonly signIns: SignInLog,
     @Inject(ConfigService) private readonly config: AppConfig,
   ) {}
 
@@ -104,10 +106,17 @@ export class AuthService implements OnApplicationBootstrap {
     const user = await this.users.findByEmail(email);
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       this.throttle.fail(keys);
+      await this.signIns.record({
+        userId: user?.id ?? null,
+        email,
+        outcome: 'wrong-password',
+        ...meta,
+      });
       throw new UnauthorizedException('Invalid email or password');
     }
     this.throttle.succeed(keys);
     if (await this.twoFactor.isEnabled(user.id)) {
+      // Not in yet: the journal gets its entry with the code (loginWithCode).
       const challengeToken = await this.jwt.signAsync(
         { sub: user.id, purpose: '2fa', client },
         { expiresIn: CHALLENGE_TTL },
@@ -115,6 +124,7 @@ export class AuthService implements OnApplicationBootstrap {
       return { result: { twoFactorRequired: true, challengeToken }, refreshToken: null };
     }
     const { response, refreshToken } = await this.issueSession(user, client, meta);
+    await this.signIns.record({ userId: user.id, email, outcome: 'ok', ...meta });
     return { result: response, refreshToken };
   }
 
@@ -128,12 +138,16 @@ export class AuthService implements OnApplicationBootstrap {
     }
     const keys = [`2fa:${challenge.sub}`, `ip:${meta.ip ?? 'unknown'}`];
     this.throttle.check(keys);
+    const user = await this.requireUser(challenge.sub);
+    const attempt = { userId: user.id, email: user.email, ...meta };
     if (!(await this.twoFactor.verify(challenge.sub, code))) {
       this.throttle.fail(keys);
+      await this.signIns.record({ ...attempt, outcome: 'wrong-code' });
       throw new UnauthorizedException('Wrong code');
     }
     this.throttle.succeed(keys);
-    return this.issueSession(await this.requireUser(challenge.sub), challenge.client, meta);
+    await this.signIns.record({ ...attempt, outcome: 'ok' });
+    return this.issueSession(user, challenge.client, meta);
   }
 
   /** Sign-up works only if the server allows it (ALLOW_REGISTRATION=true). */

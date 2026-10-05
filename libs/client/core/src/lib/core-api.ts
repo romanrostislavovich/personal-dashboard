@@ -26,6 +26,9 @@ import {
   SystemStatus,
   TelegramLinkResponse,
   TrashItem,
+  DataImportReport,
+  SecuritySettings,
+  SecurityStatus,
   TwoFactorDisable,
   TwoFactorLogin,
   TwoFactorSetup,
@@ -72,10 +75,14 @@ export const API_PATHS = {
   systemLog: '/api/system/log',
   trash: '/api/trash',
   trashItem: (id: string) => `/api/trash/${encodeURIComponent(id)}`,
+  security: '/api/security',
+  dataExport: '/api/data/export',
+  dataImport: '/api/data/import',
 } as const;
 
 /** Read requests of the core (see ApiRequest). */
 export const CORE_READS = {
+  security: () => apiRequest(API_PATHS.security),
   projects: () => apiRequest(API_PATHS.projects),
   /** Search across all modules (the command palette). */
   search: (q: string) => apiRequest(API_PATHS.search, { q }),
@@ -212,6 +219,39 @@ export function trashApi(api: ApiClient) {
     list: () => api.get<TrashItem[]>(API_PATHS.trash),
     restore: (id: string) => api.post<void>(`${API_PATHS.trashItem(id)}/restore`, {}),
     remove: (id: string) => api.delete(API_PATHS.trashItem(id)),
+  };
+}
+
+/** The security agent (the owner of the instance only): findings, checks, settings. */
+export function securityApi(api: ApiClient) {
+  return {
+    status: () => api.read<SecurityStatus>(CORE_READS.security()),
+    /** The rules look at everything again. */
+    scan: () => api.post<SecurityStatus>(`${API_PATHS.security}/scan`, {}),
+    /** The AI looks around and writes a report: a minute or two. */
+    investigate: () => api.post<SecurityStatus>(`${API_PATHS.security}/investigate`, {}),
+    saveSettings: (settings: SecuritySettings) =>
+      api.put<void>(`${API_PATHS.security}/settings`, settings),
+    /** `ignored` — "I know, leave it"; `open` — report it again. */
+    setFindingStatus: (id: string, status: 'open' | 'ignored') =>
+      api.put<void>(`${API_PATHS.security}/findings/${id}`, { status }),
+  };
+}
+
+/** One's data as a file: everything exported as one ZIP, and an archive brought back. */
+export function dataApi(api: ApiClient) {
+  return {
+    /** The archive of everything the user keeps here. */
+    export: () => api.blob(API_PATHS.dataExport),
+    /** Uploads an archive and tells what it would add; nothing is changed yet. */
+    previewImport: (archive: Blob) => {
+      const form = new FormData();
+      form.append('file', archive);
+      return api.post<DataImportReport>(API_PATHS.dataImport, form);
+    },
+    /** Adds what the uploaded archive has and the dashboard does not. */
+    applyImport: (id: string) => api.post<DataImportReport>(`${API_PATHS.dataImport}/${id}`, {}),
+    discardImport: (id: string) => api.delete(`${API_PATHS.dataImport}/${id}`),
   };
 }
 

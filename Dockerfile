@@ -18,6 +18,9 @@ RUN npm ci --ignore-scripts
 COPY . .
 # The API build writes package.json and package-lock.json with only its own dependencies next to it.
 RUN npx nx run-many -t build -p api,web,desktop
+# What npm knows about vulnerabilities in the packages that ship, as of this build: the
+# security agent reads it (it exits non-zero when it finds any — that is not a failed build).
+RUN npm audit --omit=dev --json > dist/apps/api/npm-audit.json || true
 
 # --- 2. Production dependencies of the API ---
 FROM --platform=$BUILDPLATFORM node:24-alpine AS deps

@@ -157,6 +157,18 @@ docker compose start app
 Without the last `psql` line the computer would not notice the restore and would not send back
 what changed after the dump.
 
+## The security agent on the server
+
+The dashboard runs in a container and cannot see the host. `deploy.sh` therefore uploads
+`deploy/security-scan.sh` and installs `/etc/cron.d/dashboard-security`: every hour, as root, the
+script reads the SSH settings and sign-ins, the firewall, the listening ports and the pending
+updates and writes `security/host.json`, which the Security section shows. It only reads — it
+changes nothing on the server. To look at the report: `bash /opt/dashboard/security-scan.sh -`.
+To stop it: `rm /etc/cron.d/dashboard-security`.
+
+A firewall of the hosting (Hetzner Cloud Firewall) is outside the server and not visible to the
+script: with one in place, mark the "no firewall" finding as known.
+
 ## Rolling back
 
 Before every update `deploy/deploy.sh` keeps the running image and a dump of the database

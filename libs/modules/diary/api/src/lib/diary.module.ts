@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DiaryAutomations } from './diary.automations';
 import { DiaryLife } from './diary.life';
+import { DiaryExport } from './diary.export';
 import { DiarySearch } from './diary.search';
 import { DiaryAchievements } from './diary.achievements';
 import { DiaryAiTools } from './diary.ai-tools';
@@ -21,6 +22,7 @@ import { DiaryService } from './diary.service';
   providers: [
     DiaryAutomations,
     DiaryLife,
+    DiaryExport,
     DiarySearch,
     DiaryService,
     DiaryPhotosService,

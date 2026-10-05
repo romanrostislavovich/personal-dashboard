@@ -111,6 +111,18 @@
   answers again; a new version is offered with a "Reload" button
 - **Your own home page and menu:** widgets are dragged into place, resized and hidden; whole
   sections are hidden from the menu; per device, "Apply everywhere" makes it the account's
+- **Export and import:** everything you keep as one ZIP — every record as JSON, the
+  transactions as CSV, the diary as Markdown, the photos as files; an archive is brought back
+  into this account or another dashboard, adding only what is missing, after a preview of what
+  it would add; passwords and the tokens of integrations are never in it
+- **Security agent:** a section of its own for the owner — the dashboard (sign-ins, sessions,
+  two-factor, the site's certificate and headers, backups, npm audit of the build), the server
+  (SSH, the firewall, open ports, updates — an hourly read-only scan on the host), the computers
+  with the desktop app (antivirus, firewall, disk encryption, updates) and the repository on
+  GitHub (a workflow that looks for leaked secrets and audits the packages, Dependabot alerts);
+  rules check every hour, an AI investigates the same facts every morning through read-only
+  tools of its own and writes a report; each finding has a severity and a fix, the agent itself
+  changes nothing
 - **Self-monitoring:** Settings → System shows the background jobs with their last runs and the
   server's errors and warnings of the last 14 days; a failed job, a failing sync or AI provider
   and any unhandled error are also reported to Telegram
@@ -147,8 +159,6 @@
 - **Sleep, steps, weight** — the first part of Fitness: from Google Fit / Health Connect or typed
   in by hand, shown in Life and in the morning digest
 - **Push notifications in the PWA** — on a phone without Telegram (see Everyday comfort)
-- **Export and import of all data** — one archive (JSON plus CSV for finance, Markdown for the
-  diary) and its import back into an empty or another instance
 - **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
   Cursor can read and change your data directly, without its own chat
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
@@ -204,13 +214,9 @@
   the user approves every merge and deploy, a deploy can be rolled back in one step, the agent
   runs in a sandbox without production secrets, and every action is written to an audit log.
   Secrets, auth and the guard rails themselves stay out of its reach.
-- **AI security agent, 24/7.** A separate agent with its own model connection and read-only
-  access that watches the server and the app: failed logins and unusual activity, open ports and
-  the firewall, TLS certificates, dependency vulnerabilities (`npm audit`, image scans), leaked
-  secrets in the repository, backups actually being made, suspicious changes in the database. It
-  reports through notifications with a severity and a suggested fix and never fixes things itself
-  without approval. It must not share tools or context with the main assistant, so a prompt
-  injection in user data cannot switch it off.
+- **Security agent: more** — a phone once there is a mobile app; scans of the Docker image;
+  suspicious changes in the database; macOS and Linux computers; the hosting's own firewall
+  (the scan of the server sees only the one on the host)
 
 #### Tests and CI
 

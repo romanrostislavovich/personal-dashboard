@@ -90,6 +90,30 @@ if ($defender) {
   }
 }
 
+# How the computer is protected, for the security agent: the firewall, disk encryption, how
+# long ago an update was installed, a pending restart, the lock after idling.
+$protection = @{}
+$profiles = @(Get-NetFirewallProfile)
+if ($profiles.Count) {
+  $protection.firewall = @($profiles | ForEach-Object { @{ profile = [string]$_.Name; enabled = [bool]$_.Enabled } })
+}
+# 1, 3, 5 - protected (BitLocker or device encryption); 2 - off; readable without admin rights.
+$encryption = (New-Object -ComObject Shell.Application).NameSpace($env:SystemDrive).Self.ExtendedProperty('System.Volume.BitLockerProtection')
+if ($null -ne $encryption) { $protection.diskEncrypted = ([int]$encryption -in @(1, 3, 5)) }
+$lastUpdate = @(Get-HotFix | Where-Object { $_.InstalledOn } | Sort-Object InstalledOn -Descending | Select-Object -First 1)
+if ($lastUpdate.Count) {
+  $protection.daysSinceUpdate = [int]([DateTime]::Now - $lastUpdate[0].InstalledOn).TotalDays
+}
+$protection.restartPending = (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired') -or
+  (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending')
+# The screen locks by itself: a secure screen saver, or the machine-wide inactivity limit.
+$desktop = Get-ItemProperty 'HKCU:\Control Panel\Desktop'
+$limit = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System').InactivityTimeoutSecs
+$protection.locksWhenIdle = (($desktop.ScreenSaveActive -eq '1') -and ($desktop.ScreenSaverIsSecure -eq '1')) -or ([int]$limit -gt 0)
+$uac = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System').EnableLUA
+if ($null -ne $uac) { $protection.uac = ([int]$uac -eq 1) }
+$info.protection = $protection
+
 # The processes that take the most processor time and memory, by program name.
 $processes = @(Get-CimInstance Win32_PerfFormattedData_PerfProc_Process |
     Where-Object { $_.Name -notin @('_Total', 'Idle') } |

@@ -33,5 +33,7 @@ export * from './lib/realtime';
 export * from './lib/sync';
 export * from './lib/system';
 export * from './lib/trash';
+export * from './lib/data-export';
+export * from './lib/security';
 export * from './lib/tasks';
 export * from './lib/weather';

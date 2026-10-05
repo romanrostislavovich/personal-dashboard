@@ -34,3 +34,8 @@ export {
   FALLBACK_LOCALE,
   type LocalizedText,
 } from './lib/i18n/locale';
+export { DataExportService } from './lib/data-export/data-export.service';
+export type { ReadableExport, ReadableFile } from './lib/data-export/data-export.service';
+export { csvLine } from './lib/data-export/data-archive';
+export { SecurityService } from './lib/security/security.service';
+export type { FoundProblem, Inspection, SecuritySource } from './lib/security/security-source';

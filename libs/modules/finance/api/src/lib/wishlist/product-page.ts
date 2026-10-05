@@ -35,7 +35,7 @@ export function readProductPage(html: string): ProductInfo {
     name: clean(text(product?.['name']) ?? tags.get('og:title') ?? title(html)),
     price,
     currency:
-      price !== null && /^[A-Za-z]{3}$/.test(currency ?? '') ? currency!.toUpperCase() : null,
+      price !== null && currency && /^[A-Za-z]{3}$/.test(currency) ? currency.toUpperCase() : null,
     image: imageUrl(product?.['image']) ?? tags.get('og:image') ?? null,
   };
 }
