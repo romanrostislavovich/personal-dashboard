@@ -150,7 +150,10 @@ export class SecurityService {
         }
       }
     }
-    for (const row of known.filter((item) => item.status !== 'resolved' && !seen.has(item.key))) {
+    // What the owner chose to ignore among the AI's findings stays so even when a run does not
+    // repeat it: the model words things anew, and "I know" must not come undone by that.
+    const kept = origin === 'ai' ? ['resolved', 'ignored'] : ['resolved'];
+    for (const row of known.filter((item) => !kept.includes(item.status) && !seen.has(item.key))) {
       await this.db
         .update(securityFindings)
         .set({ status: 'resolved', resolvedAt: now })
@@ -225,6 +228,15 @@ export class SecurityService {
     if (!row) {
       throw new NotFoundException();
     }
+  }
+
+  /** The findings that still stand (open or ignored), with their keys. */
+  async known(userId: string): Promise<SecurityFindingRow[]> {
+    const rows = await this.db
+      .select()
+      .from(securityFindings)
+      .where(eq(securityFindings.userId, userId));
+    return rows.filter((row) => row.status !== 'resolved');
   }
 
   async finding(userId: string, id: string): Promise<SecurityFindingRow> {

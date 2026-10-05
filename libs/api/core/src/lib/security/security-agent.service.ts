@@ -48,14 +48,26 @@ Investigate with the tools — what you look at and in which order is up to you.
 area that is available, compare the facts with each other (a sign-in from a new address next to
 failed attempts, a port open on a server without a firewall, an old computer update next to a
 switched-off antivirus) and look for what the built-in rules miss. security_findings shows what
-the rules have already found: do not repeat those, but say when one of them deserves another
-severity or when several together mean something worse.
+is known already: the findings of the rules, and your own earlier ones with their keys.
 
-For every problem of your own call security_report_finding once: a stable lowercase key
-(dashes, no dates or counters, so the same problem keeps its key tomorrow), the area, the
-severity, a short title, what exactly you saw, and a concrete fix the owner can carry out —
-the command, the setting, the place in the interface. Report only what the facts support; an
-unavailable area is not a finding.
+Record a problem with security_report_finding only when all of this is true:
+- It is a weakness or a sign of an attack that the facts show. A lack of data is never a
+  finding: that something is unavailable, unreadable, not set up, not reported or never ran
+  tells nothing about security.
+- The rules have not found it. Never restate a finding of the rules in other words, with
+  more detail or under another severity. What you think of the rules' findings — a severity
+  that is off, several that together mean something worse — belongs in the text of the report.
+- It is one finding a problem. Facts with one cause and one fix are one finding (an account
+  without two-factor sign-in whose token is also too broad: one, not two), and you record each
+  problem once in a run.
+Few sharp findings are better than many; none at all is a good result when the rules have
+covered everything.
+
+Each finding has a stable lowercase key (dashes, no dates or counters), the area, the severity,
+a short title, what exactly you saw, and a concrete fix the owner can carry out — the command,
+the setting, the place in the interface. When an earlier finding of yours still holds, record it
+again under the same key, so that it stays the same finding (and stays ignored if the owner
+chose so); one that no longer holds you simply do not record.
 
 The owner works from their own devices: "ownAddresses" of the dashboard lists the addresses
 they use, and an SSH sign-in marked "own" came from one of them. Activity from those addresses
@@ -238,20 +250,22 @@ export class SecurityAgent {
         name: 'security_findings',
         module: 'security',
         description:
-          'What the built-in rules have found so far (and your own earlier findings): area, ' +
-          'severity, title, details, status. `ignored` — the owner knows and accepts it.',
+          'What is known already: the findings of the built-in rules (`origin: rules`) and ' +
+          'your own earlier ones (`origin: ai`, with the `key` to record them under again). ' +
+          'Area, severity, title, details, status; `ignored` — the owner knows and accepts it.',
         parameters: NO_PARAMETERS,
         handler: async () =>
-          (await this.security.status(userId)).findings
-            .filter((finding) => finding.status !== 'resolved')
-            .map(({ area, severity, title, details, origin, status }) => ({
+          (await this.security.known(userId)).map(
+            ({ key, area, severity, title, details, origin, status }) => ({
+              ...(origin === 'ai' ? { key: key.slice(AI_SOURCE.length + 1) } : {}),
               area,
               severity,
               title,
               details,
               origin,
               status,
-            })),
+            }),
+          ),
       },
       {
         name: 'security_report_finding',
@@ -277,8 +291,13 @@ export class SecurityAgent {
           if (reported.length >= MAX_FINDINGS) {
             return { error: `At most ${MAX_FINDINGS} findings: keep the most important` };
           }
-          reported.push(reportedFinding.parse(args));
-          return { recorded: true };
+          const finding = reportedFinding.parse(args);
+          if (reported.some((item) => item.key === finding.key)) {
+            return { error: 'Already recorded in this run: one finding a problem' };
+          }
+          reported.push(finding);
+          // Seeing its own list keeps the model from recording the same thing twice.
+          return { recorded: true, recordedInThisRun: reported.map((item) => item.title) };
         },
       },
     ];
