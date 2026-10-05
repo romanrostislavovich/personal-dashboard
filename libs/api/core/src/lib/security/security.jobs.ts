@@ -10,6 +10,7 @@ import { SignInLog } from './sign-in-log.service';
 export const SECURITY_ACTIONS = {
   scan: 'security.scan',
   investigate: 'security.investigate',
+  guide: 'security.guide',
 } as const;
 
 /**
@@ -30,6 +31,9 @@ export class SecurityJobs implements OnModuleInit {
   onModuleInit(): void {
     this.actions.register(SECURITY_ACTIONS.scan, (userId) => this.security.scan(userId));
     this.actions.register(SECURITY_ACTIONS.investigate, (userId) => this.agent.investigate(userId));
+    this.actions.register(SECURITY_ACTIONS.guide, (userId, args) =>
+      this.agent.explain(userId, String(args['id'])),
+    );
     this.scheduler.register({
       name: 'security.scan',
       cron: '20 * * * *',

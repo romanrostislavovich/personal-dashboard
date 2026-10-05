@@ -232,6 +232,9 @@ export function securityApi(api: ApiClient) {
     investigate: () => api.post<SecurityStatus>(`${API_PATHS.security}/investigate`, {}),
     saveSettings: (settings: SecuritySettings) =>
       api.put<void>(`${API_PATHS.security}/settings`, settings),
+    /** The AI writes a step-by-step guide for the finding: up to a minute. */
+    writeGuide: (id: string) =>
+      api.post<SecurityStatus>(`${API_PATHS.security}/findings/${id}/guide`, {}),
     /** `ignored` — "I know, leave it"; `open` — report it again. */
     setFindingStatus: (id: string, status: 'open' | 'ignored') =>
       api.put<void>(`${API_PATHS.security}/findings/${id}`, { status }),

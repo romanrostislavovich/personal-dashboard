@@ -118,11 +118,13 @@
 - **Security agent:** a section of its own for the owner — the dashboard (sign-ins, sessions,
   two-factor, the site's certificate and headers, backups, npm audit of the build), the server
   (SSH, the firewall, open ports, updates — an hourly read-only scan on the host), the computers
-  with the desktop app (antivirus, firewall, disk encryption, updates) and the repository on
-  GitHub (a workflow that looks for leaked secrets and audits the packages, Dependabot alerts);
-  rules check every hour, an AI investigates the same facts every morning through read-only
-  tools of its own and writes a report; each finding has a severity and a fix, the agent itself
-  changes nothing
+  with the desktop app (antivirus, firewall, disk encryption, updates) and the connected code
+  hostings (two-factor sign-in and the token of GitHub, GitLab and Bitbucket; Dependabot and
+  secret scanning alerts of your GitHub repositories); addresses your own signed-in devices use
+  are taken for yours; rules check every hour, an AI investigates the same facts every morning
+  through read-only tools of its own and writes a report; each finding has a severity, a fix
+  and, on request, the AI's step-by-step guide for that very case; the agent itself changes
+  nothing
 - **Self-monitoring:** Settings → System shows the background jobs with their last runs and the
   server's errors and warnings of the last 14 days; a failed job, a failing sync or AI provider
   and any unhandled error are also reported to Telegram

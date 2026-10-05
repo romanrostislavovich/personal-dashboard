@@ -12,14 +12,14 @@
     "app": "The dashboard",
     "host": "The server",
     "desktop": "Computers",
-    "repo": "The repository"
+    "repo": "Code hostings"
   },
   "areaChecked": "checked",
   "areaHints": {
     "app": "not checked yet",
     "host": "no report: the server’s scan is installed by deploy.sh on the next deploy",
     "desktop": "no computer with the desktop app is registered (Activity → Setup)",
-    "repo": "name the repository in the settings below; needs a GitHub token in Integrations"
+    "repo": "connect GitHub, GitLab or Bitbucket in Settings → Integrations"
   },
   "report": "The agent’s report",
   "open": "To deal with: {{count}}",
@@ -37,6 +37,12 @@
   },
   "since": "since {{date}}",
   "ignore": "I know, leave it",
+  "whatToDo": "What to do:",
+  "guideShow": "How to fix, step by step",
+  "guideHide": "Hide the guide",
+  "guideWriting": "The AI is writing a guide for this case: up to a minute…",
+  "guideBy": "Written by the AI {{date}}. Read each command before running it.",
+  "guideAgain": "Write again",
   "ignored": "Known and left as is: {{count}}",
   "watchAgain": "Report again",
   "resolved": "Fixed: {{count}}",
@@ -51,9 +57,6 @@
     "connection": "The model of the agent",
     "assistant": "The same as the assistant",
     "connectionHint": "A connection of its own keeps the agent apart from the assistant",
-    "repository": "Repository on GitHub",
-    "repositoryHint": "owner/name — its security workflow and alerts are watched",
-    "saved": "Saved.",
-    "invalid": "The repository must look like owner/name."
+    "saved": "Saved."
   }
 }

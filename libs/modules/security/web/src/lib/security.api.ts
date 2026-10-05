@@ -25,6 +25,10 @@ export class SecurityApi {
     return fromCore(() => this.security.saveSettings(settings));
   }
 
+  writeGuide(id: string) {
+    return fromCore(() => this.security.writeGuide(id));
+  }
+
   setFindingStatus(id: string, status: 'open' | 'ignored') {
     return fromCore(() => this.security.setFindingStatus(id, status));
   }

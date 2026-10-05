@@ -6,7 +6,8 @@ export type SecuritySeverity = (typeof SECURITY_SEVERITIES)[number];
 
 /**
  * What the security agent looks at: the dashboard itself (sign-ins, sessions, the site, backups,
- * dependencies), the server it runs on, the computers with the desktop app, the repository.
+ * dependencies), the server it runs on, the computers with the desktop app, the accounts and
+ * repositories of the connected code hostings (GitHub, GitLab, Bitbucket).
  */
 export const SECURITY_AREAS = ['app', 'host', 'desktop', 'repo'] as const;
 export type SecurityArea = (typeof SECURITY_AREAS)[number];
@@ -26,8 +27,11 @@ export interface SecurityFinding {
   title: string;
   /** What exactly was seen. */
   details: string;
-  /** What to do about it; the agent itself fixes nothing. */
+  /** What to do about it, in a line or two; the agent itself fixes nothing. */
   fix: string;
+  /** The AI's step-by-step guide for this very case (Markdown); `null` — not asked for yet. */
+  guide: string | null;
+  guideAt: string | null;
   origin: FindingOrigin;
   status: FindingStatus;
   firstSeenAt: string;
@@ -49,20 +53,13 @@ export const securitySettingsSchema = z.object({
   aiEnabled: z.boolean(),
   /** The AI connection of the agent; `null` — the one the assistant uses. */
   connectionId: z.uuid().nullable(),
-  /** `owner/name` on GitHub: its security workflow and alerts are watched; `null` — none. */
-  repository: z
-    .string()
-    .trim()
-    .regex(/^[\w.-]+\/[\w.-]+$/)
-    .max(140)
-    .nullable(),
 });
 export type SecuritySettings = z.infer<typeof securitySettingsSchema>;
 
 /** One area: whether there was anything to look at, and when it was last looked at. */
 export interface SecurityAreaStatus {
   area: SecurityArea;
-  /** `false` — not set up (no report of the server, no computer, no repository). */
+  /** `false` — not set up (no report of the server, no computer, no code hosting). */
   available: boolean;
 }
 
