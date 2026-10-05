@@ -142,6 +142,10 @@
   time at the computer went to (by the window title), Development knows its repositories and
   commits — so a project shows its hours next to its commits, and a day of work is one picture.
   Modules still do not depend on each other: the core joins them
+- **An AI agent for every module, and one over them all** — each module gets an agent of its
+  own that knows its data and tools in depth (finance, the diary, development, activity…), and a
+  general one that takes a question, hands its parts to the agents concerned and puts their
+  answers together; the security agent already works apart like this
 - **Finance: the bank directly (open banking)** — transactions come from the bank every day
   (GoCardless Bank Account Data: free in the EU, mBank, PKO, Revolut), no statements needed;
   budgets, subscriptions and rules pick them up
