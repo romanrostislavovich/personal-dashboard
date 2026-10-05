@@ -42,6 +42,9 @@ export const securityFindings = pgTable(
     title: text().notNull(),
     details: text().notNull(),
     fix: text().notNull(),
+    /** The AI's step-by-step guide, written on request. */
+    guide: text(),
+    guideAt: timestamp({ withTimezone: true }),
     origin: text().$type<FindingOrigin>().notNull(),
     status: text().$type<FindingStatus>().notNull().default('open'),
     firstSeenAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -69,8 +72,6 @@ export const securitySettings = pgTable('security_settings', {
   aiEnabled: boolean().notNull().default(true),
   /** The agent's own AI connection; `null` — the assistant's. */
   connectionId: uuid(),
-  /** `owner/name` on GitHub. */
-  repository: text(),
   scannedAt: timestamp({ withTimezone: true }),
   /** Areas that had something to look at in the last scan. */
   areas: text().array().$type<SecurityArea[]>().notNull().default([]),

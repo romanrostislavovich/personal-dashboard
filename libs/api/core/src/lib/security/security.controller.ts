@@ -54,6 +54,18 @@ export class SecurityController {
     await this.security.saveSettings(user.id, input);
   }
 
+  /** "How do I fix this?": the AI writes a step-by-step guide for the finding. */
+  @Post('findings/:id/guide')
+  @HttpCode(200)
+  async guide(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<SecurityStatus> {
+    await this.security.assertOwner(user.id);
+    await this.actions.run(user.id, SECURITY_ACTIONS.guide, { id });
+    return this.security.status(user.id);
+  }
+
   /** "I know, leave it" — or back to open. */
   @Put('findings/:id')
   @HttpCode(204)

@@ -138,9 +138,11 @@ export class SecurityService {
         fresh.push(created);
       } else {
         const back = row.status === 'resolved';
+        // A problem that came back may differ from the one the guide was written for.
+        const reopened = { status: 'open' as const, resolvedAt: null, guide: null, guideAt: null };
         const [updated] = await this.db
           .update(securityFindings)
-          .set({ ...text, ...(back ? { status: 'open' as const, resolvedAt: null } : {}) })
+          .set({ ...text, ...(back ? reopened : {}) })
           .where(eq(securityFindings.id, row.id))
           .returning();
         if (back) {
@@ -225,6 +227,24 @@ export class SecurityService {
     }
   }
 
+  async finding(userId: string, id: string): Promise<SecurityFindingRow> {
+    const [row] = await this.db
+      .select()
+      .from(securityFindings)
+      .where(and(eq(securityFindings.id, id), eq(securityFindings.userId, userId)));
+    if (!row) {
+      throw new NotFoundException();
+    }
+    return row;
+  }
+
+  async saveGuide(id: string, guide: string): Promise<void> {
+    await this.db
+      .update(securityFindings)
+      .set({ guide, guideAt: new Date() })
+      .where(eq(securityFindings.id, id));
+  }
+
   async saveReport(userId: string, text: string, model: string): Promise<SecurityReport> {
     const [row] = await this.db.insert(securityReports).values({ userId, text, model }).returning();
     const old = await this.db
@@ -253,13 +273,9 @@ export class SecurityService {
 }
 
 function toSettings(
-  row: { aiEnabled: boolean; connectionId: string | null; repository: string | null } | undefined,
+  row: { aiEnabled: boolean; connectionId: string | null } | undefined,
 ): SecuritySettings {
-  return {
-    aiEnabled: row?.aiEnabled ?? true,
-    connectionId: row?.connectionId ?? null,
-    repository: row?.repository ?? null,
-  };
+  return { aiEnabled: row?.aiEnabled ?? true, connectionId: row?.connectionId ?? null };
 }
 
 export function toFinding(row: SecurityFindingRow): SecurityFinding {
@@ -270,6 +286,8 @@ export function toFinding(row: SecurityFindingRow): SecurityFinding {
     title: row.title,
     details: row.details,
     fix: row.fix,
+    guide: row.guide,
+    guideAt: row.guideAt?.toISOString() ?? null,
     origin: row.origin,
     status: row.status,
     firstSeenAt: row.firstSeenAt.toISOString(),

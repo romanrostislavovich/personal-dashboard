@@ -4,10 +4,16 @@ import { SecurityMessages } from './security.messages';
 /** What the dashboard knows about its own safety. Nothing here is a secret: the AI reads it. */
 export interface AppFacts {
   account: { twoFactor: boolean; users: number; registrationOpen: boolean };
+  /**
+   * Addresses the owner's own signed-in devices use (see `ownAddresses`): what comes from them
+   * is the owner at work, not a stranger.
+   */
+  ownAddresses: OwnAddress[];
   signIns: {
-    /** Failed attempts of the last 24 hours. */
+    /** Failed attempts of the last 24 hours, and those of them from addresses not the owner's. */
     failed: number;
-    failedByAddress: { ip: string; count: number }[];
+    failedForeign: number;
+    failedByAddress: { ip: string; count: number; own: boolean }[];
     /** A good sign-in right after several bad ones from the same address. */
     guessed: { ip: string; email: string; at: string; failuresBefore: number }[];
     /** Addresses that signed in this week and never in the months before. */
@@ -64,13 +70,17 @@ export function appProblems(facts: AppFacts, text: SecurityMessages): FoundProbl
       ),
     });
   }
-  if (signIns.failed >= FAILURES_NOTICED) {
+  // One's own mistyped passwords are not an attack: only strangers' failures count.
+  if (signIns.failedForeign >= FAILURES_NOTICED) {
     problems.push({
       key: 'app.sign-in-failures',
-      severity: signIns.failed >= FAILURES_MANY ? 'high' : 'medium',
+      severity: signIns.failedForeign >= FAILURES_MANY ? 'high' : 'medium',
       ...text.signInFailures(
-        signIns.failed,
-        signIns.failedByAddress.slice(0, 5).map((a) => `${a.ip} (${a.count})`),
+        signIns.failedForeign,
+        signIns.failedByAddress
+          .filter((a) => !a.own)
+          .slice(0, 5)
+          .map((a) => `${a.ip} (${a.count})`),
       ),
     });
   }
@@ -157,8 +167,76 @@ const GUESS_WINDOW_MS = 3_600_000;
 /** "New" is an address of this week that the months before never saw. */
 const NEW_ADDRESS_DAYS = 7;
 
-/** What the journal of sign-ins tells: the failures of a day, guessing that worked, new addresses. */
-export function summarizeSignIns(attempts: SignInAttempt[], now: Date): AppFacts['signIns'] {
+/** A device signed in to the dashboard, as its session keeps it. */
+export interface SignedInDevice {
+  ip: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+}
+
+export interface OwnAddress {
+  ip: string;
+  /** The browsers and apps signed in from it. */
+  devices: string[];
+}
+
+/** An address has to be the owner's for this long before it is trusted. */
+const OWN_AFTER_MS = DAY_MS;
+
+/**
+ * Whether an address was the owner's own at a moment: a device signed in from it, or a sign-in
+ * from it worked, at least a day before. The day matters — whoever has just guessed the
+ * password must not become "the owner" by that very sign-in.
+ */
+export function wasOwnAddress(
+  ip: string | null,
+  at: Date,
+  attempts: SignInAttempt[],
+  devices: SignedInDevice[],
+): boolean {
+  if (!ip) {
+    return false;
+  }
+  const before = at.getTime() - OWN_AFTER_MS;
+  return (
+    devices.some((device) => device.ip === ip && device.createdAt.getTime() <= before) ||
+    attempts.some((a) => a.outcome === 'ok' && a.ip === ip && a.at.getTime() <= before)
+  );
+}
+
+/** The addresses that are the owner's own now, with the devices signed in from each. */
+export function ownAddresses(
+  attempts: SignInAttempt[],
+  devices: SignedInDevice[],
+  now: Date,
+): OwnAddress[] {
+  const addresses = new Set(
+    [...devices.map((device) => device.ip), ...attempts.map((attempt) => attempt.ip)].filter(
+      (ip): ip is string => wasOwnAddress(ip, now, attempts, devices),
+    ),
+  );
+  return [...addresses].map((ip) => ({
+    ip,
+    devices: [
+      ...new Set(
+        devices
+          .filter((device) => device.ip === ip && device.userAgent)
+          .map((device) => (device.userAgent as string).slice(0, 120)),
+      ),
+    ],
+  }));
+}
+
+/**
+ * What the journal of sign-ins tells: the failures of a day, guessing that worked, new
+ * addresses — leaving out what comes from the owner's own addresses.
+ */
+export function summarizeSignIns(
+  attempts: SignInAttempt[],
+  devices: SignedInDevice[],
+  now: Date,
+): AppFacts['signIns'] {
+  const own = (ip: string | null, at: Date) => wasOwnAddress(ip, at, attempts, devices);
   const failed = attempts.filter(
     (a) => a.outcome !== 'ok' && now.getTime() - a.at.getTime() <= DAY_MS,
   );
@@ -171,6 +249,8 @@ export function summarizeSignIns(attempts: SignInAttempt[], now: Date): AppFacts
   const good = attempts.filter((a) => a.outcome === 'ok');
   const guessed = good
     .filter((a) => now.getTime() - a.at.getTime() <= NEW_ADDRESS_DAYS * DAY_MS)
+    // The owner mistyping the password at home is not guessing.
+    .filter((success) => !own(success.ip, success.at))
     .map((success) => ({
       success,
       failuresBefore: attempts.filter(
@@ -194,15 +274,19 @@ export function summarizeSignIns(attempts: SignInAttempt[], now: Date): AppFacts
   // Without older sign-ins every address is new: the journal has only just begun.
   const fresh = new Map<string, SignInAttempt>();
   if (before.size) {
-    for (const attempt of good.filter((a) => a.at.getTime() >= weekAgo && !before.has(a.ip))) {
+    const recent = good.filter(
+      (a) => a.at.getTime() >= weekAgo && !before.has(a.ip) && !own(a.ip, now),
+    );
+    for (const attempt of recent) {
       fresh.set(attempt.ip ?? 'unknown', attempt);
     }
   }
 
   return {
     failed: failed.length,
+    failedForeign: failed.filter((a) => !own(a.ip, now)).length,
     failedByAddress: [...byAddress]
-      .map(([ip, count]) => ({ ip, count }))
+      .map(([ip, count]) => ({ ip, count, own: own(ip, now) }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10),
     guessed,

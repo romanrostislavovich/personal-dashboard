@@ -147,10 +147,44 @@ const ICONS: Record<SecuritySeverity, string> = {
             <p>{{ finding.details }}</p>
             <p class="fix">
               <mat-icon inline>build</mat-icon>
-              <span>{{ finding.fix }}</span>
+              <span>
+                <b>{{ 'security.whatToDo' | transloco }}</b>
+                {{ finding.fix }}
+              </span>
             </p>
+            @if (finding.guide && shown() === finding.id) {
+              <div class="guide">
+                <div class="markdown" [innerHTML]="finding.guide | markdown"></div>
+                <p class="hint">
+                  {{
+                    'security.guideBy'
+                      | transloco: { date: (finding.guideAt | date: 'd MMM y, HH:mm') }
+                  }}
+                  <button matButton (click)="writeGuide(finding)" [disabled]="busy() !== null">
+                    {{ 'security.guideAgain' | transloco }}
+                  </button>
+                </p>
+              </div>
+            }
+            @if (writing() === finding.id) {
+              <p class="hint">{{ 'security.guideWriting' | transloco }}</p>
+              <mat-progress-bar mode="indeterminate" />
+            }
           </mat-card-content>
           <mat-card-actions align="end">
+            <button
+              matButton
+              (click)="showGuide(finding)"
+              [disabled]="writing() !== null || (!finding.guide && !s.aiAvailable)"
+            >
+              <mat-icon>menu_book</mat-icon>
+              {{
+                (finding.guide && shown() === finding.id
+                  ? 'security.guideHide'
+                  : 'security.guideShow'
+                ) | transloco
+              }}
+            </button>
             <button matButton (click)="setStatus(finding, 'ignored')">
               <mat-icon>visibility_off</mat-icon> {{ 'security.ignore' | transloco }}
             </button>
@@ -227,11 +261,6 @@ const ICONS: Record<SecuritySeverity, string> = {
               </mat-select>
               <mat-hint>{{ 'security.settings.connectionHint' | transloco }}</mat-hint>
             </mat-form-field>
-            <mat-form-field>
-              <mat-label>{{ 'security.settings.repository' | transloco }}</mat-label>
-              <input matInput [(ngModel)]="repository" placeholder="owner/name" />
-              <mat-hint>{{ 'security.settings.repositoryHint' | transloco }}</mat-hint>
-            </mat-form-field>
             <div>
               <button matButton="filled" (click)="saveSettings()" [disabled]="busy() !== null">
                 {{ 'core.actions.save' | transloco }}
@@ -304,6 +333,15 @@ const ICONS: Record<SecuritySeverity, string> = {
       margin: 8px 0;
       overflow-wrap: anywhere;
     }
+    .guide {
+      margin-top: 12px;
+      padding-top: 4px;
+      border-top: 1px solid var(--pd-border);
+      overflow-wrap: anywhere;
+    }
+    .guide pre {
+      overflow-x: auto;
+    }
     .fix {
       display: flex;
       gap: 8px;
@@ -366,7 +404,10 @@ export class SecurityPage {
   protected readonly assistant = ASSISTANT;
   protected aiEnabled = true;
   protected connectionId = ASSISTANT;
-  protected repository = '';
+
+  /** The finding whose guide is open, and the one a guide is being written for. */
+  protected readonly shown = signal<string | null>(null);
+  protected readonly writing = signal<string | null>(null);
 
   constructor() {
     effect(() => {
@@ -374,7 +415,6 @@ export class SecurityPage {
       if (settings) {
         this.aiEnabled = settings.aiEnabled;
         this.connectionId = settings.connectionId ?? ASSISTANT;
-        this.repository = settings.repository ?? '';
       }
     });
   }
@@ -396,18 +436,44 @@ export class SecurityPage {
     this.status.reload();
   }
 
+  /** Opens the guide of a finding; the first time the AI writes it. */
+  protected async showGuide(finding: SecurityFinding): Promise<void> {
+    if (this.shown() === finding.id) {
+      this.shown.set(null);
+    } else if (finding.guide) {
+      this.shown.set(finding.id);
+    } else {
+      await this.writeGuide(finding);
+    }
+  }
+
+  protected async writeGuide(finding: SecurityFinding): Promise<void> {
+    this.writing.set(finding.id);
+    try {
+      await firstValueFrom(this.api.writeGuide(finding.id));
+      this.shown.set(finding.id);
+    } catch (error) {
+      const status = errorStatus(error);
+      this.notify(
+        status === 400 ? 'security.noAi' : status === 502 ? 'security.aiFailed' : 'security.failed',
+      );
+    } finally {
+      this.writing.set(null);
+      this.status.reload();
+    }
+  }
+
   protected async saveSettings(): Promise<void> {
     const settings: SecuritySettings = {
       aiEnabled: this.aiEnabled,
       connectionId: this.connectionId || null,
-      repository: this.repository.trim() || null,
     };
     try {
       await firstValueFrom(this.api.saveSettings(settings));
       this.notify('security.settings.saved');
       this.status.reload();
     } catch {
-      this.notify('security.settings.invalid');
+      this.notify('security.failed');
     }
   }
 

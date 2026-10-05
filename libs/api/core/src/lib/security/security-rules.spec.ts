@@ -1,4 +1,11 @@
-import { AppFacts, appProblems, SignInAttempt, summarizeSignIns } from './app-security.rules';
+import {
+  AppFacts,
+  appProblems,
+  ownAddresses,
+  SignedInDevice,
+  SignInAttempt,
+  summarizeSignIns,
+} from './app-security.rules';
 import { HostReport, hostProblems, hostReportSchema } from './host-security.rules';
 import { securityMessages } from './security.messages';
 
@@ -6,6 +13,7 @@ const text = securityMessages('en');
 const now = new Date('2026-10-05T12:00:00Z');
 const ago = (minutes: number) => new Date(now.getTime() - minutes * 60_000);
 const keys = (problems: { key: string }[]) => problems.map((problem) => problem.key);
+const DAY = 60 * 24;
 
 const attempt = (outcome: string, ip: string, minutes: number): SignInAttempt => ({
   email: 'me@example.com',
@@ -14,56 +22,92 @@ const attempt = (outcome: string, ip: string, minutes: number): SignInAttempt =>
   at: ago(minutes),
   userAgent: 'browser',
 });
+/** A device signed in from an address so many minutes ago. */
+const device = (ip: string, minutes: number): SignedInDevice => ({
+  ip,
+  userAgent: 'Desktop app',
+  createdAt: ago(minutes),
+});
+const summarize = (attempts: SignInAttempt[], devices: SignedInDevice[] = []) =>
+  summarizeSignIns(attempts, devices, now);
 
 describe('summarizeSignIns', () => {
   it('counts the failures of the last day by address', () => {
-    const summary = summarizeSignIns(
-      [
-        attempt('wrong-password', '1.1.1.1', 10),
-        attempt('wrong-password', '1.1.1.1', 20),
-        attempt('wrong-code', '2.2.2.2', 30),
-        attempt('wrong-password', '3.3.3.3', 60 * 30), // Yesterday and more.
-      ],
-      now,
-    );
+    const summary = summarize([
+      attempt('wrong-password', '1.1.1.1', 10),
+      attempt('wrong-password', '1.1.1.1', 20),
+      attempt('wrong-code', '2.2.2.2', 30),
+      attempt('wrong-password', '3.3.3.3', 60 * 30), // Yesterday and more.
+    ]);
     expect(summary.failed).toBe(3);
-    expect(summary.failedByAddress[0]).toEqual({ ip: '1.1.1.1', count: 2 });
+    expect(summary.failedForeign).toBe(3);
+    expect(summary.failedByAddress[0]).toEqual({ ip: '1.1.1.1', count: 2, own: false });
   });
 
   it('notices a sign-in that worked right after failures from the same address', () => {
     const failures = [1, 2, 3, 4, 5].map((n) => attempt('wrong-password', '6.6.6.6', 10 + n));
-    const summary = summarizeSignIns([attempt('ok', '6.6.6.6', 5), ...failures], now);
+    const summary = summarize([attempt('ok', '6.6.6.6', 5), ...failures]);
     expect(summary.guessed).toEqual([
       { ip: '6.6.6.6', email: 'me@example.com', at: ago(5).toISOString(), failuresBefore: 5 },
     ]);
     // One's own mistyped password is not guessing.
-    const typo = summarizeSignIns(
-      [attempt('ok', '6.6.6.6', 5), attempt('wrong-password', '6.6.6.6', 6)],
-      now,
-    );
+    const typo = summarize([attempt('ok', '6.6.6.6', 5), attempt('wrong-password', '6.6.6.6', 6)]);
     expect(typo.guessed).toEqual([]);
   });
 
+  it('takes the owner’s own address for the owner', () => {
+    const failures = [1, 2, 3, 4, 5, 6].map((n) => attempt('wrong-password', '7.7.7.7', 10 + n));
+    const attempts = [attempt('ok', '7.7.7.7', 5), ...failures];
+    // A device has been signed in from there for a week: these are the owner's typos.
+    const home = summarize(attempts, [device('7.7.7.7', 7 * DAY)]);
+    expect(home.guessed).toEqual([]);
+    expect(home.failed).toBe(6);
+    expect(home.failedForeign).toBe(0);
+    expect(home.failedByAddress[0]).toEqual({ ip: '7.7.7.7', count: 6, own: true });
+    // An earlier sign-in from there does the same.
+    expect(summarize([...attempts, attempt('ok', '7.7.7.7', 3 * DAY)]).guessed).toEqual([]);
+  });
+
+  it('does not let a sign-in make its own address trusted', () => {
+    const failures = [1, 2, 3, 4, 5].map((n) => attempt('wrong-password', '6.6.6.6', 10 + n));
+    // The session the guessed password opened is minutes old: it proves nothing.
+    const summary = summarize([attempt('ok', '6.6.6.6', 5), ...failures], [device('6.6.6.6', 5)]);
+    expect(summary.guessed).toHaveLength(1);
+    expect(summary.failedForeign).toBe(5);
+  });
+
   it('tells a new address only against older sign-ins', () => {
-    const month = 60 * 24 * 30;
-    const known = summarizeSignIns(
-      [attempt('ok', '1.1.1.1', month), attempt('ok', '9.9.9.9', 60)],
-      now,
-    );
+    const month = DAY * 30;
+    const known = summarize([attempt('ok', '1.1.1.1', month), attempt('ok', '9.9.9.9', 60)]);
     expect(known.newAddresses.map((a) => a.ip)).toEqual(['9.9.9.9']);
-    const sameAsBefore = summarizeSignIns(
-      [attempt('ok', '1.1.1.1', month), attempt('ok', '1.1.1.1', 60)],
-      now,
-    );
+    const sameAsBefore = summarize([attempt('ok', '1.1.1.1', month), attempt('ok', '1.1.1.1', 60)]);
     expect(sameAsBefore.newAddresses).toEqual([]);
     // A journal that has only just begun knows no "before".
-    expect(summarizeSignIns([attempt('ok', '9.9.9.9', 60)], now).newAddresses).toEqual([]);
+    expect(summarize([attempt('ok', '9.9.9.9', 60)]).newAddresses).toEqual([]);
+    // An address a device has long been signed in from is not new, whatever the journal says.
+    const attempts = [attempt('ok', '1.1.1.1', month), attempt('ok', '9.9.9.9', 60)];
+    expect(summarize(attempts, [device('9.9.9.9', 3 * DAY)]).newAddresses).toEqual([]);
+  });
+});
+
+describe('ownAddresses', () => {
+  it('lists the addresses of devices and sign-ins older than a day, with their devices', () => {
+    const own = ownAddresses(
+      [attempt('ok', '2.2.2.2', 2 * DAY), attempt('ok', '3.3.3.3', 30)],
+      [device('1.1.1.1', 5 * DAY), device('4.4.4.4', 10)],
+      now,
+    );
+    expect(own).toEqual([
+      { ip: '1.1.1.1', devices: ['Desktop app'] },
+      { ip: '2.2.2.2', devices: [] },
+    ]);
   });
 });
 
 const calm: AppFacts = {
   account: { twoFactor: true, users: 1, registrationOpen: false },
-  signIns: { failed: 0, failedByAddress: [], guessed: [], newAddresses: [] },
+  ownAddresses: [],
+  signIns: { failed: 0, failedForeign: 0, failedByAddress: [], guessed: [], newAddresses: [] },
   sessions: { total: 2, idleOverMonth: 0 },
   site: {
     url: 'https://dash.example',
@@ -88,7 +132,8 @@ describe('appProblems', () => {
         account: { twoFactor: false, users: 3, registrationOpen: true },
         signIns: {
           failed: 250,
-          failedByAddress: [{ ip: '6.6.6.6', count: 250 }],
+          failedForeign: 250,
+          failedByAddress: [{ ip: '6.6.6.6', count: 250, own: false }],
           guessed: [{ ip: '6.6.6.6', email: 'me@example.com', at: 'now', failuresBefore: 7 }],
           newAddresses: [],
         },

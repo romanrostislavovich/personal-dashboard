@@ -57,6 +57,17 @@ export class AccountTokensService {
     return provider === 'gitlab' ? gitlabSources(secret) : bitbucketSources(JSON.parse(secret));
   }
 
+  /** The GitLab API with the user's token (for what the sources above do not cover). */
+  async gitlab(userId: string): Promise<GitlabClient | null> {
+    const token = await this.secrets.get(userId, KEYS.gitlab);
+    return token ? new GitlabClient(token) : null;
+  }
+
+  async bitbucket(userId: string): Promise<BitbucketClient | null> {
+    const secret = await this.secrets.get(userId, KEYS.bitbucket);
+    return secret ? new BitbucketClient(JSON.parse(secret) as BitbucketCredentials) : null;
+  }
+
   /** The token is checked against GitLab before it is saved. */
   async saveGitlab(userId: string, token: string): Promise<void> {
     await this.verify(() => new GitlabClient(token).get('/user'));
