@@ -204,6 +204,8 @@ remote "cd $REMOTE_DIR && docker compose up -d --wait --remove-orphans --quiet-p
   remote "cd $REMOTE_DIR && docker compose ps && docker compose logs --tail 30 app" >&2
   exit 1
 }
+# Caddy reads its Caddyfile only when it starts: a changed one is taken in without a restart.
+remote "cd $REMOTE_DIR && docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile" \n  >/dev/null 2>&1 || echo "Caddy did not reload its configuration (docker compose logs caddy)." >&2
 # Images other than this one and the rollback point go.
 remote "docker image prune -f >/dev/null
   keep=\$(grep -h -E '^(IMAGE|PREVIOUS_IMAGE)=' $REMOTE_DIR/.env $REMOTE_DIR/rollback.env 2>/dev/null | cut -d= -f2-)

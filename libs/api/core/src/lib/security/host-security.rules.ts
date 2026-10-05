@@ -52,8 +52,11 @@ export type HostReport = z.infer<typeof hostReportSchema>;
 
 /** The scan runs every hour: a report this old means it has stopped. */
 const STALE_HOURS = 6;
-/** What a web server with SSH is expected to have open. */
-const EXPECTED_PORTS = new Set(['tcp/22', 'tcp/80', 'tcp/443', 'udp/443']);
+/**
+ * What a web server with SSH is expected to have open; 68/udp is the DHCP client of the
+ * server's own network interface, not a service.
+ */
+const EXPECTED_PORTS = new Set(['tcp/22', 'tcp/80', 'tcp/443', 'udp/443', 'udp/68']);
 const SSH_FAILURES_NOTICED = 100;
 const DISK_HIGH = 90;
 const DISK_MEDIUM = 80;
