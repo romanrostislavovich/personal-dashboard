@@ -38,6 +38,7 @@ const reportedFinding = z.object({
   title: z.string().trim().min(1).max(200),
   details: z.string().trim().min(1).max(2000),
   fix: z.string().trim().min(1).max(2000),
+  covers: z.array(z.string().max(300)).max(20).default([]),
 });
 
 const INSTRUCTION = `You are the security agent of a self-hosted personal dashboard. You report to
@@ -54,9 +55,11 @@ Record a problem with security_report_finding only when all of this is true:
 - It is a weakness or a sign of an attack that the facts show. A lack of data is never a
   finding: that something is unavailable, unreadable, not set up, not reported or never ran
   tells nothing about security.
-- The rules have not found it. Never restate a finding of the rules in other words, with
-  more detail or under another severity. What you think of the rules' findings — a severity
-  that is off, several that together mean something worse — belongs in the text of the report.
+- It adds to what the rules found. When your finding is about the same problem as findings
+  of the rules — it says it deeper, or joins several of them into the one thing they mean —
+  pass their "ref" values in "covers": yours is then shown instead of them, with theirs folded
+  under it. Never record a finding that overlaps a rule's without naming it in "covers", and
+  do not cover a finding only to repeat it: then there is nothing to record.
 - It is one finding a problem. Facts with one cause and one fix are one finding (an account
   without two-factor sign-in whose token is also too broad: one, not two), and you record each
   problem once in a run.
@@ -168,6 +171,15 @@ export class SecurityAgent {
       throw new BadRequestException('The model returned no report');
     }
 
+    // Only the rules' findings can be covered: a made-up reference covers nothing.
+    const refs = new Set(
+      (await this.security.known(userId))
+        .filter((row) => row.origin === 'rules')
+        .map((row) => row.key),
+    );
+    for (const finding of reported) {
+      finding.covers = (finding.covers ?? []).filter((ref) => refs.has(ref));
+    }
     const fresh = await this.security.keep(userId, AI_SOURCE, 'ai', reported);
     const report = await this.security.saveReport(userId, reply.trim(), connection.model);
     this.logger.log(`Investigated: ${reported.length} finding(s) of the model`);
@@ -250,14 +262,15 @@ export class SecurityAgent {
         name: 'security_findings',
         module: 'security',
         description:
-          'What is known already: the findings of the built-in rules (`origin: rules`) and ' +
-          'your own earlier ones (`origin: ai`, with the `key` to record them under again). ' +
+          'What is known already: the findings of the built-in rules (`origin: rules`, with ' +
+          'the `ref` to name them in `covers`) and your own earlier ones (`origin: ai`, with ' +
+          'the `key` to record them under again). ' +
           'Area, severity, title, details, status; `ignored` — the owner knows and accepts it.',
         parameters: NO_PARAMETERS,
         handler: async () =>
           (await this.security.known(userId)).map(
             ({ key, area, severity, title, details, origin, status }) => ({
-              ...(origin === 'ai' ? { key: key.slice(AI_SOURCE.length + 1) } : {}),
+              ...(origin === 'ai' ? { key: key.slice(AI_SOURCE.length + 1) } : { ref: key }),
               area,
               severity,
               title,
@@ -284,6 +297,13 @@ export class SecurityAgent {
             title: { type: 'string' },
             details: { type: 'string', description: 'What exactly you saw, with the numbers' },
             fix: { type: 'string', description: 'What the owner should do, concretely' },
+            covers: {
+              type: 'array',
+              items: { type: 'string' },
+              description:
+                'The `ref` of every finding of the rules this one is about: yours is shown ' +
+                'instead of them',
+            },
           },
           required: ['key', 'area', 'severity', 'title', 'details', 'fix'],
         },

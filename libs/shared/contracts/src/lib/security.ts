@@ -34,6 +34,13 @@ export interface SecurityFinding {
   guideAt: string | null;
   origin: FindingOrigin;
   status: FindingStatus;
+  /**
+   * The AI's finding about the same problem, shown instead of this one of the rules; `null` —
+   * shown on its own.
+   */
+  coveredBy: string | null;
+  /** The rules' findings an AI finding is shown instead of. */
+  covers: { id: string; title: string; severity: SecuritySeverity }[];
   firstSeenAt: string;
   lastSeenAt: string;
   resolvedAt: string | null;

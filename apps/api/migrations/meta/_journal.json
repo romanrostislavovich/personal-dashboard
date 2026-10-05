@@ -393,6 +393,13 @@
       "when": 1791206622768,
       "tag": "0055_security_guides",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1791211994640,
+      "tag": "0056_security_covers",
+      "breakpoints": true
     }
   ]
 }

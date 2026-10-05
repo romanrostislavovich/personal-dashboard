@@ -46,6 +46,8 @@ export const securityFindings = pgTable(
     guide: text(),
     guideAt: timestamp({ withTimezone: true }),
     origin: text().$type<FindingOrigin>().notNull(),
+    /** An AI finding: the keys of the rules' findings it is about (see finding-coverage.ts). */
+    covers: text().array().notNull().default([]),
     status: text().$type<FindingStatus>().notNull().default('open'),
     firstSeenAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     lastSeenAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

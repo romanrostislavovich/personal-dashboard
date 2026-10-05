@@ -38,6 +38,7 @@
   "since": "since {{date}}",
   "ignore": "I know, leave it",
   "whatToDo": "What to do:",
+  "covers": "Shown instead of the rules’ findings about the same:",
   "guideShow": "How to fix, step by step",
   "guideHide": "Hide the guide",
   "guideWriting": "The AI is writing a guide for this case: up to a minute…",
