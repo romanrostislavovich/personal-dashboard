@@ -118,6 +118,9 @@
 - **Travel** — a map of countries and cities, trips with their costs from Finance; pairs with the
   location tracker of the mobile app
 - **Learning** — courses, languages (Duolingo), flashcards with spaced repetition
+- **Notion** — an integration with Notion (API token): import pages and databases (notes,
+  tasks, reading lists) into the matching modules, a two-way sync of tasks, the AI can search
+  your Notion pages
 
 - **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
   (bank notifications / SMS → transactions), then everything else the phone knows:
