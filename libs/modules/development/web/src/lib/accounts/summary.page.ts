@@ -15,11 +15,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CODE_PROVIDERS } from '@pd/contracts';
-import { INTEGRATIONS_LINK } from '@pd/web-core';
+import { Bar, BarChartComponent, INTEGRATIONS_LINK, Share, ShareListComponent } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
-import { Bar, BarChartComponent } from '../ui/bar-chart.component';
 import { ContributionHeatmapComponent, HeatmapDay } from '../ui/contribution-heatmap.component';
-import { Share, ShareListComponent } from '../ui/share-list.component';
 import { AccountsApi } from './accounts.api';
 import { PROVIDER_NAMES } from './providers';
 

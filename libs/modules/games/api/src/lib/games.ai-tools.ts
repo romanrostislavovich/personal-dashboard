@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, findById, idParameters, NO_PARAMETERS, ServerActions } from '@pd/api-core';
-import { GAMES, gameAccountInputSchema, WOW_REGIONS } from '@pd/contracts';
+import { GAMES, gameAccountInputSchema, WOW_REGIONS, WOW_VERSIONS } from '@pd/contracts';
 import { DotaOverviewService } from './dota/dota-overview.service';
 import { GameAccountsService } from './game-accounts.service';
 import { GAMES_ACTIONS } from './games.server-actions';
@@ -25,19 +25,29 @@ export class GamesAiTools implements OnModuleInit {
       description:
         'Game accounts (with id). Dota 2: medal (rankTier = medal×10+stars, 8 = Immortal), ' +
         'wins/losses over 30 days, recent matches with heroes and KDA, favourite heroes. ' +
-        'WoW: character, ilvl, achievement points and recent achievements. Steam: level, hours ' +
+        'WoW: character, ilvl, achievement points, recent achievements and `details` — gear ' +
+        'by slot, stats, talents, Mythic+ rating and best runs, raid progress, PvP ratings, ' +
+        'collections (mounts, pets, toys, titles, quests), reputations, professions, guild. ' +
+        'Steam: level, hours ' +
         'in games in total and over two weeks, achievements unlocked, the most played games ' +
         '(the whole library — games_steam_library).',
       parameters: NO_PARAMETERS,
       handler: async (userId) =>
-        (await this.accounts.list(userId)).map((account) =>
-          account.summary?.game === 'steam'
+        (await this.accounts.list(userId)).map((account) => {
+          if (account.summary?.game === 'steam') {
+            return {
+              ...account,
+              summary: { ...account.summary, games: account.summary.games.slice(0, STEAM_TOP) },
+            };
+          }
+          // The chart and the pictures are of no use to the model.
+          return account.summary?.game === 'wow'
             ? {
                 ...account,
-                summary: { ...account.summary, games: account.summary.games.slice(0, STEAM_TOP) },
+                summary: { ...account.summary, history: undefined, avatarUrl: undefined },
               }
-            : account,
-        ),
+            : account;
+        }),
     });
 
     this.ai.registerTool({
@@ -98,9 +108,17 @@ export class GamesAiTools implements OnModuleInit {
               'Steam: Steam ID64, a profile link or the custom profile name',
           },
           region: { type: 'string', enum: [...WOW_REGIONS], description: 'WoW' },
+          version: {
+            type: 'string',
+            enum: [...WOW_VERSIONS],
+            description:
+              'WoW: the version of the game the character is in — retail (the current game, ' +
+              'the default), anniversary (Classic Anniversary), era (Classic Era, Hardcore, ' +
+              'Season of Discovery), progression (Cataclysm / Mists of Pandaria Classic)',
+          },
           realm: {
             type: 'string',
-            description: 'WoW realm slug: "Гордунни" → gordunni, "Howling Fjord" → howling-fjord',
+            description: 'WoW realm as the game shows it ("Гордунни", "Howling Fjord") or its slug',
           },
           name: { type: 'string', description: 'WoW character name' },
         },

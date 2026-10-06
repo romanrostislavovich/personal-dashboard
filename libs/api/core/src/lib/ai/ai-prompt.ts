@@ -43,6 +43,8 @@ export interface PromptOptions {
   allowWrites?: boolean;
   /** The conversation has attached files. */
   hasAttachments?: boolean;
+  /** Rules of a special use (the search over one's life asks for links to the days). */
+  extraRules?: string[];
 }
 
 /**
@@ -52,7 +54,7 @@ export interface PromptOptions {
 export function systemPrompt(
   user: UserRow | undefined,
   timeZone: string,
-  { plainText, allowWrites, hasAttachments }: PromptOptions,
+  { plainText, allowWrites, hasAttachments, extraRules }: PromptOptions,
 ): string {
   const now = zonedDateTime(new Date(), timeZone);
   return [
@@ -66,5 +68,6 @@ export function systemPrompt(
       : 'You may use markdown (lists, bold).',
     ...(allowWrites ? WRITE_RULES : []),
     ...(hasAttachments ? ATTACHMENT_RULES : []),
+    ...(extraRules ?? []),
   ].join(' ');
 }

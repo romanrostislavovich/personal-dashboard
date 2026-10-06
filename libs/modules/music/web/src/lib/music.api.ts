@@ -8,6 +8,9 @@ import {
   MusicTopPeriod,
   MusicTops,
   NowPlaying,
+  SoundcloudConnectInput,
+  SoundcloudStats,
+  SoundcloudTrackUpdate,
 } from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
@@ -56,5 +59,26 @@ export class MusicApi {
 
   disconnectSpotify() {
     return fromCore(() => this.music.disconnectSpotify());
+  }
+
+  /** The user's own tracks on SoundCloud; `null` — not connected. */
+  soundcloud() {
+    return httpResource<SoundcloudStats | null>(() => MUSIC_READS.soundcloud());
+  }
+
+  connectSoundcloud(input: SoundcloudConnectInput) {
+    return fromCore(() => this.music.connectSoundcloud(input));
+  }
+
+  disconnectSoundcloud() {
+    return fromCore(() => this.music.disconnectSoundcloud());
+  }
+
+  syncSoundcloud() {
+    return fromCore(() => this.music.syncSoundcloud());
+  }
+
+  updateSoundcloudTrack(id: string, update: SoundcloudTrackUpdate) {
+    return fromCore(() => this.music.updateSoundcloudTrack(id, update));
   }
 }

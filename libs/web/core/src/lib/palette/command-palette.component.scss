@@ -1,0 +1,99 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  max-height: min(70vh, 560px);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-title-medium);
+}
+
+kbd {
+  padding: 2px 6px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 6px;
+  font: var(--mat-sys-label-small);
+}
+
+.list {
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.group {
+  padding: 10px 10px 4px;
+  font: var(--mat-sys-label-small);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--pd-radius-small);
+  background: none;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-large);
+  text-align: left;
+  cursor: pointer;
+}
+
+.item mat-icon {
+  flex: none;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// The line the keyboard is on; the mouse moves it too.
+.item.active {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.item.active mat-icon {
+  color: inherit;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label,
+.hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hint {
+  font: var(--mat-sys-body-small);
+  opacity: 0.75;
+}
+
+.empty {
+  padding: 18px 10px;
+  color: var(--mat-sys-on-surface-variant);
+}

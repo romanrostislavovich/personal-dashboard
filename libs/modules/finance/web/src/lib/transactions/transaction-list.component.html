@@ -79,6 +79,11 @@
                   >cloud_sync</mat-icon
                 >
               }
+              @if (t.hasReceipt) {
+                <mat-icon inline [matTooltip]="'finance.list.receipt' | transloco"
+                  >receipt_long</mat-icon
+                >
+              }
             </span>
           </span>
           <span class="amount" [class.income]="t.kind === 'income'">
@@ -101,6 +106,11 @@
           @if (!t.costSourceId) {
             <button mat-menu-item (click)="edit.emit(t)">
               <mat-icon>edit</mat-icon> {{ 'core.actions.edit' | transloco }}
+            </button>
+          }
+          @if (t.hasReceipt) {
+            <button mat-menu-item (click)="openReceipt(t)">
+              <mat-icon>receipt_long</mat-icon> {{ 'finance.list.openReceipt' | transloco }}
             </button>
           }
           <button mat-menu-item (click)="remove.emit(t)">

@@ -15,11 +15,12 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
   RecurringPayment,
   RecurringPaymentInput,
+  SubscriptionSuggestion,
   Transaction,
   TransactionInput,
   TransactionQuery,
 } from '@pd/contracts';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
   currentMonth,
@@ -29,6 +30,7 @@ import {
   monthRange,
   ProjectsApi,
   shiftMonth,
+  todayLocalDate,
 } from '@pd/web-core';
 import { FinanceApi } from './finance.api';
 import { CashFlowChartComponent } from './overview/cash-flow-chart.component';
@@ -48,6 +50,10 @@ import {
 } from './recurring-payment-form.dialog';
 import { TransactionFormData, TransactionFormDialog } from './transaction-form.dialog';
 import { TransactionListComponent } from './transactions/transaction-list.component';
+import { BudgetsCardComponent } from './budgets/budgets-card.component';
+import { GoalsTabComponent } from './goals/goals-tab.component';
+import { ReportCardComponent } from './reports/report-card.component';
+import { WishlistTabComponent } from './wishlist/wishlist-tab.component';
 
 const DEFAULT_CURRENCY = 'EUR';
 /** How many months the cash flow chart shows, the selected one being the last. */
@@ -58,8 +64,12 @@ enum Tab {
   Overview,
   Transactions,
   Recurring,
-  CostSources,
+  Goals,
+  Wishlist,
 }
+
+/** `?tab=` of a link from the home page or the search. */
+const TAB_BY_NAME: Record<string, Tab> = { goals: Tab.Goals, wishlist: Tab.Wishlist };
 
 /** The overview's "everything in the main currency" view. */
 const ALL_IN_MAIN = '*';
@@ -102,6 +112,10 @@ function inMain(transactions: Transaction[], main: string): Transaction[] {
     CategoryBreakdownComponent,
     UpcomingPaymentsComponent,
     TransactionListComponent,
+    BudgetsCardComponent,
+    GoalsTabComponent,
+    ReportCardComponent,
+    WishlistTabComponent,
   ],
   templateUrl: './finance.page.html',
   styleUrl: './finance.page.scss',
@@ -131,7 +145,9 @@ export class FinancePage {
   protected readonly allInMain = ALL_IN_MAIN;
 
   protected readonly Tab = Tab;
-  protected readonly tab = signal(Tab.Overview);
+  protected readonly tab = signal(
+    TAB_BY_NAME[inject(ActivatedRoute).snapshot.queryParamMap.get('tab') ?? ''] ?? Tab.Overview,
+  );
   /** A category clicked in the overview filters the transactions tab. */
   protected readonly categoryFilter = signal<CategoryFilter | null>(null);
   protected readonly recentCount = RECENT_TRANSACTIONS;
@@ -150,8 +166,18 @@ export class FinancePage {
       this.settings.value()?.effectiveMainCurrency ?? this.mainFlow.value()?.mainCurrency ?? null,
   );
   protected readonly recurringPayments = this.api.recurringPayments();
+  /** Their cost together and repeating charges that look like subscriptions. */
+  protected readonly subscriptions = this.api.subscriptions();
 
   protected readonly monthDate = computed(() => monthAsDate(this.month()));
+  /** `YYYY-MM` of the selected month: the budgets are monthly. */
+  protected readonly monthKey = computed(() => monthKey(this.month()));
+  /** Categories used in the month, suggested for a new budget. */
+  protected readonly knownCategories = computed(() =>
+    [...new Set(this.transactions.value().map((t) => t.category))].sort(),
+  );
+  /** Trials ending before today are over. */
+  protected readonly today = todayLocalDate();
   protected readonly isCurrentMonth = computed(
     () => monthKey(this.month()) === monthKey(currentMonth()),
   );
@@ -268,19 +294,48 @@ export class FinancePage {
     }
   }
 
-  async openRecurringForm(payment?: RecurringPayment): Promise<void> {
+  async openRecurringForm(
+    payment?: RecurringPayment,
+    draft?: Partial<RecurringPaymentInput>,
+  ): Promise<void> {
     const input = await firstValueFrom(
       this.dialog
         .open<RecurringPaymentFormDialog, RecurringPaymentFormData, RecurringPaymentInput>(
           RecurringPaymentFormDialog,
-          { data: { payment: payment ?? null, ...this.formContext() } },
+          { data: { payment: payment ?? null, draft, ...this.formContext() } },
         )
         .afterClosed(),
     );
     if (input) {
       await firstValueFrom(this.api.saveRecurringPayment(input, payment?.id));
       this.recurringPayments.reload();
+      this.subscriptions.reload();
     }
+  }
+
+  /** A suggested subscription becomes a recurring payment, its fields filled in. */
+  addSuggestion(suggestion: SubscriptionSuggestion): Promise<void> {
+    const { name, amount, currency, category, dayOfMonth } = suggestion;
+    return this.openRecurringForm(undefined, { name, amount, currency, category, dayOfMonth });
+  }
+
+  async dismissSuggestion(suggestion: SubscriptionSuggestion): Promise<void> {
+    await firstValueFrom(this.api.dismissSubscription(suggestion.key));
+    this.subscriptions.reload();
+  }
+
+  /** "every 14th" or "yearly, 10 November". */
+  protected chargeDay(payment: RecurringPayment): string {
+    if (payment.period === 'year' && payment.monthOfYear) {
+      const date = new Date(2000, payment.monthOfYear - 1, payment.dayOfMonth);
+      return this.transloco.translate('finance.recurring.everyYear', {
+        date: date.toLocaleDateString(this.transloco.getActiveLang(), {
+          day: 'numeric',
+          month: 'long',
+        }),
+      });
+    }
+    return this.transloco.translate('finance.recurring.everyMonth', { day: payment.dayOfMonth });
   }
 
   async removeRecurring(payment: RecurringPayment): Promise<void> {
@@ -289,6 +344,7 @@ export class FinancePage {
     ) {
       await firstValueFrom(this.api.removeRecurringPayment(payment.id));
       this.recurringPayments.reload();
+      this.subscriptions.reload();
     }
   }
 

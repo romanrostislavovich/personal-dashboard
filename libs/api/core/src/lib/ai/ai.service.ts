@@ -176,6 +176,39 @@ export class AiService {
     }
   }
 
+  /**
+   * A single request about a picture (a receipt): the connection that reads pictures answers.
+   * `null` — there is none (see AiConnectionsService.vision).
+   */
+  async completeWithImage(
+    userId: string,
+    instruction: string,
+    image: { data: Buffer; mimeType: string },
+    module?: string,
+  ): Promise<string | null> {
+    if (module && !(await this.canSee(userId, module))) {
+      throw new ForbiddenException(`AI access to ${module} is off`);
+    }
+    const connection = await this.connections.vision(userId);
+    if (!connection) {
+      return null;
+    }
+    const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
+    const url = `data:${image.mimeType};base64,${image.data.toString('base64')}`;
+    try {
+      const reply = await chatCompletion(connection, [
+        { role: 'system', content: `${instruction} Always answer in ${language}.` },
+        { role: 'user', content: [{ type: 'image_url', image_url: { url } }] },
+      ]);
+      return reply.content ?? '';
+    } catch (error) {
+      if (error instanceof AiRequestError) {
+        throw new BadRequestException(`AI API error (${error.status})`);
+      }
+      throw error;
+    }
+  }
+
   /** Runs a tool call; `changed` — a write tool actually changed data. */
   private async runTool(
     userId: string,

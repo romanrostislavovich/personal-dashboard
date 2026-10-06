@@ -140,10 +140,6 @@
   "digestOptions": {
     "streak": "Напоминать о серии контрибуций (GitHub, GitLab, Bitbucket)"
   },
-  "duration": {
-    "hoursMinutes": "{{hours}} ч {{minutes}} мин",
-    "minutes": "{{minutes}} мин"
-  },
   "widget": {
     "streak": "Серия, дней",
     "doneToday": "сегодня: {{count}}",
@@ -226,5 +222,9 @@
         "4": "Введи здесь e-mail, под которым входишь в Atlassian, и токен."
       }
     }
+  },
+  "life": {
+    "day": "Вкладов в код: {{count}}",
+    "total": "Вкладов в код"
   }
 }

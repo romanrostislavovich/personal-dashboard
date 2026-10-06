@@ -1,0 +1,171 @@
+@let s = stats.value();
+
+<header class="toolbar">
+  @if (s?.lastSyncedAt; as syncedAt) {
+    <span class="hint">
+      {{ 'music.soundcloud.synced' | transloco }} {{ syncedAt | date: 'd MMM, HH:mm' }}
+    </span>
+  }
+  <button matButton (click)="sync()" [disabled]="busy() || !s">
+    <mat-icon>sync</mat-icon> {{ 'music.connect.syncNow' | transloco }}
+  </button>
+</header>
+
+@if (busy()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (!s && !stats.isLoading()) {
+  <section class="setup">
+    <h3>{{ 'music.soundcloud.emptyTitle' | transloco }}</h3>
+    <p class="hint">{{ 'music.soundcloud.emptyHint' | transloco }}</p>
+    <a matButton="filled" [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+      {{ 'core.settings.openIntegrations' | transloco }}
+    </a>
+  </section>
+}
+
+@if (s) {
+  @if (s.lastError) {
+    <p class="error"><mat-icon inline>warning</mat-icon> {{ s.lastError }}</p>
+  }
+
+  <mat-card appearance="outlined">
+    <mat-card-content class="account">
+      @if (s.avatarUrl; as avatar) {
+        <img class="avatar" [src]="avatar" alt="" width="64" height="64" />
+      }
+      <div class="who">
+        <a class="name" [href]="s.permalinkUrl" target="_blank" rel="noopener">{{
+          s.displayName || s.username
+        }}</a>
+        <span class="hint">&#64;{{ s.username }}</span>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <span class="label">{{ 'music.soundcloud.plays' | transloco }}</span>
+          <span class="value">{{ s.totals.plays | number }}</span>
+          <span class="sub" [class.up]="s.playsDelta.week > 0">
+            +{{ s.playsDelta.week | number }} {{ 'music.soundcloud.perWeek' | transloco }}
+          </span>
+        </div>
+        <div class="stat">
+          <span class="label">{{ 'music.soundcloud.followers' | transloco }}</span>
+          <span class="value">{{ s.followers | number }}</span>
+          <span class="sub" [class.up]="s.followersWeek > 0">
+            +{{ s.followersWeek | number }} {{ 'music.soundcloud.perWeek' | transloco }}
+          </span>
+        </div>
+        <div class="stat">
+          <span class="label">{{ 'music.soundcloud.likes' | transloco }}</span>
+          <span class="value">{{ s.totals.likes | number }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">{{ 'music.soundcloud.reposts' | transloco }}</span>
+          <span class="value">{{ s.totals.reposts | number }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">{{ 'music.soundcloud.comments' | transloco }}</span>
+          <span class="value">{{ s.totals.comments | number }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">{{ 'music.soundcloud.tracks' | transloco }}</span>
+          <span class="value">{{ s.tracks.length | number }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>{{ 'music.soundcloud.playsHistory' | transloco }}</mat-card-title>
+      @if (s.trackedSince; as since) {
+        <mat-card-subtitle>
+          {{ 'music.soundcloud.trackedSince' | transloco }} {{ since | date: 'd MMM y' }}
+        </mat-card-subtitle>
+      }
+    </mat-card-header>
+    <mat-card-content class="padded">
+      @if (playsPoints().length > 1) {
+        <pd-sparkline
+          [points]="playsPoints()"
+          [label]="'music.soundcloud.playsHistory' | transloco"
+        />
+      } @else {
+        <p class="hint">{{ 'music.soundcloud.historyCollecting' | transloco }}</p>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  @if (rows().length > 0) {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="title" [attr.aria-sort]="ariaSort('title')">
+              <button type="button" class="sort" (click)="sortBy('title')">
+                {{ 'music.soundcloud.track' | transloco }}
+              </button>
+            </th>
+            @for (c of columns; track c.column) {
+              <th class="numeric" [attr.aria-sort]="ariaSort(c.column)">
+                <button type="button" class="sort" (click)="sortBy(c.column)">
+                  {{ c.labelKey | transloco }}
+                  @if (sort().column === c.column) {
+                    <mat-icon inline>{{
+                      sort().descending ? 'arrow_downward' : 'arrow_upward'
+                    }}</mat-icon>
+                  }
+                </button>
+              </th>
+            }
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (track of rows(); track track.id) {
+            <tr>
+              <td class="title">
+                <a [href]="track.permalinkUrl" target="_blank" rel="noopener">{{ track.title }}</a>
+                @if (track.isPrivate) {
+                  <mat-icon inline [matTooltip]="'music.soundcloud.private' | transloco">
+                    lock
+                  </mat-icon>
+                }
+                @if (track.genre) {
+                  <span class="hint">{{ track.genre }}</span>
+                }
+              </td>
+              <td class="numeric">{{ track.plays | number }}</td>
+              <td class="numeric" [class.up]="track.playsDelta.week > 0">
+                {{ track.playsDelta.week > 0 ? '+' + (track.playsDelta.week | number) : '—' }}
+              </td>
+              <td class="numeric">{{ track.likes | number }}</td>
+              <td class="numeric">{{ track.reposts | number }}</td>
+              <td class="numeric">{{ track.comments | number }}</td>
+              <td class="numeric nowrap">{{ track.publishedAt | date: 'd MMM y' }}</td>
+              <td class="action">
+                <button
+                  matIconButton
+                  [matTooltip]="
+                    (track.notify ? 'music.soundcloud.notifyOn' : 'music.soundcloud.notifyOff')
+                      | transloco
+                  "
+                  [attr.aria-label]="'music.soundcloud.notifyOn' | transloco"
+                  [attr.aria-pressed]="track.notify"
+                  (click)="toggleNotify(track)"
+                >
+                  <mat-icon>{{
+                    track.notify ? 'notifications_active' : 'notifications_off'
+                  }}</mat-icon>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="hint">{{ 'music.soundcloud.noTracks' | transloco }}</p>
+  }
+}

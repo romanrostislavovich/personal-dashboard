@@ -87,18 +87,21 @@ export class DiaryJobs implements OnModuleInit {
       },
     });
 
-    this.telegram.registerPhotoHandler(async (user, photo) => {
-      const day = this.diary.todayDate();
-      await this.photos.add(user.id, day, {
-        data: await photo.download(),
-        mimeType: photo.mimeType,
-        caption: photo.caption,
-      });
-      if (photo.caption.trim()) {
-        await this.diary.appendToToday(user.id, `📷 ${photo.caption}`);
-      }
-      return diaryMessages(user.locale).photoSaved;
-    });
+    this.telegram.registerPhotoHandler(
+      async (user, photo) => {
+        const day = this.diary.todayDate();
+        await this.photos.add(user.id, day, {
+          data: await photo.download(),
+          mimeType: photo.mimeType,
+          caption: photo.caption,
+        });
+        if (photo.caption.trim()) {
+          await this.diary.appendToToday(user.id, `📷 ${photo.caption}`);
+        }
+        return diaryMessages(user.locale).photoSaved;
+      },
+      { id: 'diary', label: { en: '📔 To the diary', ru: '📔 В дневник' } },
+    );
 
     this.scheduler.register({
       name: 'diary.evening-reminder',

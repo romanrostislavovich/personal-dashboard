@@ -1,4 +1,7 @@
 import { achievementsModule } from '@pd/achievements-web';
+import { activityModule } from '@pd/activity-web';
+import { lifeModule } from '@pd/life-web';
+import { securityModule } from '@pd/security-web';
 import { aiModule } from '@pd/ai-web';
 import { birthdaysModule } from '@pd/birthdays-web';
 import { diaryModule } from '@pd/diary-web';
@@ -27,5 +30,8 @@ export const enabledModules: WebDashboardModule[] = [
   monitoringModule,
   musicModule,
   gamesModule,
+  activityModule,
+  lifeModule,
+  securityModule,
   achievementsModule,
 ];

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
+    />
+    <title>Выделите область</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        cursor: crosshair;
+        user-select: none;
+      }
+      #shot {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      #shade {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+      }
+      #box {
+        position: fixed;
+        display: none;
+        border: 2px solid #4da3ff;
+        box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.35);
+      }
+      #hint {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 8px 14px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        font:
+          14px system-ui,
+          sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <img id="shot" alt="" />
+    <div id="shade"></div>
+    <div id="box"></div>
+    <div id="hint">Выделите область мышью · Esc — отмена</div>
+    <script>
+      // The picture of the screen to draw on; the rectangle goes back to the app in CSS pixels.
+      const shot = document.getElementById('shot');
+      const shade = document.getElementById('shade');
+      const box = document.getElementById('box');
+      let start = null;
+
+      window.desktop.region.image().then((url) => {
+        if (url) shot.src = url;
+        else window.desktop.region.done(null);
+      });
+
+      const rect = (event) => ({
+        x: Math.min(start.x, event.clientX),
+        y: Math.min(start.y, event.clientY),
+        width: Math.abs(event.clientX - start.x),
+        height: Math.abs(event.clientY - start.y),
+      });
+
+      document.addEventListener('mousedown', (event) => {
+        start = { x: event.clientX, y: event.clientY };
+        shade.style.display = 'none';
+        box.style.display = 'block';
+      });
+      document.addEventListener('mousemove', (event) => {
+        if (!start) return;
+        const r = rect(event);
+        Object.assign(box.style, {
+          left: r.x + 'px',
+          top: r.y + 'px',
+          width: r.width + 'px',
+          height: r.height + 'px',
+        });
+      });
+      document.addEventListener('mouseup', (event) => {
+        if (!start) return;
+        const r = rect(event);
+        start = null;
+        window.desktop.region.done(r);
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') window.desktop.region.done(null);
+      });
+    </script>
+  </body>
+</html>

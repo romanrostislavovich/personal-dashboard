@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig, DB, Database, SecretsService } from '@pd/api-core';
 import {
@@ -10,7 +16,12 @@ import {
   todayIn,
 } from '@pd/contracts';
 import { and, desc, eq, gt, isNotNull, max, min, sql } from 'drizzle-orm';
-import { LastfmAuthError, LastfmClient, LastfmTrack } from './clients/lastfm.client';
+import {
+  LastfmAuthError,
+  LastfmClient,
+  LastfmTrack,
+  LastfmUnavailableError,
+} from './clients/lastfm.client';
 import { musicSettings, MusicSettingsRow, scrobbles } from './music.schema';
 import { fillPlaysByDay } from './plays-by-day';
 import { scrobbleId } from './scrobble-id';
@@ -176,7 +187,16 @@ export class LastfmService {
     if (!client) {
       return null;
     }
-    const { tracks } = await client.getRecentTracks({ limit: 1 });
+    // Asked every half a minute while the page is open: Last.fm stumbling is "nothing plays".
+    const tracks = await client
+      .getRecentTracks({ limit: 1 })
+      .then((page) => page.tracks)
+      .catch((error) => {
+        if (error instanceof LastfmUnavailableError) {
+          return [];
+        }
+        throw error;
+      });
     const current = tracks.find((t) => t.playedAt === null);
     return current
       ? {
@@ -252,9 +272,21 @@ export class LastfmService {
     if (hit && hit.expiresAt > Date.now()) {
       return hit.value as T;
     }
-    const value = await load();
-    this.cache.set(cacheKey, { expiresAt: Date.now() + CACHE_TTL_MS, value });
-    return value;
+    try {
+      const value = await load();
+      this.cache.set(cacheKey, { expiresAt: Date.now() + CACHE_TTL_MS, value });
+      return value;
+    } catch (error) {
+      if (!(error instanceof LastfmUnavailableError)) {
+        throw error;
+      }
+      // Last.fm's own trouble: what was read before is better than an error; without it the
+      // page gets 503 — and the owner no alarm, there is nothing to fix here.
+      if (hit) {
+        return hit.value as T;
+      }
+      throw new ServiceUnavailableException(error.message);
+    }
   }
 
   private clearCache(userId: string): void {

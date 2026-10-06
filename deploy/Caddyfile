@@ -3,6 +3,15 @@
 {$DOMAIN} {
 	# Sync requests are already gzipped and are left as they are.
 	encode zstd gzip
+	header {
+		# The browser never tries plain HTTP again.
+		Strict-Transport-Security "max-age=31536000"
+		# No guessing of content types; the dashboard is never shown inside another site.
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		# Addresses of the dashboard's pages are not told to the sites it links to.
+		Referrer-Policy strict-origin-when-cross-origin
+	}
 	reverse_proxy app:3300
 }
 

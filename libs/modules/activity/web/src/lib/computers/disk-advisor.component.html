@@ -1,0 +1,164 @@
+@let s = status();
+@let disk = this.disk();
+@if (disk && (s.state !== 'idle' || advice())) {
+  <section>
+    <header class="title">
+      <h3>{{ 'activity.disk.title' | transloco }}</h3>
+      @if (scanned(); as sc) {
+        <span class="hint">
+          {{ 'activity.disk.scannedAt' | transloco: { mount: sc.mount } }}
+          {{ sc.at | date: 'd MMM, HH:mm' }}
+        </span>
+      }
+      <span class="spacer"></span>
+      @if (s.state !== 'scanning' && !thinking()) {
+        <button
+          matIconButton
+          [matTooltip]="'activity.disk.close' | transloco"
+          [attr.aria-label]="'activity.disk.close' | transloco"
+          (click)="dismiss()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </header>
+    @if (scanned()?.stale) {
+      <p class="hint">{{ 'activity.disk.stale' | transloco }}</p>
+    }
+
+    @if (s.state === 'scanning') {
+      <mat-progress-bar mode="indeterminate" />
+      <p class="hint">
+        {{
+          'activity.disk.scanning'
+            | transloco
+              : {
+                  mount: s.mount,
+                  files: (s.progress.files | number: '1.0-0'),
+                  gb: (s.progress.bytes / gb | number: '1.0-0'),
+                }
+        }}
+      </p>
+    } @else if (s.state === 'error') {
+      <p class="error">{{ 'activity.disk.failed' | transloco }}: {{ s.message }}</p>
+    } @else if (thinking()) {
+      <mat-progress-bar mode="indeterminate" />
+      <p class="hint">{{ 'activity.disk.thinking' | transloco }}</p>
+    }
+
+    @if (advice(); as a) {
+      <p class="summary">
+        @if (a.byAi) {
+          <mat-icon inline>auto_awesome</mat-icon>
+        }
+        {{ a.summary }}
+      </p>
+      <ul class="suggestions">
+        @for (item of a.suggestions; track item.path) {
+          @let outcome = outcomes().get(item.path);
+          @let busy = working() === item.path || working() === '*';
+          <li [class]="item.safety" [class.done]="outcome?.ok">
+            @if (item.action === 'trash' && !outcome?.ok) {
+              <mat-checkbox
+                [checked]="picked().has(item.path)"
+                [attr.aria-label]="item.path"
+                (change)="toggle(item, $event.checked)"
+              />
+            } @else {
+              <mat-icon class="kind">
+                {{
+                  outcome?.ok
+                    ? 'check_circle'
+                    : item.action === 'command'
+                      ? 'terminal'
+                      : item.action === 'tool'
+                        ? 'build'
+                        : 'visibility'
+                }}
+              </mat-icon>
+            }
+            <div class="body">
+              <div class="head">
+                <span class="path">{{ item.path }}</span>
+                <span class="size">
+                  {{ item.bytes / gb | number: '1.1-1' }} {{ 'activity.disk.gb' | transloco }}
+                </span>
+              </div>
+              <span class="safety">{{ 'activity.disk.safety.' + item.safety | transloco }}</span>
+              <span class="reason">{{ item.reason }}</span>
+              @if (item.how; as how) {
+                <span class="how">
+                  <code>{{ how }}</code>
+                  @if (item.action === 'command') {
+                    <button
+                      matIconButton
+                      [matTooltip]="'activity.disk.copy' | transloco"
+                      [attr.aria-label]="'activity.disk.copy' | transloco"
+                      (click)="copy(how)"
+                    >
+                      <mat-icon>content_copy</mat-icon>
+                    </button>
+                  }
+                </span>
+              }
+              @if (outcome; as o) {
+                <span class="outcome" [class.error]="!o.ok">{{ o.text }}</span>
+              }
+              @if (!outcome?.ok) {
+                <div class="actions">
+                  @if (item.action === 'trash') {
+                    <button matButton="tonal" [disabled]="busy" (click)="trashOne(item)">
+                      <mat-icon>delete</mat-icon> {{ 'activity.disk.toBin' | transloco }}
+                    </button>
+                  }
+                  @if (item.fix && disk.fix) {
+                    <button matButton="tonal" [disabled]="busy" (click)="fix(item)">
+                      <mat-icon>{{
+                        item.fix === 'storage-settings' ? 'settings' : 'cleaning_services'
+                      }}</mat-icon>
+                      {{ 'activity.disk.fixes.' + item.fix + '.button' | transloco }}
+                    </button>
+                  }
+                  @if (disk.reveal) {
+                    <button matButton [disabled]="busy" (click)="reveal(item)">
+                      <mat-icon>folder_open</mat-icon> {{ 'activity.disk.reveal' | transloco }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </li>
+        } @empty {
+          <li class="hint">{{ 'activity.disk.nothing' | transloco }}</li>
+        }
+      </ul>
+      @if (picked().size) {
+        <button matButton="filled" [disabled]="working() !== null" (click)="trashPicked()">
+          <mat-icon>delete</mat-icon>
+          {{ 'activity.disk.trash' | transloco: { gb: (pickedBytes() / gb | number: '1.1-1') } }}
+        </button>
+      }
+    }
+
+    @if (trashed() || binMessage()) {
+      <div class="bin">
+        @if (trashed()) {
+          <p class="hint">{{ 'activity.disk.emptyBin' | transloco }}</p>
+        }
+        @if (binMessage(); as message) {
+          <p class="hint">{{ message }}</p>
+        }
+        <div class="actions">
+          <button matButton (click)="openRecycleBin()">
+            <mat-icon>delete_outline</mat-icon> {{ 'activity.disk.openBin' | transloco }}
+          </button>
+          @if (trashed() && disk.emptyRecycleBin) {
+            <button matButton="filled" (click)="emptyRecycleBin()">
+              <mat-icon>delete_sweep</mat-icon> {{ 'activity.disk.emptyBinButton' | transloco }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </section>
+}

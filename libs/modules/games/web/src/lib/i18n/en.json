@@ -90,9 +90,9 @@
   },
   "wow": {
     "region": "Region",
-    "realm": "Realm (slug)",
+    "realm": "Realm",
     "character": "Character name",
-    "realmHint": "Realm slug as in the armory URL: “Howling Fjord” → howling-fjord",
+    "realmHint": "The realm as the game shows it — “Гордунни”, “Howling Fjord”. If it is not found, the error lists the realms of this version.",
     "achievementPoints": "Achievement points",
     "achievements": "Achievements",
     "recentAchievements": "Recent achievements",
@@ -107,13 +107,80 @@
       "1": "Open develop.battle.net, sign in with the Battle.net account and go to API Access → Create Client.",
       "2": "Any name; a Redirect URL is required — https://localhost will do; tick nothing else and create.",
       "3": "Copy the Client ID and the Client Secret and paste them here, then add characters on the Games page."
+    },
+    "addTitle": "Add a character",
+    "addHint": "The Battle.net keys are saved. Now add a character: its region, the realm as in the armory address and its name. Every character is added separately.",
+    "addCharacter": "Add a character",
+    "version": "Version of the game",
+    "versions": {
+      "retail": "World of Warcraft (current)",
+      "anniversary": "Classic Anniversary",
+      "era": "Classic Era, Hardcore, Season of Discovery",
+      "progression": "Classic: Cataclysm, Mists of Pandaria"
+    },
+    "classic": "Classic",
+    "level": "Level",
+    "bestMythic": "Best Mythic+ rating",
+    "token": "WoW Token",
+    "compare": "Characters side by side",
+    "notifyOn": "Notifications on: Mythic+ records, boss kills, PvP rating, new mounts, pets and titles",
+    "notifyOff": "Notifications of this character are off",
+    "collections": {
+      "mounts": "Mounts",
+      "pets": "Pets",
+      "toys": "Toys",
+      "heirlooms": "Heirlooms",
+      "titles": "Titles",
+      "quests": "Quests done"
+    },
+    "stats": {
+      "health": "Health",
+      "power": "Power",
+      "strength": "Strength",
+      "agility": "Agility",
+      "intellect": "Intellect",
+      "stamina": "Stamina",
+      "armor": "Armor",
+      "crit": "Critical strike",
+      "haste": "Haste",
+      "mastery": "Mastery",
+      "versatility": "Versatility"
+    },
+    "details": {
+      "open": "Details",
+      "notLoaded": "The details come with the next update — press “Update”.",
+      "overview": "Overview",
+      "gear": "Gear",
+      "talents": "Talents",
+      "raids": "Raids",
+      "collections": "Collections",
+      "reputations": "Reputations",
+      "professions": "Professions",
+      "itemLevelHistory": "Item level over 90 days",
+      "members": "{{count}} members",
+      "rank": "rank {{rank}}",
+      "active": "active",
+      "noTalents": "No talents chosen.",
+      "rating": "rating",
+      "dungeon": "Dungeon",
+      "key": "Key",
+      "time": "Time",
+      "date": "Date",
+      "overTime": "Over the timer",
+      "honorLevel": "Honor level",
+      "honorableKills": "Honorable kills",
+      "bracket": "Bracket",
+      "played": "Played",
+      "won": "Won",
+      "noBrackets": "No rated games this season."
     }
   },
   "errors": {
     "notFound": "Account not found. For Dota, check that match data is public; for WoW, check region, realm and name.",
     "duplicate": "This account is already added",
     "invalidCredentials": "Battle.net rejected the keys",
-    "generic": "Something went wrong. If you are adding WoW, save the Battle.net keys first."
+    "generic": "Something went wrong. If you are adding WoW, save the Battle.net keys first.",
+    "realmNotFound": "There is no such realm in this version of the game. Its realms: {{realms}}"
   },
   "widget": {
     "dota30": "30 days: {{wins}}–{{losses}}",
@@ -162,5 +229,10 @@
       "3": "Paste it here, then add your profiles on the Games page — one key reads all of them.",
       "4": "For data to come: in the Steam profile make “Game details” public, in Dota 2 turn on “Expose Public Match Data”."
     }
+  },
+  "life": {
+    "dotaDay": "Dota 2: {{matches}} matches, {{wins}} won",
+    "dotaMatches": "Dota 2 matches",
+    "dotaWins": "{{wins}} won ({{rate}}%)"
   }
 }

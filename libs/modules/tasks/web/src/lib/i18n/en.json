@@ -87,5 +87,28 @@
     "more": "and {{count}} more",
     "empty": "Nothing for today. 🎉",
     "open": "All tasks"
+  },
+  "commands": {
+    "add": "Add a task",
+    "remindInHour": "Remind in an hour"
+  },
+  "life": {
+    "done": "Done {{count}}: {{titles}}",
+    "doneTotal": "Tasks done"
+  },
+  "automations": {
+    "overdue": "Overdue tasks at a time",
+    "time": "Time",
+    "create": "Add a task",
+    "title": "Task",
+    "due": "Due",
+    "dues": {
+      "none": "No date",
+      "today": "Today",
+      "tomorrow": "Tomorrow"
+    },
+    "remind": "Remind me",
+    "text": "Text",
+    "inMinutes": "In minutes"
   }
 }

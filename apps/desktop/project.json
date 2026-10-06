@@ -9,10 +9,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/desktop"],
       "options": {
-        "commands": [
-          "tsc -p apps/desktop/tsconfig.json",
-          "node -e \"const fs=require('fs');fs.cpSync('apps/desktop/src/assets','dist/apps/desktop/assets',{recursive:true});fs.copyFileSync('apps/desktop/package.json','dist/apps/desktop/package.json')\""
-        ],
+        "commands": ["tsc -p apps/desktop/tsconfig.json --noEmit", "node apps/desktop/build.mjs"],
         "parallel": false
       }
     },

@@ -42,17 +42,17 @@ Apps (`apps/*`) are thin hosts with no business logic — only the list of enabl
 
 ## Key decisions
 
-| Decision                             | Why                                                                                                                         |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| **Nx monorepo**                      | Angular and Nest in one repository, shared types, module boundaries checked by the linter                                   |
-| **zod contracts** (`@pd/contracts`)  | one schema gives both the TS type for the frontend and validation on the backend (`ZodValidationPipe`)                      |
-| **Drizzle ORM**                      | tables are defined in TS next to the module (`*.schema.ts`), not in one big file; SQL migrations are human-readable         |
-| **pg-boss** for background jobs      | the queue and cron live in the same PostgreSQL — no Redis; missed runs are caught up                                        |
-| **Notifications through channels**   | a module calls `notifications.send()` and does not know where the message goes; Telegram is the first `NotificationChannel` |
-| **Everything is scoped by `userId`** | multiple users are supported without any schema changes                                                                     |
-| **One Docker image**                 | the API serves the built frontend — self-hosting with one command                                                           |
-| **Electron as a thin shell**         | the desktop app loads the same web app from the server (or localhost) and adds tray, autostart and background running       |
-| **i18n via Transloco**               | each module keeps its translations (`i18n/en.json`, `i18n/ru.json`); the core merges them into one dictionary               |
+| Decision                             | Why                                                                                                                                                                                                                                  |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Nx monorepo**                      | Angular and Nest in one repository, shared types, module boundaries checked by the linter                                                                                                                                            |
+| **zod contracts** (`@pd/contracts`)  | one schema gives both the TS type for the frontend and validation on the backend (`ZodValidationPipe`)                                                                                                                               |
+| **Drizzle ORM**                      | tables are defined in TS next to the module (`*.schema.ts`), not in one big file; SQL migrations are human-readable                                                                                                                  |
+| **pg-boss** for background jobs      | the queue and cron live in the same PostgreSQL — no Redis; missed runs are caught up                                                                                                                                                 |
+| **Notifications through channels**   | a module calls `notifications.send()` and does not know where the message goes; Telegram is the first `NotificationChannel`                                                                                                          |
+| **Everything is scoped by `userId`** | multiple users are supported without any schema changes                                                                                                                                                                              |
+| **One Docker image**                 | the API serves the built frontend — self-hosting with one command                                                                                                                                                                    |
+| **Electron as a thin shell**         | the desktop app loads the same web app from the server (or localhost) and adds tray, autostart and background running; its own code is a bundle the server hands out, so it updates without an installer (`apps/desktop/src/update`) |
+| **i18n via Transloco**               | each module keeps its translations (`i18n/en.json`, `i18n/ru.json`); the core merges them into one dictionary                                                                                                                        |
 
 ## Anatomy of a module
 
@@ -69,7 +69,11 @@ libs/modules/birthdays/
     birthdays.achievements.ts    achievements of the module
     birthdays.ai-tools.ts        data the AI assistant can request
     birthdays.digest.ts          its section of the morning digest
+    birthdays.life.ts            its events of a day and numbers of a period (Life)
+    *.automations.ts             its triggers and actions for the rules "if X, then Y"
     *.server-actions.ts          actions that call outside services (see below; birthdays has none)
+    *.export.ts                  copies of its data to read with other programs (CSV, Markdown)
+    *.security.ts                what the security agent can see through the module
     next-birthday.ts (+ .spec)   pure logic — easy to test
     birthdays.module.ts          Nest module
   web/src/lib/
@@ -129,6 +133,10 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
      changes nothing and the model asks the user; the call runs when repeated after the user's reply.
      Edits take the record id and only the fields to change (`changedFields`, `findById`).
      Never expose secrets (API keys, tokens) through tools — they are set up in the dashboard.
+   - search: `strava.search.ts` — `SearchService.register({ module, search(userId, query) })`
+     returns what of the module's data matches (`SearchHit`: a title, a line under it, the page it
+     opens); the command palette asks all modules through `/api/search` (example —
+     `libs/modules/tasks/api/src/lib/tasks.search.ts`).
    - morning digest: `strava.digest.ts` — a section with `id`, `module`, `description` and
      `collect`, registered with `MorningDigestService.register()`. The digest tells only what
      changed since the previous one, so `collect(userId)` returns facts that stay the same until
@@ -148,7 +156,9 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
 5. **Frontend:** `strava.api.ts` wraps the requests of the client core for Angular (reads as
    `httpResource(() => STRAVA_READS.x())`, writes as `fromCore(() => this.strava.y())`, example —
    `libs/modules/birthdays/web/src/lib/birthdays.api.ts`); export a `WebDashboardModule` with `id`,
-   menu item, routes, translations (`en` and `ru`), widgets and integrations.
+   menu item, routes, translations (`en` and `ru`), widgets and integrations. `commands` add lines
+   to the command palette: a page inside the section (`url`) or an action on the typed text
+   (`loadAction`, example — `libs/modules/tasks/web/src/lib/tasks.commands.ts`).
 6. **Enable** the module in `apps/api/src/modules.ts` and `apps/web/src/app/modules.ts`.
 7. **Restart `npm run dev`**: the bundlers read the `@pd/*` aliases from `tsconfig.base.json` only on start.
 
@@ -232,7 +242,35 @@ To add a service (e.g. DigitalOcean):
   client copies the newest dump to the computer (`BACKUP_COPY_DIR`).
 - **AI:** `AiService` — any OpenAI-compatible API; `ask()` is a dialogue with module tools
   (function-calling loop in `tool-loop.ts`), `complete()` is a single request without tools.
+- **Life:** `LifeService` — modules register what they can tell (`*.life.ts`): the events of a
+  day, the numbers (cards) of a period and a line of their own for the message of a month
+  (`monthNote`, e.g. the finance review). The goals of a year are counted from the same cards
+  (`LifeGoalsService`), the AI's stories of a month or a year are kept (`LifeStoriesService`),
+  and `LifeMonthJob` sends the summaries on the 1st.
+- **Automations:** `AutomationsService` — modules register triggers (an event they `emit`, or a
+  `check` of time asked every 5 minutes with the user's clock) and actions (`*.automations.ts`);
+  the user joins them into rules in Settings → Automations, by hand or from a sentence the AI
+  turns into a rule (`draft`). A rule runs at most 20 times a day (a timed one once), its last
+  error is kept; modules still never call each other — the core joins them.
 - **Auth:** a global `AuthGuard`; public endpoints are marked with `@Public()`. See Security below.
+- **Export and import:** `DataExportService` writes everything a user keeps as a ZIP while it
+  is read from the database; the tables come from the catalog, so a module's tables are exported
+  with no code — a table with `user_id` is the user's own, any other through the row it
+  references (`export-catalog.ts`). A module may add copies to read with other programs in
+  `<module>.export.ts` (`DataExportService.register`: CSV, Markdown). `DataImportService` adds
+  what is missing and trusts nothing in the file: only exported tables, every row becomes the
+  importing user's, a row is taken only with what it references being theirs. `users`,
+  `user_secrets` and the security agent's tables are never exported.
+- **Security agent:** `SecurityService` asks its sources and keeps the findings (a stable key:
+  seen again — the same row, gone — resolved, "I know" — ignored). The core's sources are the
+  dashboard and the server (`deploy/security-scan.sh` writes `SECURITY_DIR/host.json` on the
+  host every hour); a module adds one in `<module>.security.ts`
+  (`SecurityService.registerSource`: facts for the AI and the problems its own rules see —
+  example: `libs/modules/activity/api/src/lib/activity.security.ts`). `SecurityAgent` is the AI
+  half: a tool loop with one read-only tool a source and `security_report_finding`. It shares
+  nothing with the assistant — not the tools, not the conversation, optionally not the
+  connection — and the rules' findings never pass through the model. Sign-ins are journaled in
+  `auth.sign_ins` (`SignInLog`). Only the owner of the instance sees the section.
 - **Trash:** `TrashService` — a trigger on every table of `public` keeps deleted rows in the
   `trash` schema for 30 days (not synced: each instance keeps what was deleted on it); one
   transaction is one item, restored with everything deleted along with it. A table whose deletions
@@ -246,6 +284,16 @@ To add a service (e.g. DigitalOcean):
   the device's one on sign-in, `UsersService.timeZoneOf(user)` gives it (falls back to
   `APP_TIMEZONE`); moments are stored in UTC, `zonedToUtc()` / `zonedDateTime()` in contracts
   convert.
+- **Offline:** the service worker (`apps/web/ngsw-config.json`) keeps the app and the answers of
+  `GET /api/**` it has seen; without a connection the app starts as the user last signed in on the
+  device. A change of the user's own records is put into the outbox of the client core
+  (`libs/client/core/src/lib/outbox.ts`) and sent later — the call resolves with `undefined`, so a
+  page must not depend on the answer of such a write. Which writes may wait is listed there
+  (`QUEUEABLE`): add a module's own records to it, never a request that needs an outside service.
+- **Theme:** the built-in look is in `apps/web/src/styles.scss`; `ThemeService` (`@pd/web-core`)
+  changes it at run time by setting CSS variables and classes on `<html>`. A component never
+  hard-codes a colour, a font or a corner: it uses `--mat-sys-*` and `--pd-*` variables, and then
+  follows any theme by itself.
 - **Money:** `numeric(14,2)`; totals are converted into the user's main currency at the ECB rate of
   each transaction's day (Frankfurter; today's rate from open.er-api for a currency the ECB lacks),
   kept as they are otherwise (`finance/currency`).

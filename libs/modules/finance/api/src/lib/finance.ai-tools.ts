@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
   AiService,
+  ServerActions,
   changedFields,
   findById,
   idParameters,
@@ -8,6 +9,7 @@ import {
   PERIOD_PARAMETERS,
 } from '@pd/api-core';
 import {
+  wishInputSchema,
   recurringPaymentInputSchema,
   Transaction,
   TRANSACTION_KINDS,
@@ -17,7 +19,11 @@ import {
 import { z } from 'zod';
 import { CostSourcesService } from './cost-sources/cost-sources.service';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
+import { SubscriptionsService } from './recurring/subscriptions.service';
+import { GoalsService } from './goals/goals.service';
 import { TransactionsService } from './transactions/transactions.service';
+import { FINANCE_ACTIONS } from './finance.server-actions';
+import { WishlistService } from './wishlist/wishlist.service';
 
 /** Period schema + an optional "wallet". */
 const QUERY_PARAMETERS = {
@@ -50,6 +56,12 @@ const RECURRING_FIELDS = {
   name: { type: 'string', description: 'What is paid: "Hetzner CX22", "Spotify"' },
   ...MONEY_FIELDS,
   dayOfMonth: { type: 'number', description: 'Day of the month to charge, 1–31' },
+  period: { type: 'string', enum: ['month', 'year'], description: 'Every month or once a year' },
+  monthOfYear: { type: 'number', description: 'For a yearly payment: its month, 1–12' },
+  trialEndsOn: {
+    type: 'string',
+    description: 'YYYY-MM-DD: a free trial ends this day; nothing is charged before it',
+  },
   isActive: { type: 'boolean', description: 'false — paused' },
 } as const;
 
@@ -66,8 +78,8 @@ const batchArgs = z.object({
 });
 
 /**
- * AI access to finance: totals, transactions, recurring payments, cost sources;
- * adding, editing and deleting them (assistant).
+ * AI access to finance: totals, transactions, recurring payments and subscriptions, savings
+ * goals, the wishlist, cost sources; adding, editing and deleting them (assistant).
  */
 @Injectable()
 export class FinanceAiTools implements OnModuleInit {
@@ -76,6 +88,10 @@ export class FinanceAiTools implements OnModuleInit {
     private readonly transactions: TransactionsService,
     private readonly recurring: RecurringPaymentsService,
     private readonly costSources: CostSourcesService,
+    private readonly subscriptions: SubscriptionsService,
+    private readonly goals: GoalsService,
+    private readonly wishlist: WishlistService,
+    private readonly actions: ServerActions,
   ) {}
 
   onModuleInit(): void {
@@ -83,6 +99,76 @@ export class FinanceAiTools implements OnModuleInit {
     this.registerTransactionWriteTools();
     this.registerRecurringTools();
     this.registerCostSourceTools();
+    this.registerPlanningTools();
+    this.registerWishlistTools();
+  }
+
+  /** The wishlist: reading it, adding a product by its link, marking one bought. */
+  private registerWishlistTools(): void {
+    this.ai.registerTool({
+      name: 'finance_wishlist',
+      module: 'finance',
+      description:
+        'The wishlist — products the user wants to buy: id, name, link, the current price in the ' +
+        'shop, the price before the last change, the lowest and the highest seen, whether bought.',
+      parameters: NO_PARAMETERS,
+      handler: (userId) => this.wishlist.list(userId),
+    });
+
+    this.ai.registerTool({
+      name: 'finance_add_wish',
+      module: 'finance',
+      writes: true,
+      description:
+        'Adds a product to the wishlist by the link to its page in a shop; its price is then ' +
+        'read from the page every day and a change is reported. The name is taken from the page ' +
+        'unless given. Pass `price` and `currency` only when the user names the price.',
+      parameters: {
+        type: 'object',
+        properties: {
+          url: { type: 'string', description: 'The link to the product page' },
+          name: { type: 'string' },
+          note: { type: 'string' },
+          price: { type: 'number' },
+          currency: { type: 'string', description: 'ISO 4217: EUR, USD, PLN…' },
+        },
+        required: ['url'],
+      },
+      handler: (userId, args) =>
+        this.actions.run(userId, FINANCE_ACTIONS.addWish, wishInputSchema.parse(args)),
+    });
+
+    this.ai.registerTool({
+      name: 'finance_wish_bought',
+      module: 'finance',
+      writes: true,
+      description: 'Marks a product of the wishlist as bought: its price is not watched any more.',
+      parameters: idParameters('Wish id from finance_wishlist'),
+      handler: (userId, args) => this.wishlist.setBought(userId, idArgs.parse(args).id, true),
+    });
+  }
+
+  /** What the subscriptions cost together and how the savings goals are going. */
+  private registerPlanningTools(): void {
+    this.ai.registerTool({
+      name: 'finance_subscriptions',
+      module: 'finance',
+      description:
+        'What the active recurring payments cost together a month and a year in the main ' +
+        'currency, and repeating charges in the transactions that look like subscriptions.',
+      parameters: NO_PARAMETERS,
+      handler: (userId) => this.subscriptions.summary(userId),
+    });
+
+    this.ai.registerTool({
+      name: 'finance_savings_goals',
+      module: 'finance',
+      description:
+        'Savings goals: target, saved so far, deadline, how much to put aside a month and the ' +
+        'pace so far.',
+      parameters: NO_PARAMETERS,
+      handler: (userId) => this.goals.list(userId),
+    });
   }
 
   /** The summary and the list of transactions. */
@@ -219,7 +305,8 @@ export class FinanceAiTools implements OnModuleInit {
       module: 'finance',
       writes: true,
       description:
-        'Adds a monthly payment (a server, a domain, a subscription): on its day it becomes an ' +
+        'Adds a monthly or yearly payment (a server, a domain, a subscription): on its day it ' +
+        'becomes an ' +
         "expense automatically. If this month's day has passed, the first charge is next month.",
       parameters: {
         type: 'object',
@@ -245,12 +332,16 @@ export class FinanceAiTools implements OnModuleInit {
       handler: async (userId, args) => {
         const current = await find(userId, args);
         const { name, amount, currency, category, dayOfMonth, projectId, isActive } = current;
+        const { period, monthOfYear, trialEndsOn } = current;
         const input = recurringPaymentInputSchema.parse({
           name,
           amount,
           currency,
           category,
           dayOfMonth,
+          period,
+          monthOfYear,
+          trialEndsOn,
           projectId,
           isActive,
           ...changedFields(args),

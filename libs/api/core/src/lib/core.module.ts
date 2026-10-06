@@ -16,6 +16,15 @@ import { AiService } from './ai/ai.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthGuard } from './auth/auth.guard';
 import { TrashController } from './trash/trash.controller';
+import { DataController } from './data-export/data.controller';
+import { CoreSecuritySources } from './security/core.security-sources';
+import { SecurityAgent } from './security/security-agent.service';
+import { SecurityController } from './security/security.controller';
+import { SecurityJobs } from './security/security.jobs';
+import { SecurityService } from './security/security.service';
+import { SignInLog } from './security/sign-in-log.service';
+import { DataExportService } from './data-export/data-export.service';
+import { DataImportService } from './data-export/data-import.service';
 import { TrashService } from './trash/trash.service';
 import { SessionsService } from './auth/sessions.service';
 import { TwoFactorService } from './auth/two-factor.service';
@@ -31,6 +40,17 @@ import { TelegramChannel } from './notifications/telegram/telegram.channel';
 import { ProjectsController } from './projects/projects.controller';
 import { ProjectsService } from './projects/projects.service';
 import { SchedulerService } from './scheduler/scheduler.service';
+import { LifeMonthJob } from './life/life-month.job';
+import { LifeController } from './life/life.controller';
+import { LifeService } from './life/life.service';
+import { AutomationsController } from './automations/automations.controller';
+import { AutomationsService } from './automations/automations.service';
+import { CoreAutomations } from './automations/core.automations';
+import { AchievementsLife } from './life/achievements.life';
+import { LifeGoalsService } from './life/life-goals.service';
+import { LifeStoriesService } from './life/life-stories.service';
+import { SearchController } from './search/search.controller';
+import { SearchService } from './search/search.service';
 import { SecretsService } from './secrets/secrets.service';
 import { JobRunsService } from './system/job-runs.service';
 import { SystemController } from './system/system.controller';
@@ -83,6 +103,8 @@ class HealthController {
     HealthController,
     AuthController,
     TrashController,
+    DataController,
+    SecurityController,
     ProjectsController,
     NotificationsController,
     AchievementsController,
@@ -90,13 +112,31 @@ class HealthController {
     RealtimeController,
     SyncController,
     SystemController,
+    SearchController,
+    LifeController,
+    AutomationsController,
   ],
   providers: [
+    SearchService,
+    LifeService,
+    LifeMonthJob,
+    AutomationsService,
+    CoreAutomations,
+    AchievementsLife,
+    LifeGoalsService,
+    LifeStoriesService,
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_INTERCEPTOR, useClass: UserActivityInterceptor },
     AuthService,
     SessionsService,
     TrashService,
+    DataExportService,
+    DataImportService,
+    SignInLog,
+    SecurityService,
+    SecurityAgent,
+    SecurityJobs,
+    CoreSecuritySources,
     TwoFactorService,
     UsersService,
     ProjectsService,
@@ -148,6 +188,12 @@ class HealthController {
     AiService,
     // For the morning digest: modules add their sections via register().
     MorningDigestService,
+    // For the command palette: modules register their search via register().
+    SecurityService,
+    DataExportService,
+    SearchService,
+    LifeService,
+    AutomationsService,
     // For actions that reach outside services: they run on the server (see ServerActions).
     ServerActions,
   ],

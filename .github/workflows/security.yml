@@ -1,0 +1,39 @@
+# Security check of the repository: secrets that got into git and known vulnerabilities in the
+# packages that ship. It fails when it finds either; the dashboard's security agent reads the
+# result of the last run (Security section → repository).
+name: Security
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Every night: a vulnerability may be published for a package that did not change.
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The whole history: a secret removed by a later commit is still in git.
+          fetch-depth: 0
+      - name: Look for secrets in the history
+        run: >
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest
+          git /repo --redact --no-banner
+
+  dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      # What ships to the server and into the desktop app; build tooling is left out.
+      - name: npm audit
+        run: npm audit --omit=dev --audit-level=high

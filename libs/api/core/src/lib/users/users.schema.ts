@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { AccountLayout, AccountTheme } from '@pd/contracts';
+import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
  * Users. Even with a single user, all module data is
@@ -12,6 +13,10 @@ export const users = pgTable('users', {
   locale: text().notNull().default('en'),
   /** IANA zone of the user's device; `null` — not known yet, the server's zone is used. */
   timeZone: text(),
+  /** The look applied on every device (see `resolveTheme`); `null` — the built-in one. */
+  theme: jsonb().$type<AccountTheme>(),
+  /** Hidden sections and the home page as arranged on every device (see `resolveLayout`). */
+  layout: jsonb().$type<AccountLayout>(),
   telegramChatId: text(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

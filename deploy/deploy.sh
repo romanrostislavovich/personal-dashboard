@@ -120,7 +120,7 @@ remote true || {
   exit 1
 }
 remote 'command -v docker >/dev/null || (curl -fsSL https://get.docker.com | sh) >/dev/null 2>&1'
-remote "mkdir -p $REMOTE_DIR/backups"
+remote "mkdir -p $REMOTE_DIR/backups $REMOTE_DIR/security"
 $ROLLBACK && rollback
 case "$(remote uname -m)" in
   x86_64) PLATFORM=linux/amd64 ;;
@@ -139,7 +139,14 @@ docker save "$IMAGE" | gzip -1 | remote 'gunzip | docker load' | tail -1
 keep_rollback_point
 
 step "Uploading the configuration"
-scp -q -i "$DEPLOY_SSH_KEY" deploy/compose.yml deploy/Caddyfile deploy/backup.sh "$DEPLOY_HOST:$REMOTE_DIR/"
+scp -q -i "$DEPLOY_SSH_KEY" deploy/compose.yml deploy/Caddyfile deploy/backup.sh \
+  deploy/security-scan.sh "$DEPLOY_HOST:$REMOTE_DIR/"
+# The security agent's eyes on the server itself: a read-only scan every hour (as root, to see
+# the firewall and the SSH settings), and once now so the first report is there at once.
+remote "printf '%s\n' 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
+    '17 * * * * root bash $REMOTE_DIR/security-scan.sh' > /etc/cron.d/dashboard-security &&
+  chmod 644 /etc/cron.d/dashboard-security && bash $REMOTE_DIR/security-scan.sh" ||
+  echo "The scan of the server did not run: the security agent will not see the host." >&2
 
 if ! remote "test -f $REMOTE_DIR/.env"; then
   step "Writing the server's .env (first deploy)"
@@ -197,6 +204,8 @@ remote "cd $REMOTE_DIR && docker compose up -d --wait --remove-orphans --quiet-p
   remote "cd $REMOTE_DIR && docker compose ps && docker compose logs --tail 30 app" >&2
   exit 1
 }
+# Caddy reads its Caddyfile only when it starts: a changed one is taken in without a restart.
+remote "cd $REMOTE_DIR && docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile" \n  >/dev/null 2>&1 || echo "Caddy did not reload its configuration (docker compose logs caddy)." >&2
 # Images other than this one and the rollback point go.
 remote "docker image prune -f >/dev/null
   keep=\$(grep -h -E '^(IMAGE|PREVIOUS_IMAGE)=' $REMOTE_DIR/.env $REMOTE_DIR/rollback.env 2>/dev/null | cut -d= -f2-)

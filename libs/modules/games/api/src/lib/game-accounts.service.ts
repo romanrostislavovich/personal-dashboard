@@ -15,7 +15,7 @@ import { OpenDotaKeyService } from './dota/opendota-key.service';
 import { parseDotaAccountId } from './dota/steam-id';
 import { gameAccounts, GameAccountRow } from './games.schema';
 import { gamesMessages } from './games.messages';
-import { WowCharacterNotFoundError } from './wow/battlenet.client';
+import { WowCharacterNotFoundError, WowRealmNotFoundError } from './wow/battlenet.client';
 import { SteamProfileNotFoundError } from './steam/steam.client';
 import { SteamService } from './steam/steam.service';
 import { toWowExternalId, WowService } from './wow/wow.service';
@@ -187,10 +187,13 @@ export class GameAccountsService {
   }
 
   private async syncWow(row: GameAccountRow): Promise<string[]> {
-    const { profile, newAchievements } = await this.wow.sync(row);
+    const { profile, newAchievements, news } = await this.wow.sync(row);
     await this.saveProfile(row, `${profile.name} — ${profile.realm}`, { ...profile });
     const text = gamesMessages(await this.localeOf(row.userId));
-    return newAchievements.map((a) => text.wowAchievement(profile.name, a.name));
+    return [
+      ...newAchievements.map((a) => text.wowAchievement(profile.name, a.name)),
+      ...news.map((item) => text.wowNews(profile.name, item)),
+    ];
   }
 
   private async saveProfile(
@@ -233,6 +236,17 @@ export class GameAccountsService {
       }
       return { externalId: String(accountId), displayName: String(accountId) };
     }
-    return { externalId: toWowExternalId(input), displayName: `${input.name} — ${input.realm}` };
+    // The realm is typed the way the game shows it; Blizzard's API wants its slug.
+    const client = await this.wow.clientFor(userId);
+    const realm = await client.resolveRealm(input, input.realm).catch((error) => {
+      if (error instanceof WowRealmNotFoundError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    });
+    return {
+      externalId: toWowExternalId({ ...input, realm: realm.slug }),
+      displayName: `${input.name} — ${realm.name}`,
+    };
   }
 }

@@ -1,3 +1,4 @@
+import { DurationPipe } from '@pd/web-core';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,7 +7,6 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { WakatimePeriod } from '@pd/contracts';
 import { AccountsApi } from './accounts/accounts.api';
-import { DurationPipe } from './ui/duration.pipe';
 import { WakatimeApi } from './wakatime/wakatime.api';
 
 /**

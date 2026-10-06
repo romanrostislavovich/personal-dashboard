@@ -48,6 +48,11 @@ export const envSchema = z
 
     /** Path to the built Angular app; if set, the API also serves the frontend. */
     WEB_DIST_PATH: z.string().optional(),
+    /**
+     * Path to the built code of the desktop shell (dist/apps/desktop/bundle); if set, installed
+     * desktop apps update themselves from `/desktop-updates` (apps/desktop/src/update).
+     */
+    DESKTOP_BUNDLE_PATH: z.string().optional(),
 
     /** Two-way sync between a local instance and a server, see docs/sync.md. */
     SYNC_MODE: z.enum(SYNC_MODES).default('off'),
@@ -66,6 +71,11 @@ export const envSchema = z
      * to the sync client.
      */
     BACKUP_DIR: z.string().optional(),
+    /**
+     * Server: the folder `deploy/security-scan.sh` writes its hourly report of the host into
+     * (`host.json`); the security agent reads it. Without it the server is not looked at.
+     */
+    SECURITY_DIR: z.string().optional(),
     /** Client: where copies of the server's dumps are kept (docs/deploy.md, "Backups"). */
     BACKUP_COPY_DIR: z.string().default('backups'),
     /** Client: how many copies to keep. */

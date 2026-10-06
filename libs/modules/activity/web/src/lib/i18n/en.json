@@ -1,0 +1,263 @@
+{
+  "title": "Activity",
+  "tabs": {
+    "overview": "Overview",
+    "settings": "Setup",
+    "focus": "Focus",
+    "computers": "Computers"
+  },
+  "commands": {
+    "settings": "Activity: trackers and programs",
+    "focus": "Focus session"
+  },
+  "period": "Period",
+  "periods": {
+    "1": "Today",
+    "7": "7 days",
+    "30": "30 days",
+    "90": "90 days",
+    "365": "Year"
+  },
+  "device": "Device",
+  "allDevices": "All devices",
+  "total": "At the computer",
+  "activeDays": "days with activity: {{count}}",
+  "dailyAverage": "Daily average",
+  "dailyAverageHint": "over the days with activity",
+  "bestDay": "Longest day",
+  "chart": "Time per day",
+  "empty": "Nothing was recorded in this period.",
+  "byCategory": "Categories",
+  "byApp": "Programs",
+  "byProject": "Projects",
+  "byDevice": "Devices",
+  "byTitle": "Windows",
+  "categories": {
+    "development": "Development",
+    "browsing": "Browser",
+    "communication": "Communication",
+    "office": "Documents",
+    "design": "Design",
+    "games": "Games",
+    "media": "Music and video",
+    "meetings": "Meetings",
+    "system": "System",
+    "other": "Other"
+  },
+  "setup": {
+    "title": "No tracker yet",
+    "hint": "Time is recorded by the desktop app of the dashboard: open the dashboard in it and switch tracking on in the Setup tab. It then starts with the computer, sits in the tray and sends what it records by itself.",
+    "open": "Open setup"
+  },
+  "timeline": {
+    "title": "The day, window by window",
+    "day": "Day",
+    "previous": "The day before",
+    "next": "The day after",
+    "empty": "Nothing was recorded on this day.",
+    "showAll": "Show all ({{count}})"
+  },
+  "tracker": {
+    "title": "Trackers",
+    "browser": "Time is recorded by the desktop app of the dashboard. Open the dashboard in it to switch tracking on for this computer.",
+    "unsupported": "The tracker can watch windows only on Windows for now.",
+    "off": "Tracking is off on this computer. When it is on, the app records which program and window is in front and sends it to your server.",
+    "enable": "Track this computer",
+    "on": "This computer is tracked",
+    "paused": "Tracking is paused",
+    "pending": "waiting to be sent: {{count}}",
+    "pauseHour": "Pause for an hour",
+    "pauseUntil": "Pause until I resume",
+    "resume": "Resume",
+    "disable": "Switch off",
+    "thisDevice": "this computer",
+    "neverSeen": "has not reported yet",
+    "rename": "Rename the device",
+    "computer": "Computer",
+    "confirmRemove": "Remove “{{name}}” with everything it recorded?"
+  },
+  "idle": {
+    "title": "When you are away",
+    "hint": "No keyboard or mouse input for this long means you have left; the time is not counted. A full-screen video in a player or a browser counts as activity anyway, for up to 3 hours; a game left without input does not.",
+    "label": "Away after",
+    "minutes": "{{count}} min"
+  },
+  "rules": {
+    "title": "Projects",
+    "hint": "Time goes to a project when the window title contains its name. Add other words a project is recognized by: a folder, a repository, a site.",
+    "project": "Project",
+    "pattern": "The title contains",
+    "noProjects": "There are no projects yet: create one in the settings."
+  },
+  "apps": {
+    "title": "Programs",
+    "hint": "The category of each program, and whether it is recorded at all. Switching a program off deletes what was recorded for it.",
+    "category": "Category",
+    "record": "Record this program",
+    "empty": "Programs appear here as the tracker sees them.",
+    "confirmExclude": "Stop recording “{{name}}” and delete what was recorded for it?"
+  },
+  "widget": {
+    "title": "At the computer today",
+    "empty": "Nothing recorded today",
+    "open": "Open"
+  },
+  "focus": {
+    "browser": "Focus sessions run in the desktop app: open the dashboard there to start one. The statistics are here in any case.",
+    "enableTracker": "Switch tracking on for this computer in the Setup tab: focus sessions are sent with it.",
+    "project": "Project",
+    "noProject": "Without a project",
+    "note": "What I am doing",
+    "start": "Focus for {{minutes}} min",
+    "stop": "Stop",
+    "skipBreak": "Skip the break",
+    "round": "Round {{round}} of {{rounds}}",
+    "phases": {
+      "focus": "Focus",
+      "short-break": "Break",
+      "long-break": "Long break",
+      "idle": ""
+    },
+    "total": "In focus",
+    "completed": "Sessions completed",
+    "streak": "Days in a row",
+    "days": "{{count}} d",
+    "longest": "best: {{count}}",
+    "distracted": "Distractions",
+    "distractedShare": "{{share}}% of the focus time",
+    "chart": "Focus per day",
+    "sessions": "Sessions",
+    "empty": "No focus sessions in this period."
+  },
+  "computers": {
+    "measuredAt": "Measured",
+    "uptime": "up",
+    "noData": "Has not reported its state yet",
+    "cpu": "Processor",
+    "memory": "Memory",
+    "free": "{{free}} of {{total}} GB free",
+    "empty": "No computers yet: switch tracking on in the Setup tab.",
+    "hint": "The desktop app reports every 5 minutes. A notification comes when a disk has less than a tenth free or Windows marks it as failing, when Windows has been slowing the processor down for a quarter of an hour to cool it, and when the computer has not been restarted for two weeks. The last 30 days are kept. Real processor temperatures need administrator rights and a sensor driver, so the temperature here is the board sensor Windows gives.",
+    "memoryUsed": "{{used}} of {{total}} GB",
+    "speed": "speed {{percent}}% of the base",
+    "gpu": "Graphics",
+    "temperature": "Temperature",
+    "boardSensor": "board sensor, not the processor",
+    "throttling": "the processor is slowed down to cool it",
+    "battery": "Battery",
+    "onAc": "on mains power",
+    "onBattery": "on battery",
+    "batteryHealth": "health {{percent}}%",
+    "disks": "Disks",
+    "signal": "signal {{signal}}%, {{rate}} Mbit/s",
+    "defenderOn": "Defender is on",
+    "defenderOff": "Defender is off",
+    "signatures": "definitions {{days}} d old",
+    "topCpu": "Busiest now",
+    "topMemory": "Most memory",
+    "mb": "MB",
+    "outages": "Connection",
+    "outagesWeek": "Outages in the last week: {{count}}, {{minutes}} min in all",
+    "outage": {
+      "internet": "no internet",
+      "server": "the server did not answer"
+    }
+  },
+  "wellbeing": {
+    "title": "Breaks, limits and focus",
+    "hint": "The desktop app reminds to take a break, and a notification comes when a daily limit is reached (all devices together, once a day).",
+    "break": "A break after",
+    "off": "Never",
+    "limits": "Daily limits",
+    "games": "Games",
+    "total": "At the computer",
+    "noLimit": "No limit",
+    "perDay": "A day",
+    "addApp": "Limit a program",
+    "focus": "Focus timer",
+    "focusMinutes": "Focus",
+    "shortBreakMinutes": "Break",
+    "longBreakMinutes": "Long break",
+    "roundsBeforeLongBreak": "Rounds before it",
+    "summary": "Summary of the day at"
+  },
+  "disk": {
+    "title": "Free up space",
+    "analyze": "Analyze {{mount}}",
+    "scanning": "Scanning {{mount}}: {{files}} files, {{gb}} GB so far…",
+    "thinking": "The AI is looking at what was found…",
+    "failed": "The scan failed",
+    "nothing": "Nothing worth deleting was found.",
+    "safety": {
+      "safe": "Safe: it is rebuilt by itself",
+      "check": "Most likely not needed — have a look first",
+      "risky": "Your own data — only you know"
+    },
+    "copy": "Copy the command",
+    "trash": "Move to the Recycle Bin ({{gb}} GB)",
+    "confirm": "Move these to the Recycle Bin?",
+    "emptyBin": "The space is freed when the Recycle Bin is emptied.",
+    "openBin": "Open the Recycle Bin",
+    "reasons": {
+      "protected": "protected (the system, programs or a virtual disk) — left as it is",
+      "unknown": "not in the last scan — scan again",
+      "missing": "no longer there",
+      "failed": "Windows did not move it (in use, or too big for the Recycle Bin)"
+    },
+    "gb": "GB",
+    "toBin": "To the Recycle Bin",
+    "reveal": "Show in Explorer",
+    "moved": "Moved to the Recycle Bin.",
+    "done": "Done.",
+    "fixFailed": "Did not work",
+    "confirmEmpty": "Empty the Recycle Bin of {{mount}}? The files in it are deleted for good.",
+    "emptied": "The Recycle Bin is empty: the space is free.",
+    "emptyBinButton": "Empty the Recycle Bin",
+    "fixes": {
+      "npm-cache": {
+        "button": "Clear",
+        "confirm": "Clear the npm cache? Packages are downloaded again when needed."
+      },
+      "yarn-cache": {
+        "button": "Clear",
+        "confirm": "Clear the Yarn cache? Packages are downloaded again when needed."
+      },
+      "pip-cache": {
+        "button": "Clear",
+        "confirm": "Clear the pip cache? Packages are downloaded again when needed."
+      },
+      "nuget-cache": {
+        "button": "Clear",
+        "confirm": "Clear the NuGet caches? Packages are restored on the next build."
+      },
+      "docker-prune": {
+        "button": "Clean up Docker",
+        "confirm": "Remove all Docker images not used by a container, stopped containers, unused networks and the build cache? Volumes stay. Docker Desktop must be running. Images are downloaded again when needed."
+      },
+      "storage-settings": {
+        "button": "Open the settings",
+        "confirm": ""
+      }
+    },
+    "scannedAt": "Scan of {{mount}} from",
+    "stale": "This scan is old: the disk has likely changed since. Scan it again with the button in the disk's row.",
+    "close": "Close"
+  },
+  "privacy": {
+    "title": "Privacy",
+    "hint": "Windows whose title contains one of these words are recorded without the title: only the program. Private windows of browsers (Incognito, InPrivate, private browsing) are always recorded this way.",
+    "word": "A word or a site",
+    "add": "Add"
+  },
+  "life": {
+    "day": "{{hours}} h at the computer, mostly {{app}}",
+    "dayFocus": "{{hours}} h at the computer, mostly {{app}} · {{focus}} focus sessions",
+    "total": "At the computer",
+    "topApp": "mostly {{app}}",
+    "focus": "In focus",
+    "focusSessions": "{{count}} sessions"
+  },
+  "automations": {
+    "limit": "A daily limit is reached"
+  }
+}

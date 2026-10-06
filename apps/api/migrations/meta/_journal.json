@@ -253,6 +253,153 @@
       "when": 1790930239142,
       "tag": "0035_gitlab_bitbucket",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1790942829550,
+      "tag": "0036_soundcloud",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1790951530728,
+      "tag": "0037_user_theme",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1790954944339,
+      "tag": "0038_user_layout",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1790966393052,
+      "tag": "0039_wow_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1790970594620,
+      "tag": "0040_activity",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1791038679731,
+      "tag": "0041_activity_wellbeing",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1791041776048,
+      "tag": "0042_computer_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1791041780473,
+      "tag": "0043_computer_details_drop",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791051175614,
+      "tag": "0044_activity_private_words",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791051577129,
+      "tag": "0045_activity_outages",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1791052167176,
+      "tag": "0046_activity_summary",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791054550334,
+      "tag": "0047_finance_budgets",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791055506166,
+      "tag": "0048_finance_receipts_vision",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1791055973802,
+      "tag": "0049_life_months",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791062627161,
+      "tag": "0050_finance_subscriptions_goals_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1791063431850,
+      "tag": "0051_life_goals_stories",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1791064143585,
+      "tag": "0052_automation_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1791138518813,
+      "tag": "0053_finance_wishlist",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1791203169343,
+      "tag": "0054_security_agent",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1791206622768,
+      "tag": "0055_security_guides",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1791211994640,
+      "tag": "0056_security_covers",
+      "breakpoints": true
     }
   ]
 }

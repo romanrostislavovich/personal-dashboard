@@ -1,0 +1,63 @@
+{
+  "title": "Security",
+  "scan": "Check now",
+  "investigate": "Investigate with AI",
+  "scanning": "Checking the dashboard, the server, the computers and the repository…",
+  "investigating": "The AI is looking around: a minute or two…",
+  "checked": "Checked {{date}}",
+  "neverChecked": "Nothing has been checked yet: press “Check now”.",
+  "readOnly": "The agent only looks and tells — it changes nothing by itself.",
+  "ownerOnly": "The security agent reports to the owner of this dashboard only.",
+  "areas": {
+    "app": "The dashboard",
+    "host": "The server",
+    "desktop": "Computers",
+    "repo": "Code hostings"
+  },
+  "areaChecked": "checked",
+  "areaHints": {
+    "app": "not checked yet",
+    "host": "no report: the server’s scan is installed by deploy.sh on the next deploy",
+    "desktop": "no computer with the desktop app is registered (Activity → Setup)",
+    "repo": "connect GitHub, GitLab or Bitbucket in Settings → Integrations"
+  },
+  "report": "The agent’s report",
+  "open": "To deal with: {{count}}",
+  "nothing": "Nothing found. Everything checked is in order.",
+  "severity": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "info": "For information"
+  },
+  "origin": {
+    "rules": "by a rule",
+    "ai": "by the AI"
+  },
+  "since": "since {{date}}",
+  "ignore": "I know, leave it",
+  "whatToDo": "What to do:",
+  "covers": "Shown instead of the rules’ findings about the same:",
+  "guideShow": "How to fix, step by step",
+  "guideHide": "Hide the guide",
+  "guideWriting": "The AI is writing a guide for this case: up to a minute…",
+  "guideBy": "Written by the AI {{date}}. Read each command before running it.",
+  "guideAgain": "Write again",
+  "ignored": "Known and left as is: {{count}}",
+  "watchAgain": "Report again",
+  "resolved": "Fixed: {{count}}",
+  "resolvedOn": "gone since {{date}}",
+  "noAi": "No AI connection: add one in Settings → Integrations, or the rules alone keep checking.",
+  "aiFailed": "The AI provider did not answer (a wrong key, no credit, or it is down). The findings of the rules are not affected.",
+  "failed": "It did not work. Try again in a minute.",
+  "settings": {
+    "title": "Settings of the agent",
+    "ai": "The AI investigates every morning",
+    "aiHint": "Without it the rules still check every hour. The AI sees only what the checks collect — never your diary, finances or other records — and has no way to change anything.",
+    "connection": "The model of the agent",
+    "assistant": "The same as the assistant",
+    "connectionHint": "A connection of its own keeps the agent apart from the assistant",
+    "saved": "Saved."
+  }
+}

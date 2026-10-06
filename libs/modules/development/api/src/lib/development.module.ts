@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { DevelopmentLife } from './development.life';
+import { OpenSourceSearch } from './open-source/open-source.search';
 import { AccountTokensService } from './accounts/account-tokens.service';
 import { AccountsAchievements } from './accounts/accounts.achievements';
 import { AccountsAiTools } from './accounts/accounts.ai-tools';
@@ -10,6 +12,7 @@ import { AccountsService } from './accounts/accounts.service';
 import { CodeAccountsService } from './accounts/code-accounts.service';
 import { GithubController } from './github/github.controller';
 import { GithubTokenService } from './github/github-token.service';
+import { DevelopmentSecurity } from './development.security';
 import { GithubProfileAchievements } from './github-profile/github-profile.achievements';
 import { GithubProfileAiTools } from './github-profile/github-profile.ai-tools';
 import { GithubProfileController } from './github-profile/github-profile.controller';
@@ -55,7 +58,10 @@ import { WakatimeService } from './wakatime/wakatime.service';
     WakatimeController,
   ],
   providers: [
+    DevelopmentLife,
+    OpenSourceSearch,
     GithubTokenService,
+    DevelopmentSecurity,
     AccountTokensService,
     AccountsService,
     CodeAccountsService,

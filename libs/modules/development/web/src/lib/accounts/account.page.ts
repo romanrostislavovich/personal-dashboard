@@ -16,11 +16,17 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CodeProvider } from '@pd/contracts';
-import { errorBody, INTEGRATIONS_LINK, SparklineComponent } from '@pd/web-core';
+import {
+  Bar,
+  BarChartComponent,
+  errorBody,
+  INTEGRATIONS_LINK,
+  Share,
+  ShareListComponent,
+  SparklineComponent,
+} from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
-import { Bar, BarChartComponent } from '../ui/bar-chart.component';
 import { ContributionHeatmapComponent, HeatmapDay } from '../ui/contribution-heatmap.component';
-import { Share, ShareListComponent } from '../ui/share-list.component';
 import { AccountsApi } from './accounts.api';
 import { PROVIDER_NAMES } from './providers';
 

@@ -1,6 +1,12 @@
 import {
   Achievement,
   AuthConfig,
+  AutomationRule,
+  AutomationRuleInput,
+  LifeAnswer,
+  LifeGoal,
+  LifeGoalInput,
+  LifeStory,
   CurrentUser,
   LoginRequest,
   LoginResponse,
@@ -20,10 +26,14 @@ import {
   SystemStatus,
   TelegramLinkResponse,
   TrashItem,
+  DataImportReport,
+  SecuritySettings,
+  SecurityStatus,
   TwoFactorDisable,
   TwoFactorLogin,
   TwoFactorSetup,
   TwoFactorStatus,
+  SearchHit,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from './api-client';
 
@@ -60,15 +70,22 @@ export const API_PATHS = {
   syncConflict: (id: string) => `/api/sync/conflicts/${encodeURIComponent(id)}`,
   syncParked: '/api/sync/parked',
   syncParkedDiscard: '/api/sync/parked/discard',
+  search: '/api/search',
   systemStatus: '/api/system/status',
   systemLog: '/api/system/log',
   trash: '/api/trash',
   trashItem: (id: string) => `/api/trash/${encodeURIComponent(id)}`,
+  security: '/api/security',
+  dataExport: '/api/data/export',
+  dataImport: '/api/data/import',
 } as const;
 
 /** Read requests of the core (see ApiRequest). */
 export const CORE_READS = {
+  security: () => apiRequest(API_PATHS.security),
   projects: () => apiRequest(API_PATHS.projects),
+  /** Search across all modules (the command palette). */
+  search: (q: string) => apiRequest(API_PATHS.search, { q }),
   achievements: () => apiRequest(API_PATHS.achievements),
   notificationSettings: () => apiRequest(API_PATHS.notificationSettings),
   syncStatus: () => apiRequest(API_PATHS.syncStatus),
@@ -76,6 +93,18 @@ export const CORE_READS = {
   syncParked: () => apiRequest(API_PATHS.syncParked),
   /** Background jobs and the log of errors; only the owner may read it. */
   systemStatus: () => apiRequest(API_PATHS.systemStatus),
+  /** A day across every module (the life timeline). */
+  lifeDay: (day: string) => apiRequest('/api/life/day', { day }),
+  /** The numbers of every module for a period (a month, a year). */
+  lifeSummary: (from: string, to: string) => apiRequest('/api/life/summary', { from, to }),
+  lifeGoals: (year: number) => apiRequest('/api/life/goals', { year }),
+  /** What a goal of a year can be counted from. */
+  lifeMetrics: () => apiRequest('/api/life/metrics'),
+  /** The AI's kept story of `YYYY-MM` or `YYYY`: `{ story: null }` — not written yet. */
+  lifeStory: (period: string) => apiRequest('/api/life/story', { period }),
+  automations: () => apiRequest('/api/automations'),
+  /** The triggers and actions the modules registered. */
+  automationsCatalog: () => apiRequest('/api/automations/catalog'),
 };
 
 /** Signing in and the profile. Signing in does not start the session — see `DashboardClient`. */
@@ -104,6 +133,45 @@ export function authApi(api: ApiClient) {
       api.post<RecoveryCodes>(`${API_PATHS.twoFactor}/enable`, { code }),
     disableTwoFactor: (input: TwoFactorDisable) =>
       api.post<void>(`${API_PATHS.twoFactor}/disable`, input),
+  };
+}
+
+/** Rules "if X, then Y" across the modules. */
+export function automationsApi(api: ApiClient) {
+  return {
+    save: (input: AutomationRuleInput, id?: string) =>
+      id
+        ? api.put<AutomationRule>(`/api/automations/${id}`, input)
+        : api.post<AutomationRule>('/api/automations', input),
+    remove: (id: string) => api.delete(`/api/automations/${id}`),
+    /** A sentence → a rule filled in by the AI, to check and save (not saved). */
+    draft: (text: string) => api.post<AutomationRuleInput>('/api/automations/draft', { text }),
+  };
+}
+
+/** The Life section: goals of a year, the AI's stories, questions about one's own life. */
+export function lifeApi(api: ApiClient) {
+  return {
+    saveGoal: (input: LifeGoalInput, id?: string) =>
+      id
+        ? api.put<LifeGoal>(`/api/life/goals/${id}`, input)
+        : api.post<LifeGoal>('/api/life/goals', input),
+    /** The progress of a goal counted by hand. */
+    setProgress: (id: string, value: number) =>
+      api.put<LifeGoal>(`/api/life/goals/${id}/progress`, { value }),
+    removeGoal: (id: string) => api.delete(`/api/life/goals/${id}`),
+    /** Writes (or writes again) the AI's story of `YYYY-MM` or `YYYY`. */
+    writeStory: (period: string) =>
+      api.post<{ story: LifeStory | null }>('/api/life/story', { period }),
+    /** "When was I in Prague?" — answered by the AI with links to the days. */
+    ask: (question: string) => api.post<LifeAnswer>('/api/life/ask', { question }),
+  };
+}
+
+/** Search across the data of every module — what the command palette shows under "Found". */
+export function searchApi(api: ApiClient) {
+  return {
+    search: (query: string) => api.read<SearchHit[]>(CORE_READS.search(query)),
   };
 }
 
@@ -151,6 +219,42 @@ export function trashApi(api: ApiClient) {
     list: () => api.get<TrashItem[]>(API_PATHS.trash),
     restore: (id: string) => api.post<void>(`${API_PATHS.trashItem(id)}/restore`, {}),
     remove: (id: string) => api.delete(API_PATHS.trashItem(id)),
+  };
+}
+
+/** The security agent (the owner of the instance only): findings, checks, settings. */
+export function securityApi(api: ApiClient) {
+  return {
+    status: () => api.read<SecurityStatus>(CORE_READS.security()),
+    /** The rules look at everything again. */
+    scan: () => api.post<SecurityStatus>(`${API_PATHS.security}/scan`, {}),
+    /** The AI looks around and writes a report: a minute or two. */
+    investigate: () => api.post<SecurityStatus>(`${API_PATHS.security}/investigate`, {}),
+    saveSettings: (settings: SecuritySettings) =>
+      api.put<void>(`${API_PATHS.security}/settings`, settings),
+    /** The AI writes a step-by-step guide for the finding: up to a minute. */
+    writeGuide: (id: string) =>
+      api.post<SecurityStatus>(`${API_PATHS.security}/findings/${id}/guide`, {}),
+    /** `ignored` — "I know, leave it"; `open` — report it again. */
+    setFindingStatus: (id: string, status: 'open' | 'ignored') =>
+      api.put<void>(`${API_PATHS.security}/findings/${id}`, { status }),
+  };
+}
+
+/** One's data as a file: everything exported as one ZIP, and an archive brought back. */
+export function dataApi(api: ApiClient) {
+  return {
+    /** The archive of everything the user keeps here. */
+    export: () => api.blob(API_PATHS.dataExport),
+    /** Uploads an archive and tells what it would add; nothing is changed yet. */
+    previewImport: (archive: Blob) => {
+      const form = new FormData();
+      form.append('file', archive);
+      return api.post<DataImportReport>(API_PATHS.dataImport, form);
+    },
+    /** Adds what the uploaded archive has and the dashboard does not. */
+    applyImport: (id: string) => api.post<DataImportReport>(`${API_PATHS.dataImport}/${id}`, {}),
+    discardImport: (id: string) => api.delete(`${API_PATHS.dataImport}/${id}`),
   };
 }
 

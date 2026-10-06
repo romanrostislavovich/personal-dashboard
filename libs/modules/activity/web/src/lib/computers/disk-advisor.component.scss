@@ -1,0 +1,155 @@
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+h3 {
+  margin: 0;
+  font: var(--mat-sys-title-small);
+}
+
+.hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.error {
+  margin: 0;
+  color: var(--mat-sys-error);
+  font: var(--mat-sys-body-small);
+}
+
+.summary {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+}
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    display: flex;
+    gap: 8px;
+    padding: 8px 0;
+    border-top: 1px solid var(--mat-sys-outline-variant);
+  }
+}
+
+.kind {
+  flex: 0 0 40px;
+  margin-top: 8px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.path {
+  font-family: var(--pd-font-mono, monospace);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.size {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.safety {
+  font: var(--mat-sys-label-small);
+}
+
+.safe .safety {
+  color: var(--pd-success);
+}
+
+.check .safety {
+  color: var(--mat-sys-tertiary);
+}
+
+.risky .safety {
+  color: var(--mat-sys-error);
+}
+
+.reason {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.how {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  code {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.outcome {
+  font: var(--mat-sys-body-small);
+  color: var(--pd-success);
+  white-space: pre-wrap;
+}
+
+.done .path,
+.done .reason {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.done .kind {
+  color: var(--pd-success);
+}
+
+.bin {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spacer {
+  flex: 1;
+}

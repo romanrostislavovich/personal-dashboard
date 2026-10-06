@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { GamesLife } from './games.life';
+import { GamesSearch } from './games.search';
 import { GamesAiTools } from './games.ai-tools';
 import { GamesDigest } from './games.digest';
 import { GamesAchievements } from './games.achievements';
@@ -26,6 +28,8 @@ import { WowService } from './wow/wow.service';
 @Module({
   controllers: [GamesController],
   providers: [
+    GamesLife,
+    GamesSearch,
     GameAccountsService,
     DotaService,
     DotaHeroesService,

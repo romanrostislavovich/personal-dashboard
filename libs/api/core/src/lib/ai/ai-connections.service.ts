@@ -7,6 +7,7 @@ import {
   AiSettings,
   DEFAULT_DIGEST_TIME,
   DEFAULT_SPEECH_MODEL,
+  DEFAULT_VISION_MODEL,
   LocalDate,
   zonedDateTime,
 } from '@pd/contracts';
@@ -53,6 +54,8 @@ export class AiConnectionsService {
       morningDigestTime: settings?.morningDigestTime ?? DEFAULT_DIGEST_TIME,
       speechConnectionId: settings?.speechConnectionId ?? null,
       speechModel: settings?.speechModel ?? DEFAULT_SPEECH_MODEL,
+      visionConnectionId: settings?.visionConnectionId ?? null,
+      visionModel: settings?.visionModel ?? DEFAULT_VISION_MODEL,
       disabledModules: settings?.disabledModules ?? [],
       digestOptIns: settings?.digestOptIns ?? [],
     };
@@ -130,6 +133,9 @@ export class AiConnectionsService {
     if (preferences.speechConnectionId) {
       await this.find(userId, preferences.speechConnectionId);
     }
+    if (preferences.visionConnectionId) {
+      await this.find(userId, preferences.visionConnectionId);
+    }
     await this.db
       .insert(aiSettings)
       .values({ userId, ...preferences })
@@ -155,6 +161,35 @@ export class AiConnectionsService {
       apiKey: await this.secrets.get(userId, apiKeySecret(row.id)),
       model: settings?.speechModel ?? DEFAULT_SPEECH_MODEL,
     };
+  }
+
+  /**
+   * The connection that reads pictures: the chosen one with its vision model, or the first
+   * OpenAI one; `null` — none (DeepSeek, for one, sees no pictures).
+   */
+  async vision(userId: string): Promise<ChatConnection | null> {
+    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    const rows = await this.rows(userId);
+    const row =
+      rows.find((r) => r.id === settings?.visionConnectionId) ??
+      rows.find((r) => r.provider === 'openai');
+    if (!row) {
+      return null;
+    }
+    const apiKey = await this.secrets.get(userId, apiKeySecret(row.id));
+    return {
+      ...toChatConnection(row, apiKey),
+      model: settings?.visionModel ?? DEFAULT_VISION_MODEL,
+    };
+  }
+
+  /** One saved connection by its id (the security agent may have its own); null — gone. */
+  async connection(userId: string, id: string): Promise<ChatConnection | null> {
+    const row = (await this.rows(userId)).find((item) => item.id === id);
+    if (!row) {
+      return null;
+    }
+    return toChatConnection(row, await this.secrets.get(userId, apiKeySecret(row.id)));
   }
 
   /** The connection AI requests go through; null — AI is not configured. */

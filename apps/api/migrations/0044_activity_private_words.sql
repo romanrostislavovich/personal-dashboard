@@ -1,0 +1,1 @@
+ALTER TABLE "activity_settings" ADD COLUMN "private_words" text[] DEFAULT '{}' NOT NULL;

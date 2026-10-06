@@ -87,9 +87,21 @@
       <pd-wow-dashboard
         [accounts]="wow()"
         [busy]="busy()"
+        (changed)="accounts.reload()"
         (sync)="sync($event)"
         (remove)="remove($event)"
       />
+
+      <!-- The keys alone show nothing: a character is added by its region, realm and name. -->
+      @if (settings.value()?.wowCredentials && wow().length === 0) {
+        <section class="credentials">
+          <h3>{{ 'games.wow.addTitle' | transloco }}</h3>
+          <p class="hint">{{ 'games.wow.addHint' | transloco }}</p>
+          <button matButton="filled" (click)="add('wow')" [disabled]="busy()">
+            <mat-icon>add</mat-icon> {{ 'games.wow.addCharacter' | transloco }}
+          </button>
+        </section>
+      }
 
       <!-- Battle.net keys (needed only for WoW) are in Settings → Integrations. -->
       @if (settings.value() && !settings.value()?.wowCredentials) {

@@ -7,6 +7,7 @@ import { Pool } from 'pg';
 import { AppConfig } from '../config/env';
 import { Database } from '../database/database.module';
 import { SecretsService } from '../secrets/secrets.service';
+import { SignInLog } from '../security/sign-in-log.service';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { SessionsService } from './sessions.service';
@@ -49,7 +50,7 @@ describe.skipIf(!ADMIN_URL)('AuthService', { timeout: 60_000 }, () => {
     const users = new UsersService(db, config);
     sessions = new SessionsService(db);
     twoFactor = new TwoFactorService(new SecretsService(db, config));
-    auth = new AuthService(users, jwt, sessions, twoFactor, config);
+    auth = new AuthService(users, jwt, sessions, twoFactor, new SignInLog(db), config);
     await auth.register(
       {
         email: 'me@test.local',
@@ -162,5 +163,18 @@ describe.skipIf(!ADMIN_URL)('AuthService', { timeout: 60_000 }, () => {
     }
     // The account is locked from any address now, the right password included.
     await expect(login('correct horse', '10.8.8.8')).rejects.toThrow('Too many attempts');
+  });
+
+  it('journals the sign-ins: the failed ones with their address, not the refused ones', async () => {
+    const { rows } = await pool.query(
+      `SELECT outcome, ip, count(*)::int AS attempts FROM auth.sign_ins
+       WHERE ip IN ('10.9.9.9', '10.8.8.8') GROUP BY outcome, ip`,
+    );
+    // Ten wrong passwords are kept; the attempt refused for too many (429) is not.
+    expect(rows).toEqual([{ outcome: 'wrong-password', ip: '10.9.9.9', attempts: 10 }]);
+    const { rows: good } = await pool.query(
+      `SELECT count(*)::int AS attempts FROM auth.sign_ins WHERE outcome = 'ok'`,
+    );
+    expect(good[0].attempts).toBeGreaterThan(0);
   });
 });

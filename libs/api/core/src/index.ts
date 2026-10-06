@@ -11,6 +11,9 @@ export * from './lib/users/users.service';
 export * from './lib/projects/projects.schema';
 export * from './lib/projects/projects.service';
 export * from './lib/scheduler/scheduler.service';
+export * from './lib/search/search.service';
+export * from './lib/life/life.service';
+export * from './lib/automations/automations.service';
 export { SystemLogger } from './lib/system/system-logger';
 export * from './lib/secrets/secrets.service';
 export * from './lib/notifications/notification-channel';
@@ -31,3 +34,8 @@ export {
   FALLBACK_LOCALE,
   type LocalizedText,
 } from './lib/i18n/locale';
+export { DataExportService } from './lib/data-export/data-export.service';
+export type { ReadableExport, ReadableFile } from './lib/data-export/data-export.service';
+export { csvLine } from './lib/data-export/data-archive';
+export { SecurityService } from './lib/security/security.service';
+export type { FoundProblem, Inspection, SecuritySource } from './lib/security/security-source';

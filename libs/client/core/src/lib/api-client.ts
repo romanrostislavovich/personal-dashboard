@@ -1,4 +1,5 @@
 import { LoginResponse } from '@pd/contracts';
+import { isQueueable, Outbox, OutboxResult } from './outbox';
 import { ClientPlatform } from './platform';
 import { Session } from './session';
 
@@ -57,6 +58,10 @@ export function apiRequest(url: string, params?: QueryParams): ApiRequest {
  * A 401 means the access token (15 minutes) has expired: a new one is fetched with the refresh
  * token and the request is sent again; if that fails too, the session is over. Sign-in requests
  * are the exception — there a 401 is just a wrong password.
+ *
+ * Without a connection, a change of the user's own records (see `isQueueable`) is put into the
+ * outbox instead of failing: the call resolves with `undefined`, and the change is sent by
+ * `flushOutbox` once the server answers again.
  */
 export class ApiClient {
   private readonly fetch: typeof fetch;
@@ -65,6 +70,8 @@ export class ApiClient {
   constructor(
     private readonly platform: ClientPlatform,
     private readonly session: Session,
+    /** Where changes made offline wait; without it they fail like any other request. */
+    private readonly outbox?: Outbox,
   ) {
     // Called unbound: browsers reject `fetch` invoked as a method of another object.
     const platformFetch = platform.fetch ?? globalThis.fetch;
@@ -133,6 +140,30 @@ export class ApiClient {
   }
 
   async request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
+    try {
+      return await this.requestNow<T>(method, path, options);
+    } catch (error) {
+      // An error status is an answer; anything else means the server was not reached.
+      const unreachable = !(error instanceof ApiError) && !options.signal?.aborted;
+      if (this.outbox && unreachable && isQueueable(method, path, options.body)) {
+        await this.outbox.add(method, path, options.body);
+        return undefined as T;
+      }
+      throw error;
+    }
+  }
+
+  /** Sends the changes made offline, oldest first (see Outbox). */
+  async flushOutbox(): Promise<OutboxResult> {
+    if (!this.outbox) {
+      return { sent: 0, refused: [], left: 0 };
+    }
+    return this.outbox.flush(async (write) => {
+      await this.requestNow(write.method, write.path, { body: write.body });
+    });
+  }
+
+  private async requestNow<T>(method: string, path: string, options: RequestOptions): Promise<T> {
     const response = await this.sendAuthorized(method, path, options, 'application/json');
     const body = await readBody(response);
     if (!response.ok) {

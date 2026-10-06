@@ -90,9 +90,9 @@
   },
   "wow": {
     "region": "Регион",
-    "realm": "Реалм (slug)",
+    "realm": "Мир",
     "character": "Имя персонажа",
-    "realmHint": "Slug реалма — как в адресе armory: «Гордунни» → gordunni, «Howling Fjord» → howling-fjord",
+    "realmHint": "Мир так, как он называется в игре, — «Гордунни», «Ревущий фьорд». Если он не найдётся, в ошибке будет список миров этой версии.",
     "achievementPoints": "Очки достижений",
     "achievements": "Достижений",
     "recentAchievements": "Последние достижения",
@@ -107,13 +107,80 @@
       "1": "Открой develop.battle.net, войди под аккаунтом Battle.net и перейди в API Access → Create Client.",
       "2": "Название любое; Redirect URL обязателен — подойдёт https://localhost; больше ничего не отмечай и создай.",
       "3": "Скопируй Client ID и Client Secret и вставь сюда, затем добавь персонажей на странице «Игры»."
+    },
+    "addTitle": "Добавь персонажа",
+    "addHint": "Ключи Battle.net сохранены. Теперь добавь персонажа: регион, реалм как в адресе armory и имя. Каждый персонаж добавляется отдельно.",
+    "addCharacter": "Добавить персонажа",
+    "version": "Версия игры",
+    "versions": {
+      "retail": "World of Warcraft (актуальная)",
+      "anniversary": "Classic Anniversary",
+      "era": "Classic Era, Hardcore, Season of Discovery",
+      "progression": "Classic: Cataclysm, Mists of Pandaria"
+    },
+    "classic": "Classic",
+    "level": "Уровень",
+    "bestMythic": "Лучший рейтинг Mythic+",
+    "token": "Жетон WoW",
+    "compare": "Персонажи рядом",
+    "notifyOn": "Уведомления включены: рекорды Mythic+, убитые боссы, рейтинг PvP, новый транспорт, питомцы и звания",
+    "notifyOff": "Уведомления по этому персонажу выключены",
+    "collections": {
+      "mounts": "Транспорт",
+      "pets": "Питомцы",
+      "toys": "Игрушки",
+      "heirlooms": "Наследуемые вещи",
+      "titles": "Звания",
+      "quests": "Выполнено заданий"
+    },
+    "stats": {
+      "health": "Здоровье",
+      "power": "Ресурс",
+      "strength": "Сила",
+      "agility": "Ловкость",
+      "intellect": "Интеллект",
+      "stamina": "Выносливость",
+      "armor": "Броня",
+      "crit": "Критический удар",
+      "haste": "Скорость",
+      "mastery": "Искусность",
+      "versatility": "Универсальность"
+    },
+    "details": {
+      "open": "Подробнее",
+      "notLoaded": "Подробности появятся со следующим обновлением — нажми «Обновить».",
+      "overview": "Обзор",
+      "gear": "Экипировка",
+      "talents": "Таланты",
+      "raids": "Рейды",
+      "collections": "Коллекции",
+      "reputations": "Репутации",
+      "professions": "Профессии",
+      "itemLevelHistory": "Уровень предметов за 90 дней",
+      "members": "участников: {{count}}",
+      "rank": "ранг {{rank}}",
+      "active": "активная",
+      "noTalents": "Таланты не выбраны.",
+      "rating": "рейтинг",
+      "dungeon": "Подземелье",
+      "key": "Ключ",
+      "time": "Время",
+      "date": "Дата",
+      "overTime": "Не в таймер",
+      "honorLevel": "Уровень чести",
+      "honorableKills": "Почётные убийства",
+      "bracket": "Режим",
+      "played": "Сыграно",
+      "won": "Побед",
+      "noBrackets": "В этом сезоне рейтинговых игр нет."
     }
   },
   "errors": {
     "notFound": "Аккаунт не найден. Для Dota проверь, что статистика матчей открыта; для WoW — регион, реалм и имя.",
     "duplicate": "Этот аккаунт уже добавлен",
     "invalidCredentials": "Battle.net не принял ключи",
-    "generic": "Что-то пошло не так. Если добавляешь WoW — сначала сохрани ключи Battle.net."
+    "generic": "Что-то пошло не так. Если добавляешь WoW — сначала сохрани ключи Battle.net.",
+    "realmNotFound": "В этой версии игры нет такого мира. Её миры: {{realms}}"
   },
   "widget": {
     "dota30": "30 дней: {{wins}}–{{losses}}",
@@ -162,5 +229,10 @@
       "3": "Вставь его сюда, затем добавь свои профили на странице «Игры» — один ключ читает их все.",
       "4": "Чтобы данные приходили: в профиле Steam открой «Доступ к игровой информации», в Dota 2 включи «Общедоступную историю матчей»."
     }
+  },
+  "life": {
+    "dotaDay": "Dota 2: матчей {{matches}}, побед {{wins}}",
+    "dotaMatches": "Матчей в Dota 2",
+    "dotaWins": "побед {{wins}} ({{rate}}%)"
   }
 }

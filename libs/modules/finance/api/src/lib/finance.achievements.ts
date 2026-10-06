@@ -1,7 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
-import { and, count, eq, SQL, sql } from 'drizzle-orm';
-import { costSources, recurringPayments, transactions } from './finance.schema';
+import { and, count, eq, isNotNull, SQL, sql } from 'drizzle-orm';
+import { costSources, recurringPayments, transactions, wishes } from './finance.schema';
 
 /** Finance achievements: for how many months the records have been kept. */
 @Injectable()
@@ -14,6 +14,7 @@ export class FinanceAchievements implements OnModuleInit {
   onModuleInit(): void {
     this.registerTracking();
     this.registerAutomation();
+    this.registerWishlist();
   }
 
   /** Keeping records: months with transactions and their number. */
@@ -109,6 +110,30 @@ export class FinanceAchievements implements OnModuleInit {
     });
   }
 
+  /** The wishlist: what was wanted and then bought. */
+  private registerWishlist(): void {
+    this.achievements.register({
+      id: 'finance.wishes-bought',
+      module: 'finance',
+      measure: (userId) =>
+        this.count(wishes, and(eq(wishes.userId, userId), isNotNull(wishes.boughtAt))),
+      tiers: achievementTiers(
+        [
+          1,
+          '🎁',
+          { en: 'A wish come true', ru: 'Мечта сбылась' },
+          { en: 'Buy something from the wishlist', ru: 'Купить что-нибудь из списка желаний' },
+        ],
+        [
+          10,
+          '🛍️',
+          { en: 'Patient buyer', ru: 'Терпеливый покупатель' },
+          { en: '10 wishes bought', ru: '10 купленных желаний' },
+        ],
+      ),
+    });
+  }
+
   private async monthsWithTransactions(userId: string): Promise<number> {
     const [row] = await this.db
       .select({
@@ -120,7 +145,7 @@ export class FinanceAchievements implements OnModuleInit {
   }
 
   private async count(
-    table: typeof transactions | typeof recurringPayments | typeof costSources,
+    table: typeof transactions | typeof recurringPayments | typeof costSources | typeof wishes,
     where: SQL | undefined,
   ): Promise<number> {
     const [row] = await this.db.select({ value: count() }).from(table).where(where);

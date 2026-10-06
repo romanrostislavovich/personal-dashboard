@@ -20,7 +20,9 @@
   "tabs": {
     "overview": "Overview",
     "transactions": "Transactions",
-    "recurring": "Recurring payments"
+    "recurring": "Subscriptions and payments",
+    "goals": "Goals",
+    "wishlist": "Wishlist"
   },
   "transaction": {
     "add": "Add transaction",
@@ -37,9 +39,24 @@
     "dayHint": "31 = last day of the month",
     "active": "Active",
     "everyMonth": "on day {{day}} monthly",
-    "hint": "Once a month on the charge day an expense is created automatically and you get a notification.",
+    "hint": "On its day a payment becomes an expense by itself and a notification comes. A yearly one — once a year in its month; nothing is charged before a free trial ends.",
     "empty": "No recurring payments",
-    "confirmDelete": "Delete payment “{{name}}”? Transactions it created will stay."
+    "confirmDelete": "Delete payment “{{name}}”? Transactions it created will stay.",
+    "period": "How often",
+    "monthly": "Every month",
+    "yearly": "Once a year",
+    "monthOfYear": "Month",
+    "trialEndsOn": "Free trial until",
+    "trialHint": "A reminder 3 days before",
+    "everyYear": "yearly, {{date}}",
+    "trialUntil": "trial until {{date}}",
+    "priceWas": "Was {{amount}} until {{date}}",
+    "perMonth": "Subscriptions a month:",
+    "perYear": "a year:",
+    "suggestions": "Looks like subscriptions",
+    "suggestionsHint": "Charged once a month at about the same price — add them to keep track",
+    "seen": "{{count}} months",
+    "notSubscription": "Not a subscription"
   },
   "widget": {
     "title": "Finance",
@@ -121,7 +138,9 @@
     "notFound": "Nothing found",
     "clearFilters": "Reset filters",
     "actions": "Actions",
-    "recurring": "Recurring payment"
+    "recurring": "Recurring payment",
+    "receipt": "Recorded from a receipt",
+    "openReceipt": "The receipt"
   },
   "main": {
     "all": "Everything in {{currency}}",
@@ -130,5 +149,107 @@
     "rates": "Other currencies are converted at the European Central Bank rate of each transaction’s day.",
     "approximate": "{{currencies}}: at today’s rate (the ECB does not publish it).",
     "missing": "{{currencies}}: no rate, left out of the totals."
+  },
+  "budgets": {
+    "title": "Budgets",
+    "subtitle": "Monthly limits in the main currency: a warning at 80%, and when one is spent",
+    "empty": "No budgets yet: set a monthly limit for a category or for all expenses.",
+    "category": "Category",
+    "limit": "Limit a month",
+    "total": "All expenses",
+    "add": "Category",
+    "addTotal": "All expenses"
+  },
+  "life": {
+    "spent": "Spent {{amount}} {{currency}} · mostly on {{top}}",
+    "earned": "Earned {{amount}} {{currency}}",
+    "spentTotal": "Spent",
+    "topCategory": "mostly on {{category}}",
+    "earnedTotal": "Earned",
+    "savedTotal": "Left over (income − expenses)"
+  },
+  "goals": {
+    "add": "New goal",
+    "edit": "Edit the goal",
+    "hint": "What is saved counts by itself from the wallet (income minus expenses since the start) plus what you add by hand.",
+    "name": "What for",
+    "namePlaceholder": "A trip, a new laptop, a safety cushion…",
+    "target": "How much",
+    "startedOn": "Counting from",
+    "deadline": "By (optional)",
+    "wallet": "Money comes from",
+    "walletHint": "What is left in this wallet since the start counts towards the goal",
+    "byHand": "Only what I add by hand",
+    "until": "by {{date}}",
+    "done": "Reached 🎉",
+    "needed": "Put aside {{amount}} a month",
+    "pace": "saving {{amount}} a month so far",
+    "split": "wallet {{wallet}} · by hand {{added}}",
+    "contribute": "Add money",
+    "putIn": "Put in",
+    "takeOut": "Take out",
+    "day": "Day",
+    "history": "Added by hand",
+    "noHistory": "Nothing added by hand yet.",
+    "empty": "No goals yet: what are you saving for?",
+    "confirmDelete": "Delete the goal \"{{name}}\"?"
+  },
+  "wishlist": {
+    "add": "New wish",
+    "edit": "Edit the wish",
+    "hint": "Paste a link to a product in a shop: its price is read from the page every morning, and you get a message when it changes.",
+    "url": "Link to the product",
+    "urlHint": "The page of the product itself, not a search or a category",
+    "name": "Name",
+    "nameHint": "Empty — the name from the page",
+    "price": "Price",
+    "priceHint": "Only when the page does not tell it: the shop’s own price replaces it",
+    "note": "Note",
+    "empty": "Nothing here yet: what would you like to buy?",
+    "adding": "Reading the page…",
+    "noPrice": "No price yet",
+    "was": "was {{amount}}",
+    "range": "lowest {{lowest}} · highest {{highest}}",
+    "lowestNow": "The lowest price so far",
+    "checked": "checked {{date}}",
+    "unreadable": "The shop’s page does not tell the price ({{error}}), so it is not watched: keep it up to date by hand with “Edit”.",
+    "history": "Price history",
+    "noHistory": "The chart appears after the second day.",
+    "check": "Check now",
+    "open": "Open in the shop",
+    "bought": "Bought",
+    "markBought": "Bought it",
+    "unmarkBought": "Want it again",
+    "confirmDelete": "Delete \"{{name}}\" from the wishlist?",
+    "widgetTitle": "Wishlist",
+    "widgetEmpty": "Add a product to watch its price."
+  },
+  "report": {
+    "title": "The month by the AI",
+    "subtitle": "Where the money went, what changed and where to save",
+    "written": "Written {{date}}",
+    "write": "Review the month",
+    "rewrite": "Write again",
+    "nothing": "No transactions this month.",
+    "error": "The AI could not write it: check the AI connection in Settings, or whether finance is hidden from it."
+  },
+  "automations": {
+    "expense": "An expense is recorded",
+    "min": "From the amount (main currency)",
+    "category": "Only the category",
+    "budget": "A budget is running out",
+    "level": "When",
+    "levels": {
+      "any": "80% or spent",
+      "warned": "80% spent",
+      "exceeded": "Spent"
+    },
+    "wishPrice": "A price in the wishlist changed",
+    "direction": "Which way",
+    "directions": {
+      "any": "Any change",
+      "down": "Cheaper",
+      "up": "More expensive"
+    }
   }
 }

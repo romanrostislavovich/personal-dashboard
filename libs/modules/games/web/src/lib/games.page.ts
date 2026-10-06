@@ -7,9 +7,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { GameAccountInput } from '@pd/contracts';
+import { Game, GameAccountInput } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
-import { errorStatus, INTEGRATIONS_LINK } from '@pd/web-core';
+import { errorBody, errorStatus, INTEGRATIONS_LINK } from '@pd/web-core';
 import { AddGameAccountDialog } from './add-account.dialog';
 import { DotaDashboardComponent } from './dota/dota-dashboard.component';
 import { GamesApi } from './games.api';
@@ -53,10 +53,13 @@ export class GamesPage {
   protected readonly wow = computed(() => this.accounts.value().filter((a) => a.game === 'wow'));
   protected readonly tabIndex = signal(0);
 
-  async add(): Promise<void> {
+  /** `game` — the game the dialog opens on (a tab's own "add" button). */
+  async add(game?: Game): Promise<void> {
     const input = await firstValueFrom(
       this.dialog
-        .open<AddGameAccountDialog, void, GameAccountInput>(AddGameAccountDialog)
+        .open<AddGameAccountDialog, Game | undefined, GameAccountInput>(AddGameAccountDialog, {
+          data: game,
+        })
         .afterClosed(),
     );
     if (input) {
@@ -91,9 +94,13 @@ export class GamesPage {
       this.accounts.reload();
     } catch (error) {
       const key = errorKeys[errorStatus(error)];
-      this.snackBar.open(this.transloco.translate(key ?? 'games.errors.generic'), 'OK', {
-        duration: 6000,
-      });
+      // "No realm … Realms: a, b, c": the server lists the realms the user can choose from.
+      const said = (errorBody(error) as { message?: string } | null)?.message ?? '';
+      const realms = said.split('Realms: ')[1];
+      const text = realms
+        ? this.transloco.translate('games.errors.realmNotFound', { realms })
+        : this.transloco.translate(key ?? 'games.errors.generic');
+      this.snackBar.open(text, 'OK', { duration: realms ? 30000 : 6000 });
     } finally {
       this.busy.set(false);
     }

@@ -48,7 +48,30 @@
     },
     "level": "Level {{level}}",
     "xp": "{{current}} / {{next}} XP to the next level",
-    "unlocked": "{{unlocked}} of {{total}} achievements"
+    "unlocked": "{{unlocked}} of {{total}} achievements",
+    "edit": {
+      "start": "Edit",
+      "done": "Done",
+      "hint": "Drag the widgets by the handle, change their size, hide the ones you do not need. It stays on this device.",
+      "reset": "Back to the shared layout",
+      "applyEverywhere": "Apply everywhere",
+      "applied": "The layout is applied on every device",
+      "notApplied": "Could not save the layout. Please try again.",
+      "move": "Drag to move",
+      "hide": "Hide the widget",
+      "show": "Show the widget",
+      "sectionHidden": "the section is hidden",
+      "sizes": {
+        "small": "Small",
+        "medium": "Medium",
+        "large": "Full width"
+      },
+      "sizeLetters": {
+        "small": "S",
+        "medium": "M",
+        "large": "L"
+      }
+    }
   },
   "projects": {
     "title": "Projects",
@@ -192,6 +215,24 @@
       "signOut": "Sign out this device",
       "signOutOthers": "Sign out everywhere else"
     },
+    "data": {
+      "title": "Export and import",
+      "subtitle": "Everything you keep here as one file",
+      "exportHint": "A ZIP with all your records (JSON), the transactions as CSV, the diary as Markdown and the photos. Passwords and the tokens of integrations are never in it.",
+      "export": "Export everything",
+      "import": "Import an archive",
+      "exporting": "Collecting the archive…",
+      "reading": "Reading the archive…",
+      "importing": "Adding the records…",
+      "preview": "The archive of {{date}} would add {{added}} records; {{existing}} are here already and stay as they are.",
+      "applied": "Added {{added}} records from the archive of {{date}}; {{existing}} were here already.",
+      "apply": "Import",
+      "unknown": "Left out — this dashboard has no such sections: {{tables}}",
+      "notArchive": "This is not an archive of a dashboard, or it is damaged.",
+      "otherAccount": "This archive is already imported into another account of this dashboard.",
+      "gone": "The uploaded archive is gone: pick the file again.",
+      "failed": "It did not work. Nothing was changed."
+    },
     "trash": {
       "title": "Trash",
       "subtitle": "Deleted in the last 30 days — by you or by the AI assistant",
@@ -226,7 +267,9 @@
       "account": "Account",
       "integrations": "Integrations",
       "data": "Data",
-      "system": "System"
+      "system": "System",
+      "appearance": "Appearance",
+      "automations": "Automations"
     },
     "integrationsIntro": "Connections to outside services: where notifications go, where the modules take their data from, which AI answers.",
     "openIntegrations": "Connect in Settings → Integrations",
@@ -253,6 +296,54 @@
     "guide": {
       "title": "How to connect",
       "open": "Open {{site}}"
+    },
+    "theme": {
+      "colors": "Colours",
+      "mode": "Mode",
+      "modes": {
+        "system": "As the device",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "accent": "Accent colour",
+      "presets": {
+        "violet": "Violet",
+        "blue": "Blue",
+        "green": "Green",
+        "orange": "Orange",
+        "pink": "Pink",
+        "gray": "Grey"
+      },
+      "custom": "Your own colour",
+      "black": "Black background in the dark mode (for OLED screens)",
+      "glow": "Glow of the accent colours behind the page",
+      "shape": "Text and shape",
+      "font": "Font",
+      "fonts": {
+        "default": "Inter and Manrope",
+        "system": "The font of the device",
+        "serif": "With serifs",
+        "mono": "Monospace"
+      },
+      "density": "Density",
+      "densities": {
+        "normal": "Normal",
+        "compact": "Compact"
+      },
+      "radius": "Rounded corners",
+      "devices": "This device and the others",
+      "own": "This device has a look of its own.",
+      "shared": "This device shows the look of the account.",
+      "builtIn": "This device shows the built-in look.",
+      "devicesHint": "Changes of the theme, the sections and the home page stay on this device. “Apply everywhere” makes them the look of the account: every device takes it, their own included.",
+      "applyEverywhere": "Apply everywhere",
+      "useAccount": "Back to the look of the account",
+      "applied": "Applied on every device",
+      "notApplied": "Could not save. Please try again."
+    },
+    "sections": {
+      "title": "Sections",
+      "hint": "A hidden section leaves the menu and the home page. Its data keeps coming and the assistant still sees it."
     }
   },
   "toast": {
@@ -264,5 +355,84 @@
       "epic": "Epic",
       "legendary": "Legendary"
     }
+  },
+  "palette": {
+    "open": "Search",
+    "placeholder": "Go to a page, search, or type a task…",
+    "nothing": "Nothing found.",
+    "failed": "It did not work",
+    "groups": {
+      "actions": "Actions",
+      "pages": "Pages",
+      "found": "Found"
+    },
+    "mode": {
+      "light": "Light theme",
+      "dark": "Dark theme",
+      "system": "Theme as on the device"
+    }
+  },
+  "offline": {
+    "offline": "No connection.",
+    "pending": "Waiting to be sent: {{count}}.",
+    "savedTitle": "Saved on this device",
+    "savedText": "There is no connection: it will be sent when the server answers.",
+    "sentTitle": "Sent to the server",
+    "sentText": "Changes made offline: {{count}}.",
+    "refusedTitle": "The server refused some changes",
+    "refusedText": "Changes made offline that were not accepted: {{count}}.",
+    "updateReady": "A new version of the dashboard is ready.",
+    "reload": "Reload"
+  },
+  "duration": {
+    "hoursMinutes": "{{hours}} h {{minutes}} min",
+    "minutes": "{{minutes}} min"
+  },
+  "capture": {
+    "nothing": "Nothing was captured.",
+    "text": "Captured text",
+    "image": "Captured screenshot",
+    "close": "Close"
+  },
+  "life": {
+    "achievements": "Achievements unlocked"
+  },
+  "automations": {
+    "daily": "Every day at a time",
+    "time": "Time",
+    "weekday": "Day",
+    "weekdays": {
+      "any": "Every day",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "7": "Sunday"
+    },
+    "notify": "Send me a message",
+    "text": "Text",
+    "title": "Rules \"if X, then Y\"",
+    "intro": "When something happens in one section, something is done in another. Rules run on the server, at most 20 times a day each.",
+    "describe": "Describe a rule",
+    "describePlaceholder": "If a site goes down, add a task to fix it",
+    "compose": "Compose",
+    "composeHint": "The AI fills in the rule; you check it and save.",
+    "composeError": "The AI could not make a rule",
+    "add": "New rule",
+    "edit": "The rule",
+    "name": "Name",
+    "when": "When",
+    "then": "Then",
+    "variables": "The text may use:",
+    "active": "On",
+    "fired": "Ran {{count}} times, last {{date}}",
+    "never": "Not run yet",
+    "error": "Last run failed: {{error}}",
+    "empty": "No rules yet.",
+    "confirmDelete": "Delete the rule \"{{name}}\"?",
+    "any": "—",
+    "general": "General"
   }
 }

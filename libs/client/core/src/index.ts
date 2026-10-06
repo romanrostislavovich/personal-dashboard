@@ -2,11 +2,13 @@
 export * from './lib/platform';
 export * from './lib/session';
 export * from './lib/api-client';
+export * from './lib/outbox';
 export * from './lib/core-api';
 export * from './lib/realtime';
 export * from './lib/locale';
 export * from './lib/dashboard-client';
 // Requests of the modules, like their types in @pd/contracts: every client gets all of them.
+export * from './lib/modules/activity';
 export * from './lib/modules/ai';
 export * from './lib/modules/development';
 export * from './lib/modules/diary';
