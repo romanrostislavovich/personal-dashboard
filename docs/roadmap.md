@@ -188,6 +188,15 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   estimate ("slept ~6 h, went to bed at 2:40"), a weekly trend, in Life; the phone refines it later
 - **Sleep, steps, weight** — the first part of Fitness: from Google Fit / Health Connect or typed
   in by hand, shown in Life and in the morning digest
+- **Weather: more** — air quality and pollen; days off and public holidays in the digest
+
+#### Development and monitoring
+
+- **A public status page** — for the sites of Monitoring, the user picks which are shown
+- **More checks** — a heartbeat for cron jobs (in the spirit of healthchecks.io: an alert when a
+  job did not report in time), DNS, a keyword on the page, ping
+- **CI status of the repositories** — failed GitHub Actions and deploys shown in Development and
+  in the digest
 
 #### Desktop
 
@@ -256,6 +265,13 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Science** — a section for science
 - **Psychology** — a section for psychology; how exactly to tie it in is still open (for example
   mood and diary patterns, self-reflection prompts, tests and notes)
+- **Car** — mileage, refuelling and fuel use, service by intervals; the costs go to Finance by
+  themselves
+- **Utilities and meters** — a monthly reminder to read the meters (a photo, the AI reads the
+  numbers), charts of use and costs
+- **Recipes** — your own recipes with ingredients and steps, tags and search
+- **Digital legacy** — if you do not sign in for N days, a chosen person gets access to what you
+  allowed (e.g. a part of the password vault); warnings first, and it can be cancelled
 
 #### Integrations
 
@@ -275,6 +291,8 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   the rest needs the Dota 2 Game Coordinator (a sign-in to Steam from the server)
 - **Games:** PlayStation and Xbox — playtime and platform achievements
 - **Music and media:** podcasts and YouTube history
+- **Your own channels** — statistics of your YouTube, Twitch or Telegram channel, like SoundCloud
+  already has: subscribers, views, comments day by day
 - **Activity: more trackers** — the tracker of the desktop app watches windows on Windows only;
   macOS and Linux, and the same tracker on a phone (time per app), report to the same section
 - **Wishlist: more** — a wish feeds a savings goal; shops that turn a server away (Media Expert,
