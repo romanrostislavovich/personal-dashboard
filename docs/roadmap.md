@@ -259,6 +259,11 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 #### Integrations
 
+- **Google services** — one Google sign-in (OAuth) for all of them: Calendar (the Calendar
+  module), Fit / Health Connect (sleep, steps, weight), Gmail (bills and receipts into Finance,
+  important letters in the digest), Drive (backups and files for the AI), Photos (photos of a day
+  in the diary and Life), Tasks (synced with the TODO list), YouTube (watch history), Maps
+  Timeline (places and trips for Travel)
 - **Notion** — an integration with Notion (API token): import pages and databases (notes,
   tasks, reading lists) into the matching modules, a two-way sync of tasks, the AI can search
   your Notion pages
