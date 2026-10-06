@@ -189,6 +189,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Sleep, steps, weight** — the first part of Fitness: from Google Fit / Health Connect or typed
   in by hand, shown in Life and in the morning digest
 - **Weather: more** — air quality and pollen; days off and public holidays in the digest
+- **Shopping list** — items added from Telegram ("milk, bread") or the page, grouped by shop or
+  category, ticked off in the shop; ingredients of a recipe added in one click; can be shared
+  with someone at home
 - **Parcel tracking** — InPost, DHL, Poczta Polska, Nova Poshta and others: send a tracking
   number to Telegram (or it is picked up from Gmail), status changes arrive by themselves, the
   parcels on the way in the digest
