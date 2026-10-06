@@ -81,47 +81,149 @@
 
 ## Next
 
-### Planned
+Split by priority: **Now** is what comes first (safety of the data before more sensitive data
+arrives, and quick wins), **Next** is the following round, **Later** is the rest of the plan.
+
+### Now
+
+#### Data and security
+
+- **Encryption of sensitive data** — the diary, the medical record, notes about people and the
+  password vault are stored encrypted; for such modules the AI can be limited to a local model
+  (Ollama), so they never go to an outside API
+- **Off-site backup** — an encrypted copy of the daily dumps in S3 / Backblaze B2, not only on
+  your computer
+- **Integration status** — one screen with the last successful refresh of every integration and
+  the tokens that expire soon (Spotify, Battle.net, GitLab...), with a warning before an
+  integration breaks
+
+#### Tests and CI
+
+- **End-to-end smoke tests** (Playwright): sign-in, a diary entry, a transaction, an AI message
+- **Database tests in CI** — a PostgreSQL service in GitHub Actions, so the `*.db.spec.ts` tests
+  run instead of being skipped
+- **Dependency updates** (Renovate) and a clean `npm audit`
+
+#### Quick wins
+
+- **Section visibility** — turn whole sections on or off in the settings (e.g. hide Fitness if
+  you do not use it): a hidden section disappears from the menu, the home page, the digest and
+  notifications
+- **Telegram buttons** — buttons under notifications already exist; still to do: "Yes / No" to
+  confirm a deletion instead of a typed answer, quick commands like `/spent 12 coffee`
+- **Evening check-in in Telegram** — the bot asks "how was your day?", the answer goes to mood and
+  the diary
+
+### Next
+
+#### Everyday use
+
+- **Bank by API** — Monobank API or open banking (GoCardless): transactions arrive by themselves,
+  without statements or SMS
+- **Quick capture on the desktop** — a global hotkey opens a small window: "coffee 3€", "buy
+  milk", "mood 4"; the AI puts each into its module
+- **Notification settings** — which module sends what and where; quiet hours (nothing at night)
+  and small notifications grouped into one message
+- **Command palette (Ctrl+K)** — search across modules and quick actions
+- **Customizable home page** — order and hide widgets
+- **Themes** — light, dark and "follow the system", a few ready-made themes, and customization:
+  accent color, fonts, density; the same theme in web and desktop
+- **Finance:** budgets per category with warnings; a photo of a receipt in Telegram becomes a
+  transaction; a reminder before a free trial ends and when a subscription gets more expensive
+
+#### New modules
 
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
-- **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
-- **Activity** — a new section with computer activity tracked by the desktop app: time at the PC
-  per day, time per application (and window or site), active vs idle time, daily and weekly
-  totals; data stays on your own server
-- **Development: self-hosted GitLab** — an instance of your own next to gitlab.com (its address
-  with the token); later the tabs of the section may move to their own submenu
-- **Dota 2: the whole match history** — the Steam Web API gives only the 500 latest matches;
-  the rest needs the Dota 2 Game Coordinator (a sign-in to Steam from the server)
-- **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
-- **Books** — reading list, progress, ratings and notes
-- **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and
-  its trend, heart rate; data from smart watches and fitness bands (Apple Health, Google Fit /
-  Health Connect, Garmin, Fitbit, Mi Band / Zepp and similar); runs and rides from Strava
-- **Music: SoundCloud** — an integration of the Music module, next to Last.fm and Spotify: my own
-  mixes and tracks with their plays, likes, reposts and comments
-- **Science** — a section for science
-- **Psychology** — a section for psychology; how exactly to tie it in is still open (for example
-  mood and diary patterns, self-reflection prompts, tests and notes)
-- **Calendar** — Google Calendar / CalDAV: today's meetings in the morning digest, linked to the
-  time tracker and tasks
-- **People (personal CRM)** — grows out of Birthdays: notes about people, when you last talked,
-  reminders like "you have not written to X for a long time"
 - **Health** — your own medical record: blood type, allergies, chronic conditions, vaccinations,
   operations, doctors and their contacts; medications and when to take them, doctor visits, lab
   results with charts (a PDF of the results is parsed by the AI, like a bank statement is today)
+- **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and
+  its trend, heart rate; data from smart watches and fitness bands (Apple Health, Google Fit /
+  Health Connect, Garmin, Fitbit, Mi Band / Zepp and similar); runs and rides from Strava
+- **Habits** — a habit tracker module, in the digest too
+- **Calendar** — Google Calendar / CalDAV: today's meetings in the morning digest, linked to the
+  time tracker and tasks
+- **Activity** — a new section with computer activity tracked by the desktop app: time at the PC
+  per day, time per application (and window or site), active vs idle time, daily and weekly
+  totals; data stays on your own server
+- **Time tracker + Pomodoro** — track time per project or task, Pomodoro sessions with breaks
+
+#### Data in and out
+
+- **Export of all data** — the diary as Markdown (Obsidian-compatible), finance as CSV,
+  everything as JSON
+- **Import from other apps** — Daylio / Day One (diary), Todoist (tasks), Toggl (time), CSV of
+  other banks; makes moving in easy
+
+#### AI
+
+- **AI memory** — facts about the user the assistant keeps between conversations
+- **Life timeline** — one feed of a day across all modules: diary entry, spending, what was
+  playing, matches, weather, steps; open any day and see how it went
+- **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
+  Cursor can read and change your data directly, without its own chat
+
+#### For new users
+
+- **Demo mode** — a start with sample data and a public demo instance, so the project can be
+  tried before installing it
+- **First-run wizard** — pick the sections you need (with Section visibility), the time zone,
+  connect Telegram
+
+### Later
+
+#### Modules
+
+- **People (personal CRM)** — grows out of Birthdays: notes about people, when you last talked,
+  reminders like "you have not written to X for a long time"
 - **Documents and deadlines** — passport, insurance, car inspection, warranties, domain renewals,
   with reminders well in advance (domains can live in Monitoring)
 - **Investments and net worth** — stocks, crypto, deposits; net worth over time on top of the
   Finance wallets
+- **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
+- **Books** — reading list, progress, ratings and notes
 - **Bookmarks / read later** — links sent to Telegram are saved, the AI writes a short summary,
   full-text search
 - **Travel** — a map of countries and cities, trips with their costs from Finance; pairs with the
   location tracker of the mobile app
 - **Learning** — courses, languages (Duolingo), flashcards with spaced repetition
+- **Science** — a section for science
+- **Psychology** — a section for psychology; how exactly to tie it in is still open (for example
+  mood and diary patterns, self-reflection prompts, tests and notes)
+
+#### Integrations
+
 - **Notion** — an integration with Notion (API token): import pages and databases (notes,
   tasks, reading lists) into the matching modules, a two-way sync of tasks, the AI can search
   your Notion pages
+- **Home Assistant** — the smart home: power use, sensors, the state of the house in the morning
+  digest
+- **Development: self-hosted GitLab** — an instance of your own next to gitlab.com (its address
+  with the token); later the tabs of the section may move to their own submenu
+- **Dota 2: the whole match history** — the Steam Web API gives only the 500 latest matches;
+  the rest needs the Dota 2 Game Coordinator (a sign-in to Steam from the server)
+- **Games:** PlayStation and Xbox — playtime and platform achievements
+- **Music: SoundCloud** — an integration of the Music module, next to Last.fm and Spotify: my own
+  mixes and tracks with their plays, likes, reposts and comments
+- **Music and media:** podcasts and YouTube history
 
+#### Across modules
+
+- **Insights across modules** — mood on days with a run, what was playing on bad days (through AI
+  tools or core insights: modules do not depend on each other). The AI looks for such links across
+  all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you
+  were sad, you listened to this music and did that"
+- **Year in review / monthly "Wrapped"** — top artists, money spent, number of entries, the best
+  month by mood, achievements; the text is written by the AI, shown as a nice page
+- **Yearly goals** — goals whose progress is counted from the modules: "read 20 books", "run
+  500 km", "save X", "100 diary days in a row"
+- **Automations "if X, then Y"** — rules across modules: "a site is down → a task in the TODO
+  list", "over budget → a reminder", "no diary entry by 22:00 → a message in Telegram"; plus
+  webhooks and a public API with tokens
+
+#### Big steps
+
+- **PWA** — install on a phone, work offline (a cheap mobile app before the real one)
 - **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
   (bank notifications / SMS → transactions), then everything else the phone knows:
   - **location tracker** — where you have been, places and trips
@@ -140,61 +242,12 @@
   without approval. It must not share tools or context with the main assistant, so a prompt
   injection in user data cannot switch it off.
 
-#### Tests and CI
-
-- **End-to-end smoke tests** (Playwright): sign-in, a diary entry, a transaction, an AI message
-- **Database tests in CI** — a PostgreSQL service in GitHub Actions, so the `*.db.spec.ts` tests
-  run instead of being skipped
-- **Dependency updates** (Renovate) and a clean `npm audit`
-
-#### Everyday comfort
-
-- **Command palette (Ctrl+K)** — search across modules and quick actions
-- **PWA** — install on a phone, work offline (a cheap mobile app before the real one)
-- **Customizable home page** — order and hide widgets
-- **Themes** — light, dark and "follow the system", a few ready-made themes, and customization:
-  accent color, fonts, density; the same theme in web and desktop
-- **Section visibility** — turn whole sections on or off in the settings (e.g. hide Fitness if
-  you do not use it): a hidden section disappears from the menu, the home page, the digest and
-  notifications
-- **Telegram buttons** — "Yes / No" to confirm a deletion; quick commands like `/spent 12 coffee`
-
-#### Features
-
-- **Finance:** budgets per category with warnings; a photo of a receipt in Telegram becomes a
-  transaction; a reminder before a free trial ends and when a subscription gets more expensive
-- **Life timeline** — one feed of a day across all modules: diary entry, spending, what was
-  playing, matches, weather, steps; open any day and see how it went
-- **Year in review / monthly "Wrapped"** — top artists, money spent, number of entries, the best
-  month by mood, achievements; the text is written by the AI, shown as a nice page
-- **Yearly goals** — goals whose progress is counted from the modules: "read 20 books", "run
-  500 km", "save X", "100 diary days in a row"
-- **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
-  Cursor can read and change your data directly, without its own chat
-- **Automations "if X, then Y"** — rules across modules: "a site is down → a task in the TODO
-  list", "over budget → a reminder", "no diary entry by 22:00 → a message in Telegram"; plus
-  webhooks and a public API with tokens
-- **Evening check-in in Telegram** — the bot asks "how was your day?", the answer goes to mood and
-  the diary
-- **Games:** PlayStation and Xbox — playtime and platform achievements
-- **Music and media:** podcasts and YouTube history
-- **Export of all data** — the diary as Markdown (Obsidian-compatible), finance as CSV,
-  everything as JSON
-- **Habits** — a habit tracker module, in the digest too
-- **Insights across modules** — mood on days with a run, what was playing on bad days (through AI
-  tools or core insights: modules do not depend on each other). The AI looks for such links across
-  all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you
-  were sad, you listened to this music and did that"
-- **AI memory** — facts about the user the assistant keeps between conversations
-- **AI reminders** — "remind me on Friday to call mum" becomes a scheduled job
-
 ### Ideas
 
 - Production projects: errors (Sentry), traffic (Plausible / Umami / Google Analytics),
   Stripe payouts as project income, a monthly report per project
 - More cost providers: DigitalOcean, AWS Cost Explorer, Vercel, OpenAI and Anthropic usage
 - GitHub repository traffic (views / clones), npm downloads history
-- Notification settings: which module sends what and where
 - Channels: Discord, e-mail, web push (browser notifications when the tab is closed)
 - AI: native Anthropic API, streaming answers
 - Roles and sharing for multi-user setups
