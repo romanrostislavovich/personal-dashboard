@@ -4,6 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Project, ProjectInput } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
@@ -14,7 +15,7 @@ import { errorStatus } from '../client/core-requests';
 @Component({
   selector: 'pd-projects-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatCardModule, MatButtonModule, MatIconModule, TranslocoPipe],
+  imports: [MatCardModule, MatButtonModule, MatIconModule, RouterLink, TranslocoPipe],
   template: `
     <header class="page-header">
       <h1 class="page-title">{{ 'core.projects.title' | transloco }}</h1>
@@ -28,7 +29,9 @@ import { errorStatus } from '../client/core-requests';
       @for (project of projects.value(); track project.id) {
         <mat-card appearance="outlined">
           <mat-card-header>
-            <mat-card-title>{{ project.name }}</mat-card-title>
+            <mat-card-title>
+              <a class="name" [routerLink]="['/projects', project.id]">{{ project.name }}</a>
+            </mat-card-title>
             @if (project.url) {
               <mat-card-subtitle>
                 <a [href]="project.url" target="_blank" rel="noopener">{{ project.url }}</a>
@@ -41,6 +44,9 @@ import { errorStatus } from '../client/core-requests';
             </mat-card-content>
           }
           <mat-card-actions align="end">
+            <a matButton [routerLink]="['/projects', project.id]">
+              {{ 'core.projects.open' | transloco }}
+            </a>
             <button matIconButton (click)="openForm(project)"><mat-icon>edit</mat-icon></button>
             <button matIconButton (click)="remove(project)"><mat-icon>delete</mat-icon></button>
           </mat-card-actions>
@@ -59,6 +65,10 @@ import { errorStatus } from '../client/core-requests';
     .hint {
       color: var(--mat-sys-on-surface-variant);
       margin-top: 0;
+    }
+    .name {
+      color: inherit;
+      text-decoration: none;
     }
   `,
 })

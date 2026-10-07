@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, findById, idParameters, NO_PARAMETERS } from '@pd/api-core';
 import { monitorInputSchema } from '@pd/contracts';
 import { CheckerService } from './checker.service';
+import { MonitoringLinks } from './monitoring.links';
 import { MonitorsService } from './monitors.service';
 
 /** AI access to site monitoring; adding and removing monitored addresses (assistant). */
@@ -11,9 +12,28 @@ export class MonitoringAiTools implements OnModuleInit {
     private readonly ai: AiService,
     private readonly monitors: MonitorsService,
     private readonly checker: CheckerService,
+    private readonly links: MonitoringLinks,
   ) {}
 
   onModuleInit(): void {
+    this.ai.registerTool({
+      name: 'monitoring_incidents',
+      module: 'monitoring',
+      description:
+        'The times the sites were down over the last days (30 by default, the history is ' +
+        'kept for about a month), newest first: URL, project id, from, to, minutes, and ' +
+        '`changesBefore` — the commits and releases of the project in the 24 hours before it ' +
+        '(from its GitHub repositories, matched by the project name and aliases), the nearest ' +
+        'first. Useful for "why did the site go down", "what did I deploy before it broke". ' +
+        'A change before an incident is a suspect, not a proof.',
+      parameters: {
+        type: 'object',
+        properties: { days: { type: 'number', description: '1–35, default 30' } },
+      },
+      handler: (userId, args) =>
+        this.links.incidents(userId, Math.min(35, Math.max(1, Number(args['days']) || 30))),
+    });
+
     this.ai.registerTool({
       name: 'monitoring_status',
       module: 'monitoring',

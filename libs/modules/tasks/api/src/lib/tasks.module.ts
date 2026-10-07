@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TasksAutomations } from './tasks.automations';
 import { TasksLife } from './tasks.life';
+import { TasksLinks } from './tasks.links';
 import { TasksSearch } from './tasks.search';
 import { RemindersService } from './reminders.service';
 import { TasksAchievements } from './tasks.achievements';
@@ -19,6 +20,7 @@ import { TasksService } from './tasks.service';
   providers: [
     TasksAutomations,
     TasksLife,
+    TasksLinks,
     TasksSearch,
     TasksService,
     RemindersService,

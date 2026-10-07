@@ -60,7 +60,8 @@
       "upcoming": "No tasks with a later date.",
       "all": "No tasks yet — type the first one above.",
       "done": "Nothing done in the last month."
-    }
+    },
+    "focusTime": "Focus time on this task"
   },
   "reminders": {
     "dialog": {
@@ -110,5 +111,9 @@
     "remind": "Remind me",
     "text": "Text",
     "inMinutes": "In minutes"
+  },
+  "links": {
+    "open": "Open tasks",
+    "done": "Tasks done"
   }
 }

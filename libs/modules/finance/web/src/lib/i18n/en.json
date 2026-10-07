@@ -56,7 +56,12 @@
     "suggestions": "Looks like subscriptions",
     "suggestionsHint": "Charged once a month at about the same price — add them to keep track",
     "seen": "{{count}} months",
-    "notSubscription": "Not a subscription"
+    "notSubscription": "Not a subscription",
+    "usage": {
+      "title": "Is it used?",
+      "hint": "What you pay for against how much you used it in the last {{days}} days — music plays, time in the program, play time. Payments no section knows are not listed.",
+      "unused": "not used once"
+    }
   },
   "widget": {
     "title": "Finance",
@@ -251,5 +256,10 @@
       "down": "Cheaper",
       "up": "More expensive"
     }
+  },
+  "links": {
+    "income": "Income",
+    "expense": "Expenses",
+    "spent": "Money spent"
   }
 }

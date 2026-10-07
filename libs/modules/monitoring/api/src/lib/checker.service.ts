@@ -9,6 +9,7 @@ import { applyCheck, MonitorEvent } from './state/monitor-state';
 /** A notification event together with whom and what to send it about. */
 export interface MonitorNotice {
   userId: string;
+  projectId: string;
   projectName: string;
   url: string;
   event: MonitorEvent;
@@ -62,7 +63,14 @@ export class CheckerService {
       .where(eq(monitors.id, monitor.id));
 
     return event
-      ? { userId: monitor.userId, projectName, url: monitor.url, event, error: result.error }
+      ? {
+          userId: monitor.userId,
+          projectId: monitor.projectId,
+          projectName,
+          url: monitor.url,
+          event,
+          error: result.error,
+        }
       : null;
   }
 

@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GamesLife } from './games.life';
+import { GamesLinks } from './games.links';
+import { SteamPlayService } from './steam/steam-play.service';
 import { GamesSearch } from './games.search';
 import { GamesAiTools } from './games.ai-tools';
 import { GamesDigest } from './games.digest';
@@ -29,6 +31,8 @@ import { WowService } from './wow/wow.service';
   controllers: [GamesController],
   providers: [
     GamesLife,
+    GamesLinks,
+    SteamPlayService,
     GamesSearch,
     GameAccountsService,
     DotaService,

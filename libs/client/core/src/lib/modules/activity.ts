@@ -36,6 +36,8 @@ export const ACTIVITY_READS = {
   /** Every program seen, with its category and whether it is recorded. */
   apps: () => apiRequest(`${BASE}/apps`),
   rules: () => apiRequest(`${BASE}/rules`),
+  /** Focus with music against focus in silence (the music comes from the Music section). */
+  focusMusic: (period: ActivityPeriod) => apiRequest(`${BASE}/focus/music`, period),
   /** Focus sessions of a period with their totals. */
   focus: (period: ActivityPeriod) => apiRequest(`${BASE}/focus`, period),
   limits: () => apiRequest(`${BASE}/limits`),

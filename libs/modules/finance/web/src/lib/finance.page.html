@@ -204,6 +204,43 @@
           <b>{{ subs.perYear | currency: subs.currency : 'symbol' : '1.0-0' }}</b>
         </p>
       }
+      @if (subs.usage.length) {
+        <mat-card appearance="outlined" class="suggestions">
+          <mat-card-header>
+            <mat-card-title>{{ 'finance.recurring.usage.title' | transloco }}</mat-card-title>
+            <mat-card-subtitle>{{
+              'finance.recurring.usage.hint' | transloco: { days: subs.usageDays }
+            }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-list>
+            @for (item of subs.usage; track item.id) {
+              <mat-list-item>
+                <mat-icon matListItemIcon [class.warn]="item.unused">
+                  {{ item.unused ? 'money_off' : 'check_circle' }}
+                </mat-icon>
+                <span matListItemTitle>{{ item.name }}</span>
+                <span matListItemLine>
+                  @if (item.unused) {
+                    {{ 'finance.recurring.usage.unused' | transloco }}
+                  } @else {
+                    @for (use of item.uses; track use.module) {
+                      @if (use.unitKey.endsWith('seconds')) {
+                        {{ use.amount | pdDuration }}
+                      } @else {
+                        {{ use.amount | number }}
+                      }
+                      {{ use.unitKey | transloco }}{{ $last ? '' : ' · ' }}
+                    }
+                  }
+                </span>
+                <div matListItemMeta class="meta">
+                  <span class="amount">{{ item.amount | currency: item.currency }}</span>
+                </div>
+              </mat-list-item>
+            }
+          </mat-list>
+        </mat-card>
+      }
       @if (subs.suggestions.length) {
         <mat-card appearance="outlined" class="suggestions">
           <mat-card-header>

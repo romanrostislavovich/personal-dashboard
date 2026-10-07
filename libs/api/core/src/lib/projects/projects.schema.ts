@@ -10,5 +10,7 @@ export const projects = pgTable('projects', {
   name: text().notNull(),
   url: text(),
   description: text(),
+  /** Other names it goes by: a repository, a folder in an IDE (see LinksService). */
+  aliases: text().array().notNull().default([]),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

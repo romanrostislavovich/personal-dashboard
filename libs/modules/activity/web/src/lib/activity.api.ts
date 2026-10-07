@@ -16,6 +16,7 @@ import {
   ActivityStats,
   ActivityComputer,
   DiskReport,
+  ActivityFocusMusic,
   ActivityFocusStats,
   ActivityLimit,
   ActivityLimitInput,
@@ -91,6 +92,11 @@ export class ActivityApi {
 
   removeRule(id: string) {
     return fromCore(() => this.activity.removeRule(id));
+  }
+
+  /** Focus with music against focus in silence. */
+  focusMusic(period: () => ActivityPeriod) {
+    return httpResource<ActivityFocusMusic>(() => ACTIVITY_READS.focusMusic(period()));
   }
 
   focus(period: () => ActivityPeriod) {

@@ -12,6 +12,7 @@ export * from './lib/activity-disk';
 export * from './lib/life';
 export * from './lib/automations';
 export * from './lib/projects';
+export * from './lib/links';
 export * from './lib/notifications';
 export * from './lib/birthdays';
 export * from './lib/finance';

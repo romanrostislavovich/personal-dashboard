@@ -25,10 +25,14 @@ import {
   LifeSummary,
   LifeSummaryQuery,
   lifeSummaryQuerySchema,
+  MoodInsights,
+  MoodInsightsQuery,
+  moodInsightsQuerySchema,
 } from '@pd/contracts';
 import { z } from 'zod';
 import { AiService } from '../ai/ai.service';
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
+import { ProjectOverviewService } from '../links/project-overview.service';
 import { ZodValidationPipe } from '../validation/zod-validation.pipe';
 import { LifeGoalsService } from './life-goals.service';
 import { LifeStoriesService } from './life-stories.service';
@@ -36,7 +40,6 @@ import { LifeService } from './life.service';
 
 type ValidGoalInput = z.output<typeof lifeGoalInputSchema>;
 
-/** How the answers about one's own life point to the days they are about. */
 /** The life timeline, the summaries, the goals of a year and the AI's stories. */
 @Controller('life')
 export class LifeController {
@@ -45,7 +48,17 @@ export class LifeController {
     private readonly goals: LifeGoalsService,
     private readonly stories: LifeStoriesService,
     private readonly ai: AiService,
+    private readonly overviews: ProjectOverviewService,
   ) {}
+
+  /** What goes with the days of a good mood and of a bad one, across the sections. */
+  @Get('mood-insights')
+  moodInsights(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(moodInsightsQuerySchema)) query: MoodInsightsQuery,
+  ): Promise<MoodInsights> {
+    return this.overviews.moodInsights(user.id, query);
+  }
 
   @Get('day')
   day(

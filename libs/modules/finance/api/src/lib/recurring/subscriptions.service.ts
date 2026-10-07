@@ -1,6 +1,14 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, NotificationsService, UsersService } from '@pd/api-core';
-import { addDays, parseLocalDate, Subscriptions, toLocalDate } from '@pd/contracts';
+import { DB, Database, LinksService, NotificationsService, UsersService } from '@pd/api-core';
+import {
+  addDays,
+  LocalDate,
+  parseLocalDate,
+  RecurringPayment,
+  Subscriptions,
+  SubscriptionUse,
+  toLocalDate,
+} from '@pd/contracts';
 import { and, eq, gte } from 'drizzle-orm';
 import { round } from '../currency/conversion';
 import { ExchangeRatesService } from '../currency/exchange-rates.service';
@@ -13,6 +21,8 @@ import { ExpenseRow, priceRises, suggestSubscriptions, trialsEnding } from './su
 
 /** How far back repeating charges are looked for. */
 const SUGGEST_DAYS = 200;
+/** The use of what is paid for is looked at over this many days. */
+const USAGE_DAYS = 30;
 /** How far back a higher price in the bank counts. */
 const PRICE_DAYS = 40;
 
@@ -30,6 +40,7 @@ export class SubscriptionsService implements OnModuleInit {
     private readonly settings: FinanceSettingsService,
     private readonly notifications: NotificationsService,
     private readonly users: UsersService,
+    private readonly links: LinksService,
   ) {}
 
   onModuleInit(): void {
@@ -55,6 +66,8 @@ export class SubscriptionsService implements OnModuleInit {
       .from(subscriptionDismissals)
       .where(eq(subscriptionDismissals.userId, userId));
     return {
+      usage: await this.usage(userId, payments, today),
+      usageDays: USAGE_DAYS,
       currency: main,
       perMonth: round(perMonth),
       perYear: round(perMonth * 12),
@@ -65,6 +78,34 @@ export class SubscriptionsService implements OnModuleInit {
         new Set(dismissed.map((row) => row.key)),
       ),
     };
+  }
+
+  /**
+   * Whether what is paid for is used: the other sections are asked by the payment's name
+   * (music knows a streaming service, activity — a program, games — a game). A payment no
+   * section knows is left out: nothing can be said about it.
+   */
+  private async usage(
+    userId: string,
+    payments: RecurringPayment[],
+    today: LocalDate,
+  ): Promise<SubscriptionUse[]> {
+    const period = { from: toLocalDate(addDays(parseLocalDate(today), -USAGE_DAYS)), to: today };
+    const found: SubscriptionUse[] = [];
+    for (const { id, name, amount, currency } of payments) {
+      const uses = await this.links.usageOf(userId, name, period);
+      if (uses.length) {
+        found.push({
+          id,
+          name,
+          amount,
+          currency,
+          uses,
+          unused: uses.every((use) => use.amount === 0),
+        });
+      }
+    }
+    return found;
   }
 
   /** "Not a subscription": the charge is not suggested again. */

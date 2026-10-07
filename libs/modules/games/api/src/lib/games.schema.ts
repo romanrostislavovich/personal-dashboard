@@ -3,6 +3,7 @@ import { GAMES } from '@pd/contracts';
 import {
   bigint,
   boolean,
+  date,
   index,
   integer,
   jsonb,
@@ -112,6 +113,30 @@ export const steamGames = pgTable(
     achievementsPlaytime: integer(),
   },
   (table) => [primaryKey({ columns: [table.accountId, table.appId] })],
+);
+
+/**
+ * Play on Steam day by day. Steam tells only the total per game, so each sync adds what the
+ * totals grew by to the user's current day (see SteamPlayService) — the history starts when
+ * the account is connected.
+ */
+export const steamPlayDays = pgTable(
+  'games_steam_play_days',
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    accountId: uuid()
+      .notNull()
+      .references(() => gameAccounts.id, { onDelete: 'cascade' }),
+    appId: integer().notNull(),
+    day: date({ mode: 'string' }).notNull(),
+    minutes: integer().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.accountId, table.appId, table.day] }),
+    index().on(table.userId, table.day),
+  ],
 );
 
 /** Earned WoW achievements — to notice new ones and send a notification. */

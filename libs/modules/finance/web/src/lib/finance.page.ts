@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -23,6 +23,7 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
+  DurationPipe,
   currentMonth,
   INTEGRATIONS_LINK,
   Month,
@@ -94,6 +95,8 @@ function inMain(transactions: Transaction[], main: string): Transaction[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
+    DecimalPipe,
+    DurationPipe,
     CurrencyPipe,
     MatCardModule,
     MatChipsModule,

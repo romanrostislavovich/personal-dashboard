@@ -5,7 +5,9 @@ import {
   SchedulerService,
   UsersService,
 } from '@pd/api-core';
-import { CheckerService } from './checker.service';
+import { ProjectChange } from '@pd/contracts';
+import { CheckerService, MonitorNotice } from './checker.service';
+import { MonitoringLinks } from './monitoring.links';
 import { monitoringMessages } from './monitoring.messages';
 import { isSslReminderDay } from './state/monitor-state';
 
@@ -24,6 +26,7 @@ export class MonitoringJobs implements OnModuleInit {
     private readonly checker: CheckerService,
     private readonly notifications: NotificationsService,
     private readonly automations: AutomationsService,
+    private readonly links: MonitoringLinks,
   ) {}
 
   onModuleInit(): void {
@@ -43,11 +46,14 @@ export class MonitoringJobs implements OnModuleInit {
     for (const notice of await this.checker.checkAll()) {
       const text = monitoringMessages(await this.localeOf(notice.userId));
       const { event } = notice;
+      // A site that went down right after a commit or a release: the alert names it.
+      const [change] = event.type === 'down' ? await this.changesBefore(notice, event.since) : [];
       await this.notifications.send(notice.userId, {
         title: event.type === 'down' ? text.downTitle(notice) : text.recoveredTitle(notice),
         body:
           event.type === 'down'
-            ? text.downBody(notice)
+            ? text.downBody(notice) +
+              (change ? `\n${text.lastChange(change, event.since.getTime())}` : '')
             : text.recoveredBody(notice, event.downtimeMs),
         source: 'monitoring',
       });
@@ -72,6 +78,15 @@ export class MonitoringJobs implements OnModuleInit {
         body: text.sslBody(notice, daysLeft),
         source: 'monitoring',
       });
+    }
+  }
+
+  /** Never fails the alert: a code hosting that does not answer only leaves the line out. */
+  private async changesBefore(notice: MonitorNotice, since: Date): Promise<ProjectChange[]> {
+    try {
+      return await this.links.changesBefore(notice.userId, notice.projectId, since);
+    } catch {
+      return [];
     }
   }
 

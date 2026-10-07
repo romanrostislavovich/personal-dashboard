@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { AiActionOutcome, AiChatMessage } from '@pd/contracts';
 import { AppConfig } from '../config/env';
 import { coreMessages } from '../i18n/core.messages';
+import { LinksService } from '../links/links.service';
 import { UsersService } from '../users/users.service';
 import { AiActionsService } from './ai-actions.service';
 import { AiConnectionsService } from './ai-connections.service';
@@ -57,6 +58,7 @@ export class AiService {
     private readonly connections: AiConnectionsService,
     private readonly users: UsersService,
     private readonly actions: AiActionsService,
+    private readonly links: LinksService,
   ) {}
 
   registerTool(tool: AiTool): void {
@@ -95,7 +97,11 @@ export class AiService {
       {
         role: 'system',
         // "Today" and "tomorrow at 9" are the user's own, wherever the server stands.
-        content: systemPrompt(user, this.users.timeZoneOf(user), { ...options, hasAttachments }),
+        content: systemPrompt(user, this.users.timeZoneOf(user), {
+          ...options,
+          hasAttachments,
+          pages: this.links.pages(),
+        }),
       },
       ...history.map(({ role, content, attachments }) => ({
         role,

@@ -234,5 +234,8 @@
     "dotaDay": "Dota 2: {{matches}} matches, {{wins}} won",
     "dotaMatches": "Dota 2 matches",
     "dotaWins": "{{wins}} won ({{rate}}%)"
+  },
+  "usage": {
+    "minutes": "min played"
   }
 }

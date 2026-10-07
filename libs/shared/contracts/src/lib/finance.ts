@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ServiceUsage } from './links';
 import { LocalDate } from './local-date';
 
 export const TRANSACTION_KINDS = ['income', 'expense'] as const;
@@ -257,6 +258,23 @@ export interface Subscriptions {
   perMonth: number;
   perYear: number;
   suggestions: SubscriptionSuggestion[];
+  /**
+   * The active payments some section knows the use of (music — the plays, activity — the time
+   * in the program, games — the play time), over the last `usageDays`.
+   */
+  usage: SubscriptionUse[];
+  usageDays: number;
+}
+
+/** A payment against how much what it pays for was used. */
+export interface SubscriptionUse {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  uses: ServiceUsage[];
+  /** Paid for and not used once in the period. */
+  unused: boolean;
 }
 
 export const subscriptionDismissSchema = z.object({ key: z.string().trim().min(1).max(200) });

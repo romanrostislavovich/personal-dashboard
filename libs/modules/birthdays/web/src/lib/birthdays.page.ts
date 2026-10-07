@@ -1,16 +1,22 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { BirthdayInput, daysUntilNearest, UpcomingBirthday } from '@pd/contracts';
+import { automationsApi, CORE_READS } from '@pd/client-core';
+import { AutomationRule, BirthdayInput, daysUntilNearest, UpcomingBirthday } from '@pd/contracts';
+import { DASHBOARD_CLIENT } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { BirthdayFormDialog } from './birthday-form.dialog';
 import { BirthdayWhenComponent } from './birthday-when.component';
 import { BirthdaysApi } from './birthdays.api';
+
+const GIFT_TRIGGER = 'birthdays.upcoming';
 
 /**
  * The people and their dates: a birthday and, for someone who has died, the day of memory —
@@ -25,12 +31,25 @@ import { BirthdaysApi } from './birthdays.api';
     MatListModule,
     MatButtonModule,
     MatIconModule,
+    MatTooltipModule,
     TranslocoPipe,
     BirthdayWhenComponent,
   ],
   template: `
     <header class="page-header">
       <h1 class="page-title">{{ 'birthdays.pageTitle' | transloco }}</h1>
+      <button
+        matButton
+        [disabled]="hasGiftRule()"
+        [matTooltip]="'birthdays.automations.giftHint' | transloco"
+        (click)="addGiftRule()"
+      >
+        <mat-icon>redeem</mat-icon>
+        {{
+          (hasGiftRule() ? 'birthdays.automations.giftOn' : 'birthdays.automations.gift')
+            | transloco
+        }}
+      </button>
       <button matButton="filled" (click)="openForm()">
         <mat-icon>add</mat-icon> {{ 'birthdays.add' | transloco }}
       </button>
@@ -100,6 +119,15 @@ export class BirthdaysPage {
   private readonly dialog = inject(MatDialog);
   private readonly transloco = inject(TranslocoService);
 
+  private readonly automations = automationsApi(inject(DASHBOARD_CLIENT).api);
+  private readonly rules = httpResource<AutomationRule[]>(() => CORE_READS.automations(), {
+    defaultValue: [],
+  });
+  /** A rule on the coming birthday is there already (made here or in the settings). */
+  protected readonly hasGiftRule = computed(() =>
+    this.rules.value().some((rule) => rule.trigger === GIFT_TRIGGER),
+  );
+
   protected readonly birthdays = this.api.list();
   /** Days until the nearest date of a person: the birthday or the day of memory. */
   protected readonly nearest = daysUntilNearest;
@@ -117,6 +145,29 @@ export class BirthdaysPage {
     }
     await firstValueFrom(birthday ? this.api.update(birthday.id, input) : this.api.create(input));
     this.birthdays.reload();
+  }
+
+  /**
+   * "A week before a birthday, add a task to buy a gift": a rule of the automations. The task
+   * is another section's — the rule only names its action, the core joins the two.
+   */
+  async addGiftRule(): Promise<void> {
+    await this.automations.save({
+      name: this.transloco.translate('birthdays.automations.giftRule'),
+      trigger: GIFT_TRIGGER,
+      triggerParams: { days: '7' },
+      action: 'tasks.create',
+      // The braces are the rule's own variables, filled in when it runs.
+      actionParams: {
+        title: this.transloco.translate('birthdays.automations.giftTask', {
+          name: '{{name}}',
+          date: '{{date}}',
+        }),
+        due: 'none',
+      },
+      isActive: true,
+    });
+    this.rules.reload();
   }
 
   async remove(birthday: UpcomingBirthday): Promise<void> {

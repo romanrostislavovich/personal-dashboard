@@ -5,6 +5,7 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { GameAccountRow, steamGames } from '../games.schema';
 import { parseSteamReference } from './steam-id';
 import { SteamKeyService } from './steam-key.service';
+import { SteamPlayService } from './steam-play.service';
 import {
   mergeGames,
   SteamClient,
@@ -39,6 +40,7 @@ export class SteamService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly keys: SteamKeyService,
+    private readonly play: SteamPlayService,
   ) {}
 
   /** The Steam ID64 of what the user pasted; a custom address is resolved by Steam. */
@@ -69,7 +71,10 @@ export class SteamService {
       client.getRecentGames(steamId).catch(() => []),
     ]);
     if (games) {
-      await this.saveGames(account.id, mergeGames(games, recent));
+      const merged = mergeGames(games, recent);
+      // Before the totals are replaced: their growth is the play since the last sync.
+      await this.play.record(account, merged);
+      await this.saveGames(account.id, merged);
       await this.syncAchievements(account.id, steamId, client);
     }
     return toProfile(player, level, games === null);

@@ -226,5 +226,9 @@
   "life": {
     "day": "{{count}} contributions",
     "total": "Contributions"
+  },
+  "links": {
+    "coding": "Coding time (WakaTime)",
+    "stars": "Stars of its repositories"
   }
 }

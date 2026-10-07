@@ -7,6 +7,12 @@ export interface OtherComputerDay {
   computer: string;
   day: LocalDate;
   seconds: number;
+  /**
+   * What the time was spent on, when the service counts one thing only (Steam: `games`).
+   * Such time may be on a computer the tracker runs on as well, so only what is over the
+   * tracker's own time in that category on the day is new (see Activity's other-computers.ts).
+   */
+  category?: 'games';
 }
 
 /**

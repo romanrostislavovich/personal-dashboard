@@ -273,8 +273,21 @@ To add a service (e.g. DigitalOcean):
   `auth.sign_ins` (`SignInLog`). Only the owner of the instance sees the section.
 - **Other computers:** `OtherComputersService` — a module that knows about time at a computer
   the desktop app does not run on registers a source (`<module>.other-computers.ts`: WakaTime's
-  machines in Development), and Activity adds that time to the time at the computer, leaving
-  out the computers its own tracker covers. Neither module knows the other.
+  machines in Development; the play time of Steam in Games), and Activity adds that time to
+  the time at the computer, leaving out the computers its own tracker covers — and of a
+  service's games time only what is over the games the tracker has seen itself that day.
+  Neither module knows the other.
+- **Links between the sections:** `LinksService` — what one module knows and another needs
+  goes through the core. A module registers in `<module>.links.ts`: what it knows about a
+  project (`registerProject`: facts for the project page `/projects/:id`, and the changes
+  between two moments — commits before a site went down), a number for every day
+  (`registerDailyMetrics`: compared on the days of a good and a bad mood), the use of a
+  service by the name its payment has (`registerUsage`), what happened between two moments
+  (`registerMoments`: the music of a focus session), the time spent on something by its name
+  (`registerTimeSpent`: the focus time of a task) and its pages (`registerPages`: the
+  assistant links to them). A project is matched across the sections by its name and its
+  `aliases` (a repository, a WakaTime project). A source that fails is left out: a link
+  never breaks the section that asked. Every link has a tool of the assistant.
 - **Trash:** `TrashService` — a trigger on every table of `public` keeps deleted rows in the
   `trash` schema for 30 days (not synced: each instance keeps what was deleted on it); one
   transaction is one item, restored with everything deleted along with it. A table whose deletions

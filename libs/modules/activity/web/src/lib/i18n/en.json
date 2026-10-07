@@ -127,7 +127,15 @@
     "distractedShare": "{{share}}% of the focus time",
     "chart": "Focus per day",
     "sessions": "Sessions",
-    "empty": "No focus sessions in this period."
+    "empty": "No focus sessions in this period.",
+    "music": {
+      "title": "Focus and music",
+      "hint": "What played during the sessions, from the listening history.",
+      "with": "With music — sessions: {{count}}",
+      "without": "In silence — sessions: {{count}}",
+      "result": "{{completed}}% finished, {{distracted}}% of the time lost to distractions",
+      "artists": "Played most often:"
+    }
   },
   "computers": {
     "measuredAt": "Measured",
@@ -251,13 +259,14 @@
   },
   "otherComputers": {
     "title": "Computers without the app",
-    "hint": "A computer the app cannot be installed on (a work laptop) is known from WakaTime — only its time in an IDE, so the least you worked there. That time is added to the time at the computer. A computer that has the app is left out by itself: its time would be counted twice.",
+    "hint": "A computer the app cannot be installed on (a work laptop) is known from WakaTime — only its time in an IDE, so the least you worked there. Play time comes from Steam: only what is over the games the app has seen itself on that day, so a console or another computer is counted and nothing twice. That time is added to the time at the computer. A computer that has the app is left out by itself.",
     "recent": "{{time}} in {{days}} days",
     "tracked": "has the app — counted by it",
     "count": "Add its time",
-    "included": "Including {{time}} on computers without the app — only the time in an IDE there.",
+    "included": "Including {{time}} the app has not seen: an IDE on computers without it, and games from Steam.",
     "sources": {
-      "wakatime": "WakaTime"
+      "wakatime": "WakaTime",
+      "steam": "Steam — games on other devices"
     }
   },
   "life": {
@@ -270,5 +279,14 @@
   },
   "automations": {
     "limit": "A daily limit is reached"
+  },
+  "links": {
+    "time": "Time at the computer",
+    "focus": "Focus sessions",
+    "hours": "At the computer",
+    "games": "In games"
+  },
+  "usage": {
+    "seconds": "at the computer"
   }
 }

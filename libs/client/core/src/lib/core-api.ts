@@ -83,6 +83,9 @@ export const API_PATHS = {
 export const CORE_READS = {
   security: () => apiRequest(API_PATHS.security),
   projects: () => apiRequest(API_PATHS.projects),
+  /** A project across the sections: its hours, money, tasks, sites and latest changes. */
+  projectOverview: (id: string, from: string, to: string) =>
+    apiRequest(`${API_PATHS.project(id)}/overview`, { from, to }),
   /** Search across all modules (the command palette). */
   search: (q: string) => apiRequest(API_PATHS.search, { q }),
   achievements: () => apiRequest(API_PATHS.achievements),
@@ -96,6 +99,8 @@ export const CORE_READS = {
   lifeDay: (day: string) => apiRequest('/api/life/day', { day }),
   /** The numbers of every module for a period (a month, a year). */
   lifeSummary: (from: string, to: string) => apiRequest('/api/life/summary', { from, to }),
+  /** What goes with the days of a good mood and of a bad one, across the sections. */
+  moodInsights: (from: string, to: string) => apiRequest('/api/life/mood-insights', { from, to }),
   lifeGoals: (year: number) => apiRequest('/api/life/goals', { year }),
   /** What a goal of a year can be counted from. */
   lifeMetrics: () => apiRequest('/api/life/metrics'),

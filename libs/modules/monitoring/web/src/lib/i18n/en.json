@@ -34,5 +34,9 @@
     "down": "A site went down",
     "up": "A site is back up",
     "site": "Only the site (part of its name or address)"
+  },
+  "links": {
+    "uptime": "Uptime of its sites",
+    "incidents": "Times down"
   }
 }

@@ -66,5 +66,14 @@
   "life": {
     "day": "Birthday: {{names}}",
     "memorial": "Day of memory: {{names}}"
+  },
+  "automations": {
+    "upcoming": "A birthday is coming",
+    "days": "Days before",
+    "gift": "Task a week before",
+    "giftOn": "Gift task: on",
+    "giftHint": "A week before every birthday a task “Buy a gift” is added to your TODO list. Change or remove the rule in Settings → Automations.",
+    "giftRule": "A gift a week before a birthday",
+    "giftTask": "Buy a gift: {{name}} ({{date}})"
   }
 }

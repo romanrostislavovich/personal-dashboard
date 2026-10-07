@@ -93,6 +93,11 @@
               <mat-icon inline>notifications</mat-icon> {{ task.reminderAt | date: 'd MMM, HH:mm' }}
             </span>
           }
+          @if (task.focusSeconds) {
+            <span [matTooltip]="'tasks.todo.focusTime' | transloco">
+              <mat-icon inline>timer</mat-icon> {{ task.focusSeconds | pdDuration }}
+            </span>
+          }
           @if (task.checklist.length) {
             <span>
               <mat-icon inline>checklist</mat-icon> {{ checklistDone(task) }}/{{

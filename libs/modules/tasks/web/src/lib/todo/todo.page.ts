@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { DurationPipe } from '@pd/web-core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Task } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
@@ -38,6 +39,7 @@ import { allTags, filterTasks, isOverdue, TASK_VIEWS, TaskFilter, TaskView } fro
     MatSelectModule,
     MatTooltipModule,
     TranslocoPipe,
+    DurationPipe,
   ],
   templateUrl: './todo.page.html',
   styleUrl: './todo.page.scss',

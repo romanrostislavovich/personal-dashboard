@@ -67,6 +67,38 @@ export class TransactionsService {
     return { mainCurrency: main, byCategory };
   }
 
+  /** Personal expenses per day in the main currency (the money of the projects is not a day's). */
+  async expensesByDayInMain(
+    userId: string,
+    period: { from: string; to: string },
+  ): Promise<{ mainCurrency: string; byDay: Map<string, number> }> {
+    const rows = await this.db
+      .select({
+        amount: transactions.amount,
+        currency: transactions.currency,
+        day: transactions.occurredOn,
+      })
+      .from(transactions)
+      .where(
+        and(
+          this.filter(userId, { ...period, scope: 'personal' }),
+          eq(transactions.kind, 'expense'),
+        ),
+      );
+    const main = await this.settings.mainCurrency(userId);
+    const { values } = await this.convert(
+      rows,
+      main,
+      (r) => r.amount,
+      (r) => r.day,
+    );
+    const byDay = new Map<string, number>();
+    rows.forEach((row, index) =>
+      byDay.set(row.day, (byDay.get(row.day) ?? 0) + (values[index] ?? 0)),
+    );
+    return { mainCurrency: main, byDay };
+  }
+
   private changed(userId: string): void {
     for (const listener of this.listeners) {
       // A failing listener (a notification) must not fail the transaction that was saved.
