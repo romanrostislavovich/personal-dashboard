@@ -52,7 +52,8 @@ export class TodoPage {
   protected readonly views = TASK_VIEWS;
   protected readonly today = todayLocal();
 
-  protected readonly filter = signal<TaskFilter>({ view: 'today', listId: null, tag: null });
+  /** The page opens on everything that is not done: the whole list, not only today's part. */
+  protected readonly filter = signal<TaskFilter>({ view: 'all', listId: null, tag: null });
   protected readonly shown = computed(() =>
     filterTasks(this.tasks.value(), this.filter(), this.today),
   );
