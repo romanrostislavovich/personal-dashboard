@@ -9,6 +9,7 @@ import { LastfmSyncJob } from './lastfm-sync.job';
 import { LastfmService } from './lastfm.service';
 import { MusicController } from './music.controller';
 import { MusicServerActions } from './music.server-actions';
+import { MusicHistoryQueryService } from './music-history.query';
 import { MusicHistoryStatsService } from './music-history.stats';
 import { SoundcloudAchievements } from './soundcloud/soundcloud.achievements';
 import { SoundcloudAiTools } from './soundcloud/soundcloud.ai-tools';
@@ -34,6 +35,7 @@ import { SpotifyService } from './spotify.service';
     SpotifyService,
     LastfmSyncJob,
     MusicHistoryStatsService,
+    MusicHistoryQueryService,
     MusicAchievements,
     MusicAiTools,
     MusicDigest,

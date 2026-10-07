@@ -1,7 +1,16 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, PERIOD_PARAMETERS } from '@pd/api-core';
+import { AiService, PERIOD_PARAMETERS, UsersService } from '@pd/api-core';
 import { activityDaySchema, activityPeriodSchema } from '@pd/contracts';
+import { z } from 'zod';
 import { ActivityService } from './activity.service';
+import { digestTimeline } from './timeline-digest';
+
+const TIME = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const timelineArgs = activityDaySchema.extend({
+  fromTime: TIME.optional(),
+  toTime: TIME.optional(),
+  limit: z.number().int().min(1).max(200).default(80),
+});
 
 /** AI access to the time at the computer: per program, category, project and window title. */
 @Injectable()
@@ -9,6 +18,7 @@ export class ActivityAiTools implements OnModuleInit {
   constructor(
     private readonly ai: AiService,
     private readonly activity: ActivityService,
+    private readonly users: UsersService,
   ) {}
 
   onModuleInit(): void {
@@ -30,14 +40,29 @@ export class ActivityAiTools implements OnModuleInit {
       name: 'activity_timeline',
       module: 'activity',
       description:
-        'What was in front on one day, newest first: program, window title, category, start ' +
-        'and end. Useful for "what was I doing at 3 pm", "when did I start working".',
+        'What was in front on one day, oldest first, as stretches in one window: from and to ' +
+        "on the user's clock (HH:mm), minutes, program, window title, category. Useful for " +
+        '"what was I doing at 3 pm", "when did I start working". A day has hundreds of ' +
+        'windows: narrow it to hours with `fromTime` / `toTime`; when more than `limit` (80 ' +
+        'by default) are left, only the longest are returned and `note` says so.',
       parameters: {
         type: 'object',
-        properties: { day: { type: 'string', description: 'The day, YYYY-MM-DD' } },
+        properties: {
+          day: { type: 'string', description: 'The day, YYYY-MM-DD' },
+          fromTime: { type: 'string', description: 'HH:mm — only what was open from this time' },
+          toTime: { type: 'string', description: 'HH:mm — only what was open up to this time' },
+          limit: { type: 'number', description: '1–200, default 80' },
+        },
         required: ['day'],
       },
-      handler: (userId, args) => this.activity.timeline(userId, activityDaySchema.parse(args)),
+      handler: async (userId, args) => {
+        const { fromTime, toTime, limit, ...day } = timelineArgs.parse(args);
+        return digestTimeline(
+          await this.activity.timeline(userId, day),
+          this.users.timeZoneOf(await this.users.findById(userId)),
+          { fromTime, toTime, limit },
+        );
+      },
     });
   }
 }

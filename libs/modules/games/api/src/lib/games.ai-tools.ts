@@ -1,6 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, findById, idParameters, NO_PARAMETERS, ServerActions } from '@pd/api-core';
-import { GAMES, gameAccountInputSchema, WOW_REGIONS, WOW_VERSIONS } from '@pd/contracts';
+import {
+  DOTA_MATCH_MODES,
+  DOTA_RESULTS,
+  dotaMatchesQuerySchema,
+  GAMES,
+  gameAccountInputSchema,
+  WOW_REGIONS,
+  WOW_VERSIONS,
+} from '@pd/contracts';
+import { DotaHeroesService } from './dota/dota-heroes.service';
 import { DotaOverviewService } from './dota/dota-overview.service';
 import { GameAccountsService } from './game-accounts.service';
 import { GAMES_ACTIONS } from './games.server-actions';
@@ -16,6 +25,7 @@ export class GamesAiTools implements OnModuleInit {
     private readonly accounts: GameAccountsService,
     private readonly actions: ServerActions,
     private readonly dota: DotaOverviewService,
+    private readonly heroes: DotaHeroesService,
   ) {}
 
   onModuleInit(): void {
@@ -70,6 +80,53 @@ export class GamesAiTools implements OnModuleInit {
         );
         // The day-by-day calendar is for the page; a count of active days is enough here.
         return { ...overview, activeDaysLastYear: activity.length };
+      },
+    });
+
+    this.ai.registerTool({
+      name: 'games_dota_matches',
+      module: 'games',
+      description:
+        'Dota 2 matches one by one, newest first, from the whole stored history: hero, result, ' +
+        'KDA, duration, mode, GPM/XPM, when played. Narrow them with `hero` (its name), ' +
+        '`mode`, `result` and the days `from` / `to` — for "how did I play last week", "my ' +
+        'last games on Pudge", "how many ranked wins in September". `total` is how many ' +
+        'match, `wins` and `losses` are counted over all of them, not only the ones shown.',
+      parameters: {
+        type: 'object',
+        properties: {
+          hero: { type: 'string', description: 'The name of the hero, e.g. "Pudge"' },
+          mode: { type: 'string', enum: [...DOTA_MATCH_MODES] },
+          result: { type: 'string', enum: [...DOTA_RESULTS] },
+          from: { type: 'string', description: 'YYYY-MM-DD' },
+          to: { type: 'string', description: 'YYYY-MM-DD' },
+          accountId: { type: 'string', description: 'Game account id from games_accounts' },
+          limit: { type: 'number', description: '10–100, default 30' },
+        },
+      },
+      handler: async (userId, args) => {
+        const { hero, limit, ...filters } = args;
+        const heroId = typeof hero === 'string' ? await this.heroId(hero) : undefined;
+        if (typeof hero === 'string' && !heroId) {
+          return { error: `No Dota hero is called "${hero}"` };
+        }
+        const query = dotaMatchesQuerySchema.parse({ ...filters, heroId, pageSize: limit ?? 30 });
+        const page = await this.dota.matches(userId, query);
+        // The wins and losses of everything that matches, not of the page.
+        const count = async (result: 'win' | 'loss') =>
+          query.result && query.result !== result
+            ? 0
+            : (await this.dota.matches(userId, { ...query, result, pageSize: 10 })).total;
+        return {
+          total: page.total,
+          wins: await count('win'),
+          losses: await count('loss'),
+          shown: page.items.length,
+          matches: page.items.map(({ hero: played, ...match }) => ({
+            ...match,
+            hero: played.name,
+          })),
+        };
       },
     });
 
@@ -165,5 +222,16 @@ export class GamesAiTools implements OnModuleInit {
         await this.accounts.remove(userId, (await find(userId, args)).id);
       },
     });
+  }
+
+  /** The id of a hero by its name, whatever the case; a part of the name when nothing is exact. */
+  private async heroId(name: string): Promise<number | undefined> {
+    const hero = await this.heroes.resolver();
+    const wanted = name.trim().toLowerCase();
+    const all = (await this.heroes.ids()).map((id) => hero(id));
+    return (
+      all.find((item) => item.name.toLowerCase() === wanted) ??
+      all.find((item) => item.name.toLowerCase().includes(wanted))
+    )?.id;
   }
 }
