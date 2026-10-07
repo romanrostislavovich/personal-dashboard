@@ -85,9 +85,9 @@ export class ReposService {
     return repos.map((repo) => toTrackedRepo(repo, byRepo.get(repo.id) ?? [], today));
   }
 
-  /** The repositories shown by default: without the hidden ones. */
+  /** The open source shown by default: public, without the hidden ones. */
   async visible(userId: string): Promise<TrackedRepo[]> {
-    return (await this.list(userId)).filter((repo) => !repo.hidden);
+    return (await this.list(userId)).filter((repo) => !repo.hidden && !repo.isPrivate);
   }
 
   /** Adds a repository by hand — one the account does not bring — and loads it right away. */
@@ -272,6 +272,7 @@ function toTrackedRepo(
     language: repo.language,
     isFork: repo.isFork,
     isArchived: repo.isArchived,
+    isPrivate: repo.isPrivate,
     hidden: repo.hidden,
     notify: repo.notify,
     npmPackage: repo.npmPackage,

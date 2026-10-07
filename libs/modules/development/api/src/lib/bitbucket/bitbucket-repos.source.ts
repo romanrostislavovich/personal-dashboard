@@ -11,7 +11,7 @@ interface RawItem {
   author?: { display_name?: string };
 }
 
-/** Public Bitbucket repositories for the Open Source section. */
+/** Bitbucket repositories for the Development section. */
 export class BitbucketRepoSource implements RepoSource {
   readonly provider = 'bitbucket';
 
@@ -20,7 +20,7 @@ export class BitbucketRepoSource implements RepoSource {
     private readonly workspaces: BitbucketWorkspaces,
   ) {}
 
-  /** The public repositories of every workspace the user belongs to. */
+  /** The repositories of every workspace the user belongs to. */
   async listAccount(): Promise<AccountRepo[]> {
     const me = await this.workspaces.me();
     const repos: AccountRepo[] = [];
@@ -83,6 +83,7 @@ export class BitbucketRepoSource implements RepoSource {
       language: repo.language || null,
       isFork: Boolean(repo.parent),
       isArchived: false,
+      isPrivate: repo.is_private,
       stars: watchers,
       forks,
       openIssues: 0,

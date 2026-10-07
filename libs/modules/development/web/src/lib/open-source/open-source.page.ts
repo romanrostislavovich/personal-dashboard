@@ -23,6 +23,7 @@ import { RepoDetailsComponent } from './repo-details.component';
 import {
   DEFAULT_REPO_FILTER,
   filterRepos,
+  REPO_VISIBILITIES,
   RepoFilter,
   RepoKind,
   repoLanguages,
@@ -46,8 +47,8 @@ const COLUMNS: { column: RepoSortColumn; labelKey: string; numeric: boolean }[] 
 ];
 
 /**
- * Open source repositories: the public ones of the GitHub account and its organizations appear
- * by themselves, any other is added by hand. A table with filters; a row opens into details.
+ * Repositories: those of the connected accounts and their organizations appear by themselves —
+ * open source and private, a filter tells them apart — any other is added by hand. A table with filters; a row opens into details.
  */
 @Component({
   selector: 'pd-open-source-page',
@@ -91,6 +92,7 @@ export class OpenSourcePage {
 
   protected readonly columns = COLUMNS;
   protected readonly relations = REPO_RELATIONS;
+  protected readonly visibilities = REPO_VISIBILITIES;
   protected readonly kinds: RepoKind[] = ['forks', 'archived', 'hidden'];
   protected readonly filter = signal<RepoFilter>(DEFAULT_REPO_FILTER);
   protected readonly sort = signal<RepoSort>({ column: 'stars', descending: true });

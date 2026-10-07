@@ -1,12 +1,12 @@
 {
   "title": "Разработка",
   "tabs": {
-    "openSource": "Open Source",
     "github": "GitHub",
     "wakatime": "WakaTime",
     "summary": "Сводка",
     "gitlab": "GitLab",
-    "bitbucket": "Bitbucket"
+    "bitbucket": "Bitbucket",
+    "repositories": "Репозитории"
   },
   "errors": {
     "notFound": "Репозиторий не найден — или его сервис не подключён",
@@ -60,7 +60,8 @@
     "badges": {
       "fork": "форк",
       "archived": "архив",
-      "hidden": "скрыт"
+      "hidden": "скрыт",
+      "private": "приватный"
     },
     "release": "Последний релиз",
     "notify": "Уведомлять об issues, PR, релизах и рубежах звёзд",
@@ -70,7 +71,7 @@
     "remove": "Перестать отслеживать",
     "nothingFound": "Под фильтры ничего не подходит.",
     "empty": "Репозиториев пока нет — нажми «Обновить», чтобы прочитать их с подключённых сервисов.",
-    "noTokenHint": "Репозитории читаются по твоему токену: добавь его в интеграциях — публичные репозитории появятся сами.",
+    "noTokenHint": "Репозитории читаются по твоему токену: добавь его в интеграциях — репозитории появятся сами, приватные тоже, если токену разрешено их читать.",
     "widget": {
       "title": "Open Source",
       "week": "за 7 дн.",
@@ -79,7 +80,12 @@
     },
     "repoHint": "Ссылка на GitHub, GitLab или Bitbucket; просто owner/name — это GitHub",
     "service": "Сервис",
-    "noTokenTitle": "Подключи GitHub, GitLab или Bitbucket"
+    "noTokenTitle": "Подключи GitHub, GitLab или Bitbucket",
+    "visibility": "Видимость",
+    "visibilities": {
+      "public": "Open source",
+      "private": "Приватные"
+    }
   },
   "github": {
     "token": {

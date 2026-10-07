@@ -13,6 +13,7 @@ const REPO_FIELDS = `
   description
   isFork
   isArchived
+  isPrivate
   stargazerCount
   forkCount
   pushedAt
@@ -45,7 +46,10 @@ const ACCOUNT_QUERY = `
 export class GithubReposClient {
   constructor(private readonly token: string) {}
 
-  /** Every public repository of the token's owner and of the organizations they belong to. */
+  /**
+   * Every repository of the token's owner and of the organizations they belong to; a token
+   * that reads only public repositories brings only those.
+   */
   async listAccount(): Promise<AccountRepo[]> {
     const repos: AccountRepo[] = [];
     let cursor: string | null = null;
@@ -101,6 +105,7 @@ function toSnapshot(raw: RawRepo): RepoSnapshot {
     language: raw.primaryLanguage?.name ?? null,
     isFork: raw.isFork,
     isArchived: raw.isArchived,
+    isPrivate: raw.isPrivate,
     stars: raw.stargazerCount,
     forks: raw.forkCount,
     openIssues: raw.issues.totalCount,
@@ -151,6 +156,7 @@ interface RawRepo {
   description: string | null;
   isFork: boolean;
   isArchived: boolean;
+  isPrivate: boolean;
   stargazerCount: number;
   forkCount: number;
   pushedAt: string | null;

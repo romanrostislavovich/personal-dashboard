@@ -13,8 +13,8 @@ import {
 } from 'drizzle-orm/pg-core';
 
 /**
- * Repositories of the Open Source section and their current figures (updated by the sync):
- * the public ones the integration brings and the ones added by hand.
+ * Repositories of the Development section and their current figures (updated by the sync):
+ * the ones the integration brings — public and private — and the ones added by hand.
  */
 export const trackedRepos = pgTable(
   'github_tracked_repos',
@@ -42,6 +42,8 @@ export const trackedRepos = pgTable(
     language: text(),
     isFork: boolean().notNull().default(false),
     isArchived: boolean().notNull().default(false),
+    /** Not public on its service: seen only by the token's owner (never "open source"). */
+    isPrivate: boolean().notNull().default(false),
     stars: integer().notNull().default(0),
     forks: integer().notNull().default(0),
     openIssues: integer().notNull().default(0),

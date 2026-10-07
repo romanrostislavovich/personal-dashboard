@@ -65,6 +65,7 @@ export class RepoSyncService {
         language: snapshot.language,
         isFork: snapshot.isFork,
         isArchived: snapshot.isArchived,
+        isPrivate: snapshot.isPrivate,
         pushedAt: snapshot.pushedAt ? new Date(snapshot.pushedAt) : null,
         latestReleaseTag: release?.tag ?? null,
         latestReleaseAt: release ? new Date(release.publishedAt) : null,

@@ -81,6 +81,20 @@
         }
       </mat-select>
     </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>{{ 'development.oss.visibility' | transloco }}</mat-label>
+      <mat-select
+        [value]="filter().visibility"
+        (selectionChange)="setFilter({ visibility: $event.value })"
+      >
+        <mat-option [value]="null">{{ 'development.oss.all' | transloco }}</mat-option>
+        @for (visibility of visibilities; track visibility) {
+          <mat-option [value]="visibility">
+            {{ 'development.oss.visibilities.' + visibility | transloco }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
     @if (providers().length > 1) {
       <mat-form-field subscriptSizing="dynamic">
         <mat-label>{{ 'development.oss.service' | transloco }}</mat-label>
@@ -162,6 +176,11 @@
               </button>
               @if (providers().length > 1) {
                 <span class="badge">{{ providerNames[repo.provider] }}</span>
+              }
+              @if (repo.isPrivate) {
+                <mat-icon class="mark" [matTooltip]="'development.oss.badges.private' | transloco">
+                  lock
+                </mat-icon>
               }
               @if (repo.isFork) {
                 <span class="badge">{{ 'development.oss.badges.fork' | transloco }}</span>

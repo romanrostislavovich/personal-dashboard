@@ -67,8 +67,8 @@ export class DevelopmentLinks implements OnModuleInit {
       { module: 'development', path: '/development/summary', description: 'all code accounts' },
       {
         module: 'development',
-        path: '/development/open-source',
-        description: 'repositories: stars, issues, releases',
+        path: '/development/repositories',
+        description: 'repositories, open source and private: stars, issues, releases',
       },
       { module: 'development', path: '/development/wakatime', description: 'coding time' },
     ]);
@@ -110,7 +110,7 @@ export class DevelopmentLinks implements OnModuleInit {
               labelKey: 'development.links.stars',
               value: repos.reduce((sum, repo) => sum + repo.stars, 0),
               unit: 'count' as const,
-              link: '/development/open-source',
+              link: '/development/repositories',
               note: repos.map((repo) => repo.fullName).join(', '),
             },
           ]

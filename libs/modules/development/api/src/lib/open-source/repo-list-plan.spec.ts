@@ -12,6 +12,7 @@ function accountRepo(externalId: string, fullName: string): AccountRepo {
     language: null,
     isFork: false,
     isArchived: false,
+    isPrivate: false,
     stars: 0,
     forks: 0,
     openIssues: 0,

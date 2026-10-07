@@ -5,7 +5,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 
 /** Subsections of Development: each is a child route, so a tab has its own address. */
 const TABS = [
-  { path: 'open-source', labelKey: 'development.tabs.openSource' },
+  { path: 'repositories', labelKey: 'development.tabs.repositories' },
   { path: 'summary', labelKey: 'development.tabs.summary' },
   { path: 'github', labelKey: 'development.tabs.github' },
   { path: 'gitlab', labelKey: 'development.tabs.gitlab' },

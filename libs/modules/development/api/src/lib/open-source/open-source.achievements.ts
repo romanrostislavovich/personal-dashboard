@@ -146,14 +146,15 @@ export class OpenSourceAchievements implements OnModuleInit {
   }
 
   /**
-   * Achievements are about one's own work: organizations' and hand-added repositories do not
-   * count, and neither do forks of other people's projects.
+   * Achievements are about one's own open source: organizations' and hand-added repositories
+   * do not count, and neither do forks of other people's projects and private repositories.
    */
   private own(userId: string) {
     return and(
       eq(trackedRepos.userId, userId),
       eq(trackedRepos.relation, 'owner'),
       eq(trackedRepos.isFork, false),
+      eq(trackedRepos.isPrivate, false),
     );
   }
 

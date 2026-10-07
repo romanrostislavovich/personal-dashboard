@@ -11,6 +11,8 @@ export interface RepoSnapshot {
   language: string | null;
   isFork: boolean;
   isArchived: boolean;
+  /** Not public on its service. */
+  isPrivate: boolean;
   /** Bitbucket has no stars: its watchers are counted instead. */
   stars: number;
   forks: number;
@@ -38,7 +40,10 @@ export interface RepoIssue {
 /** What the Open Source section needs from a service; one implementation per service. */
 export interface RepoSource {
   readonly provider: RepoProvider;
-  /** Every public repository of the token's owner and of their organizations / groups. */
+  /**
+   * Every repository of the token's owner and of their organizations / groups — the private
+   * ones too, as far as the token may read them.
+   */
   listAccount(): Promise<AccountRepo[]>;
   /** Repositories by name, in the order asked; `null` — not found (deleted, private, a typo). */
   getMany(fullNames: string[]): Promise<(RepoSnapshot | null)[]>;
