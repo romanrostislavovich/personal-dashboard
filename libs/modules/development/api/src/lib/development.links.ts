@@ -1,14 +1,16 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DB, Database, LinksService, ProjectRef } from '@pd/api-core';
 import { ProjectChange, ProjectFact } from '@pd/contracts';
 import { and, eq, gte, lte } from 'drizzle-orm';
+import { AccountTokensService } from './accounts/account-tokens.service';
 import { GithubTokenService } from './github/github-token.service';
 import { GithubClient } from './github/github.client';
-import { trackedRepos } from './open-source/open-source.schema';
+import { TrackedRepoRow, trackedRepos } from './open-source/open-source.schema';
+import { bitbucketCommits, gitlabCommits, RepoCommit } from './project-commits';
 import { belongsTo, namesOf } from './project-names';
 import { wakatimeDayBreakdown, wakatimeDays } from './wakatime/wakatime.schema';
 
-/** Repositories of a project asked for commits at once: each is a request to GitHub. */
+/** Repositories of a project asked for commits at once: each is a request to its service. */
 const MAX_REPOS = 3;
 
 /**
@@ -18,10 +20,13 @@ const MAX_REPOS = 3;
  */
 @Injectable()
 export class DevelopmentLinks implements OnModuleInit {
+  private readonly logger = new Logger(DevelopmentLinks.name);
+
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly links: LinksService,
     private readonly github: GithubTokenService,
+    private readonly tokens: AccountTokensService,
   ) {}
 
   onModuleInit(): void {
@@ -113,23 +118,20 @@ export class DevelopmentLinks implements OnModuleInit {
     ];
   }
 
-  /** Commits and releases of the project's GitHub repositories between two moments. */
+  /**
+   * Commits and releases of the project's repositories between two moments, from whichever
+   * service each is on: GitHub, GitLab or Bitbucket.
+   */
   private async changes(
     userId: string,
     project: ProjectRef,
     from: Date,
     to: Date,
   ): Promise<ProjectChange[]> {
-    const repos = (await this.reposOf(userId, namesOf(project))).filter(
-      (repo) => repo.provider === 'github',
-    );
-    if (!repos.length) {
-      return [];
-    }
-    const client = new GithubClient(await this.github.token(userId));
+    const repos = await this.reposOf(userId, namesOf(project));
     const changes: ProjectChange[] = [];
     for (const repo of repos.slice(0, MAX_REPOS)) {
-      for (const commit of await client.listCommits(repo.fullName, from, to)) {
+      for (const commit of await this.commits(userId, repo, from, to)) {
         changes.push({ module: 'development', where: repo.fullName, ...commit });
       }
       const released = repo.latestReleaseAt;
@@ -139,11 +141,36 @@ export class DevelopmentLinks implements OnModuleInit {
           where: repo.fullName,
           at: released.toISOString(),
           title: `Release ${repo.latestReleaseTag}`,
-          url: `${repo.htmlUrl}/releases/tag/${encodeURIComponent(repo.latestReleaseTag)}`,
+          // GitLab keeps its releases under `/-/`.
+          url: `${repo.htmlUrl}${repo.provider === 'gitlab' ? '/-/releases/' : '/releases/tag/'}${encodeURIComponent(repo.latestReleaseTag)}`,
         });
       }
     }
     return changes.sort((a, b) => b.at.localeCompare(a.at));
+  }
+
+  /** A service that does not answer leaves its repository out, not the others. */
+  private async commits(
+    userId: string,
+    repo: TrackedRepoRow,
+    from: Date,
+    to: Date,
+  ): Promise<RepoCommit[]> {
+    try {
+      if (repo.provider === 'gitlab') {
+        const gitlab = await this.tokens.gitlab(userId);
+        return gitlab ? await gitlabCommits(gitlab, repo.fullName, from, to) : [];
+      }
+      if (repo.provider === 'bitbucket') {
+        const bitbucket = await this.tokens.bitbucket(userId);
+        return bitbucket ? await bitbucketCommits(bitbucket, repo.fullName, from, to) : [];
+      }
+      const github = new GithubClient(await this.github.token(userId));
+      return await github.listCommits(repo.fullName, from, to);
+    } catch (error) {
+      this.logger.warn(`Commits of ${repo.fullName} were not read: ${String(error).slice(0, 200)}`);
+      return [];
+    }
   }
 
   private async reposOf(userId: string, names: string[]) {
