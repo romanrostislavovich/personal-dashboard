@@ -8,10 +8,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CORE_READS } from '@pd/client-core';
-import { ProjectOverview } from '@pd/contracts';
+import { ProjectMonth, ProjectOverview } from '@pd/contracts';
 import { DurationPipe } from '../ui/duration.pipe';
 
 const PERIODS = [30, 90, 365] as const;
+const MONTHS = 6;
 
 function localDate(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -131,6 +132,44 @@ function localDate(date: Date): string {
         </mat-card>
       }
 
+      @if (hasMonths()) {
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>{{ 'core.projects.months' | transloco }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="months">
+              <span class="head"></span>
+              <span class="head">{{ 'core.projects.monthTime' | transloco }}</span>
+              <span class="head">{{ 'core.projects.monthCoding' | transloco }}</span>
+              <span class="head">{{ 'core.projects.monthIncome' | transloco }}</span>
+              <span class="head">{{ 'core.projects.monthExpense' | transloco }}</span>
+              @for (month of months.value(); track month.month) {
+                <span>{{ month.month + '-01' | date: 'LLL y' }}</span>
+                <span class="number">{{ month.seconds ? (month.seconds | pdDuration) : '—' }}</span>
+                <span class="number">
+                  {{ month.codingSeconds ? (month.codingSeconds | pdDuration) : '—' }}
+                </span>
+                <span class="number">
+                  {{
+                    month.currency && month.income
+                      ? (month.income | currency: month.currency : 'symbol' : '1.0-0')
+                      : '—'
+                  }}
+                </span>
+                <span class="number">
+                  {{
+                    month.currency && month.expense
+                      ? (month.expense | currency: month.currency : 'symbol' : '1.0-0')
+                      : '—'
+                  }}
+                </span>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
       <p class="hint">
         {{ 'core.projects.aliasesHint' | transloco }}
         @if (data.project.aliases.length) {
@@ -190,6 +229,22 @@ function localDate(date: Date): string {
     .more {
       font: var(--mat-sys-label-medium);
     }
+    .months {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) repeat(4, auto);
+      gap: 6px 20px;
+      padding-top: 12px;
+      max-width: 640px;
+    }
+    .head {
+      font: var(--mat-sys-label-medium);
+      color: var(--mat-sys-on-surface-variant);
+      text-align: right;
+    }
+    .number {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
     .change {
       display: grid;
       grid-template-columns: 110px 1fr auto;
@@ -218,6 +273,16 @@ export class ProjectPage {
     from.setDate(from.getDate() - this.days() + 1);
     return { from: localDate(from), to: localDate(to) };
   });
+  /** The last half-year month by month, whatever the period above. */
+  protected readonly months = httpResource<ProjectMonth[]>(
+    () => CORE_READS.projectMonths(this.id(), MONTHS),
+    { defaultValue: [] },
+  );
+  protected readonly hasMonths = computed(() =>
+    this.months
+      .value()
+      .some((month) => month.seconds || month.codingSeconds || month.income || month.expense),
+  );
   protected readonly overview = httpResource<ProjectOverview>(() =>
     CORE_READS.projectOverview(this.id(), this.period().from, this.period().to),
   );

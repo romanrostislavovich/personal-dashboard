@@ -74,5 +74,10 @@
     "0": "Like most people",
     "1": "I am usually warm",
     "2": "I am always hot — dress me lighter"
+  },
+  "links": {
+    "temperature": "Temperature",
+    "rain": "Rain, mm",
+    "sun": "Sunshine"
   }
 }

@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database } from '@pd/api-core';
+import { AppConfig, DB, Database, LinksService } from '@pd/api-core';
 import {
   birthdayInputSchema,
   DateParts,
@@ -21,14 +21,25 @@ export class BirthdaysService {
   constructor(
     @Inject(DB) private readonly db: Database,
     @Inject(ConfigService) private readonly config: AppConfig,
+    private readonly links: LinksService,
   ) {}
 
   /** All of the user's people, the one with the nearest date (a birthday or a day of memory) first. */
   async list(userId: string): Promise<UpcomingBirthday[]> {
     const rows = await this.db.select().from(birthdays).where(eq(birthdays.userId, userId));
     const today = this.today();
+    // Gift ideas are another section's (the wishlist): the core tells them by the name.
+    const ideas = await this.links.aboutPeople(
+      userId,
+      rows.map((row) => row.name),
+    );
     return rows
-      .map((row) => toUpcoming(row, today))
+      .map((row) => ({
+        ...toUpcoming(row, today),
+        giftIdeas: (ideas.get(row.name.trim().toLowerCase()) ?? []).filter(
+          (note) => note.kind === 'gift',
+        ),
+      }))
       .sort((a, b) => daysUntilNearest(a) - daysUntilNearest(b));
   }
 
@@ -106,5 +117,6 @@ export function toUpcoming(row: BirthdayRow, today: DateParts): UpcomingBirthday
       // The year someone died in has no anniversary yet.
       years: died.turningAge || null,
     },
+    giftIdeas: [],
   };
 }

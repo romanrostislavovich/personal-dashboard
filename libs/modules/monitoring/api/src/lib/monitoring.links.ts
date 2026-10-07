@@ -1,6 +1,14 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DB, Database, LinksService, ProjectOverviewService, UsersService } from '@pd/api-core';
-import { addDays, parseLocalDate, ProjectChange, toLocalDate, zonedToUtc } from '@pd/contracts';
+import {
+  addDays,
+  Moment,
+  parseLocalDate,
+  ProjectChange,
+  ProjectFact,
+  toLocalDate,
+  zonedToUtc,
+} from '@pd/contracts';
 import { and, asc, eq, gte, inArray, lt } from 'drizzle-orm';
 import { checkResults, monitors } from './monitoring.schema';
 import { Incident, incidentsOf } from './state/incidents';
@@ -11,6 +19,9 @@ const SUSPECT_HOURS = 24;
 /** Incidents told with their changes at once: each asks the code hosting. */
 const MAX_INCIDENTS = 10;
 const MAX_CHANGES = 5;
+const DAY_MS = 24 * HOUR_MS;
+/** An outage of a computer this close to an incident is told with it. */
+const OUTAGE_SLACK_MS = 10 * 60 * 1000;
 
 /** An incident of a site with what changed in the project's code shortly before it. */
 export interface IncidentReport {
@@ -22,6 +33,14 @@ export interface IncidentReport {
   downMinutes: number | null;
   /** Commits and releases in the day before it, the nearest to it first. */
   changesBefore: ProjectChange[];
+  /**
+   * Times the user's own computers could not reach the internet (`title: internet`) or the
+   * dashboard's server (`server`) around the incident, as the desktop app saw them: a second
+   * witness. The sites are checked from the server, so an outage of the internet at home does
+   * not explain an incident — but the server unreachable from a computer at the same time
+   * says the trouble was real and wider than one site.
+   */
+  outages: Moment[];
 }
 
 /**
@@ -55,6 +74,7 @@ export class MonitoringLinks implements OnModuleInit {
         }
         const up = checks.filter((check) => check.isUp).length;
         return [
+          ...(await this.sslFact(userId, project.id)),
           {
             module: 'monitoring',
             labelKey: 'monitoring.links.uptime',
@@ -98,9 +118,39 @@ export class MonitoringLinks implements OnModuleInit {
         to: incident.to?.toISOString() ?? null,
         downMinutes: minutesOf(incident),
         changesBefore: await this.changesBefore(userId, site.projectId, incident.from),
+        outages: (
+          await this.links.momentsBetween(
+            userId,
+            new Date(incident.from.getTime() - OUTAGE_SLACK_MS),
+            new Date((incident.to ?? now).getTime() + OUTAGE_SLACK_MS),
+          )
+        ).filter((moment) => moment.kind === 'outage'),
       });
     }
     return reports;
+  }
+
+  /** The days left of the certificate that expires first among the project's sites. */
+  private async sslFact(userId: string, projectId: string): Promise<ProjectFact[]> {
+    const sites = await this.db
+      .select({ url: monitors.url, expiresAt: monitors.sslExpiresAt })
+      .from(monitors)
+      .where(and(eq(monitors.userId, userId), eq(monitors.projectId, projectId)));
+    const [first] = sites
+      .flatMap((site) => (site.expiresAt ? [{ url: site.url, expiresAt: site.expiresAt }] : []))
+      .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime());
+    return first
+      ? [
+          {
+            module: 'monitoring',
+            labelKey: 'monitoring.links.sslDays',
+            value: Math.floor((first.expiresAt.getTime() - Date.now()) / DAY_MS),
+            unit: 'count',
+            link: '/monitoring',
+            note: first.url,
+          },
+        ]
+      : [];
   }
 
   /** What changed in the project's code in the day before a moment, the nearest first. */

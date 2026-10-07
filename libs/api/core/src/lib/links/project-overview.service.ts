@@ -4,14 +4,17 @@ import {
   MoodInsights,
   parseLocalDate,
   ProjectFact,
+  ProjectMonth,
   ProjectOverview,
   toLocalDate,
+  zonedDateTime,
   zonedToUtc,
 } from '@pd/contracts';
 import { ProjectsService } from '../projects/projects.service';
 import { UsersService } from '../users/users.service';
 import { LinksService, Period, ProjectRef } from './links.service';
 import { moodInsights } from './mood-insights';
+import { lastMonths, monthOf } from './project-months';
 
 /** Changes of a project shown in its overview. */
 const CHANGES = 15;
@@ -76,6 +79,18 @@ export class ProjectOverviewService {
       changes: changes.slice(0, CHANGES),
       perHour: perHour(facts),
     };
+  }
+
+  /** The project month by month, oldest first: its hours and its money. */
+  async months(userId: string, projectId: string, count: number): Promise<ProjectMonth[]> {
+    const project = await this.ref(userId, projectId);
+    const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
+    const today = zonedDateTime(new Date(), timeZone).date;
+    const months: ProjectMonth[] = [];
+    for (const { month, from, to } of lastMonths(today, count)) {
+      months.push(monthOf(month, await this.links.projectFacts(userId, project, { from, to })));
+    }
+    return months;
   }
 
   /** What goes with the days of a good mood and of a bad one (see moodInsights). */

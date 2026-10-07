@@ -259,6 +259,11 @@ export const activitySettingsSchema = z
       .nullable(),
     /** Computers of other services (WakaTime) whose time is not added to the time at the computer. */
     skippedComputers: z.array(z.string().trim().min(1).max(200)).max(50),
+    /**
+     * Minutes every task done today adds to the daily limit of games; `0` — the limit does not
+     * depend on the tasks. The tasks belong to another section: the core tells their number.
+     */
+    gamesMinutesPerTask: z.number().int().min(0).max(120),
   })
   .extend(activityFocusSettingsSchema.shape);
 export type ActivitySettings = z.infer<typeof activitySettingsSchema>;

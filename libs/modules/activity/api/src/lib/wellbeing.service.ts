@@ -3,6 +3,7 @@ import {
   AutomationsService,
   DB,
   Database,
+  LinksService,
   NotificationsService,
   ProjectsService,
   UsersService,
@@ -62,6 +63,7 @@ export class WellbeingService {
     private readonly projects: ProjectsService,
     private readonly users: UsersService,
     private readonly automations: AutomationsService,
+    private readonly links: LinksService,
   ) {}
 
   // --- Focus sessions ---
@@ -255,6 +257,7 @@ export class WellbeingService {
       new Map(rows.map((row) => [row.app, row.seconds])),
       (app) => categoryOf(app, categories),
       day,
+      await this.gamesBonusMinutes(userId, day),
     );
     if (!reached.length) {
       return;
@@ -286,6 +289,17 @@ export class WellbeingService {
         .set({ notifiedOn: day })
         .where(eq(activityLimits.id, limit.id));
     }
+  }
+
+  /** Minutes the tasks done today add to the limit of games (see `gamesMinutesPerTask`). */
+  private async gamesBonusMinutes(userId: string, day: LocalDate): Promise<number> {
+    const { gamesMinutesPerTask } = await this.activity.settings(userId);
+    if (!gamesMinutesPerTask) {
+      return 0;
+    }
+    // The tasks are another section's: the core tells how many were done today.
+    const done = await this.links.dailyMetric(userId, 'tasks.done', { from: day, to: day });
+    return (done?.days[0]?.value ?? 0) * gamesMinutesPerTask;
   }
 
   // --- Health of the computers ---

@@ -72,8 +72,8 @@
     "days": "Days before",
     "gift": "Task a week before",
     "giftOn": "Gift task: on",
-    "giftHint": "A week before every birthday a task “Buy a gift” is added to your TODO list. Change or remove the rule in Settings → Automations.",
+    "giftHint": "A week before every birthday a task “Buy a gift” is added to your TODO list, with the gift ideas of the wishlist (a wish marked as a gift for the person). Change or remove the rule in Settings → Automations.",
     "giftRule": "A gift a week before a birthday",
-    "giftTask": "Buy a gift: {{name}} ({{date}})"
+    "giftTask": "Buy a gift: {{name}} ({{date}}) {{ideas}}"
   }
 }

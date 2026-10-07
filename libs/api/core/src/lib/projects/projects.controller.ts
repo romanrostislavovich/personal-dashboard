@@ -12,6 +12,9 @@ import {
 } from '@nestjs/common';
 import {
   projectInputSchema,
+  ProjectMonth,
+  ProjectMonthsQuery,
+  projectMonthsQuerySchema,
   ProjectOverview,
   ProjectOverviewQuery,
   projectOverviewQuerySchema,
@@ -44,6 +47,16 @@ export class ProjectsController {
     @Query(new ZodValidationPipe(projectOverviewQuerySchema)) query: ProjectOverviewQuery,
   ): Promise<ProjectOverview> {
     return this.overviews.overview(user.id, id, query);
+  }
+
+  /** The project month by month: its hours and its money. */
+  @Get(':id/months')
+  months(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query(new ZodValidationPipe(projectMonthsQuerySchema)) query: ProjectMonthsQuery,
+  ): Promise<ProjectMonth[]> {
+    return this.overviews.months(user.id, id, query.months);
   }
 
   @Post()

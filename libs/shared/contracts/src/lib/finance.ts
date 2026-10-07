@@ -356,6 +356,10 @@ export const wishInputSchema = z.object({
   /** The price typed in by hand: used while the page does not tell one. */
   price: z.number().positive().max(1_000_000_000).nullish(),
   currency: z.string().trim().length(3).toUpperCase().nullish(),
+  /** The savings goal the wish is saved for: the list tells how much it still lacks. */
+  goalId: z.uuid().nullish(),
+  /** Whom it is a gift for: a name as in Birthdays, where it shows as a gift idea. */
+  recipient: z.string().trim().max(100).nullish(),
 });
 export type WishInput = z.input<typeof wishInputSchema>;
 
@@ -378,6 +382,18 @@ export interface Wish {
   checkError: string | null;
   boughtAt: string | null;
   createdAt: string;
+  goalId: string | null;
+  recipient: string | null;
+  /**
+   * The goal the wish is saved for against its price (in the goal's currency); `null` — no
+   * goal, no price, or the wish is bought.
+   */
+  goal: { name: string; saved: number; missing: number; currency: string } | null;
+  /**
+   * What is left of this month's budget of all expenses, and what buying the wish would leave
+   * (negative — over the budget), in the main currency; `null` — no such budget or no price.
+   */
+  budget: { left: number; afterBuying: number; currency: string } | null;
 }
 
 /** The price of a wish on a day. */
@@ -386,5 +402,9 @@ export interface WishPricePoint {
   price: number;
 }
 
-export const wishBoughtSchema = z.object({ bought: z.boolean() });
+export const wishBoughtSchema = z.object({
+  bought: z.boolean(),
+  /** Also record the purchase as an expense of today, at the wish's price. */
+  record: z.boolean().optional(),
+});
 export type WishBought = z.infer<typeof wishBoughtSchema>;

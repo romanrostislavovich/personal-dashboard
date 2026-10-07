@@ -24,7 +24,11 @@ export class MonitoringAiTools implements OnModuleInit {
         'kept for about a month), newest first: URL, project id, from, to, minutes, and ' +
         '`changesBefore` — the commits and releases of the project in the 24 hours before it ' +
         '(from its GitHub, GitLab and Bitbucket repositories, matched by the project name and aliases), the nearest ' +
-        'first. Useful for "why did the site go down", "what did I deploy before it broke". ' +
+        "first; `outages` — times the user's own computers could not reach the internet " +
+        "(`title: internet`) or the dashboard's server (`server`) around it, with the computer " +
+        'in `subtitle`: the sites are checked from the server, so only a `server` outage is a ' +
+        'second witness of the incident. Useful for "why did the site go down", "what did I ' +
+        'deploy before it broke". ' +
         'A change before an incident is a suspect, not a proof.',
       parameters: {
         type: 'object',

@@ -105,10 +105,14 @@ export class TasksService {
       userId,
       rows.map((row) => row.title),
     );
-    return rows.map((row) => ({
-      ...toTask(row, reminderAt.get(row.id) ?? null),
-      focusSeconds: spent.get(row.title.trim().toLowerCase()) ?? 0,
-    }));
+    return rows.map((row) => {
+      const time = spent.get(row.title.trim().toLowerCase());
+      return {
+        ...toTask(row, reminderAt.get(row.id) ?? null),
+        focusSeconds: time?.focus ?? 0,
+        windowSeconds: time?.windows ?? 0,
+      };
+    });
   }
 
   async find(userId: string, id: string): Promise<TaskRow> {
@@ -275,5 +279,6 @@ export function toTask(row: TaskRow, reminderAt: string | null): Task {
     createdAt: row.createdAt.toISOString(),
     reminderAt,
     focusSeconds: 0,
+    windowSeconds: 0,
   };
 }

@@ -53,6 +53,7 @@ const DEFAULT_SETTINGS: ActivitySettings = {
   privateWords: [],
   summaryTime: '21:00',
   skippedComputers: [],
+  gamesMinutesPerTask: 0,
 };
 /** The hours of the user's own clock the achievements call night and early morning. */
 const NIGHT_ENDS_AT = 5;
@@ -175,6 +176,7 @@ export class ActivityService {
           privateWords: row.privateWords,
           summaryTime: row.summaryTime,
           skippedComputers: row.skippedComputers,
+          gamesMinutesPerTask: row.gamesMinutesPerTask,
         }
       : DEFAULT_SETTINGS;
   }
@@ -313,6 +315,47 @@ export class ActivityService {
       await this.computersOf(userId, times, devices),
       trackedGames,
     );
+  }
+
+  /**
+   * When the computer was first and last used on each day, in hours of the user's clock — a
+   * rough picture of the daily rhythm. A day lasts until four in the morning, so working past
+   * midnight is a late evening (over 24), not an early morning.
+   */
+  async dayBounds(
+    userId: string,
+    period: ActivityPeriod,
+  ): Promise<{ day: LocalDate; first: number; last: number }[]> {
+    const timeZone = await this.timeZone(userId);
+    const s = activitySpans;
+    type Moment = typeof s.startedAt | typeof s.endedAt;
+    const local = (column: Moment) => sql`(${column} AT TIME ZONE ${timeZone})`;
+    const dayStart = sql`date_trunc('day', ${local(s.startedAt)} - interval '4 hours')`;
+    const hours = (column: Moment) =>
+      sql`extract(epoch from ${local(column)} - ${dayStart}) / 3600`;
+    const rows = await this.db
+      .select({
+        day: sql<LocalDate>`to_char(${dayStart}, 'YYYY-MM-DD')`,
+        first: sql<number>`round(min(${hours(s.startedAt)})::numeric, 2)::float`,
+        last: sql<number>`round(max(${hours(s.endedAt)})::numeric, 2)::float`,
+      })
+      .from(s)
+      .where(this.within(userId, period, timeZone))
+      .groupBy(sql`1`);
+    return rows;
+  }
+
+  /** Time per window title since a moment, lower case — to find what a title names. */
+  async titleSeconds(userId: string, since: Date): Promise<{ title: string; seconds: number }[]> {
+    const s = activitySpans;
+    return this.db
+      .select({
+        title: sql<string>`lower(${s.title})`,
+        seconds: sql<number>`sum(${s.seconds})::int`,
+      })
+      .from(s)
+      .where(and(eq(s.userId, userId), gte(s.startedAt, since), sql`${s.title} <> ''`))
+      .groupBy(sql`1`);
   }
 
   /** The tracker's own time in games per day of a period. */

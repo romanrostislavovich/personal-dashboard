@@ -137,6 +137,8 @@ export const activitySettings = pgTable('activity_settings', {
   summarySentOn: date({ mode: 'string' }),
   /** Computers of other services (WakaTime) whose time is not added (see other-computers.ts). */
   skippedComputers: text().array().notNull().default([]),
+  /** Minutes a task done today adds to the limit of games (the tasks come through the core). */
+  gamesMinutesPerTask: integer().notNull().default(0),
 });
 
 /** "No more than this much a day": in games, at the computer at all, in one program. */

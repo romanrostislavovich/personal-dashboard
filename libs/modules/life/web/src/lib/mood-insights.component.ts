@@ -6,7 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CORE_READS } from '@pd/client-core';
-import { MoodInsights } from '@pd/contracts';
+import { MoodInsight, MoodInsights } from '@pd/contracts';
 
 const PERIODS = [90, 180, 365] as const;
 
@@ -76,14 +76,24 @@ function localDate(date: Date): string {
                       @case ('hours') {
                         {{ 'life.hours' | transloco: { value: (value | number: '1.0-1') } }}
                       }
+                      @case ('degrees') {
+                        {{ value | number: '1.0-1' }}°
+                      }
+                      @case ('clock') {
+                        {{ clock(value) }}
+                      }
                       @default {
                         {{ value | number: '1.0-1' }}
                       }
                     }
                   </span>
                 }
-                <span class="number" [class.more]="item.differencePercent > 0">
-                  {{ item.differencePercent > 0 ? '+' : '' }}{{ item.differencePercent }}%
+                <span class="number" [class.more]="item.difference > 0">
+                  @if (item.reading) {
+                    {{ difference(item) }}
+                  } @else {
+                    {{ item.differencePercent > 0 ? '+' : '' }}{{ item.differencePercent }}%
+                  }
                 </span>
               } @empty {
                 <span class="hint wide">{{ 'life.mood.same' | transloco }}</span>
@@ -132,6 +142,24 @@ function localDate(date: Date): string {
   `,
 })
 export class MoodInsightsComponent {
+  /** A time of the day out of hours: 23.5 — 23:30, 25 — 01:00 (after midnight). */
+  protected clock(hours: number): string {
+    const minutes = Math.round(hours * 60) % (24 * 60);
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+  }
+
+  /** The difference of a reading in its own unit: an hour earlier, three degrees warmer. */
+  protected difference(item: MoodInsight): string {
+    const sign = item.difference > 0 ? '+' : '−';
+    const value = Math.abs(item.difference);
+    if (item.unit === 'clock') {
+      const minutes = Math.round(value * 60);
+      return `${sign}${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`;
+    }
+    return `${sign}${Math.round(value * 10) / 10}${item.unit === 'degrees' ? '°' : ''}`;
+  }
+
   protected readonly periods = PERIODS;
   protected readonly days = signal<number>(PERIODS[1]);
   protected readonly insights = httpResource<MoodInsights>(() => {

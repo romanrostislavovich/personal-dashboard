@@ -108,8 +108,9 @@ export function financeApi(api: ApiClient) {
     removeWish: (id: string) => api.delete(`${BASE}/wishlist/${id}`),
     /** Reads the price again without waiting for the morning. */
     checkWish: (id: string) => api.post<Wish>(`${BASE}/wishlist/${id}/check`, {}),
-    setWishBought: (id: string, bought: boolean) =>
-      api.put<Wish>(`${BASE}/wishlist/${id}/bought`, { bought }),
+    /** `record` — the purchase also becomes an expense of today. */
+    setWishBought: (id: string, bought: boolean, record = false) =>
+      api.put<Wish>(`${BASE}/wishlist/${id}/bought`, { bought, record }),
     /** Writes (or writes again) the AI's review of a month. */
     writeReport: (month: string) =>
       api.post<{ report: FinanceReport | null }>(`${BASE}/reports`, { month }),

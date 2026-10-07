@@ -37,6 +37,31 @@ describe('moodInsights', () => {
     ]);
   });
 
+  it('compares a reading by the difference itself, over the days it was taken', () => {
+    const clock = (key: string, values: Record<number, number>) => ({
+      ...metric(key, values),
+      unit: 'clock' as const,
+    });
+    const result = moodInsights(
+      [
+        mood,
+        // Up an hour later on the bad days; day 8 was not measured and is not a zero.
+        clock('activity.firstUse', { 1: 8, 2: 8, 3: 8, 6: 9, 7: 9, 5: 12 }),
+        // Half an hour is the least worth telling: twenty minutes are not.
+        clock('activity.lastUse', { 1: 23, 2: 23, 3: 23, 6: 23.3, 7: 23.3, 8: 23.3 }),
+      ],
+      period,
+    );
+    expect(result.insights).toEqual([]);
+    const enough = moodInsights(
+      [mood, clock('activity.firstUse', { 1: 8, 2: 8, 3: 8, 6: 9, 7: 9, 8: 9 })],
+      period,
+    );
+    expect(enough.insights).toMatchObject([
+      { key: 'activity.firstUse', onGoodDays: 8, onBadDays: 9, difference: -1, reading: true },
+    ]);
+  });
+
   it('says nothing from too few days of either kind', () => {
     const fewBad = metric('diary.mood', { 1: 5, 2: 4, 3: 4, 6: 2 });
     const result = moodInsights([fewBad, metric('activity.hours', { 1: 1, 6: 9 })], period);

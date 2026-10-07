@@ -78,6 +78,8 @@ export interface ActivityFocusMusic {
   withoutMusic: ActivityFocusMusicGroup;
   /** The artists that played in the most sessions. */
   artists: { artist: string; sessions: number; plays: number }[];
+  /** What played while working on each project (`null` — without one), the most sessions first. */
+  byProject: { project: string | null; sessions: number; artists: string[] }[];
 }
 
 /** The timer of the focus sessions, set in the dashboard and followed by every desktop app. */

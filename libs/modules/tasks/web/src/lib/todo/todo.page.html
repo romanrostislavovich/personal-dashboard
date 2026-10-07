@@ -98,6 +98,11 @@
               <mat-icon inline>timer</mat-icon> {{ task.focusSeconds | pdDuration }}
             </span>
           }
+          @if (task.windowSeconds) {
+            <span [matTooltip]="'tasks.todo.windowTime' | transloco">
+              <mat-icon inline>desktop_windows</mat-icon> {{ task.windowSeconds | pdDuration }}
+            </span>
+          }
           @if (task.checklist.length) {
             <span>
               <mat-icon inline>checklist</mat-icon> {{ checklistDone(task) }}/{{

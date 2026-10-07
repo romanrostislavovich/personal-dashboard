@@ -166,5 +166,8 @@
   },
   "links": {
     "mood": "Mood"
+  },
+  "dayContext": {
+    "title": "What the day was like"
   }
 }

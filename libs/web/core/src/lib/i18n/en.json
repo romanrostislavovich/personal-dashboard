@@ -93,7 +93,12 @@
     "income": "income",
     "expense": "expenses",
     "changes": "Latest changes",
-    "nothing": "No section knows anything about this project in the period. Link its repository and its WakaTime project by adding other names, and transactions, tasks and monitored sites by choosing the project in them."
+    "nothing": "No section knows anything about this project in the period. Link its repository and its WakaTime project by adding other names, and transactions, tasks and monitored sites by choosing the project in them.",
+    "months": "Month by month",
+    "monthTime": "At the computer",
+    "monthCoding": "In code",
+    "monthIncome": "Income",
+    "monthExpense": "Expenses"
   },
   "settings": {
     "title": "Settings",

@@ -90,6 +90,11 @@ export interface Task {
    * none, or the task was not asked about with the others.
    */
   focusSeconds: number;
+  /**
+   * Time of the windows whose title names the task (a branch, a file, a page), over the last
+   * three months — also from the Activity section. It overlaps the focus time: never add them.
+   */
+  windowSeconds: number;
 }
 
 // --- Reminders ---

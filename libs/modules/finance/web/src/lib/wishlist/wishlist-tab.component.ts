@@ -106,6 +106,46 @@ import { priceTrend, shopName } from './wish-view';
                 }
               </p>
             }
+            @if (wish.goal; as goal) {
+              <p class="money" [class.down]="goal.missing === 0">
+                <mat-icon inline>savings</mat-icon>
+                @if (goal.missing === 0) {
+                  {{ 'finance.wishlist.goalEnough' | transloco: { goal: goal.name } }}
+                } @else {
+                  {{
+                    'finance.wishlist.goalMissing'
+                      | transloco
+                        : {
+                            goal: goal.name,
+                            saved: (goal.saved | currency: goal.currency),
+                            missing: (goal.missing | currency: goal.currency),
+                          }
+                  }}
+                }
+              </p>
+            }
+            @if (wish.budget; as budget) {
+              <p class="money" [class.warning]="budget.afterBuying < 0">
+                <mat-icon inline>account_balance_wallet</mat-icon>
+                {{
+                  (budget.afterBuying < 0
+                    ? 'finance.wishlist.budgetOver'
+                    : 'finance.wishlist.budgetLeft'
+                  )
+                    | transloco
+                      : {
+                          left: (budget.left | currency: budget.currency),
+                          after: (abs(budget.afterBuying) | currency: budget.currency),
+                        }
+                }}
+              </p>
+            }
+            @if (wish.recipient) {
+              <p class="note">
+                <mat-icon inline>redeem</mat-icon>
+                {{ 'finance.wishlist.giftFor' | transloco: { name: wish.recipient } }}
+              </p>
+            }
             @if (wish.checkError && !wish.boughtAt) {
               <p class="warning">
                 <mat-icon inline>warning</mat-icon>
@@ -259,6 +299,10 @@ import { priceTrend, shopName } from './wish-view';
     .history {
       margin-top: 12px;
     }
+    .money {
+      margin: 4px 0;
+      font: var(--mat-sys-body-small);
+    }
     .bought {
       opacity: 0.7;
     }
@@ -273,6 +317,9 @@ export class WishlistTabComponent {
   private readonly transloco = inject(TranslocoService);
 
   protected readonly wishes = this.api.wishlist();
+  /** For the form: a wish can be saved for one of them. */
+  private readonly goals = this.api.goals();
+  protected readonly abs = Math.abs;
   /** The wish whose price history is shown. */
   protected readonly open = signal<string | null>(null);
   protected readonly history = this.api.wishPrices(this.open);
@@ -295,7 +342,7 @@ export class WishlistTabComponent {
     const input = await firstValueFrom(
       this.dialog
         .open<WishFormDialog, WishFormData, WishInput>(WishFormDialog, {
-          data: { wish: wish ?? null, currency: this.currency() },
+          data: { wish: wish ?? null, currency: this.currency(), goals: this.goals.value() },
         })
         .afterClosed(),
     );
@@ -310,7 +357,17 @@ export class WishlistTabComponent {
   }
 
   protected async setBought(wish: Wish, bought: boolean): Promise<void> {
-    await firstValueFrom(this.api.setWishBought(wish.id, bought));
+    // Buying is money spent: offered to be put into the transactions at once.
+    const record =
+      bought &&
+      wish.price !== null &&
+      confirm(
+        this.transloco.translate('finance.wishlist.recordPurchase', {
+          name: wish.name,
+          price: `${wish.price.toFixed(2)} ${wish.currency ?? ''}`.trim(),
+        }),
+      );
+    await firstValueFrom(this.api.setWishBought(wish.id, bought, record));
     this.wishes.reload();
   }
 

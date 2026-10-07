@@ -232,6 +232,10 @@ export const wishes = pgTable('finance_wishes', {
   /** Why the last check gave no price; `null` — it did. */
   checkError: text(),
   boughtAt: timestamp({ withTimezone: true }),
+  /** The savings goal the wish is saved for. */
+  goalId: uuid().references(() => savingsGoals.id, { onDelete: 'set null' }),
+  /** Whom it is a gift for: a name, as the person is called in Birthdays. */
+  recipient: text(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 

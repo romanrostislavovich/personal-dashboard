@@ -1,3 +1,4 @@
+import { PersonNote } from './links';
 import { z } from 'zod';
 import { LocalDate } from './local-date';
 
@@ -76,6 +77,11 @@ export interface UpcomingBirthday extends Birthday {
     /** Years since; `null` if the year is unknown. */
     years: number | null;
   } | null;
+  /**
+   * Gift ideas for the person: what the other sections keep under their name (the wishes of
+   * the wishlist marked as a gift for them). Empty when the people were not asked about.
+   */
+  giftIdeas: PersonNote[];
 }
 
 /** A date of a person that is coming: their birthday or their day of memory. */

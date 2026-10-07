@@ -90,13 +90,38 @@ export class CoreAiTools implements OnModuleInit {
         ),
     });
     this.ai.registerTool({
+      name: 'core_project_months',
+      module: 'projects',
+      description:
+        'One project month by month, oldest first: seconds at the computer on it, coding ' +
+        'seconds from WakaTime, income and expenses with their currency. Useful for "is X ' +
+        'paying off", "how did the work on X go over the half-year". Take the id from ' +
+        'core_projects.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Project id from core_projects' },
+          months: { type: 'number', description: '1–24, default 6' },
+        },
+        required: ['id'],
+      },
+      handler: (userId, args) =>
+        this.overviews.months(
+          userId,
+          String(args['id']),
+          Math.min(24, Math.max(1, Math.round(Number(args['months']) || 6))),
+        ),
+    });
+    this.ai.registerTool({
       name: 'core_mood_insights',
       module: 'life',
       description:
         'What goes with good and bad days: for the days with a mood in the diary (good: 4–5, ' +
         'bad: 1–2), the average of every daily number — hours at the computer, in games, ' +
-        'coding, money spent, music plays, tasks done — on good days against bad ones, the ' +
-        'largest difference first. `enough: false` — too few days to say. It shows what goes ' +
+        'coding, money spent, music plays, tasks done, and readings: the temperature, the ' +
+        'sun, when the computer was first and last used (`clock`: hours of the day, over 24 ' +
+        '— after midnight; compare readings by `difference`, not percent) — on good days ' +
+        'against bad ones, the largest difference first. `enough: false` — too few days to say. It shows what goes ' +
         'together, not the cause: say so. Use a long period (three months and more).',
       parameters: PERIOD_PARAMETERS,
       handler: (userId, args) =>

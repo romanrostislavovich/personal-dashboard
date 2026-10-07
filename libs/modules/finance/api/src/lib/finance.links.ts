@@ -2,16 +2,19 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LinksService } from '@pd/api-core';
 import { ProjectFact } from '@pd/contracts';
 import { TransactionsService } from './transactions/transactions.service';
+import { WishlistService } from './wishlist/wishlist.service';
 
 /**
  * What finance tells the other sections (see LinksService): the money of a project for its
- * overview, and the money spent on every day (what goes with a good or a bad day).
+ * overview, the money spent on every day (what goes with a good or a bad day), and the wishes
+ * that are a gift for somebody — the gift ideas of a birthday.
  */
 @Injectable()
 export class FinanceLinks implements OnModuleInit {
   constructor(
     private readonly links: LinksService,
     private readonly transactions: TransactionsService,
+    private readonly wishlist: WishlistService,
   ) {}
 
   onModuleInit(): void {
@@ -65,6 +68,27 @@ export class FinanceLinks implements OnModuleInit {
               },
             ]
           : [];
+      },
+    });
+
+    this.links.registerPeople({
+      module: 'finance',
+      about: async (userId, names) => {
+        const ideas = await this.wishlist.giftIdeas(userId, names);
+        return new Map(
+          [...ideas].map(([name, wishes]) => [
+            name,
+            wishes.map((wish) => ({
+              kind: 'gift',
+              title: wish.name,
+              detail:
+                wish.price !== null && wish.currency
+                  ? `${wish.price.toFixed(2)} ${wish.currency}`
+                  : null,
+              link: wish.url,
+            })),
+          ]),
+        );
       },
     });
 

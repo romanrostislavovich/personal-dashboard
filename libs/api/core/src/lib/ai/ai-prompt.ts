@@ -47,8 +47,10 @@ const LINK_RULES = [
   'across them (hours, coding time, money, tasks, uptime, the latest commits, money per hour);',
   'core_mood_insights — what goes with good and bad days; monitoring_incidents — what changed',
   'in the code before a site went down; finance_subscription_usage — whether what is paid for',
-  'is used; activity_focus_music — what played during focus sessions; tasks_time — focus time',
-  'per task; games_steam_days — play time per day.',
+  'is used; activity_focus_music — what played during focus sessions; tasks_time — time per',
+  'task; games_steam_days — play time per day; core_project_months — a project month by',
+  'month; music_mood_artists — who plays on good and bad days; finance_wishlist — a wish',
+  'against its savings goal and the budget; birthdays_upcoming — gift ideas of the wishlist.',
 ];
 
 /** Where things are in the app, so an answer can lead to the page. */

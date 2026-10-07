@@ -59,5 +59,8 @@
     "assistant": "The same as the assistant",
     "connectionHint": "A connection of its own keeps the agent apart from the assistant",
     "saved": "Saved."
+  },
+  "links": {
+    "findings": "Open security findings"
   }
 }
