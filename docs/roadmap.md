@@ -153,9 +153,7 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 #### Tests and CI
 
 - **End-to-end smoke tests** (Playwright): sign-in, a diary entry, a transaction, an AI message
-- **Database tests in CI** — a PostgreSQL service in GitHub Actions, so the `*.db.spec.ts` tests
-  run instead of being skipped
-- **Dependency updates** (Renovate) and a clean `npm audit`
+- **Dependency updates** (Renovate)
 
 #### Quick wins
 
