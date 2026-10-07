@@ -120,13 +120,3 @@ export interface LifeStory {
   text: string;
   createdAt: string;
 }
-
-// --- Asking about one's own life ---
-
-export const lifeAskSchema = z.object({ question: z.string().trim().min(2).max(500) });
-export type LifeAsk = z.infer<typeof lifeAskSchema>;
-
-export interface LifeAnswer {
-  /** Markdown with links to the days and pages it is about. */
-  answer: string;
-}

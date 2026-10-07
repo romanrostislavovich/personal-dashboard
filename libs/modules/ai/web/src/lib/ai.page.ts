@@ -51,6 +51,7 @@ const SUGGESTION_KEYS = ['birthdays', 'spending', 'sites', 'diary', 'music'];
 
 @Component({
   selector: 'pd-ai-page',
+  host: { '(click)': 'follow($event)' },
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
@@ -281,6 +282,15 @@ export class AiPage {
   private update(history: ChatEntry[]): void {
     this.history.set(history);
     setTimeout(() => this.messagesEnd()?.nativeElement.scrollIntoView({ behavior: 'smooth' }));
+  }
+
+  /** A link of an answer to a day or a diary entry opens inside the app, not as a page load. */
+  protected follow(event: MouseEvent): void {
+    const href = (event.target as HTMLElement).closest('a')?.getAttribute('href');
+    if (href?.startsWith('/')) {
+      event.preventDefault();
+      void this.router.navigateByUrl(href);
+    }
   }
 }
 

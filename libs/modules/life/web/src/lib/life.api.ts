@@ -36,8 +36,4 @@ export class LifeApi {
   writeStory(period: string) {
     return fromCore(() => this.life.writeStory(period));
   }
-
-  ask(question: string) {
-    return fromCore(() => this.life.ask(question));
-  }
 }

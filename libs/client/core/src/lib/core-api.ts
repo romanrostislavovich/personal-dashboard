@@ -3,7 +3,6 @@ import {
   AuthConfig,
   AutomationRule,
   AutomationRuleInput,
-  LifeAnswer,
   LifeGoal,
   LifeGoalInput,
   LifeStory,
@@ -163,8 +162,6 @@ export function lifeApi(api: ApiClient) {
     /** Writes (or writes again) the AI's story of `YYYY-MM` or `YYYY`. */
     writeStory: (period: string) =>
       api.post<{ story: LifeStory | null }>('/api/life/story', { period }),
-    /** "When was I in Prague?" — answered by the AI with links to the days. */
-    ask: (question: string) => api.post<LifeAnswer>('/api/life/ask', { question }),
   };
 }
 
