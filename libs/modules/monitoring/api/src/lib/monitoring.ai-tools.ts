@@ -23,7 +23,7 @@ export class MonitoringAiTools implements OnModuleInit {
         'The times the sites were down over the last days (30 by default, the history is ' +
         'kept for about a month), newest first: URL, project id, from, to, minutes, and ' +
         '`changesBefore` — the commits and releases of the project in the 24 hours before it ' +
-        '(from its GitHub repositories, matched by the project name and aliases), the nearest ' +
+        '(from its GitHub, GitLab and Bitbucket repositories, matched by the project name and aliases), the nearest ' +
         'first. Useful for "why did the site go down", "what did I deploy before it broke". ' +
         'A change before an incident is a suspect, not a proof.',
       parameters: {
