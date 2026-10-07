@@ -12,7 +12,9 @@
 
 ## ✅ Modules
 
-- **Birthdays** with reminders
+- **Birthdays** with reminders, and days of memory: a person may have the day they died — a
+  quiet reminder on the day and the day before, and their birthday told on the day only, in
+  other words
 - **Finance:** wallets (personal / per project), recurring payments, automatic cost import from
   Hetzner Cloud and DeepSeek; monthly budgets per category or for everything, with a warning at
   80% and when spent; a photo of a receipt in Telegram becomes an expense (read by an AI with

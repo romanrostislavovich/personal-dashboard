@@ -1,5 +1,6 @@
 {
   "title": "Birthdays",
+  "pageTitle": "Birthdays and days of memory",
   "add": "Add",
   "edit": "Edit",
   "name": "Name",
@@ -10,13 +11,30 @@
   "remind": "Remind",
   "note": "Note",
   "notePlaceholder": "Gift ideas, wishes…",
-  "empty": "Nobody here yet — add the first birthday",
+  "empty": "Nobody here yet — add the first person",
   "confirmDelete": "Delete “{{name}}”?",
   "today": "Today",
   "tomorrow": "Tomorrow",
   "inDays": "in {{days}} d",
   "turning": "turning {{age}}",
+  "birthday": "Birthday",
+  "death": "Day of death",
+  "deathHint": "For someone who has died: you are reminded of the day of memory, and of the birthday — on the day only, in other words.",
+  "memorialRemind": "Remind of the day of memory",
+  "noDate": "Give a birthday or a day of death: a day and a month.",
+  "bornOn": "Birthday:",
+  "wouldTurn": "would have turned {{age}}",
+  "memorialOn": "Day of memory:",
+  "yearsSince": "{{years}} y. since",
   "remindOption": {
+    "0": "On the day",
+    "1": "1 day before",
+    "3": "3 days before",
+    "7": "A week before",
+    "14": "2 weeks before",
+    "30": "A month before"
+  },
+  "memorialRemindOption": {
     "0": "On the day",
     "1": "1 day before",
     "3": "3 days before",
@@ -39,11 +57,14 @@
     "12": "December"
   },
   "widget": {
-    "title": "Upcoming birthdays",
+    "title": "Upcoming dates",
     "empty": "Nobody in the next month",
-    "all": "All"
+    "all": "All",
+    "memorial": "day of memory",
+    "birthdayInMemory": "birthday, in memory"
   },
   "life": {
-    "day": "Birthday: {{names}}"
+    "day": "Birthday: {{names}}",
+    "memorial": "Day of memory: {{names}}"
   }
 }

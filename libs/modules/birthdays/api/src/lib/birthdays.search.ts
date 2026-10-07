@@ -36,7 +36,11 @@ export class BirthdaysSearch implements OnModuleInit {
       module: 'birthdays',
       kind: 'birthday',
       title: row.name,
-      subtitle: `${two(row.day)}.${two(row.month)}${row.year ? `.${row.year}` : ''}`,
+      // The birthday; for someone kept only for the day of memory — that day.
+      subtitle:
+        row.day && row.month
+          ? `${two(row.day)}.${two(row.month)}${row.year ? `.${row.year}` : ''}`
+          : `† ${two(row.deathDay ?? 0)}.${two(row.deathMonth ?? 0)}${row.deathYear ? `.${row.deathYear}` : ''}`,
       url: '/birthdays',
     }));
   }

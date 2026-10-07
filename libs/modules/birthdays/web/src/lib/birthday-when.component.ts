@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 
-/** "Today" / "Tomorrow" / "in 5 days" — highlighted when it is soon. */
+/**
+ * "Today" / "Tomorrow" / "in 5 days" — highlighted when it is soon. A day of memory (`quiet`)
+ * is marked without the party: no confetti, a calm colour.
+ */
 @Component({
   selector: 'pd-birthday-when',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -9,7 +12,12 @@ import { TranslocoPipe } from '@jsverse/transloco';
   template: `
     @switch (daysUntil()) {
       @case (0) {
-        <span class="chip today">🎉 {{ 'birthdays.today' | transloco }}</span>
+        <span class="chip today" [class.quiet]="quiet()">
+          @if (!quiet()) {
+            🎉
+          }
+          {{ 'birthdays.today' | transloco }}
+        </span>
       }
       @case (1) {
         <span class="chip soon">{{ 'birthdays.tomorrow' | transloco }}</span>
@@ -37,8 +45,14 @@ import { TranslocoPipe } from '@jsverse/transloco';
       background: var(--mat-sys-primary);
       color: var(--mat-sys-on-primary);
     }
+    .today.quiet {
+      background: var(--mat-sys-surface-container-highest);
+      color: var(--mat-sys-on-surface);
+    }
   `,
 })
 export class BirthdayWhenComponent {
   readonly daysUntil = input.required<number>();
+  /** A day of memory, or the birthday of someone who has died. */
+  readonly quiet = input(false);
 }

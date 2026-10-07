@@ -1,7 +1,13 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig, DB, Database } from '@pd/api-core';
-import { birthdayInputSchema, DateParts, todayIn, UpcomingBirthday } from '@pd/contracts';
+import {
+  birthdayInputSchema,
+  DateParts,
+  daysUntilNearest,
+  todayIn,
+  UpcomingBirthday,
+} from '@pd/contracts';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { BirthdayRow, birthdays } from './birthdays.schema';
@@ -17,17 +23,19 @@ export class BirthdaysService {
     @Inject(ConfigService) private readonly config: AppConfig,
   ) {}
 
-  /** All of the user's birthdays, upcoming ones first. */
+  /** All of the user's people, the one with the nearest date (a birthday or a day of memory) first. */
   async list(userId: string): Promise<UpcomingBirthday[]> {
     const rows = await this.db.select().from(birthdays).where(eq(birthdays.userId, userId));
     const today = this.today();
-    return rows.map((row) => toUpcoming(row, today)).sort((a, b) => a.daysUntil - b.daysUntil);
+    return rows
+      .map((row) => toUpcoming(row, today))
+      .sort((a, b) => daysUntilNearest(a) - daysUntilNearest(b));
   }
 
   async create(userId: string, input: ValidBirthdayInput): Promise<UpcomingBirthday> {
     const [row] = await this.db
       .insert(birthdays)
-      .values({ userId, ...input })
+      .values({ userId, ...stored(input) })
       .returning();
     return toUpcoming(row, this.today());
   }
@@ -35,7 +43,7 @@ export class BirthdaysService {
   async update(userId: string, id: string, input: ValidBirthdayInput): Promise<UpcomingBirthday> {
     const [row] = await this.db
       .update(birthdays)
-      .set(input)
+      .set(stored(input))
       .where(and(eq(birthdays.id, id), eq(birthdays.userId, userId)))
       .returning();
     if (!row) {
@@ -53,7 +61,30 @@ export class BirthdaysService {
   }
 }
 
-function toUpcoming(row: BirthdayRow, today: DateParts): UpcomingBirthday {
+/** What is not given is stored as empty: on an update `undefined` would keep the old value. */
+function stored(input: ValidBirthdayInput) {
+  return {
+    ...input,
+    month: input.month ?? null,
+    day: input.day ?? null,
+    year: input.year ?? null,
+    note: input.note ?? null,
+    deathMonth: input.deathMonth ?? null,
+    deathDay: input.deathDay ?? null,
+    deathYear: input.deathYear ?? null,
+  };
+}
+
+export function toUpcoming(row: BirthdayRow, today: DateParts): UpcomingBirthday {
+  const born =
+    row.month && row.day
+      ? nextBirthday({ month: row.month, day: row.day, year: row.year }, today)
+      : null;
+  // A day of memory comes round like a birthday does: the same day every year.
+  const died =
+    row.deathMonth && row.deathDay
+      ? nextBirthday({ month: row.deathMonth, day: row.deathDay, year: row.deathYear }, today)
+      : null;
   return {
     id: row.id,
     name: row.name,
@@ -62,6 +93,18 @@ function toUpcoming(row: BirthdayRow, today: DateParts): UpcomingBirthday {
     year: row.year,
     note: row.note,
     remindDaysBefore: row.remindDaysBefore,
-    ...nextBirthday(row, today),
+    deathMonth: row.deathMonth,
+    deathDay: row.deathDay,
+    deathYear: row.deathYear,
+    memorialRemindDaysBefore: row.memorialRemindDaysBefore,
+    nextDate: born?.nextDate ?? null,
+    daysUntil: born?.daysUntil ?? null,
+    turningAge: born?.turningAge ?? null,
+    memorial: died && {
+      nextDate: died.nextDate,
+      daysUntil: died.daysUntil,
+      // The year someone died in has no anniversary yet.
+      years: died.turningAge || null,
+    },
   };
 }

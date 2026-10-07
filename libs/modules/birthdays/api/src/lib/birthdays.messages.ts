@@ -1,7 +1,10 @@
 import { pickMessages } from '@pd/api-core';
 import { UpcomingBirthday } from '@pd/contracts';
 
-/** Notification texts; the language is picked by `user.locale`. */
+/**
+ * Notification texts; the language is picked by `user.locale`. The ones about someone who has
+ * died are plain: no exclamation marks, no "congratulate".
+ */
 const messages = {
   en: {
     title: '🎂 Birthday',
@@ -11,14 +14,49 @@ const messages = {
       `${b.name}'s birthday is in ${b.daysUntil} ${b.daysUntil === 1 ? 'day' : 'days'} ` +
       `(${formatDate(b.nextDate)})` +
       (b.turningAge ? `, turning ${b.turningAge}` : ''),
+    inMemoryTitle: '🕯 Birthday',
+    inMemory: (b: UpcomingBirthday) =>
+      `Today is the birthday of ${b.name}` +
+      (b.turningAge ? ` — would have turned ${b.turningAge}` : '') +
+      '.',
+    memorialTitle: '🕯 Day of memory',
+    memorialToday: (b: UpcomingBirthday) =>
+      `Today is the day of memory of ${b.name}` +
+      (b.memorial?.years ? ` — ${yearsEn(b.memorial.years)} ago` : '') +
+      '.',
+    memorialSoon: (b: UpcomingBirthday) =>
+      (b.memorial?.daysUntil === 1
+        ? `Tomorrow is the day of memory of ${b.name}`
+        : `The day of memory of ${b.name} is in ${b.memorial?.daysUntil} days ` +
+          `(${formatDate(b.memorial?.nextDate)})`) +
+      (b.memorial?.years ? ` — ${yearsEn(b.memorial.years)} since` : '') +
+      '.',
   },
   ru: {
     title: '🎂 День рождения',
     today: (b: UpcomingBirthday) =>
       `Сегодня день рождения у ${b.name}${b.turningAge ? ` — исполняется ${b.turningAge}` : ''}!`,
     soon: (b: UpcomingBirthday) =>
-      `Через ${b.daysUntil} ${pluralDaysRu(b.daysUntil)} (${formatDate(b.nextDate)}) день рождения у ${b.name}` +
+      `Через ${b.daysUntil} ${pluralDaysRu(b.daysUntil ?? 0)} (${formatDate(b.nextDate)}) день рождения у ${b.name}` +
       (b.turningAge ? `, исполнится ${b.turningAge}` : ''),
+    inMemoryTitle: '🕯 День рождения',
+    // After a colon: a name is not declined, and "день рождения Иван" would read wrong.
+    inMemory: (b: UpcomingBirthday) =>
+      `Сегодня день рождения: ${b.name}` +
+      (b.turningAge ? ` — исполнилось бы ${b.turningAge}` : '') +
+      '.',
+    memorialTitle: '🕯 День памяти',
+    memorialToday: (b: UpcomingBirthday) =>
+      `Сегодня день памяти: ${b.name}` +
+      (b.memorial?.years ? ` — ${yearsRu(b.memorial.years)} назад` : '') +
+      '.',
+    memorialSoon: (b: UpcomingBirthday) =>
+      (b.memorial?.daysUntil === 1
+        ? `Завтра день памяти: ${b.name}`
+        : `Через ${b.memorial?.daysUntil} ${pluralDaysRu(b.memorial?.daysUntil ?? 0)} ` +
+          `(${formatDate(b.memorial?.nextDate)}) день памяти: ${b.name}`) +
+      (b.memorial?.years ? ` — ${yearsRu(b.memorial.years)} со дня смерти` : '') +
+      '.',
   },
 };
 
@@ -34,8 +72,19 @@ function pluralDaysRu(n: number): string {
   return 'дней';
 }
 
+/** "1 год", "3 года", "10 лет". */
+function yearsRu(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n} год`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} года`;
+  return `${n} лет`;
+}
+
+const yearsEn = (n: number) => `${n} ${n === 1 ? 'year' : 'years'}`;
+
 /** `2026-10-03` → `03.10`. */
-function formatDate(localDate: string): string {
-  const [, month, day] = localDate.split('-');
+function formatDate(localDate: string | null | undefined): string {
+  const [, month, day] = (localDate ?? '').split('-');
   return `${day}.${month}`;
 }
