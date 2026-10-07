@@ -1,10 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, PERIOD_PARAMETERS, UsersService } from '@pd/api-core';
-import { activityDaySchema, activityPeriodSchema } from '@pd/contracts';
+import { AiService, NO_PARAMETERS, PERIOD_PARAMETERS, UsersService } from '@pd/api-core';
+import {
+  activityDaySchema,
+  activityPeriodSchema,
+  activitySettingsUpdateSchema,
+} from '@pd/contracts';
 import { z } from 'zod';
 import { ActivityLinks } from './activity.links';
 import { ActivityService } from './activity.service';
 import { digestTimeline } from './timeline-digest';
+import { WellbeingService } from './wellbeing.service';
 
 const TIME = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const timelineArgs = activityDaySchema.extend({
@@ -21,9 +26,48 @@ export class ActivityAiTools implements OnModuleInit {
     private readonly activity: ActivityService,
     private readonly users: UsersService,
     private readonly links: ActivityLinks,
+    private readonly wellbeing: WellbeingService,
   ) {}
 
   onModuleInit(): void {
+    this.ai.registerTool({
+      name: 'activity_limits',
+      module: 'activity',
+      description:
+        'The daily limits of time at the computer: `limits` — kind (games, total — the whole ' +
+        'day, app — one program) and minutes; `gamesBonus` — how the limit of games grows ' +
+        'with the tasks done today: minutesPerTask (0 — it does not), tasksDone, minutes ' +
+        'earned so far. Useful for "how long may I still play today" together with ' +
+        'activity_stats of today.',
+      parameters: NO_PARAMETERS,
+      handler: async (userId) => ({
+        limits: await this.wellbeing.limits(userId),
+        gamesBonus: await this.wellbeing.gamesBonus(userId, await this.activity.today(userId)),
+      }),
+    });
+
+    this.ai.registerTool({
+      name: 'activity_set_games_bonus',
+      module: 'activity',
+      writes: true,
+      description:
+        'Sets how many minutes every task done today adds to the daily limit of games ' +
+        '(0–120; 0 — the limit no longer depends on the tasks). The limit itself is set in ' +
+        'the settings of Activity.',
+      parameters: {
+        type: 'object',
+        properties: { minutes: { type: 'number', description: '0–120 per task' } },
+        required: ['minutes'],
+      },
+      handler: async (userId, args) => {
+        const { gamesMinutesPerTask } = activitySettingsUpdateSchema.parse({
+          gamesMinutesPerTask: args['minutes'],
+        });
+        await this.activity.saveSettings(userId, { gamesMinutesPerTask });
+        return { gamesMinutesPerTask };
+      },
+    });
+
     this.ai.registerTool({
       name: 'activity_focus_music',
       module: 'activity',

@@ -18,6 +18,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { TrashController } from './trash/trash.controller';
 import { DataController } from './data-export/data.controller';
 import { OtherComputersService } from './computer-time/other-computers.service';
+import { LinksAchievements } from './links/links.achievements';
 import { LinksService } from './links/links.service';
 import { ProjectOverviewService } from './links/project-overview.service';
 import { CoreSecuritySources } from './security/core.security-sources';
@@ -138,6 +139,7 @@ class HealthController {
     DataImportService,
     OtherComputersService,
     LinksService,
+    LinksAchievements,
     ProjectOverviewService,
     SignInLog,
     SecurityService,

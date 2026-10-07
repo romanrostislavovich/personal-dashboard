@@ -166,6 +166,37 @@ export class FinanceAiTools implements OnModuleInit {
     });
 
     this.ai.registerTool({
+      name: 'finance_update_wish',
+      module: 'finance',
+      writes: true,
+      description:
+        'Changes a product of the wishlist: pass its id and only the fields to change — the ' +
+        'name, the note, the price typed in by hand, `goalId` — the savings goal it is saved ' +
+        'for (from finance_savings_goals; null — none), `recipient` — whom it is a gift for, ' +
+        'the name as in birthdays_upcoming (null — nobody).',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Wish id from finance_wishlist' },
+          name: { type: 'string' },
+          note: { type: 'string' },
+          price: { type: 'number' },
+          currency: { type: 'string', description: 'ISO 4217: EUR, USD, PLN…' },
+          goalId: { type: 'string' },
+          recipient: { type: 'string' },
+        },
+        required: ['id'],
+      },
+      handler: async (userId, args) => {
+        const { id } = idArgs.parse(args);
+        const wish = findById(await this.wishlist.list(userId), id, 'Wish');
+        // The link of a wish stays; what is not passed stays as it is.
+        const input = wishInputSchema.parse({ url: wish.url, ...changedFields(args) });
+        return this.wishlist.update(userId, id, input);
+      },
+    });
+
+    this.ai.registerTool({
       name: 'finance_wish_bought',
       module: 'finance',
       writes: true,

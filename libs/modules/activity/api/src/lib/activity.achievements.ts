@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AchievementsService, achievementTiers, AchievementTierTuple } from '@pd/api-core';
 import { ActivityCategory } from '@pd/contracts';
+import { ActivityLinks } from './activity.links';
 import { ActivityAllTime, ActivityService } from './activity.service';
 import { WellbeingService } from './wellbeing.service';
 
@@ -14,7 +15,9 @@ const inCategory = (category: ActivityCategory) => (records: ActivityAllTime) =>
 
 /**
  * Achievements of the Activity section: hours recorded in total and on what, days and streaks,
- * long days, the time of day, projects and programs.
+ * long days, the time of day, projects and programs. The hours in total, in development and in
+ * games count what the overview counts: also a computer known from WakaTime and the games of
+ * Steam the tracker has not seen. Focus with music asks the Music section through the core.
  */
 @Injectable()
 export class ActivityAchievements implements OnModuleInit {
@@ -24,9 +27,41 @@ export class ActivityAchievements implements OnModuleInit {
     private readonly achievements: AchievementsService,
     private readonly activity: ActivityService,
     private readonly wellbeing: WellbeingService,
+    private readonly links: ActivityLinks,
   ) {}
 
   onModuleInit(): void {
+    // What played is the Music section's: the core tells it for each session.
+    this.achievements.register({
+      id: 'activity.focus-music',
+      module: 'activity',
+      measure: async (userId) => {
+        const today = await this.activity.today(userId);
+        const from = `${Number(today.slice(0, 4)) - 1}${today.slice(4)}`;
+        return (await this.links.focusMusic(userId, { from, to: today })).withMusic.sessions;
+      },
+      tiers: achievementTiers(
+        [
+          10,
+          '🎧',
+          { en: 'In the zone', ru: 'В потоке' },
+          {
+            en: '10 focus sessions with music playing, within a year',
+            ru: '10 фокус-сессий под музыку за год',
+          },
+        ],
+        [
+          100,
+          '🎼',
+          { en: 'Soundtrack of work', ru: 'Саундтрек работы' },
+          {
+            en: '100 focus sessions with music playing, within a year',
+            ru: '100 фокус-сессий под музыку за год',
+          },
+        ],
+      ),
+    });
+
     this.metric('activity.hours', (records) => hours(records.totalSeconds), [
       [
         1,
