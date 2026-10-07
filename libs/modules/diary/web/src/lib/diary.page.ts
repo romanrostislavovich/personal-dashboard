@@ -33,6 +33,7 @@ import { DiaryDeleteDialog } from './diary-delete.dialog';
 import { DiaryEditorComponent } from './diary-editor.component';
 import { DiaryHeatmapComponent } from './diary-heatmap.component';
 import { DiaryInsightsComponent } from './diary-insights.component';
+import { DiaryDayContextComponent } from './diary-day-context.component';
 import { DiaryMemoriesComponent } from './diary-memories.component';
 import { DiaryTemplateDialog } from './diary-template.dialog';
 import { MOOD_EMOJI } from './mood';
@@ -59,6 +60,7 @@ type Panel = 'month' | 'search' | 'marks';
     DiaryHeatmapComponent,
     DiaryInsightsComponent,
     DiaryMemoriesComponent,
+    DiaryDayContextComponent,
   ],
   templateUrl: './diary.page.html',
   styleUrl: './diary.page.scss',

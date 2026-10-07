@@ -48,7 +48,8 @@ export class BirthdaysAiTools implements OnModuleInit {
       module: 'birthdays',
       description:
         'People whose birthday or day of memory is in the next N days (0 — today): id, name, ' +
-        'the birthday (`nextDate`, `daysUntil`, `turningAge`), a note (often gift ideas) and ' +
+        'the birthday (`nextDate`, `daysUntil`, `turningAge`), a note (often gift ideas), ' +
+        '`giftIdeas` — products of the wishlist marked as a gift for them, with the price — and ' +
         '`memorial` — for someone who has died, the next day of memory with the years since; ' +
         'their birthday is then a day to remember them, not to congratulate. 366 days — all ' +
         'of them.',

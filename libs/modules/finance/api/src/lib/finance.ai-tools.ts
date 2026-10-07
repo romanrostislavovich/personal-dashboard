@@ -128,7 +128,11 @@ export class FinanceAiTools implements OnModuleInit {
       module: 'finance',
       description:
         'The wishlist — products the user wants to buy: id, name, link, the current price in the ' +
-        'shop, the price before the last change, the lowest and the highest seen, whether bought.',
+        'shop, the price before the last change, the lowest and the highest seen, whether ' +
+        'bought; `recipient` — whom it is a gift for; `goal` — the savings goal it is saved ' +
+        "for: saved and still missing; `budget` — what is left of this month's budget of all " +
+        'expenses and what buying it would leave (negative — over the budget). Useful for ' +
+        '"can I afford X now".',
       parameters: NO_PARAMETERS,
       handler: (userId) => this.wishlist.list(userId),
     });
@@ -149,6 +153,11 @@ export class FinanceAiTools implements OnModuleInit {
           note: { type: 'string' },
           price: { type: 'number' },
           currency: { type: 'string', description: 'ISO 4217: EUR, USD, PLN…' },
+          goalId: { type: 'string', description: 'A savings goal it is saved for' },
+          recipient: {
+            type: 'string',
+            description: 'Whom it is a gift for: the name as in birthdays_upcoming',
+          },
         },
         required: ['url'],
       },
@@ -160,9 +169,20 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_wish_bought',
       module: 'finance',
       writes: true,
-      description: 'Marks a product of the wishlist as bought: its price is not watched any more.',
-      parameters: idParameters('Wish id from finance_wishlist'),
-      handler: (userId, args) => this.wishlist.setBought(userId, idArgs.parse(args).id, true),
+      description:
+        'Marks a product of the wishlist as bought: its price is not watched any more. With ' +
+        '`record: true` the purchase is also recorded as an expense of today at its price — ' +
+        'ask the user unless they said so.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Wish id from finance_wishlist' },
+          record: { type: 'boolean', description: 'Also record the expense' },
+        },
+        required: ['id'],
+      },
+      handler: (userId, args) =>
+        this.wishlist.setBought(userId, idArgs.parse(args).id, true, args['record'] === true),
     });
   }
 

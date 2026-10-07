@@ -2,6 +2,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
 import { and, count, eq, isNotNull, SQL, sql } from 'drizzle-orm';
 import { costSources, recurringPayments, transactions, wishes } from './finance.schema';
+import { SubscriptionsService } from './recurring/subscriptions.service';
 
 /** Finance achievements: for how many months the records have been kept. */
 @Injectable()
@@ -9,12 +10,41 @@ export class FinanceAchievements implements OnModuleInit {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly achievements: AchievementsService,
+    private readonly subscriptions: SubscriptionsService,
   ) {}
 
   onModuleInit(): void {
     this.registerTracking();
     this.registerAutomation();
     this.registerWishlist();
+    this.registerSubscriptionUse();
+  }
+
+  /**
+   * Paying only for what is used: the other sections tell the use of a subscription (music —
+   * the plays, activity — the time in the program). Counts the used ones, and nothing while
+   * one is paid for and not used.
+   */
+  private registerSubscriptionUse(): void {
+    this.achievements.register({
+      id: 'finance.subscriptions-used',
+      module: 'finance',
+      measure: async (userId) => {
+        const { usage } = await this.subscriptions.summary(userId);
+        return usage.some((item) => item.unused) ? 0 : usage.length;
+      },
+      tiers: [
+        achievementTier(
+          2,
+          '♻️',
+          { en: 'Nothing wasted', ru: 'Ничего зря' },
+          {
+            en: 'Two or more subscriptions whose use is known, and every one of them was used in the last 30 days',
+            ru: 'Две и больше подписок, использование которых известно, — и каждой пользовались за последние 30 дней',
+          },
+        ),
+      ],
+    });
   }
 
   /** Keeping records: months with transactions and their number. */

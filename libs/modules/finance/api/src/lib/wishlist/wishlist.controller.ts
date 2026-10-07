@@ -72,6 +72,6 @@ export class WishlistController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(wishBoughtSchema)) body: WishBought,
   ) {
-    return this.wishlist.setBought(user.id, id, body.bought);
+    return this.wishlist.setBought(user.id, id, body.bought, body.record);
   }
 }

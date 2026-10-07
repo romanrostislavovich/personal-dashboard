@@ -24,6 +24,7 @@ import { CoreSecuritySources } from './security/core.security-sources';
 import { SecurityAgent } from './security/security-agent.service';
 import { SecurityController } from './security/security.controller';
 import { SecurityJobs } from './security/security.jobs';
+import { SecurityLinks } from './security/security.links';
 import { SecurityService } from './security/security.service';
 import { SignInLog } from './security/sign-in-log.service';
 import { DataExportService } from './data-export/data-export.service';
@@ -142,6 +143,7 @@ class HealthController {
     SecurityService,
     SecurityAgent,
     SecurityJobs,
+    SecurityLinks,
     CoreSecuritySources,
     TwoFactorService,
     UsersService,

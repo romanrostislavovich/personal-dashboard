@@ -35,6 +35,17 @@ describe('reachedLimits', () => {
     ]);
   });
 
+  it('gives the games more time for the tasks done today', () => {
+    const games = [limit('games', 180), limit('app', 90, 'wow')];
+    // Three hours of games: the limit of three is reached, the one of three and a half is not.
+    expect(reachedLimits(games, today, categoryOf, '2026-10-03', 0)).toHaveLength(2);
+    const withBonus = reachedLimits(games, today, categoryOf, '2026-10-03', 30);
+    expect(withBonus.map((r) => r.limit.kind)).toEqual(['app']);
+    // What is told is the limit as it is today.
+    const over = reachedLimits([limit('games', 150)], today, categoryOf, '2026-10-03', 20);
+    expect(over[0].limit.minutes).toBe(170);
+  });
+
   it('reports a limit once a day', () => {
     const reported = { ...limit('games', 60), notifiedOn: '2026-10-03' };
     expect(reachedLimits([reported], today, categoryOf, '2026-10-03')).toEqual([]);

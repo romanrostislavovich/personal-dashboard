@@ -227,7 +227,18 @@
     "unmarkBought": "Want it again",
     "confirmDelete": "Delete \"{{name}}\" from the wishlist?",
     "widgetTitle": "Wishlist",
-    "widgetEmpty": "Add a product to watch its price."
+    "widgetEmpty": "Add a product to watch its price.",
+    "goal": "Saving for it in the goal",
+    "noGoal": "No goal",
+    "goalHint": "The list tells how much the goal still lacks for this price.",
+    "recipient": "A gift for",
+    "recipientHint": "The name as in Birthdays: the wish shows there as a gift idea.",
+    "goalEnough": "The goal “{{goal}}” has enough for it",
+    "goalMissing": "Goal “{{goal}}”: {{saved}} saved, {{missing}} to go",
+    "budgetLeft": "{{left}} left in this month's budget — {{after}} after buying",
+    "budgetOver": "{{left}} left in this month's budget — buying goes {{after}} over it",
+    "giftFor": "A gift for {{name}}",
+    "recordPurchase": "Record “{{name}}” as an expense of today, {{price}}?\n\nOK — mark as bought and add the expense. Cancel — only mark as bought."
   },
   "report": {
     "title": "The month by the AI",

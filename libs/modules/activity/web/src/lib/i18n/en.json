@@ -187,7 +187,11 @@
     "shortBreakMinutes": "Break",
     "longBreakMinutes": "Long break",
     "roundsBeforeLongBreak": "Rounds before it",
-    "summary": "Summary of the day at"
+    "summary": "Summary of the day at",
+    "gamesPerTask": "Every task done today adds",
+    "gamesPerTaskHint": "The limit of games grows with the tasks you finished today.",
+    "plusMinutes": "+{{minutes}} min of games",
+    "noBonus": "Nothing: the limit is the same every day"
   },
   "disk": {
     "title": "Free up space",
@@ -284,7 +288,9 @@
     "time": "Time at the computer",
     "focus": "Focus sessions",
     "hours": "At the computer",
-    "games": "In games"
+    "games": "In games",
+    "firstUse": "First at the computer",
+    "lastUse": "Last at the computer"
   },
   "usage": {
     "seconds": "at the computer"

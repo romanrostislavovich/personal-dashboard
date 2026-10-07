@@ -37,6 +37,8 @@ export function reachedLimits(
   today: ReadonlyMap<string, number>,
   categoryOf: (app: string) => ActivityCategory,
   day: LocalDate,
+  /** Minutes earned on top of the limit of games (tasks done today). */
+  gamesBonusMinutes = 0,
 ): ReachedLimit[] {
   const total = [...today.values()].reduce((sum, seconds) => sum + seconds, 0);
   const games = [...today].reduce(
@@ -53,7 +55,8 @@ export function reachedLimits(
         : limit.kind === 'games'
           ? games
           : (today.get(limit.app ?? '') ?? 0);
-    return used >= limit.minutes * 60 ? [{ limit, usedSeconds: used }] : [];
+    const minutes = limit.minutes + (limit.kind === 'games' ? gamesBonusMinutes : 0);
+    return used >= minutes * 60 ? [{ limit: { ...limit, minutes }, usedSeconds: used }] : [];
   });
 }
 

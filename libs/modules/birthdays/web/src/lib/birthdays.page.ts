@@ -58,7 +58,7 @@ const GIFT_TRIGGER = 'birthdays.upcoming';
     <mat-card appearance="outlined">
       <mat-list>
         @for (birthday of birthdays.value(); track birthday.id) {
-          <mat-list-item [lines]="birthday.memorial && birthday.nextDate ? 3 : 2">
+          <mat-list-item [lines]="lines(birthday)">
             <mat-icon matListItemIcon>{{ birthday.memorial ? 'local_florist' : 'cake' }}</mat-icon>
             <span matListItemTitle>{{ birthday.name }}</span>
             @if (birthday.nextDate) {
@@ -91,6 +91,24 @@ const GIFT_TRIGGER = 'birthdays.upcoming';
                 }
               </span>
             }
+            @if (birthday.giftIdeas.length) {
+              <span matListItemLine class="ideas">
+                <mat-icon inline>redeem</mat-icon>
+                @for (idea of birthday.giftIdeas; track idea.title) {
+                  @if (idea.link) {
+                    <a [href]="idea.link" target="_blank" rel="noopener noreferrer">{{
+                      idea.title
+                    }}</a>
+                  } @else {
+                    {{ idea.title }}
+                  }
+                  @if (idea.detail) {
+                    ({{ idea.detail }})
+                  }
+                  {{ $last ? '' : ' · ' }}
+                }
+              </span>
+            }
             <div matListItemMeta class="meta">
               <pd-birthday-when [daysUntil]="nearest(birthday)" [quiet]="!!birthday.memorial" />
               <button matIconButton (click)="openForm(birthday)"><mat-icon>edit</mat-icon></button>
@@ -104,6 +122,10 @@ const GIFT_TRIGGER = 'birthdays.upcoming';
     </mat-card>
   `,
   styles: `
+    .ideas a {
+      color: var(--mat-sys-primary);
+      text-decoration: none;
+    }
     .meta {
       display: flex;
       align-items: center;
@@ -129,6 +151,16 @@ export class BirthdaysPage {
   );
 
   protected readonly birthdays = this.api.list();
+  /** The title, a line for each date and one for the gift ideas. */
+  protected lines(birthday: UpcomingBirthday): number {
+    return (
+      1 +
+      (birthday.nextDate ? 1 : 0) +
+      (birthday.memorial ? 1 : 0) +
+      (birthday.giftIdeas.length ? 1 : 0)
+    );
+  }
+
   /** Days until the nearest date of a person: the birthday or the day of memory. */
   protected readonly nearest = daysUntilNearest;
 
@@ -162,6 +194,7 @@ export class BirthdaysPage {
         title: this.transloco.translate('birthdays.automations.giftTask', {
           name: '{{name}}',
           date: '{{date}}',
+          ideas: '{{ideas}}',
         }),
         due: 'none',
       },

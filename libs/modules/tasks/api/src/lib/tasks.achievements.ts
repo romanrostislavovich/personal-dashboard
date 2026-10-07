@@ -50,6 +50,44 @@ export class TasksAchievements implements OnModuleInit {
         ],
       ),
     });
+    // The focus sessions are another section's: the core tells the time of each task.
+    this.achievements.register({
+      id: 'tasks.focus-hours',
+      module: 'tasks',
+      measure: async (userId) =>
+        Math.floor(
+          (await this.tasks.list(userId)).reduce((sum, task) => sum + task.focusSeconds, 0) / 3600,
+        ),
+      tiers: achievementTiers(
+        [
+          1,
+          '⏱️',
+          { en: 'Timed', ru: 'Под таймер' },
+          {
+            en: 'An hour of focus sessions on your tasks (the note of a session names the task)',
+            ru: 'Час фокус-сессий по своим задачам (в заметке сессии — название задачи)',
+          },
+        ],
+        [
+          10,
+          '🎯',
+          { en: 'On target', ru: 'Точно в цель' },
+          {
+            en: '10 hours of focus sessions on the tasks of the last month',
+            ru: '10 часов фокус-сессий по задачам последнего месяца',
+          },
+        ],
+        [
+          40,
+          '🧠',
+          { en: 'Deep work', ru: 'Глубокая работа' },
+          {
+            en: '40 hours of focus sessions on the tasks of the last month',
+            ru: '40 часов фокус-сессий по задачам последнего месяца',
+          },
+        ],
+      ),
+    });
     this.achievements.register({
       id: 'tasks.completed-in-day',
       module: 'tasks',

@@ -99,6 +99,9 @@ export const CORE_READS = {
   lifeDay: (day: string) => apiRequest('/api/life/day', { day }),
   /** The numbers of every module for a period (a month, a year). */
   lifeSummary: (from: string, to: string) => apiRequest('/api/life/summary', { from, to }),
+  /** A project month by month: its hours and its money. */
+  projectMonths: (id: string, months: number) =>
+    apiRequest(`${API_PATHS.project(id)}/months`, { months }),
   /** What goes with the days of a good mood and of a bad one, across the sections. */
   moodInsights: (from: string, to: string) => apiRequest('/api/life/mood-insights', { from, to }),
   lifeGoals: (year: number) => apiRequest('/api/life/goals', { year }),

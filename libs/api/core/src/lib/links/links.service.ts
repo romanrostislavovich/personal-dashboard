@@ -3,6 +3,7 @@ import {
   DailyMetric,
   LocalDate,
   Moment,
+  PersonNote,
   ProjectChange,
   ProjectFact,
   ServiceUsage,
@@ -64,11 +65,25 @@ export interface MomentSource {
   between(userId: string, from: Date, to: Date): Promise<Moment[]>;
 }
 
-/** A section that knows how long was worked on something called by a name (focus sessions). */
+/** A section that knows how long was worked on something called by a name. */
 export interface TimeSpentSource {
   module: string;
+  /**
+   * How the time was counted: `focus` — focus sessions whose note names it; `windows` — windows
+   * whose title names it. The two overlap, so they are told apart, never added.
+   */
+  kind: TimeSpentKind;
   /** Seconds for each of the names, lower case; a name nobody worked on is left out. */
   spent(userId: string, names: string[]): Promise<Map<string, number>>;
+}
+export type TimeSpentKind = 'focus' | 'windows';
+export type TimeSpent = Record<TimeSpentKind, number>;
+
+/** A section that keeps something about people by their names (gift ideas of the wishlist). */
+export interface PeopleSource {
+  module: string;
+  /** What it keeps for each of the names, lower case; a name it knows nothing of is left out. */
+  about(userId: string, names: string[]): Promise<Map<string, Omit<PersonNote, 'module'>[]>>;
 }
 
 /**
@@ -86,6 +101,7 @@ export class LinksService {
   private readonly moments: MomentSource[] = [];
   private readonly timeSpent: TimeSpentSource[] = [];
   private readonly appPages: AppPage[] = [];
+  private readonly people: PeopleSource[] = [];
 
   registerProject(source: ProjectSource): void {
     this.projects.push(source);
@@ -105,6 +121,10 @@ export class LinksService {
 
   registerTimeSpent(source: TimeSpentSource): void {
     this.timeSpent.push(source);
+  }
+
+  registerPeople(source: PeopleSource): void {
+    this.people.push(source);
   }
 
   registerPages(pages: AppPage[]): void {
@@ -154,15 +174,50 @@ export class LinksService {
     return this.collect(this.metrics, (source) => source.metrics(userId, period));
   }
 
+  /**
+   * One daily number by its key (`diary.mood`): only the section it belongs to is asked — the
+   * key starts with the section's id. `null` — the section has no such number in the period.
+   */
+  async dailyMetric(userId: string, key: string, period: Period): Promise<DailyMetric | null> {
+    const module = key.split('.')[0];
+    const metrics = await this.collect(
+      this.metrics.filter((source) => source.module === module),
+      (source) => source.metrics(userId, period),
+    );
+    return metrics.find((metric) => metric.key === key) ?? null;
+  }
+
+  /** What the sections keep about the people of these names; the keys are lower case. */
+  async aboutPeople(userId: string, names: string[]): Promise<Map<string, PersonNote[]>> {
+    const notes = new Map<string, PersonNote[]>();
+    const wanted = [...new Set(names.map((name) => name.trim().toLowerCase()).filter(Boolean))];
+    if (!wanted.length) {
+      return notes;
+    }
+    for (const source of this.people) {
+      try {
+        for (const [name, found] of await source.about(userId, wanted)) {
+          notes.set(name, [
+            ...(notes.get(name) ?? []),
+            ...found.map((note) => ({ module: source.module, ...note })),
+          ]);
+        }
+      } catch (error) {
+        this.logger.warn(`People of ${source.module} were not read: ${String(error)}`);
+      }
+    }
+    return notes;
+  }
+
   /** What happened between two moments, oldest first. */
   async momentsBetween(userId: string, from: Date, to: Date): Promise<Moment[]> {
     const moments = await this.collect(this.moments, (source) => source.between(userId, from, to));
     return moments.sort((a, b) => a.at.localeCompare(b.at));
   }
 
-  /** Seconds worked on each of the names (lower case), over every section that knows. */
-  async timeSpentOn(userId: string, names: string[]): Promise<Map<string, number>> {
-    const total = new Map<string, number>();
+  /** Seconds worked on each of the names (lower case), by how the time was counted. */
+  async timeSpentOn(userId: string, names: string[]): Promise<Map<string, TimeSpent>> {
+    const total = new Map<string, TimeSpent>();
     const wanted = [...new Set(names.map((name) => name.trim().toLowerCase()).filter(Boolean))];
     if (!wanted.length) {
       return total;
@@ -170,7 +225,9 @@ export class LinksService {
     for (const source of this.timeSpent) {
       try {
         for (const [name, seconds] of await source.spent(userId, wanted)) {
-          total.set(name, (total.get(name) ?? 0) + seconds);
+          const spent = total.get(name) ?? { focus: 0, windows: 0 };
+          spent[source.kind] += seconds;
+          total.set(name, spent);
         }
       } catch (error) {
         this.logger.warn(`Time spent of ${source.module} was not read: ${String(error)}`);

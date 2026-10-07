@@ -61,7 +61,8 @@
       "all": "No tasks yet — type the first one above.",
       "done": "Nothing done in the last month."
     },
-    "focusTime": "Focus time on this task"
+    "focusTime": "Focus time on this task",
+    "windowTime": "Time in windows named after this task (three months)"
   },
   "reminders": {
     "dialog": {

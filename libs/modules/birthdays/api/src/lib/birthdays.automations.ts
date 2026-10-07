@@ -25,9 +25,10 @@ export class BirthdaysAutomations implements OnModuleInit {
       labelKey: 'birthdays.automations.upcoming',
       description:
         'A birthday of somebody alive is exactly `days` days away (7 by default); for several ' +
-        'people on the same day the names come together',
+        'people on the same day the names come together; `ideas` — their gift ideas from the ' +
+        'wishlist',
       params: [{ name: 'days', type: 'number', labelKey: 'birthdays.automations.days' }],
-      variables: ['name', 'date', 'days', 'age'],
+      variables: ['name', 'date', 'days', 'age', 'ideas'],
       check: async (userId, params, now) => {
         if (now.time < NOT_BEFORE) {
           return null;
@@ -45,6 +46,8 @@ export class BirthdaysAutomations implements OnModuleInit {
           date: people[0].nextDate ?? '',
           days: String(days),
           age: people.length === 1 ? String(people[0].turningAge ?? '') : '',
+          // The gift ideas of the wishlist, to put into the task.
+          ideas: people.flatMap((person) => person.giftIdeas.map((idea) => idea.title)).join(', '),
         };
       },
     });

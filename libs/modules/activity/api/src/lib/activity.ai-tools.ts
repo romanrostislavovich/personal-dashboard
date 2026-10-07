@@ -31,7 +31,7 @@ export class ActivityAiTools implements OnModuleInit {
         'Focus sessions (Pomodoro) of a period against the music that played during them ' +
         '(from the listening history): `withMusic` and `withoutMusic` — sessions, focus ' +
         'seconds, percent finished, percent of the time lost to distractions; `artists` — who ' +
-        'played in the most sessions. Useful for "what do I listen to when I work", "do I ' +
+        'played in the most sessions; `byProject` — who played while working on each project. Useful for "what do I listen to when I work", "do I ' +
         'focus better with music". A difference between the two is not a proof of the cause.',
       parameters: PERIOD_PARAMETERS,
       handler: (userId, args) => this.links.focusMusic(userId, activityPeriodSchema.parse(args)),

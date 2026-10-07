@@ -1,8 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, NO_PARAMETERS, ServerActions } from '@pd/api-core';
-import { MUSIC_TOP_PERIODS, MusicTopPeriod } from '@pd/contracts';
+import { AiService, NO_PARAMETERS, PERIOD_PARAMETERS, ServerActions } from '@pd/api-core';
+import { moodInsightsQuerySchema, MUSIC_TOP_PERIODS, MusicTopPeriod } from '@pd/contracts';
 import { LastfmService } from './lastfm.service';
 import { HISTORY_GROUPS, historyTopSchema, MusicHistoryQueryService } from './music-history.query';
+import { MusicLinks } from './music.links';
 import { MUSIC_ACTIONS } from './music.server-actions';
 
 /**
@@ -16,9 +17,24 @@ export class MusicAiTools implements OnModuleInit {
     private readonly ai: AiService,
     private readonly lastfm: LastfmService,
     private readonly history: MusicHistoryQueryService,
+    private readonly links: MusicLinks,
   ) {}
 
   onModuleInit(): void {
+    this.ai.registerTool({
+      name: 'music_mood_artists',
+      module: 'music',
+      description:
+        'Who the user listens to on the days of a good mood (4–5 in the diary) and on the bad ' +
+        'ones (1–2): for each side the artists played on a larger share of such days than of ' +
+        'the other kind — days, plays, share of the days in percent. Useful for "what do I ' +
+        'listen to when I feel good / bad". It shows what goes together, not what lifts a ' +
+        'mood. Use a long period (three months and more).',
+      parameters: PERIOD_PARAMETERS,
+      handler: (userId, args) =>
+        this.links.moodArtists(userId, moodInsightsQuerySchema.parse(args)),
+    });
+
     this.ai.registerTool({
       name: 'music_stats',
       module: 'music',

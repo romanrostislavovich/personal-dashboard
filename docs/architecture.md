@@ -284,8 +284,11 @@ To add a service (e.g. DigitalOcean):
   (`registerDailyMetrics`: compared on the days of a good and a bad mood), the use of a
   service by the name its payment has (`registerUsage`), what happened between two moments
   (`registerMoments`: the music of a focus session), the time spent on something by its name
-  (`registerTimeSpent`: the focus time of a task) and its pages (`registerPages`: the
-  assistant links to them). A project is matched across the sections by its name and its
+  (`registerTimeSpent`: the focus time of a task and the time of the windows named after it),
+  what it keeps about a person by their name (`registerPeople`: the gift ideas of the wishlist
+  in Birthdays) and its pages (`registerPages`: the assistant links to them). A section may ask
+  for one daily number of another (`dailyMetric`: the tasks done today raise the limit of
+  games; the mood of the diary sorts the artists of Music). A project is matched across the sections by its name and its
   `aliases` (a repository, a WakaTime project). A source that fails is left out: a link
   never breaks the section that asked. Every link has a tool of the assistant.
 - **Trash:** `TrashService` — a trigger on every table of `public` keeps deleted rows in the

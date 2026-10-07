@@ -1,7 +1,8 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService, Period, UsersService } from '@pd/api-core';
+import { DB, Database, LinksService, MOOD_METRIC, Period, UsersService } from '@pd/api-core';
 import { addDays, LocalDate, parseLocalDate, toLocalDate, zonedToUtc } from '@pd/contracts';
 import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
+import { moodArtists, MoodArtists } from './mood-artists';
 import { scrobbles } from './music.schema';
 
 /** A payment named with one of these is for listening to music (the plays come from Last.fm). */
@@ -97,6 +98,24 @@ export class MusicLinks implements OnModuleInit {
     this.links.registerPages([
       { module: 'music', path: '/music/listening', description: 'listening history and tops' },
     ]);
+  }
+
+  /**
+   * Who plays on the days of a good mood and who on the bad ones. The mood is the diary's:
+   * the core tells it day by day.
+   */
+  async moodArtists(userId: string, period: Period): Promise<MoodArtists> {
+    const mood = await this.links.dailyMetric(userId, MOOD_METRIC, period);
+    const timeZone = await this.timeZone(userId);
+    const day = sql<LocalDate>`to_char(${scrobbles.playedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`;
+    const plays = mood?.days.length
+      ? await this.db
+          .select({ day, artist: scrobbles.artist, plays: sql<number>`count(*)::int` })
+          .from(scrobbles)
+          .where(await this.within(userId, period))
+          .groupBy(sql`1`, scrobbles.artist)
+      : [];
+    return moodArtists(mood?.days ?? [], plays);
   }
 
   /** The plays of the user's own days of a period. */

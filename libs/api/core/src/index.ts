@@ -45,9 +45,12 @@ export type {
   AppPage,
   DailyMetricSource,
   MomentSource,
+  PeopleSource,
   Period,
   ProjectRef,
   ProjectSource,
+  TimeSpent,
+  TimeSpentKind,
   TimeSpentSource,
   UsageSource,
 } from './lib/links/links.service';

@@ -151,6 +151,12 @@ const DAILY_BARS_LIMIT = 31;
                       {{ artist.artist }} ({{ artist.sessions }}){{ $last ? '' : ', ' }}
                     }
                   </p>
+                  @for (item of m.byProject; track item.project) {
+                    <p class="hint">
+                      <b>{{ item.project ?? ('activity.focus.noProject' | transloco) }}:</b>
+                      {{ item.artists.join(', ') }}
+                    </p>
+                  }
                 </mat-card-content>
               </mat-card>
             }

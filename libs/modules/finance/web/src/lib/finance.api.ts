@@ -190,8 +190,8 @@ export class FinanceApi {
     return fromCore(() => this.finance.checkWish(id));
   }
 
-  setWishBought(id: string, bought: boolean) {
-    return fromCore(() => this.finance.setWishBought(id, bought));
+  setWishBought(id: string, bought: boolean, record = false) {
+    return fromCore(() => this.finance.setWishBought(id, bought, record));
   }
 
   /** Opens the photo of a transaction's receipt in a new tab. */

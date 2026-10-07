@@ -84,20 +84,25 @@ export class TasksAiTools implements OnModuleInit {
       name: 'tasks_time',
       module: 'tasks',
       description:
-        'Time spent on tasks: the open tasks and the ones done in the last month that have ' +
-        'focus sessions (Pomodoro) whose note names the task — title, focusSeconds, done or ' +
-        'not, due date — the longest first. Useful for "how long did the task X take", "what ' +
-        'did I spend the most focus time on". A task nobody ran a focus session for is not ' +
-        'listed.',
+        'Time spent on tasks: the open tasks and the ones done in the last month with ' +
+        '`focusSeconds` — focus sessions (Pomodoro) whose note names the task — and ' +
+        '`windowSeconds` — windows whose title contains the title of the task (a branch, a ' +
+        'file, a page; the last three months). The two overlap: never add them, tell the ' +
+        'larger as the estimate. Also done or not, due date; the longest first. Useful for ' +
+        '"how long did the task X take". A task with no time of either kind is not listed.',
       parameters: NO_PARAMETERS,
       handler: async (userId) =>
         (await this.tasks.list(userId))
-          .filter((task) => task.focusSeconds > 0)
-          .sort((a, b) => b.focusSeconds - a.focusSeconds)
-          .map(({ id, title, focusSeconds, completedAt, dueDate }) => ({
+          .filter((task) => task.focusSeconds > 0 || task.windowSeconds > 0)
+          .sort(
+            (a, b) =>
+              Math.max(b.focusSeconds, b.windowSeconds) - Math.max(a.focusSeconds, a.windowSeconds),
+          )
+          .map(({ id, title, focusSeconds, windowSeconds, completedAt, dueDate }) => ({
             id,
             title,
             focusSeconds,
+            windowSeconds,
             done: completedAt !== null,
             dueDate,
           })),

@@ -264,6 +264,7 @@
       [template]="settings.value()?.template ?? null"
       (saved)="onSaved()"
     />
+    <pd-diary-day-context [day]="selectedDay()" />
     <pd-diary-memories [day]="selectedDay()" (dayOpen)="selectDay($event)" />
     @if (insights.value(); as data) {
       <mat-card appearance="outlined" class="insights">

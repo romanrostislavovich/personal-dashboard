@@ -5,12 +5,15 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Wish, WishInput } from '@pd/contracts';
+import { MatSelectModule } from '@angular/material/select';
+import { SavingsGoal, Wish, WishInput } from '@pd/contracts';
 
 export interface WishFormData {
   wish: Wish | null;
   /** The currency of a price typed in by hand. */
   currency: string;
+  /** The savings goals a wish can be saved for. */
+  goals: SavingsGoal[];
 }
 
 /** A new wish or changes to one. Only the link is needed: the rest comes from the page. */
@@ -22,6 +25,7 @@ export interface WishFormData {
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     TranslocoPipe,
   ],
@@ -55,6 +59,25 @@ export interface WishFormData {
         </div>
         <p class="hint">{{ 'finance.wishlist.priceHint' | transloco }}</p>
 
+        @if (data.goals.length) {
+          <mat-form-field>
+            <mat-label>{{ 'finance.wishlist.goal' | transloco }}</mat-label>
+            <mat-select formControlName="goalId">
+              <mat-option [value]="null">{{ 'finance.wishlist.noGoal' | transloco }}</mat-option>
+              @for (goal of data.goals; track goal.id) {
+                <mat-option [value]="goal.id">{{ goal.name }}</mat-option>
+              }
+            </mat-select>
+            <mat-hint>{{ 'finance.wishlist.goalHint' | transloco }}</mat-hint>
+          </mat-form-field>
+        }
+
+        <mat-form-field>
+          <mat-label>{{ 'finance.wishlist.recipient' | transloco }}</mat-label>
+          <input matInput formControlName="recipient" maxlength="100" />
+          <mat-hint>{{ 'finance.wishlist.recipientHint' | transloco }}</mat-hint>
+        </mat-form-field>
+
         <mat-form-field>
           <mat-label>{{ 'finance.wishlist.note' | transloco }}</mat-label>
           <textarea matInput formControlName="note" rows="2" maxlength="500"></textarea>
@@ -75,7 +98,7 @@ export interface WishFormData {
     .form {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 8px;
       min-width: min(480px, 80vw);
     }
     .row {
@@ -104,6 +127,8 @@ export class WishFormDialog {
       [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)],
     ],
     note: [this.wish?.note ?? ''],
+    goalId: [this.wish?.goalId ?? (null as string | null)],
+    recipient: [this.wish?.recipient ?? ''],
   });
 
   save(): void {
@@ -116,6 +141,8 @@ export class WishFormDialog {
       note: value.note || null,
       price,
       currency: price === null ? null : value.currency.toUpperCase(),
+      goalId: value.goalId,
+      recipient: value.recipient.trim() || null,
     });
   }
 }

@@ -109,6 +109,29 @@ const FOCUS = {
           </mat-form-field>
         </div>
 
+        @if (minutesOf('games')) {
+          <div class="row">
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>{{ 'activity.wellbeing.gamesPerTask' | transloco }}</mat-label>
+              <mat-select
+                [value]="settings.value()?.gamesMinutesPerTask ?? 0"
+                (valueChange)="save({ gamesMinutesPerTask: $event })"
+              >
+                @for (minutes of gamesPerTaskOptions; track minutes) {
+                  <mat-option [value]="minutes">
+                    {{
+                      minutes
+                        ? ('activity.wellbeing.plusMinutes' | transloco: { minutes })
+                        : ('activity.wellbeing.noBonus' | transloco)
+                    }}
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-hint>{{ 'activity.wellbeing.gamesPerTaskHint' | transloco }}</mat-hint>
+            </mat-form-field>
+          </div>
+        }
+
         @for (limit of appLimits(); track limit.app) {
           <div class="row app">
             <span class="name">{{ nameOf(limit.app) }}</span>
@@ -199,6 +222,7 @@ export class WellbeingSettingsComponent {
   protected readonly breakOptions = BREAK_MINUTES;
   protected readonly summaryTimes = SUMMARY_TIMES;
   protected readonly gameOptions = GAME_LIMITS;
+  protected readonly gamesPerTaskOptions = [0, 5, 10, 15, 20, 30];
   protected readonly totalOptions = TOTAL_LIMITS;
   protected readonly appOptions = APP_LIMITS;
   protected readonly focusOptions = FOCUS;

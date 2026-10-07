@@ -1,4 +1,4 @@
-import { focusMusic, timeByName } from './focus-music';
+import { focusMusic, timeByName, timeByTitle } from './focus-music';
 
 const session = (artists: string[], completed: boolean, distractedSeconds = 0) => ({
   completed,
@@ -33,8 +33,37 @@ describe('focusMusic', () => {
     ]);
   });
 
+  it('tells what played while working on each project', () => {
+    const result = focusMusic([
+      { ...session(['Muse', 'Muse'], true), project: 'Shop' },
+      { ...session(['Muse', 'Tool'], true), project: 'Shop' },
+      { ...session(['Bonobo'], true), project: null },
+      { ...session([], true), project: 'Blog' },
+    ]);
+    expect(result.byProject).toEqual([
+      { project: 'Shop', sessions: 2, artists: ['Muse', 'Tool'] },
+      { project: null, sessions: 1, artists: ['Bonobo'] },
+    ]);
+  });
+
   it('copes with no sessions', () => {
     expect(focusMusic([]).withMusic).toMatchObject({ sessions: 0, completedPercent: 0 });
+  });
+});
+
+describe('timeByTitle', () => {
+  const titles = [
+    { title: 'fix-login — auth.ts — visual studio code', seconds: 1200 },
+    { title: 'pull request: fix-login · github', seconds: 300 },
+    { title: 'inbox', seconds: 900 },
+  ];
+
+  it('sums the windows whose title contains the name', () => {
+    expect(timeByTitle(titles, ['fix-login', 'deploy'])).toEqual(new Map([['fix-login', 1500]]));
+  });
+
+  it('does not look for a name too short to be told from a word', () => {
+    expect(timeByTitle(titles, ['inbox', 'auth'])).toEqual(new Map());
   });
 });
 

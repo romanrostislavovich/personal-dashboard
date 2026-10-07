@@ -37,6 +37,7 @@
   },
   "links": {
     "uptime": "Uptime of its sites",
-    "incidents": "Times down"
+    "incidents": "Times down",
+    "sslDays": "Days until the SSL certificate expires"
   }
 }

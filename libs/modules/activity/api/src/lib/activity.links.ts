@@ -1,13 +1,16 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DB, Database, LinksService } from '@pd/api-core';
 import { ActivityFocusMusic, ActivityPeriod, ProjectFact } from '@pd/contracts';
-import { and, eq, isNotNull } from 'drizzle-orm';
-import { activityFocusSessions } from './activity.schema';
+import { and, asc, eq, gt, isNotNull, lt } from 'drizzle-orm';
+import { activityDevices, activityFocusSessions, activityOutages } from './activity.schema';
 import { ActivityService } from './activity.service';
-import { focusMusic, FocusWithPlays, timeByName } from './focus-music';
+import { focusMusic, FocusWithPlays, timeByName, timeByTitle } from './focus-music';
 import { WellbeingService } from './wellbeing.service';
 
 const HOUR = 3600;
+/** Windows named after a task are looked for this far back. */
+const TITLE_DAYS = 90;
+const DAY_MS = 24 * 60 * 60 * 1000;
 /** Focus sessions asked about their music at once: each is a question to the other sections. */
 const MAX_SESSIONS = 200;
 /** A name shorter than this would be found inside any other word. */
@@ -65,6 +68,45 @@ export class ActivityLinks implements OnModuleInit {
 
     this.links.registerTimeSpent({
       module: 'activity',
+      kind: 'windows',
+      spent: async (userId, names) =>
+        timeByTitle(
+          await this.activity.titleSeconds(userId, new Date(Date.now() - TITLE_DAYS * DAY_MS)),
+          names,
+        ),
+    });
+
+    // Times a computer could not reach the internet or the server: what a site that "went
+    // down" then may really have been.
+    this.links.registerMoments({
+      module: 'activity',
+      between: async (userId, from, to) => {
+        const o = activityOutages;
+        const outages = await this.db
+          .select({
+            kind: o.kind,
+            startedAt: o.startedAt,
+            endedAt: o.endedAt,
+            device: activityDevices.name,
+          })
+          .from(o)
+          .innerJoin(activityDevices, eq(activityDevices.id, o.deviceId))
+          .where(and(eq(o.userId, userId), lt(o.startedAt, to), gt(o.endedAt, from)))
+          .orderBy(asc(o.startedAt));
+        return outages.map((outage) => ({
+          module: 'activity',
+          kind: 'outage',
+          at: outage.startedAt.toISOString(),
+          until: outage.endedAt.toISOString(),
+          title: outage.kind,
+          subtitle: outage.device,
+        }));
+      },
+    });
+
+    this.links.registerTimeSpent({
+      module: 'activity',
+      kind: 'focus',
       spent: async (userId, names) => {
         const s = activityFocusSessions;
         const sessions = await this.db
@@ -84,6 +126,7 @@ export class ActivityLinks implements OnModuleInit {
         }
         const focus = await this.wellbeing.focusStats(userId, period);
         const games = await this.activity.gamesByDay(userId, period);
+        const bounds = await this.activity.dayBounds(userId, period);
         const hours = (days: { day: string; seconds: number }[]) =>
           days
             .filter((day) => day.seconds > 0)
@@ -109,6 +152,20 @@ export class ActivityLinks implements OnModuleInit {
             labelKey: 'activity.links.focus',
             unit: 'hours' as const,
             days: hours(focus.days),
+          },
+          {
+            key: 'activity.firstUse',
+            module: 'activity',
+            labelKey: 'activity.links.firstUse',
+            unit: 'clock' as const,
+            days: bounds.map(({ day, first }) => ({ day, value: first })),
+          },
+          {
+            key: 'activity.lastUse',
+            module: 'activity',
+            labelKey: 'activity.links.lastUse',
+            unit: 'clock' as const,
+            days: bounds.map(({ day, last }) => ({ day, value: last })),
           },
         ].filter((metric) => metric.days.length > 0);
       },
@@ -162,6 +219,7 @@ export class ActivityLinks implements OnModuleInit {
         completed: session.completed,
         focusSeconds: session.focusSeconds,
         distractedSeconds: session.distractions.reduce((sum, item) => sum + item.seconds, 0),
+        project: session.projectName,
         artists: moments
           .filter((moment) => moment.kind === 'play')
           .map((moment) => moment.subtitle ?? moment.title),
