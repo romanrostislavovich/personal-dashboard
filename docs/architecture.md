@@ -271,6 +271,10 @@ To add a service (e.g. DigitalOcean):
   nothing with the assistant — not the tools, not the conversation, optionally not the
   connection — and the rules' findings never pass through the model. Sign-ins are journaled in
   `auth.sign_ins` (`SignInLog`). Only the owner of the instance sees the section.
+- **Other computers:** `OtherComputersService` — a module that knows about time at a computer
+  the desktop app does not run on registers a source (`<module>.other-computers.ts`: WakaTime's
+  machines in Development), and Activity adds that time to the time at the computer, leaving
+  out the computers its own tracker covers. Neither module knows the other.
 - **Trash:** `TrashService` — a trigger on every table of `public` keeps deleted rows in the
   `trash` schema for 30 days (not synced: each instance keeps what was deleted on it); one
   transaction is one item, restored with everything deleted along with it. A table whose deletions

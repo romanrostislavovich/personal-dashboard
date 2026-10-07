@@ -30,7 +30,10 @@ export class ActivityAiTools implements OnModuleInit {
         'program (`apps`, with its category), per category (development, browsing, ' +
         'communication, office, design, games, media, system, other), per project (`projects` ' +
         '— time whose window title matched the project), per device, and the window titles ' +
-        'that took the most time (`titles`). Useful for "how long did I work yesterday", ' +
+        'that took the most time (`titles`). `otherComputers` — computers without the tracker ' +
+        '(a work laptop) whose time comes from another service (WakaTime: only the time in an ' +
+        'IDE, so the least that was worked there); it is already in the total, the days and ' +
+        'development. Useful for "how long did I work yesterday", ' +
         '"what did I spend the week on", "how much did I play".',
       parameters: PERIOD_PARAMETERS,
       handler: (userId, args) => this.activity.stats(userId, activityPeriodSchema.parse(args)),

@@ -12,6 +12,7 @@ import {
   ActivityProjectRuleInput,
   ActivitySettings,
   ActivitySettingsUpdate,
+  ActivityOtherComputer,
   ActivityStats,
   ActivityComputer,
   DiskReport,
@@ -30,6 +31,13 @@ export class ActivityApi {
   /** Reloads when the period changes. */
   stats(period: () => ActivityPeriod) {
     return httpResource<ActivityStats>(() => ACTIVITY_READS.stats(period()));
+  }
+
+  /** Computers other services know (WakaTime), with whether their time is counted. */
+  otherComputers(period: () => ActivityPeriod) {
+    return httpResource<ActivityOtherComputer[]>(() => ACTIVITY_READS.otherComputers(period()), {
+      defaultValue: [],
+    });
   }
 
   timeline(query: () => ActivityDayQuery) {

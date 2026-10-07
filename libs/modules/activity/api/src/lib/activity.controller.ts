@@ -44,6 +44,7 @@ import {
   ActivitySettings,
   ActivitySettingsUpdate,
   activitySettingsUpdateSchema,
+  ActivityOtherComputer,
   ActivityStats,
   ActivityTimelineEntry,
 } from '@pd/contracts';
@@ -100,6 +101,15 @@ export class ActivityController {
     @Query(new ZodValidationPipe(activityPeriodSchema)) period: ActivityPeriod,
   ): Promise<ActivityStats> {
     return this.activity.stats(user.id, period);
+  }
+
+  /** Computers other services know (WakaTime), with whether their time is counted. */
+  @Get('other-computers')
+  otherComputers(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(activityPeriodSchema)) period: ActivityPeriod,
+  ): Promise<ActivityOtherComputer[]> {
+    return this.activity.otherComputers(user.id, period);
   }
 
   /** What was in front on one day, newest first. */

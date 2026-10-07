@@ -114,7 +114,21 @@ export class OverviewPage {
     this.shares((this.stats.value()?.apps ?? []).slice(0, TOP_APPS)),
   );
   protected readonly projects = computed(() => this.shares(this.stats.value()?.projects));
-  protected readonly byDevice = computed(() => this.shares(this.stats.value()?.devices));
+  /** Computers without the tracker whose time another service knows (a work laptop). */
+  protected readonly otherComputers = computed(() => this.stats.value()?.otherComputers ?? []);
+  protected readonly otherSeconds = computed(() =>
+    this.otherComputers().reduce((total, item) => total + item.seconds, 0),
+  );
+  /** The tracker's computers and the others, the latter named with where their time is from. */
+  protected readonly byDevice = computed(() =>
+    this.shares([
+      ...(this.stats.value()?.devices ?? []),
+      ...this.otherComputers().map(({ computer, source, seconds }) => ({
+        name: `${computer} · ${this.transloco.translate(`activity.otherComputers.sources.${source}`)}`,
+        seconds,
+      })),
+    ]),
+  );
   protected readonly titles = computed(() =>
     this.shares(
       (this.stats.value()?.titles ?? []).map(({ name, title, seconds }) => ({

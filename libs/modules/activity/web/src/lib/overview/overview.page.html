@@ -60,6 +60,11 @@
       }
     </mat-card-content>
   </mat-card>
+  @if (otherSeconds() > 0) {
+    <p class="hint">
+      {{ 'activity.otherComputers.included' | transloco: { time: (otherSeconds() | pdDuration) } }}
+    </p>
+  }
 
   @if (days() > 1) {
     <mat-card appearance="outlined">

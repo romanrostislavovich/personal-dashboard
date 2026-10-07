@@ -141,6 +141,8 @@ export function buildStats(
       .map((device) => ({ ...device, seconds: byDevice.get(device.id) ?? 0 }))
       .sort(descending),
     titles: [...byTitle.values()].sort(descending).slice(0, TOP_TITLES),
+    // Added by the service from what other services know (see other-computers.ts).
+    otherComputers: [],
   };
 }
 

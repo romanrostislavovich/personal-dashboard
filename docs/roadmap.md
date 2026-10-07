@@ -72,7 +72,10 @@
   achievements; reminders to take a break; daily limits on games, the whole day or a program;
   the disks, load and memory of every computer, with a warning when a disk runs out of space;
   temperature (the board sensor), battery health, graphics, Wi-Fi, disk health, the busiest
-  processes; disk cleanup advice from the AI, the picked items moved to the Recycle Bin
+  processes; disk cleanup advice from the AI, the picked items moved to the Recycle Bin; a
+  computer the app cannot be installed on (a work laptop) is counted from WakaTime — its time
+  in an IDE is added to the time at the computer, a computer with the tracker is not counted
+  twice
 - **Weather:** today's forecast and the week ahead for your city (Open-Meteo, no API key) with
   clothing advice that follows how you take the cold —
   on its page, on the home page and in the morning digest; the city comes from the browser's

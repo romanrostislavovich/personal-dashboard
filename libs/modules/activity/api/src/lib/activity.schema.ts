@@ -135,6 +135,8 @@ export const activitySettings = pgTable('activity_settings', {
   summaryTime: text().default('21:00'),
   /** ...and the last day it was handled (sent, or there was nothing to sum up). */
   summarySentOn: date({ mode: 'string' }),
+  /** Computers of other services (WakaTime) whose time is not added (see other-computers.ts). */
+  skippedComputers: text().array().notNull().default([]),
 });
 
 /** "No more than this much a day": in games, at the computer at all, in one program. */

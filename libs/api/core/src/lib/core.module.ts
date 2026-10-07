@@ -17,6 +17,7 @@ import { AuthController } from './auth/auth.controller';
 import { AuthGuard } from './auth/auth.guard';
 import { TrashController } from './trash/trash.controller';
 import { DataController } from './data-export/data.controller';
+import { OtherComputersService } from './computer-time/other-computers.service';
 import { CoreSecuritySources } from './security/core.security-sources';
 import { SecurityAgent } from './security/security-agent.service';
 import { SecurityController } from './security/security.controller';
@@ -132,6 +133,7 @@ class HealthController {
     TrashService,
     DataExportService,
     DataImportService,
+    OtherComputersService,
     SignInLog,
     SecurityService,
     SecurityAgent,
@@ -189,6 +191,7 @@ class HealthController {
     // For the morning digest: modules add their sections via register().
     MorningDigestService,
     // For the command palette: modules register their search via register().
+    OtherComputersService,
     SecurityService,
     DataExportService,
     SearchService,
