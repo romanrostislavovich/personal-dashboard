@@ -2,8 +2,8 @@ import { CODE_PROVIDERS } from '@pd/contracts';
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
- * Web part of the Development section: open source repositories (GitHub, GitLab, Bitbucket and
- * npm), the accounts on these services — each on its own and all together — and coding time
+ * Web part of the Development section: repositories, open source and private (GitHub, GitLab,
+ * Bitbucket and npm), the accounts on these services — each on its own and all together — and coding time
  * from WakaTime.
  * Plugged in at apps/web/src/app/modules.ts.
  */
@@ -16,13 +16,15 @@ export const developmentModule: WebDashboardModule = {
       path: '',
       loadComponent: () => import('./development.page').then((m) => m.DevelopmentPage),
       children: [
-        { path: '', pathMatch: 'full', redirectTo: 'open-source' },
+        { path: '', pathMatch: 'full', redirectTo: 'repositories' },
+        // The tab was "Open Source" once: old links and bookmarks still open it.
+        { path: 'open-source', pathMatch: 'full', redirectTo: 'repositories' },
         {
           path: 'summary',
           loadComponent: () => import('./accounts/summary.page').then((m) => m.SummaryPage),
         },
         {
-          path: 'open-source',
+          path: 'repositories',
           loadComponent: () =>
             import('./open-source/open-source.page').then((m) => m.OpenSourcePage),
         },

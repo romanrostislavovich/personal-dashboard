@@ -3,19 +3,16 @@ import { GitlabClient, projectPath, RawGitlabProject, RawGitlabUser } from './gi
 
 const NEW_ITEMS = '30';
 
-/** Public GitLab projects for the Open Source section. */
+/** GitLab projects for the repositories of the Development section. */
 export class GitlabRepoSource implements RepoSource {
   readonly provider = 'gitlab';
 
   constructor(private readonly gitlab: GitlabClient) {}
 
-  /** The public projects the user is a member of: their own and those of their groups. */
+  /** The projects the user is a member of: their own and those of their groups. */
   async listAccount(): Promise<AccountRepo[]> {
     const me = await this.gitlab.get<RawGitlabUser>('/user');
-    const projects = await this.gitlab.all<RawGitlabProject>('/projects', {
-      membership: 'true',
-      visibility: 'public',
-    });
+    const projects = await this.gitlab.all<RawGitlabProject>('/projects', { membership: 'true' });
     const repos: AccountRepo[] = [];
     for (const project of projects) {
       const own = project.namespace.kind === 'user' && project.namespace.path === me?.username;
@@ -73,6 +70,8 @@ export class GitlabRepoSource implements RepoSource {
       language,
       isFork: Boolean(project.forked_from_project),
       isArchived: Boolean(project.archived),
+      // `internal` is seen by every signed-in user of the instance, but not by the world.
+      isPrivate: project.visibility !== 'public',
       stars: project.star_count,
       forks: project.forks_count,
       openIssues: project.open_issues_count ?? 0,

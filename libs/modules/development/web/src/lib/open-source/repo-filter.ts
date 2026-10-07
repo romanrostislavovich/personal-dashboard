@@ -3,10 +3,16 @@ import { REPO_PROVIDERS, RepoProvider, RepoRelation, TrackedRepo } from '@pd/con
 /** Kinds of repositories that can be left out of the table. */
 export type RepoKind = 'forks' | 'archived' | 'hidden';
 
+/** `public` — open source; `private` — seen only by you. */
+export type RepoVisibility = 'public' | 'private';
+export const REPO_VISIBILITIES: RepoVisibility[] = ['public', 'private'];
+
 export interface RepoFilter {
   /** Part of the name or the description. */
   search: string;
   relation: RepoRelation | null;
+  /** Open source or private; `null` — all of them. */
+  visibility: RepoVisibility | null;
   /** GitHub, GitLab or Bitbucket. */
   provider: RepoProvider | null;
   language: string | null;
@@ -17,6 +23,7 @@ export interface RepoFilter {
 export const DEFAULT_REPO_FILTER: RepoFilter = {
   search: '',
   relation: null,
+  visibility: null,
   provider: null,
   language: null,
   kinds: [],
@@ -46,6 +53,7 @@ export function filterRepos(repos: TrackedRepo[], filter: RepoFilter): TrackedRe
       (filter.kinds.includes('archived') || !repo.isArchived) &&
       (filter.kinds.includes('hidden') || !repo.hidden) &&
       (!filter.relation || repo.relation === filter.relation) &&
+      (!filter.visibility || repo.isPrivate === (filter.visibility === 'private')) &&
       (!filter.provider || repo.provider === filter.provider) &&
       (!filter.language || repo.language === filter.language) &&
       (!search ||

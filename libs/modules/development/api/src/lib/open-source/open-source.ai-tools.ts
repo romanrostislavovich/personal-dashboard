@@ -28,8 +28,8 @@ export class OpenSourceAiTools implements OnModuleInit {
       name: 'github_repos',
       module: 'development',
       description:
-        "Open source repositories from GitHub, GitLab and Bitbucket (`provider`): the user's " +
-        'own public ones (`relation: owner`), those of ' +
+        "Repositories from GitHub, GitLab and Bitbucket (`provider`): the user's own " +
+        '(`relation: owner`), public (open source) and private (`isPrivate`), those of ' +
         'their organizations (`organization`) and ones added by hand (`manual`). For each: id, ' +
         'stars and growth over 7/30 days, forks, open issues and PRs, language, latest release, ' +
         'weekly npm downloads, whether it is a fork, archived, hidden, has notifications on. ' +

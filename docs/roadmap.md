@@ -34,8 +34,8 @@
   at a time → a message, a task, a reminder, a line in the diary), made by hand or from a
   sentence the AI turns into a rule
 - **Development:** one section with tabs —
-  - **Open Source:** the public repositories of your GitHub, GitLab and Bitbucket accounts and of
-    their organizations appear by themselves, any other is added by hand; a table with filters (source, language; forks,
+  - **Repositories:** the repositories of your GitHub, GitLab and Bitbucket accounts and of
+    their organizations appear by themselves, open source and private, any other is added by hand; a table with filters (source, visibility — open source or private, language; forks,
     archived and hidden ones on request) and totals that follow them, stars history, issues, PRs, releases, npm downloads (the package of
     package.json, if npm confirms it is published from this repository); alerts only for the repositories you mark
   - **GitHub account:** contribution calendar by year, streaks, commits / PRs / reviews / issues,

@@ -1,0 +1,1 @@
+ALTER TABLE "github_tracked_repos" ADD COLUMN "is_private" boolean DEFAULT false NOT NULL;

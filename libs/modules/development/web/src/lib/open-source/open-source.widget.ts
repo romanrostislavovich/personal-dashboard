@@ -97,11 +97,11 @@ const WIDGET_MAX_REPOS = 5;
 })
 export class OpenSourceWidget {
   protected readonly repos = inject(OpenSourceApi).repos();
-  /** By stars, as the server returns them; hidden ones are left out. */
+  /** By stars, as the server returns them; hidden and private ones are left out. */
   protected readonly top = computed(() =>
     this.repos
       .value()
-      .filter((repo) => !repo.hidden)
+      .filter((repo) => !repo.hidden && !repo.isPrivate)
       .slice(0, WIDGET_MAX_REPOS),
   );
 

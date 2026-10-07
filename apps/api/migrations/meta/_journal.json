@@ -421,6 +421,13 @@
       "when": 1791408884965,
       "tag": "0059_links_between_modules",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1791412078450,
+      "tag": "0060_private_repositories",
+      "breakpoints": true
     }
   ]
 }

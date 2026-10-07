@@ -1,12 +1,12 @@
 {
   "title": "Development",
   "tabs": {
-    "openSource": "Open Source",
     "github": "GitHub",
     "wakatime": "WakaTime",
     "summary": "Summary",
     "gitlab": "GitLab",
-    "bitbucket": "Bitbucket"
+    "bitbucket": "Bitbucket",
+    "repositories": "Repositories"
   },
   "errors": {
     "notFound": "Repository not found — or its service is not connected",
@@ -60,7 +60,8 @@
     "badges": {
       "fork": "fork",
       "archived": "archived",
-      "hidden": "hidden"
+      "hidden": "hidden",
+      "private": "private"
     },
     "release": "Latest release",
     "notify": "Notify about issues, PRs, releases and star milestones",
@@ -70,7 +71,7 @@
     "remove": "Stop tracking",
     "nothingFound": "Nothing matches the filters.",
     "empty": "No repositories yet — press “Update” to read them from the connected services.",
-    "noTokenHint": "Repositories are read with your token: add one in the integrations and your public repositories appear by themselves.",
+    "noTokenHint": "Repositories are read with your token: add one in the integrations and your repositories appear by themselves — the private ones too, if the token may read them.",
     "widget": {
       "title": "Open Source",
       "week": "7 days",
@@ -79,7 +80,12 @@
     },
     "repoHint": "A link to GitHub, GitLab or Bitbucket; a bare owner/name means GitHub",
     "service": "Service",
-    "noTokenTitle": "Connect GitHub, GitLab or Bitbucket"
+    "noTokenTitle": "Connect GitHub, GitLab or Bitbucket",
+    "visibility": "Visibility",
+    "visibilities": {
+      "public": "Open source",
+      "private": "Private"
+    }
   },
   "github": {
     "token": {

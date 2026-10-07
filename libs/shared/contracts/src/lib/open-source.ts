@@ -130,6 +130,8 @@ export interface TrackedRepo {
   language: string | null;
   isFork: boolean;
   isArchived: boolean;
+  /** Not public on its service; a public one is open source. */
+  isPrivate: boolean;
   hidden: boolean;
   notify: boolean;
   npmPackage: string | null;
