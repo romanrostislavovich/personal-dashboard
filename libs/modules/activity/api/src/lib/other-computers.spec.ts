@@ -80,4 +80,31 @@ describe('withOtherComputers', () => {
       { category: 'browsing', seconds: 100 },
     ]);
   });
+
+  it('adds of the games of Steam only what the tracker has not seen itself', () => {
+    const steam = (day: string, hours: number): OtherComputerTime => ({
+      computer: 'Steam',
+      source: 'steam',
+      day,
+      seconds: hours * 3600,
+      category: 'games',
+    });
+    // The 6th: three hours on Steam, two of them seen by the tracker. The 7th: all seen.
+    const played = [steam('2026-10-06', 3), steam('2026-10-07', 1)];
+    const trackedGames = new Map([
+      ['2026-10-06', 2 * 3600],
+      ['2026-10-07', 1.5 * 3600],
+    ]);
+    const merged = withOtherComputers(
+      tracked,
+      played,
+      otherComputers(played, ['LRR'], []),
+      trackedGames,
+    );
+    expect(merged.totalSeconds).toBe(9 * 3600);
+    expect(merged.days[1]).toEqual({ day: '2026-10-06', seconds: 6 * 3600 });
+    expect(merged.days[2]).toEqual({ day: '2026-10-07', seconds: 3 * 3600 });
+    expect(merged.categories).toContainEqual({ category: 'games', seconds: 3600 });
+    expect(merged.otherComputers).toEqual([{ computer: 'Steam', source: 'steam', seconds: 3600 }]);
+  });
 });

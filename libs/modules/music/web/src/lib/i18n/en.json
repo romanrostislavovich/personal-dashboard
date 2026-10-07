@@ -122,5 +122,11 @@
     "plays": "Songs listened to",
     "topArtist": "most of all {{artist}} ({{topPlays}})",
     "topArtists": "top: {{artists}}"
+  },
+  "links": {
+    "plays": "Music plays"
+  },
+  "usage": {
+    "plays": "plays"
   }
 }

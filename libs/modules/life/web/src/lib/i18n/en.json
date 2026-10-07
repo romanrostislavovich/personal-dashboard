@@ -46,5 +46,15 @@
     "empty": "No goals for this year yet.",
     "confirmDelete": "Delete the goal \"{{title}}\"?",
     "ofYear": "Goals of the year: {{done}} of {{total}} done"
+  },
+  "mood": {
+    "title": "What goes with a good day",
+    "hint": "The numbers of every section on the days of a good mood (4–5 in the diary) against the days of a bad one (1–2). It shows what goes together, not what causes what.",
+    "days": "{{days}} days",
+    "few": "Too few days with a mood to compare: {{good}} good and {{bad}} bad. At least three of each are needed — mark the mood in the diary.",
+    "of": "{{good}} good days against {{bad}} bad ones — the average of a day:",
+    "good": "Good days",
+    "bad": "Bad days",
+    "same": "Nothing differs noticeably between good and bad days."
   }
 }

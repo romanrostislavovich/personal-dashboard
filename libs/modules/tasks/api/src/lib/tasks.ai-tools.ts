@@ -81,6 +81,29 @@ export class TasksAiTools implements OnModuleInit {
     });
 
     this.ai.registerTool({
+      name: 'tasks_time',
+      module: 'tasks',
+      description:
+        'Time spent on tasks: the open tasks and the ones done in the last month that have ' +
+        'focus sessions (Pomodoro) whose note names the task — title, focusSeconds, done or ' +
+        'not, due date — the longest first. Useful for "how long did the task X take", "what ' +
+        'did I spend the most focus time on". A task nobody ran a focus session for is not ' +
+        'listed.',
+      parameters: NO_PARAMETERS,
+      handler: async (userId) =>
+        (await this.tasks.list(userId))
+          .filter((task) => task.focusSeconds > 0)
+          .sort((a, b) => b.focusSeconds - a.focusSeconds)
+          .map(({ id, title, focusSeconds, completedAt, dueDate }) => ({
+            id,
+            title,
+            focusSeconds,
+            done: completedAt !== null,
+            dueDate,
+          })),
+    });
+
+    this.ai.registerTool({
       name: 'tasks_add',
       module: 'tasks',
       writes: true,

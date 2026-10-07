@@ -1,4 +1,5 @@
 import { pickMessages } from '@pd/api-core';
+import { ProjectChange } from '@pd/contracts';
 import { MonitorNotice, SslNotice } from './checker.service';
 
 /** Module notification texts; the language is picked by `user.locale`. */
@@ -10,6 +11,9 @@ const messages = {
     recoveredTitle: (n: MonitorNotice) => `🟢 ${n.projectName} is back up`,
     recoveredBody: (n: MonitorNotice, downtimeMs: number) =>
       `${n.url}\nDowntime: ${formatDuration(downtimeMs, 'min', 'h')}`,
+    lastChange: (change: ProjectChange, downAt: number) =>
+      `Last change before it (${formatDuration(downAt - Date.parse(change.at), 'min', 'h')} earlier): ` +
+      `${change.title} — ${change.where}`,
     sslTitle: (n: SslNotice) => `🔒 SSL certificate of ${n.projectName}`,
     sslBody: (n: SslNotice, daysLeft: number) =>
       daysLeft > 0
@@ -23,6 +27,9 @@ const messages = {
     recoveredTitle: (n: MonitorNotice) => `🟢 ${n.projectName} снова работает`,
     recoveredBody: (n: MonitorNotice, downtimeMs: number) =>
       `${n.url}\nПростой: ${formatDuration(downtimeMs, 'мин', 'ч')}`,
+    lastChange: (change: ProjectChange, downAt: number) =>
+      `Последнее изменение перед этим (за ${formatDuration(downAt - Date.parse(change.at), 'мин', 'ч')}): ` +
+      `${change.title} — ${change.where}`,
     sslTitle: (n: SslNotice) => `🔒 SSL-сертификат ${n.projectName}`,
     sslBody: (n: SslNotice, daysLeft: number) =>
       daysLeft > 0

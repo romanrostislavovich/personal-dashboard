@@ -85,6 +85,11 @@ export interface Task {
   createdAt: string;
   /** When its nearest reminder goes off; `null` — none is set. */
   reminderAt: string | null;
+  /**
+   * Time of the focus sessions whose note names the task (from the Activity section); `0` —
+   * none, or the task was not asked about with the others.
+   */
+  focusSeconds: number;
 }
 
 // --- Reminders ---

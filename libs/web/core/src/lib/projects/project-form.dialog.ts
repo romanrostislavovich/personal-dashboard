@@ -37,6 +37,11 @@ import { Project, ProjectInput } from '@pd/contracts';
           <mat-label>{{ 'core.projects.description' | transloco }}</mat-label>
           <textarea matInput formControlName="description" rows="3"></textarea>
         </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ 'core.projects.aliases' | transloco }}</mat-label>
+          <input matInput formControlName="aliases" placeholder="owner/repo, my-app" />
+          <mat-hint>{{ 'core.projects.aliasesHint' | transloco }}</mat-hint>
+        </mat-form-field>
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
@@ -53,6 +58,7 @@ import { Project, ProjectInput } from '@pd/contracts';
       display: flex;
       flex-direction: column;
       min-width: min(420px, 80vw);
+      gap: 8px;
     }
   `,
 })
@@ -64,10 +70,20 @@ export class ProjectFormDialog {
     name: [this.project?.name ?? '', Validators.required],
     url: [this.project?.url ?? ''],
     description: [this.project?.description ?? ''],
+    // Typed as one line: the names separated by commas.
+    aliases: [(this.project?.aliases ?? []).join(', ')],
   });
 
   save(): void {
-    const { name, url, description } = this.form.getRawValue();
-    this.dialogRef.close({ name, url: url || null, description: description || null });
+    const { name, url, description, aliases } = this.form.getRawValue();
+    this.dialogRef.close({
+      name,
+      url: url || null,
+      description: description || null,
+      aliases: aliases
+        .split(',')
+        .map((alias) => alias.trim())
+        .filter(Boolean),
+    });
   }
 }

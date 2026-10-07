@@ -1,9 +1,12 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { Project, ProjectInput } from '@pd/contracts';
+import { Project, projectInputSchema } from '@pd/contracts';
 import { and, asc, eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { DB, Database } from '../database/database.module';
 import { isForeignKeyViolation } from '../database/pg-errors';
 import { projects } from './projects.schema';
+
+type ProjectInput = z.output<typeof projectInputSchema>;
 
 @Injectable()
 export class ProjectsService {
@@ -27,6 +30,18 @@ export class ProjectsService {
     if (count === 0) {
       throw new NotFoundException('Project not found');
     }
+  }
+
+  /** One project of the user. */
+  async get(userId: string, id: string): Promise<Project> {
+    const [row] = await this.db
+      .select()
+      .from(projects)
+      .where(and(eq(projects.id, id), eq(projects.userId, userId)));
+    if (!row) {
+      throw new NotFoundException('Project not found');
+    }
+    return toProject(row);
   }
 
   async create(userId: string, input: ProjectInput): Promise<Project> {
@@ -68,6 +83,7 @@ function toProject(row: typeof projects.$inferSelect): Project {
     name: row.name,
     url: row.url,
     description: row.description,
+    aliases: row.aliases,
     createdAt: row.createdAt.toISOString(),
   };
 }

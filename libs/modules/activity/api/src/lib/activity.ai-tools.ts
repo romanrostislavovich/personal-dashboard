@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, PERIOD_PARAMETERS, UsersService } from '@pd/api-core';
 import { activityDaySchema, activityPeriodSchema } from '@pd/contracts';
 import { z } from 'zod';
+import { ActivityLinks } from './activity.links';
 import { ActivityService } from './activity.service';
 import { digestTimeline } from './timeline-digest';
 
@@ -19,9 +20,23 @@ export class ActivityAiTools implements OnModuleInit {
     private readonly ai: AiService,
     private readonly activity: ActivityService,
     private readonly users: UsersService,
+    private readonly links: ActivityLinks,
   ) {}
 
   onModuleInit(): void {
+    this.ai.registerTool({
+      name: 'activity_focus_music',
+      module: 'activity',
+      description:
+        'Focus sessions (Pomodoro) of a period against the music that played during them ' +
+        '(from the listening history): `withMusic` and `withoutMusic` — sessions, focus ' +
+        'seconds, percent finished, percent of the time lost to distractions; `artists` — who ' +
+        'played in the most sessions. Useful for "what do I listen to when I work", "do I ' +
+        'focus better with music". A difference between the two is not a proof of the cause.',
+      parameters: PERIOD_PARAMETERS,
+      handler: (userId, args) => this.links.focusMusic(userId, activityPeriodSchema.parse(args)),
+    });
+
     this.ai.registerTool({
       name: 'activity_stats',
       module: 'activity',

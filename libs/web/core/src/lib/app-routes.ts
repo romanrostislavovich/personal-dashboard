@@ -35,6 +35,10 @@ export function buildAppRoutes(modules: WebDashboardModule[]): Routes {
           loadComponent: () => import('./projects/projects.page').then((m) => m.ProjectsPage),
         },
         {
+          path: 'projects/:id',
+          loadComponent: () => import('./projects/project.page').then((m) => m.ProjectPage),
+        },
+        {
           path: 'settings',
           loadComponent: () => import('./settings/settings.page').then((m) => m.SettingsPage),
         },

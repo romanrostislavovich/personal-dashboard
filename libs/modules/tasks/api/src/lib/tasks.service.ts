@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DB, Database, isUniqueViolation, UsersService } from '@pd/api-core';
+import { DB, Database, isUniqueViolation, LinksService, UsersService } from '@pd/api-core';
 import { projects } from '@pd/api-core/schema';
 import {
   computeStreaks,
@@ -32,6 +32,7 @@ export class TasksService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly users: UsersService,
+    private readonly links: LinksService,
   ) {}
 
   // --- Lists ---
@@ -99,7 +100,15 @@ export class TasksService {
         asc(tasks.createdAt),
       );
     const reminderAt = await this.nearestReminders(rows.map((row) => row.id));
-    return rows.map((row) => toTask(row, reminderAt.get(row.id) ?? null));
+    // The focus sessions belong to another section: the core tells the time of each title.
+    const spent = await this.links.timeSpentOn(
+      userId,
+      rows.map((row) => row.title),
+    );
+    return rows.map((row) => ({
+      ...toTask(row, reminderAt.get(row.id) ?? null),
+      focusSeconds: spent.get(row.title.trim().toLowerCase()) ?? 0,
+    }));
   }
 
   async find(userId: string, id: string): Promise<TaskRow> {
@@ -265,5 +274,6 @@ export function toTask(row: TaskRow, reminderAt: string | null): Task {
     completedAt: row.completedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     reminderAt,
+    focusSeconds: 0,
   };
 }

@@ -83,7 +83,17 @@
     "description": "Description",
     "empty": "No projects yet",
     "confirmDelete": "Delete project “{{name}}”?",
-    "inUse": "Cannot delete: finance records are linked to this project"
+    "inUse": "Cannot delete: finance records are linked to this project",
+    "open": "Overview",
+    "aliases": "Other names",
+    "aliasesHint": "Names the project goes by in other sections, separated by commas: its repository (owner/name), its project in WakaTime. Time, commits and stars are found by them.",
+    "period": "Period",
+    "days": "{{days}} days",
+    "perHour": "Per hour of work:",
+    "income": "income",
+    "expense": "expenses",
+    "changes": "Latest changes",
+    "nothing": "No section knows anything about this project in the period. Link its repository and its WakaTime project by adding other names, and transactions, tasks and monitored sites by choosing the project in them."
   },
   "settings": {
     "title": "Settings",

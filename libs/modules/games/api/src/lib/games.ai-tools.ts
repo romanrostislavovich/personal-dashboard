@@ -1,6 +1,14 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, findById, idParameters, NO_PARAMETERS, ServerActions } from '@pd/api-core';
 import {
+  AiService,
+  findById,
+  idParameters,
+  NO_PARAMETERS,
+  PERIOD_PARAMETERS,
+  ServerActions,
+} from '@pd/api-core';
+import {
+  activityPeriodSchema,
   DOTA_MATCH_MODES,
   DOTA_RESULTS,
   dotaMatchesQuerySchema,
@@ -13,6 +21,7 @@ import { DotaHeroesService } from './dota/dota-heroes.service';
 import { DotaOverviewService } from './dota/dota-overview.service';
 import { GameAccountsService } from './game-accounts.service';
 import { GAMES_ACTIONS } from './games.server-actions';
+import { SteamPlayService } from './steam/steam-play.service';
 
 /** Steam games an account shows in the list of accounts. */
 const STEAM_TOP = 15;
@@ -26,9 +35,26 @@ export class GamesAiTools implements OnModuleInit {
     private readonly actions: ServerActions,
     private readonly dota: DotaOverviewService,
     private readonly heroes: DotaHeroesService,
+    private readonly steamPlay: SteamPlayService,
   ) {}
 
   onModuleInit(): void {
+    this.ai.registerTool({
+      name: 'games_steam_days',
+      module: 'games',
+      description:
+        'Play time on Steam day by day over a period: day, game, minutes — on any device ' +
+        '(a console, a computer without the tracker). Collected since the Steam account was ' +
+        'connected, from the growth of the totals at each sync; what is over the tracked games ' +
+        'time of a day is already added to activity_stats. Useful for "what did I play last ' +
+        'week", "how long did I play on Saturday".',
+      parameters: PERIOD_PARAMETERS,
+      handler: (userId, args) => {
+        const { from, to } = activityPeriodSchema.parse(args);
+        return this.steamPlay.days(userId, from, to);
+      },
+    });
+
     this.ai.registerTool({
       name: 'games_accounts',
       module: 'games',

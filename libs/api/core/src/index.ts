@@ -40,6 +40,19 @@ export { csvLine } from './lib/data-export/data-archive';
 export { SecurityService } from './lib/security/security.service';
 export type { FoundProblem, Inspection, SecuritySource } from './lib/security/security-source';
 export { OtherComputersService } from './lib/computer-time/other-computers.service';
+export { LinksService } from './lib/links/links.service';
+export type {
+  AppPage,
+  DailyMetricSource,
+  MomentSource,
+  Period,
+  ProjectRef,
+  ProjectSource,
+  TimeSpentSource,
+  UsageSource,
+} from './lib/links/links.service';
+export { ProjectOverviewService } from './lib/links/project-overview.service';
+export { MOOD_METRIC } from './lib/links/mood-insights';
 export type {
   OtherComputerDay,
   OtherComputerSource,

@@ -62,6 +62,24 @@ export interface ActivityFocusStats {
   streak: { current: number; longest: number };
 }
 
+/** Focus sessions of one kind (with music, without): how they went. */
+export interface ActivityFocusMusicGroup {
+  sessions: number;
+  focusSeconds: number;
+  /** How many of them were finished, percent. */
+  completedPercent: number;
+  /** How much of their time went to distractions, percent. */
+  distractedPercent: number;
+}
+
+/** Focus with music against focus in silence; the music comes from the Music section. */
+export interface ActivityFocusMusic {
+  withMusic: ActivityFocusMusicGroup;
+  withoutMusic: ActivityFocusMusicGroup;
+  /** The artists that played in the most sessions. */
+  artists: { artist: string; sessions: number; plays: number }[];
+}
+
 /** The timer of the focus sessions, set in the dashboard and followed by every desktop app. */
 export const activityFocusSettingsSchema = z.object({
   focusMinutes: z.number().int().min(5).max(120),

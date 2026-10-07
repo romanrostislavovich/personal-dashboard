@@ -34,6 +34,23 @@ export class GithubClient {
       }));
   }
 
+  /** Commits of the default branch between two moments, newest first (the latest 30). */
+  async listCommits(
+    fullName: string,
+    since: Date,
+    until: Date,
+  ): Promise<{ at: string; title: string; url: string | null }[]> {
+    const commits = await this.get<RawCommit[]>(
+      `/repos/${fullName}/commits?per_page=30&since=${since.toISOString()}&until=${until.toISOString()}`,
+    );
+    return commits.map((raw) => ({
+      at: raw.commit.committer?.date ?? raw.commit.author?.date ?? until.toISOString(),
+      // The first line of the message is its title.
+      title: raw.commit.message.split('\n')[0].slice(0, 200),
+      url: raw.html_url ?? null,
+    }));
+  }
+
   /** Token check: returns the owner's login. */
   async getViewerLogin(): Promise<string> {
     return (await this.get<{ login: string }>('/user')).login;
@@ -71,4 +88,13 @@ interface RawIssue {
   created_at: string;
   user: { login: string } | null;
   pull_request?: unknown;
+}
+
+interface RawCommit {
+  html_url?: string;
+  commit: {
+    message: string;
+    author?: { date?: string };
+    committer?: { date?: string };
+  };
 }

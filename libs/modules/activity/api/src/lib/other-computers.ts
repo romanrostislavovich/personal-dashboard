@@ -6,6 +6,8 @@ export interface OtherComputerTime {
   source: string;
   day: LocalDate;
   seconds: number;
+  /** The one thing the service counts (Steam: games); otherwise it is work in an IDE. */
+  category?: 'games';
 }
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -43,33 +45,79 @@ export function otherComputers(
 }
 
 /**
+ * What of the services' time is new to the tracker. Time in an IDE on a computer without the
+ * tracker is all new. Time in games (Steam) is not tied to a computer and may have been played
+ * on a tracked one, so on each day only what is over the tracker's own games time is new —
+ * shared between the sources in proportion.
+ */
+export function newTime(
+  counted: OtherComputerTime[],
+  trackedGames: ReadonlyMap<LocalDate, number>,
+): OtherComputerTime[] {
+  const gamesOfDay = new Map<LocalDate, number>();
+  for (const time of counted) {
+    if (time.category === 'games') {
+      gamesOfDay.set(time.day, (gamesOfDay.get(time.day) ?? 0) + time.seconds);
+    }
+  }
+  return counted
+    .map((time) => {
+      if (time.category !== 'games') {
+        return time;
+      }
+      const all = gamesOfDay.get(time.day) ?? 0;
+      const over = Math.max(0, all - (trackedGames.get(time.day) ?? 0));
+      return { ...time, seconds: all ? Math.round((time.seconds * over) / all) : 0 };
+    })
+    .filter((time) => time.seconds > 0);
+}
+
+/**
  * Adds the time of the counted computers to the statistics of the tracker: to the total, to
- * its days and — what such a service counts being work in an IDE — to development.
+ * its days and to the category — games for a service of games, development for the rest (what
+ * such a service counts being work in an IDE). `trackedGames` — the tracker's own games time
+ * per day (see newTime).
  */
 export function withOtherComputers(
   stats: ActivityStats,
   times: OtherComputerTime[],
   computers: ActivityOtherComputer[],
+  trackedGames: ReadonlyMap<LocalDate, number> = new Map(),
 ): ActivityStats {
-  const counted = times.filter((time) =>
+  const isCounted = (time: OtherComputerTime) =>
     computers.some(
       (item) => item.counted && item.source === time.source && same(item.computer, time.computer),
-    ),
-  );
+    );
+  const counted = newTime(times.filter(isCounted), trackedGames);
   const added = counted.reduce((total, time) => total + time.seconds, 0);
   if (added === 0) {
     return { ...stats, otherComputers: [] };
   }
   const perDay = new Map<LocalDate, number>();
+  const perCategory = new Map<'games' | 'development', number>();
+  const perComputer = new Map<string, { computer: string; source: string; seconds: number }>();
   for (const time of counted) {
     perDay.set(time.day, (perDay.get(time.day) ?? 0) + time.seconds);
+    const category = time.category ?? 'development';
+    perCategory.set(category, (perCategory.get(category) ?? 0) + time.seconds);
+    const key = `${time.source}:${time.computer.toLowerCase()}`;
+    const computer = perComputer.get(key) ?? {
+      computer: time.computer,
+      source: time.source,
+      seconds: 0,
+    };
+    computer.seconds += time.seconds;
+    perComputer.set(key, computer);
   }
-  const development = stats.categories.find((item) => item.category === 'development');
-  const categories = development
-    ? stats.categories.map((item) =>
-        item === development ? { ...item, seconds: item.seconds + added } : item,
-      )
-    : [...stats.categories, { category: 'development' as const, seconds: added }];
+  const categories = stats.categories.map((item) => ({ ...item }));
+  for (const [category, seconds] of perCategory) {
+    const known = categories.find((item) => item.category === category);
+    if (known) {
+      known.seconds += seconds;
+    } else {
+      categories.push({ category, seconds });
+    }
+  }
   return {
     ...stats,
     totalSeconds: stats.totalSeconds + added,
@@ -78,8 +126,6 @@ export function withOtherComputers(
       seconds: day.seconds + (perDay.get(day.day) ?? 0),
     })),
     categories: categories.sort((a, b) => b.seconds - a.seconds),
-    otherComputers: computers
-      .filter((item) => item.counted)
-      .map(({ computer, source, seconds }) => ({ computer, source, seconds })),
+    otherComputers: [...perComputer.values()].sort((a, b) => b.seconds - a.seconds),
   };
 }

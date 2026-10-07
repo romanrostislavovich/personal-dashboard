@@ -122,5 +122,11 @@
     "plays": "Прослушано песен",
     "topArtist": "больше всего {{artist}} ({{topPlays}})",
     "topArtists": "топ: {{artists}}"
+  },
+  "links": {
+    "plays": "Прослушивания"
+  },
+  "usage": {
+    "plays": "прослушиваний"
   }
 }

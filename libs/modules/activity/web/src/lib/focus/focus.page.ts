@@ -115,6 +115,47 @@ const DAILY_BARS_LIMIT = 31;
             </mat-card>
           }
 
+          @if (music.value(); as m) {
+            @if (m.withMusic.sessions) {
+              <mat-card appearance="outlined">
+                <mat-card-header>
+                  <mat-card-title>{{ 'activity.focus.music.title' | transloco }}</mat-card-title>
+                  <mat-card-subtitle>
+                    {{ 'activity.focus.music.hint' | transloco }}
+                  </mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content class="padded">
+                  @for (group of [m.withMusic, m.withoutMusic]; track $index) {
+                    <p class="music-group">
+                      <b>{{
+                        ($index === 0
+                          ? 'activity.focus.music.with'
+                          : 'activity.focus.music.without'
+                        ) | transloco: { count: group.sessions }
+                      }}</b>
+                      <span class="hint">
+                        {{
+                          'activity.focus.music.result'
+                            | transloco
+                              : {
+                                  completed: group.completedPercent,
+                                  distracted: group.distractedPercent,
+                                }
+                        }}
+                      </span>
+                    </p>
+                  }
+                  <p class="hint">
+                    {{ 'activity.focus.music.artists' | transloco }}
+                    @for (artist of m.artists; track artist.artist) {
+                      {{ artist.artist }} ({{ artist.sessions }}){{ $last ? '' : ', ' }}
+                    }
+                  </p>
+                </mat-card-content>
+              </mat-card>
+            }
+          }
+
           <mat-card appearance="outlined">
             <mat-card-header>
               <mat-card-title>{{ 'activity.focus.sessions' | transloco }}</mat-card-title>
@@ -193,6 +234,11 @@ const DAILY_BARS_LIMIT = 31;
     .padded {
       padding-top: 12px;
     }
+    .music-group {
+      display: flex;
+      flex-direction: column;
+      margin: 0 0 8px;
+    }
     .columns {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
@@ -245,6 +291,8 @@ export class FocusPage {
   protected readonly days = signal<(typeof PERIODS)[number]>(30);
   protected readonly settings = this.api.settings();
   protected readonly stats = this.api.focus(() => lastDays(this.days()));
+  /** What played during the sessions: the Music section tells it through the core. */
+  protected readonly music = this.api.focusMusic(() => lastDays(this.days()));
 
   protected readonly distractedShare = computed(() => {
     const s = this.stats.value();

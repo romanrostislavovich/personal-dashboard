@@ -8,19 +8,42 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
-import { ProjectInput, projectInputSchema } from '@pd/contracts';
+import {
+  projectInputSchema,
+  ProjectOverview,
+  ProjectOverviewQuery,
+  projectOverviewQuerySchema,
+} from '@pd/contracts';
+import { z } from 'zod';
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
 import { ZodValidationPipe } from '../validation/zod-validation.pipe';
+import { ProjectOverviewService } from '../links/project-overview.service';
 import { ProjectsService } from './projects.service';
+
+type ProjectInput = z.output<typeof projectInputSchema>;
 
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projects: ProjectsService) {}
+  constructor(
+    private readonly projects: ProjectsService,
+    private readonly overviews: ProjectOverviewService,
+  ) {}
 
   @Get()
   list(@CurrentUser() user: AuthUser) {
     return this.projects.list(user.id);
+  }
+
+  /** The project across the sections: its hours, money, tasks, sites and latest changes. */
+  @Get(':id/overview')
+  overview(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query(new ZodValidationPipe(projectOverviewQuerySchema)) query: ProjectOverviewQuery,
+  ): Promise<ProjectOverview> {
+    return this.overviews.overview(user.id, id, query);
   }
 
   @Post()

@@ -18,6 +18,8 @@ import { AuthGuard } from './auth/auth.guard';
 import { TrashController } from './trash/trash.controller';
 import { DataController } from './data-export/data.controller';
 import { OtherComputersService } from './computer-time/other-computers.service';
+import { LinksService } from './links/links.service';
+import { ProjectOverviewService } from './links/project-overview.service';
 import { CoreSecuritySources } from './security/core.security-sources';
 import { SecurityAgent } from './security/security-agent.service';
 import { SecurityController } from './security/security.controller';
@@ -134,6 +136,8 @@ class HealthController {
     DataExportService,
     DataImportService,
     OtherComputersService,
+    LinksService,
+    ProjectOverviewService,
     SignInLog,
     SecurityService,
     SecurityAgent,
@@ -192,6 +196,9 @@ class HealthController {
     MorningDigestService,
     // For the command palette: modules register their search via register().
     OtherComputersService,
+    // For the links between the sections: a module registers what it knows (see LinksService).
+    LinksService,
+    ProjectOverviewService,
     SecurityService,
     DataExportService,
     SearchService,

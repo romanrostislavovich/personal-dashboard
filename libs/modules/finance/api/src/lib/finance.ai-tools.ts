@@ -179,6 +179,23 @@ export class FinanceAiTools implements OnModuleInit {
     });
 
     this.ai.registerTool({
+      name: 'finance_subscription_usage',
+      module: 'finance',
+      description:
+        'Whether what is paid for is used: the active recurring payments some section knows ' +
+        'the use of over the last 30 days — music plays for a streaming service, time in the ' +
+        'program of that name at the computer, play time of a game. `uses` — per section: ' +
+        'unitKey (…plays / …seconds / …minutes), amount, lastUsedAt; `unused: true` — paid ' +
+        'and not used once. Payments no section knows are not listed: nothing can be said ' +
+        'about them. Useful for "which subscriptions can I cancel".',
+      parameters: NO_PARAMETERS,
+      handler: async (userId) => {
+        const { usage, usageDays } = await this.subscriptions.summary(userId);
+        return { days: usageDays, payments: usage };
+      },
+    });
+
+    this.ai.registerTool({
       name: 'finance_savings_goals',
       module: 'finance',
       description:

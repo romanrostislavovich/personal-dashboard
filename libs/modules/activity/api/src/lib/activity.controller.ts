@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { AuthUser, CurrentUser, Public, ZodValidationPipe } from '@pd/api-core';
 import {
+  ActivityFocusMusic,
   ActivityApp,
   ActivityAppUpdate,
   ActivityComputer,
@@ -48,6 +49,7 @@ import {
   ActivityStats,
   ActivityTimelineEntry,
 } from '@pd/contracts';
+import { ActivityLinks } from './activity.links';
 import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
 import { DiskAdviceService } from './disk/disk-advice.service';
@@ -66,6 +68,7 @@ export class ActivityController {
     private readonly devices: DevicesService,
     private readonly wellbeing: WellbeingService,
     private readonly diskAdvice: DiskAdviceService,
+    private readonly links: ActivityLinks,
   ) {}
 
   // --- A tracker ---
@@ -207,6 +210,15 @@ export class ActivityController {
     @Query(new ZodValidationPipe(activityPeriodSchema)) period: ActivityPeriod,
   ): Promise<ActivityFocusStats> {
     return this.wellbeing.focusStats(user.id, period);
+  }
+
+  /** Focus with music against focus in silence; the music comes from the Music section. */
+  @Get('focus/music')
+  focusMusic(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(activityPeriodSchema)) period: ActivityPeriod,
+  ): Promise<ActivityFocusMusic> {
+    return this.links.focusMusic(user.id, period);
   }
 
   @Delete('focus/:id')

@@ -296,7 +296,43 @@ export class ActivityService {
       return stats; // One computer of the tracker was asked for: the others are not its time.
     }
     const times = await this.others.days(userId, period.from, period.to);
-    return withOtherComputers(stats, times, await this.computersOf(userId, times, devices));
+    if (!times.length) {
+      return stats;
+    }
+    // Games of a service (Steam) add only what the tracker has not seen itself.
+    const chosen = await this.chosenCategories(userId);
+    const trackedGames = new Map<LocalDate, number>();
+    for (const row of rows) {
+      if (categoryOf(row.app, chosen, row.title) === 'games') {
+        trackedGames.set(row.day, (trackedGames.get(row.day) ?? 0) + row.seconds);
+      }
+    }
+    return withOtherComputers(
+      stats,
+      times,
+      await this.computersOf(userId, times, devices),
+      trackedGames,
+    );
+  }
+
+  /** The tracker's own time in games per day of a period. */
+  async gamesByDay(userId: string, period: ActivityPeriod): Promise<Map<LocalDate, number>> {
+    const timeZone = await this.timeZone(userId);
+    const s = activitySpans;
+    const day = sql<LocalDate>`to_char(${s.startedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`;
+    const rows = await this.db
+      .select({ day, app: s.app, seconds: sql<number>`sum(${s.seconds})::int` })
+      .from(s)
+      .where(this.within(userId, period, timeZone))
+      .groupBy(sql`1`, s.app);
+    const chosen = await this.chosenCategories(userId);
+    const games = new Map<LocalDate, number>();
+    for (const row of rows) {
+      if (categoryOf(row.app, chosen) === 'games') {
+        games.set(row.day, (games.get(row.day) ?? 0) + row.seconds);
+      }
+    }
+    return games;
   }
 
   /**
@@ -436,6 +472,7 @@ export class ActivityService {
       name: project.name,
       patterns: [
         project.name,
+        ...project.aliases,
         ...rules.filter((rule) => rule.projectId === project.id).map((rule) => rule.pattern),
       ],
     }));
