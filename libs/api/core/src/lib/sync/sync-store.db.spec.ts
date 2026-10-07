@@ -312,6 +312,7 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', { timeout: 60_000 }, (
         month: 5,
         day: 6,
         remind_days_before: [0],
+        memorial_remind_days_before: [0, 1],
         created_at: LONG_AGO,
       }),
     });
@@ -360,6 +361,7 @@ describe.skipIf(!ADMIN_URL)('SyncStore on two databases', { timeout: 60_000 }, (
         month: 3,
         day: 4,
         remind_days_before: [0],
+        memorial_remind_days_before: [0, 1],
         created_at: new Date().toISOString(),
       }),
     });

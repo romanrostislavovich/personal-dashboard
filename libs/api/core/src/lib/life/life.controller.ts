@@ -12,9 +12,6 @@ import {
   Query,
 } from '@nestjs/common';
 import {
-  LifeAnswer,
-  LifeAsk,
-  lifeAskSchema,
   LifeDay,
   LifeDayQuery,
   lifeDayQuerySchema,
@@ -40,16 +37,7 @@ import { LifeService } from './life.service';
 type ValidGoalInput = z.output<typeof lifeGoalInputSchema>;
 
 /** How the answers about one's own life point to the days they are about. */
-const ASK_RULES = [
-  'The user is searching their own life history kept in the dashboard. Look for the answer',
-  'with the tools: diary_search for words, places and people, then diary_entries, the',
-  'transactions, music, activity and games tools for the rest. Answer in a few sentences with',
-  'the dates. Link every day you mention as [3 Oct 2026](/life/day?day=2026-10-03) and a diary',
-  'entry as [the entry](/diary?day=2026-10-03); use only links of this form. If nothing is',
-  'found, say so plainly.',
-];
-
-/** The life timeline, the summaries, the goals of a year, the AI's stories and questions. */
+/** The life timeline, the summaries, the goals of a year and the AI's stories. */
 @Controller('life')
 export class LifeController {
   constructor(
@@ -144,19 +132,5 @@ export class LifeController {
       throw new BadRequestException('AI is not configured');
     }
     return { story: await this.stories.write(user.id, body.period) };
-  }
-
-  // --- A question about one's own life ---
-
-  /** "When was I in Prague?": the AI searches with its tools and links the days it found. */
-  @Post('ask')
-  async ask(
-    @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(lifeAskSchema)) body: LifeAsk,
-  ): Promise<LifeAnswer> {
-    const { reply } = await this.ai.ask(user.id, [{ role: 'user', content: body.question }], {
-      extraRules: ASK_RULES,
-    });
-    return { answer: reply };
   }
 }

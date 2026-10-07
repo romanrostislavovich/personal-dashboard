@@ -28,7 +28,7 @@
   the computer, music, contributions, matches, birthdays) and the summaries of a month or a year
   (the best month by mood, the top artists, what was left over, achievements); the AI's story of
   a month or a year, sent on the 1st with the finance review; goals of a year counted from the
-  modules or by hand; "Ask" — the AI searches one's own history and links the days it found
+  modules or by hand
 - **Automations:** rules "if X, then Y" across the modules (a site went down, an expense over an
   amount, a budget running out, no diary entry by a time, overdue tasks, a daily limit, every day
   at a time → a message, a task, a reminder, a line in the diary), made by hand or from a
@@ -78,7 +78,8 @@
   on its page, on the home page and in the morning digest; the city comes from the browser's
   location until you pick another
 - **Achievements:** 340+ achievements across all modules, rarities, XP and player level
-- **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API),
+- **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API), which
+  also searches your own history ("when was I in Prague?") and links the days it found,
   `/ask` in Telegram, morning digest at the time you choose (the weather and only what changed since the previous
   one),
   weekly diary summary; several saved connections with their keys — switch the active one in one

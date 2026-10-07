@@ -3,8 +3,7 @@
   "tabs": {
     "day": "Day",
     "summary": "Summary",
-    "goals": "Goals",
-    "ask": "Ask"
+    "goals": "Goals"
   },
   "day": "Day",
   "previous": "The day before",
@@ -47,16 +46,5 @@
     "empty": "No goals for this year yet.",
     "confirmDelete": "Delete the goal \"{{title}}\"?",
     "ofYear": "Goals of the year: {{done}} of {{total}} done"
-  },
-  "ask": {
-    "command": "Ask about my life",
-    "label": "Ask about your life",
-    "placeholder": "When was I in Prague?",
-    "submit": "Ask",
-    "hint": "The AI searches the diary, transactions, music, activity and games, and links the days it found.",
-    "example1": "When did I last write about the sea?",
-    "example2": "What did I spend the most on in September?",
-    "example3": "What was I listening to on my best days?",
-    "error": "The AI could not answer: check the AI connection in Settings."
   }
 }
