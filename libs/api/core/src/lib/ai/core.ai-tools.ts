@@ -1,10 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
+  lifeDayQuerySchema,
   moodInsightsQuerySchema,
   projectInputSchema,
   projectOverviewQuerySchema,
 } from '@pd/contracts';
 import { AchievementsService } from '../achievements/achievements.service';
+import { LifeService } from '../life/life.service';
 import { LinksService } from '../links/links.service';
 import { ProjectOverviewService } from '../links/project-overview.service';
 import { ProjectsService } from '../projects/projects.service';
@@ -33,6 +35,7 @@ export class CoreAiTools implements OnModuleInit {
     private readonly achievements: AchievementsService,
     private readonly overviews: ProjectOverviewService,
     private readonly links: LinksService,
+    private readonly life: LifeService,
   ) {}
 
   onModuleInit(): void {
@@ -50,7 +53,10 @@ export class CoreAiTools implements OnModuleInit {
     this.ai.registerTool({
       name: 'core_achievements',
       module: 'achievements',
-      description: 'Personal achievements: unlocked ones (unlockedAt) and progress on the rest.',
+      description:
+        'Personal achievements: unlocked ones (unlockedAt) and progress on the rest. Some are ' +
+        'for what the sections know together: a project known to several sections, a project ' +
+        'that pays for its hours, what goes with a good day, focus with music, gift ideas.',
       parameters: NO_PARAMETERS,
       handler: async (userId) =>
         (await this.achievements.list(userId)).map(({ title, progress, goal, unlockedAt }) => ({
@@ -88,6 +94,24 @@ export class CoreAiTools implements OnModuleInit {
           String(args['id']),
           projectOverviewQuerySchema.parse({ from: args['from'], to: args['to'] }),
         ),
+    });
+    this.ai.registerTool({
+      name: 'core_day',
+      module: 'life',
+      description:
+        'One day across every section at once: `events` — what each section has for the day ' +
+        '(hours at the computer and the main program, money spent and earned, music, tasks ' +
+        'done, the diary entry and the mood, games, commits), each with its section (`module`), ' +
+        'a translation key that names it (`key`), its numbers (`params`) and the page to open ' +
+        '(`link`). Useful for "what did I do on the 3rd", "how was yesterday" — one call ' +
+        'instead of asking every section; for the details of one section use its own tools.',
+      parameters: {
+        type: 'object',
+        properties: { day: { type: 'string', description: 'The day, YYYY-MM-DD' } },
+        required: ['day'],
+      },
+      handler: async (userId, args) =>
+        this.life.day(userId, lifeDayQuerySchema.parse({ day: args['day'] }).day),
     });
     this.ai.registerTool({
       name: 'core_project_months',

@@ -41,7 +41,7 @@ import {
   activitySettings,
   activitySpans,
 } from './activity.schema';
-import { otherComputers, OtherComputerTime, withOtherComputers } from './other-computers';
+import { newTime, otherComputers, OtherComputerTime, withOtherComputers } from './other-computers';
 
 const DEFAULT_SETTINGS: ActivitySettings = {
   idleMinutes: 5,
@@ -55,6 +55,8 @@ const DEFAULT_SETTINGS: ActivitySettings = {
   skippedComputers: [],
   gamesMinutesPerTask: 0,
 };
+/** "From the beginning" for the services asked about a period. */
+const EVER_SINCE = '2000-01-01';
 /** The hours of the user's own clock the achievements call night and early morning. */
 const NIGHT_ENDS_AT = 5;
 const MORNING_ENDS_AT = 8;
@@ -466,15 +468,64 @@ export class ActivityService {
       .from(s)
       .where(eq(s.userId, userId));
     const devices = await this.db.$count(activityDevices, eq(activityDevices.userId, userId));
+    const chosen = await this.chosenCategories(userId);
+    const records = buildRecords(rows, chosen);
+    // The totals are what the overview shows: with the computers and the games other services
+    // know. The days, the streaks and the best day stay the tracker's own.
+    const other = await this.otherAllTime(userId, rows, chosen);
+    for (const [category, seconds] of other) {
+      records.totalSeconds += seconds;
+      records.byCategory.set(category, (records.byCategory.get(category) ?? 0) + seconds);
+    }
 
     return {
-      ...buildRecords(rows, await this.chosenCategories(userId)),
+      ...records,
       nightSeconds: times?.night ?? 0,
       earlySeconds: times?.early ?? 0,
       weekendSeconds: times?.weekend ?? 0,
       projectSeconds: times?.projects ?? 0,
       devices,
     };
+  }
+
+  /**
+   * Everything other services ever added to the time at the computer, by what it was: work in
+   * an IDE on a computer without the tracker, and games the tracker has not seen itself.
+   */
+  private async otherAllTime(
+    userId: string,
+    rows: { day: LocalDate; app: string; seconds: number }[],
+    chosen: ReadonlyMap<string, ActivityCategory | null>,
+  ): Promise<Map<'development' | 'games', number>> {
+    const added = new Map<'development' | 'games', number>();
+    const times = await this.others.days(userId, EVER_SINCE, await this.today(userId));
+    if (!times.length) {
+      return added;
+    }
+    const names = await this.db
+      .select({ name: activityDevices.name })
+      .from(activityDevices)
+      .where(eq(activityDevices.userId, userId));
+    const computers = await this.computersOf(userId, times, names);
+    const counted = times.filter((time) =>
+      computers.some(
+        (item) =>
+          item.counted &&
+          item.source === time.source &&
+          item.computer.trim().toLowerCase() === time.computer.trim().toLowerCase(),
+      ),
+    );
+    const trackedGames = new Map<LocalDate, number>();
+    for (const row of rows) {
+      if (categoryOf(row.app, chosen) === 'games') {
+        trackedGames.set(row.day, (trackedGames.get(row.day) ?? 0) + row.seconds);
+      }
+    }
+    for (const time of newTime(counted, trackedGames)) {
+      const category = time.category ?? 'development';
+      added.set(category, (added.get(category) ?? 0) + time.seconds);
+    }
+    return added;
   }
 
   /** Seconds at the computer on the user's today — for the widget and the digest. */

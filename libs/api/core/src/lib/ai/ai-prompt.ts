@@ -43,7 +43,9 @@ const HISTORY_LINKS = [
 
 /** The links between the sections: what to ask when a question spans several of them. */
 const LINK_RULES = [
-  'The sections are linked, and a question may span several: core_project_overview — a project',
+  'The sections are linked, and a question may span several: core_day — one day across all of',
+  'them; activity_limits — the daily limits and what the tasks done today add to the games;',
+  'core_project_overview — a project',
   'across them (hours, coding time, money, tasks, uptime, the latest commits, money per hour);',
   'core_mood_insights — what goes with good and bad days; monitoring_incidents — what changed',
   'in the code before a site went down; finance_subscription_usage — whether what is paid for',

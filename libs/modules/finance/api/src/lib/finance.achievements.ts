@@ -143,6 +143,26 @@ export class FinanceAchievements implements OnModuleInit {
   /** The wishlist: what was wanted and then bought. */
   private registerWishlist(): void {
     this.achievements.register({
+      id: 'finance.wishes-saved-for',
+      module: 'finance',
+      measure: (userId) =>
+        this.count(
+          wishes,
+          and(eq(wishes.userId, userId), isNotNull(wishes.boughtAt), isNotNull(wishes.goalId)),
+        ),
+      tiers: [
+        achievementTier(
+          1,
+          '🎯',
+          { en: 'Saved up and bought', ru: 'Накопил и купил' },
+          {
+            en: 'A wish that had a savings goal is bought',
+            ru: 'Куплено желание, на которое была цель накоплений',
+          },
+        ),
+      ],
+    });
+    this.achievements.register({
       id: 'finance.wishes-bought',
       module: 'finance',
       measure: (userId) =>

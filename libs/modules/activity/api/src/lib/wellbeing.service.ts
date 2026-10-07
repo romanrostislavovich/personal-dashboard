@@ -293,13 +293,26 @@ export class WellbeingService {
 
   /** Minutes the tasks done today add to the limit of games (see `gamesMinutesPerTask`). */
   private async gamesBonusMinutes(userId: string, day: LocalDate): Promise<number> {
+    return (await this.gamesBonus(userId, day)).minutes;
+  }
+
+  /** What the limit of games earns today: the tasks done, and the minutes they add. */
+  async gamesBonus(
+    userId: string,
+    day: LocalDate,
+  ): Promise<{ minutesPerTask: number; tasksDone: number; minutes: number }> {
     const { gamesMinutesPerTask } = await this.activity.settings(userId);
     if (!gamesMinutesPerTask) {
-      return 0;
+      return { minutesPerTask: 0, tasksDone: 0, minutes: 0 };
     }
     // The tasks are another section's: the core tells how many were done today.
     const done = await this.links.dailyMetric(userId, 'tasks.done', { from: day, to: day });
-    return (done?.days[0]?.value ?? 0) * gamesMinutesPerTask;
+    const tasksDone = done?.days[0]?.value ?? 0;
+    return {
+      minutesPerTask: gamesMinutesPerTask,
+      tasksDone,
+      minutes: tasksDone * gamesMinutesPerTask,
+    };
   }
 
   // --- Health of the computers ---
