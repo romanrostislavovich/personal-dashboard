@@ -249,6 +249,9 @@ export const dotaMatchesQuerySchema = z.object({
   heroId: z.coerce.number().int().positive().optional(),
   mode: z.enum(DOTA_MATCH_MODES).optional(),
   result: z.enum(DOTA_RESULTS).optional(),
+  /** Days, inclusive: only the matches started in them. */
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
   page: z.coerce.number().int().min(0).default(0),
   pageSize: z.coerce.number().int().min(10).max(100).default(25),
 });

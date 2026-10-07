@@ -85,6 +85,12 @@ export class DotaOverviewService {
     if (query.result) {
       filters.push(query.result === 'win' ? sql`${m.won}` : sql`NOT ${m.won}`);
     }
+    if (query.from) {
+      filters.push(sql`${m.startedAt} >= ${query.from}::date`);
+    }
+    if (query.to) {
+      filters.push(sql`${m.startedAt} < ${query.to}::date + 1`);
+    }
     const where = filters.length ? sql.join(filters, sql` AND `) : sql`true`;
     const [items, total] = await Promise.all([
       this.matchRows(ids, where, pageSize, page * pageSize, await this.heroes.resolver()),

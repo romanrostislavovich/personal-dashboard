@@ -1,12 +1,20 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, findById, idParameters, NO_PARAMETERS, ServerActions } from '@pd/api-core';
 import { trackedRepoInputSchema, trackedRepoUpdateSchema } from '@pd/contracts';
+import { z } from 'zod';
 import { ReposService } from './repos.service';
 import { OPEN_SOURCE_ACTIONS } from './open-source.server-actions';
 
 const settingsSchema = trackedRepoUpdateSchema.pick({ hidden: true, notify: true });
 
 /** AI access to open source statistics; adding, hiding and refreshing repositories (assistant). */
+const repoArgs = z.object({
+  search: z.string().trim().min(1).max(100).optional(),
+  provider: z.enum(['github', 'gitlab', 'bitbucket']).optional(),
+  relation: z.enum(['owner', 'organization', 'manual']).optional(),
+  limit: z.number().int().min(1).max(150).default(40),
+});
+
 @Injectable()
 export class OpenSourceAiTools implements OnModuleInit {
   constructor(
@@ -24,10 +32,45 @@ export class OpenSourceAiTools implements OnModuleInit {
         'own public ones (`relation: owner`), those of ' +
         'their organizations (`organization`) and ones added by hand (`manual`). For each: id, ' +
         'stars and growth over 7/30 days, forks, open issues and PRs, language, latest release, ' +
-        'weekly npm downloads, whether it is a fork, archived, hidden, has notifications on.',
-      parameters: NO_PARAMETERS,
-      handler: async (userId) =>
-        (await this.repos.list(userId)).map((repo) => ({ ...repo, history: undefined })),
+        'weekly npm downloads, whether it is a fork, archived, hidden, has notifications on. ' +
+        'The most starred first; only `limit` (40 by default) are returned and `total` says ' +
+        'how many match — find one with `search` (a part of its name, description or ' +
+        'language) or narrow by `provider` or `relation`.',
+      parameters: {
+        type: 'object',
+        properties: {
+          search: { type: 'string', description: 'A part of the name, description or language' },
+          provider: { type: 'string', enum: ['github', 'gitlab', 'bitbucket'] },
+          relation: { type: 'string', enum: ['owner', 'organization', 'manual'] },
+          limit: { type: 'number', description: '1–150, default 40' },
+        },
+      },
+      handler: async (userId, args) => {
+        const { search, provider, relation, limit } = repoArgs.parse(args);
+        const part = search?.toLowerCase();
+        const found = (await this.repos.list(userId))
+          .filter(
+            (repo) =>
+              (!provider || repo.provider === provider) &&
+              (!relation || repo.relation === relation) &&
+              (!part ||
+                [repo.fullName, repo.description, repo.language].some((text) =>
+                  text?.toLowerCase().includes(part),
+                )),
+          )
+          .sort((a, b) => b.stars - a.stars);
+        return {
+          total: found.length,
+          shown: Math.min(found.length, limit),
+          // The chart, the address and what is empty are of no use to the model.
+          repos: found.slice(0, limit).map((repo) => ({
+            ...repo,
+            history: undefined,
+            htmlUrl: undefined,
+            lastSyncedAt: undefined,
+          })),
+        };
+      },
     });
 
     this.ai.registerTool({

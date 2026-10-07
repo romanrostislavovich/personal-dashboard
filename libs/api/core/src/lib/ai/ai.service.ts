@@ -244,9 +244,15 @@ export class AiService {
       const value = await tool.handler(userId, args);
       await log('done');
       const result = value === undefined ? '{"done":true}' : JSON.stringify(value);
+      // A cut answer must not pass for a whole one: the model would answer from a part of the
+      // data as if it were all of it ("no such track in your top").
       const output =
         result.length > MAX_TOOL_RESULT_CHARS
-          ? `${result.slice(0, MAX_TOOL_RESULT_CHARS)}… (truncated)`
+          ? `${result.slice(0, MAX_TOOL_RESULT_CHARS)}… [CUT: only the first ` +
+            `${MAX_TOOL_RESULT_CHARS} of ${result.length} characters are shown, the rest of the ` +
+            'data is missing. Do not answer from this part as if it were everything: call the ' +
+            'tool again with a filter, a shorter period or a smaller limit, or use a more ' +
+            'specific tool.]'
           : result;
       return { output, changed: Boolean(tool.writes) };
     } catch (error) {

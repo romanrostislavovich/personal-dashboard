@@ -41,10 +41,11 @@ export class WakatimeAiTools implements OnModuleInit {
             day: totals.bestDay.day,
             hours: toHours(totals.bestDay.seconds),
           },
-          days: days.map(({ day, seconds }) => ({ day, hours: toHours(seconds) })),
           projects: await top('project'),
           languages: await top('language'),
           editors: await top('editor'),
+          // Last: over a long period the days are many, and what is cut must not be the totals.
+          days: days.map(({ day, seconds }) => ({ day, hours: toHours(seconds) })),
         };
       },
     });

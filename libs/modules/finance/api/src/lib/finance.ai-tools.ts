@@ -24,6 +24,7 @@ import { GoalsService } from './goals/goals.service';
 import { TransactionsService } from './transactions/transactions.service';
 import { FINANCE_ACTIONS } from './finance.server-actions';
 import { WishlistService } from './wishlist/wishlist.service';
+import { filterTransactions, totalsByCategory } from './transactions/transaction-report';
 
 /** Period schema + an optional "wallet". */
 const QUERY_PARAMETERS = {
@@ -64,6 +65,23 @@ const RECURRING_FIELDS = {
   },
   isActive: { type: 'boolean', description: 'false — paused' },
 } as const;
+
+/** What narrows the transactions of a period, on top of the period and the wallet. */
+const FILTER_PARAMETERS = {
+  kind: { type: 'string', enum: [...TRANSACTION_KINDS] },
+  category: { type: 'string', description: 'Only this category (the case does not matter)' },
+  search: {
+    type: 'string',
+    description: 'A part of the comment or of the category: a shop, a service ("zabka", "taxi")',
+  },
+} as const;
+
+const filterArgs = z.object({
+  kind: z.enum(TRANSACTION_KINDS).optional(),
+  category: z.string().trim().min(1).max(100).optional(),
+  search: z.string().trim().min(1).max(100).optional(),
+  limit: z.number().int().min(1).max(200).default(60),
+});
 
 /** Transaction ids come from the model: check the format before querying the database. */
 const idArgs = z.object({ id: z.uuid() });
@@ -177,20 +195,90 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_summary',
       module: 'finance',
       description:
-        'Income, expenses and balance by currency for a period, and the main expense categories. ' +
+        'Income, expenses and balance by currency for a period, and the five largest expense ' +
+        'categories. For every category, or for one shop or service, use finance_categories. ' +
         'Project ids are available via core_projects.',
       parameters: QUERY_PARAMETERS,
       handler: (userId, args) => this.transactions.summary(userId, toQuery(args)),
     });
 
     this.ai.registerTool({
+      name: 'finance_categories',
+      module: 'finance',
+      description:
+        'What went through every category in a period, the largest first: how many ' +
+        'transactions, the amount in the main currency (`mainAmount`) and as recorded per ' +
+        'currency. Counted from all transactions of the period, so it is the tool for "how ' +
+        'much did I spend on X": narrow it with `search` (a shop or a service in the comment: ' +
+        '"zabka", "taxi") or `category`. Any period works — a month, a year, everything.',
+      parameters: {
+        type: 'object',
+        properties: { ...QUERY_PARAMETERS.properties, ...FILTER_PARAMETERS },
+        required: ['from', 'to'],
+      },
+      handler: async (userId, args) => {
+        const found = filterTransactions(
+          await this.transactions.list(userId, toQuery(args)),
+          filterArgs.parse(args),
+        );
+        return { transactions: found.length, categories: totalsByCategory(found) };
+      },
+    });
+
+    this.ai.registerTool({
       name: 'finance_transactions',
       module: 'finance',
       description:
-        'Transactions for a period: id, date, income/expense, amount, currency, category, note, ' +
-        'project.',
-      parameters: QUERY_PARAMETERS,
-      handler: (userId, args) => this.transactions.list(userId, toQuery(args)),
+        'The transactions of a period, newest first: id, date, income/expense, amount, ' +
+        'currency, the amount in the main currency, category, note, project. A busy month has ' +
+        'hundreds of them, so only `limit` (60 by default) are returned and `total` says how ' +
+        'many match: narrow them with `kind`, `category` or `search` (a part of the comment). ' +
+        'For sums use finance_categories — never add up a list that was cut.',
+      parameters: {
+        type: 'object',
+        properties: {
+          ...QUERY_PARAMETERS.properties,
+          ...FILTER_PARAMETERS,
+          limit: { type: 'number', description: '1–200, default 60' },
+        },
+        required: ['from', 'to'],
+      },
+      handler: async (userId, args) => {
+        const filter = filterArgs.parse(args);
+        const found = filterTransactions(
+          await this.transactions.list(userId, toQuery(args)),
+          filter,
+        );
+        return {
+          total: found.length,
+          shown: Math.min(found.length, filter.limit),
+          transactions: found
+            .slice(0, filter.limit)
+            .map(
+              ({
+                id,
+                occurredOn,
+                kind,
+                amount,
+                currency,
+                mainAmount,
+                category,
+                note,
+                projectId,
+              }) => ({
+                id,
+                occurredOn,
+                kind,
+                amount,
+                currency,
+                mainAmount,
+                category,
+                note,
+                projectId,
+              }),
+            ),
+        };
+      },
     });
   }
 
