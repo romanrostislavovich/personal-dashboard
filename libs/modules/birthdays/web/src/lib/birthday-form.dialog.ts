@@ -1,15 +1,40 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Birthday, BirthdayInput, REMINDER_DAY_OPTIONS } from '@pd/contracts';
+import {
+  Birthday,
+  BirthdayInput,
+  MEMORIAL_REMINDER_DEFAULT,
+  REMINDER_DAY_OPTIONS,
+} from '@pd/contracts';
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
+/** A date is a day and a month together, and a person needs at least one of the two dates. */
+function wholeDates(form: AbstractControl): ValidationErrors | null {
+  const { day, month, deathDay, deathMonth } = form.value as Record<string, number | null>;
+  const half = (d: number | null, m: number | null) => Boolean(d) !== Boolean(m);
+  if (half(day, month) || half(deathDay, deathMonth)) {
+    return { halfDate: true };
+  }
+  return day || deathDay ? null : { noDate: true };
+}
+
+/**
+ * A person and the dates to remember: the birthday and, for someone who has died, the day they
+ * died. Either may be left empty, not both.
+ */
 @Component({
   selector: 'pd-birthday-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +56,7 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
           <input matInput formControlName="name" cdkFocusInitial />
         </mat-form-field>
 
+        <h3>{{ 'birthdays.birthday' | transloco }}</h3>
         <div class="row">
           <mat-form-field>
             <mat-label>{{ 'birthdays.day' | transloco }}</mat-label>
@@ -39,6 +65,7 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
           <mat-form-field>
             <mat-label>{{ 'birthdays.month' | transloco }}</mat-label>
             <mat-select formControlName="month">
+              <mat-option [value]="null">—</mat-option>
               @for (month of months; track month) {
                 <mat-option [value]="month">{{
                   'birthdays.months.' + month | transloco
@@ -52,17 +79,55 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
             <mat-hint>{{ 'birthdays.yearHint' | transloco }}</mat-hint>
           </mat-form-field>
         </div>
+        @if (!form.controls.deathDay.value) {
+          <mat-form-field>
+            <mat-label>{{ 'birthdays.remind' | transloco }}</mat-label>
+            <mat-select formControlName="remindDaysBefore" multiple>
+              @for (days of reminderOptions; track days) {
+                <mat-option [value]="days">{{
+                  'birthdays.remindOption.' + days | transloco
+                }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
 
-        <mat-form-field>
-          <mat-label>{{ 'birthdays.remind' | transloco }}</mat-label>
-          <mat-select formControlName="remindDaysBefore" multiple>
-            @for (days of reminderOptions; track days) {
-              <mat-option [value]="days">{{
-                'birthdays.remindOption.' + days | transloco
-              }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <h3>{{ 'birthdays.death' | transloco }}</h3>
+        <p class="hint">{{ 'birthdays.deathHint' | transloco }}</p>
+        <div class="row">
+          <mat-form-field>
+            <mat-label>{{ 'birthdays.day' | transloco }}</mat-label>
+            <input matInput type="number" min="1" max="31" formControlName="deathDay" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>{{ 'birthdays.month' | transloco }}</mat-label>
+            <mat-select formControlName="deathMonth">
+              <mat-option [value]="null">—</mat-option>
+              @for (month of months; track month) {
+                <mat-option [value]="month">{{
+                  'birthdays.months.' + month | transloco
+                }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>{{ 'birthdays.year' | transloco }}</mat-label>
+            <input matInput type="number" formControlName="deathYear" />
+            <mat-hint>{{ 'birthdays.yearHint' | transloco }}</mat-hint>
+          </mat-form-field>
+        </div>
+        @if (form.controls.deathDay.value) {
+          <mat-form-field>
+            <mat-label>{{ 'birthdays.memorialRemind' | transloco }}</mat-label>
+            <mat-select formControlName="memorialRemindDaysBefore" multiple>
+              @for (days of reminderOptions; track days) {
+                <mat-option [value]="days">{{
+                  'birthdays.memorialRemindOption.' + days | transloco
+                }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
 
         <mat-form-field>
           <mat-label>{{ 'birthdays.note' | transloco }}</mat-label>
@@ -73,6 +138,9 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
             [placeholder]="'birthdays.notePlaceholder' | transloco"
           ></textarea>
         </mat-form-field>
+        @if (form.hasError('noDate') && form.dirty) {
+          <p class="hint error">{{ 'birthdays.noDate' | transloco }}</p>
+        }
       </mat-dialog-content>
 
       <mat-dialog-actions align="end">
@@ -96,26 +164,58 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
       grid-template-columns: 1fr 2fr 1.3fr;
       gap: 8px;
     }
+    h3 {
+      margin: 4px 0 8px;
+      font: var(--mat-sys-title-small);
+    }
+    .hint {
+      margin: -4px 0 8px;
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .error {
+      color: var(--mat-sys-error);
+    }
   `,
 })
 export class BirthdayFormDialog {
   protected readonly birthday = inject<Birthday | null>(MAT_DIALOG_DATA);
   private readonly dialogRef = inject(MatDialogRef<BirthdayFormDialog, BirthdayInput>);
-
   protected readonly months = MONTHS;
   protected readonly reminderOptions = REMINDER_DAY_OPTIONS;
 
-  protected readonly form = inject(NonNullableFormBuilder).group({
-    name: [this.birthday?.name ?? '', Validators.required],
-    day: [this.birthday?.day ?? 1, [Validators.required, Validators.min(1), Validators.max(31)]],
-    month: [this.birthday?.month ?? 1, Validators.required],
-    year: [this.birthday?.year ?? (null as number | null)],
-    remindDaysBefore: [this.birthday?.remindDaysBefore ?? [0, 1, 7]],
-    note: [this.birthday?.note ?? ''],
-  });
+  private readonly dayOfMonth = [Validators.min(1), Validators.max(31)];
+  protected readonly form = inject(NonNullableFormBuilder).group(
+    {
+      name: [this.birthday?.name ?? '', Validators.required],
+      // A new person starts with a birthday to fill in; an existing one shows what is known.
+      day: [this.birthday ? this.birthday.day : (1 as number | null), this.dayOfMonth],
+      month: [this.birthday ? this.birthday.month : (1 as number | null)],
+      year: [this.birthday?.year ?? (null as number | null)],
+      remindDaysBefore: [this.birthday?.remindDaysBefore ?? [0, 1, 7]],
+      deathDay: [this.birthday?.deathDay ?? (null as number | null), this.dayOfMonth],
+      deathMonth: [this.birthday?.deathMonth ?? (null as number | null)],
+      deathYear: [this.birthday?.deathYear ?? (null as number | null)],
+      memorialRemindDaysBefore: [
+        this.birthday?.memorialRemindDaysBefore ?? MEMORIAL_REMINDER_DEFAULT,
+      ],
+      note: [this.birthday?.note ?? ''],
+    },
+    { validators: wholeDates },
+  );
 
   save(): void {
     const value = this.form.getRawValue();
-    this.dialogRef.close({ ...value, year: value.year || null, note: value.note || null });
+    this.dialogRef.close({
+      ...value,
+      // An emptied number field gives null or '': both mean "not known".
+      day: value.day || null,
+      month: value.month || null,
+      year: value.year || null,
+      deathDay: value.deathDay || null,
+      deathMonth: value.deathMonth || null,
+      deathYear: value.deathYear || null,
+      note: value.note || null,
+    });
   }
 }
