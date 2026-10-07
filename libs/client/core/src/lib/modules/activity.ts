@@ -27,6 +27,8 @@ const BASE = '/api/activity';
 export const ACTIVITY_READS = {
   /** Time per day, program, category, project and device for a period. */
   stats: (period: ActivityPeriod) => apiRequest(`${BASE}/stats`, period),
+  /** Computers other services know (WakaTime), with whether their time is counted. */
+  otherComputers: (period: ActivityPeriod) => apiRequest(`${BASE}/other-computers`, period),
   /** What was in front on one day, newest first. */
   timeline: (query: ActivityDayQuery) => apiRequest(`${BASE}/timeline`, query),
   devices: () => apiRequest(`${BASE}/devices`),

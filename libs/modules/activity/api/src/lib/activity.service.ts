@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database, ProjectsService, UsersService } from '@pd/api-core';
+import { DB, Database, OtherComputersService, ProjectsService, UsersService } from '@pd/api-core';
 import {
   ActivityApp,
   ActivityAppUpdate,
@@ -13,6 +13,7 @@ import {
   ActivitySettings,
   ActivitySettingsUpdate,
   ActivitySpanInput,
+  ActivityOtherComputer,
   ActivityStats,
   ActivityTimelineEntry,
   addDays,
@@ -40,6 +41,7 @@ import {
   activitySettings,
   activitySpans,
 } from './activity.schema';
+import { otherComputers, OtherComputerTime, withOtherComputers } from './other-computers';
 
 const DEFAULT_SETTINGS: ActivitySettings = {
   idleMinutes: 5,
@@ -50,6 +52,7 @@ const DEFAULT_SETTINGS: ActivitySettings = {
   roundsBeforeLongBreak: 4,
   privateWords: [],
   summaryTime: '21:00',
+  skippedComputers: [],
 };
 /** The hours of the user's own clock the achievements call night and early morning. */
 const NIGHT_ENDS_AT = 5;
@@ -81,6 +84,7 @@ export class ActivityService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly users: UsersService,
+    private readonly others: OtherComputersService,
     private readonly projectsService: ProjectsService,
   ) {}
 
@@ -170,6 +174,7 @@ export class ActivityService {
           roundsBeforeLongBreak: row.roundsBeforeLongBreak,
           privateWords: row.privateWords,
           summaryTime: row.summaryTime,
+          skippedComputers: row.skippedComputers,
         }
       : DEFAULT_SETTINGS;
   }
@@ -282,11 +287,45 @@ export class ActivityService {
       .select({ id: activityDevices.id, name: activityDevices.name })
       .from(activityDevices)
       .where(eq(activityDevices.userId, userId));
-    return buildStats(rows, period, {
+    const stats = buildStats(rows, period, {
       categories: await this.chosenCategories(userId),
       projects: await this.projectPatterns(userId),
       devices,
     });
+    if (period.deviceId) {
+      return stats; // One computer of the tracker was asked for: the others are not its time.
+    }
+    const times = await this.others.days(userId, period.from, period.to);
+    return withOtherComputers(stats, times, await this.computersOf(userId, times, devices));
+  }
+
+  /**
+   * The computers other services know (a work laptop in WakaTime) over a period, each with
+   * whether its time is added to the time at the computer — for the settings.
+   */
+  async otherComputers(userId: string, period: ActivityPeriod): Promise<ActivityOtherComputer[]> {
+    const devices = await this.db
+      .select({ name: activityDevices.name })
+      .from(activityDevices)
+      .where(eq(activityDevices.userId, userId));
+    const times = await this.others.days(userId, period.from, period.to);
+    return this.computersOf(userId, times, devices);
+  }
+
+  private async computersOf(
+    userId: string,
+    times: OtherComputerTime[],
+    devices: { name: string }[],
+  ): Promise<ActivityOtherComputer[]> {
+    if (!times.length) {
+      return [];
+    }
+    const { skippedComputers } = await this.settings(userId);
+    return otherComputers(
+      times,
+      devices.map((device) => device.name),
+      skippedComputers,
+    );
   }
 
   /** What was in front, minute by minute, on one day — newest first. */

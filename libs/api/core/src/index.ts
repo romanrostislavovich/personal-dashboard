@@ -39,3 +39,8 @@ export type { ReadableExport, ReadableFile } from './lib/data-export/data-export
 export { csvLine } from './lib/data-export/data-archive';
 export { SecurityService } from './lib/security/security.service';
 export type { FoundProblem, Inspection, SecuritySource } from './lib/security/security-source';
+export { OtherComputersService } from './lib/computer-time/other-computers.service';
+export type {
+  OtherComputerDay,
+  OtherComputerSource,
+} from './lib/computer-time/other-computers.service';

@@ -257,6 +257,8 @@ export const activitySettingsSchema = z
       .string()
       .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
       .nullable(),
+    /** Computers of other services (WakaTime) whose time is not added to the time at the computer. */
+    skippedComputers: z.array(z.string().trim().min(1).max(200)).max(50),
   })
   .extend(activityFocusSettingsSchema.shape);
 export type ActivitySettings = z.infer<typeof activitySettingsSchema>;
@@ -324,6 +326,25 @@ export interface ActivityStats {
   devices: { id: string; name: string; seconds: number }[];
   /** The window titles that took the most time. */
   titles: { app: string; name: string; title: string; seconds: number }[];
+  /**
+   * Computers without the desktop app whose time another service knows (WakaTime: a work laptop,
+   * only the time in an IDE). Their time is already in `totalSeconds`, `days` and the
+   * development category — as the least that was worked there, not all of it.
+   */
+  otherComputers: { computer: string; source: string; seconds: number }[];
+}
+
+/** A computer another service knows, as the settings list it. */
+export interface ActivityOtherComputer {
+  computer: string;
+  /** The service that knows it: `wakatime`. */
+  source: string;
+  /** Its time over the period asked for. */
+  seconds: number;
+  /** Its time is added to the time at the computer. */
+  counted: boolean;
+  /** Why it is not: the desktop app runs on it (`tracked`), or the user switched it off. */
+  reason: 'tracked' | 'off' | null;
 }
 
 /** A program as the settings list it: with its category and whether it is recorded. */

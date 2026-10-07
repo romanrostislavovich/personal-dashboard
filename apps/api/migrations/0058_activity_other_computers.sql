@@ -1,0 +1,1 @@
+ALTER TABLE "activity_settings" ADD COLUMN "skipped_computers" text[] DEFAULT '{}' NOT NULL;

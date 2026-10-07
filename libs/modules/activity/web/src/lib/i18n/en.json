@@ -249,6 +249,17 @@
     "word": "A word or a site",
     "add": "Add"
   },
+  "otherComputers": {
+    "title": "Computers without the app",
+    "hint": "A computer the app cannot be installed on (a work laptop) is known from WakaTime — only its time in an IDE, so the least you worked there. That time is added to the time at the computer. A computer that has the app is left out by itself: its time would be counted twice.",
+    "recent": "{{time}} in {{days}} days",
+    "tracked": "has the app — counted by it",
+    "count": "Add its time",
+    "included": "Including {{time}} on computers without the app — only the time in an IDE there.",
+    "sources": {
+      "wakatime": "WakaTime"
+    }
+  },
   "life": {
     "day": "{{hours}} h at the computer, mostly {{app}}",
     "dayFocus": "{{hours}} h at the computer, mostly {{app}} · {{focus}} focus sessions",
