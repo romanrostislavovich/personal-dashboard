@@ -145,6 +145,12 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 ### Now
 
+#### Open-source release
+
+- **Make the repository public** — secrets and personal data in the history, issues and CI logs,
+  a security review, licenses, a clean first run for a stranger, GitHub settings; the step by
+  step checklist is in [open-source-release.md](open-source-release.md)
+
 #### Data and security
 
 - **Encryption of sensitive data** — the diary, the medical record, notes about people and the
