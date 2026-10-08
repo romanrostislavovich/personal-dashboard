@@ -11,6 +11,19 @@ npm run db:up            # PostgreSQL in Docker
 npm run dev              # API on :3300, web on http://localhost:4200
 ```
 
+| Command                     | What it does                                         |
+| --------------------------- | ---------------------------------------------------- |
+| `npm run dev`               | API + web in development mode                        |
+| `npm run dev:desktop`       | Desktop shell on top of the dev server               |
+| `npm run db:up`             | Start PostgreSQL in Docker                           |
+| `npm run db:generate`       | Create an SQL migration after changing `*.schema.ts` |
+| `npm test` / `npm run lint` | Tests / linter for all projects                      |
+| `npm run build`             | Production build of API and web                      |
+| `npm run desktop:package`   | Build a desktop installer                            |
+
+If port 5432 is taken by another PostgreSQL, set `DB_PORT=5433` in `.env` and update the port in
+`DATABASE_URL`.
+
 Read [docs/architecture.md](docs/architecture.md) first — it explains how the core and the modules
 fit together and has a step-by-step guide to writing a module.
 
