@@ -16,6 +16,7 @@ import { TelegramSettingsComponent } from './telegram-settings.component';
 import { ThemeSettingsComponent } from './theme-settings.component';
 import { TrashSettingsComponent } from './trash-settings.component';
 import { DataSettingsComponent } from './data-settings.component';
+import { IntegrationStatusComponent } from './integration-status.component';
 import { AutomationsSettingsComponent } from '../automations/automations-settings.component';
 
 /** Tabs of the page, as `?tab=` names them: module pages link to `integrations`. */
@@ -34,6 +35,7 @@ const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 's
     NgComponentOutlet,
     TranslocoPipe,
     ProfileSettingsComponent,
+    IntegrationStatusComponent,
     PasswordSettingsComponent,
     SectionsSettingsComponent,
     SecuritySettingsComponent,
@@ -71,6 +73,7 @@ const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 's
 
       <mat-tab [label]="'core.settings.tabs.integrations' | transloco">
         <p class="intro">{{ 'core.settings.integrationsIntro' | transloco }}</p>
+        <pd-integration-status />
         <div class="grid">
           <pd-telegram-settings />
           @for (integration of integrations(); track integration.id) {

@@ -277,6 +277,18 @@ To add a service (e.g. DigitalOcean):
   the time at the computer, leaving out the computers its own tracker covers — and of a
   service's games time only what is over the games the tracker has seen itself that day.
   Neither module knows the other.
+- **Integration status:** `IntegrationsService` — a module reports its connections to outside
+  services in `<module>.integrations.ts` (`integrations.register({ id, module, staleHours,
+reports })`: the account, the last refresh, its error, the expiry of the token when the
+  service tells it). The core turns a report into a state (ok, error, stale, expiring,
+  expired), shows them all in Settings → Integrations and, once a day, tells the user about a
+  trouble that is new (`integration_alerts` remembers what was told).
+- **Demo mode:** `DEMO_MODE=true` makes a shared demo user with sample data (`DemoService`):
+  each module fills its own tables in `<module>.demo.ts` (`demo.register({ module, seed })`),
+  the user is made anew every night, visitors come in without a password (`POST /auth/demo`).
+  `DemoGuard` lets the demo user read everything and write only everyday data — no account
+  settings, tokens, addresses to request or files (the allowlist is in `demo.guard.ts`); of the
+  background jobs only those marked `demo: true` run, so nothing reaches outside services.
 - **Links between the sections:** `LinksService` — what one module knows and another needs
   goes through the core. A module registers in `<module>.links.ts`: what it knows about a
   project (`registerProject`: facts for the project page `/projects/:id`, and the changes

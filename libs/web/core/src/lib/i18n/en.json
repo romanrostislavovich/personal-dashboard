@@ -26,7 +26,9 @@
     "verify": "Confirm",
     "back": "Back",
     "wrongCode": "Wrong code, try again",
-    "tooMany": "Too many attempts. Wait 15 minutes and try again."
+    "tooMany": "Too many attempts. Wait 15 minutes and try again.",
+    "tryDemo": "Try the demo",
+    "demoHint": "This is a demo: look around without an account. The data is made up."
   },
   "register": {
     "title": "Sign up",
@@ -449,5 +451,23 @@
     "confirmDelete": "Delete the rule \"{{name}}\"?",
     "any": "—",
     "general": "General"
+  },
+  "demo": {
+    "banner": "A demo with made-up data: it is made anew every night, and connecting services, files and the account settings are switched off.",
+    "notAvailable": "Not available in the demo"
+  },
+  "integrations": {
+    "title": "State of the connections",
+    "allFine": "Everything refreshes as it should",
+    "troubled": "{{count}} need attention",
+    "refresh": "Check again",
+    "expires": "The token expires on {{date}}",
+    "states": {
+      "ok": "Works",
+      "error": "The last refresh failed",
+      "stale": "Has not refreshed for too long",
+      "expiring": "The token expires soon",
+      "expired": "The token has expired"
+    }
   }
 }

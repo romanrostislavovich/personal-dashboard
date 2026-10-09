@@ -16,9 +16,12 @@ export class OutboundPolicy implements OnModuleInit {
 
   onModuleInit(): void {
     const registration = this.config.get('ALLOW_REGISTRATION', { infer: true });
-    const allowed = this.config.get('ALLOW_PRIVATE_URLS', { infer: true }) ?? !registration;
+    const demo = this.config.get('DEMO_MODE', { infer: true });
+    // A demo is open to everybody, like an instance with registration.
+    const allowed =
+      this.config.get('ALLOW_PRIVATE_URLS', { infer: true }) ?? !(registration || demo);
     setPrivateAddressesAllowed(allowed);
-    if (allowed && registration) {
+    if (allowed && (registration || demo)) {
       this.logger.warn(
         'Registration is open and ALLOW_PRIVATE_URLS is on: any user can make the server ' +
           'request addresses of its own network.',

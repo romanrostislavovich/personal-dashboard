@@ -4,6 +4,21 @@ Notable changes of every release. The versions follow [Semantic Versioning](http
 before 1.0 a minor version may bring changes that need attention when updating — they are listed
 under **Updating**.
 
+## Unreleased
+
+### Added
+
+- **State of the connections** in Settings → Integrations: every connected service with its
+  last refresh, the error of a failed one, a token that expires soon (GitHub, GitLab); a
+  message once a day when a connection gets into trouble. The assistant can read it too.
+- **Demo mode** (`DEMO_MODE=true`): a "Try the demo" button on the login page opens a shared
+  account with made-up data in every section, made anew every night. The demo user cannot
+  change the account, connect services or upload files, and no background job reaches outside.
+
+### Updating
+
+- Migration 0062 adds `integration_alerts`.
+
 ## 0.3.0 — the first public release
 
 ### Added

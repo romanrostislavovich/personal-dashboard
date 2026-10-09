@@ -79,6 +79,14 @@ import { AuthService } from './auth.service';
             </button>
           </form>
         }
+        @if (demo()) {
+          <div class="demo">
+            <p class="hint">{{ 'core.login.demoHint' | transloco }}</p>
+            <button matButton="tonal" type="button" [disabled]="loading()" (click)="tryDemo()">
+              {{ 'core.login.tryDemo' | transloco }}
+            </button>
+          </div>
+        }
         @if (registrationEnabled()) {
           <p class="switch">
             {{ 'core.login.noAccount' | transloco }}
@@ -117,6 +125,14 @@ import { AuthService } from './auth.service';
     .code-form {
       margin-top: 8px;
     }
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--mat-sys-outline-variant);
+    }
     .hint {
       margin: 0 0 8px;
       color: var(--mat-sys-on-surface-variant);
@@ -129,6 +145,8 @@ export class LoginPage {
 
   readonly loading = signal(false);
   readonly registrationEnabled = signal(false);
+  /** A demo instance: the page offers to come in without an account. */
+  readonly demo = signal(false);
   /** The translation key of the error to show. */
   readonly error = signal<string | null>(null);
   /** Set after the password step when a 2FA code is needed. */
@@ -141,7 +159,10 @@ export class LoginPage {
 
   constructor() {
     this.auth.config().then(
-      (config) => this.registrationEnabled.set(config.registrationEnabled),
+      (config) => {
+        this.registrationEnabled.set(config.registrationEnabled);
+        this.demo.set(config.demo);
+      },
       () => this.registrationEnabled.set(false),
     );
   }
@@ -153,6 +174,13 @@ export class LoginPage {
         this.challengeToken.set(challengeToken);
         return;
       }
+      await this.router.navigateByUrl('/');
+    });
+  }
+
+  async tryDemo(): Promise<void> {
+    await this.attempt(async () => {
+      await this.auth.tryDemo();
       await this.router.navigateByUrl('/');
     });
   }

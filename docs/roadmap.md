@@ -145,12 +145,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 ### Now
 
-#### Open-source release
-
-- **Make the repository public** — secrets and personal data in the history, issues and CI logs,
-  a security review, licenses, a clean first run for a stranger, GitHub settings; the step by
-  step checklist is in [open-source-release.md](open-source-release.md)
-
 #### Data and security
 
 - **Encryption of sensitive data** — the diary, the medical record, notes about people and the
@@ -158,9 +152,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   (Ollama), so they never go to an outside API
 - **Encrypted off-site backup** — the daily dump encrypted and sent to Backblaze B2 or S3, so the
   data outlives the server
-- **Integration status** — one screen with the last successful refresh of every integration and
-  the tokens that expire soon (Spotify, Battle.net, GitLab...), with a warning before an
-  integration breaks
 
 #### Tests and CI
 
@@ -174,7 +165,7 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Telegram:** "Yes / No" buttons to confirm a deletion; quick commands like `/spent 12 coffee`
 - **Evening check-in in Telegram** — the bot asks "how was your day?", the answer goes to mood and
   the diary
-- **Life: more** — weather and steps in the day feed
+- **Life: more** — the weather in the day feed (it is already compared with the mood) and steps
 
 ### Next
 
@@ -194,8 +185,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   ("2 focus sessions a day", "at most 10 h of games", "5 diary entries"), a result and XP at the end
 - **Tilt detector** — three Dota losses in a row or two hours of games after midnight → a gentle
   "maybe enough?"; win rate by the time of day and after N matches in a row
-- **Sleep from the computer** — the last activity at night and the first in the morning give an
-  estimate ("slept ~6 h, went to bed at 2:40"), a weekly trend, in Life; the phone refines it later
+- **Sleep from the computer** — the first and the last activity of a day are known already (and
+  compared with the mood); next: an estimate out of them ("slept ~6 h, went to bed at 2:40"), a
+  weekly trend, in Life; the phone refines it later
 - **Sleep, steps, weight** — the first part of Fitness: from Google Fit / Health Connect or typed
   in by hand, shown in Life and in the morning digest
 - **Weather: more** — air quality and pollen; days off and public holidays in the digest
@@ -241,19 +233,14 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 #### AI and links between modules
 
-- **Better monitoring through links between modules** — what one module knows shown where
-  another needs it, first Activity and Development: Activity already tells which project the
-  time at the computer went to (by the window title), Development knows its repositories and
-  commits — so a project shows its hours next to its commits, and a day of work is one picture.
-  Modules still do not depend on each other: the core joins them
 - **AI memory** — facts about the user the assistant keeps between conversations
 - **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
   Cursor can read and change your data directly, without its own chat
 
 #### For new users
 
-- **Demo mode** — a start with sample data and a public demo instance, so the project can be
-  tried before installing it
+- **A public demo instance** — the demo mode is there (`DEMO_MODE=true`: a made-up account with
+  every section filled); what is left is to host one and link it from the README
 - **First-run wizard** — pick the sections you need, the time zone, connect Telegram
 - **Import from other apps** — Daylio / Day One (diary), Todoist (tasks), Toggl (time), CSV of
   other banks; makes moving in easy

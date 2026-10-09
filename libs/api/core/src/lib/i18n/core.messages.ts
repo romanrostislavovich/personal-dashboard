@@ -1,3 +1,4 @@
+import { IntegrationStatus } from '@pd/contracts';
 import { pickMessages } from './locale';
 
 /** Core texts: bot replies, service notifications, AI. */
@@ -30,6 +31,18 @@ const messages = {
     lifeMonthLink: 'Every number:',
     lifeYearTitle: (year: string) => `🎆 Your ${year}`,
     automationTitle: (rule: string) => `⚙️ ${rule || 'Automation'}`,
+    integrationsTitle: '🔌 A connection needs attention',
+    integrationTrouble: (status: IntegrationStatus) =>
+      `${status.name}${status.detail ? ` (${status.detail})` : ''}: ${
+        {
+          ok: 'works',
+          error: `the last refresh failed — ${status.error ?? 'unknown error'}`,
+          stale: 'has not refreshed for too long',
+          expiring: `its token expires on ${(status.expiresAt ?? '').slice(0, 10)}`,
+          expired: 'its token has expired',
+        }[status.state]
+      }`,
+    integrationsSee: 'Settings → Integrations shows them all.',
     lifeGoalDoneTitle: (title: string) => `🎯 Goal of the year reached: ${title}`,
     lifeGoalDoneBody: 'All the goals:',
     telegramPhotoExpired: 'The photo is no longer waiting: send it again.',
@@ -87,6 +100,18 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
     lifeMonthLink: 'Все цифры:',
     lifeYearTitle: (year: string) => `🎆 Ваш ${year} год`,
     automationTitle: (rule: string) => `⚙️ ${rule || 'Автоматизация'}`,
+    integrationsTitle: '🔌 Подключение требует внимания',
+    integrationTrouble: (status: IntegrationStatus) =>
+      `${status.name}${status.detail ? ` (${status.detail})` : ''}: ${
+        {
+          ok: 'работает',
+          error: `последнее обновление не удалось — ${status.error ?? 'неизвестная ошибка'}`,
+          stale: 'слишком давно не обновлялось',
+          expiring: `токен истекает ${(status.expiresAt ?? '').slice(0, 10)}`,
+          expired: 'токен истёк',
+        }[status.state]
+      }`,
+    integrationsSee: 'Все подключения — в Настройки → Интеграции.',
     lifeGoalDoneTitle: (title: string) => `🎯 Цель года выполнена: ${title}`,
     lifeGoalDoneBody: 'Все цели:',
     telegramPhotoExpired: 'Фото уже не ждёт: пришлите его ещё раз.',

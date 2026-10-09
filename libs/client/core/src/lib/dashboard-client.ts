@@ -69,6 +69,11 @@ export function createDashboardClient(platform: ClientPlatform) {
       return started(await auth.register({ ...input, client }));
     },
 
+    /** "Try the demo" of a demo instance: in as the shared demo user. */
+    async tryDemo(): Promise<CurrentUser> {
+      return started(await auth.demo(client));
+    },
+
     /**
      * On app start: a new access token from the refresh token (the cookie, or the stored one)
      * and the user; `null` when signed out.

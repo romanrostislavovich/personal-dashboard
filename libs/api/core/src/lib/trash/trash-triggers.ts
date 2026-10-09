@@ -18,6 +18,8 @@ const NOT_TRASHED = new Set([
   'ai_actions',
   'morning_digest_snapshots',
   'security_reports',
+  // A note of what the user was told about: nothing to restore.
+  'integration_alerts',
 ]);
 
 /**

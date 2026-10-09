@@ -1,3 +1,4 @@
+import { TasksDemo } from './tasks.demo';
 import { Module } from '@nestjs/common';
 import { TasksAutomations } from './tasks.automations';
 import { TasksLife } from './tasks.life';
@@ -19,6 +20,7 @@ import { TasksService } from './tasks.service';
   controllers: [TasksController],
   providers: [
     TasksAutomations,
+    TasksDemo,
     TasksLife,
     TasksLinks,
     TasksSearch,

@@ -230,3 +230,15 @@ mat-sidenav-content {
   color: var(--mat-sys-on-tertiary-container);
   font: var(--mat-sys-body-small);
 }
+
+.demo-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+  font: var(--mat-sys-body-medium);
+}

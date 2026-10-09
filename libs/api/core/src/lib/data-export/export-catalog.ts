@@ -32,6 +32,8 @@ const NOT_EXPORTED = new Set([
   'security_findings',
   'security_reports',
   'security_settings',
+  // Which troubles of the connections were told about already.
+  'integration_alerts',
 ]);
 
 export const USER_COLUMN = 'user_id';

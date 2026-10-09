@@ -1,6 +1,14 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, HostListener, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  HostListener,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,7 +16,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { errorStatus } from '../client/core-requests';
+import { ToastService } from '../toast/toast.service';
 import { map } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { RealtimeNotifier } from '../realtime/realtime-notifier';
@@ -44,9 +54,29 @@ interface NavItem {
 })
 export class ShellComponent {
   protected readonly auth = inject(AuthService);
+  /** A demo instance says so on every page: the data is made up and made anew every night. */
+  protected readonly demo = signal(false);
+  private readonly toasts = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
 
   constructor() {
     // Live events (new achievements, notifications) while the dashboard is open.
+    void this.auth.config().then(
+      (config) => this.demo.set(config.demo),
+      () => undefined,
+    );
+    // In a demo some actions are refused by the server (403): say so instead of doing nothing.
+    const refused = (event: PromiseRejectionEvent) => {
+      if (this.demo() && errorStatus(event.reason) === 403) {
+        event.preventDefault();
+        this.toasts.show({
+          icon: 'science',
+          title: this.transloco.translate('core.demo.notAvailable'),
+        });
+      }
+    };
+    window.addEventListener('unhandledrejection', refused);
+    inject(DestroyRef).onDestroy(() => window.removeEventListener('unhandledrejection', refused));
     inject(RealtimeNotifier).start();
   }
 

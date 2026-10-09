@@ -9,3 +9,4 @@ export * from './lib/ai/ai.schema';
 export * from './lib/life/life.schema';
 export * from './lib/automations/automations.schema';
 export * from './lib/sync/sync.schema';
+export * from './lib/integrations/integrations.schema';

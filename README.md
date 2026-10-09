@@ -83,6 +83,10 @@ docker compose up -d --build  # → http://localhost:3300
 Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`: the user is created on the first start, database
 migrations run by themselves.
 
+**Just looking?** Add `DEMO_MODE=true` to `.env` before the first start: the login page gets a
+"Try the demo" button that opens a made-up account with every section filled — nothing to
+connect. Its data is made anew every night; do not use it together with your own.
+
 Put HTTPS in front of it (Caddy, Traefik, nginx) and set `PUBLIC_URL`. A ready server setup with
 Caddy, daily backups and one-command updates: [docs/deploy.md](docs/deploy.md). Prebuilt image:
 `ghcr.io/romanrostislavovich/personal-dashboard`.

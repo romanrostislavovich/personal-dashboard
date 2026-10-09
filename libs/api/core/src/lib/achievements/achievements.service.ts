@@ -79,6 +79,8 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     this.scheduler.register({
       name: 'achievements.evaluate',
       cron: '40 * * * *',
+      // Counted from the demo data too: nothing outside is asked.
+      demo: true,
       handler: async () => {
         for (const user of await this.users.findAll()) {
           await this.evaluate(user.id);

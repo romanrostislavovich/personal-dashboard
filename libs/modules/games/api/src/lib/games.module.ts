@@ -1,3 +1,5 @@
+import { GamesIntegrations } from './games.integrations';
+import { GamesDemo } from './games.demo';
 import { Module } from '@nestjs/common';
 import { GamesLife } from './games.life';
 import { GamesLinks } from './games.links';
@@ -30,6 +32,8 @@ import { WowService } from './wow/wow.service';
 @Module({
   controllers: [GamesController],
   providers: [
+    GamesDemo,
+    GamesIntegrations,
     GamesLife,
     GamesLinks,
     SteamPlayService,
