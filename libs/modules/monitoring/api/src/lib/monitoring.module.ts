@@ -1,3 +1,4 @@
+import { MonitoringDemo } from './monitoring.demo';
 import { Module } from '@nestjs/common';
 import { MonitoringAutomations } from './monitoring.automations';
 import { MonitoringLinks } from './monitoring.links';
@@ -18,6 +19,7 @@ import { MonitorsService } from './monitors.service';
   controllers: [MonitoringController],
   providers: [
     MonitoringAutomations,
+    MonitoringDemo,
     MonitoringLinks,
     MonitoringSearch,
     MonitorsService,

@@ -95,6 +95,11 @@
     }
 
     <main class="content">
+      @if (demo()) {
+        <p class="demo-banner" role="note">
+          <mat-icon inline>science</mat-icon> {{ 'core.demo.banner' | transloco }}
+        </p>
+      }
       <router-outlet />
     </main>
     <pd-toast-host />

@@ -19,6 +19,12 @@ import { TrashController } from './trash/trash.controller';
 import { DataController } from './data-export/data.controller';
 import { OtherComputersService } from './computer-time/other-computers.service';
 import { LinksAchievements } from './links/links.achievements';
+import { DemoGuard } from './demo/demo.guard';
+import { DemoService } from './demo/demo.service';
+import { CoreDemo } from './demo/core.demo';
+import { CoreIntegrations } from './integrations/core.integrations';
+import { IntegrationsController } from './integrations/integrations.controller';
+import { IntegrationsService } from './integrations/integrations.service';
 import { OutboundPolicy } from './net/outbound-policy';
 import { LinksService } from './links/links.service';
 import { ProjectOverviewService } from './links/project-overview.service';
@@ -121,6 +127,7 @@ class HealthController {
     SearchController,
     LifeController,
     AutomationsController,
+    IntegrationsController,
   ],
   providers: [
     SearchService,
@@ -132,6 +139,10 @@ class HealthController {
     LifeGoalsService,
     LifeStoriesService,
     { provide: APP_GUARD, useClass: AuthGuard },
+    // After AuthGuard: it needs to know who is asking.
+    { provide: APP_GUARD, useClass: DemoGuard },
+    DemoService,
+    CoreDemo,
     { provide: APP_INTERCEPTOR, useClass: UserActivityInterceptor },
     AuthService,
     SessionsService,
@@ -140,6 +151,8 @@ class HealthController {
     DataImportService,
     OtherComputersService,
     OutboundPolicy,
+    IntegrationsService,
+    CoreIntegrations,
     LinksService,
     LinksAchievements,
     ProjectOverviewService,
@@ -202,6 +215,10 @@ class HealthController {
     MorningDigestService,
     // For the command palette: modules register their search via register().
     OtherComputersService,
+    // For the list of integrations: a module reports its connections (see IntegrationsService).
+    IntegrationsService,
+    // For a demo instance: a module registers its sample data (see DemoService).
+    DemoService,
     // For the links between the sections: a module registers what it knows (see LinksService).
     LinksService,
     ProjectOverviewService,

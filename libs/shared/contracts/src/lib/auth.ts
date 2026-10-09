@@ -120,6 +120,9 @@ export const registerSchema = z.object({
 });
 export type RegisterRequest = z.input<typeof registerSchema>;
 
+/** `POST /api/auth/demo`: coming into a demo instance. */
+export const demoLoginSchema = z.object({ client: z.enum(AUTH_CLIENTS).default('web') });
+
 export const profileUpdateSchema = z.object({
   displayName: z.string().trim().min(1).max(50).optional(),
   locale: z.enum(SUPPORTED_LOCALES).optional(),
@@ -141,4 +144,6 @@ export type PasswordChange = z.infer<typeof passwordChangeSchema>;
 /** Public server settings — needed by the login page. */
 export interface AuthConfig {
   registrationEnabled: boolean;
+  /** A demo instance: the login page offers to come in without an account. */
+  demo: boolean;
 }

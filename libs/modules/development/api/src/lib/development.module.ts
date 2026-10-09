@@ -1,3 +1,5 @@
+import { DevelopmentIntegrations } from './development.integrations';
+import { DevelopmentDemo } from './development.demo';
 import { Module } from '@nestjs/common';
 import { DevelopmentLife } from './development.life';
 import { DevelopmentLinks } from './development.links';
@@ -60,6 +62,8 @@ import { WakatimeService } from './wakatime/wakatime.service';
     WakatimeController,
   ],
   providers: [
+    DevelopmentDemo,
+    DevelopmentIntegrations,
     DevelopmentLife,
     DevelopmentLinks,
     OpenSourceSearch,

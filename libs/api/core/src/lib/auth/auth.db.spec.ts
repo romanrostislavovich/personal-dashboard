@@ -1,3 +1,4 @@
+import { DemoService } from '../demo/demo.service';
 import { JwtService } from '@nestjs/jwt';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
@@ -50,7 +51,9 @@ describe.skipIf(!ADMIN_URL)('AuthService', { timeout: 60_000 }, () => {
     const users = new UsersService(db, config);
     sessions = new SessionsService(db);
     twoFactor = new TwoFactorService(new SecretsService(db, config));
-    auth = new AuthService(users, jwt, sessions, twoFactor, new SignInLog(db), config);
+    auth = new AuthService(users, jwt, sessions, twoFactor, new SignInLog(db), config, {
+      enabled: false,
+    } as DemoService);
     await auth.register(
       {
         email: 'me@test.local',

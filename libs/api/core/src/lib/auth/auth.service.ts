@@ -26,6 +26,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { AppConfig } from '../config/env';
 import { UserRow } from '../users/users.schema';
+import { DemoService } from '../demo/demo.service';
 import { UsersService } from '../users/users.service';
 import { LoginThrottle, throttleKeys } from './login-throttle';
 import { ClientMeta, SessionsService } from './sessions.service';
@@ -65,6 +66,7 @@ export class AuthService implements OnApplicationBootstrap {
     private readonly twoFactor: TwoFactorService,
     private readonly signIns: SignInLog,
     @Inject(ConfigService) private readonly config: AppConfig,
+    private readonly demo: DemoService,
   ) {}
 
   /** On first start, create the administrator from ADMIN_EMAIL / ADMIN_PASSWORD. */
@@ -93,7 +95,10 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   publicConfig(): AuthConfig {
-    return { registrationEnabled: this.config.get('ALLOW_REGISTRATION', { infer: true }) };
+    return {
+      registrationEnabled: this.config.get('ALLOW_REGISTRATION', { infer: true }),
+      demo: this.demo.enabled,
+    };
   }
 
   /** The password step; with 2FA on it ends with a challenge for the code. */
@@ -169,6 +174,14 @@ export class AuthService implements OnApplicationBootstrap {
       locale: input.locale,
     });
     return this.issueSession(user, client, meta);
+  }
+
+  /** A visitor of a demo instance comes in as the shared demo user, without a password. */
+  async startDemo(client: AuthClient, meta: ClientMeta): Promise<IssuedSession> {
+    if (!this.demo.enabled) {
+      throw new ForbiddenException('This is not a demo instance');
+    }
+    return this.issueSession(await this.demo.user(), client, meta);
   }
 
   /** A new access token for a refresh token (a rotated one, once a day, comes along). */

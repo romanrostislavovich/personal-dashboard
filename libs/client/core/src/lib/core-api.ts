@@ -1,5 +1,6 @@
 import {
   Achievement,
+  AuthClient as AuthClientKind,
   AuthConfig,
   AutomationRule,
   AutomationRuleInput,
@@ -42,6 +43,7 @@ import { ApiClient, apiRequest } from './api-client';
  */
 export const API_PATHS = {
   authConfig: '/api/auth/config',
+  demo: '/api/auth/demo',
   login: '/api/auth/login',
   loginWithCode: '/api/auth/login/2fa',
   refresh: '/api/auth/refresh',
@@ -109,6 +111,8 @@ export const CORE_READS = {
   lifeMetrics: () => apiRequest('/api/life/metrics'),
   /** The AI's kept story of `YYYY-MM` or `YYYY`: `{ story: null }` — not written yet. */
   lifeStory: (period: string) => apiRequest('/api/life/story', { period }),
+  /** Every connection to an outside service with its state. */
+  integrations: () => apiRequest('/api/integrations'),
   automations: () => apiRequest('/api/automations'),
   /** The triggers and actions the modules registered. */
   automationsCatalog: () => apiRequest('/api/automations/catalog'),
@@ -123,6 +127,8 @@ export function authApi(api: ApiClient) {
     loginWithCode: (input: TwoFactorLogin) =>
       api.post<LoginResponse>(API_PATHS.loginWithCode, input),
     register: (input: RegisterRequest) => api.post<LoginResponse>(API_PATHS.register, input),
+    /** A demo instance: a session of the shared demo user, without a password. */
+    demo: (client: AuthClientKind) => api.post<LoginResponse>(API_PATHS.demo, { client }),
     me: () => api.get<CurrentUser>(API_PATHS.me),
     updateProfile: (changes: ProfileUpdate) => api.patch<CurrentUser>(API_PATHS.me, changes),
     /** Also signs every other device out. */

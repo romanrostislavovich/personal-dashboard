@@ -1,3 +1,4 @@
+import { BirthdaysDemo } from './birthdays.demo';
 import { Module } from '@nestjs/common';
 import { BirthdaysAutomations } from './birthdays.automations';
 import { BirthdaysLife } from './birthdays.life';
@@ -14,6 +15,7 @@ import { BirthdaysService } from './birthdays.service';
   controllers: [BirthdaysController],
   providers: [
     BirthdaysAutomations,
+    BirthdaysDemo,
     BirthdaysLife,
     BirthdaysSearch,
     BirthdaysService,

@@ -27,6 +27,7 @@ import {
   RecoveryCodes,
   RefreshRequest,
   refreshSchema,
+  demoLoginSchema,
   registerSchema,
   SessionInfo,
   TwoFactorCode,
@@ -109,6 +110,22 @@ export class AuthController {
   ): Promise<LoginResponse> {
     const issued = await this.auth.register(input, input.client, clientMeta(request));
     return this.started(issued, request, response);
+  }
+
+  /** "Try the demo" of a demo instance: a session of the shared demo user. */
+  @Public()
+  @Post('demo')
+  @HttpCode(200)
+  async demo(
+    @Body(new ZodValidationPipe(demoLoginSchema)) input: z.output<typeof demoLoginSchema>,
+    @Req() request: AuthRequest,
+    @Res({ passthrough: true }) response: AuthResponse,
+  ): Promise<LoginResponse> {
+    return this.started(
+      await this.auth.startDemo(input.client, clientMeta(request)),
+      request,
+      response,
+    );
   }
 
   /** A new access token; the web's refresh token comes in the cookie, an app's in the body. */

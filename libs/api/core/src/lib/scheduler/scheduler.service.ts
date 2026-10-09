@@ -18,6 +18,11 @@ export interface ScheduledJob {
   handler: () => Promise<void>;
   /** A job that runs every minute: its runs are not written to the log one by one. */
   quiet?: boolean;
+  /**
+   * Runs on a demo instance too (DEMO_MODE). The others do not: they reach outside services,
+   * send notifications or charge payments — nothing a shared made-up account should do.
+   */
+  demo?: boolean;
 }
 
 /**
@@ -64,8 +69,12 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
       return;
     }
     const tz = this.config.get('APP_TIMEZONE', { infer: true });
+    const demo = this.config.get('DEMO_MODE', { infer: true });
+    if (demo) {
+      this.logger.log('Demo instance: only the jobs of the demo itself run');
+    }
 
-    for (const job of this.jobs) {
+    for (const job of this.jobs.filter((item) => !demo || item.demo)) {
       await this.boss.createQueue(job.name);
       await this.boss.schedule(job.name, job.cron, null, { tz, missed: 'once' });
       await this.boss.work(job.name, async () => {

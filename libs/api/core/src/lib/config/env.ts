@@ -46,6 +46,12 @@ export const envSchema = z
      * them (see net/outbound.ts).
      */
     ALLOW_PRIVATE_URLS: z.stringbool().optional(),
+    /**
+     * A demo instance: one shared user with made-up data that anybody enters without a
+     * password and that is made anew every night (see demo/demo.service.ts). Never on an
+     * instance with real data.
+     */
+    DEMO_MODE: z.stringbool().default(false),
     /** Language of the first user (ADMIN_EMAIL): en or ru. */
     DEFAULT_LOCALE: z.enum(SUPPORTED_LOCALES).default('en'),
 

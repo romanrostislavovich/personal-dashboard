@@ -68,6 +68,11 @@ export class AuthService {
     this.signedIn(await this.client.signUp(input));
   }
 
+  /** A demo instance: in as the shared demo user, without an account. */
+  async tryDemo(): Promise<void> {
+    this.signedIn(await this.client.tryDemo());
+  }
+
   /** A new access token after a 401 from `HttpClient`; `null` — the session is over. */
   async refreshToken(): Promise<string | null> {
     // `undefined` — no answer (still offline); `null` — the server ended the session.

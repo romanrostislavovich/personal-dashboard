@@ -46,6 +46,11 @@ export {
   privateAddressesAllowed,
   safeFetch,
 } from './lib/net/outbound';
+export { IntegrationsService } from './lib/integrations/integrations.service';
+export type { IntegrationSource } from './lib/integrations/integrations.service';
+export type { IntegrationReport } from './lib/integrations/integration-state';
+export { DemoService } from './lib/demo/demo.service';
+export type { DemoContext, DemoSeed } from './lib/demo/demo.service';
 export { LinksService } from './lib/links/links.service';
 export type {
   AppPage,

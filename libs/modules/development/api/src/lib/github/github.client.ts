@@ -1,3 +1,5 @@
+import { githubTokenExpiry } from '../token-expiry';
+
 const API = 'https://api.github.com';
 
 export interface GithubIssue {
@@ -49,6 +51,13 @@ export class GithubClient {
       title: raw.commit.message.split('\n')[0].slice(0, 200),
       url: raw.html_url ?? null,
     }));
+  }
+
+  /** When the token expires, as GitHub tells it with any answer; `null` — it does not. */
+  async tokenExpiry(): Promise<Date | null> {
+    const response = await this.request('/user');
+    await response.body?.cancel();
+    return githubTokenExpiry(response.headers.get('github-authentication-token-expiration'));
   }
 
   /** Token check: returns the owner's login. */

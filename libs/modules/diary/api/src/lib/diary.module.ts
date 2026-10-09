@@ -1,3 +1,4 @@
+import { DiaryDemo } from './diary.demo';
 import { Module } from '@nestjs/common';
 import { DiaryAutomations } from './diary.automations';
 import { DiaryLife } from './diary.life';
@@ -22,6 +23,7 @@ import { DiaryService } from './diary.service';
   controllers: [DiaryController],
   providers: [
     DiaryAutomations,
+    DiaryDemo,
     DiaryLife,
     DiaryLinks,
     DiaryExport,
