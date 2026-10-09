@@ -24,6 +24,7 @@ import {
   chatCompletion,
   SpeechConnection,
 } from './openai-compatible.client';
+import { OutboundBlockedError } from '../net/outbound';
 
 /** The API key of a connection in SecretsService. */
 const apiKeySecret = (connectionId: string) => `ai.connection.${connectionId}`;
@@ -300,7 +301,9 @@ async function verify(connection: ChatConnection): Promise<void> {
     throw new BadRequestException(
       error instanceof AiRequestError
         ? `AI API rejected the request (${error.status})`
-        : 'AI API is unreachable',
+        : error instanceof OutboundBlockedError
+          ? error.message
+          : 'AI API is unreachable',
     );
   }
 }

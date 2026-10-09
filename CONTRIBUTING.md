@@ -43,8 +43,17 @@ npx prettier --check "apps/**/*.{ts,html,scss}" "libs/**/*.{ts,html,scss,json}"
 - Tests that need PostgreSQL (`*.db.spec.ts`) run only when `TEST_DATABASE_URL` is set, e.g.
   `TEST_DATABASE_URL=postgres://dashboard:dashboard@localhost:5432/dashboard npm test` with
   `npm run db:up` running (use your `DB_PORT` if it differs). CI always runs them.
-- Modules must not import other modules — use the core (`@pd/api-core`, `@pd/web-core`) and
-  `@pd/contracts`. ESLint will tell you if a boundary is crossed.
+- Modules must not import other modules — use the core (`@pd/api-core`, `@pd/web-core`,
+  `@pd/client-core`) and `@pd/contracts`. ESLint will tell you if a boundary is crossed. What
+  one module knows and another needs goes through the core: see "Links between the sections"
+  in the architecture docs (`<module>.links.ts`).
+- Request and response types and their zod schemas live in `libs/shared/contracts`; every API
+  request (URL, parameters, body) lives in `libs/client/core`, and a web module's `*.api.ts`
+  only wraps it for Angular.
+- Every table of a module has `userId` and every query filters by it; every table has a
+  primary key (the sync between two instances tracks rows by it).
+- A request to an address a user gives goes through `safeFetch` of `@pd/api-core`, never plain
+  `fetch`: it keeps other users out of the server's own network.
 - Keep the code readable for humans: small files, clear names, comments where the _why_ is not obvious.
 
 ## Dependency overrides
@@ -75,6 +84,7 @@ entry once its parent ships the fix (check with `npm ls <package>` and `npm audi
   in the architecture docs.
 - A new notification channel (Discord, e-mail).
 - A translation to another language — see “Adding a language”.
+- More starting points: [docs/good-first-issues.md](docs/good-first-issues.md).
 
 By contributing you agree that your contributions are licensed under the [MIT License](LICENSE) and
 that you follow the [Code of Conduct](CODE_OF_CONDUCT.md).

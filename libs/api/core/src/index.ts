@@ -40,6 +40,12 @@ export { csvLine } from './lib/data-export/data-archive';
 export { SecurityService } from './lib/security/security.service';
 export type { FoundProblem, Inspection, SecuritySource } from './lib/security/security-source';
 export { OtherComputersService } from './lib/computer-time/other-computers.service';
+export {
+  assertPublicHost,
+  OutboundBlockedError,
+  privateAddressesAllowed,
+  safeFetch,
+} from './lib/net/outbound';
 export { LinksService } from './lib/links/links.service';
 export type {
   AppPage,

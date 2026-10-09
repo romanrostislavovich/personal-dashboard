@@ -7,17 +7,30 @@ import { z } from 'zod';
  * the app fails at startup with a clear error instead of in the middle of work.
  * Example values are in `.env.example` at the repository root.
  */
+/**
+ * The values of `.env.example` are public: a server started with them signs its sessions with
+ * a key anybody knows. A secret that still looks like a placeholder is refused.
+ */
+const PLACEHOLDER = /change[-_ ]?me|your[-_ ]|example|placeholder|^(.)\1+$/i;
+const secret = (name: string) =>
+  z
+    .string()
+    .min(32, `${name} must be at least 32 characters`)
+    .refine((value) => !PLACEHOLDER.test(value), {
+      message: `${name} is still the placeholder of .env.example: generate a random one`,
+    });
+
 export const envSchema = z
   .object({
     API_PORT: z.coerce.number().default(3300),
     DATABASE_URL: z.url(),
-    JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+    JWT_SECRET: secret('JWT_SECRET'),
     /**
      * Encryption key for integration tokens (GitHub, Sentry…) in the database.
      * Separate from JWT_SECRET: changing the JWT secret must not lose saved tokens.
      * If this key is lost, the tokens have to be entered again.
      */
-    ENCRYPTION_KEY: z.string().min(32, 'ENCRYPTION_KEY must be at least 32 characters'),
+    ENCRYPTION_KEY: secret('ENCRYPTION_KEY'),
     /** Time zone in which daily jobs run (reminders, recurring payments). */
     APP_TIMEZONE: z.string().default('Europe/Warsaw'),
 
@@ -26,12 +39,25 @@ export const envSchema = z
      * Off by default: a self-hosted dashboard is usually personal.
      */
     ALLOW_REGISTRATION: z.stringbool().default(false),
+    /**
+     * Whether a site to monitor, a page of a shop or an AI endpoint may be a private or local
+     * address (`127.0.0.1`, `192.168.*`, the cloud's metadata). Unset — only while registration
+     * is closed: with other users on the instance it would open the server's own network to
+     * them (see net/outbound.ts).
+     */
+    ALLOW_PRIVATE_URLS: z.stringbool().optional(),
     /** Language of the first user (ADMIN_EMAIL): en or ru. */
     DEFAULT_LOCALE: z.enum(SUPPORTED_LOCALES).default('en'),
 
     /** The first user is created automatically if the database has no users yet. */
     ADMIN_EMAIL: z.email().optional(),
-    ADMIN_PASSWORD: z.string().min(8).optional(),
+    ADMIN_PASSWORD: z
+      .string()
+      .min(8)
+      .refine((value) => !/change[-_ ]?me/i.test(value), {
+        message: 'ADMIN_PASSWORD is still the placeholder of .env.example: choose your own',
+      })
+      .optional(),
 
     /** Without a token the Telegram channel is simply disabled. */
     TELEGRAM_BOT_TOKEN: z.string().optional(),
@@ -57,7 +83,7 @@ export const envSchema = z
     /** Two-way sync between a local instance and a server, see docs/sync.md. */
     SYNC_MODE: z.enum(SYNC_MODES).default('off'),
     /** Shared secret of the two instances (at least 32 characters, the same on both). */
-    SYNC_TOKEN: z.string().min(32, 'SYNC_TOKEN must be at least 32 characters').optional(),
+    SYNC_TOKEN: secret('SYNC_TOKEN').optional(),
     /** Client: the server address, for example https://dash.example.com. */
     SYNC_SERVER_URL: z.url().optional(),
     /** Client: how often to sync. */
@@ -104,7 +130,9 @@ export type Env = z.infer<typeof envSchema>;
 export type AppConfig = ConfigService<Env, true>;
 
 export function validateEnv(raw: Record<string, unknown>): Env {
-  const result = envSchema.safeParse(raw);
+  // `SYNC_TOKEN=` in a .env file is "not set", as the examples leave what is optional.
+  const set = Object.fromEntries(Object.entries(raw).filter(([, value]) => value !== ''));
+  const result = envSchema.safeParse(set);
   if (!result.success) {
     throw new Error(`Invalid environment variables:\n${z.prettifyError(result.error)}`);
   }

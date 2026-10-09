@@ -1,6 +1,6 @@
 {
   "name": "personal-dashboard",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Self-hosted personal dashboard: birthdays, finance, website monitoring, open source stats, diary, music, games, achievements and an AI assistant over your own data.",
   "license": "MIT",
   "repository": {
