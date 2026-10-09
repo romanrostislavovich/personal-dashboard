@@ -1,9 +1,12 @@
+import { randomBytes } from 'node:crypto';
 import { validateEnv } from './env';
 
+// Made at run time: a literal that looks like a key would be taken for one by secret scanners.
+const random = () => randomBytes(32).toString('hex');
 const valid = {
   DATABASE_URL: 'postgres://dashboard:dashboard@localhost:5432/dashboard',
-  JWT_SECRET: '3f9c1a7e5b2d4f6081a3c5e7f9b1d3f5a7c9e1b3',
-  ENCRYPTION_KEY: 'b8e2d4f6a1c3e5079b2d4f6a8c0e2b4d6f8a0c2e',
+  JWT_SECRET: random(),
+  ENCRYPTION_KEY: random(),
 };
 
 describe('validateEnv', () => {

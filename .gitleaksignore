@@ -3,3 +3,7 @@
 
 # A placeholder for unit tests ("test-encryption-key-…"): nothing is encrypted with it.
 78ea4dd194424a78b816f15a691ffc963024fcbf:libs/api/core/test-env.mts:generic-api-key:9
+
+# Made-up values of a unit test of the start-up checks (replaced by random ones since).
+10e6ed7210f2d6ff2ebe53024af864aac28da673:libs/api/core/src/lib/config/env.spec.ts:generic-api-key:5
+10e6ed7210f2d6ff2ebe53024af864aac28da673:libs/api/core/src/lib/config/env.spec.ts:generic-api-key:6
