@@ -116,6 +116,21 @@ export class DiaryAiTools implements OnModuleInit {
       name: 'diary_replace_text',
       module: 'diary',
       writes: true,
+      // It overwrites what the user wrote: they see what goes and what comes first.
+      confirm: async (userId, args) => {
+        const { day, find, replaceWith } = replaceArgs.parse(args);
+        const entry = await this.diary.get(userId, day);
+        const occurrences = entry ? entry.content.split(find).length - 1 : 0;
+        if (!entry || occurrences === 0) {
+          throw new Error('The fragment is not in this entry — copy it exactly from diary_entries');
+        }
+        return {
+          day,
+          occurrences,
+          find: find.slice(0, 500),
+          replaceWith: replaceWith.slice(0, 500),
+        };
+      },
       description:
         "Corrects a day's entry: replaces every occurrence of an exact fragment " +
         '(copy it from diary_entries). An empty replaceWith removes the fragment.',

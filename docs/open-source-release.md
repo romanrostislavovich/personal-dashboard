@@ -15,14 +15,38 @@ the issues or in the Actions logs is copied and cached the moment it is visible)
 - `LICENSE` (MIT), `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue and PR templates
   are in place; `security.yml` runs gitleaks over the whole history on every push.
 
+## Done on 2026-10-09
+
+- gitleaks over the whole history of every branch (`--log-opts="--all"`, 177 commits with
+  changes): no leaks. trufflehog over the same history, without verifying against outside
+  services: one finding — the `dashboard:dashboard` password of the local database in
+  `docker-compose.yml`, the well-known one of development; its port now listens on this
+  computer only.
+- `.env.example` and `deploy/.env.example` hold only placeholders — and the server now refuses
+  to start with them (`JWT_SECRET`, `ENCRYPTION_KEY`, `SYNC_TOKEN`, `ADMIN_PASSWORD`).
+- Requests to addresses users give go through `safeFetch`: private and local addresses are
+  refused once registration is open, on every redirect (`ALLOW_PRIVATE_URLS`).
+- Starting the sync and copying a backup are the owner's alone (any signed-in user could).
+- The assistant asks before it replaces text in the diary; every tool that deletes or
+  overwrites has a confirmation.
+- The desktop update: only from the server the app is signed in to, over HTTPS, every file
+  against the manifest's hashes, file names checked; `SECURITY.md` says the builds are not
+  code-signed.
+- `npm audit --omit=dev`: 0 vulnerabilities. Licenses of what ships: MIT, ISC, Apache-2.0, BSD,
+  0BSD and Python-2.0 (argparse) — all compatible with MIT.
+- A clean clone, following the README literally, with Docker: found and fixed empty optional
+  values of `.env.example` (`SYNC_TOKEN=`) failing the start; then the image builds, the
+  migrations run, the first user signs in, registration is closed. `npm ci` and
+  `nx run-many -t lint test build` were **not** run in the clean clone (see section 5).
+- Versions brought in line (`0.3.0`), `CHANGELOG.md`, the README (badges, status, the note on
+  the other services), `CONTRIBUTING.md` against `CLAUDE.md`, texts of the first issues
+  ([good-first-issues.md](good-first-issues.md)).
+
 ## 1. Secrets (cannot be undone)
 
-- [ ] Run gitleaks locally over the whole history, not only in CI:
-      `brew install gitleaks && gitleaks git . --verbose` — every finding is either fixed or a
-      reasoned line in `.gitleaksignore`
-- [ ] A second scanner for what gitleaks misses: `brew install trufflehog && trufflehog git file://. --only-verified`
-- [ ] Check `.env.example` and `deploy/.env.example` by hand: only placeholders, no real
-      values left from your own setup
+- [x] gitleaks over the whole history — no leaks (see above)
+- [x] A second scanner (trufflehog, unverified) — only the local database password
+- [x] `.env.example` and `deploy/.env.example`: only placeholders
 - [ ] Any token that was ever pasted into a commit, an issue, a PR or a CI log — rotate it, even
       if it was removed later
 - [ ] Repository → Settings → Secrets and variables → Actions: only what the workflows need
@@ -41,9 +65,8 @@ the issues or in the Actions logs is copied and cached the moment it is visible)
 - [ ] **Actions logs and artifacts** become public too — delete old workflow runs (Actions → a
       workflow → "..." → Delete) unless you are sure no log printed anything private
 - [ ] **Releases** (`v0.2.0`, `v0.2.1`) and their notes — the installers are fine, check the text
-- [ ] **Screenshot** `docs/images/dashboard.png` is outdated (September, 42 achievements, an old
-      menu) and shows your account; replace it with fresh screenshots on sample data (see
-      "Demo mode" in the roadmap, or a separate user filled by hand)
+- [x] **Screenshot** `docs/images/dashboard.png` — replaced on 2026-10-09 with the home page of
+      a demo user ("Alex", made-up data on a throwaway instance); nothing of yours is on it
 - [ ] Mentions of your own projects in code comments and tests (`ai-text-guard.com`,
       `ngx-translate-lint`) are harmless; replace them with `example.com` only if you prefer
 - [ ] `docs/roadmap.md` speaks in the first person in places ("my own mixes", "my GitHub") —
@@ -53,45 +76,50 @@ the issues or in the Actions logs is copied and cached the moment it is visible)
 
 Once public, anyone can read the code looking for a way in to every self-hosted instance.
 
-- [ ] Run a security review of the whole code base (`/security-review` in Claude Code), fix
-      what it finds
-- [ ] The server refuses to start without `JWT_SECRET` and `ENCRYPTION_KEY`, or with short
-      ones; `ALLOW_REGISTRATION` is `false` by default
-- [ ] **Requests the server makes to addresses users give** — Monitoring checks, the wishlist
-      reading a shop's page, integration URLs (self-hosted GitLab...): block private and local
-      addresses (`127.0.0.1`, `10.*`, `192.168.*`, `169.254.169.254`, `localhost`) at least when
-      registration is open, otherwise a user can reach the server's internal network (SSRF)
-- [ ] **Desktop auto-update** — the app updates itself from the server; make sure it only
-      accepts an update from the server it is signed in to over HTTPS, and write down in
-      `SECURITY.md` that the builds are not code-signed
-- [ ] `npm audit --omit=dev` is clean (CI checks it)
-- [ ] The AI tools: deleting still needs a confirmation; data from integrations (diary text,
-      e-mails, page titles) cannot switch the security agent off (it already has its own tools)
+- [ ] Run a full security review of the whole code base (`/security-review` in Claude Code).
+      What was looked at so far: the endpoints open without a sign-in, the secrets at start,
+      requests to users' addresses, raw SQL, file names of downloads, the owner-only actions,
+      the assistant's tools — a full review may find more
+- [x] The server refuses to start without `JWT_SECRET` and `ENCRYPTION_KEY`, with short ones or
+      with the placeholders of `.env.example`; `ALLOW_REGISTRATION` is `false` by default
+- [x] **Requests the server makes to addresses users give** — Monitoring, the wishlist and AI
+      endpoints refuse private and local addresses once registration is open. Not covered: a
+      DNS answer that changes between the check and the request (rebinding)
+- [x] **Desktop auto-update** — only from the server it is signed in to, over HTTPS;
+      `SECURITY.md` says the builds are not code-signed
+- [x] `npm audit --omit=dev` is clean (CI checks it)
+- [x] The AI tools: deleting and overwriting need a confirmation; the security agent has its
+      own tools and conversation
 
 ## 4. Legal
 
-- [ ] Licenses of the dependencies are compatible with MIT:
-      `npx license-checker-rseidelsohn --production --summary` — no GPL / AGPL in what ships
-- [ ] Icons, fonts, sounds and images in the repository are yours or under a free license
-- [ ] A short note in the README: not affiliated with Valve, Blizzard, Spotify, Last.fm,
-      GitHub and the others; their names and APIs belong to them
-- [ ] The wishlist reads shops' pages — a note that the user is responsible for following the
-      shop's terms
+- [x] Licenses of the dependencies are compatible with MIT — no GPL / AGPL in what ships
+- [ ] Icons and images in the repository are yours or under a free license: the app icon
+      (`apps/desktop/icon.png`, `apps/web/public/icon*.png`) and `docs/images/dashboard.png` are
+      the only ones; there are no fonts or sounds. Only you know where the icon came from
+- [x] A note in the README: not affiliated with the services it connects to
+- [x] The wishlist reads shops' pages — the same note says the user follows the shop's terms
 
 ## 5. A first run that works for a stranger
 
-- [ ] **Clean clone**: clone into a new folder (no `node_modules`, no `.env`) and follow the
-      README literally: `npm ci`, `npx nx run-many -t lint test build`, then the self-hosting
-      steps with `docker compose up`; fix every step that needs knowledge not written down
+- [x] **Clean clone, the Docker way** — copy `.env.example` to `.env`, set the secrets, start
+      it with Docker Compose as the README says: works (one bug fixed on the way, see above)
+- [ ] **Clean clone, the development way**: `npm ci`, `npx nx run-many -t lint test build`,
+      `npm run dev` in a new folder — not done here: Nx's native module is blocked by Smart App
+      Control on the machine this was checked on. CI does exactly this on Linux and is green;
+      try it once on a computer without that block
 - [ ] Do the same on Windows (the desktop tracker is Windows-only) or say so in the README
-- [ ] **Version**: `package.json` says `0.1.0`, the latest tag is `v0.2.1` — bring them in line
-- [ ] **CHANGELOG.md** — at least one entry for the public release
-- [ ] **README**: fresh screenshots or a short GIF; badges (CI, license, latest release); the
-      feature list matches what is in `docs/roadmap.md` under ✅; a line about the status
-      ("a personal project, used daily; breaking changes are possible before 1.0")
-- [ ] `CONTRIBUTING.md` is up to date with `CLAUDE.md` (module boundaries, contracts,
-      migrations, i18n keys in both languages)
-- [ ] 3–5 issues labelled `good first issue` (e.g. a translation, a small integration)
+- [x] **Version**: `0.3.0` in `package.json`, the desktop's and the lock file — the next tag is
+      `v0.3.0`
+- [x] **CHANGELOG.md** — the entry of the public release
+- [x] **README**: badges (CI, security, release, license), the status line, the links between
+      the sections among the highlights
+- [x] **README: a fresh screenshot** on sample data; a short GIF or more pages (a project, the
+      mood, the assistant) would still help
+- [x] `CONTRIBUTING.md` is up to date with `CLAUDE.md` (module boundaries, contracts, the
+      client core, tables, migrations, i18n, `safeFetch`)
+- [ ] Open 3–5 issues labelled `good first issue`: their texts are ready in
+      [good-first-issues.md](good-first-issues.md)
 
 ## 6. GitHub settings
 

@@ -1,5 +1,10 @@
 # Personal Dashboard
 
+[![CI](https://github.com/romanrostislavovich/personal-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/romanrostislavovich/personal-dashboard/actions/workflows/ci.yml)
+[![Security](https://github.com/romanrostislavovich/personal-dashboard/actions/workflows/security.yml/badge.svg)](https://github.com/romanrostislavovich/personal-dashboard/actions/workflows/security.yml)
+[![Release](https://img.shields.io/github/v/release/romanrostislavovich/personal-dashboard)](https://github.com/romanrostislavovich/personal-dashboard/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **Your whole life in one self-hosted dashboard — with an AI that knows all of it.**
 
 Finance, a diary, tasks, music, games, coding stats, time at the computer, uptime of your sites —
@@ -7,6 +12,9 @@ in one place on your own server, with notifications and an assistant in Telegram
 (Windows / macOS / Linux) and an installable PWA. English and Russian.
 
 ![Dashboard](docs/images/dashboard.png)
+
+> **Status:** a personal project, used every day by its author. It works and is tested, but
+> before 1.0 an update may need attention — read the [changelog](CHANGELOG.md) first.
 
 ## Highlights
 
@@ -16,14 +24,17 @@ in one place on your own server, with notifications and an assistant in Telegram
 - 💬 **Telegram as a remote** — voice messages, a photo of a receipt becomes an expense, a bank
   statement PDF becomes transactions, reminders with "Done / +1 hour / Tomorrow" buttons
 - 📖 **Life** — one feed of any day across every section, a "Wrapped" of the month or the year
-  written by the AI, goals of a year counted from your data, "Ask" your own history
+  written by the AI, goals of a year counted from your data, questions to your own history
+- 🔗 **Sections that know each other** — a project with its hours, commits, money and uptime on
+  one page; what goes with your good and bad days; the last commit before a site went down;
+  subscriptions you pay for and do not use
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by
   22:00 → a reminder; describe the rule in a sentence and the AI builds it
 - ⏱️ **Desktop tracker** (Windows) — which programs and windows ate your day, focus sessions, break
   reminders, daily limits on games, disk cleanup advice from the AI
 - 🛡️ **Security agent** — watches sign-ins, the server (SSH, firewall, open ports), your computers
   and repositories every hour; an AI investigates every morning and tells what to fix
-- 🏆 **340+ achievements** across all sections, with XP and a player level
+- 🏆 **360+ achievements** across all sections, with XP and a player level
 - 🎨 **Comfortable** — Ctrl+K opens any page and searches all your data, themes and accents, a
   home page you arrange yourself, an installable app that opens offline
 - 🔒 **Yours** — your server, tokens encrypted, two-factor sign-in, a 30-day trash, an offline
@@ -95,3 +106,10 @@ how to help: [CONTRIBUTING.md](CONTRIBUTING.md) · security reports: [SECURITY.m
 ## License
 
 [MIT](LICENSE)
+
+Personal Dashboard is an independent project. It is not affiliated with, endorsed or sponsored
+by GitHub, GitLab, Atlassian, WakaTime, Valve, Blizzard, Spotify, Last.fm, SoundCloud, OpenAI,
+DeepSeek, Telegram, Hetzner or any other service it connects to; their names, trademarks and
+APIs belong to their owners. You connect your own accounts with your own keys and are
+responsible for following the terms of each service — including the shops whose pages the
+wishlist reads once a day to learn a price.

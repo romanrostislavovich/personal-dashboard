@@ -1,3 +1,5 @@
+import { safeFetch } from '../net/outbound';
+
 /** A message in Chat Completions format (OpenAI, DeepSeek, Ollama, etc.). */
 /** A part of a message with a picture (OpenAI's format, which compatible APIs follow). */
 export type ContentPart =
@@ -55,7 +57,8 @@ export async function chatCompletion(
   messages: ChatMessage[],
   tools: ToolDefinition[] = [],
 ): Promise<Extract<ChatMessage, { role: 'assistant' }>> {
-  const response = await fetch(`${connection.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
+  // The address is the user's: not into the server's own network (see net/outbound.ts).
+  const response = await safeFetch(`${connection.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
     method: 'POST',
     signal: AbortSignal.timeout(TIMEOUT_MS),
     headers: {
@@ -106,12 +109,15 @@ export async function transcribe(
   if (language) {
     form.append('language', language);
   }
-  const response = await fetch(`${connection.baseUrl.replace(/\/+$/, '')}/audio/transcriptions`, {
-    method: 'POST',
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-    headers: connection.apiKey ? { Authorization: `Bearer ${connection.apiKey}` } : {},
-    body: form,
-  });
+  const response = await safeFetch(
+    `${connection.baseUrl.replace(/\/+$/, '')}/audio/transcriptions`,
+    {
+      method: 'POST',
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      headers: connection.apiKey ? { Authorization: `Bearer ${connection.apiKey}` } : {},
+      body: form,
+    },
+  );
   if (!response.ok) {
     throw new AiRequestError(await response.text(), response.status);
   }

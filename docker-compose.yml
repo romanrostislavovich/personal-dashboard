@@ -9,8 +9,9 @@ services:
       POSTGRES_PASSWORD: dashboard
       POSTGRES_DB: dashboard
     ports:
-      # Host port; change DB_PORT in .env if 5432 is already taken.
-      - '${DB_PORT:-5432}:5432'
+      # Host port; change DB_PORT in .env if 5432 is already taken. Only this computer can
+      # reach it: the password above is the well-known one of local development.
+      - '127.0.0.1:${DB_PORT:-5432}:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:

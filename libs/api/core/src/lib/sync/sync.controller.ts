@@ -12,6 +12,7 @@ import {
   Post,
   Req,
   StreamableFile,
+  ForbiddenException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -41,6 +42,7 @@ import {
   readRequestBody,
   SYNC_CONTENT_TYPE,
 } from './sync-protocol';
+import { UsersService } from '../users/users.service';
 import { ServerActions } from './server-actions';
 import { SyncClient } from './sync-client.service';
 import { SyncConflictsService } from './sync-conflicts.service';
@@ -62,6 +64,7 @@ export class SyncController {
     private readonly store: SyncStore,
     private readonly conflictsService: SyncConflictsService,
     private readonly backups: BackupService,
+    private readonly users: UsersService,
   ) {}
 
   @Public()
@@ -123,6 +126,16 @@ export class SyncController {
     });
   }
 
+  /**
+   * The sync covers the whole database, every user's: starting it is the owner's alone. (On an
+   * instance with open registration any user could otherwise rewrite it from the server.)
+   */
+  private async requireOwner(user: AuthUser): Promise<void> {
+    if ((await this.users.owner())?.id !== user.id) {
+      throw new ForbiddenException('Only the owner of the instance runs the sync');
+    }
+  }
+
   @Get('status')
   status(): Promise<SyncStatus> {
     return this.fullStatus();
@@ -130,21 +143,24 @@ export class SyncController {
 
   /** "Sync now" on the client. */
   @Post('run')
-  async run(): Promise<SyncStatus> {
+  async run(@CurrentUser() user: AuthUser): Promise<SyncStatus> {
+    await this.requireOwner(user);
     await this.requireClient().syncNow();
     return this.fullStatus();
   }
 
   /** "Resync everything" on the client: mends data that differs from the server's. */
   @Post('resync')
-  async resync(): Promise<SyncStatus> {
+  async resync(@CurrentUser() user: AuthUser): Promise<SyncStatus> {
+    await this.requireOwner(user);
     await this.requireClient().resyncEverything();
     return this.fullStatus();
   }
 
   /** "Copy now" on the client: the server's newest dump to this computer. */
   @Post('backup/copy')
-  async copyBackup(): Promise<SyncStatus> {
+  async copyBackup(@CurrentUser() user: AuthUser): Promise<SyncStatus> {
+    await this.requireOwner(user);
     this.requireClient();
     await this.backups.copyNow();
     return this.fullStatus();

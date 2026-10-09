@@ -1,3 +1,5 @@
+import { safeFetch } from '@pd/api-core';
+
 const TIMEOUT_MS = 15_000;
 /** A product page is rarely over a megabyte; the rest of a huge one is not read. */
 const MAX_LENGTH = 3_000_000;
@@ -14,7 +16,8 @@ const HEADERS = {
 /** The HTML of a page, or why it could not be loaded (`HTTP 403`, `timeout`, `ENOTFOUND`). */
 export async function fetchPage(url: string): Promise<{ html: string } | { error: string }> {
   try {
-    const response = await fetch(url, {
+    // The address is the user's: not into the server's own network, on any redirect.
+    const response = await safeFetch(url, {
       redirect: 'follow',
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: HEADERS,
