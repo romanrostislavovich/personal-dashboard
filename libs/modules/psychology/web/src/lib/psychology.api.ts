@@ -12,6 +12,7 @@ import {
   PsychologyPatterns,
   PsychologyReflection,
   PsychologySettings,
+  PsychologySettingsInput,
 } from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
@@ -90,7 +91,7 @@ export class PsychologyApi {
     return httpResource<PsychologySettings>(() => PSYCHOLOGY_READS.settings());
   }
 
-  saveSettings(settings: PsychologySettings) {
+  saveSettings(settings: PsychologySettingsInput) {
     return fromCore(() => this.psychology.saveSettings(settings));
   }
 }

@@ -38,9 +38,13 @@ export const psychologyEvents = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     title: text().notNull(),
     description: text(),
-    startedOn: date({ mode: 'string' }).notNull(),
+    /** `null` — the event is told by age (`ageFrom`). */
+    startedOn: date({ mode: 'string' }),
     /** `null` — one day, or still going on. */
     endedOn: date({ mode: 'string' }),
+    /** The age in full years it happened at, for what is remembered without dates. */
+    ageFrom: smallint(),
+    ageTo: smallint(),
     /** How it felt: -2 (hard) … 2 (good). */
     feeling: smallint().$type<EventFeeling>().notNull().default(0),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -88,6 +92,8 @@ export const psychologySettings = pgTable('psychology_settings', {
     .references(() => users.id, { onDelete: 'cascade' }),
   /** Three questions about the week on Sunday evening. */
   weeklyReview: boolean().notNull().default(false),
+  /** Puts the events told by age among the dated ones. */
+  birthYear: smallint(),
 });
 
 export type PsychologyEventRow = typeof psychologyEvents.$inferSelect;

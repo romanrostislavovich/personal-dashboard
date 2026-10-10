@@ -9,6 +9,8 @@ const messages = {
     eventsPeriod: (from: string, to: string) => `${from} – ${to}`,
     eventsHeaders: ['From', 'To', 'Event', 'How it felt', 'Description'],
     ongoing: '',
+    /** Stands in the "From" column of an event told by age. */
+    age: (from: number, to: number | null) => (to == null ? `Age ${from}` : `Age ${from}–${to}`),
     feelings: { '-2': 'Very hard', '-1': 'Hard', '0': 'Neutral', '1': 'Good', '2': 'Very good' },
     /** Asked when there is no AI to write questions from the week's own data. */
     standardQuestions: [
@@ -27,6 +29,8 @@ const messages = {
     eventsPeriod: (from: string, to: string) => `${from} – ${to}`,
     eventsHeaders: ['С', 'По', 'Событие', 'Как ощущалось', 'Описание'],
     ongoing: '',
+    age: (from: number, to: number | null) =>
+      to == null ? `Возраст: ${from}` : `Возраст: ${from}–${to}`,
     feelings: {
       '-2': 'Очень тяжело',
       '-1': 'Тяжело',

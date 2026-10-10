@@ -24,7 +24,7 @@ import {
   psychologyPatternsQuerySchema,
   PsychologyReflectionAnswers,
   psychologyReflectionAnswersSchema,
-  PsychologySettings,
+  PsychologySettingsInput,
   psychologySettingsSchema,
 } from '@pd/contracts';
 import { PsychologyService, ValidEventInput } from './psychology.service';
@@ -181,7 +181,7 @@ export class PsychologyController {
   @HttpCode(204)
   saveSettings(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(psychologySettingsSchema)) settings: PsychologySettings,
+    @Body(new ZodValidationPipe(psychologySettingsSchema)) settings: PsychologySettingsInput,
   ) {
     return this.reflections.saveSettings(user.id, settings);
   }
