@@ -18,7 +18,8 @@ const TELEGRAM_MAX_LENGTH = 4000;
  * Connects the diary to the outside world:
  * - bot commands: `/d text` appends a note to today's entry, `/mood 4` rates the day,
  *   `/today` shows today's entry; a photo sent to the bot is added to today's entry;
- * - at 21:00, a reminder for those who enabled it and have not written today;
+ * - at 21:00, an evening check-in for those who enabled it and have not written today: the
+ *   bot asks how the day was, a button sets the mood, the next message goes to the entry;
  * - on Sundays at 20:00, an AI summary of the week (for those who enabled it).
  */
 @Injectable()
@@ -103,6 +104,28 @@ export class DiaryJobs implements OnModuleInit {
       { id: 'diary', label: { en: '📔 To the diary', ru: '📔 В дневник' } },
     );
 
+    // The buttons under the evening question: `dmood:<day>:<1–5>`. The day is in the button, so
+    // an answer after midnight still goes to the day that was asked about.
+    this.telegram.registerAction({
+      name: 'dmood',
+      handler: async (user, payload) => {
+        const [day, value] = payload.split(':');
+        const mood = Number(value);
+        const replies = diaryMessages(user.locale);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Number.isInteger(mood) || mood < 1 || mood > 5) {
+          return replies.moodUsage;
+        }
+        await this.diary.setMood(user.id, day, mood);
+        return {
+          reply: replies.checkInAskWords(MOOD_EMOJI[mood]),
+          expectText: async (author, text) => {
+            await this.diary.appendNote(author.id, day, text);
+            return diaryMessages(author.locale).saved;
+          },
+        };
+      },
+    });
+
     this.scheduler.register({
       name: 'diary.evening-reminder',
       cron: '0 21 * * *',
@@ -140,10 +163,16 @@ export class DiaryJobs implements OnModuleInit {
     for (const userId of await this.diary.usersToRemind()) {
       const user = await this.users.findById(userId);
       const text = diaryMessages(user?.locale ?? 'en');
+      const day = this.diary.todayDate();
       await this.notifications.send(userId, {
         title: text.reminderTitle,
         body: text.reminderBody,
         source: 'diary',
+        // One tap rates the day; the bot then asks for a few words.
+        actions: [1, 2, 3, 4, 5].map((mood) => ({
+          label: MOOD_EMOJI[mood],
+          action: `dmood:${day}:${mood}`,
+        })),
       });
     }
   }

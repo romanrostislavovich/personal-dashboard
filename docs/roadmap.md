@@ -53,6 +53,11 @@
     one-off or repeating, about a task or on their own; sent to Telegram with "Done", "+1 hour",
     "Tomorrow" and "Another time" buttons and as notifications; `/todo`, `/remind`, `/tasks`
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
+- **Psychology:** watching oneself over time — the patterns of the mood (by the day of the week,
+  week by week, low stretches, the mood during the events of a life), a few questions about the
+  week (written by the AI from the week's own data, or three standard ones), notes about
+  oneself, short standard questionnaires with their history (WHO-5, GAD-7, PHQ-9 — never a
+  diagnosis), and events with their periods, saved as an Excel workbook or a Word document
 - **Diary:** visual editor over Markdown (the source is a click away) with autosave, mood,
   hashtags, emoji marks on phrases, photos, search, year heatmap, “on this day”, mood insights,
   templates; `/d`, `/mood`, `/today` and photos from Telegram
@@ -163,8 +168,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Hidden sections in the digest and notifications** — today hiding a section only takes it out
   of the menu and the home page
 - **Telegram:** "Yes / No" buttons to confirm a deletion; quick commands like `/spent 12 coffee`
-- **Evening check-in in Telegram** — the bot asks "how was your day?", the answer goes to mood and
-  the diary
 - **Life: more** — the weather in the day feed (it is already compared with the mood) and steps
 
 ### Next
@@ -266,8 +269,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   location tracker of the mobile app
 - **Learning** — courses, languages (Duolingo), flashcards with spaced repetition
 - **Science** — a section for science
-- **Psychology** — a section for psychology; how exactly to tie it in is still open (for example
-  mood and diary patterns, self-reflection prompts, tests and notes)
 - **Car** — mileage, refuelling and fuel use, service by intervals; the costs go to Finance by
   themselves
 - **Utilities and meters** — a monthly reminder to read the meters (a photo, the AI reads the

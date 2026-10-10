@@ -1,0 +1,169 @@
+{
+  "title": "Psychology",
+  "about": "A place to watch yourself over time: how the mood moves, what happened, what you noticed. It describes and never diagnoses.",
+  "tabs": {
+    "patterns": "Patterns",
+    "reflection": "Reflection",
+    "notes": "Notes",
+    "checkups": "Check-ups",
+    "events": "Events"
+  },
+  "period": "Period",
+  "days": "{{days}} days",
+  "day": "Day",
+  "saved": "Saved",
+  "weekdays": {
+    "0": "Mon",
+    "1": "Tue",
+    "2": "Wed",
+    "3": "Thu",
+    "4": "Fri",
+    "5": "Sat",
+    "6": "Sun"
+  },
+  "feelings": {
+    "-2": "Very hard",
+    "-1": "Hard",
+    "0": "Neutral",
+    "1": "Good",
+    "2": "Very good"
+  },
+  "patterns": {
+    "empty": "No mood in this period yet. Mark the mood of a day in the diary — or tap it in the evening message of the bot — and the patterns appear here.",
+    "whatGoesWith": "What goes with a good day",
+    "average": "Average mood",
+    "ofFive": "out of 5",
+    "daysWithMood": "Days with a mood",
+    "bestDay": "The best day of the week",
+    "hardestDay": "The hardest day of the week",
+    "lowRun": "The longest low stretch",
+    "runDays": "{{days}} d in a row",
+    "since": "from {{date}}",
+    "byWeekday": "By the day of the week",
+    "byWeek": "Week by week",
+    "fewWeeks": "A second week with a mood is needed for a line.",
+    "duringEvents": "During the events",
+    "duringEventsHint": "The average mood of the days of each event, against the average of the period."
+  },
+  "reflection": {
+    "hint": "A few questions about the week, to answer in your own words. With an AI connected they are written from your own week; otherwise three standard ones are asked.",
+    "thisWeek": "Questions of this week",
+    "weekly": "Send the questions every Sunday at 18:00",
+    "checkIn": "A short evening check-in — the mood in one tap and a few words — is the evening reminder of the Diary: switch it on there.",
+    "weekOf": "The week of {{date}}",
+    "byAi": "Written from your week by the AI",
+    "standard": "The standard questions",
+    "empty": "No questions yet: press “Questions of this week”.",
+    "confirmDelete": "Delete the questions of this week with the answers?"
+  },
+  "notes": {
+    "placeholder": "What did you notice about yourself?",
+    "empty": "No notes yet. Write down what you notice: a reaction, a habit, a thought that keeps coming back.",
+    "confirmDelete": "Delete this note?"
+  },
+  "checkups": {
+    "notDiagnosis": "These short questionnaires are a way to watch yourself over time, not a diagnosis. Only a specialist who talks to you can tell what a score means.",
+    "never": "Not filled in yet",
+    "take": "Fill in",
+    "deleteLast": "Delete the last one",
+    "confirmDelete": "Delete the last result?",
+    "careTitle": "You do not have to carry this alone",
+    "careText": "One of your answers speaks of thoughts of not wanting to live or of hurting yourself. Such thoughts are a sign of how hard things are, and they deserve attention. Please tell someone you trust, or a doctor or a psychologist. If you feel you may be in danger right now, call your local emergency number or a crisis line."
+  },
+  "events": {
+    "add": "A new event",
+    "edit": "Change the event",
+    "title": "What happened",
+    "from": "From",
+    "to": "To",
+    "toHint": "Empty: one day, or still going on",
+    "feeling": "How it felt",
+    "description": "Details",
+    "empty": "No events yet. Write down what happens in your life with its dates: a move, an illness, a trip, a new job.",
+    "confirmDelete": "Delete “{{title}}”?",
+    "export": "Save as a file",
+    "exportHint": "The events that touch the period — all of them when it is empty — as an Excel workbook or a Word document.",
+    "inPeriod": "Events in the file: {{count}}"
+  },
+  "tests": {
+    "who5": {
+      "name": "WHO-5 well-being",
+      "about": "Five statements about the last two weeks. The higher the score, the better the well-being.",
+      "intro": "For each statement choose what is closest to how you have felt over the last two weeks.",
+      "items": {
+        "1": "I have felt cheerful and in good spirits",
+        "2": "I have felt calm and relaxed",
+        "3": "I have felt active and vigorous",
+        "4": "I woke up feeling fresh and rested",
+        "5": "My daily life has been filled with things that interest me"
+      },
+      "answers": {
+        "0": "At no time",
+        "1": "Some of the time",
+        "2": "Less than half of the time",
+        "3": "More than half of the time",
+        "4": "Most of the time",
+        "5": "All of the time"
+      },
+      "bands": {
+        "low": "Low well-being — worth paying attention to",
+        "fine": "Well-being in the usual range"
+      }
+    },
+    "gad7": {
+      "name": "GAD-7 anxiety",
+      "about": "Seven questions about worry over the last two weeks. The lower the score, the calmer.",
+      "intro": "Over the last two weeks, how often have you been bothered by the following?",
+      "items": {
+        "1": "Feeling nervous, anxious or on edge",
+        "2": "Not being able to stop or control worrying",
+        "3": "Worrying too much about different things",
+        "4": "Trouble relaxing",
+        "5": "Being so restless that it is hard to sit still",
+        "6": "Becoming easily annoyed or irritable",
+        "7": "Feeling afraid as if something awful might happen"
+      },
+      "answers": {
+        "0": "Not at all",
+        "1": "Several days",
+        "2": "More than half the days",
+        "3": "Nearly every day"
+      },
+      "bands": {
+        "minimal": "Minimal",
+        "mild": "Mild",
+        "moderate": "Moderate — worth talking to a specialist",
+        "severe": "High — worth talking to a specialist"
+      }
+    },
+    "phq9": {
+      "name": "PHQ-9 low mood",
+      "about": "Nine questions about mood and energy over the last two weeks. The lower the score, the better.",
+      "intro": "Over the last two weeks, how often have you been bothered by the following?",
+      "items": {
+        "1": "Little interest or pleasure in doing things",
+        "2": "Feeling down, depressed or hopeless",
+        "3": "Trouble falling or staying asleep, or sleeping too much",
+        "4": "Feeling tired or having little energy",
+        "5": "Poor appetite or overeating",
+        "6": "Feeling bad about yourself — or that you are a failure or have let yourself or your family down",
+        "7": "Trouble concentrating on things, such as reading or watching television",
+        "8": "Moving or speaking so slowly that other people could have noticed — or the opposite, being so restless that you have been moving around a lot more than usual",
+        "9": "Thoughts that you would be better off dead, or of hurting yourself in some way"
+      },
+      "answers": {
+        "0": "Not at all",
+        "1": "Several days",
+        "2": "More than half the days",
+        "3": "Nearly every day"
+      },
+      "bands": {
+        "minimal": "Minimal",
+        "mild": "Mild",
+        "moderate": "Moderate — worth talking to a specialist",
+        "moderatelySevere": "Quite high — worth talking to a specialist",
+        "severe": "High — please talk to a specialist"
+      }
+    }
+  }
+}
