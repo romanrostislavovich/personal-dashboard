@@ -19,6 +19,8 @@
       "@pd/web-core": ["./libs/web/core/src/index.ts"],
       "@pd/birthdays-api": ["./libs/modules/birthdays/api/src/index.ts"],
       "@pd/birthdays-web": ["./libs/modules/birthdays/web/src/index.ts"],
+      "@pd/psychology-api": ["./libs/modules/psychology/api/src/index.ts"],
+      "@pd/psychology-web": ["./libs/modules/psychology/web/src/index.ts"],
       "@pd/finance-api": ["./libs/modules/finance/api/src/index.ts"],
       "@pd/finance-web": ["./libs/modules/finance/web/src/index.ts"],
       "@pd/api-core/schema": ["./libs/api/core/src/schema.ts"],

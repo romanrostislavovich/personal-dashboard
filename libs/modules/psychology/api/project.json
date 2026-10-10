@@ -1,0 +1,9 @@
+{
+  "name": "psychology-api",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/modules/psychology/api/src",
+  "projectType": "library",
+  "tags": ["scope:api", "type:module"],
+  "// targets": "to see all targets run: nx show project psychology-api --web",
+  "targets": {}
+}

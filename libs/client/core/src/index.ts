@@ -15,5 +15,6 @@ export * from './lib/modules/diary';
 export * from './lib/modules/finance';
 export * from './lib/modules/games';
 export * from './lib/modules/music';
+export * from './lib/modules/psychology';
 export * from './lib/modules/small-modules';
 export * from './lib/modules/tasks';

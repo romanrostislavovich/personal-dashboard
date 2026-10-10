@@ -15,6 +15,7 @@ const ALLOWED_WRITES = [
   '/api/diary/entries',
   '/api/diary/settings',
   '/api/birthdays',
+  '/api/psychology',
   '/api/finance/transactions',
   '/api/finance/budgets',
   '/api/finance/goals',

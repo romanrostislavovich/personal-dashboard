@@ -7,7 +7,9 @@ const messages = {
     usage: 'Write text after the command, e.g.:\n/d Shipped the release today #work',
     saved: '📔 Saved to your diary',
     reminderTitle: '📔 Diary',
-    reminderBody: 'How was your day? Reply here with /d and a couple of sentences.',
+    reminderBody: 'How was your day? Tap a mood — then I will ask for a couple of words.',
+    checkInAskWords: (emoji: string) =>
+      `${emoji} Saved. A few words about the day? Your next message goes to the diary.`,
     weeklyTitle: '📔 Your week in the diary',
     moodDescription: 'Rate today: /mood 1–5',
     moodUsage: 'Send a number from 1 (bad) to 5 (great), e.g. /mood 4',
@@ -21,7 +23,9 @@ const messages = {
     usage: 'Напиши текст после команды, например:\n/d Сегодня закончил релиз #работа',
     saved: '📔 Записал в дневник',
     reminderTitle: '📔 Дневник',
-    reminderBody: 'Как прошёл день? Ответь сюда командой /d и парой предложений.',
+    reminderBody: 'Как прошёл день? Нажми на настроение — потом спрошу пару слов.',
+    checkInAskWords: (emoji: string) =>
+      `${emoji} Записал. Пару слов о дне? Следующее сообщение пойдёт в дневник.`,
     weeklyTitle: '📔 Неделя в дневнике',
     moodDescription: 'Оценить день: /mood 1–5',
     moodUsage: 'Отправь число от 1 (плохо) до 5 (отлично), например /mood 4',

@@ -23,6 +23,7 @@ export * from './lib/code-accounts';
 export * from './lib/wakatime';
 export * from './lib/monitoring';
 export * from './lib/diary';
+export * from './lib/psychology';
 export * from './lib/music';
 export * from './lib/soundcloud';
 export * from './lib/games';
