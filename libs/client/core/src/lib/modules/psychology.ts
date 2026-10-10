@@ -9,6 +9,7 @@ import {
   PsychologyPatterns,
   PsychologyReflection,
   PsychologySettings,
+  PsychologySettingsInput,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -60,7 +61,8 @@ export function psychologyApi(api: ApiClient) {
     removeReflection: (id: string) => api.delete(`${BASE}/reflections/${id}`),
 
     settings: () => api.read<PsychologySettings>(PSYCHOLOGY_READS.settings()),
-    saveSettings: (settings: PsychologySettings) => api.put<void>(`${BASE}/settings`, settings),
+    saveSettings: (settings: PsychologySettingsInput) =>
+      api.put<void>(`${BASE}/settings`, settings),
   };
 }
 

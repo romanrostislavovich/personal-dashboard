@@ -1,7 +1,9 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DB, Database, LinksService, MOOD_METRIC, UsersService } from '@pd/api-core';
 import {
+  compareEvents,
   EventExportFormat,
+  eventTouches,
   LocalDate,
   psychologyAssessmentInputSchema,
   PsychologyAssessment,
@@ -15,7 +17,7 @@ import {
   questionnaireBand,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, desc, eq, gte, lte, or, isNull } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { ExportTable, toDocx, toXlsx } from './events-export';
 import { moodPatterns } from './patterns';
@@ -26,6 +28,7 @@ import {
   PsychologyEventRow,
   psychologyEvents,
   psychologyNotes,
+  psychologySettings,
 } from './psychology.schema';
 
 export type ValidEventInput = z.output<typeof psychologyEventInputSchema>;
@@ -91,22 +94,25 @@ export class PsychologyService {
     userId: string,
     period: { from?: LocalDate; to?: LocalDate } = {},
   ): Promise<PsychologyEvent[]> {
-    const e = psychologyEvents;
     const rows = await this.db
       .select()
-      .from(e)
-      .where(
-        and(
-          eq(e.userId, userId),
-          period.to ? lte(e.startedOn, period.to) : undefined,
-          // An event without an end is its first day — or still going on: it touches any later period.
-          period.from
-            ? or(gte(e.endedOn, period.from), and(isNull(e.endedOn), gte(e.startedOn, period.from)))
-            : undefined,
-        ),
-      )
-      .orderBy(desc(e.startedOn), desc(e.createdAt));
-    return rows.map(toEvent);
+      .from(psychologyEvents)
+      .where(eq(psychologyEvents.userId, userId));
+    // An event told by age is placed in time by the year of birth, so the period and the
+    // order are worked out here rather than in the query; a life has few enough events.
+    const birthYear = await this.birthYear(userId);
+    return rows
+      .map(toEvent)
+      .filter((event) => eventTouches(event, birthYear, period))
+      .sort(compareEvents(birthYear));
+  }
+
+  private async birthYear(userId: string): Promise<number | null> {
+    const [row] = await this.db
+      .select({ birthYear: psychologySettings.birthYear })
+      .from(psychologySettings)
+      .where(eq(psychologySettings.userId, userId));
+    return row?.birthYear ?? null;
   }
 
   async addEvent(userId: string, input: ValidEventInput): Promise<PsychologyEvent> {
@@ -152,7 +158,7 @@ export class PsychologyService {
           : text.eventsAll,
       headers: text.eventsHeaders,
       rows: events.map((event) => [
-        event.startedOn,
+        event.startedOn ?? text.age(event.ageFrom ?? 0, event.ageTo),
         event.endedOn ?? text.ongoing,
         event.title,
         feelingText(user?.locale, event.feeling),
@@ -206,7 +212,11 @@ export class PsychologyService {
   ): Promise<PsychologyPatterns> {
     // The mood is the diary's: the core tells it.
     const mood = await this.links.dailyMetric(userId, MOOD_METRIC, period);
-    return moodPatterns(mood?.days ?? [], await this.events(userId, period), period);
+    // Only the dated events: an age does not say which days.
+    const events = (await this.events(userId, period)).flatMap((event) =>
+      event.startedOn ? { ...event, startedOn: event.startedOn } : [],
+    );
+    return moodPatterns(mood?.days ?? [], events, period);
   }
 }
 
@@ -214,8 +224,10 @@ function stored(input: ValidEventInput) {
   return {
     title: input.title,
     description: input.description || null,
-    startedOn: input.startedOn,
+    startedOn: input.startedOn ?? null,
     endedOn: input.endedOn && input.endedOn !== input.startedOn ? input.endedOn : null,
+    ageFrom: input.ageFrom ?? null,
+    ageTo: input.ageTo != null && input.ageTo !== input.ageFrom ? input.ageTo : null,
     feeling: input.feeling,
   };
 }
@@ -227,6 +239,8 @@ function toEvent(row: PsychologyEventRow): PsychologyEvent {
     description: row.description,
     startedOn: row.startedOn,
     endedOn: row.endedOn,
+    ageFrom: row.ageFrom,
+    ageTo: row.ageTo,
     feeling: row.feeling,
     createdAt: row.createdAt.toISOString(),
   };

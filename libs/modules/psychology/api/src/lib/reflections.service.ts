@@ -6,6 +6,7 @@ import {
   parseLocalDate,
   PsychologyReflection,
   PsychologySettings,
+  PsychologySettingsInput,
   toLocalDate,
   zonedDateTime,
 } from '@pd/contracts';
@@ -109,10 +110,14 @@ export class ReflectionsService {
       .select()
       .from(psychologySettings)
       .where(eq(psychologySettings.userId, userId));
-    return { weeklyReview: row?.weeklyReview ?? false };
+    return { weeklyReview: row?.weeklyReview ?? false, birthYear: row?.birthYear ?? null };
   }
 
-  async saveSettings(userId: string, settings: PsychologySettings): Promise<void> {
+  /** Only what is given is changed. */
+  async saveSettings(userId: string, settings: PsychologySettingsInput): Promise<void> {
+    if (!Object.keys(settings).length) {
+      return;
+    }
     await this.db
       .insert(psychologySettings)
       .values({ userId, ...settings })

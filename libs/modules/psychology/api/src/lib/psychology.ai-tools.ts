@@ -42,6 +42,8 @@ export class PsychologyAiTools implements OnModuleInit {
       description:
         "The events of the user's life with their periods: id, title, description, startedOn, " +
         'endedOn (null — one day or still going on), feeling (-2 very hard … 2 very good). ' +
+        'An event remembered without dates has ageFrom and ageTo instead (the age in full ' +
+        'years, e.g. 3; ageTo null — within one year of life) and startedOn null. ' +
         'Useful for "what happened in spring", "when did I change jobs". The latest first.',
       parameters: NO_PARAMETERS,
       handler: (userId) => this.psychology.events(userId),
@@ -53,7 +55,9 @@ export class PsychologyAiTools implements OnModuleInit {
       writes: true,
       description:
         "Records an event of the user's life with its period. `endedOn` is left out for one " +
-        'day or for something still going on.',
+        'day or for something still going on. For something remembered by age rather than ' +
+        'by dates ("when I was three", "between 6 and 10") give `ageFrom` (and `ageTo`) ' +
+        'instead of the dates — never both.',
       parameters: {
         type: 'object',
         properties: {
@@ -61,9 +65,11 @@ export class PsychologyAiTools implements OnModuleInit {
           description: { type: 'string' },
           startedOn: { type: 'string', description: 'YYYY-MM-DD' },
           endedOn: { type: 'string', description: 'YYYY-MM-DD' },
+          ageFrom: { type: 'number', description: 'Age in full years, instead of the dates' },
+          ageTo: { type: 'number', description: 'The last age, for several years' },
           feeling: { type: 'number', description: '-2 very hard … 2 very good, 0 neutral' },
         },
-        required: ['title', 'startedOn'],
+        required: ['title'],
       },
       handler: (userId, args) =>
         this.psychology.addEvent(userId, psychologyEventInputSchema.parse(args)),
@@ -76,8 +82,8 @@ export class PsychologyAiTools implements OnModuleInit {
       module: 'psychology',
       writes: true,
       confirm: async (userId, args) => {
-        const { title, startedOn, endedOn } = await findEvent(userId, args);
-        return { title, startedOn, endedOn };
+        const { title, startedOn, endedOn, ageFrom, ageTo } = await findEvent(userId, args);
+        return startedOn ? { title, startedOn, endedOn } : { title, ageFrom, ageTo };
       },
       description: "Deletes an event of the user's life.",
       parameters: idParameters('Event id from psychology_events'),

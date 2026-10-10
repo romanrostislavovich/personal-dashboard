@@ -16,37 +16,118 @@ export interface PsychologyNote extends PsychologyNoteInput {
   createdAt: string;
 }
 
-// --- Events: something that happened over a period ---
+// --- Events: something that happened over a period, or at an age ---
 
 /** How the event felt: from hard (-2) to good (2); `0` — neither. */
 export const EVENT_FEELINGS = [-2, -1, 0, 1, 2] as const;
 export type EventFeeling = (typeof EVENT_FEELINGS)[number];
 
+const age = z.number().int().min(0).max(120);
+
+/**
+ * When an event happened is told one of two ways: by dates (`startedOn`, `endedOn`) or — for
+ * what is remembered without them, a childhood above all — by the age in full years
+ * (`ageFrom`, `ageTo`).
+ */
 export const psychologyEventInputSchema = z
   .object({
     title: z.string().trim().min(1).max(200),
     description: z.string().trim().max(5000).nullish(),
-    startedOn: day,
+    startedOn: day.nullish(),
     /** The last day of it; `null` — one day, or still going on. */
     endedOn: day.nullish(),
+    ageFrom: age.nullish(),
+    /** The last age of it; `null` — within one year of life. */
+    ageTo: age.nullish(),
     feeling: z
       .union([z.literal(-2), z.literal(-1), z.literal(0), z.literal(1), z.literal(2)])
       .default(0),
   })
-  .refine((event) => !event.endedOn || event.endedOn >= event.startedOn, {
+  .refine((event) => Boolean(event.startedOn) !== (event.ageFrom != null), {
+    message: 'An event has either dates or an age',
+    path: ['startedOn'],
+  })
+  .refine((event) => !event.endedOn || (event.startedOn && event.endedOn >= event.startedOn), {
     message: 'The end is before the start',
     path: ['endedOn'],
-  });
+  })
+  .refine(
+    (event) => event.ageTo == null || (event.ageFrom != null && event.ageTo >= event.ageFrom),
+    { message: 'The end is before the start', path: ['ageTo'] },
+  );
 export type PsychologyEventInput = z.input<typeof psychologyEventInputSchema>;
 
 export interface PsychologyEvent {
   id: string;
   title: string;
   description: string | null;
-  startedOn: LocalDate;
+  /** `null` — the event is told by age. */
+  startedOn: LocalDate | null;
   endedOn: LocalDate | null;
+  /** `null` — the event is told by dates. */
+  ageFrom: number | null;
+  ageTo: number | null;
   feeling: EventFeeling;
   createdAt: string;
+}
+
+type EventTime = Pick<PsychologyEvent, 'startedOn' | 'endedOn' | 'ageFrom' | 'ageTo'>;
+
+/**
+ * The days an event covers. One told by age covers the calendar years the user was that old
+ * in (a year of life lies across two of them) — known only with the year of birth; `null`
+ * without it.
+ */
+export function eventSpan(
+  event: EventTime,
+  birthYear: number | null,
+): { from: LocalDate; to: LocalDate } | null {
+  if (event.startedOn) {
+    return { from: event.startedOn, to: event.endedOn ?? event.startedOn };
+  }
+  if (event.ageFrom == null || birthYear == null) {
+    return null;
+  }
+  return {
+    from: `${birthYear + event.ageFrom}-01-01` as LocalDate,
+    to: `${birthYear + (event.ageTo ?? event.ageFrom) + 1}-12-31` as LocalDate,
+  };
+}
+
+/** Whether an event touches the period; one that cannot be placed in time is only in "everything". */
+export function eventTouches(
+  event: EventTime,
+  birthYear: number | null,
+  period: { from?: string; to?: string },
+): boolean {
+  if (!period.from && !period.to) {
+    return true;
+  }
+  const span = eventSpan(event, birthYear);
+  return (
+    span !== null &&
+    (!period.to || span.from <= period.to) &&
+    (!period.from || span.to >= period.from)
+  );
+}
+
+/**
+ * The latest first. Events told by age stand where the year of birth puts them; without it
+ * they come after the dated ones, the youngest age last.
+ */
+export function compareEvents(
+  birthYear: number | null,
+): (a: EventTime & { createdAt: string }, b: EventTime & { createdAt: string }) => number {
+  return (a, b) => {
+    const [spanA, spanB] = [eventSpan(a, birthYear), eventSpan(b, birthYear)];
+    if (spanA && spanB) {
+      return spanB.from.localeCompare(spanA.from) || b.createdAt.localeCompare(a.createdAt);
+    }
+    if (spanA || spanB) {
+      return spanA ? -1 : 1;
+    }
+    return (b.ageFrom ?? 0) - (a.ageFrom ?? 0) || b.createdAt.localeCompare(a.createdAt);
+  };
 }
 
 export const EVENT_EXPORT_FORMATS = ['xlsx', 'docx'] as const;
@@ -182,11 +263,19 @@ export const psychologyReflectionAnswersSchema = z.object({
 });
 export type PsychologyReflectionAnswers = z.infer<typeof psychologyReflectionAnswersSchema>;
 
+/** `PUT /api/psychology/settings`: only what is sent is changed. */
 export const psychologySettingsSchema = z.object({
-  /** Three questions about the week every Sunday evening. */
-  weeklyReview: z.boolean(),
+  weeklyReview: z.boolean().optional(),
+  birthYear: z.number().int().min(1900).max(2100).nullable().optional(),
 });
-export type PsychologySettings = z.infer<typeof psychologySettingsSchema>;
+export type PsychologySettingsInput = z.infer<typeof psychologySettingsSchema>;
+
+export interface PsychologySettings {
+  /** Three questions about the week every Sunday evening. */
+  weeklyReview: boolean;
+  /** Puts the events told by age among the dated ones; `null` — not given. */
+  birthYear: number | null;
+}
 
 // --- Patterns: the mood over time ---
 

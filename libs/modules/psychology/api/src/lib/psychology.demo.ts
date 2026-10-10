@@ -35,6 +35,15 @@ export class PsychologyDemo implements OnModuleInit {
         feeling,
       });
     }
+    // Something remembered by age, and the year of birth that places it in time.
+    await this.reflections.saveSettings(userId, { birthYear: 1994 });
+    await this.psychology.addEvent(userId, {
+      title: 'Summers at the lake with grandfather',
+      description: 'Fishing at dawn. The calm I still look for.',
+      ageFrom: 6,
+      ageTo: 9,
+      feeling: 2,
+    });
     await this.psychology.addNote(userId, {
       day: daysAgo(2),
       text: 'I get irritable when I skip lunch — it is not the work, it is the hunger.',
