@@ -18,25 +18,17 @@ import {
   PsychologyEventExport,
   psychologyEventExportSchema,
   psychologyEventInputSchema,
-  PsychologyNoteInput,
-  psychologyNoteInputSchema,
   PsychologyPatternsQuery,
   psychologyPatternsQuerySchema,
-  PsychologyReflectionAnswers,
-  psychologyReflectionAnswersSchema,
   PsychologySettingsInput,
   psychologySettingsSchema,
 } from '@pd/contracts';
 import { PsychologyService, ValidEventInput } from './psychology.service';
-import { ReflectionsService } from './reflections.service';
 
-/** Psychology: patterns of the mood, reflection, notes, check-ups and events. */
+/** Psychology: patterns of the mood, check-ups and events. */
 @Controller('psychology')
 export class PsychologyController {
-  constructor(
-    private readonly psychology: PsychologyService,
-    private readonly reflections: ReflectionsService,
-  ) {}
+  constructor(private readonly psychology: PsychologyService) {}
 
   @Get('patterns')
   patterns(
@@ -44,38 +36,6 @@ export class PsychologyController {
     @Query(new ZodValidationPipe(psychologyPatternsQuerySchema)) query: PsychologyPatternsQuery,
   ) {
     return this.psychology.patterns(user.id, query);
-  }
-
-  // --- Notes ---
-
-  @Get('notes')
-  notes(@CurrentUser() user: AuthUser) {
-    return this.psychology.notes(user.id);
-  }
-
-  @Post('notes')
-  @HttpCode(204)
-  addNote(
-    @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(psychologyNoteInputSchema)) input: PsychologyNoteInput,
-  ) {
-    return this.psychology.addNote(user.id, input);
-  }
-
-  @Put('notes/:id')
-  @HttpCode(204)
-  updateNote(
-    @CurrentUser() user: AuthUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(psychologyNoteInputSchema)) input: PsychologyNoteInput,
-  ) {
-    return this.psychology.updateNote(user.id, id, input);
-  }
-
-  @Delete('notes/:id')
-  @HttpCode(204)
-  removeNote(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.psychology.removeNote(user.id, id);
   }
 
   // --- Events ---
@@ -143,38 +103,9 @@ export class PsychologyController {
     return this.psychology.removeAssessment(user.id, id);
   }
 
-  // --- Reflection ---
-
-  @Get('reflections')
-  reflectionList(@CurrentUser() user: AuthUser) {
-    return this.reflections.list(user.id);
-  }
-
-  /** The questions of this week: written now if there are none yet (the AI may take a while). */
-  @Post('reflections/this-week')
-  thisWeek(@CurrentUser() user: AuthUser) {
-    return this.reflections.forThisWeek(user.id);
-  }
-
-  @Put('reflections/:id')
-  answer(
-    @CurrentUser() user: AuthUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(psychologyReflectionAnswersSchema))
-    body: PsychologyReflectionAnswers,
-  ) {
-    return this.reflections.answer(user.id, id, body.answers);
-  }
-
-  @Delete('reflections/:id')
-  @HttpCode(204)
-  removeReflection(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.reflections.remove(user.id, id);
-  }
-
   @Get('settings')
   settings(@CurrentUser() user: AuthUser) {
-    return this.reflections.settings(user.id);
+    return this.psychology.settings(user.id);
   }
 
   @Put('settings')
@@ -183,6 +114,6 @@ export class PsychologyController {
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(psychologySettingsSchema)) settings: PsychologySettingsInput,
   ) {
-    return this.reflections.saveSettings(user.id, settings);
+    return this.psychology.saveSettings(user.id, settings);
   }
 }

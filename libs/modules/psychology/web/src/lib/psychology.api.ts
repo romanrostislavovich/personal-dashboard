@@ -7,10 +7,7 @@ import {
   PsychologyAssessmentInput,
   PsychologyEvent,
   PsychologyEventInput,
-  PsychologyNote,
-  PsychologyNoteInput,
   PsychologyPatterns,
-  PsychologyReflection,
   PsychologySettings,
   PsychologySettingsInput,
 } from '@pd/contracts';
@@ -25,18 +22,6 @@ export class PsychologyApi {
     return httpResource<PsychologyPatterns>(() =>
       PSYCHOLOGY_READS.patterns(period().from, period().to),
     );
-  }
-
-  notes() {
-    return httpResource<PsychologyNote[]>(() => PSYCHOLOGY_READS.notes(), { defaultValue: [] });
-  }
-
-  saveNote(input: PsychologyNoteInput, id?: string) {
-    return fromCore(() => this.psychology.saveNote(input, id));
-  }
-
-  removeNote(id: string) {
-    return fromCore(() => this.psychology.removeNote(id));
   }
 
   events() {
@@ -67,24 +52,6 @@ export class PsychologyApi {
 
   removeAssessment(id: string) {
     return fromCore(() => this.psychology.removeAssessment(id));
-  }
-
-  reflections() {
-    return httpResource<PsychologyReflection[]>(() => PSYCHOLOGY_READS.reflections(), {
-      defaultValue: [],
-    });
-  }
-
-  reflectOnThisWeek() {
-    return fromCore(() => this.psychology.reflectOnThisWeek());
-  }
-
-  answerReflection(id: string, answers: string[]) {
-    return fromCore(() => this.psychology.answerReflection(id, answers));
-  }
-
-  removeReflection(id: string) {
-    return fromCore(() => this.psychology.removeReflection(id));
   }
 
   settings() {

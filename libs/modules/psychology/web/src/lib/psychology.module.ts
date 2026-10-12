@@ -1,8 +1,8 @@
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
- * Web part of Psychology: the patterns of the mood, a few questions about the week, notes
- * about oneself, short questionnaires over time and the events of a life.
+ * Web part of Psychology: the patterns of the mood, short questionnaires over time and the
+ * events of a life.
  * Plugged in at apps/web/src/app/modules.ts.
  */
 export const psychologyModule: WebDashboardModule = {
@@ -19,11 +19,6 @@ export const psychologyModule: WebDashboardModule = {
           path: 'patterns',
           loadComponent: () => import('./patterns.page').then((m) => m.PatternsPage),
         },
-        {
-          path: 'reflection',
-          loadComponent: () => import('./reflection.page').then((m) => m.ReflectionPage),
-        },
-        { path: 'notes', loadComponent: () => import('./notes.page').then((m) => m.NotesPage) },
         {
           path: 'checkups',
           loadComponent: () => import('./checkups.page').then((m) => m.CheckupsPage),

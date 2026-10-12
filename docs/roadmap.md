@@ -54,10 +54,9 @@
     "Tomorrow" and "Another time" buttons and as notifications; `/todo`, `/remind`, `/tasks`
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
 - **Psychology:** watching oneself over time — the patterns of the mood (by the day of the week,
-  week by week, low stretches, the mood during the events of a life), a few questions about the
-  week (written by the AI from the week's own data, or three standard ones), notes about
-  oneself, short standard questionnaires with their history (WHO-5, GAD-7, PHQ-9 — never a
-  diagnosis), and events with their periods, saved as an Excel workbook or a Word document
+  week by week, low stretches, the mood during the events of a life), short standard
+  questionnaires with their history (WHO-5, GAD-7, PHQ-9 — never a diagnosis), and events with
+  their periods or the age they happened at, saved as an Excel workbook or a Word document
 - **Diary:** visual editor over Markdown (the source is a click away) with autosave, mood,
   hashtags, emoji marks on phrases, photos, search, year heatmap, “on this day”, mood insights,
   templates; `/d`, `/mood`, `/today` and photos from Telegram

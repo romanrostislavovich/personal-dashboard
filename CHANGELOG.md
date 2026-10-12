@@ -8,10 +8,10 @@ under **Updating**.
 
 ### Added
 
-- **Psychology** — a section for watching oneself over time: the patterns of the mood, a few
-  questions about the week, notes, short questionnaires with their history (WHO-5, GAD-7,
-  PHQ-9; self-observation, not a diagnosis) and the events of a life with their periods, saved
-  as an Excel workbook or a Word document.
+- **Psychology** — a section for watching oneself over time: the patterns of the mood, short
+  questionnaires with their history (WHO-5, GAD-7, PHQ-9; self-observation, not a diagnosis)
+  and the events of a life — told by their dates or by the age they happened at — saved as an
+  Excel workbook or a Word document.
 - **Evening check-in in Telegram**: the diary's evening reminder now has mood buttons, and the
   next message goes to the entry of that day.
 - **State of the connections** in Settings → Integrations: every connected service with its
@@ -23,7 +23,7 @@ under **Updating**.
 
 ### Updating
 
-- Migration 0062 adds `integration_alerts`, 0063 the tables of Psychology.
+- Migration 0062 adds `integration_alerts`, 0063–0065 the tables of Psychology.
 
 ## 0.3.0 — the first public release
 

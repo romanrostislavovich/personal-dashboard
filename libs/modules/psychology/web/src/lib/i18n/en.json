@@ -1,17 +1,13 @@
 {
   "title": "Psychology",
-  "about": "A place to watch yourself over time: how the mood moves, what happened, what you noticed. It describes and never diagnoses.",
+  "about": "A place to watch yourself over time: how the mood moves and what happened. It describes and never diagnoses.",
   "tabs": {
     "patterns": "Patterns",
-    "reflection": "Reflection",
-    "notes": "Notes",
     "checkups": "Check-ups",
     "events": "Events"
   },
   "period": "Period",
   "days": "{{days}} days",
-  "day": "Day",
-  "saved": "Saved",
   "weekdays": {
     "0": "Mon",
     "1": "Tue",
@@ -44,22 +40,6 @@
     "fewWeeks": "A second week with a mood is needed for a line.",
     "duringEvents": "During the events",
     "duringEventsHint": "The average mood of the days of each event, against the average of the period."
-  },
-  "reflection": {
-    "hint": "A few questions about the week, to answer in your own words. With an AI connected they are written from your own week; otherwise three standard ones are asked.",
-    "thisWeek": "Questions of this week",
-    "weekly": "Send the questions every Sunday at 18:00",
-    "checkIn": "A short evening check-in — the mood in one tap and a few words — is the evening reminder of the Diary: switch it on there.",
-    "weekOf": "The week of {{date}}",
-    "byAi": "Written from your week by the AI",
-    "standard": "The standard questions",
-    "empty": "No questions yet: press “Questions of this week”.",
-    "confirmDelete": "Delete the questions of this week with the answers?"
-  },
-  "notes": {
-    "placeholder": "What did you notice about yourself?",
-    "empty": "No notes yet. Write down what you notice: a reaction, a habit, a thought that keeps coming back.",
-    "confirmDelete": "Delete this note?"
   },
   "checkups": {
     "notDiagnosis": "These short questionnaires are a way to watch yourself over time, not a diagnosis. Only a specialist who talks to you can tell what a score means.",

@@ -10,9 +10,9 @@ import {
   PsychologyAssessmentInput,
   PsychologyEvent,
   psychologyEventInputSchema,
-  PsychologyNote,
-  PsychologyNoteInput,
   PsychologyPatterns,
+  PsychologySettings,
+  PsychologySettingsInput,
   QUESTIONNAIRES,
   questionnaireBand,
   zonedDateTime,
@@ -27,7 +27,6 @@ import {
   psychologyAssessments,
   PsychologyEventRow,
   psychologyEvents,
-  psychologyNotes,
   psychologySettings,
 } from './psychology.schema';
 
@@ -39,8 +38,8 @@ const MIME: Record<EventExportFormat, string> = {
 };
 
 /**
- * Psychology: notes about oneself, the events of a life, questionnaires taken over time, and
- * the patterns of the mood. The mood itself is the diary's — the core tells it day by day.
+ * Psychology: the events of a life, questionnaires taken over time, and the patterns of the
+ * mood. The mood itself is the diary's — the core tells it day by day.
  */
 @Injectable()
 export class PsychologyService {
@@ -49,43 +48,6 @@ export class PsychologyService {
     private readonly links: LinksService,
     private readonly users: UsersService,
   ) {}
-
-  // --- Notes ---
-
-  async notes(userId: string): Promise<PsychologyNote[]> {
-    const rows = await this.db
-      .select()
-      .from(psychologyNotes)
-      .where(eq(psychologyNotes.userId, userId))
-      .orderBy(desc(psychologyNotes.day), desc(psychologyNotes.createdAt));
-    return rows.map(({ id, day, text, createdAt }) => ({
-      id,
-      day,
-      text,
-      createdAt: createdAt.toISOString(),
-    }));
-  }
-
-  async addNote(userId: string, input: PsychologyNoteInput): Promise<void> {
-    await this.db.insert(psychologyNotes).values({ userId, ...input });
-  }
-
-  async updateNote(userId: string, id: string, input: PsychologyNoteInput): Promise<void> {
-    const updated = await this.db
-      .update(psychologyNotes)
-      .set(input)
-      .where(and(eq(psychologyNotes.id, id), eq(psychologyNotes.userId, userId)))
-      .returning({ id: psychologyNotes.id });
-    if (!updated.length) {
-      throw new NotFoundException();
-    }
-  }
-
-  async removeNote(userId: string, id: string): Promise<void> {
-    await this.db
-      .delete(psychologyNotes)
-      .where(and(eq(psychologyNotes.id, id), eq(psychologyNotes.userId, userId)));
-  }
 
   // --- Events ---
 
@@ -108,11 +70,26 @@ export class PsychologyService {
   }
 
   private async birthYear(userId: string): Promise<number | null> {
+    return (await this.settings(userId)).birthYear;
+  }
+
+  async settings(userId: string): Promise<PsychologySettings> {
     const [row] = await this.db
-      .select({ birthYear: psychologySettings.birthYear })
+      .select()
       .from(psychologySettings)
       .where(eq(psychologySettings.userId, userId));
-    return row?.birthYear ?? null;
+    return { birthYear: row?.birthYear ?? null };
+  }
+
+  /** Only what is given is changed. */
+  async saveSettings(userId: string, settings: PsychologySettingsInput): Promise<void> {
+    if (!Object.keys(settings).length) {
+      return;
+    }
+    await this.db
+      .insert(psychologySettings)
+      .values({ userId, ...settings })
+      .onConflictDoUpdate({ target: psychologySettings.userId, set: settings });
   }
 
   async addEvent(userId: string, input: ValidEventInput): Promise<PsychologyEvent> {

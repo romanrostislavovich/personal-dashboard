@@ -1,15 +1,13 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DemoService } from '@pd/api-core';
 import { PsychologyService } from './psychology.service';
-import { ReflectionsService } from './reflections.service';
 
-/** The demo data of Psychology: a few events, notes, check-ups and a week's questions. */
+/** The demo data of Psychology: a few events and check-ups. */
 @Injectable()
 export class PsychologyDemo implements OnModuleInit {
   constructor(
     private readonly demo: DemoService,
     private readonly psychology: PsychologyService,
-    private readonly reflections: ReflectionsService,
   ) {}
 
   onModuleInit(): void {
@@ -36,21 +34,13 @@ export class PsychologyDemo implements OnModuleInit {
       });
     }
     // Something remembered by age, and the year of birth that places it in time.
-    await this.reflections.saveSettings(userId, { birthYear: 1994 });
+    await this.psychology.saveSettings(userId, { birthYear: 1994 });
     await this.psychology.addEvent(userId, {
       title: 'Summers at the lake with grandfather',
       description: 'Fishing at dawn. The calm I still look for.',
       ageFrom: 6,
       ageTo: 9,
       feeling: 2,
-    });
-    await this.psychology.addNote(userId, {
-      day: daysAgo(2),
-      text: 'I get irritable when I skip lunch — it is not the work, it is the hunger.',
-    });
-    await this.psychology.addNote(userId, {
-      day: daysAgo(9),
-      text: 'After a walk the evening feels longer, in a good way.',
     });
     const checkups: ['who5' | 'gad7', number, number[]][] = [
       ['who5', 60, [2, 2, 3, 2, 3]],
@@ -62,11 +52,5 @@ export class PsychologyDemo implements OnModuleInit {
     for (const [test, days, answers] of checkups) {
       await this.psychology.addAssessment(userId, { test, takenOn: daysAgo(days), answers });
     }
-    const reflection = await this.reflections.forThisWeek(userId);
-    await this.reflections.answer(userId, reflection.id, [
-      'The walks with Mia gave energy; the late evenings at the laptop took it.',
-      '',
-      '',
-    ]);
   }
 }

@@ -1,23 +1,17 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, findById, idParameters, NO_PARAMETERS, PERIOD_PARAMETERS } from '@pd/api-core';
-import {
-  psychologyEventInputSchema,
-  psychologyNoteInputSchema,
-  psychologyPatternsQuerySchema,
-} from '@pd/contracts';
+import { psychologyEventInputSchema, psychologyPatternsQuerySchema } from '@pd/contracts';
 import { PsychologyService } from './psychology.service';
-import { ReflectionsService } from './reflections.service';
 
 /**
- * The assistant's access to Psychology: the patterns of the mood, notes, events, check-ups and
- * reflections; adding a note or an event.
+ * The assistant's access to Psychology: the patterns of the mood, events and check-ups;
+ * adding an event.
  */
 @Injectable()
 export class PsychologyAiTools implements OnModuleInit {
   constructor(
     private readonly ai: AiService,
     private readonly psychology: PsychologyService,
-    private readonly reflections: ReflectionsService,
   ) {}
 
   onModuleInit(): void {
@@ -93,45 +87,22 @@ export class PsychologyAiTools implements OnModuleInit {
     });
 
     this.ai.registerTool({
-      name: 'psychology_notes',
+      name: 'psychology_checkups',
       module: 'psychology',
       description:
-        "The user's notes about themselves (what they noticed: reactions, habits, thoughts), " +
-        'a day each, the latest first; the answers to the weekly questions are in ' +
-        '`reflections` (week — its Monday, questions, answers); `checkups` — questionnaires ' +
-        'filled in over time: who5 (well-being, 0–100, higher is better), gad7 (anxiety, 0–21) ' +
-        'and phq9 (low mood, 0–27), each with the date, the score and its band. They are ' +
-        'self-observation, not a diagnosis: describe the change over time, never name a ' +
-        'condition, and if the user seems to be struggling, gently suggest talking to a ' +
-        'professional or someone they trust.',
+        'The questionnaires the user filled in over time: who5 (well-being, 0–100, higher is ' +
+        'better), gad7 (anxiety, 0–21) and phq9 (low mood, 0–27), each with the date, the ' +
+        'score and its band; the latest first. They are self-observation, not a diagnosis: ' +
+        'describe the change over time, never name a condition, and if the user seems to be ' +
+        'struggling, gently suggest talking to a professional or someone they trust.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) => ({
-        notes: await this.psychology.notes(userId),
-        reflections: await this.reflections.list(userId),
-        checkups: (await this.psychology.assessments(userId)).map(
-          ({ test, takenOn, score, band }) => ({ test, takenOn, score, band }),
-        ),
-      }),
-    });
-
-    this.ai.registerTool({
-      name: 'psychology_add_note',
-      module: 'psychology',
-      writes: true,
-      description:
-        'Saves a note of the user about themselves on a day (today unless they say another).',
-      parameters: {
-        type: 'object',
-        properties: {
-          day: { type: 'string', description: 'YYYY-MM-DD' },
-          text: { type: 'string' },
-        },
-        required: ['day', 'text'],
-      },
-      handler: async (userId, args) => {
-        await this.psychology.addNote(userId, psychologyNoteInputSchema.parse(args));
-        return { saved: true };
-      },
+      handler: async (userId) =>
+        (await this.psychology.assessments(userId)).map(({ test, takenOn, score, band }) => ({
+          test,
+          takenOn,
+          score,
+          band,
+        })),
     });
   }
 }

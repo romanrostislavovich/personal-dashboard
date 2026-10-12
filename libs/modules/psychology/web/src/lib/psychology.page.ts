@@ -6,8 +6,6 @@ import { TranslocoPipe } from '@jsverse/transloco';
 /** Subsections of Psychology: each is a child route, so a tab has its own address. */
 const TABS = [
   { path: 'patterns', labelKey: 'psychology.tabs.patterns' },
-  { path: 'reflection', labelKey: 'psychology.tabs.reflection' },
-  { path: 'notes', labelKey: 'psychology.tabs.notes' },
   { path: 'checkups', labelKey: 'psychology.tabs.checkups' },
   { path: 'events', labelKey: 'psychology.tabs.events' },
 ] as const;

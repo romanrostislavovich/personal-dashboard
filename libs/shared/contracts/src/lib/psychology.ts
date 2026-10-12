@@ -3,19 +3,6 @@ import { LocalDate } from './local-date';
 
 const day = z.iso.date();
 
-// --- Notes: what one noticed about oneself ---
-
-export const psychologyNoteInputSchema = z.object({
-  day,
-  text: z.string().trim().min(1).max(5000),
-});
-export type PsychologyNoteInput = z.infer<typeof psychologyNoteInputSchema>;
-
-export interface PsychologyNote extends PsychologyNoteInput {
-  id: string;
-  createdAt: string;
-}
-
 // --- Events: something that happened over a period, or at an age ---
 
 /** How the event felt: from hard (-2) to good (2); `0` — neither. */
@@ -244,35 +231,13 @@ export interface PsychologyAssessment {
   care: boolean;
 }
 
-// --- Reflection: a few questions about the week ---
-
-export interface PsychologyReflection {
-  id: string;
-  /** The Monday of the week. */
-  week: LocalDate;
-  questions: string[];
-  /** One answer a question; an empty string — not answered yet. */
-  answers: string[];
-  /** Written by the AI from the week's data, or the standard ones. */
-  byAi: boolean;
-  createdAt: string;
-}
-
-export const psychologyReflectionAnswersSchema = z.object({
-  answers: z.array(z.string().trim().max(5000)).max(10),
-});
-export type PsychologyReflectionAnswers = z.infer<typeof psychologyReflectionAnswersSchema>;
-
 /** `PUT /api/psychology/settings`: only what is sent is changed. */
 export const psychologySettingsSchema = z.object({
-  weeklyReview: z.boolean().optional(),
   birthYear: z.number().int().min(1900).max(2100).nullable().optional(),
 });
 export type PsychologySettingsInput = z.infer<typeof psychologySettingsSchema>;
 
 export interface PsychologySettings {
-  /** Three questions about the week every Sunday evening. */
-  weeklyReview: boolean;
   /** Puts the events told by age among the dated ones; `null` — not given. */
   birthYear: number | null;
 }
