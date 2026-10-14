@@ -16,6 +16,7 @@ import { TelegramSettingsComponent } from './telegram-settings.component';
 import { ThemeSettingsComponent } from './theme-settings.component';
 import { TrashSettingsComponent } from './trash-settings.component';
 import { DataSettingsComponent } from './data-settings.component';
+import { DeviceBackupSettingsComponent } from './device-backup-settings.component';
 import { IntegrationStatusComponent } from './integration-status.component';
 import { AutomationsSettingsComponent } from '../automations/automations-settings.component';
 
@@ -41,6 +42,7 @@ const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 's
     SecuritySettingsComponent,
     TrashSettingsComponent,
     DataSettingsComponent,
+    DeviceBackupSettingsComponent,
     AutomationsSettingsComponent,
     SyncSettingsComponent,
     SystemSettingsComponent,
@@ -91,6 +93,7 @@ const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 's
       <mat-tab [label]="'core.settings.tabs.data' | transloco">
         <div class="grid">
           <pd-sync-settings />
+          <pd-device-backup-settings />
           <pd-data-settings />
           <pd-trash-settings />
         </div>

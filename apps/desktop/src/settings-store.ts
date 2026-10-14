@@ -12,13 +12,24 @@ export interface DesktopSettings {
   startWithSystem: boolean;
   /** The app restarted itself to install an update: it comes back the way it was, in the tray. */
   startHiddenOnce: boolean;
+  /** Where the copies of one's data go (backup/backup-folder.ts); `null` — the default one. */
+  backupFolder: string | null;
+  /** How many copies are kept. */
+  backupKeep: number;
 }
 
 const DEFAULTS: DesktopSettings = {
   serverUrl: null,
   startWithSystem: true,
   startHiddenOnce: false,
+  backupFolder: null,
+  backupKeep: 14,
 };
+
+/** Documents\Personal Dashboard\Backups: where a person looks for their files. */
+export function backupFolder(settings: DesktopSettings): string {
+  return settings.backupFolder ?? join(app.getPath('documents'), 'Personal Dashboard', 'Backups');
+}
 
 /** Settings are stored as JSON in the user folder (%APPDATA%/Personal Dashboard). */
 function settingsPath(): string {

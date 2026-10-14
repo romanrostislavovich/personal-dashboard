@@ -361,6 +361,19 @@
     "sections": {
       "title": "Sections",
       "hint": "A hidden section leaves the menu and the home page. Its data keeps coming and the assistant still sees it."
+    },
+    "deviceBackup": {
+      "title": "Copies on this computer",
+      "subtitle": "Your data kept here too, in case the server is gone",
+      "latest": "The latest copy: {{date}}, {{size}} MB. Copies kept: {{count}}.",
+      "none": "No copy yet: the first one is made within a minute of the start, then once a day.",
+      "keep": "Copies to keep",
+      "making": "Making a copy…",
+      "failed": "The copy was not made: {{error}}",
+      "hint": "Once a day the app saves the archive of “Export everything” here. The server gone or not paid for, the data stays: put the archive back through “Import archive” into any dashboard. The archive is not encrypted (the medical texts too) — keep the folder private, or choose an encrypted drive.",
+      "now": "Make a copy now",
+      "open": "Open the folder",
+      "change": "Change the folder"
     }
   },
   "toast": {

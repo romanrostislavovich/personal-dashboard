@@ -1,9 +1,18 @@
-import { app, BrowserWindow, ipcMain, Notification, shell } from 'electron';
-import { readFile } from 'node:fs/promises';
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  Notification,
+  OpenDialogOptions,
+  shell,
+} from 'electron';
+import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { noticeText } from './activity/notices';
 import { ActivityTracker, TrackerNotice } from './activity/tracker';
-import { loadSettings, saveSettings } from './settings-store';
+import { BackupStatus, listCopies, saveCopy } from './backup/backup-folder';
+import { backupFolder, loadSettings, saveSettings } from './settings-store';
 import { Capture } from './capture/capture';
 import { DiskCleaner } from './disk/disk-cleaner';
 import { DiskFix } from './disk/disk-fixes';
@@ -271,6 +280,38 @@ function registerIpc(): void {
     const content = await readFile(statement.path).catch(() => null);
     return content ? { name: statement.name, base64: content.toString('base64') } : null;
   });
+  // The copies of one's data: the page fetches the archive, the shell keeps it in a folder.
+  ipcMain.handle('backup:status', () => backupStatus());
+  ipcMain.handle('backup:save', async (_event, name: string, data: Uint8Array) => {
+    const settings = loadSettings();
+    await saveCopy(backupFolder(settings), String(name), new Uint8Array(data), settings.backupKeep);
+    return backupStatus();
+  });
+  ipcMain.handle('backup:open-folder', async () => {
+    const folder = backupFolder(loadSettings());
+    await mkdir(folder, { recursive: true });
+    await shell.openPath(folder);
+  });
+  ipcMain.handle('backup:choose-folder', async () => {
+    const settings = loadSettings();
+    const options: OpenDialogOptions = {
+      defaultPath: backupFolder(settings),
+      properties: ['openDirectory', 'createDirectory'],
+    };
+    const picked = mainWindow
+      ? await dialog.showOpenDialog(mainWindow, options)
+      : await dialog.showOpenDialog(options);
+    if (!picked.canceled && picked.filePaths[0]) {
+      saveSettings({ ...settings, backupFolder: picked.filePaths[0] });
+    }
+    return backupStatus();
+  });
+  ipcMain.handle('backup:keep', (_event, keep: number) => {
+    if (Number.isInteger(keep) && keep >= 1 && keep <= 365) {
+      saveSettings({ ...loadSettings(), backupKeep: keep });
+    }
+    return backupStatus();
+  });
   ipcMain.handle('disk:keep-advice', (_event, advice: unknown) => disk.keepAdvice(advice));
   ipcMain.handle('disk:dismiss', () => disk.dismiss());
 
@@ -346,3 +387,10 @@ app.on('will-quit', () => capture.unregister());
 
 // The app lives in the tray, so closing all windows does not quit it.
 app.on('window-all-closed', () => undefined);
+
+/** The folder of the copies and what is in it. */
+async function backupStatus(): Promise<BackupStatus> {
+  const settings = loadSettings();
+  const folder = backupFolder(settings);
+  return { folder, keep: settings.backupKeep, copies: await listCopies(folder) };
+}
