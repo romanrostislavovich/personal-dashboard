@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@pd/api-core';
 import { npmPackageName } from '@pd/contracts';
 
 /** npm package downloads for the last 7 days. `null` if the package is not found. */
@@ -5,7 +6,9 @@ export async function fetchNpmWeeklyDownloads(packageName: string): Promise<numb
   // Scoped packages (@scope/name) are passed in the URL as is. Repositories added before links
   // were accepted may hold the package's npmjs.com page instead of its name.
   const name = npmPackageName(packageName);
-  const response = await fetch(`https://api.npmjs.org/downloads/point/last-week/${name}`);
+  const response = await fetchWithTimeout(
+    `https://api.npmjs.org/downloads/point/last-week/${name}`,
+  );
   if (response.status === 404) {
     return null;
   }
@@ -22,7 +25,7 @@ export async function fetchNpmWeeklyDownloads(packageName: string): Promise<numb
 export async function fetchNpmPackageRepo(packageName: string): Promise<string | null> {
   // A scoped name keeps its `@` and has the slash encoded: `@scope%2Fname`.
   const name = packageName.replace('/', '%2F');
-  const response = await fetch(`https://registry.npmjs.org/${name}/latest`);
+  const response = await fetchWithTimeout(`https://registry.npmjs.org/${name}/latest`);
   if (response.status === 404) {
     return null;
   }

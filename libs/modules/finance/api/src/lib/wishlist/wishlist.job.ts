@@ -14,6 +14,8 @@ export class WishlistJob implements OnModuleInit {
     this.scheduler.register({
       name: 'finance.wishlist-prices',
       cron: '0 7 * * *',
+      // Every wish is a page of a shop to read: the run is long.
+      expireMinutes: 180,
       handler: () => this.wishlist.checkAll(),
     });
   }

@@ -23,6 +23,24 @@ export interface ScheduledJob {
    * send notifications or charge payments — nothing a shared made-up account should do.
    */
   demo?: boolean;
+  /**
+   * A failed run is tried again, a minute later and then longer. Only for a job that sends
+   * nothing (a sync): a retry repeats everything the failed run did — reminders sent twice.
+   * Without it a failed run waits for its next time, and the owner is told.
+   */
+  retry?: boolean;
+  /** A run longer than this is taken as hung and failed; the default is an hour. */
+  expireMinutes?: number;
+}
+
+const DEFAULT_EXPIRE_MINUTES = 60;
+
+/** How pg-boss keeps the runs of a job (by default: retried twice at once, hung after 15 min). */
+export function queueOptions(job: ScheduledJob) {
+  return {
+    expireInSeconds: (job.expireMinutes ?? DEFAULT_EXPIRE_MINUTES) * 60,
+    ...(job.retry ? { retryLimit: 2, retryDelay: 60, retryBackoff: true } : { retryLimit: 0 }),
+  };
 }
 
 /**
@@ -44,6 +62,8 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
   private readonly logger = new Logger(SchedulerService.name);
   private readonly jobs: ScheduledJob[] = [];
   private readonly boss: PgBoss;
+  /** The queue is up (the health check asks); `false` before the start and after an error. */
+  running = false;
 
   constructor(
     @Inject(ConfigService) private readonly config: AppConfig,
@@ -51,6 +71,7 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
   ) {
     this.boss = new PgBoss(config.get('DATABASE_URL', { infer: true }));
     this.boss.on('error', (error) => this.logger.error(error));
+    this.boss.on('stopped', () => (this.running = false));
   }
 
   register(job: ScheduledJob): void {
@@ -64,6 +85,7 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
 
   async onApplicationBootstrap(): Promise<void> {
     await this.boss.start();
+    this.running = true;
     if (this.config.get('SYNC_MODE', { infer: true }) === 'client') {
       this.logger.log('Sync client: background jobs run on the server');
       return;
@@ -75,8 +97,14 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
     }
 
     for (const job of this.jobs.filter((item) => !demo || item.demo)) {
-      await this.boss.createQueue(job.name);
-      await this.boss.schedule(job.name, job.cron, null, { tz, missed: 'once' });
+      // A queue made by an older version keeps its options: they are set again on every start.
+      await this.boss.createQueue(job.name, queueOptions(job));
+      await this.boss.updateQueue(job.name, queueOptions(job));
+      await this.boss.schedule(job.name, job.cron, null, {
+        tz,
+        missed: 'once',
+        ...queueOptions(job),
+      });
       await this.boss.work(job.name, async () => {
         if (!job.quiet) {
           this.logger.log(`Running job ${job.name}`);

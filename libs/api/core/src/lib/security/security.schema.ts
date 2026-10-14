@@ -57,15 +57,19 @@ export const securityFindings = pgTable(
 );
 
 /** The AI's accounts of its investigations; the last ones are kept. */
-export const securityReports = pgTable('security_reports', {
-  id: uuid().primaryKey().defaultRandom(),
-  userId: uuid()
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  text: text().notNull(),
-  model: text().notNull(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const securityReports = pgTable(
+  'security_reports',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    text: text().notNull(),
+    model: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId)],
+);
 
 export const securitySettings = pgTable('security_settings', {
   userId: uuid()

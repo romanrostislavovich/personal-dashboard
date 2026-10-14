@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@pd/api-core';
 import { MusicTopItem, MusicTopPeriod } from '@pd/contracts';
 
 const API = 'https://ws.audioscrobbler.com/2.0/';
@@ -123,7 +124,7 @@ export class LastfmClient {
     let response: Response;
     let data: Answer;
     try {
-      response = await fetch(`${API}?${query}`, {
+      response = await fetchWithTimeout(`${API}?${query}`, {
         headers: { 'User-Agent': 'personal-dashboard' },
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });

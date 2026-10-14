@@ -8,6 +8,17 @@ export const TRASH_OFF_SETTING = 'pd.trash_off';
 const TRIGGER_NAME = 'trash_keep';
 
 /**
+ * Deletes that are housekeeping (old measurements cleaned up on schedule) and keep nothing in
+ * the trash: it is for what a person deleted, and a daily cleanup would bury that.
+ */
+export function withoutTrash<T>(db: Database, work: (tx: Database) => Promise<T>): Promise<T> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT set_config(${TRASH_OFF_SETTING}, 'on', true)`);
+    return work(tx as unknown as Database);
+  });
+}
+
+/**
  * Tables whose deletions are housekeeping, not the user's: they never go to the trash. A deleted
  * API key must be gone; old check results and the AI log are cleaned up on schedule.
  */

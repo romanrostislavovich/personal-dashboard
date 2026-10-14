@@ -49,7 +49,11 @@ export const tasks = pgTable(
     completedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId, table.completedAt)],
+  (table) => [
+    index().on(table.userId, table.completedAt),
+    index().on(table.listId),
+    index().on(table.projectId),
+  ],
 );
 
 /**
@@ -73,7 +77,11 @@ export const reminders = pgTable(
     firedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index().on(table.status, table.remindAt)],
+  (table) => [
+    index().on(table.status, table.remindAt),
+    index().on(table.userId),
+    index().on(table.taskId),
+  ],
 );
 
 export type TaskRow = typeof tasks.$inferSelect;

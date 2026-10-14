@@ -512,6 +512,13 @@
       "when": 1792000527836,
       "tag": "0072_health_document_pages",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1792003751202,
+      "tag": "0073_missing_indexes",
+      "breakpoints": true
     }
   ]
 }

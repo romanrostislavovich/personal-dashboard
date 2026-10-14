@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@pd/api-core';
 import { LocalDate, WakatimeBreakdown } from '@pd/contracts';
 
 const API = 'https://wakatime.com/api/v1';
@@ -43,7 +44,7 @@ export class WakatimeClient {
   }
 
   private async get<T>(path: string): Promise<T> {
-    const response = await fetch(API + path, {
+    const response = await fetchWithTimeout(API + path, {
       headers: {
         // The API key goes as the user name of HTTP Basic auth.
         Authorization: `Basic ${Buffer.from(this.apiKey).toString('base64')}`,

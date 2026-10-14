@@ -99,9 +99,28 @@ export async function assertPublicHost(hostname: string): Promise<void> {
  * `fetch` for an address a user gave: only http(s), and every redirect is checked like the
  * first address — a public page must not lead into the private network.
  */
+/** How long a call to an outside service may take unless it says otherwise. */
+export const OUTSIDE_TIMEOUT_MS = 30_000;
+
+/**
+ * `fetch` to an outside service (GitHub, Steam, Last.fm…) that gives up after
+ * `OUTSIDE_TIMEOUT_MS` unless the call brings a signal of its own: a service that never
+ * answers would otherwise hold a job for minutes, and the next run would start beside it.
+ */
+export function fetchWithTimeout(
+  url: string | URL,
+  init: RequestInit = {},
+  timeoutMs = OUTSIDE_TIMEOUT_MS,
+): Promise<Response> {
+  return fetch(url, { ...init, signal: init.signal ?? AbortSignal.timeout(timeoutMs) });
+}
+
 export async function safeFetch(url: string, init: RequestInit = {}): Promise<Response> {
   let current = new URL(url);
-  let request = init;
+  let request: RequestInit = {
+    ...init,
+    signal: init.signal ?? AbortSignal.timeout(OUTSIDE_TIMEOUT_MS),
+  };
   for (let hop = 0; ; hop++) {
     if (current.protocol !== 'http:' && current.protocol !== 'https:') {
       throw new OutboundBlockedError(current.protocol);

@@ -1,12 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
   AutomationsService,
-  DB,
   Database,
+  DB,
   LinksService,
   NotificationsService,
   ProjectsService,
   UsersService,
+  withoutTrash,
 } from '@pd/api-core';
 import {
   ActivityComputer,
@@ -512,7 +513,10 @@ export class WellbeingService {
   /** Called once a day: health is for the recent past, not forever. */
   async deleteOldHealth(): Promise<void> {
     const before = new Date(Date.now() - HEALTH_KEEP_DAYS * DAY_MS);
-    await this.db.delete(activityHealth).where(lt(activityHealth.at, before));
-    await this.db.delete(activityOutages).where(lt(activityOutages.startedAt, before));
+    // Housekeeping, not the user's deletion: nothing of it goes to the trash.
+    await withoutTrash(this.db, async (tx) => {
+      await tx.delete(activityHealth).where(lt(activityHealth.at, before));
+      await tx.delete(activityOutages).where(lt(activityOutages.startedAt, before));
+    });
   }
 }

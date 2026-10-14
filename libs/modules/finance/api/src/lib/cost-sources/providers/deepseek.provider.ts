@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { fetchWithTimeout } from '@pd/api-core';
 import { CostMeasurement, CostProviderAdapter, CostProviderAuthError } from '../cost-provider';
 import { consumptionBetween, DeepseekBalanceInfo, pickBalance } from './deepseek-balance';
 
@@ -28,7 +29,7 @@ export class DeepseekCostProvider implements CostProviderAdapter {
   }
 
   private async fetchBalance(token: string): Promise<DeepseekBalanceInfo[]> {
-    const response = await fetch('https://api.deepseek.com/user/balance', {
+    const response = await fetchWithTimeout('https://api.deepseek.com/user/balance', {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
     });
     if (response.status === 401) {

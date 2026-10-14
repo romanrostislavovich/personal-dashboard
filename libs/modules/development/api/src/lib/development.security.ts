@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { DB, Database, Inspection, SecurityService } from '@pd/api-core';
+import { Database, DB, fetchWithTimeout, Inspection, SecurityService } from '@pd/api-core';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { AccountTokensService } from './accounts/account-tokens.service';
 import { GithubTokenService } from './github/github-token.service';
@@ -81,7 +81,7 @@ export class DevelopmentSecurity implements OnModuleInit {
       return null;
     }
     const ask = async <T>(path: string): Promise<GithubAnswer<T>> => {
-      const response = await fetch(`${GITHUB_API}${path}`, {
+      const response = await fetchWithTimeout(`${GITHUB_API}${path}`, {
         signal: AbortSignal.timeout(TIMEOUT_MS),
         headers: {
           Authorization: `Bearer ${token}`,

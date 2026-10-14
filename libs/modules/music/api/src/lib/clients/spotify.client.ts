@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@pd/api-core';
 import { NowPlaying } from '@pd/contracts';
 
 const ACCOUNTS = 'https://accounts.spotify.com';
@@ -48,7 +49,7 @@ export class SpotifyClient {
 
   /** The current track, or `null` if nothing is playing. */
   async currentlyPlaying(accessToken: string): Promise<NowPlaying | null> {
-    const response = await fetch(`${API}/me/player/currently-playing`, {
+    const response = await fetchWithTimeout(`${API}/me/player/currently-playing`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (response.status === 204) {
@@ -79,7 +80,7 @@ export class SpotifyClient {
   }
 
   private async requestToken(body: Record<string, string>): Promise<SpotifyTokens> {
-    const response = await fetch(`${ACCOUNTS}/api/token`, {
+    const response = await fetchWithTimeout(`${ACCOUNTS}/api/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

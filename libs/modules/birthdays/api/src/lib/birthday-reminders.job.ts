@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { NotificationsService, SchedulerService, UsersService } from '@pd/api-core';
+import { forEachUser, NotificationsService, SchedulerService, UsersService } from '@pd/api-core';
 import { birthdayMessages } from './birthdays.messages';
 import { BirthdaysService } from './birthdays.service';
 import { dueReminders } from './due-reminders';
@@ -23,7 +23,7 @@ export class BirthdayRemindersJob implements OnModuleInit {
   }
 
   async run(): Promise<void> {
-    for (const user of await this.users.findAll()) {
+    await forEachUser('birthdays.daily-reminders', await this.users.findAll(), async (user) => {
       const text = birthdayMessages(user.locale);
       for (const { kind, person } of dueReminders(await this.birthdays.list(user.id))) {
         const message =
@@ -43,6 +43,6 @@ export class BirthdayRemindersJob implements OnModuleInit {
                 };
         await this.notifications.send(user.id, { ...message, source: 'birthdays' });
       }
-    }
+    });
   }
 }

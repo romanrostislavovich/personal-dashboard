@@ -68,7 +68,7 @@ export const healthDoctors = pgTable(
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId)],
+  (table) => [index().on(table.userId), index().on(table.clinicId)],
 );
 
 export const healthVisits = pgTable(
@@ -90,7 +90,11 @@ export const healthVisits = pgTable(
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId, table.visitedOn)],
+  (table) => [
+    index().on(table.userId, table.visitedOn),
+    index().on(table.clinicId),
+    index().on(table.doctorId),
+  ],
 );
 
 /**
@@ -113,7 +117,7 @@ export const healthDiagnoses = pgTable(
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId, table.code)],
+  (table) => [index().on(table.userId, table.code), index().on(table.visitId)],
 );
 
 export const healthMedications = pgTable(
@@ -135,7 +139,7 @@ export const healthMedications = pgTable(
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId)],
+  (table) => [index().on(table.userId), index().on(table.visitId)],
 );
 
 /**
@@ -239,7 +243,7 @@ export const healthDocuments = pgTable(
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId)],
+  (table) => [index().on(table.userId), index().on(table.visitId)],
 );
 
 /**
@@ -279,7 +283,11 @@ export const healthLabPanels = pgTable(
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId, table.takenOn)],
+  (table) => [
+    index().on(table.userId, table.takenOn),
+    index().on(table.visitId),
+    index().on(table.documentId),
+  ],
 );
 
 /**
@@ -326,7 +334,11 @@ export const healthStudies = pgTable(
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId, table.performedOn)],
+  (table) => [
+    index().on(table.userId, table.performedOn),
+    index().on(table.visitId),
+    index().on(table.documentId),
+  ],
 );
 
 /**

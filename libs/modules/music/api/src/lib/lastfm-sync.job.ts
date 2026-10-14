@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AchievementsService, SchedulerService } from '@pd/api-core';
+import { AchievementsService, forEachUser, SchedulerService } from '@pd/api-core';
 import { LastfmHistoryImport } from './lastfm-history.import';
 import { LastfmService } from './lastfm.service';
 
@@ -23,11 +23,10 @@ export class LastfmSyncJob implements OnModuleInit {
     this.scheduler.register({
       name: 'music.lastfm-sync',
       cron: '*/15 * * * *',
-      handler: async () => {
-        for (const userId of await this.lastfm.connectedUserIds()) {
-          await this.syncUser(userId);
-        }
-      },
+      handler: async () =>
+        forEachUser('music.lastfm-sync', await this.lastfm.connectedUserIds(), (userId) =>
+          this.syncUser(userId),
+        ),
     });
   }
 

@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '@pd/api-core';
+
 const API = 'https://api.opendota.com/api';
 const STEAM_CDN = 'https://cdn.cloudflare.steamstatic.com';
 /** The same hero list OpenDota serves, straight from the project's repository. */
@@ -147,7 +149,7 @@ export const openDota = {
 
   /** The hero list from the mirror: for when the OpenDota API itself is down. */
   async getHeroesFromMirror(): Promise<Map<number, HeroInfo>> {
-    const response = await fetch(HEROES_MIRROR);
+    const response = await fetchWithTimeout(HEROES_MIRROR);
     if (!response.ok) {
       throw new Error(`Hero list mirror ${response.status}`);
     }
@@ -174,7 +176,7 @@ async function request(
   path: string,
   apiKey: string | null = null,
 ): Promise<Response> {
-  const response = await fetch(withKey(API + path, apiKey), { method });
+  const response = await fetchWithTimeout(withKey(API + path, apiKey), { method });
   // The key never gets into an error text: it would end up in the log and on the page.
   if (apiKey && [400, 401, 403].includes(response.status)) {
     const body = (await response.json().catch(() => null)) as { error?: string } | null;
