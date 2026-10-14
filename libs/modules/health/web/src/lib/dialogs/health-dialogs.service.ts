@@ -4,12 +4,12 @@ import { ComponentType } from '@angular/cdk/portal';
 import { TranslocoService } from '@jsverse/transloco';
 import { HealthClinic, HealthDocument } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
-import { HealthApi } from '../health.api';
 import { DraftReviewData, DraftReviewDialog } from '../drafts/draft-review.dialog';
 import { ClinicDialog } from './clinic.dialog';
 import { DiagnosisDialog, DiagnosisDialogData } from './diagnosis.dialog';
 import { DoctorDialog, DoctorDialogData } from './doctor.dialog';
 import { DocumentDialog, DocumentDialogData } from './document.dialog';
+import { DocumentViewerDialog } from './document-viewer.dialog';
 import { LabPanelDialog, LabPanelDialogData } from './lab-panel.dialog';
 import { MedicationDialog, MedicationDialogData } from './medication.dialog';
 import { StudyDialog, StudyDialogData } from './study.dialog';
@@ -22,7 +22,6 @@ import { VisitDialog, VisitDialogData } from './visit.dialog';
 @Injectable({ providedIn: 'root' })
 export class HealthDialogs {
   private readonly dialog = inject(MatDialog);
-  private readonly api = inject(HealthApi);
   private readonly transloco = inject(TranslocoService);
 
   visit(data: VisitDialogData) {
@@ -71,18 +70,9 @@ export class HealthDialogs {
     return true;
   }
 
-  /** Opens the original in a new tab (a link cannot send the auth header, so it goes as a blob). */
+  /** Shows the original over the page (see DocumentViewerDialog). */
   async openDocument(document: HealthDocument): Promise<void> {
-    const tab = window.open('', '_blank');
-    const blob = await this.api.client.documentFile(document.id);
-    const url = URL.createObjectURL(blob);
-    if (tab) {
-      tab.location.href = url;
-    } else {
-      window.location.href = url;
-    }
-    // The tab has read it by then; the URL is not needed after.
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    await this.open(DocumentViewerDialog, document, { autoFocus: 'dialog', maxWidth: '95vw' });
   }
 
   private async open<D, C>(

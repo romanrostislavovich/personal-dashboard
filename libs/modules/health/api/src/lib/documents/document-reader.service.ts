@@ -21,7 +21,7 @@ import { healthDocuments } from '../health.schema';
 import { HealthService } from '../health.service';
 import { LabsService } from '../labs.service';
 import { assertOwnedId, found } from '../owned';
-import { DRAFT_INSTRUCTION, parseDraft } from './draft-parse';
+import { answerShape, DRAFT_INSTRUCTION, parseDraft } from './draft-parse';
 
 export type ValidDraftApply = z.output<typeof healthDraftApplySchema>;
 
@@ -64,7 +64,13 @@ export class DocumentReaderService {
       .from(healthDocuments)
       .where(and(eq(healthDocuments.id, documentId), eq(healthDocuments.userId, userId)));
     const { data, mimeType, kind } = found(document, 'Document');
-    const draft = parseDraft(await this.ask(userId, data, mimeType));
+    const answer = await this.ask(userId, data, mimeType);
+    const draft = parseDraft(answer);
+    // The shape only — keys and the length of the lists, never the document's words.
+    this.logger.log(
+      `A medical document read: ${answerShape(answer)} → ` +
+        `${draft?.diagnoses.length ?? 0} diagnoses, ${draft?.medications.length ?? 0} medications`,
+    );
     if (!draft) {
       throw failure('unreadable');
     }

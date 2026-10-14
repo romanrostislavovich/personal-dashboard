@@ -130,7 +130,9 @@
     "tooBig": "The file is over 20 MB.",
     "name": "Name",
     "kind": "Kind",
-    "date": "Date of the document"
+    "date": "Date of the document",
+    "download": "Download",
+    "close": "Close"
   },
   "clinic": {
     "title": "Clinics",
