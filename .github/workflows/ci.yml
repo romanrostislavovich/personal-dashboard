@@ -104,7 +104,7 @@ jobs:
 
       - name: The report and the server's log, when a test failed
         if: failure()
-        run: docker logs dashboard > e2e/playwright-report/server.log 2>&1 || true
+        run: mkdir -p e2e/playwright-report && docker logs dashboard > e2e/playwright-report/server.log 2>&1 || true
 
       - uses: actions/upload-artifact@v4
         if: failure()
