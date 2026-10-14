@@ -110,8 +110,13 @@ export class CoreAiTools implements OnModuleInit {
         properties: { day: { type: 'string', description: 'The day, YYYY-MM-DD' } },
         required: ['day'],
       },
+      // The events of a section the AI must not see stay out (switched off, or its own model).
       handler: async (userId, args) =>
-        this.life.day(userId, lifeDayQuerySchema.parse({ day: args['day'] }).day),
+        this.life.day(
+          userId,
+          lifeDayQuerySchema.parse({ day: args['day'] }).day,
+          await this.ai.hiddenFromShared(userId),
+        ),
     });
     this.ai.registerTool({
       name: 'core_project_months',

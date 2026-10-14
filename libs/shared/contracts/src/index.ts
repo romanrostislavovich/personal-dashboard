@@ -40,3 +40,4 @@ export * from './lib/data-export';
 export * from './lib/security';
 export * from './lib/tasks';
 export * from './lib/weather';
+export * from './lib/health';

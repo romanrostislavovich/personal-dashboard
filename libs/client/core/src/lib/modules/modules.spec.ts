@@ -4,6 +4,7 @@ import { memoryStorage } from '../testing';
 import { diaryApi, DIARY_READS } from './diary';
 import { FINANCE_READS } from './finance';
 import { GAMES_READS } from './games';
+import { healthApi } from './health';
 
 function client(response = new Response(JSON.stringify({ id: 'p1' }))) {
   const fetch = vi.fn().mockResolvedValue(response);
@@ -56,5 +57,18 @@ describe('files', () => {
     const photo = await diaryApi(api).photo('abc');
     expect(photo.type).toBe('image/png');
     expect(await photo.text()).toBe('png');
+  });
+
+  it('a medical document goes with its description, empty fields left out', async () => {
+    const { fetch, api } = client();
+    await healthApi(api).uploadDocument(
+      { name: 'Consultation', kind: 'consultation', visitId: null, documentedOn: '' },
+      new Blob(['pdf'], { type: 'application/pdf' }),
+    );
+
+    const [url, init] = fetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/medical/documents');
+    const form = init.body as FormData;
+    expect([...form.keys()]).toEqual(['name', 'kind', 'file']);
   });
 });

@@ -1,5 +1,13 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -16,6 +24,7 @@ import { IntegrationGuideComponent } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
 import { AiConnectionFormDialog } from './ai-connection-form.dialog';
+import { AiModuleAccessComponent } from './ai-module-access.component';
 
 /**
  * Saved AI connections — one of them active, switched in one click (say, when a balance runs
@@ -25,6 +34,7 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
   selector: 'pd-ai-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    AiModuleAccessComponent,
     DatePipe,
     MatCardModule,
     IntegrationGuideComponent,
@@ -189,16 +199,11 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
 
           <h3 class="section">👁️ {{ 'ai.privacy.title' | transloco }}</h3>
           <p class="hint">{{ 'ai.privacy.hint' | transloco }}</p>
-          <div class="modules">
-            @for (module of modules(); track module) {
-              <mat-slide-toggle
-                [checked]="!settings().disabledModules.includes(module)"
-                (change)="setVisible(module, $event.checked)"
-              >
-                {{ moduleName(module) }}
-              </mat-slide-toggle>
-            }
-          </div>
+          <pd-ai-module-access
+            [settings]="settings()"
+            [modules]="namedModules()"
+            (save)="savePreferences($event)"
+          />
 
           <h3 class="section">📜 {{ 'ai.log.title' | transloco }}</h3>
           @if (actions(); as list) {
@@ -229,11 +234,6 @@ import { AiConnectionFormDialog } from './ai-connection-form.dialog';
     </mat-card>
   `,
   styles: `
-    .modules {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 8px 16px;
-    }
     .action {
       display: flex;
       gap: 12px;
@@ -350,6 +350,9 @@ export class AiSettingsComponent {
 
   /** Modules that give the AI data. */
   protected readonly modules = signal<string[]>([]);
+  protected readonly namedModules = computed(() =>
+    this.modules().map((id) => ({ id, name: this.moduleName(id) })),
+  );
   /** Optional digest sections that modules offer (`development.streak`). */
   protected readonly digestOptions = signal<string[]>([]);
   /** The assistant's changes; `null` until asked for. */
@@ -383,11 +386,6 @@ export class AiSettingsComponent {
   async setDigestOption(option: string, enabled: boolean): Promise<void> {
     const others = this.settings().digestOptIns.filter((id) => id !== option);
     await this.savePreferences({ digestOptIns: enabled ? [...others, option] : others });
-  }
-
-  async setVisible(module: string, visible: boolean): Promise<void> {
-    const others = this.settings().disabledModules.filter((m) => m !== module);
-    await this.savePreferences({ disabledModules: visible ? others : [...others, module] });
   }
 
   async loadActions(): Promise<void> {
