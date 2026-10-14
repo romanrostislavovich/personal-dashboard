@@ -83,6 +83,19 @@ export class AiService {
     return !(await this.connections.disabledModules(userId)).includes(module);
   }
 
+  /**
+   * Whether this module's data may go into a request of the shared connection (a story of Life
+   * across the modules): not for a module switched off or with a connection of its own.
+   */
+  async canShare(userId: string, module: string): Promise<boolean> {
+    return !(await this.hiddenFromShared(userId)).includes(module);
+  }
+
+  /** Modules whose data a tool across the sections leaves out (see `canShare`). */
+  hiddenFromShared(userId: string): Promise<string[]> {
+    return this.connections.hiddenFromShared(userId);
+  }
+
   // --- Model requests ---
 
   /**
@@ -108,7 +121,8 @@ export class AiService {
         content: withAttachments(content, attachments),
       })),
     ];
-    const hidden = new Set(await this.connections.disabledModules(userId));
+    // A section with a connection of its own keeps its data away from the chat's one.
+    const hidden = new Set(await this.hiddenFromShared(userId));
     const tools = this.tools.filter(
       (tool) => !hidden.has(tool.module) && (options.allowWrites || !tool.writes),
     );
@@ -155,7 +169,8 @@ export class AiService {
 
   /**
    * A single request without tools (summaries, rewording). `module` — whose data `content` is:
-   * refused if the user has switched that module off for the AI.
+   * refused if the user has switched that module off for the AI, sent to the module's own
+   * connection if it has one.
    */
   async complete(
     userId: string,
@@ -166,7 +181,9 @@ export class AiService {
     if (module && !(await this.canSee(userId, module))) {
       throw new ForbiddenException(`AI access to ${module} is off`);
     }
-    const connection = await this.requireConnection(userId);
+    const connection =
+      (module && (await this.connections.ofModule(userId, module))) ||
+      (await this.requireConnection(userId));
     const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
     try {
       const reply = await chatCompletion(connection, [
@@ -183,8 +200,8 @@ export class AiService {
   }
 
   /**
-   * A single request about a picture (a receipt): the connection that reads pictures answers.
-   * `null` — there is none (see AiConnectionsService.vision).
+   * A single request about a picture (a receipt): the module's own connection answers, or else
+   * the one that reads pictures. `null` — there is none (see AiConnectionsService.vision).
    */
   async completeWithImage(
     userId: string,
@@ -195,7 +212,9 @@ export class AiService {
     if (module && !(await this.canSee(userId, module))) {
       throw new ForbiddenException(`AI access to ${module} is off`);
     }
-    const connection = await this.connections.vision(userId);
+    const connection =
+      (module && (await this.connections.ofModule(userId, module))) ||
+      (await this.connections.vision(userId));
     if (!connection) {
       return null;
     }

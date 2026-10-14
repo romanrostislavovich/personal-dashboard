@@ -38,7 +38,7 @@ export class LifeStoriesService {
    */
   async write(userId: string, period: string): Promise<LifeStory | null> {
     const cards = await this.life.period(userId, periodRange(period));
-    const seen = await Promise.all(cards.map((card) => this.ai.canSee(userId, card.module)));
+    const seen = await Promise.all(cards.map((card) => this.ai.canShare(userId, card.module)));
     const forAi = cards.filter((_, index) => seen[index]);
     if (!forAi.length || !(await this.ai.isConfigured(userId))) {
       return null;

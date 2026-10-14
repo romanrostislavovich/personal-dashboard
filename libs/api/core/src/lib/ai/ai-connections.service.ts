@@ -59,6 +59,7 @@ export class AiConnectionsService {
       visionModel: settings?.visionModel ?? DEFAULT_VISION_MODEL,
       disabledModules: settings?.disabledModules ?? [],
       digestOptIns: settings?.digestOptIns ?? [],
+      moduleConnections: settings?.moduleConnections ?? {},
     };
   }
 
@@ -69,6 +70,37 @@ export class AiConnectionsService {
       .from(aiSettings)
       .where(eq(aiSettings.userId, userId));
     return settings?.disabledModules ?? [];
+  }
+
+  /**
+   * Modules whose data must not go to the shared connection: the ones switched off for the AI
+   * and the ones with a connection of their own (unless it is the active one anyway).
+   */
+  async hiddenFromShared(userId: string): Promise<string[]> {
+    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    const activeId = activeRow(await this.rows(userId), settings?.activeConnectionId)?.id;
+    return hiddenFromShared(settings ?? {}, activeId);
+  }
+
+  /**
+   * The connection of a section of its own; `null` — the section uses the shared one. A chosen
+   * connection that is gone is an error, never a quiet fall back to the shared one: the user
+   * chose it to keep the data away from there.
+   */
+  async ofModule(userId: string, module: string): Promise<ChatConnection | null> {
+    const [settings] = await this.db
+      .select({ moduleConnections: aiSettings.moduleConnections })
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
+    const id = settings?.moduleConnections[module];
+    if (!id) {
+      return null;
+    }
+    const connection = await this.connection(userId, id);
+    if (!connection) {
+      throw new BadRequestException(`The AI connection of ${module} is gone`);
+    }
+    return connection;
   }
 
   /** Opt-in sections of the morning digest the user switched on. */
@@ -119,6 +151,18 @@ export class AiConnectionsService {
       .delete(aiConnections)
       .where(and(eq(aiConnections.id, id), eq(aiConnections.userId, userId)));
     await this.secrets.delete(userId, apiKeySecret(id));
+    // A section that had this connection is not left pointing at nothing.
+    const { moduleConnections } = await this.settings(userId);
+    if (Object.values(moduleConnections).includes(id)) {
+      await this.db
+        .update(aiSettings)
+        .set({
+          moduleConnections: Object.fromEntries(
+            Object.entries(moduleConnections).filter(([, connectionId]) => connectionId !== id),
+          ),
+        })
+        .where(eq(aiSettings.userId, userId));
+    }
     return this.settings(userId);
   }
 
@@ -136,6 +180,9 @@ export class AiConnectionsService {
     }
     if (preferences.visionConnectionId) {
       await this.find(userId, preferences.visionConnectionId);
+    }
+    for (const id of Object.values(preferences.moduleConnections ?? {})) {
+      await this.find(userId, id);
     }
     await this.db
       .insert(aiSettings)
@@ -266,6 +313,20 @@ export class AiConnectionsService {
       hasApiKey: await this.secrets.has(userId, apiKeySecret(row.id)),
     };
   }
+}
+
+/**
+ * Modules switched off for the AI, and the ones with a connection of their own other than the
+ * active one: their data never goes to the shared connection.
+ */
+export function hiddenFromShared(
+  settings: { disabledModules?: string[]; moduleConnections?: Record<string, string> },
+  activeId: string | undefined,
+): string[] {
+  const own = Object.entries(settings.moduleConnections ?? {})
+    .filter(([, connectionId]) => connectionId !== activeId)
+    .map(([module]) => module);
+  return [...new Set([...(settings.disabledModules ?? []), ...own])];
 }
 
 /** The chosen connection, or the oldest one if the choice was deleted. */
