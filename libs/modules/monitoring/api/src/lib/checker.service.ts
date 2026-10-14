@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DB, Database, projects } from '@pd/api-core';
 import { eq, lt, sql } from 'drizzle-orm';
 import { checkHttp } from './checks/http-check';
@@ -24,19 +24,39 @@ export interface SslNotice {
 }
 
 const RESULTS_RETENTION_DAYS = 35;
+/** Sites checked at once: many monitors must not open hundreds of connections together. */
+const CHECKS_AT_ONCE = 10;
 
 /** Runs checks and updates monitor state. */
 @Injectable()
 export class CheckerService {
+  private readonly logger = new Logger(CheckerService.name);
+
   constructor(@Inject(DB) private readonly db: Database) {}
 
   /** Checks all monitors of all users; returns "down/up" events. */
   async checkAll(): Promise<MonitorNotice[]> {
     const rows = await this.monitorsWithProjects();
-    const notices = await Promise.all(
-      rows.map((row) => this.checkOne(row.monitor, row.projectName)),
-    );
-    return notices.filter((notice): notice is MonitorNotice => notice !== null);
+    const notices: MonitorNotice[] = [];
+    // A few at a time; one check that fails (its result not saved) never loses the others'.
+    for (let start = 0; start < rows.length; start += CHECKS_AT_ONCE) {
+      const results = await Promise.allSettled(
+        rows
+          .slice(start, start + CHECKS_AT_ONCE)
+          .map((row) => this.checkOne(row.monitor, row.projectName)),
+      );
+      for (const [index, result] of results.entries()) {
+        if (result.status === 'fulfilled') {
+          if (result.value) {
+            notices.push(result.value);
+          }
+        } else {
+          const monitor = rows[start + index].monitor;
+          this.logger.warn(`The check of ${monitor.url} failed: ${result.reason}`);
+        }
+      }
+    }
+    return notices;
   }
 
   async checkOne(monitor: MonitorRow, projectName: string): Promise<MonitorNotice | null> {

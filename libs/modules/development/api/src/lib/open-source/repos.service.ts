@@ -156,7 +156,9 @@ export class ReposService {
     if (repo.relation !== 'manual') {
       throw new BadRequestException('A repository of the account cannot be removed: hide it');
     }
-    await this.db.delete(trackedRepos).where(eq(trackedRepos.id, id));
+    await this.db
+      .delete(trackedRepos)
+      .where(and(eq(trackedRepos.id, id), eq(trackedRepos.userId, userId)));
   }
 
   /**

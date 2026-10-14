@@ -25,4 +25,16 @@ describe('LoginThrottle', () => {
     }
     expect(() => throttle.check(keys)).not.toThrow();
   });
+
+  it('never forgets a lock still in force, however many other keys come', () => {
+    const throttle = new LoginThrottle(() => 0);
+    const locked = throttleKeys('1.2.3.4', 'me@example.com');
+    for (let i = 0; i < 10; i++) {
+      throttle.fail(locked);
+    }
+    for (let i = 0; i < 10_050; i++) {
+      throttle.fail([`ip:flood-${i}`]);
+    }
+    expect(() => throttle.check(locked)).toThrow(HttpException);
+  });
 });

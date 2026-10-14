@@ -77,3 +77,4 @@ export type {
   OtherComputerSource,
 } from './lib/computer-time/other-computers.service';
 export { withoutTrash } from './lib/trash/trash-triggers';
+export { RateLimit } from './lib/system/rate-limit';

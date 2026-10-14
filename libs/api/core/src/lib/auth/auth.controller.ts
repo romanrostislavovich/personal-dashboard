@@ -54,6 +54,7 @@ import { AuthUser, CurrentUser } from './current-user.decorator';
 import { Public } from './public.decorator';
 import { SessionsService } from './sessions.service';
 import { TwoFactorService } from './two-factor.service';
+import { RateLimit } from '../system/rate-limit';
 
 @Controller('auth')
 export class AuthController {
@@ -102,6 +103,8 @@ export class AuthController {
   }
 
   @Public()
+  // New accounts from one address: a few an hour is plenty for a person.
+  @RateLimit(5, 3600)
   @Post('register')
   async register(
     @Body(new ZodValidationPipe(registerSchema)) input: z.output<typeof registerSchema>,
@@ -114,6 +117,7 @@ export class AuthController {
 
   /** "Try the demo" of a demo instance: a session of the shared demo user. */
   @Public()
+  @RateLimit(30, 3600)
   @Post('demo')
   @HttpCode(200)
   async demo(

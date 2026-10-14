@@ -143,7 +143,10 @@ export class TasksService {
     if (repeat && !dueDate) {
       throw new BadRequestException('A repeating task needs a due date');
     }
-    await this.db.update(tasks).set(changes).where(eq(tasks.id, id));
+    await this.db
+      .update(tasks)
+      .set(changes)
+      .where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
   }
 
   /**
@@ -160,7 +163,10 @@ export class TasksService {
       this.users.timeZoneOf(await this.users.findById(userId)),
     ).date;
     await this.db.transaction(async (tx) => {
-      await tx.update(tasks).set({ completedAt: new Date() }).where(eq(tasks.id, id));
+      await tx
+        .update(tasks)
+        .set({ completedAt: new Date() })
+        .where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
       await tx
         .update(reminders)
         .set({ status: 'done' })
@@ -179,7 +185,10 @@ export class TasksService {
   /** Back to the open ones. What a repeating task has already brought next stays. */
   async reopen(userId: string, id: string): Promise<void> {
     await this.find(userId, id);
-    await this.db.update(tasks).set({ completedAt: null }).where(eq(tasks.id, id));
+    await this.db
+      .update(tasks)
+      .set({ completedAt: null })
+      .where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
   }
 
   async remove(userId: string, id: string): Promise<void> {

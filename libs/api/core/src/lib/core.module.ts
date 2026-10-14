@@ -52,6 +52,7 @@ import { ProjectsController } from './projects/projects.controller';
 import { ProjectsService } from './projects/projects.service';
 import { SchedulerService } from './scheduler/scheduler.service';
 import { HealthController } from './system/health.controller';
+import { RateLimitGuard } from './system/rate-limit';
 import { LifeMonthJob } from './life/life-month.job';
 import { LifeController } from './life/life.controller';
 import { LifeService } from './life/life.service';
@@ -132,6 +133,8 @@ import { UserActivityService } from './realtime/user-activity.service';
     { provide: APP_GUARD, useClass: AuthGuard },
     // After AuthGuard: it needs to know who is asking.
     { provide: APP_GUARD, useClass: DemoGuard },
+    // After AuthGuard too: a signed-in user is counted by their account, others by the address.
+    { provide: APP_GUARD, useClass: RateLimitGuard },
     DemoService,
     CoreDemo,
     { provide: APP_INTERCEPTOR, useClass: UserActivityInterceptor },
