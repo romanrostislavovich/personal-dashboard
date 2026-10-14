@@ -169,6 +169,35 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Telegram:** "Yes / No" buttons to confirm a deletion; quick commands like `/spent 12 coffee`
 - **Life: more** — the weather in the day feed (it is already compared with the mood) and steps
 
+#### Reliability
+
+- **Background jobs send nothing twice** — pg-boss retries a failed job at once (2 times) and
+  expires it after 15 minutes, so a job that fails on one user, or runs long (the wishlist prices),
+  sends its notifications again; every job that loops over the users catches the error per user
+  (birthday reminders, recurring payments, WakaTime, Last.fm, achievements), queue options per job
+  (expiry, no retries for the ones that notify, a backoff)
+- **Every call to an outside service has a timeout** — GitHub, WakaTime, npm, Battle.net,
+  OpenDota, Spotify, Hetzner, DeepSeek and Telegram wait forever today; one shared `fetchJson`
+  with a timeout, `Retry-After` / rate-limit reset read, the user skipped until the reset
+- **Indexes** — `finance_transactions` has none on `user_id` (and the date); the `user_id` and
+  foreign keys of recurring payments, wishes, goal contributions, monitors, birthdays and reminders
+- **A real health check** — `/health` answers "ok" even without the database; a readiness check
+  (`SELECT 1`, pg-boss started, migrations applied) for the Docker healthcheck
+- **The trash keeps only what a person deleted** — the daily cleanup of `activity_health` and
+  `activity_outages` fills the trash today
+- **Auth hardening** — the API key of an AI connection is not carried over a redirect to another
+  host (`safeFetch`); the current password in "change password" is throttled; the sign-in
+  throttle never forgets a lock still in force; a global rate limit for the rest of the API
+  (AI chat, registration, import)
+- **The image is published only after CI passes** — today a commit that breaks CI is still built
+  and deployed
+- **Desktop: the offline queue survives a crash** — written atomically (a temporary file and a
+  rename), saves debounced, a broken file never loses the device token; a rejected batch (400 / 413) is dropped or split instead of blocking the queue; a timeout on the upload; the window
+  watcher survives a missing PowerShell and never runs twice
+- **Smaller things** — a rule of Activity checks the project is the user's; every write filters
+  by `userId`, not only by `id`; the achievements are measured in parallel; the monitors are
+  checked with a limit and `allSettled`; the wishlist reads at most its limit of a page
+
 ### Next
 
 #### Everyday use
@@ -176,8 +205,16 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Finance: the bank directly (open banking)** — transactions come from the bank every day
   (GoCardless Bank Account Data: free in the EU, mBank, PKO, Revolut), no statements needed;
   budgets, subscriptions and rules pick them up
+- **Notifications through an outbox** — a notification is sent once today, lost on an error and
+  never deduplicated; a `notifications` table (a dedupe key, a status, attempts) and delivery
+  by a job with a backoff (Telegram's `retry_after` too); a flapping site or a repeated price
+  change sends one message, not ten. The notification centre below is built on it; before it,
+  a delivery log in Settings → System (sent, failed, deduplicated)
 - **Notification centre and quiet hours** — the history of every notification with filters;
   nothing at night, one summary in the morning; minor ones gathered into one message an hour
+- **A calendar feed (ICS)** — a private link with the birthdays, days of memory, reminders, due
+  dates of tasks, subscription charges and the end of free trials, subscribed to in the calendar
+  of a phone
 - **Push notifications** — in the browser, the desktop app and on phones (the PWA, without
   Telegram), next to Telegram; switched off per kind of notification or all at once
 - **Habits** — a habit tracker module, in the digest too
@@ -207,6 +244,30 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   job did not report in time), DNS, a keyword on the page, ping
 - **CI status of the repositories** — failed GitHub Actions and deploys shown in Development and
   in the digest
+
+#### Engineering
+
+- **Sync across versions** — today any difference of the migrations stops sync; a peer whose
+  migrations are the start of yours is accepted, the status says "the server is N migrations
+  ahead", and a notification tells when the two drift apart
+- **`updatedAt` on every table a user edits** — "edited at" in the UI and a check that the AI and
+  a second tab do not overwrite each other's change (If-Match)
+- **Observability** — JSON logs in production with a request or job id; `/metrics` (job runs,
+  AI calls and tokens, sync lag, failed notifications)
+- **Loading and errors are not "empty"** — a shared `<pd-resource-state>`: a list shows "No …
+  yet" today while it loads or after a failed request; the actions of the AI page report errors
+- **Accessibility** — `aria-label` on the 28 icon-only buttons without one, the accessibility rules
+  of angular-eslint; the last hardcoded texts and status colours go to Transloco and theme tokens
+- **Smaller components** — the diary editor (845 lines), the WoW dashboard, the security page,
+  Psychology's events, the AI settings: templates and styles in their own files, parts split out
+- **Tests where there are none** — the web libraries (pure helpers first: finance stats, the
+  activity timeline, months, the repository filter) and the desktop app (the span builder, the
+  private-window rules — the same as `isMeetingTitle` of contracts, the focus timer); lint for
+  the desktop app
+- **CI and tooling** — the Nx cache kept between runs, `format:check`, `.nvmrc` / `engines`,
+  `affected` and `typecheck` scripts
+- **A module generator** — `nx g @pd/tools:module`: the api and web libraries, contracts, the
+  requests of the client core, i18n and the registration in one command instead of ten steps
 
 #### Desktop
 
@@ -238,6 +299,31 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **AI memory** — facts about the user the assistant keeps between conversations
 - **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
   Cursor can read and change your data directly, without its own chat
+- **AI: what it costs** — the tokens of every answer are kept (today `usage` is thrown away) per
+  connection, model and day; the spend of a day and a month in the AI settings, a monthly limit
+  per connection
+- **AI: fewer tools a request** — all ~97 tools go with every request and every round today; the
+  modules a question needs are picked first, and only their tools are offered (cheaper, and small
+  Ollama models choose better)
+- **AI: the prompt cache works** — the time of day is the first line of the system prompt, so the
+  cache of DeepSeek and OpenAI misses every minute; the stable part goes first, the time last
+- **AI: a budget for the history** — a file is sent again in every round of the next 20
+  messages (up to 180k characters); after its turn a file becomes a short summary, the oldest
+  turns are dropped over the budget
+- **AI: outside text is data, never orders** — window titles, product names from shops, commit
+  messages reach the model as they are while 46 tools can change data; tool results are marked as
+  untrusted, and no writes in a turn that read outside text unless the user asked for a change
+- **AI: robust answers** — an answer cut by the length limit is continued or marked; retries with
+  a backoff on 429 / 5xx; a backup connection when the active one fails; a time limit for one
+  answer; one answer at a time in a conversation (the web chat and Telegram share it); the state
+  of a confirmation kept in the database
+- **AI: undo** — "undo the last change of the assistant" in the chat and `/undo` in Telegram, out
+  of the action log and the trash
+- **AI: progress while it works** — "looking at finance…", "searching the diary…" over the live
+  events, before streaming the answer itself
+- **AI: what it read** — the action log also keeps which read tools of which modules were called
+- **Telegram: long messages are split** — today an answer is cut at 4096 characters and a long
+  notification fails
 
 #### For new users
 
@@ -312,6 +398,10 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Automations: more triggers and actions** — matches, a new release, a birthday today; a
   transaction or a diary mood as an action
 - **Automations: webhooks and a public API** with tokens
+- **Automations: an incoming webhook** — `POST /api/hooks/:token` from iOS Shortcuts, IFTTT,
+  Home Assistant or GitHub Actions is a trigger of a rule
+- **Automations: a question to the AI on a schedule** — "every Friday: how much did I spend on
+  food this week?", the answer to Telegram (today a rule sends only a fixed text)
 - **An AI agent for every module, and one over them all** — each module gets an agent of its
   own that knows its data and tools in depth (finance, the diary, development, activity…), and a
   general one that takes a question, hands its parts to the agents concerned and puts their
