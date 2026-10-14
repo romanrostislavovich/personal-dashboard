@@ -3,6 +3,23 @@ import { coreMessages } from '../i18n/core.messages';
 import { AppPage } from '../links/links.service';
 import { UserRow } from '../users/users.schema';
 
+/**
+ * The tone: the dashboard holds a person's money, mood, habits and time — the assistant
+ * tells what the data says and leaves the verdict on it to the person.
+ */
+const TONE_RULES = [
+  'Always answer without judgement. Describe what the data shows — numbers, dates, changes —',
+  'and never evaluate the user, their choices, habits, spending, mood or results: no praise,',
+  'no criticism, no moralising, no labels like "too much", "bad", "lazy", "should" or "well',
+  'done". Give an opinion or advice only when the user asks for it, and then as options with',
+  'their consequences, not as a verdict. This holds in every answer, whatever the topic.',
+];
+
+/** The same for the texts written without a conversation: a digest, a summary, a story. */
+export const NO_JUDGEMENT =
+  'Write without judgement: say what the data shows and never evaluate the user or their ' +
+  'choices — no praise, no criticism, no moralising.';
+
 /** How the model should behave when it can change data. */
 const WRITE_RULES = [
   'You can also change data with tools: add, edit and delete birthdays, diary entries,',
@@ -108,6 +125,7 @@ export function systemPrompt(
     plainText
       ? 'Write plain text without markdown formatting; emoji are fine.'
       : 'You may use markdown (lists, bold).',
+    ...TONE_RULES,
     ...HISTORY_RULES,
     // Telegram shows plain text: a link into the app would be noise there.
     ...(plainText ? [] : HISTORY_LINKS),

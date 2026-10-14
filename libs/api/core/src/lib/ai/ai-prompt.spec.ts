@@ -17,4 +17,12 @@ describe('systemPrompt', () => {
     expect(prompt).not.toContain('/projects/<id>');
     expect(prompt).toContain('core_mood_insights');
   });
+
+  it('asks for answers without judgement everywhere: the chat, Telegram, with and without writes', () => {
+    for (const options of [{}, { plainText: true }, { allowWrites: true, hasAttachments: true }]) {
+      expect(systemPrompt(undefined, 'Europe/Warsaw', options)).toContain(
+        'Always answer without judgement.',
+      );
+    }
+  });
 });

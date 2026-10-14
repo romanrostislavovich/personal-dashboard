@@ -13,7 +13,7 @@ import { LinksService } from '../links/links.service';
 import { UsersService } from '../users/users.service';
 import { AiActionsService } from './ai-actions.service';
 import { AiConnectionsService } from './ai-connections.service';
-import { PromptOptions, systemPrompt } from './ai-prompt';
+import { NO_JUDGEMENT, PromptOptions, systemPrompt } from './ai-prompt';
 import { AiTool } from './ai-tool';
 import { withAttachments } from './attachment-text';
 import { claimsChange, FAKE_CHANGE_CORRECTION } from './claims-change';
@@ -170,7 +170,10 @@ export class AiService {
     const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
     try {
       const reply = await chatCompletion(connection, [
-        { role: 'system', content: `${instruction} Always answer in ${language}.` },
+        {
+          role: 'system',
+          content: `${instruction} ${NO_JUDGEMENT} Always answer in ${language}.`,
+        },
         { role: 'user', content },
       ]);
       return reply.content ?? '';
