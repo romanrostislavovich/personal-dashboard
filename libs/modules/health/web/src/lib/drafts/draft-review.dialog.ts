@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -8,7 +8,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
   DIAGNOSIS_STATUSES,
@@ -21,6 +20,7 @@ import {
 } from '@pd/contracts';
 import { errorBody } from '@pd/web-core';
 import { CountryFieldComponent } from '../dialogs/country-field.component';
+import { DocumentPagesComponent } from '../dialogs/document-pages.component';
 import { HealthApi } from '../health.api';
 import { SpecialityPipe, today } from '../health-labels';
 import {
@@ -48,6 +48,7 @@ export interface DraftReviewData {
   selector: 'pd-health-draft-review-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DocumentPagesComponent,
     CountryFieldComponent,
     MatButtonModule,
     MatButtonToggleModule,
@@ -64,12 +65,11 @@ export interface DraftReviewData {
   templateUrl: './draft-review.dialog.html',
   styleUrl: './draft-review.dialog.scss',
 })
-export class DraftReviewDialog implements OnDestroy {
+export class DraftReviewDialog {
   protected readonly data = inject<DraftReviewData>(MAT_DIALOG_DATA);
   private readonly api = inject(HealthApi);
   private readonly ref = inject(MatDialogRef<DraftReviewDialog, boolean>);
   private readonly fb = inject(NonNullableFormBuilder);
-  private readonly sanitizer = inject(DomSanitizer);
 
   protected readonly kinds = HEALTH_DRAFT_KINDS;
   protected readonly statuses = DIAGNOSIS_STATUSES;
@@ -77,7 +77,6 @@ export class DraftReviewDialog implements OnDestroy {
   protected readonly specialities = HEALTH_SPECIALITIES;
   protected readonly languages = ['uk', 'ru', 'pl', 'en'];
   protected readonly NEW = NEW;
-  protected readonly isPdf = this.data.document.mimeType === 'application/pdf';
 
   protected readonly form = signal<DraftForm | null>(null);
   /** The translation key of why the document could not be read; `null` — it was. */
@@ -85,12 +84,8 @@ export class DraftReviewDialog implements OnDestroy {
   protected readonly reading = signal(false);
   protected readonly busy = signal(false);
   protected readonly saveFailed = signal(false);
-  protected readonly imageUrl = signal<string | null>(null);
-  protected readonly pdfUrl = signal<SafeResourceUrl | null>(null);
-  private objectUrl: string | null = null;
 
   constructor() {
-    void this.showOriginal();
     void this.load();
   }
 
@@ -130,17 +125,6 @@ export class DraftReviewDialog implements OnDestroy {
         today(),
       ),
     );
-  }
-
-  private async showOriginal(): Promise<void> {
-    const blob = await this.api.client.documentFile(this.data.document.id);
-    this.objectUrl = URL.createObjectURL(blob);
-    if (this.isPdf) {
-      // Our own blob of the user's own file: safe to show in the frame.
-      this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.objectUrl));
-    } else {
-      this.imageUrl.set(this.objectUrl);
-    }
   }
 
   protected addDiagnosis(form: DraftForm): void {
@@ -194,11 +178,5 @@ export class DraftReviewDialog implements OnDestroy {
   protected async drop(): Promise<void> {
     await this.api.client.dropDraft(this.data.document.id);
     this.ref.close(true);
-  }
-
-  ngOnDestroy(): void {
-    if (this.objectUrl) {
-      URL.revokeObjectURL(this.objectUrl);
-    }
   }
 }

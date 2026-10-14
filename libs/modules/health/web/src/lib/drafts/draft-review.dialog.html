@@ -1,13 +1,7 @@
 <h2 mat-dialog-title>{{ 'health.drafts.title' | transloco }}</h2>
 <mat-dialog-content class="layout">
   <section class="original" [attr.aria-label]="'health.drafts.original' | transloco">
-    @if (imageUrl(); as url) {
-      <img [src]="url" [alt]="data.document.name" />
-    } @else if (pdfUrl(); as url) {
-      <iframe [src]="url" [title]="data.document.name"></iframe>
-    } @else {
-      <mat-progress-bar mode="indeterminate" />
-    }
+    <pd-health-document-pages [document]="data.document" />
   </section>
 
   <section class="draft">

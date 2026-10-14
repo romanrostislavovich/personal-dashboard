@@ -24,7 +24,9 @@ under **Updating**.
   study becomes a draft in its own language: the visit with its clinic, doctor, diagnoses and
   medications, the lab report line by line, or the study. Nothing is saved until you check the
   draft beside the original and press Save. From Telegram too: a photo with “🩺 A medical
-  document”. The AI is Health's own connection when it has one.
+  document”. The AI is Health's own connection when it has one. A document photographed page
+  by page is one document: several photos at once, pages added later, or an album in Telegram —
+  the AI reads every page together.
 - **Health: a summary for a new doctor** — current diagnoses, medications, the latest results
   with their trend, studies and visits, under headings in Polish, Ukrainian, Russian, English
   or German, the texts translated by the AI if you ask; a speciality can be left out with
@@ -61,7 +63,7 @@ under **Updating**.
 - Migration 0062 adds `integration_alerts`, 0063–0065 the tables of Psychology, 0066
   `ai_settings.module_connections`, 0067 the tables of Health, 0068 its lab results and studies, 0069 the
   drafts of its documents, 0070 the links for doctors, 0071 the profile
-  and the reminders to take medications.
+  and the reminders to take medications, 0072 the pages of its documents.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
   key as the server.
 

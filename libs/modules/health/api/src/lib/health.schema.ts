@@ -242,6 +242,28 @@ export const healthDocuments = pgTable(
   (table) => [index().on(table.userId)],
 );
 
+/**
+ * The second and later pages of a photographed document, in order; the first is the
+ * document's own `data`. They go with the document.
+ */
+export const healthDocumentPages = pgTable(
+  'health_document_pages',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: owner(),
+    documentId: uuid()
+      .notNull()
+      .references(() => healthDocuments.id, { onDelete: 'cascade' }),
+    /** 2 for the second page, and so on. */
+    page: integer().notNull(),
+    mimeType: text().notNull(),
+    size: integer().notNull(),
+    data: encryptedBytes().notNull(),
+    createdAt: created(),
+  },
+  (table) => [unique().on(table.documentId, table.page), index().on(table.userId)],
+);
+
 /** A lab report: the day the samples were taken, the laboratory, and its lines. */
 export const healthLabPanels = pgTable(
   'health_lab_panels',
@@ -355,6 +377,7 @@ registerEncryptedTables(
   healthDiagnoses,
   healthMedications,
   healthDocuments,
+  healthDocumentPages,
   healthLabPanels,
   healthLabValues,
   healthStudies,

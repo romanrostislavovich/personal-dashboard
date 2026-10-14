@@ -33,6 +33,12 @@ const MAX_TOOL_RESULT_CHARS = 12_000;
 
 export type AskOptions = Omit<PromptOptions, 'hasAttachments'>;
 
+/** A picture sent to the AI. */
+export interface AiImage {
+  data: Buffer;
+  mimeType: string;
+}
+
 export interface CompleteOptions {
   /**
    * The answer keeps the language of the content (what is read out of a document) instead of
@@ -211,13 +217,14 @@ export class AiService {
   }
 
   /**
-   * A single request about a picture (a receipt): the module's own connection answers, or else
-   * the one that reads pictures. `null` — there is none (see AiConnectionsService.vision).
+   * A single request about a picture (a receipt), or several (the pages of a document, in
+   * order): the module's own connection answers, or else the one that reads pictures.
+   * `null` — there is none (see AiConnectionsService.vision).
    */
   async completeWithImage(
     userId: string,
     instruction: string,
-    image: { data: Buffer; mimeType: string },
+    image: AiImage | AiImage[],
     module?: string,
     options: CompleteOptions = {},
   ): Promise<string | null> {
@@ -231,11 +238,14 @@ export class AiService {
       return null;
     }
     const system = await this.withLanguage(userId, instruction, options);
-    const url = `data:${image.mimeType};base64,${image.data.toString('base64')}`;
+    const content = (Array.isArray(image) ? image : [image]).map((one) => ({
+      type: 'image_url' as const,
+      image_url: { url: `data:${one.mimeType};base64,${one.data.toString('base64')}` },
+    }));
     try {
       const reply = await chatCompletion(connection, [
         { role: 'system', content: system },
-        { role: 'user', content: [{ type: 'image_url', image_url: { url } }] },
+        { role: 'user', content },
       ]);
       return reply.content ?? '';
     } catch (error) {

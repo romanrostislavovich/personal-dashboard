@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -10,10 +10,12 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import {
   HEALTH_DOCUMENT_KINDS,
   HEALTH_DOCUMENT_MAX_BYTES,
+  HEALTH_DOCUMENT_MAX_PAGES,
   HEALTH_DOCUMENT_TYPES,
   HealthDocument,
   HealthDocumentKind,
   HealthRecord,
+  isHealthPageType,
 } from '@pd/contracts';
 import { HealthApi } from '../health.api';
 import { fileSize, orNull } from '../health-labels';
@@ -55,18 +57,43 @@ export interface DocumentDialogData {
               #input
               type="file"
               hidden
+              multiple
               [accept]="types"
-              (change)="choose($any($event.target).files?.[0])"
+              (change)="choose($any($event.target).files)"
             />
-            @if (file(); as chosen) {
-              <span>{{ chosen.name }} · {{ size(chosen.size) }}</span>
+            @if (files().length === 1) {
+              <span>{{ files()[0].name }} · {{ size(files()[0].size) }}</span>
+            } @else if (files().length > 1) {
+              <span>{{ 'health.document.pages' | transloco: { count: files().length } }}</span>
             } @else {
               <span class="hint">{{ 'health.document.types' | transloco }}</span>
             }
           </div>
-          @if (tooBig()) {
-            <p class="error" role="alert">{{ 'health.document.tooBig' | transloco }}</p>
-          }
+          <p class="hint">{{ 'health.document.pagesHint' | transloco }}</p>
+        } @else if (takesPages) {
+          <div class="file">
+            <button matButton="tonal" type="button" (click)="pages.click()">
+              <mat-icon>add_photo_alternate</mat-icon> {{ 'health.document.addPages' | transloco }}
+            </button>
+            <input
+              #pages
+              type="file"
+              hidden
+              multiple
+              [accept]="imageTypes"
+              (change)="choose($any($event.target).files)"
+            />
+            @if (files().length) {
+              <span>{{ 'health.document.newPages' | transloco: { count: files().length } }}</span>
+            } @else {
+              <span class="hint">
+                {{ 'health.document.pages' | transloco: { count: data.document.pages } }}
+              </span>
+            }
+          </div>
+        }
+        @if (problem(); as key) {
+          <p class="error" role="alert">{{ key | transloco }}</p>
         }
         <mat-form-field>
           <mat-label>{{ 'health.document.name' | transloco }}</mat-label>
@@ -108,7 +135,7 @@ export interface DocumentDialogData {
         <button
           matButton="filled"
           type="submit"
-          [disabled]="form.invalid || busy() || (!data.document && (!file() || tooBig()))"
+          [disabled]="form.invalid || busy() || problem() || (!data.document && !files().length)"
         >
           {{ 'core.actions.save' | transloco }}
         </button>
@@ -154,13 +181,20 @@ export class DocumentDialog {
 
   protected readonly kinds = HEALTH_DOCUMENT_KINDS;
   protected readonly types = HEALTH_DOCUMENT_TYPES.join(',');
+  protected readonly imageTypes = HEALTH_DOCUMENT_TYPES.filter(isHealthPageType).join(',');
   protected readonly size = fileSize;
-  protected readonly file = signal<File | null>(null);
-  protected readonly tooBig = signal(false);
+  /** One file, or the photos of the pages in order; for a document kept — pages to add. */
+  protected readonly files = signal<File[]>([]);
+  /** What is wrong with the files chosen (a translation key); `null` — nothing. */
+  protected readonly problem = computed(() => filesProblem(this.files(), this.data.document));
   protected readonly busy = signal(false);
   protected readonly error = signal(false);
 
   private readonly document = this.data.document;
+  /** A photographed document takes more pages; a PDF has its own. */
+  protected readonly takesPages = Boolean(
+    this.document && isHealthPageType(this.document.mimeType),
+  );
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: [this.document?.name ?? '', Validators.required],
     kind: (this.document?.kind ?? 'consultation') as HealthDocumentKind,
@@ -168,12 +202,12 @@ export class DocumentDialog {
     visitId: this.document?.visitId ?? this.data.visitId ?? '',
   });
 
-  /** The name of the file, without its extension, until one is typed. */
-  protected choose(file: File | undefined): void {
-    this.file.set(file ?? null);
-    this.tooBig.set(Boolean(file && file.size > HEALTH_DOCUMENT_MAX_BYTES));
-    if (file && !this.form.controls.name.value.trim()) {
-      this.form.controls.name.setValue(file.name.replace(/\.[^.]+$/, '').slice(0, 200));
+  /** The name of the first file, without its extension, until one is typed. */
+  protected choose(list: FileList | null): void {
+    const files = Array.from(list ?? []);
+    this.files.set(files);
+    if (files.length && !this.form.controls.name.value.trim()) {
+      this.form.controls.name.setValue(files[0].name.replace(/\.[^.]+$/, '').slice(0, 200));
     }
   }
 
@@ -185,14 +219,16 @@ export class DocumentDialog {
       documentedOn: orNull(value.documentedOn),
       visitId: orNull(value.visitId),
     };
-    const file = this.file();
+    const [first, ...rest] = this.files();
     this.busy.set(true);
     this.error.set(false);
     try {
-      if (this.document) {
-        await this.api.client.updateDocument(this.document.id, input);
-      } else if (file) {
-        await this.api.client.uploadDocument(input, file);
+      // The first file makes the document, the others follow it as its pages.
+      const id = this.document
+        ? (await this.api.client.updateDocument(this.document.id, input)).id
+        : (await this.api.client.uploadDocument(input, first)).id;
+      for (const page of this.document ? this.files() : rest) {
+        await this.api.client.addDocumentPage(id, page);
       }
       this.ref.close(true);
     } catch {
@@ -201,4 +237,22 @@ export class DocumentDialog {
       this.busy.set(false);
     }
   }
+}
+
+/**
+ * Why the files cannot go as they are: a PDF goes alone (it has pages of its own), pages are
+ * photos, and there are not more than a document holds. `existing` — pages are added to it.
+ */
+function filesProblem(files: File[], existing: HealthDocument | undefined): string | null {
+  if (files.some((file) => file.size > HEALTH_DOCUMENT_MAX_BYTES)) {
+    return 'health.document.tooBig';
+  }
+  const photos = files.every((file) => isHealthPageType(file.type));
+  if (!photos && (files.length > 1 || existing)) {
+    return 'health.document.onePdf';
+  }
+  if (files.length + (existing?.pages ?? 0) > HEALTH_DOCUMENT_MAX_PAGES) {
+    return 'health.document.tooManyPages';
+  }
+  return null;
 }

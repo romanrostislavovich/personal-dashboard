@@ -51,8 +51,16 @@ export interface BotAction {
 }
 
 /** A photo sent to the bot by a user who has linked Telegram. */
-export interface BotPhoto {
+export interface BotPhoto extends BotPhotoPage {
   caption: string;
+  /**
+   * Every photo of an album, in order, for a handler that takes an album as one
+   * (`BotPhotoChoice.wholeAlbum`); otherwise only this photo.
+   */
+  pages: BotPhotoPage[];
+}
+
+export interface BotPhotoPage {
   /** Telegram photos are JPEG; the largest available size is downloaded. */
   mimeType: string;
   download: () => Promise<Buffer>;
@@ -70,6 +78,11 @@ export interface BotPhotoChoice {
   /** Short, Latin letters: it is part of the button's 64 bytes. */
   id: string;
   label: { en: string; ru: string };
+  /**
+   * An album comes as one call with all its photos in `BotPhoto.pages` (the pages of one
+   * document); without it, one call a photo, as if they were sent one by one.
+   */
+  wholeAlbum?: boolean;
 }
 
 /** A file sent to the bot as a document (not as a compressed photo). */

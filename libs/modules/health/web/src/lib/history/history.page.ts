@@ -244,6 +244,9 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
                   document.mimeType === 'application/pdf' ? 'picture_as_pdf' : 'image'
                 }}</mat-icon>
                 {{ document.name }}
+                @if (document.pages > 1) {
+                  · {{ 'health.document.pages' | transloco: { count: document.pages } }}
+                }
               </button>
             }
             @if (visit.nextVisitOn) {
@@ -291,6 +294,9 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
                 document.mimeType === 'application/pdf' ? 'picture_as_pdf' : 'image'
               }}</mat-icon>
               {{ document.name }}
+              @if (document.pages > 1) {
+                · {{ 'health.document.pages' | transloco: { count: document.pages } }}
+              }
             </button>
             <span class="hint">
               {{ 'health.documentKinds.' + document.kind | transloco }}
@@ -629,8 +635,10 @@ export class HistoryPage {
     }
   }
 
-  protected open(document: HealthDocument): Promise<void> {
-    return this.dialogs.openDocument(document);
+  protected async open(document: HealthDocument): Promise<void> {
+    if (await this.dialogs.openDocument(document)) {
+      this.record.reload();
+    }
   }
 }
 

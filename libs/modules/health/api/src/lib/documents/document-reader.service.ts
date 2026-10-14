@@ -5,7 +5,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { AiService, DB, Database } from '@pd/api-core';
+import { AiImage, AiService, DB, Database } from '@pd/api-core';
 import {
   HealthDocumentDraft,
   healthDocumentDraftSchema,
@@ -14,10 +14,10 @@ import {
   HealthDraftApplied,
   HealthDraftKind,
 } from '@pd/contracts';
-import { and, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { extractText } from 'unpdf';
 import { z } from 'zod';
-import { healthDocuments } from '../health.schema';
+import { healthDocumentPages, healthDocuments } from '../health.schema';
 import { HealthService } from '../health.service';
 import { LabsService } from '../labs.service';
 import { assertOwnedId, found } from '../owned';
@@ -33,6 +33,11 @@ export type ValidDraftApply = z.output<typeof healthDraftApplySchema>;
 
 /** Why a document could not be read; the page tells it in the user's language. */
 export type ReadFailure = 'scanned' | 'noAi' | 'noVision' | 'aiOff' | 'aiFailed' | 'unreadable';
+
+/** Told with a document photographed page by page. */
+const PAGES_NOTE =
+  'The pictures are the pages of one document, in order: read them as one document, and ' +
+  'take every diagnosis, medication and lab result from every page.';
 
 /** A PDF with less text than this is a scan: its text has to be seen, not read. */
 const MIN_PDF_TEXT = 40;
@@ -70,7 +75,15 @@ export class DocumentReaderService {
       .from(healthDocuments)
       .where(and(eq(healthDocuments.id, documentId), eq(healthDocuments.userId, userId)));
     const { data, mimeType, kind } = found(document, 'Document');
-    const answer = await this.ask(userId, data, mimeType, DRAFT_INSTRUCTION);
+    const rest = await this.db
+      .select({ data: healthDocumentPages.data, mimeType: healthDocumentPages.mimeType })
+      .from(healthDocumentPages)
+      .where(
+        and(eq(healthDocumentPages.documentId, documentId), eq(healthDocumentPages.userId, userId)),
+      )
+      .orderBy(asc(healthDocumentPages.page));
+    const pages: AiImage[] = [{ data, mimeType }, ...rest];
+    const answer = await this.ask(userId, pages, DRAFT_INSTRUCTION);
     const read = parseDraft(answer);
     // The shape only — keys and the length of the lists, never the document's words.
     this.logger.log(
@@ -80,7 +93,7 @@ export class DocumentReaderService {
     if (!read) {
       throw failure('unreadable');
     }
-    const draft = read.labValues.length ? read : await this.withLabs(userId, data, mimeType, read);
+    const draft = read.labValues.length ? read : await this.withLabs(userId, pages, read);
     await this.db
       .update(healthDocuments)
       .set({
@@ -161,12 +174,11 @@ export class DocumentReaderService {
    */
   private async withLabs(
     userId: string,
-    data: Buffer,
-    mimeType: string,
+    pages: AiImage[],
     draft: HealthDocumentDraft,
   ): Promise<HealthDocumentDraft> {
     try {
-      const labs = parseLabs(await this.ask(userId, data, mimeType, LABS_INSTRUCTION));
+      const labs = parseLabs(await this.ask(userId, pages, LABS_INSTRUCTION));
       this.logger.log(
         `Lab results asked again: ${labs.labValues.length} results, ` +
           `${labs.orderedTests} tests ordered without a result`,
@@ -179,14 +191,10 @@ export class DocumentReaderService {
     }
   }
 
-  /** The AI's answer about a picture or the text of a PDF. */
-  private async ask(
-    userId: string,
-    data: Buffer,
-    mimeType: string,
-    instruction: string,
-  ): Promise<string> {
+  /** The AI's answer about the pictures of the pages, or the text of a PDF. */
+  private async ask(userId: string, pages: AiImage[], instruction: string): Promise<string> {
     try {
+      const [{ data, mimeType }] = pages;
       if (mimeType === 'application/pdf') {
         const text = await pdfText(data);
         if (text.replace(/\s+/g, '').length < MIN_PDF_TEXT) {
@@ -198,8 +206,8 @@ export class DocumentReaderService {
       }
       const answer = await this.ai.completeWithImage(
         userId,
-        instruction,
-        { data, mimeType },
+        pages.length > 1 ? `${instruction}\n\n${PAGES_NOTE}` : instruction,
+        pages,
         'health',
         { keepLanguage: true },
       );
