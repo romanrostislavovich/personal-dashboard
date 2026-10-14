@@ -1,4 +1,4 @@
-import { hiddenFromShared } from './ai-connections.service';
+import { acceptsReasoningEffort, hiddenFromShared } from './ai-connections.service';
 
 describe('hiddenFromShared', () => {
   it('keeps the modules switched off', () => {
@@ -22,5 +22,23 @@ describe('hiddenFromShared', () => {
         'cloud',
       ),
     ).toEqual(['health']);
+  });
+});
+
+describe('acceptsReasoningEffort', () => {
+  it('is sent to the reasoning models of OpenAI', () => {
+    expect(acceptsReasoningEffort('openai', 'gpt-6-luna')).toBe(true);
+    expect(acceptsReasoningEffort('openai', 'gpt-5.1')).toBe(true);
+  });
+
+  it('is not sent to the older ones, which answer 400 to it', () => {
+    expect(acceptsReasoningEffort('openai', 'gpt-4o-mini')).toBe(false);
+    expect(acceptsReasoningEffort('openai', 'gpt-4.1')).toBe(false);
+    expect(acceptsReasoningEffort('openai', 'chatgpt-4o-latest')).toBe(false);
+  });
+
+  it('is not sent to other providers at all', () => {
+    expect(acceptsReasoningEffort('deepseek', 'deepseek-chat')).toBe(false);
+    expect(acceptsReasoningEffort('ollama', 'gpt-6-luna')).toBe(false);
   });
 });
