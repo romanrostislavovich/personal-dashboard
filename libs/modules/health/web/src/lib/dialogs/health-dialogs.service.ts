@@ -70,9 +70,9 @@ export class HealthDialogs {
     return true;
   }
 
-  /** Shows the original over the page (see DocumentViewerDialog). */
-  async openDocument(document: HealthDocument): Promise<void> {
-    await this.open(DocumentViewerDialog, document, { autoFocus: 'dialog', maxWidth: '95vw' });
+  /** Shows the original over the page (see DocumentViewerDialog); `true` — a page went. */
+  openDocument(document: HealthDocument): Promise<boolean> {
+    return this.open(DocumentViewerDialog, document, { autoFocus: 'dialog', maxWidth: '95vw' });
   }
 
   private async open<D, C>(

@@ -23,7 +23,7 @@ export { TelegramBotService } from './lib/notifications/telegram/telegram-bot.se
 export * from './lib/achievements/achievement-metric';
 export { AchievementsService } from './lib/achievements/achievements.service';
 export * from './lib/ai/ai-tool';
-export { AiService, type CompleteOptions } from './lib/ai/ai.service';
+export { type AiImage, AiService, type CompleteOptions } from './lib/ai/ai.service';
 export { decodeText } from './lib/ai/attachment-text';
 export * from './lib/ai/digest-section';
 export { MorningDigestService } from './lib/ai/morning-digest.service';

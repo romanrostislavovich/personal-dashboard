@@ -61,12 +61,25 @@ interface PendingLink {
  */
 /** A photo waits this long for the user to say where it goes. */
 const PENDING_PHOTO_TTL_MS = 30 * 60_000;
+/** The photos of an album come as separate messages: the last is waited for this long. */
+const ALBUM_WAIT_MS = 1_500;
 
-interface PendingPhoto {
+/** One photo, or the photos of an album in order. */
+interface Photos {
   caption: string;
-  fileId: string;
+  fileIds: string[];
+}
+
+interface PendingPhoto extends Photos {
   expiresAt: number;
 }
+
+interface Album extends Photos {
+  ctx: Context;
+  timer?: ReturnType<typeof setTimeout>;
+}
+
+type PhotoEntry = { choice: BotPhotoChoice; handler: BotPhotoHandler };
 
 @Injectable()
 export class TelegramBotService implements OnApplicationBootstrap, OnApplicationShutdown {
@@ -78,9 +91,11 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   private readonly actions: BotAction[] = [];
   /** Chats the bot asked something: the next message there is the answer. */
   private readonly expectedText = new Map<string, ExpectedText>();
-  private readonly photoHandlers: { choice: BotPhotoChoice; handler: BotPhotoHandler }[] = [];
+  private readonly photoHandlers: PhotoEntry[] = [];
   /** Photos waiting for the user to say where they go (with several photo handlers). */
   private readonly pendingPhotos = new Map<string, PendingPhoto>();
+  /** Albums still coming in, by chat and album. */
+  private readonly albums = new Map<string, Album>();
   private documentHandler: BotDocumentHandler | null = null;
   private textHandler: BotTextHandler | null = null;
   private voiceTranscriber: BotVoiceTranscriber | null = null;
@@ -311,8 +326,8 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   }
 
   /**
-   * Photos and documents from an unlinked chat are ignored silently. With one photo handler it
-   * takes the photo; with several the bot asks with buttons where the photo goes.
+   * Photos and documents from an unlinked chat are ignored silently. The photos of an album
+   * are gathered first, so it is asked about and handled once.
    */
   private async onPhoto(ctx: Filter<Context, 'message:photo'>): Promise<void> {
     const user = await this.users.findByTelegramChatId(String(ctx.chat.id));
@@ -320,18 +335,42 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       return;
     }
     const largest = ctx.message.photo[ctx.message.photo.length - 1];
-    const photo = { caption: ctx.message.caption ?? '', fileId: largest.file_id };
-    if (this.photoHandlers.length === 1) {
-      await this.answer(
-        ctx,
-        user,
-        await this.handlePhoto(user, this.photoHandlers[0].handler, photo),
+    const caption = ctx.message.caption ?? '';
+    const group = ctx.message.media_group_id;
+    if (!group) {
+      await this.takePhotos(ctx, user, { caption, fileIds: [largest.file_id] });
+      return;
+    }
+    const key = `${ctx.chat.id}:${group}`;
+    const album = this.albums.get(key) ?? { ctx, caption: '', fileIds: [] };
+    album.fileIds.push(largest.file_id);
+    album.caption ||= caption;
+    clearTimeout(album.timer);
+    album.timer = setTimeout(() => {
+      this.albums.delete(key);
+      this.takePhotos(album.ctx, user, album).catch((error) =>
+        this.logger.warn(`An album could not be taken: ${error}`),
       );
+    }, ALBUM_WAIT_MS);
+    this.albums.set(key, album);
+  }
+
+  /**
+   * With one photo handler it takes the photos; with several the bot asks with buttons where
+   * they go.
+   */
+  private async takePhotos(ctx: Context, user: UserRow, photos: Photos): Promise<void> {
+    if (this.photoHandlers.length === 1) {
+      await this.answer(ctx, user, await this.handlePhotos(user, this.photoHandlers[0], photos));
       return;
     }
     const token = randomBytes(6).toString('base64url');
     this.dropOldPhotos();
-    this.pendingPhotos.set(token, { ...photo, expiresAt: Date.now() + PENDING_PHOTO_TTL_MS });
+    this.pendingPhotos.set(token, {
+      caption: photos.caption,
+      fileIds: photos.fileIds,
+      expiresAt: Date.now() + PENDING_PHOTO_TTL_MS,
+    });
     const keyboard = new InlineKeyboard();
     for (const { choice } of this.photoHandlers) {
       keyboard.text(
@@ -351,19 +390,32 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       return coreMessages(user.locale).telegramPhotoExpired;
     }
     this.pendingPhotos.delete(token);
-    return this.handlePhoto(user, target.handler, photo);
+    return this.handlePhotos(user, target, photo);
   }
 
-  private handlePhoto(
-    user: UserRow,
-    handler: BotPhotoHandler,
-    photo: { caption: string; fileId: string },
-  ): Promise<string> {
-    return handler(user, {
-      caption: photo.caption,
+  /**
+   * An album goes as one call to a handler that takes it whole, and photo by photo to the
+   * others (the caption with the first); the same reply is said once.
+   */
+  private async handlePhotos(user: UserRow, entry: PhotoEntry, photos: Photos): Promise<string> {
+    const pages = photos.fileIds.map((fileId) => ({
       mimeType: 'image/jpeg',
-      download: () => this.downloadFile(photo.fileId),
-    });
+      download: () => this.downloadFile(fileId),
+    }));
+    if (entry.choice.wholeAlbum || pages.length === 1) {
+      return entry.handler(user, { caption: photos.caption, ...pages[0], pages });
+    }
+    const replies: string[] = [];
+    for (const [index, page] of pages.entries()) {
+      replies.push(
+        await entry.handler(user, {
+          caption: index === 0 ? photos.caption : '',
+          ...page,
+          pages: [page],
+        }),
+      );
+    }
+    return [...new Set(replies.filter(Boolean))].join('\n');
   }
 
   private dropOldPhotos(): void {

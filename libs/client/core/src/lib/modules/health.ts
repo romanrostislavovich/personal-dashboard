@@ -120,8 +120,18 @@ export function healthApi(api: ApiClient) {
     },
     updateDocument: (id: string, input: HealthDocumentInput) =>
       api.put<HealthDocument>(`${BASE}/documents/${id}`, input),
-    /** The bytes, for an object URL (a link cannot send the auth header). */
-    documentFile: (id: string) => api.blob(`${BASE}/documents/${id}/file`),
+    /** The bytes of a page, for an object URL (a link cannot send the auth header). */
+    documentFile: (id: string, page = 1) =>
+      api.blob(`${BASE}/documents/${id}/file${page > 1 ? `?page=${page}` : ''}`),
+    /** One more photographed page at the end. */
+    addDocumentPage: (id: string, file: Blob) => {
+      const form = new FormData();
+      form.append('file', file);
+      return api.post<HealthDocument>(`${BASE}/documents/${id}/pages`, form);
+    },
+    /** A page after the first taken out; the ones after it move up. */
+    removeDocumentPage: (id: string, page: number) =>
+      api.delete<HealthDocument>(`${BASE}/documents/${id}/pages/${page}`),
     removeDocument: (id: string) => api.delete(`${BASE}/documents/${id}`),
 
     /** The AI reads the document into a draft (kept next to it); takes up to a minute. */

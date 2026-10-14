@@ -505,6 +505,13 @@
       "when": 1791987794471,
       "tag": "0071_health_profile_intakes",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1792000527836,
+      "tag": "0072_health_document_pages",
+      "breakpoints": true
     }
   ]
 }

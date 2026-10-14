@@ -2,12 +2,14 @@ import {
   BadRequestException,
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Header,
   HttpCode,
   NotFoundException,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Post,
   Put,
@@ -305,12 +307,39 @@ export class HealthController {
     return this.health.updateDocument(user.id, id, input);
   }
 
-  /** The file itself; the browser fetches it with the auth header, as a blob. */
+  /** A page of the file (`?page=2`; the first without it); fetched with the auth header. */
   @Get('documents/:id/file')
   @Header('Cache-Control', 'private, no-store')
-  async documentFile(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    const { data, mimeType } = await this.health.documentFile(user.id, id);
+  async documentFile(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+  ) {
+    const { data, mimeType } = await this.health.documentFile(user.id, id, page);
     return new StreamableFile(data, { type: mimeType });
+  }
+
+  /** One more photographed page, in `file`, at the end. */
+  @Post('documents/:id/pages')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: HEALTH_DOCUMENT_MAX_BYTES } }))
+  addPage(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: UploadedDocument | undefined,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Expected a file in the "file" field');
+    }
+    return this.health.addPage(user.id, id, { data: file.buffer, mimeType: file.mimetype });
+  }
+
+  @Delete('documents/:id/pages/:page')
+  removePage(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('page', ParseIntPipe) page: number,
+  ) {
+    return this.health.removePage(user.id, id, page);
   }
 
   // --- A document read by the AI: a draft, checked and saved by the user ---

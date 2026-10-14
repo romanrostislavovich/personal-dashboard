@@ -207,6 +207,8 @@ export interface HealthMedication {
 // --- Documents ---
 
 export const HEALTH_DOCUMENT_MAX_BYTES = 20 * 1024 * 1024;
+/** A photographed document has a page a photo; a PDF has its own pages. */
+export const HEALTH_DOCUMENT_MAX_PAGES = 20;
 export const HEALTH_DOCUMENT_TYPES = [
   'application/pdf',
   'image/jpeg',
@@ -234,6 +236,11 @@ export const healthDocumentInputSchema = z.object({
 });
 export type HealthDocumentInput = z.input<typeof healthDocumentInputSchema>;
 
+/** Pictures may become pages of one document; a PDF may not, it has pages of its own. */
+export function isHealthPageType(mimeType: string): boolean {
+  return mimeType.startsWith('image/');
+}
+
 export interface HealthDocument {
   id: string;
   name: string;
@@ -242,6 +249,8 @@ export interface HealthDocument {
   visitId: string | null;
   mimeType: string;
   size: number;
+  /** Photos of a document taken page by page; 1 for one photo or a PDF. */
+  pages: number;
   /** The AI has read it and the draft waits to be checked (see HealthDocumentDraft). */
   hasDraft: boolean;
   createdAt: string;

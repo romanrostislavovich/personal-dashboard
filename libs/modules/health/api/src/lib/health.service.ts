@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { DB, Database } from '@pd/api-core';
 import {
+  HEALTH_DOCUMENT_MAX_PAGES,
   HEALTH_DOCUMENT_TYPES,
   HealthClinic,
   healthClinicInputSchema,
@@ -15,8 +16,9 @@ import {
   HealthRecord,
   HealthVisit,
   healthVisitInputSchema,
+  isHealthPageType,
 } from '@pd/contracts';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, max, sql } from 'drizzle-orm';
 import { PgTable } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import {
@@ -27,6 +29,7 @@ import {
   HealthDoctorRow,
   healthDoctors,
   HealthDocumentRow,
+  healthDocumentPages,
   healthDocuments,
   HealthMedicationRow,
   healthMedications,
@@ -313,12 +316,123 @@ export class HealthService {
     return toDocument(found(row, 'Document'));
   }
 
-  async documentFile(userId: string, id: string): Promise<{ data: Buffer; mimeType: string }> {
+  /** A page of it: the first is the document's own file. */
+  async documentFile(
+    userId: string,
+    id: string,
+    page = 1,
+  ): Promise<{ data: Buffer; mimeType: string }> {
+    if (page > 1) {
+      const [row] = await this.db
+        .select({ data: healthDocumentPages.data, mimeType: healthDocumentPages.mimeType })
+        .from(healthDocumentPages)
+        .where(
+          and(
+            eq(healthDocumentPages.documentId, id),
+            eq(healthDocumentPages.userId, userId),
+            eq(healthDocumentPages.page, page),
+          ),
+        );
+      return found(row, 'Page');
+    }
     const [row] = await this.db
       .select({ data: healthDocuments.data, mimeType: healthDocuments.mimeType })
       .from(healthDocuments)
       .where(and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)));
     return found(row, 'Document');
+  }
+
+  /** Every page, in order: what the AI reads. */
+  async documentPages(userId: string, id: string): Promise<{ data: Buffer; mimeType: string }[]> {
+    const first = await this.documentFile(userId, id);
+    const rest = await this.db
+      .select({ data: healthDocumentPages.data, mimeType: healthDocumentPages.mimeType })
+      .from(healthDocumentPages)
+      .where(and(eq(healthDocumentPages.documentId, id), eq(healthDocumentPages.userId, userId)))
+      .orderBy(asc(healthDocumentPages.page));
+    return [first, ...rest];
+  }
+
+  /** One more photographed page at the end; a PDF has its own pages and takes none. */
+  async addPage(
+    userId: string,
+    id: string,
+    file: { data: Buffer; mimeType: string },
+  ): Promise<HealthDocument> {
+    const [document] = await this.db
+      .select({ mimeType: healthDocuments.mimeType })
+      .from(healthDocuments)
+      .where(and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)));
+    if (
+      !isHealthPageType(found(document, 'Document').mimeType) ||
+      !isHealthPageType(file.mimeType)
+    ) {
+      throw new BadRequestException(
+        'Pages are photos (JPEG, PNG, WebP) of a photographed document',
+      );
+    }
+    const pages = await this.pageCount(id);
+    if (pages >= HEALTH_DOCUMENT_MAX_PAGES) {
+      throw new BadRequestException(`A document has ${HEALTH_DOCUMENT_MAX_PAGES} pages at most`);
+    }
+    await this.db.insert(healthDocumentPages).values({
+      userId,
+      documentId: id,
+      page: pages + 1,
+      mimeType: file.mimeType,
+      size: file.data.length,
+      data: file.data,
+    });
+    return this.document(userId, id);
+  }
+
+  /** A page taken out; the ones after it move up. The first page is the document itself. */
+  async removePage(userId: string, id: string, page: number): Promise<HealthDocument> {
+    if (page < 2) {
+      throw new BadRequestException('The first page goes only with the whole document');
+    }
+    await this.db.transaction(async (tx) => {
+      const [removed] = await tx
+        .delete(healthDocumentPages)
+        .where(
+          and(
+            eq(healthDocumentPages.documentId, id),
+            eq(healthDocumentPages.userId, userId),
+            eq(healthDocumentPages.page, page),
+          ),
+        )
+        .returning({ id: healthDocumentPages.id });
+      found(removed, 'Page');
+      // One by one, up from the next: (document, page) stays unique on every step.
+      const later = await tx
+        .select({ id: healthDocumentPages.id, page: healthDocumentPages.page })
+        .from(healthDocumentPages)
+        .where(and(eq(healthDocumentPages.documentId, id), gt(healthDocumentPages.page, page)))
+        .orderBy(asc(healthDocumentPages.page));
+      for (const row of later) {
+        await tx
+          .update(healthDocumentPages)
+          .set({ page: row.page - 1 })
+          .where(eq(healthDocumentPages.id, row.id));
+      }
+    });
+    return this.document(userId, id);
+  }
+
+  private async document(userId: string, id: string): Promise<HealthDocument> {
+    const [row] = await this.db
+      .select(documentColumns)
+      .from(healthDocuments)
+      .where(and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)));
+    return toDocument(found(row, 'Document'));
+  }
+
+  private async pageCount(id: string): Promise<number> {
+    const [row] = await this.db
+      .select({ last: max(healthDocumentPages.page) })
+      .from(healthDocumentPages)
+      .where(eq(healthDocumentPages.documentId, id));
+    return row?.last ?? 1;
   }
 
   async removeDocument(userId: string, id: string): Promise<void> {
@@ -364,6 +478,8 @@ const documentColumns = {
   mimeType: healthDocuments.mimeType,
   size: healthDocuments.size,
   hasDraft: sql<boolean>`${healthDocuments.draft} is not null`,
+  // Named in full: inside the subquery a bare `id` would be the page's own.
+  pages: sql<number>`(select coalesce(max(p.page), 1) from health_document_pages p where p.document_id = health_documents.id)::int`,
   createdAt: healthDocuments.createdAt,
 };
 
@@ -442,7 +558,10 @@ function toMedication(row: HealthMedicationRow): HealthMedication {
 }
 
 function toDocument(
-  row: Omit<HealthDocumentRow, 'data' | 'draft' | 'userId' | 'updatedAt'> & { hasDraft: boolean },
+  row: Omit<HealthDocumentRow, 'data' | 'draft' | 'userId' | 'updatedAt'> & {
+    hasDraft: boolean;
+    pages: number;
+  },
 ): HealthDocument {
   return {
     id: row.id,
@@ -452,6 +571,7 @@ function toDocument(
     visitId: row.visitId,
     mimeType: row.mimeType,
     size: row.size,
+    pages: row.pages,
     hasDraft: row.hasDraft,
     createdAt: row.createdAt.toISOString(),
   };

@@ -132,7 +132,17 @@
     "kind": "Kind",
     "date": "Date of the document",
     "download": "Download",
-    "close": "Close"
+    "close": "Close",
+    "pages": "{{count}} pages",
+    "page": "Page {{page}} of {{pages}}",
+    "previous": "Previous page",
+    "next": "Next page",
+    "removePage": "Remove the page",
+    "addPages": "Add pages",
+    "pagesHint": "Several photos become the pages of one document, in the order chosen.",
+    "onePdf": "A PDF goes alone: it has pages of its own.",
+    "tooManyPages": "A document has 20 pages at most.",
+    "newPages": "Pages to add: {{count}}"
   },
   "clinic": {
     "title": "Clinics",
