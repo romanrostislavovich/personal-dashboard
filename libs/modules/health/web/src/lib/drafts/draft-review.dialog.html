@@ -115,78 +115,6 @@
               <mat-label>{{ 'health.visit.nextVisitOn' | transloco }}</mat-label>
               <input matInput type="date" formControlName="nextVisitOn" />
             </mat-form-field>
-
-            <h3 class="section">{{ 'health.tabs.conditions' | transloco }}</h3>
-            <div formArrayName="diagnoses" class="lines">
-              @for (line of form.controls.diagnoses.controls; track line; let i = $index) {
-                <div class="line" [formGroupName]="i">
-                  <mat-form-field subscriptSizing="dynamic" class="code">
-                    <mat-label>{{ 'health.diagnosis.code' | transloco }}</mat-label>
-                    <input matInput maxlength="20" formControlName="code" />
-                  </mat-form-field>
-                  <mat-form-field subscriptSizing="dynamic" class="wide">
-                    <mat-label>{{ 'health.diagnosis.title' | transloco }}</mat-label>
-                    <input matInput maxlength="500" formControlName="title" />
-                  </mat-form-field>
-                  <mat-form-field subscriptSizing="dynamic" class="status">
-                    <mat-label>{{ 'health.diagnosis.status' | transloco }}</mat-label>
-                    <mat-select formControlName="status">
-                      @for (status of statuses; track status) {
-                        <mat-option [value]="status">
-                          {{ 'health.statuses.' + status | transloco }}
-                        </mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
-                  <button
-                    matIconButton
-                    type="button"
-                    [attr.aria-label]="'core.actions.delete' | transloco"
-                    (click)="form.controls.diagnoses.removeAt(i)"
-                  >
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </div>
-              }
-            </div>
-            <button matButton type="button" class="add" (click)="addDiagnosis(form)">
-              <mat-icon>add</mat-icon> {{ 'health.diagnosis.one' | transloco }}
-            </button>
-
-            <h3 class="section">{{ 'health.tabs.medications' | transloco }}</h3>
-            <div formArrayName="medications" class="lines">
-              @for (line of form.controls.medications.controls; track line; let i = $index) {
-                <div class="line" [formGroupName]="i">
-                  <mat-form-field subscriptSizing="dynamic" class="wide">
-                    <mat-label>{{ 'health.medication.name' | transloco }}</mat-label>
-                    <input matInput maxlength="200" formControlName="name" />
-                  </mat-form-field>
-                  <mat-form-field subscriptSizing="dynamic">
-                    <mat-label>{{ 'health.medication.substance' | transloco }}</mat-label>
-                    <input matInput maxlength="200" formControlName="substance" />
-                  </mat-form-field>
-                  <mat-form-field subscriptSizing="dynamic">
-                    <mat-label>{{ 'health.medication.dose' | transloco }}</mat-label>
-                    <input matInput maxlength="200" formControlName="dose" />
-                  </mat-form-field>
-                  <mat-form-field subscriptSizing="dynamic" class="wide">
-                    <mat-label>{{ 'health.medication.schedule' | transloco }}</mat-label>
-                    <input matInput maxlength="500" formControlName="schedule" />
-                  </mat-form-field>
-                  <button
-                    matIconButton
-                    type="button"
-                    [attr.aria-label]="'core.actions.delete' | transloco"
-                    (click)="form.controls.medications.removeAt(i)"
-                  >
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </div>
-              }
-            </div>
-            <button matButton type="button" class="add" (click)="addMedication(form)">
-              <mat-icon>add</mat-icon> {{ 'health.medication.one' | transloco }}
-            </button>
           }
 
           @case ('labs') {
@@ -255,6 +183,81 @@
           @default {
             <p class="hint">{{ 'health.drafts.otherHint' | transloco }}</p>
           }
+        }
+
+        <!-- Whatever the kind: a lab report or a study may also name a diagnosis or prescribe. -->
+        @if (form.controls.kind.value !== 'other') {
+          <h3 class="section">{{ 'health.tabs.conditions' | transloco }}</h3>
+          <div formArrayName="diagnoses" class="lines">
+            @for (line of form.controls.diagnoses.controls; track line; let i = $index) {
+              <div class="line" [formGroupName]="i">
+                <mat-form-field subscriptSizing="dynamic" class="code">
+                  <mat-label>{{ 'health.diagnosis.code' | transloco }}</mat-label>
+                  <input matInput maxlength="20" formControlName="code" />
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic" class="wide">
+                  <mat-label>{{ 'health.diagnosis.title' | transloco }}</mat-label>
+                  <input matInput maxlength="500" formControlName="title" />
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic" class="status">
+                  <mat-label>{{ 'health.diagnosis.status' | transloco }}</mat-label>
+                  <mat-select formControlName="status">
+                    @for (status of statuses; track status) {
+                      <mat-option [value]="status">
+                        {{ 'health.statuses.' + status | transloco }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <button
+                  matIconButton
+                  type="button"
+                  [attr.aria-label]="'core.actions.delete' | transloco"
+                  (click)="form.controls.diagnoses.removeAt(i)"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+          <button matButton type="button" class="add" (click)="addDiagnosis(form)">
+            <mat-icon>add</mat-icon> {{ 'health.diagnosis.one' | transloco }}
+          </button>
+
+          <h3 class="section">{{ 'health.tabs.medications' | transloco }}</h3>
+          <div formArrayName="medications" class="lines">
+            @for (line of form.controls.medications.controls; track line; let i = $index) {
+              <div class="line" [formGroupName]="i">
+                <mat-form-field subscriptSizing="dynamic" class="wide">
+                  <mat-label>{{ 'health.medication.name' | transloco }}</mat-label>
+                  <input matInput maxlength="200" formControlName="name" />
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic">
+                  <mat-label>{{ 'health.medication.substance' | transloco }}</mat-label>
+                  <input matInput maxlength="200" formControlName="substance" />
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic">
+                  <mat-label>{{ 'health.medication.dose' | transloco }}</mat-label>
+                  <input matInput maxlength="200" formControlName="dose" />
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic" class="wide">
+                  <mat-label>{{ 'health.medication.schedule' | transloco }}</mat-label>
+                  <input matInput maxlength="500" formControlName="schedule" />
+                </mat-form-field>
+                <button
+                  matIconButton
+                  type="button"
+                  [attr.aria-label]="'core.actions.delete' | transloco"
+                  (click)="form.controls.medications.removeAt(i)"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+          <button matButton type="button" class="add" (click)="addMedication(form)">
+            <mat-icon>add</mat-icon> {{ 'health.medication.one' | transloco }}
+          </button>
         }
       </form>
     }

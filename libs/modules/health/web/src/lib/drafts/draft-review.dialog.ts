@@ -155,15 +155,19 @@ export class DraftReviewDialog implements OnDestroy {
     form.controls.labValues.push(labLine(this.fb));
   }
 
-  /** Only the part of the kind picked has to be right: the rest is not saved. */
+  /** Only the parts saved with the kind picked have to be right: the rest is not saved. */
   protected valid(form: DraftForm): boolean {
     const { controls } = form;
     if (controls.day.invalid) {
       return false;
     }
+    if (
+      controls.kind.value !== 'other' &&
+      !(controls.diagnoses.valid && controls.medications.valid)
+    ) {
+      return false;
+    }
     switch (controls.kind.value) {
-      case 'visit':
-        return controls.diagnoses.valid && controls.medications.valid;
       case 'labs':
         return controls.labValues.length > 0 && controls.labValues.valid;
       default:
