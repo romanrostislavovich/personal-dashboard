@@ -7,6 +7,9 @@ import { HealthServerActions } from './health.server-actions';
 import { HealthService } from './health.service';
 import { IcdDictionaryService } from './icd/icd-dictionary.service';
 import { LabsService } from './labs.service';
+import { SharedSummaryController } from './summary/shared.controller';
+import { SummaryController } from './summary/summary.controller';
+import { SummaryService } from './summary/summary.service';
 
 /**
  * Health: one medical history across countries and clinics — visits, diagnoses by ICD code,
@@ -14,7 +17,7 @@ import { LabsService } from './labs.service';
  * module is in docs/health.md.
  */
 @Module({
-  controllers: [HealthController],
+  controllers: [HealthController, SummaryController, SharedSummaryController],
   providers: [
     HealthService,
     LabsService,
@@ -23,6 +26,7 @@ import { LabsService } from './labs.service';
     HealthAiTools,
     DocumentReaderService,
     HealthTelegram,
+    SummaryService,
   ],
 })
 export class HealthModule {}

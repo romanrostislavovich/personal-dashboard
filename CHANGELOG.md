@@ -25,6 +25,12 @@ under **Updating**.
   medications, the lab report line by line, or the study. Nothing is saved until you check the
   draft beside the original and press Save. From Telegram too: a photo with “🩺 A medical
   document”. The AI is Health's own connection when it has one.
+- **Health: a summary for a new doctor** — current diagnoses, medications, the latest results
+  with their trend, studies and visits, under headings in Polish, Ukrainian, Russian, English
+  or German, the texts translated by the AI if you ask; a speciality can be left out with
+  everything of it. Opened to print or save as PDF, downloaded for Word, or shared as a link
+  the doctor opens without an account for 1–30 days — revocable, with how often it was
+  opened.
 - **An AI connection of its own for a section** (Settings → AI): a local model for Health, say;
   the section's data then never reaches the shared connection.
 - **Columns stored encrypted** for modules (`encryptedText()`, `encryptedBytes()`): a dump or a
@@ -46,7 +52,7 @@ under **Updating**.
 
 - Migration 0062 adds `integration_alerts`, 0063–0065 the tables of Psychology, 0066
   `ai_settings.module_connections`, 0067 the tables of Health, 0068 its lab results and studies, 0069 the
-  drafts of its documents.
+  drafts of its documents, 0070 the links for doctors.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
   key as the server.
 

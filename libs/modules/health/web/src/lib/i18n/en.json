@@ -6,7 +6,8 @@
     "conditions": "Conditions",
     "medications": "Medications",
     "doctors": "Doctors and clinics",
-    "results": "Results"
+    "results": "Results",
+    "summary": "For a doctor"
   },
   "all": "All",
   "country": "Country",
@@ -303,5 +304,53 @@
       "aiFailed": "The AI did not answer. Try again later.",
       "unreadable": "Nothing could be read out of the document."
     }
+  },
+  "summary": {
+    "title": "A summary for a new doctor",
+    "about": "Your history in the doctor's language: what is going on now, what you take, the latest results and the visits. Codes and numbers stay as in the documents.",
+    "language": "The doctor's language",
+    "languages": {
+      "en": "English",
+      "pl": "Polish",
+      "uk": "Ukrainian",
+      "ru": "Russian",
+      "de": "German"
+    },
+    "from": "Visits and results since",
+    "fromHint": "Empty — the whole history",
+    "translate": "Translate the texts with the AI",
+    "translateHint": "Diagnoses, doses, recommendations and conclusions are sent to the AI of Health (Settings → AI). Without it they stay as written, under the headings in the doctor's language.",
+    "include": "What goes in",
+    "sections": {
+      "conditions": "Current diagnoses",
+      "pastConditions": "Past diagnoses (ruled out, in remission)",
+      "medications": "Medications taken now",
+      "pastMedications": "Medications taken before",
+      "labs": "Latest lab results",
+      "studies": "Studies",
+      "visits": "Visits",
+      "visitTexts": "Complaints, examination and recommendations of each visit"
+    },
+    "leaveOut": "Leave out",
+    "leaveOutHint": "A speciality left out takes its visits along, with what was diagnosed and prescribed at them.",
+    "print": "Open to print or save as PDF",
+    "failed": "Could not make the summary. Try again.",
+    "link": "A link for a doctor",
+    "linkAbout": "The doctor opens it without an account. The summary is frozen as it is now, with the choices above; the link stops working when it expires or you revoke it.",
+    "forWhom": "For whom (only you see it)",
+    "days": "Works for",
+    "daysCount": "{{count}} d.",
+    "makeLink": "Make a link",
+    "copy": "Copy",
+    "copied": "Copied",
+    "onlyOnce": "The address is shown only now: copy it and send it to the doctor.",
+    "states": {
+      "active": "works",
+      "expired": "expired",
+      "revoked": "revoked"
+    },
+    "until": "until {{day}}",
+    "opened": "opened {{count}} times",
+    "revoke": "Revoke"
   }
 }

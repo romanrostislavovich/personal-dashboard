@@ -15,8 +15,12 @@ import {
   HealthMedication,
   HealthMedicationInput,
   HealthRecord,
+  HealthShare,
+  HealthShareCreated,
+  HealthShareInput,
   HealthStudy,
   HealthStudyInput,
+  HealthSummaryOptionsInput,
   HealthVisit,
   HealthVisitInput,
   IcdDictionary,
@@ -34,6 +38,8 @@ export const HEALTH_READS = {
   record: () => apiRequest(`${BASE}/record`),
   /** The ICD dictionaries loaded, with how many codes each has. */
   dictionaries: () => apiRequest(`${BASE}/icd`),
+  /** The links for doctors, the latest first. */
+  shares: () => apiRequest(`${BASE}/shares`),
 };
 
 /** Adds without an id, changes with one. */
@@ -99,6 +105,14 @@ export function healthApi(api: ApiClient) {
     /** Saves a checked draft at once: the visit, the lab report or the study, with the document. */
     applyDraft: (input: HealthDraftApplyInput) =>
       api.post<HealthDraftApplied>(`${BASE}/drafts/apply`, input),
+
+    /** The summary for a doctor as a page to print (HTML) or a Word document. */
+    summaryHtml: (options: HealthSummaryOptionsInput) => api.blob(`${BASE}/summary/html`, options),
+    summaryDocx: (options: HealthSummaryOptionsInput) => api.blob(`${BASE}/summary/docx`, options),
+    shares: () => api.read<HealthShare[]>(HEALTH_READS.shares()),
+    /** A link for a doctor; its address comes only now. */
+    share: (input: HealthShareInput) => api.post<HealthShareCreated>(`${BASE}/shares`, input),
+    revokeShare: (id: string) => api.delete(`${BASE}/shares/${id}`),
 
     dictionaries: () => api.read<IcdDictionary[]>(HEALTH_READS.dictionaries()),
     /** Downloads a dictionary from its publisher on the server; takes a minute. */

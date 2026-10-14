@@ -110,10 +110,17 @@ Ministry of Health is OID 1.2.643.5.1.13.13.11.1005 on nsi.rosminzdrav.ru. Later
    (`keepLanguage`), the draft stored encrypted next to the document until it is saved in one
    transaction (`apply`) or dropped. The page shows the original beside the editable draft.
    Telegram: a photo with "🩺 A medical document" under it.
-4. **For a new doctor** — active diagnoses, current medications, allergies, the latest results,
+4. ✅ **For a new doctor** — active diagnoses, current medications, allergies, the latest results,
    the chronology; translated into the doctor's language, the codes kept; ticks for what goes in;
    a printable page (PDF through the browser) and DOCX; a public link for N days, revocable,
    throttled, off in the demo.
+   Done: `buildHealthSummary` (contracts) picks the facts, `summaryBlocks` lays them out once
+   for both the page (`summary-html.ts`, no script, every text escaped) and Word
+   (`summary-docx.ts`); headings in en / pl / uk / ru / de, the texts translated by the AI only
+   when asked (codes, numbers and medication names kept). A link stores the token's hash and
+   the page frozen when it was made, encrypted; `/api/medical/shared/:token` is public, the same
+   404 for unknown, expired and revoked, 30 opens per address in 10 minutes, `noindex`, a CSP
+   that runs nothing.
 5. **Links** — Psychology shows the psychiatrist's medications and diagnoses as periods on the
    mood and the questionnaires; a recommendation becomes a task or a reminder in one click; the
    next visit in the digest; search (Ctrl+K); demo data.

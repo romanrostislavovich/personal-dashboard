@@ -1,5 +1,11 @@
 import { encryptedBytes, encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
-import { DiagnosisStatus, HealthDocumentKind, HealthStudyKind, IcdSystem } from '@pd/contracts';
+import {
+  DiagnosisStatus,
+  HealthDocumentKind,
+  HealthStudyKind,
+  IcdSystem,
+  SummaryLanguage,
+} from '@pd/contracts';
 import {
   date,
   doublePrecision,
@@ -214,6 +220,31 @@ export const healthStudies = pgTable(
 );
 
 /**
+ * A link that shows a summary to a doctor without signing in. Only the hash of its token is
+ * kept; the summary is frozen when the link is made (what the user saw is what the doctor
+ * sees), stored encrypted, and is gone for the link once it expires or is revoked.
+ */
+export const healthShares = pgTable(
+  'health_shares',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: owner(),
+    tokenHash: text().notNull().unique(),
+    note: encryptedText(),
+    language: text().$type<SummaryLanguage>().notNull(),
+    /** The HTML of the summary, as it was made. */
+    page: encryptedText().notNull(),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    revokedAt: timestamp({ withTimezone: true }),
+    opened: integer().notNull().default(0),
+    lastOpenedAt: timestamp({ withTimezone: true }),
+    createdAt: created(),
+    updatedAt: updated(),
+  },
+  (table) => [index().on(table.userId)],
+);
+
+/**
  * The ICD dictionary the user loaded from its publisher (see IcdDictionaryService). It is
  * never shipped with the dashboard and never exported: the publisher's terms allow neither.
  */
@@ -239,6 +270,7 @@ registerEncryptedTables(
   healthLabPanels,
   healthLabValues,
   healthStudies,
+  healthShares,
 );
 
 export type HealthClinicRow = typeof healthClinics.$inferSelect;
@@ -250,3 +282,4 @@ export type HealthDocumentRow = typeof healthDocuments.$inferSelect;
 export type HealthLabPanelRow = typeof healthLabPanels.$inferSelect;
 export type HealthLabValueRow = typeof healthLabValues.$inferSelect;
 export type HealthStudyRow = typeof healthStudies.$inferSelect;
+export type HealthShareRow = typeof healthShares.$inferSelect;
