@@ -1,10 +1,10 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { contains, DB, Database, SEARCH_LIMIT, SearchService } from '@pd/api-core';
+import { DB, Database, SEARCH_LIMIT, SearchService } from '@pd/api-core';
 import { SearchHit } from '@pd/contracts';
-import { and, asc, eq, or } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { birthdays } from './birthdays.schema';
 
-/** Birthdays for the command palette: by the name and the note. */
+/** Birthdays for the command palette: by the name and the note (searched here — it is encrypted). */
 @Injectable()
 export class BirthdaysSearch implements OnModuleInit {
   constructor(
@@ -20,17 +20,21 @@ export class BirthdaysSearch implements OnModuleInit {
   }
 
   private async find(userId: string, query: string): Promise<SearchHit[]> {
-    const rows = await this.db
-      .select()
-      .from(birthdays)
-      .where(
-        and(
-          eq(birthdays.userId, userId),
-          or(contains(birthdays.name, query), contains(birthdays.note, query)),
-        ),
+    const wanted = query.toLowerCase();
+    const rows = (
+      await this.db
+        .select()
+        .from(birthdays)
+        .where(eq(birthdays.userId, userId))
+        .orderBy(asc(birthdays.name))
+    )
+      .filter((row) =>
+        `${row.name}
+${row.note ?? ''}`
+          .toLowerCase()
+          .includes(wanted),
       )
-      .orderBy(asc(birthdays.name))
-      .limit(SEARCH_LIMIT);
+      .slice(0, SEARCH_LIMIT);
     const two = (value: number) => String(value).padStart(2, '0');
     return rows.map((row) => ({
       module: 'birthdays',

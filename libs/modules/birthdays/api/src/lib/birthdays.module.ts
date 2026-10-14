@@ -1,4 +1,5 @@
 import { BirthdaysDemo } from './birthdays.demo';
+import { BirthdaysEncryption } from './birthdays.encryption';
 import { Module } from '@nestjs/common';
 import { BirthdaysAutomations } from './birthdays.automations';
 import { BirthdaysLife } from './birthdays.life';
@@ -16,6 +17,7 @@ import { BirthdaysService } from './birthdays.service';
   providers: [
     BirthdaysAutomations,
     BirthdaysDemo,
+    BirthdaysEncryption,
     BirthdaysLife,
     BirthdaysSearch,
     BirthdaysService,

@@ -1,4 +1,4 @@
-import { appendNote, extractTags, searchSnippet } from './diary-text';
+import { appendNote, countWords, extractTags, hasText, searchSnippet } from './diary-text';
 
 describe('extractTags', () => {
   it('finds hashtags in Cyrillic and Latin, lowercased and unique', () => {
@@ -43,5 +43,19 @@ describe('searchSnippet', () => {
 describe('appendNote without time', () => {
   it('adds a plain paragraph for past days', () => {
     expect(appendNote('Morning.', 'Evening walk', null)).toBe('Morning.\n\nEvening walk');
+  });
+});
+
+describe('words and search of an encrypted diary (done here, not in the database)', () => {
+  it('counts the words as the database did: none in an empty entry', () => {
+    expect(countWords('')).toBe(0);
+    expect(countWords('   \n ')).toBe(0);
+    expect(countWords('  A walk\n\nby the **river** ')).toBe(5);
+  });
+
+  it('finds the words whatever their case', () => {
+    expect(hasText('A walk by the River', 'river')).toBe(true);
+    expect(hasText('Прогулка у РЕКИ', 'реки')).toBe(true);
+    expect(hasText('A walk', 'sea')).toBe(false);
   });
 });

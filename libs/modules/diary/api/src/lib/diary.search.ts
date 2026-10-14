@@ -1,10 +1,11 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { contains, DB, Database, SEARCH_LIMIT, snippet, SearchService } from '@pd/api-core';
+import { DB, Database, SEARCH_LIMIT, snippet, SearchService } from '@pd/api-core';
 import { SearchHit } from '@pd/contracts';
-import { and, desc, eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
+import { hasText } from './diary-text';
 import { diaryEntries } from './diary.schema';
 
-/** Diary entries for the command palette: by their text. */
+/** Diary entries for the command palette: by their text (searched here — it is encrypted). */
 @Injectable()
 export class DiarySearch implements OnModuleInit {
   constructor(
@@ -20,15 +21,17 @@ export class DiarySearch implements OnModuleInit {
     const rows = await this.db
       .select({ day: diaryEntries.day, content: diaryEntries.content })
       .from(diaryEntries)
-      .where(and(eq(diaryEntries.userId, userId), contains(diaryEntries.content, query)))
-      .orderBy(desc(diaryEntries.day))
-      .limit(SEARCH_LIMIT);
-    return rows.map((row) => ({
-      module: 'diary',
-      kind: 'entry',
-      title: row.day,
-      subtitle: snippet(row.content, query),
-      url: '/diary',
-    }));
+      .where(eq(diaryEntries.userId, userId))
+      .orderBy(desc(diaryEntries.day));
+    return rows
+      .filter((row) => hasText(row.content, query))
+      .slice(0, SEARCH_LIMIT)
+      .map((row) => ({
+        module: 'diary',
+        kind: 'entry',
+        title: row.day,
+        subtitle: snippet(row.content, query),
+        url: '/diary',
+      }));
   }
 }

@@ -18,6 +18,17 @@ export function appendNote(content: string, note: string, time: string | null): 
   return content.trim() ? `${content.trimEnd()}\n\n${line}` : line;
 }
 
+/** Words of an entry as written (its Markdown too); an empty entry has none. */
+export function countWords(content: string): number {
+  const trimmed = content.trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
+
+/** Whether an entry has the words searched for, whatever the case. */
+export function hasText(content: string, query: string): boolean {
+  return content.toLowerCase().includes(query.toLowerCase());
+}
+
 export function shorten(text: string, maxLength: number): string {
   return text.length > maxLength ? `${text.slice(0, maxLength).trimEnd()}…` : text;
 }

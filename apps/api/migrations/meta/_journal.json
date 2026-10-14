@@ -519,6 +519,13 @@
       "when": 1792003751202,
       "tag": "0073_missing_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1792012298673,
+      "tag": "0074_diary_words",
+      "breakpoints": true
     }
   ]
 }

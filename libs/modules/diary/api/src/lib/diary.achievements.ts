@@ -151,7 +151,8 @@ export class DiaryAchievements implements OnModuleInit {
       measure: (userId) =>
         this.aggregate(
           userId,
-          sql`coalesce(sum(array_length(regexp_split_to_array(trim(${diaryEntries.content}), '\\s+'), 1)), 0)`,
+          // Counted on save (the text itself is encrypted).
+          sql`coalesce(sum(${diaryEntries.words}), 0)`,
         ),
       tiers: achievementTiers(
         [

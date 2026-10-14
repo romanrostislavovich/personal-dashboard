@@ -24,7 +24,7 @@ import {
   toLocalDate,
 } from '@pd/contracts';
 import { and, arrayContains, asc, desc, eq, gte, isNotNull, lte, sql } from 'drizzle-orm';
-import { appendNote, extractTags, searchSnippet, shorten } from './diary-text';
+import { appendNote, countWords, extractTags, hasText, searchSnippet, shorten } from './diary-text';
 import { DiaryEntryRow, diaryEntries, diaryPhotos, diarySettings } from './diary.schema';
 
 const MOOD_HISTORY_DAYS = 30;
@@ -34,10 +34,6 @@ const SEARCH_LIMIT = 50;
 const MEMORY_PREVIEW_LENGTH = 200;
 /** A tag needs this many rated days before its average mood means anything. */
 const TAG_MOOD_MIN_DAYS = 3;
-
-/** Word count in SQL; an empty entry has 0 words, not 1. */
-const wordCount = sql<number>`CASE WHEN btrim(${diaryEntries.content}) = '' THEN 0
-  ELSE array_length(regexp_split_to_array(btrim(${diaryEntries.content}), '\\s+'), 1) END`;
 
 @Injectable()
 export class DiaryService {
@@ -77,6 +73,7 @@ export class DiaryService {
     }
     const values = {
       content,
+      words: countWords(content),
       mood,
       tags: extractTags(content),
       marks: parseDiaryMarks(content),
@@ -210,27 +207,30 @@ export class DiaryService {
     );
   }
 
-  /** Case-insensitive substring search over all entries. */
+  /**
+   * Case-insensitive substring search over all entries. The text is encrypted, so the entries
+   * are read and searched here, not in the database — a diary of years is a few thousand rows.
+   */
   async search(userId: string, query: string): Promise<DiarySearchHit[]> {
-    // `%` and `_` from the user are literal characters, not wildcards.
-    const pattern = `%${query.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
     const rows = await this.db
       .select({ day: diaryEntries.day, mood: diaryEntries.mood, content: diaryEntries.content })
       .from(diaryEntries)
-      .where(and(eq(diaryEntries.userId, userId), sql`${diaryEntries.content} ILIKE ${pattern}`))
-      .orderBy(desc(diaryEntries.day))
-      .limit(SEARCH_LIMIT);
-    return rows.map((row) => ({
-      day: row.day,
-      mood: row.mood,
-      snippet: searchSnippet(row.content, query),
-    }));
+      .where(eq(diaryEntries.userId, userId))
+      .orderBy(desc(diaryEntries.day));
+    return rows
+      .filter((row) => hasText(row.content, query))
+      .slice(0, SEARCH_LIMIT)
+      .map((row) => ({
+        day: row.day,
+        mood: row.mood,
+        snippet: searchSnippet(row.content, query),
+      }));
   }
 
   /** Days of a year with an entry — for the heatmap. */
   async calendar(userId: string, year: number): Promise<DiaryCalendarDay[]> {
     const rows = await this.db
-      .select({ day: diaryEntries.day, mood: diaryEntries.mood, words: wordCount })
+      .select({ day: diaryEntries.day, mood: diaryEntries.mood, words: diaryEntries.words })
       .from(diaryEntries)
       .where(
         and(
