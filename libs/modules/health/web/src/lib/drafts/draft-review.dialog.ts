@@ -168,6 +168,8 @@ export class DraftReviewDialog implements OnDestroy {
       return false;
     }
     switch (controls.kind.value) {
+      case 'visit':
+        return controls.labValues.valid;
       case 'labs':
         return controls.labValues.length > 0 && controls.labValues.valid;
       default:

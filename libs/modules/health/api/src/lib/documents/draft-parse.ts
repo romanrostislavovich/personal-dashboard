@@ -108,7 +108,8 @@ lists lab results or refers to tests. Whatever the kind, fill "diagnoses" with e
 the document names (also one under "Діагноз", "Диагноз", "Rozpoznanie", "Diagnosis", with or
 without an ICD code) and "medications" with every medicine it prescribes or tells to go on
 taking — also those written only inside the recommendations, which still stay in
-"recommendations" as written as well.
+"recommendations" as written as well — and "labValues" with every lab result it lists, with
+"laboratory" if it is named: a visit that lists results keeps them too.
 
 Answer with JSON only, no other text. Leave out (or set to null) what the document does not say:
 {
