@@ -20,6 +20,8 @@ const NOT_TRASHED = new Set([
   'security_reports',
   // A note of what the user was told about: nothing to restore.
   'integration_alerts',
+  // Loaded from its publisher again when needed (Health's ICD dictionary).
+  'health_icd_codes',
 ]);
 
 /**
