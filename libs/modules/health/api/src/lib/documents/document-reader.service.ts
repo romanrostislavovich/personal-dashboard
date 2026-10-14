@@ -21,7 +21,13 @@ import { healthDocuments } from '../health.schema';
 import { HealthService } from '../health.service';
 import { LabsService } from '../labs.service';
 import { assertOwnedId, found } from '../owned';
-import { answerShape, DRAFT_INSTRUCTION, parseDraft } from './draft-parse';
+import {
+  answerShape,
+  DRAFT_INSTRUCTION,
+  LABS_INSTRUCTION,
+  parseDraft,
+  parseLabs,
+} from './draft-parse';
 
 export type ValidDraftApply = z.output<typeof healthDraftApplySchema>;
 
@@ -64,16 +70,17 @@ export class DocumentReaderService {
       .from(healthDocuments)
       .where(and(eq(healthDocuments.id, documentId), eq(healthDocuments.userId, userId)));
     const { data, mimeType, kind } = found(document, 'Document');
-    const answer = await this.ask(userId, data, mimeType);
-    const draft = parseDraft(answer);
+    const answer = await this.ask(userId, data, mimeType, DRAFT_INSTRUCTION);
+    const read = parseDraft(answer);
     // The shape only — keys and the length of the lists, never the document's words.
     this.logger.log(
       `A medical document read: ${answerShape(answer)} → ` +
-        `${draft?.diagnoses.length ?? 0} diagnoses, ${draft?.medications.length ?? 0} medications`,
+        `${read?.diagnoses.length ?? 0} diagnoses, ${read?.medications.length ?? 0} medications`,
     );
-    if (!draft) {
+    if (!read) {
       throw failure('unreadable');
     }
+    const draft = read.labValues.length ? read : await this.withLabs(userId, data, mimeType, read);
     await this.db
       .update(healthDocuments)
       .set({
@@ -148,21 +155,50 @@ export class DocumentReaderService {
     });
   }
 
+  /**
+   * The lab results asked for once more, on their own (see LABS_INSTRUCTION). A failure of this
+   * second question leaves the draft as the first one read it.
+   */
+  private async withLabs(
+    userId: string,
+    data: Buffer,
+    mimeType: string,
+    draft: HealthDocumentDraft,
+  ): Promise<HealthDocumentDraft> {
+    try {
+      const labs = parseLabs(await this.ask(userId, data, mimeType, LABS_INSTRUCTION));
+      this.logger.log(
+        `Lab results asked again: ${labs.labValues.length} results, ` +
+          `${labs.orderedTests} tests ordered without a result`,
+      );
+      return labs.labValues.length
+        ? { ...draft, labValues: labs.labValues, laboratory: draft.laboratory ?? labs.laboratory }
+        : draft;
+    } catch {
+      return draft;
+    }
+  }
+
   /** The AI's answer about a picture or the text of a PDF. */
-  private async ask(userId: string, data: Buffer, mimeType: string): Promise<string> {
+  private async ask(
+    userId: string,
+    data: Buffer,
+    mimeType: string,
+    instruction: string,
+  ): Promise<string> {
     try {
       if (mimeType === 'application/pdf') {
         const text = await pdfText(data);
         if (text.replace(/\s+/g, '').length < MIN_PDF_TEXT) {
           throw failure('scanned');
         }
-        return await this.ai.complete(userId, DRAFT_INSTRUCTION, text, 'health', {
+        return await this.ai.complete(userId, instruction, text, 'health', {
           keepLanguage: true,
         });
       }
       const answer = await this.ai.completeWithImage(
         userId,
-        DRAFT_INSTRUCTION,
+        instruction,
         { data, mimeType },
         'health',
         { keepLanguage: true },

@@ -1,4 +1,4 @@
-import { answerShape, parseDraft } from './draft-parse';
+import { answerShape, parseDraft, parseLabs } from './draft-parse';
 
 describe('parseDraft', () => {
   it('reads the JSON of a visit, even inside a code fence', () => {
@@ -84,5 +84,26 @@ describe('parseDraft', () => {
       'kind, diagnoses[0], labValues[1]',
     );
     expect(answerShape('Sorry, I cannot read it')).toBe('no JSON (23 characters)');
+  });
+
+  it('reads the answer to the second question about lab results', () => {
+    expect(
+      parseLabs(
+        '```json\n{"laboratory":"Synevo","labValues":[{"name":"TSH","result":2.1,"unit":"mIU/L"}],"orderedTests":0}\n```',
+      ),
+    ).toEqual({
+      laboratory: 'Synevo',
+      labValues: [{ name: 'TSH', result: '2.1', unit: 'mIU/L' }],
+      orderedTests: 0,
+    });
+    expect(parseLabs('{"labValues":[],"orderedTests":3}')).toMatchObject({
+      labValues: [],
+      orderedTests: 3,
+    });
+    expect(parseLabs('No results here')).toEqual({
+      laboratory: null,
+      labValues: [],
+      orderedTests: 0,
+    });
   });
 });
