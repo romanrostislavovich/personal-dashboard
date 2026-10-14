@@ -1,5 +1,13 @@
 import { Inject, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { AiService, DB, Database, TelegramBotService, UserRow, UsersService } from '@pd/api-core';
+import {
+  AiService,
+  compressImage,
+  Database,
+  DB,
+  TelegramBotService,
+  UserRow,
+  UsersService,
+} from '@pd/api-core';
 import { zonedDateTime } from '@pd/contracts';
 import { and, eq, sql } from 'drizzle-orm';
 import { FinanceSettingsService } from '../currency/finance-settings.service';
@@ -79,9 +87,12 @@ export class ReceiptsService implements OnModuleInit {
       note: read.shop || null,
       occurredOn: read.date,
     });
-    await this.db
-      .insert(financeReceipts)
-      .values({ transactionId: transaction.id, userId: user.id, data, mimeType });
+    // The AI read the photo as it came; what is kept is made small.
+    await this.db.insert(financeReceipts).values({
+      transactionId: transaction.id,
+      userId: user.id,
+      ...(await compressImage({ data, mimeType })),
+    });
     await this.telegram.sendMessage(user.telegramChatId ?? '', text.receiptSaved(read), [
       { label: text.receiptDelete, action: `rcpdel:${transaction.id}` },
     ]);

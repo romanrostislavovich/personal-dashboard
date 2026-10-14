@@ -57,6 +57,10 @@ under **Updating**.
 - **Demo mode** (`DEMO_MODE=true`): a "Try the demo" button on the login page opens a shared
   account with made-up data in every section, made anew every night. The demo user cannot
   change the account, connect services or upload files, and no background job reaches outside.
+- **Pictures are made small before they are stored** — diary photos, receipts and photographed
+  medical documents are turned upright, shrunk to 2560 px on the longest side and kept as WebP:
+  a phone photo of several megabytes becomes a few hundred kilobytes. The place a photo was
+  taken and the phone are dropped from it. PDFs and animations stay as they are.
 - **Copies on this computer** — the desktop app saves the archive of "Export everything" once a
   day into a folder of the computer (Settings → Data), the last 14 kept: the data outlives the
   server and comes back through "Import archive".

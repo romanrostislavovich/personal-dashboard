@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
+import { compressImage, Database, DB } from '@pd/api-core';
 import { DIARY_PHOTO_MAX_BYTES, DIARY_PHOTO_TYPES, DiaryPhoto, LocalDate } from '@pd/contracts';
 import { and, asc, count, eq } from 'drizzle-orm';
 import { diaryPhotos } from './diary.schema';
@@ -48,15 +48,17 @@ export class DiaryPhotosService {
     if (photo.data.length > DIARY_PHOTO_MAX_BYTES) {
       throw new BadRequestException('The image is too large');
     }
+    // Made small and stripped of where it was taken before it is kept (an animation stays).
+    const { data, mimeType } = await compressImage(photo);
     const [row] = await this.db
       .insert(diaryPhotos)
       .values({
         userId,
         day,
-        mimeType: photo.mimeType,
-        size: photo.data.length,
+        mimeType,
+        size: data.length,
         caption: photo.caption?.trim() || null,
-        data: photo.data,
+        data,
       })
       .returning(photoInfo);
     return { ...row, createdAt: row.createdAt.toISOString() };
