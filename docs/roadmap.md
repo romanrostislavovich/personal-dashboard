@@ -157,6 +157,37 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Encrypted off-site backup** — the daily dump encrypted and sent to Backblaze B2 or S3, so the
   data outlives the server
 
+#### Health
+
+Right after the encryption: the history of visits is needed now, and it is the most sensitive
+data of all.
+
+- **Health** — your own medical record: blood type, allergies, chronic conditions, vaccinations,
+  operations, doctors and their contacts; medications and when to take them, doctor visits, lab
+  results with charts (a PDF of the results is parsed by the AI, like a bank statement is today)
+- **Health: one history across countries and clinics** — a life spread over several countries
+  (Ukraine, Belarus, Poland) and clinics leaves the history in pieces no one doctor sees; the
+  dashboard keeps one of your own:
+  - **a visit** — the date, the country, the clinic, the doctor and their speciality (a
+    psychiatrist, a therapist, any other), the complaints, the diagnosis, the recommendations,
+    the medications prescribed, the next visit; the documents of the visit (a scan, a photo, a
+    PDF) kept with it
+  - **a document is read by the AI** — a photo or a PDF in Ukrainian, Russian, Polish or English
+    becomes a visit: the diagnosis, the recommendations and the medications filled in, checked by
+    you before it is saved; the original is always kept
+  - **diagnoses by ICD-10 / ICD-11 code** — one code across countries and languages, so the same
+    condition from three clinics is one line with its history: when it was first set, who
+    confirmed or changed it, when it came back
+  - **in dynamics** — a timeline of every visit, diagnosis and medication (started, dose changed,
+    stopped and why); a recommendation becomes a task or a reminder in one click; a diagnosis or a
+    medication of the psychiatrist is shown in Psychology next to the mood and the questionnaires
+    of the same time (through the links of the core)
+  - **for a new doctor** — a summary of the history in the doctor's language (the AI translates,
+    the codes stay), as a PDF or a link that works for a few days and can be revoked; you pick what
+    goes in (e.g. not the psychiatry for a dentist)
+  - stored encrypted, and its AI may be limited to a local model (see "Encryption of sensitive
+    data")
+
 #### Tests and CI
 
 - **End-to-end smoke tests** (Playwright): sign-in, a diary entry, a transaction, an AI message
@@ -222,6 +253,13 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   questions; the answers go to the diary, the main thing of the next week to the tasks
 - **Challenges of the week** — every Monday three personal challenges from the user's own data
   ("2 focus sessions a day", "at most 10 h of games", "5 diary entries"), a result and XP at the end
+- **Psychology: a questionnaire on a schedule** — a reminder to take WHO-5, GAD-7 or PHQ-9 as
+  often as the user picks (e.g. WHO-5 every two weeks), in Telegram with a link to it
+- **Psychology: a gentle warning** — when the results of a questionnaire stay worse for several
+  times in a row (never a diagnosis), a quiet message with where to get help, the contacts of
+  your own doctor first if Health has them
+- **Psychology: the events of a life on the chart of the mood** — the periods of the events laid
+  over the mood and the questionnaires, to see what went along with what
 - **Tilt detector** — three Dota losses in a row or two hours of games after midnight → a gentle
   "maybe enough?"; win rate by the time of day and after N matches in a row
 - **Sleep from the computer** — the first and the last activity of a day are known already (and
@@ -287,9 +325,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 #### New modules
 
 - **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
-- **Health** — your own medical record: blood type, allergies, chronic conditions, vaccinations,
-  operations, doctors and their contacts; medications and when to take them, doctor visits, lab
-  results with charts (a PDF of the results is parsed by the AI, like a bank statement is today)
 - **Time tracker** — track time per project or task (focus sessions are done, see Activity)
 - **Calendar** — Google Calendar / CalDAV: today's meetings in the morning digest, linked to the
   time tracker and tasks
