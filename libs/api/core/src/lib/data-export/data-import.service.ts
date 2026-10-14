@@ -15,6 +15,7 @@ import {
 import { sql, SQL } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { rm } from 'node:fs/promises';
+import { encryptBytes, encryptedColumnsOf, encryptedRow } from '../crypto/encrypted-columns';
 import { DB, Database } from '../database/database.module';
 import { isFileReference, MANIFEST_PATH, readArchive, tableOfPath } from './data-archive';
 import {
@@ -186,8 +187,12 @@ export class DataImportService implements OnApplicationShutdown {
         const pending = waiting.get(event.path);
         if (pending) {
           waiting.delete(event.path);
+          // An encrypted column gets this instance's key (the archive holds it decrypted).
+          const content = encryptedColumnsOf(pending.target.table.name)?.bytes.has(pending.column)
+            ? encryptBytes(event.content)
+            : event.content;
           // PostgreSQL reads `\x…` as the bytes of a bytea column.
-          pending.row[pending.column] = `\\x${event.content.toString('hex')}`;
+          pending.row[pending.column] = `\\x${content.toString('hex')}`;
           if (!Object.values(pending.row).some(isFileReference)) {
             await add(pending.target, pending.row);
           }
@@ -200,7 +205,7 @@ export class DataImportService implements OnApplicationShutdown {
         unknown.add(name);
         continue;
       }
-      const row = parseRow(event.line);
+      const row = encryptedRow(name, parseRow(event.line));
       const count = counts.get(name) ?? { table: name, inArchive: 0, added: 0 };
       counts.set(name, { ...count, inArchive: count.inArchive + 1 });
       const files = Object.entries(row).filter(([, value]) => isFileReference(value));

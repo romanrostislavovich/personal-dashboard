@@ -25,7 +25,10 @@ Angular.
 1. **Encrypted fields** — a helper that encrypts free text and files of a module with
    `ENCRYPTION_KEY` (AES-256-GCM, as `SecretsService` does). Dates, ICD codes and lab numbers stay
    plain, or charts and filters are impossible. It protects dumps and backups; both sides of sync
-   need the same key.
+   need the same key. ✅ Done: `encryptedText()` / `encryptedBytes()` from `@pd/api-core/schema`
+   (`crypto/encrypted-columns.ts`), a key of their own derived from `ENCRYPTION_KEY`; a table with
+   them is named in `registerEncryptedTables()`, so the export writes them decrypted (an archive
+   is readable anywhere) and the import seals them again with the key of the instance.
 2. **A connection of its own for a section** — by default Health uses the active AI connection
    like everything else; in the settings the whole section can be given another saved connection
    (e.g. a local Ollama), and then every AI call of Health goes there. ✅ Done for any section:
