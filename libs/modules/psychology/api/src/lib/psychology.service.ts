@@ -20,7 +20,7 @@ import {
 import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { ExportTable, toDocx, toXlsx } from './events-export';
-import { moodPatterns } from './patterns';
+import { moodDuring, moodPatterns } from './patterns';
 import { feelingText, psychologyMessages } from './psychology.messages';
 import {
   PsychologyAssessmentRow,
@@ -193,7 +193,13 @@ export class PsychologyService {
     const events = (await this.events(userId, period)).flatMap((event) =>
       event.startedOn ? { ...event, startedOn: event.startedOn } : [],
     );
-    return moodPatterns(mood?.days ?? [], events, period);
+    const days = mood?.days ?? [];
+    // The treatment Health tells, through the core: Psychology does not know Health.
+    const periods = (await this.links.periodsBetween(userId, period)).map((item) => ({
+      ...item,
+      mood: moodDuring(days, item.from, item.to, period),
+    }));
+    return { ...moodPatterns(days, events, period), periods };
   }
 }
 

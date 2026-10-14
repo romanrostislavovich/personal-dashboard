@@ -59,6 +59,7 @@ export type {
   MomentSource,
   PeopleSource,
   Period,
+  PeriodSource,
   ProjectRef,
   ProjectSource,
   TimeSpent,

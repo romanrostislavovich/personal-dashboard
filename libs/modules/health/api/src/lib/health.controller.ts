@@ -6,6 +6,7 @@ import {
   Get,
   Header,
   HttpCode,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Post,
@@ -16,7 +17,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
+import {
+  AuthUser,
+  AutomationsService,
+  CurrentUser,
+  ServerActions,
+  ZodValidationPipe,
+} from '@pd/api-core';
 import {
   HEALTH_DOCUMENT_MAX_BYTES,
   healthClinicInputSchema,
@@ -26,6 +33,8 @@ import {
   healthDraftApplySchema,
   healthLabPanelInputSchema,
   healthStudyInputSchema,
+  HealthTaskInput,
+  healthTaskInputSchema,
   healthMedicationInputSchema,
   healthVisitInputSchema,
   ICD_FILE_MAX_BYTES,
@@ -69,6 +78,7 @@ export class HealthController {
     private readonly reader: DocumentReaderService,
     private readonly icd: IcdDictionaryService,
     private readonly actions: ServerActions,
+    private readonly automations: AutomationsService,
   ) {}
 
   @Get('record')
@@ -149,6 +159,25 @@ export class HealthController {
   @HttpCode(204)
   removeVisit(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.health.removeVisit(user.id, id);
+  }
+
+  /**
+   * A recommendation becomes a task through the action Tasks registers (Health does not know
+   * Tasks); 404 when Tasks is not enabled.
+   */
+  @Post('tasks')
+  async addTask(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(healthTaskInputSchema)) input: HealthTaskInput,
+  ) {
+    const done = await this.automations.runAction(user.id, 'tasks.create', {
+      title: input.title,
+      due: 'none',
+    });
+    if (!done) {
+      throw new NotFoundException('Tasks are not enabled');
+    }
+    return { created: true };
   }
 
   // --- Diagnoses ---

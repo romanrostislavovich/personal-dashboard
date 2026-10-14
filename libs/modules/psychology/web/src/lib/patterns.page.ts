@@ -151,6 +151,47 @@ const PERIODS = [90, 180, 365] as const;
             </mat-card-content>
           </mat-card>
         }
+
+        @if (data.periods.length) {
+          <mat-card appearance="outlined">
+            <mat-card-header>
+              <mat-card-title>{{
+                'psychology.patterns.duringTreatment' | transloco
+              }}</mat-card-title>
+              <mat-card-subtitle>
+                {{ 'psychology.patterns.duringTreatmentHint' | transloco }}
+              </mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              @for (period of data.periods; track $index) {
+                <div class="event">
+                  <span class="what">
+                    <b>{{ period.title }}</b>
+                    <span class="hint">
+                      {{ 'psychology.patterns.periodKinds.' + period.kind | transloco }}
+                      @if (period.subtitle) {
+                        · {{ period.subtitle }}
+                      }
+                      · {{ period.from | date: 'd MMM y' }} –
+                      @if (period.to) {
+                        {{ period.to | date: 'd MMM y' }}
+                      } @else {
+                        {{ 'psychology.patterns.ongoing' | transloco }}
+                      }
+                    </span>
+                  </span>
+                  <span
+                    class="mood"
+                    [class.low]="period.mood !== null && period.mood < (data.average ?? 0) - 0.3"
+                    [class.high]="period.mood !== null && period.mood > (data.average ?? 0) + 0.3"
+                  >
+                    {{ period.mood === null ? '—' : (period.mood | number: '1.1-1') }}
+                  </span>
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
       }
     }
   `,

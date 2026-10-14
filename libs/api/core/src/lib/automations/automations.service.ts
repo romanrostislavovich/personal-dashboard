@@ -87,6 +87,24 @@ export class AutomationsService {
     this.actions.set(action.id, action);
   }
 
+  /** Whether a module that does this is enabled (`tasks.create`, say). */
+  hasAction(id: string): boolean {
+    return this.actions.has(id);
+  }
+
+  /**
+   * Runs an action of another module once, without a rule: a recommendation of a doctor becomes
+   * a task (Health) without Health knowing Tasks. `false` — no module does it here.
+   */
+  async runAction(userId: string, id: string, params: Params): Promise<boolean> {
+    const action = this.actions.get(id);
+    if (!action) {
+      return false;
+    }
+    await action.run(userId, params, {});
+    return true;
+  }
+
   catalog(): AutomationCatalog {
     return {
       triggers: [...this.triggers.values()].map(({ id, module, labelKey, params, variables }) => ({

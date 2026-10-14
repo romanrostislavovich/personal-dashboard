@@ -21,6 +21,7 @@ import {
   HealthStudy,
   HealthStudyInput,
   HealthSummaryOptionsInput,
+  HealthTaskInput,
   HealthVisit,
   HealthVisitInput,
   IcdDictionary,
@@ -61,6 +62,9 @@ export function healthApi(api: ApiClient) {
     saveVisit: (input: HealthVisitInput, id?: string) =>
       save<HealthVisit>(api, 'visits', input, id),
     removeVisit: (id: string) => api.delete(`${BASE}/visits/${id}`),
+
+    /** A recommendation of a doctor as a task of the TODO list; 404 without Tasks. */
+    addTask: (input: HealthTaskInput) => api.post<{ created: boolean }>(`${BASE}/tasks`, input),
 
     saveDiagnosis: (input: HealthDiagnosisInput, id?: string) =>
       save<HealthDiagnosis>(api, 'diagnoses', input, id),

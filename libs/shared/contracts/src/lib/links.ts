@@ -160,3 +160,17 @@ export interface Moment {
   title: string;
   subtitle: string | null;
 }
+
+/**
+ * Something that lasted, told by a section for the others: a medication taken, a condition
+ * diagnosed (Health) — Psychology lays them over the mood. `to` `null` — still going on.
+ */
+export interface TimelinePeriod {
+  module: string;
+  /** `medication`, `diagnosis`. */
+  kind: string;
+  title: string;
+  subtitle: string | null;
+  from: LocalDate;
+  to: LocalDate | null;
+}

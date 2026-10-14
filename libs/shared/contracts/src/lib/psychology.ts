@@ -261,4 +261,17 @@ export interface PsychologyPatterns {
   longestLowRun: { days: number; from: LocalDate } | null;
   /** The events of the period with the average mood during each; `null` — no mood then. */
   events: { id: string; title: string; from: LocalDate; to: LocalDate; mood: number | null }[];
+  /**
+   * What other sections tell lasted over the period — the treatment of Health — with the
+   * average mood during each; `to` `null` — still going on.
+   */
+  periods: {
+    module: string;
+    kind: string;
+    title: string;
+    subtitle: string | null;
+    from: LocalDate;
+    to: LocalDate | null;
+    mood: number | null;
+  }[];
 }
