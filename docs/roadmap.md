@@ -168,7 +168,9 @@ data of all. The plan in stages: [health.md](health.md). ✅ Stage 1 is done —
 diagnoses by ICD code gathered into conditions, medications, documents, the ICD-10 dictionary
 from WHO, all stored encrypted; next: lab results, a document read by the AI into a draft, the
 summary for a new doctor. ✅ Stage 2 too: lab results across laboratories and countries in one
-unit, with the laboratory's own range, and studies with their conclusions.
+unit, with the laboratory's own range, and studies with their conclusions. ✅ Stage 3: a
+document read by the AI into a draft that is checked beside the original before it is saved,
+from the page or a Telegram photo.
 
 - **Health** — your own medical record: blood type, allergies, chronic conditions, vaccinations,
   operations, doctors and their contacts; medications and when to take them, doctor visits, lab

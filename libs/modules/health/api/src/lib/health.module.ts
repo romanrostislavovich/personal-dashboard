@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { DocumentReaderService } from './documents/document-reader.service';
+import { HealthTelegram } from './documents/health-telegram';
 import { HealthAiTools } from './health.ai-tools';
 import { HealthController } from './health.controller';
 import { HealthServerActions } from './health.server-actions';
@@ -13,6 +15,14 @@ import { LabsService } from './labs.service';
  */
 @Module({
   controllers: [HealthController],
-  providers: [HealthService, LabsService, IcdDictionaryService, HealthServerActions, HealthAiTools],
+  providers: [
+    HealthService,
+    LabsService,
+    IcdDictionaryService,
+    HealthServerActions,
+    HealthAiTools,
+    DocumentReaderService,
+    HealthTelegram,
+  ],
 })
 export class HealthModule {}

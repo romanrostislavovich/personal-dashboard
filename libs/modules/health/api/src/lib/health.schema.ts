@@ -140,6 +140,8 @@ export const healthDocuments = pgTable(
     mimeType: text().notNull(),
     size: integer().notNull(),
     data: encryptedBytes().notNull(),
+    /** What the AI read out of it, as JSON, until the user saves or drops it. */
+    draft: encryptedText(),
     createdAt: created(),
     updatedAt: updated(),
   },

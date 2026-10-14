@@ -101,9 +101,15 @@ Ministry of Health is OID 1.2.643.5.1.13.13.11.1005 on nsi.rosminzdrav.ru. Later
    `labSeries`); a line keeps the laboratory's own unit and range, the value in the analyte's
    unit is worked out on reading. Results and ranges are typed as labs write them (`5,6`,
    `3,9–5,5`, `<5.2`, `отрицательно`).
-3. **A document → a draft → confirmed** — a photo or a PDF in any of the four languages becomes a
+3. ✅ **A document → a draft → confirmed** — a photo or a PDF in any of the four languages becomes a
    draft of a visit, a lab panel or a study; shown next to the original, corrected and saved.
    Vision for scans. Telegram: a photo captioned `/med` (kept apart from receipt photos).
+   Done: `DocumentReaderService` — a photo through the vision connection, a PDF through its
+   text (a scanned PDF without a text layer is asked for as photos: rendering PDF pages needs a
+   native canvas the image has not), the answer kept in the document's language
+   (`keepLanguage`), the draft stored encrypted next to the document until it is saved in one
+   transaction (`apply`) or dropped. The page shows the original beside the editable draft.
+   Telegram: a photo with "🩺 A medical document" under it.
 4. **For a new doctor** — active diagnoses, current medications, allergies, the latest results,
    the chronology; translated into the doctor's language, the codes kept; ticks for what goes in;
    a printable page (PDF through the browser) and DOCX; a public link for N days, revocable,

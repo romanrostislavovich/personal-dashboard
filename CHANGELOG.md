@@ -20,6 +20,11 @@ under **Updating**.
   Russian, Polish or English, so one analyte from labs in different countries is one chart in
   one unit, with the laboratory's range as a band and what was out of it marked. Studies
   (ultrasound, MRI, ECG…) with their conclusions.
+- **Health: a document read by the AI** — a photo or a PDF of a consultation, lab results or a
+  study becomes a draft in its own language: the visit with its clinic, doctor, diagnoses and
+  medications, the lab report line by line, or the study. Nothing is saved until you check the
+  draft beside the original and press Save. From Telegram too: a photo with “🩺 A medical
+  document”. The AI is Health's own connection when it has one.
 - **An AI connection of its own for a section** (Settings → AI): a local model for Health, say;
   the section's data then never reaches the shared connection.
 - **Columns stored encrypted** for modules (`encryptedText()`, `encryptedBytes()`): a dump or a
@@ -40,7 +45,8 @@ under **Updating**.
 ### Updating
 
 - Migration 0062 adds `integration_alerts`, 0063–0065 the tables of Psychology, 0066
-  `ai_settings.module_connections`, 0067 the tables of Health, 0068 its lab results and studies.
+  `ai_settings.module_connections`, 0067 the tables of Health, 0068 its lab results and studies, 0069 the
+  drafts of its documents.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
   key as the server.
 
