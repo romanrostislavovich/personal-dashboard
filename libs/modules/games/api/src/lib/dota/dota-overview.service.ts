@@ -324,25 +324,36 @@ function modeFilter(mode: DotaMatchMode): SQL {
   }
 }
 
+type MatchCounts = { matches: number; decided: number; wins: number; lastMatchAt: string };
+
+const NO_MATCHES: MatchCounts = { matches: 0, decided: 0, wins: 0, lastMatchAt: '' };
+
 function toAccountSummary(
   account: GameAccountRow,
-  counts: { matches: number; decided: number; wins: number; lastMatchAt: string } | undefined,
+  counts: MatchCounts = NO_MATCHES,
 ): DotaAccountSummary {
-  const profile = account.profile as DotaProfile | null;
   return {
     id: account.id,
-    personaName: profile?.personaName ?? account.displayName,
-    avatarUrl: profile?.avatarUrl ?? null,
-    profileUrl: profile?.profileUrl ?? null,
-    rankTier: profile?.rankTier ?? null,
-    leaderboardRank: profile?.leaderboardRank ?? null,
-    historyHidden: profile?.historyHidden ?? false,
-    matches: counts?.matches ?? 0,
-    decided: counts?.decided ?? 0,
-    wins: counts?.wins ?? 0,
-    lastMatchAt: iso(counts?.lastMatchAt ?? null),
+    ...profileOf(account),
+    matches: counts.matches,
+    decided: counts.decided,
+    wins: counts.wins,
+    lastMatchAt: iso(counts.lastMatchAt || null),
     lastSyncedAt: account.lastSyncedAt?.toISOString() ?? null,
     lastError: account.lastError,
+  };
+}
+
+/** What OpenDota told of the account; before its first sync — the name it was added with. */
+function profileOf(account: GameAccountRow) {
+  const profile = (account.profile ?? {}) as Partial<DotaProfile>;
+  return {
+    personaName: profile.personaName ?? account.displayName,
+    avatarUrl: profile.avatarUrl ?? null,
+    profileUrl: profile.profileUrl ?? null,
+    rankTier: profile.rankTier ?? null,
+    leaderboardRank: profile.leaderboardRank ?? null,
+    historyHidden: profile.historyHidden ?? false,
   };
 }
 

@@ -47,19 +47,21 @@ export class AiConnectionsService {
     const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
     // Oldest first: the order of the Telegram `/model` list.
     const connections = await Promise.all(rows.map((row) => this.toConnection(userId, row)));
+    // A user who never saved the settings has the defaults of the table.
+    const stored = settings ?? defaultSettings(userId);
     return {
       configured: rows.length > 0,
-      activeConnectionId: activeRow(rows, settings?.activeConnectionId)?.id ?? null,
+      activeConnectionId: activeRow(rows, stored.activeConnectionId)?.id ?? null,
       connections,
-      morningDigest: settings?.morningDigest ?? false,
-      morningDigestTime: settings?.morningDigestTime ?? DEFAULT_DIGEST_TIME,
-      speechConnectionId: settings?.speechConnectionId ?? null,
-      speechModel: settings?.speechModel ?? DEFAULT_SPEECH_MODEL,
-      visionConnectionId: settings?.visionConnectionId ?? null,
-      visionModel: settings?.visionModel ?? DEFAULT_VISION_MODEL,
-      disabledModules: settings?.disabledModules ?? [],
-      digestOptIns: settings?.digestOptIns ?? [],
-      moduleConnections: settings?.moduleConnections ?? {},
+      morningDigest: stored.morningDigest,
+      morningDigestTime: stored.morningDigestTime,
+      speechConnectionId: stored.speechConnectionId,
+      speechModel: stored.speechModel,
+      visionConnectionId: stored.visionConnectionId,
+      visionModel: stored.visionModel,
+      disabledModules: stored.disabledModules,
+      digestOptIns: stored.digestOptIns,
+      moduleConnections: stored.moduleConnections,
     };
   }
 
@@ -340,6 +342,24 @@ function activeRow(
 
 function connectionFields({ name, provider, baseUrl, model }: AiConnectionInput) {
   return { name, provider, baseUrl, model };
+}
+
+/** The settings of a user who never saved any: the defaults of `ai_settings`. */
+function defaultSettings(userId: string): typeof aiSettings.$inferSelect {
+  return {
+    userId,
+    activeConnectionId: null,
+    morningDigest: false,
+    morningDigestTime: DEFAULT_DIGEST_TIME,
+    morningDigestDay: null,
+    speechConnectionId: null,
+    speechModel: DEFAULT_SPEECH_MODEL,
+    visionConnectionId: null,
+    visionModel: DEFAULT_VISION_MODEL,
+    disabledModules: [],
+    digestOptIns: [],
+    moduleConnections: {},
+  };
 }
 
 function toChatConnection(

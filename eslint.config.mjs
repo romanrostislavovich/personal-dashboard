@@ -65,7 +65,10 @@ export default [
       '**/*.cjs',
       '**/*.mjs',
     ],
-    // Override or add rules here
-    rules: {},
+    rules: {
+      // A function with more ways through it than this is hard to read and to test: split it.
+      // A warning, not an error — a form of many optional fields (`?? ''`) counts every one.
+      complexity: ['warn', { max: 20 }],
+    },
   },
 ];
