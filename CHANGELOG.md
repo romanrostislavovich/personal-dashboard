@@ -31,6 +31,10 @@ under **Updating**.
   everything of it. Opened to print or save as PDF, downloaded for Word, or shared as a link
   the doctor opens without an account for 1–30 days — revocable, with how often it was
   opened.
+- **Health and the other sections** — Psychology shows the mood during the treatment of the
+  mind (medications of a psychiatrist or psychotherapist, F-diagnoses); a line of a doctor's
+  recommendations becomes a task in one click; the next visits in the morning digest (when
+  ticked); Health in the command palette; demo data.
 - **An AI connection of its own for a section** (Settings → AI): a local model for Health, say;
   the section's data then never reaches the shared connection.
 - **Columns stored encrypted** for modules (`encryptedText()`, `encryptedBytes()`): a dump or a

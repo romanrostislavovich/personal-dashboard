@@ -156,6 +156,12 @@ export interface HealthDiagnosis {
   notes: string | null;
 }
 
+/** A recommendation of a doctor made a task of the TODO list (when Tasks is enabled). */
+export const healthTaskInputSchema = z.object({
+  title: z.string().trim().min(1).max(500),
+});
+export type HealthTaskInput = z.input<typeof healthTaskInputSchema>;
+
 // --- Medications ---
 
 export const healthMedicationInputSchema = z

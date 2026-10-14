@@ -251,7 +251,8 @@ To add a service (e.g. DigitalOcean):
   `check` of time asked every 5 minutes with the user's clock) and actions (`*.automations.ts`);
   the user joins them into rules in Settings → Automations, by hand or from a sentence the AI
   turns into a rule (`draft`). A rule runs at most 20 times a day (a timed one once), its last
-  error is kept; modules still never call each other — the core joins them.
+  error is kept; modules still never call each other — the core joins them. `runAction` runs an
+  action once without a rule (a recommendation of a doctor becomes a task).
 - **Auth:** a global `AuthGuard`; public endpoints are marked with `@Public()`. See Security below.
 - **Export and import:** `DataExportService` writes everything a user keeps as a ZIP while it
   is read from the database; the tables come from the catalog, so a module's tables are exported
@@ -298,7 +299,8 @@ reports })`: the account, the last refresh, its error, the expiry of the token w
   (`registerMoments`: the music of a focus session), the time spent on something by its name
   (`registerTimeSpent`: the focus time of a task and the time of the windows named after it),
   what it keeps about a person by their name (`registerPeople`: the gift ideas of the wishlist
-  in Birthdays) and its pages (`registerPages`: the assistant links to them). A section may ask
+  in Birthdays) and its pages (`registerPages`: the assistant links to them), what lasted over a period (`registerPeriods`:
+  the treatment of Health, laid over the mood in Psychology). A section may ask
   for one daily number of another (`dailyMetric`: the tasks done today raise the limit of
   games; the mood of the diary sorts the artists of Music). A project is matched across the sections by its name and its
   `aliases` (a repository, a WakaTime project). A source that fails is left out: a link

@@ -55,6 +55,10 @@ const HIT_ICONS: Record<string, string> = {
   soundcloud: 'cloud',
   repository: 'code',
   project: 'rocket_launch',
+  diagnosis: 'diagnosis',
+  medication: 'medication',
+  visit: 'stethoscope',
+  document: 'description',
 };
 
 /**

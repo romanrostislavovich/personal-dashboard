@@ -121,9 +121,15 @@ Ministry of Health is OID 1.2.643.5.1.13.13.11.1005 on nsi.rosminzdrav.ru. Later
    the page frozen when it was made, encrypted; `/api/medical/shared/:token` is public, the same
    404 for unknown, expired and revoked, 30 opens per address in 10 minutes, `noindex`, a CSP
    that runs nothing.
-5. **Links** — Psychology shows the psychiatrist's medications and diagnoses as periods on the
+5. ✅ **Links** — Psychology shows the psychiatrist's medications and diagnoses as periods on the
    mood and the questionnaires; a recommendation becomes a task or a reminder in one click; the
    next visit in the digest; search (Ctrl+K); demo data.
+   Done: `LinksService.registerPeriods` / `periodsBetween` (Health tells the treatment of the
+   mind: medications of a psychiatrist or psychotherapist, ICD-10 F / ICD-11 6 conditions;
+   Psychology shows the mood during each, and its AI tool drops the periods of a section hidden
+   from the shared AI); `AutomationsService.runAction` (a line of the recommendations becomes a
+   task through `tasks.create`); the next visits in the digest (`optIn`); the command palette;
+   demo data across two countries.
 6. **Later** — reminders to take medications, the profile (vaccinations, operations), import from
    the Polish IKP and the Ukrainian Helsi when they export.
 

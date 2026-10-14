@@ -1,0 +1,106 @@
+import { HealthRecord } from '@pd/contracts';
+import { mindPeriods } from './health.links';
+import { healthHits } from './health.search';
+
+const record: HealthRecord = {
+  clinics: [],
+  doctors: [],
+  visits: [visit('psy', 'psychiatrist'), visit('gp', 'general')],
+  diagnoses: [
+    diagnosis('F41.1', 'Anxiety', 'confirmed', '2026-10-13'),
+    diagnosis('F32.1', 'Depression', 'remission', '2020-01-10'),
+    diagnosis('J45', 'Asthma', 'confirmed', '2015-01-01'),
+    diagnosis('F43.2', 'Ruled out', 'ruledOut', '2026-01-01'),
+  ],
+  medications: [
+    medication('Escitalopram', 'psy', '2026-10-13', null),
+    medication('Salbutamol', 'gp', '2015-01-01', null),
+  ],
+  documents: [],
+  labPanels: [],
+  studies: [],
+};
+
+describe('mindPeriods', () => {
+  it('tells the treatment of the mind only, still going on or over', () => {
+    const periods = mindPeriods(record, { from: '2019-01-01', to: '2026-12-31' });
+    expect(periods).toEqual([
+      {
+        kind: 'medication',
+        title: 'Escitalopram',
+        subtitle: '10 mg',
+        from: '2026-10-13',
+        to: null,
+      },
+      { kind: 'diagnosis', title: 'F41.1 Anxiety', subtitle: null, from: '2026-10-13', to: null },
+      {
+        kind: 'diagnosis',
+        title: 'F32.1 Depression',
+        subtitle: null,
+        from: '2020-01-10',
+        to: '2020-01-10',
+      },
+    ]);
+  });
+
+  it('leaves out what does not touch the range', () => {
+    expect(mindPeriods(record, { from: '2021-01-01', to: '2021-12-31' })).toEqual([]);
+  });
+});
+
+describe('healthHits', () => {
+  it('finds a diagnosis by its code and a medication by its substance', () => {
+    expect(healthHits(record, 'f41').map((hit) => hit.title)).toEqual(['F41.1 Anxiety']);
+    expect(healthHits(record, 'escitalo').map((hit) => hit.kind)).toEqual(['medication']);
+  });
+});
+
+function visit(id: string, speciality: string) {
+  return {
+    id,
+    visitedOn: '2026-10-13',
+    clinicId: null,
+    doctorId: null,
+    speciality,
+    country: 'PL',
+    complaints: null,
+    findings: null,
+    recommendations: null,
+    notes: null,
+    nextVisitOn: null,
+    language: null,
+  };
+}
+
+function diagnosis(
+  code: string,
+  title: string,
+  status: 'confirmed' | 'remission' | 'ruledOut',
+  diagnosedOn: string,
+) {
+  return {
+    id: code,
+    system: 'icd10' as const,
+    code,
+    title,
+    status,
+    diagnosedOn,
+    visitId: null,
+    notes: null,
+  };
+}
+
+function medication(name: string, visitId: string, startedOn: string, stoppedOn: string | null) {
+  return {
+    id: name,
+    name,
+    substance: name.toLowerCase(),
+    dose: '10 mg',
+    schedule: null,
+    startedOn,
+    stoppedOn,
+    stopReason: null,
+    visitId,
+    notes: null,
+  };
+}

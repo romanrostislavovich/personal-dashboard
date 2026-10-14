@@ -77,7 +77,10 @@
     "recommendations": "Recommendations",
     "notes": "Notes",
     "nextVisitOn": "Next visit",
-    "next": "Next visit: {{day}}"
+    "next": "Next visit: {{day}}",
+    "toTask": "Add to tasks",
+    "taskAdded": "Added to tasks",
+    "taskFailed": "Could not add the task: is Tasks enabled?"
   },
   "diagnosis": {
     "add": "Add a diagnosis",
@@ -352,5 +355,8 @@
     "until": "until {{day}}",
     "opened": "opened {{count}} times",
     "revoke": "Revoke"
+  },
+  "digestOptions": {
+    "nextVisit": "Upcoming visits to a doctor"
   }
 }

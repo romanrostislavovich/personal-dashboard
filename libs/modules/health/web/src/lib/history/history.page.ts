@@ -16,7 +16,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { ToastService } from '@pd/web-core';
 import { HealthDocument, HealthLabPanel, HealthRecord, HealthVisit } from '@pd/contracts';
 import { HealthDialogs } from '../dialogs/health-dialogs.service';
 import { HealthApi } from '../health.api';
@@ -153,10 +154,27 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
             </div>
 
             @for (field of texts; track field) {
-              @if (visit[field]) {
+              @if (visit[field]; as text) {
                 <div class="text">
                   <span class="label">{{ 'health.visit.' + field | transloco }}</span>
-                  <span class="words">{{ visit[field] }}</span>
+                  @if (field === 'recommendations') {
+                    <!-- Every line of the recommendations can become a task. -->
+                    @for (line of lines(text); track $index) {
+                      <span class="recommendation">
+                        <span class="words">{{ line }}</span>
+                        <button
+                          matIconButton
+                          [attr.aria-label]="'health.visit.toTask' | transloco"
+                          [matTooltip]="'health.visit.toTask' | transloco"
+                          (click)="toTask(line)"
+                        >
+                          <mat-icon>add_task</mat-icon>
+                        </button>
+                      </span>
+                    }
+                  } @else {
+                    <span class="words">{{ text }}</span>
+                  }
                 </div>
               }
             }
@@ -363,6 +381,14 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
+    .recommendation {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .recommendation .words {
+      flex: 1;
+    }
     .line {
       display: flex;
       align-items: center;
@@ -414,6 +440,8 @@ export class HistoryPage {
   private readonly api = inject(HealthApi);
   private readonly dialogs = inject(HealthDialogs);
   private readonly route = inject(ActivatedRoute);
+  private readonly toasts = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
   private readonly router = inject(Router);
 
   protected readonly record = this.api.record();
@@ -572,6 +600,32 @@ export class HistoryPage {
   protected async review(record: HealthRecord, document: HealthDocument): Promise<void> {
     if (await this.dialogs.review({ record, document })) {
       this.record.reload();
+    }
+  }
+
+  /** A recommendation in lines, without the list marks a document puts before them. */
+  protected lines(text: string): string[] {
+    return text
+      .split(/\r?\n/)
+      .map((line) => line.replace(/^\s*(?:[-•*]|\d+[.)])\s*/, '').trim())
+      .filter(Boolean);
+  }
+
+  /** The line becomes a task of the TODO list (through the core: Health does not know Tasks). */
+  protected async toTask(line: string): Promise<void> {
+    try {
+      await this.api.client.addTask({ title: line });
+      this.toasts.show({
+        icon: 'add_task',
+        title: this.transloco.translate('health.visit.taskAdded'),
+        text: line,
+        route: '/tasks/todo',
+      });
+    } catch {
+      this.toasts.show({
+        icon: 'error',
+        title: this.transloco.translate('health.visit.taskFailed'),
+      });
     }
   }
 

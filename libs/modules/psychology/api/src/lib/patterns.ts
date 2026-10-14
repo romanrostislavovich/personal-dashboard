@@ -63,6 +63,7 @@ export function moodPatterns(
 
   return {
     ...period,
+    periods: [],
     days: days.length,
     average: average(days.map((item) => item.value)),
     byWeekday,
@@ -86,4 +87,15 @@ export function moodPatterns(
       .filter((event) => event.to >= period.from && event.from <= period.to)
       .sort((a, b) => b.from.localeCompare(a.from)),
   };
+}
+
+/** The average mood from `from` to `to` (the end of the period for one still going on). */
+export function moodDuring(
+  mood: { day: LocalDate; value: number }[],
+  from: LocalDate,
+  to: LocalDate | null,
+  period: { to: LocalDate },
+): number | null {
+  const last = to ?? period.to;
+  return average(mood.filter((item) => item.day >= from && item.day <= last).map((i) => i.value));
 }

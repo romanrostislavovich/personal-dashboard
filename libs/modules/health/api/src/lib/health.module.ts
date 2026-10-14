@@ -3,6 +3,10 @@ import { DocumentReaderService } from './documents/document-reader.service';
 import { HealthTelegram } from './documents/health-telegram';
 import { HealthAiTools } from './health.ai-tools';
 import { HealthController } from './health.controller';
+import { HealthDemo } from './health.demo';
+import { HealthDigest } from './health.digest';
+import { HealthLinks } from './health.links';
+import { HealthSearch } from './health.search';
 import { HealthServerActions } from './health.server-actions';
 import { HealthService } from './health.service';
 import { IcdDictionaryService } from './icd/icd-dictionary.service';
@@ -27,6 +31,10 @@ import { SummaryService } from './summary/summary.service';
     DocumentReaderService,
     HealthTelegram,
     SummaryService,
+    HealthLinks,
+    HealthDigest,
+    HealthSearch,
+    HealthDemo,
   ],
 })
 export class HealthModule {}
