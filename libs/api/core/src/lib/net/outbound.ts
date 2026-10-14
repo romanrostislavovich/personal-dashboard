@@ -99,6 +99,17 @@ export async function assertPublicHost(hostname: string): Promise<void> {
  * `fetch` for an address a user gave: only http(s), and every redirect is checked like the
  * first address — a public page must not lead into the private network.
  */
+/** Headers that prove who is asking: never sent to a host other than the one they were for. */
+const CREDENTIAL_HEADERS = ['authorization', 'cookie', 'proxy-authorization', 'x-api-key'];
+
+function withoutCredentials(headers: RequestInit['headers']): Headers {
+  const result = new Headers(headers);
+  for (const name of CREDENTIAL_HEADERS) {
+    result.delete(name);
+  }
+  return result;
+}
+
 /** How long a call to an outside service may take unless it says otherwise. */
 export const OUTSIDE_TIMEOUT_MS = 30_000;
 
@@ -138,7 +149,12 @@ export async function safeFetch(url: string, init: RequestInit = {}): Promise<Re
     if (init.redirect === 'error' || hop >= MAX_REDIRECTS) {
       throw new Error(`Too many redirects: ${url}`);
     }
-    current = new URL(location, current);
+    const next = new URL(location, current);
+    // As browsers do: the API key of an AI connection or a cookie is not carried to another host.
+    if (next.origin !== current.origin) {
+      request = { ...request, headers: withoutCredentials(request.headers) };
+    }
+    current = next;
     // As browsers do: after "see other" (and after a POST moved) the next request is a GET.
     if (response.status === 303 || (response.status < 303 && request.method === 'POST')) {
       request = { ...request, method: 'GET', body: undefined };

@@ -14,6 +14,8 @@ const UPLOAD_MS = 60_000;
 const WATCH_WITHOUT_INPUT_MS = 3 * 60 * 60 * 1000;
 /** The server takes this many spans at a time (see activityIngestSchema). */
 const BATCH = 500;
+/** An upload that takes longer is given up: the spans wait for the next one. */
+const UPLOAD_TIMEOUT_MS = 30_000;
 /** And this many focus sessions. */
 const FOCUS_BATCH = 50;
 /** How often the state of the computer (disks, load) is taken. */
@@ -146,6 +148,7 @@ export class ActivityTracker {
     this.close();
     this.focus.stop();
     await this.upload();
+    this.store.flush();
   }
 
   focusStatus(): FocusStatus & { available: boolean } {
@@ -280,8 +283,10 @@ export class ActivityTracker {
       // An empty batch is sent too: it is how a new exclusion or idle time reaches the tracker.
       // Focus sessions and the computer's state go with the first batch.
       let first = true;
+      // Halved when the server finds a batch too large; back to full on the next upload.
+      let size = BATCH;
       do {
-        const batch = this.store.queue.slice(0, BATCH);
+        const batch = this.store.queue.slice(0, size);
         const focus = first ? this.store.focusQueue.slice(0, FOCUS_BATCH) : [];
         const health = first ? this.pendingHealth : null;
         const outages = first ? this.store.outageQueue.slice() : [];
@@ -295,11 +300,26 @@ export class ActivityTracker {
             ...(health ? { health } : {}),
             ...(outages.length ? { outages } : {}),
           }),
+          signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
         });
         if (response.status === 401) {
           // The device was removed in the dashboard: this computer no longer reports.
           this.disable();
           return;
+        }
+        if (response.status === 413 && batch.length > 1) {
+          // Too large for the server: the same spans go again in smaller batches.
+          size = Math.ceil(batch.length / 2);
+          first = true;
+          continue;
+        }
+        if (response.status === 400 || response.status === 413) {
+          // The server will never take these (a span it finds wrong): they are dropped, or
+          // they would block everything after them for good.
+          this.store.dequeue(batch.length);
+          this.store.dequeueFocus(new Set(focus.map((session) => session.id)));
+          this.store.dequeueOutages(new Set(outages.map((outage) => outage.id)));
+          continue;
         }
         if (!response.ok) {
           // The server answers, but with an error (a restart, a deploy): it is down for us.
@@ -335,7 +355,7 @@ export class ActivityTracker {
           this.pendingHealth = null;
         }
         this.onChange();
-      } while (this.store.queue.length >= BATCH);
+      } while (this.store.queue.length >= size);
     } catch {
       // No connection: the spans wait in the store, the outage is noted.
       await this.outages.failed();

@@ -58,12 +58,23 @@ export class LoginThrottle {
     return entry;
   }
 
+  /**
+   * Keeps the map bounded: the ended windows go first, then the oldest keys that are not
+   * locked. A lock still in force is never forgotten — or flooding the map with new addresses
+   * would free a locked account.
+   */
   private prune(): void {
     if (this.failures.size <= MAX_KEYS) {
       return;
     }
-    for (const key of this.failures.keys()) {
-      if (!this.current(key) || this.failures.size > MAX_KEYS) {
+    for (const key of [...this.failures.keys()]) {
+      this.current(key);
+    }
+    for (const [key, entry] of this.failures) {
+      if (this.failures.size <= MAX_KEYS) {
+        return;
+      }
+      if (entry.count < MAX_FAILURES) {
         this.failures.delete(key);
       }
     }

@@ -96,7 +96,7 @@ export class RecurringPaymentsService {
       await tx
         .update(recurringPayments)
         .set({ ...normalized(input), noticedAmount: null })
-        .where(eq(recurringPayments.id, id));
+        .where(and(eq(recurringPayments.id, id), eq(recurringPayments.userId, userId)));
     });
     return (await this.list(userId)).find((payment) => payment.id === id) as RecurringPayment;
   }

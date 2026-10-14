@@ -23,6 +23,7 @@ import {
   AuthUser,
   AutomationsService,
   CurrentUser,
+  RateLimit,
   ServerActions,
   ZodValidationPipe,
 } from '@pd/api-core';
@@ -345,6 +346,7 @@ export class HealthController {
   // --- A document read by the AI: a draft, checked and saved by the user ---
 
   /** Reads it now (a minute at most) and keeps the draft next to it. */
+  @RateLimit(30, 3600)
   @Post('documents/:id/read')
   readDocument(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.reader.read(user.id, id);

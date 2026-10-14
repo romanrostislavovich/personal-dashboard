@@ -253,6 +253,8 @@ export class ActivityService {
   }
 
   async addRule(userId: string, input: ActivityProjectRuleInput): Promise<void> {
+    // A rule may only point at the user's own project.
+    await this.projectsService.assertOwned(userId, input.projectId);
     await this.db
       .insert(activityProjectRules)
       .values({ userId, ...input })

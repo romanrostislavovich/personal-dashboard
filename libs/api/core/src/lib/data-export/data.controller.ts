@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os';
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
 import { DataExportService } from './data-export.service';
 import { DataImportService } from './data-import.service';
+import { RateLimit } from '../system/rate-limit';
 
 /** A history of years with its photos; anything larger is not an archive of one person. */
 const MAX_ARCHIVE_BYTES = 2 * 1024 * 1024 * 1024;
@@ -50,6 +51,7 @@ export class DataController {
   }
 
   /** Uploads an archive and tells what it would add; nothing is changed yet. */
+  @RateLimit(10, 3600)
   @Post('import')
   @UseInterceptors(
     // Kept on the disk, not in memory: an archive with photos is large.

@@ -74,6 +74,19 @@ under **Updating**.
 - **The trash keeps only what a person deleted**: the daily cleanup of old activity measurements
   no longer fills it.
 - **The Docker image is published only after CI passes** on the commit.
+- **Limits on what costs:** an AI message (30 a minute), an attachment, reading a medical
+  document by the AI, an import, a new account (5 an hour from one address) and the demo; over
+  the limit the answer is 429 with how long to wait.
+- **Signing in:** the API key of an AI connection or a cookie is never carried over a redirect to
+  another host; the current password in "change password" is limited like a sign-in; a lock
+  is never forgotten however many other addresses try.
+- **Desktop:** its queue is written whole or not at all (a crash leaves no broken file) and
+  together a moment later; the device is kept in a file of its own; a batch the server refuses
+  is split or dropped instead of blocking the queue; an upload gives up after 30 seconds; no
+  PowerShell no longer crashes the app, and the window watcher never runs twice.
+- **Smaller:** a rule of Activity takes only the user's own project; every write names the
+  user, not only the row; monitors are checked ten at a time and one failed check never loses
+  the others; a wishlist page is read only up to its limit.
 
 ### Updating
 

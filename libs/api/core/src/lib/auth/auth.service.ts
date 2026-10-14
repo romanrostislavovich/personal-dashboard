@@ -227,10 +227,8 @@ export class AuthService implements OnApplicationBootstrap {
     sessionId: string | null,
     { currentPassword, newPassword }: PasswordChange,
   ) {
-    const user = await this.requireUser(userId);
-    if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
-      throw new BadRequestException('Current password is incorrect');
-    }
+    // A stolen session must not be a way to guess the password: throttled like a sign-in.
+    await this.checkPassword(userId, currentPassword);
     await this.users.update(userId, {
       passwordHash: await bcrypt.hash(newPassword, BCRYPT_ROUNDS),
     });
@@ -238,7 +236,7 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   /** Turning 2FA off asks for the password and a code: a stolen session alone is not enough. */
-  async checkPassword(userId: string, password: string): Promise<void> {
+  async checkPassword(userId: string, password: string): Promise<UserRow> {
     const user = await this.requireUser(userId);
     const keys = [`password:${userId}`];
     this.throttle.check(keys);
@@ -246,6 +244,8 @@ export class AuthService implements OnApplicationBootstrap {
       this.throttle.fail(keys);
       throw new BadRequestException('Current password is incorrect');
     }
+    this.throttle.succeed(keys);
+    return user;
   }
 
   private async issueSession(

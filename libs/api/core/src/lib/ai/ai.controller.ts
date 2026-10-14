@@ -36,6 +36,7 @@ import { AiConversationsService } from './ai-conversations.service';
 import { AiService } from './ai.service';
 import { AttachmentError, attachmentText } from './attachment-text';
 import { MorningDigestService } from './morning-digest.service';
+import { RateLimit } from '../system/rate-limit';
 
 /** The part of a multer upload we use (multer's own types are not installed). */
 interface UploadedDocument {
@@ -124,6 +125,8 @@ export class AiController {
    * Chat: one new message; the conversation is stored and shared with Telegram.
    * Like the Telegram assistant, it can also change data when asked.
    */
+  // Every message is a paid request to the AI.
+  @RateLimit(30, 60)
   @Post('chat')
   chat(
     @CurrentUser() user: AuthUser,
@@ -168,6 +171,7 @@ export class AiController {
   }
 
   /** The text of a file for the chat: the client sends it back with the next message. */
+  @RateLimit(30, 3600)
   @Post('attachments')
   @UseInterceptors(
     FileInterceptor('file', {

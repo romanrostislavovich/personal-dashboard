@@ -18,6 +18,7 @@ const RESTART_MS = 30_000;
 export class WindowWatcher {
   private child: ChildProcess | null = null;
   private stopped = false;
+  private restartTimer: NodeJS.Timeout | null = null;
 
   constructor(private readonly onSample: (sample: WindowSample | null) => void) {}
 
@@ -50,20 +51,38 @@ export class WindowWatcher {
     );
     this.child = child;
     createInterface({ input: child.stdout }).on('line', (line) => this.onSample(parse(line)));
-    child.on('exit', () => {
-      this.child = null;
-      // No window is known from now on; the watcher comes back unless it was stopped.
-      this.onSample(null);
-      if (!this.stopped) {
-        setTimeout(() => this.start(), RESTART_MS);
-      }
-    });
+    // PowerShell missing or blocked: without a listener the error would end the whole app.
+    child.on('error', () => this.ended(child));
+    child.on('exit', () => this.ended(child));
   }
 
   stop(): void {
     this.stopped = true;
+    if (this.restartTimer) {
+      clearTimeout(this.restartTimer);
+      this.restartTimer = null;
+    }
     this.child?.kill();
     this.child = null;
+  }
+
+  /**
+   * No window is known from now on; the watcher comes back unless it was stopped. Only for the
+   * child still current: an old one ending after a restart must not drop the new one (two
+   * watchers would then run).
+   */
+  private ended(child: ChildProcess): void {
+    if (this.child !== child) {
+      return;
+    }
+    this.child = null;
+    this.onSample(null);
+    if (!this.stopped && !this.restartTimer) {
+      this.restartTimer = setTimeout(() => {
+        this.restartTimer = null;
+        this.start();
+      }, RESTART_MS);
+    }
   }
 }
 

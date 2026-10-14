@@ -182,7 +182,7 @@ export class WishlistService {
         goalId: input.goalId === undefined ? row.goalId : await this.ownGoal(userId, input.goalId),
         recipient: input.recipient === undefined ? row.recipient : input.recipient || null,
       })
-      .where(eq(wishes.id, id));
+      .where(and(eq(wishes.id, id), eq(wishes.userId, userId)));
     if (input.price != null) {
       const currency = input.currency ?? row.currency ?? (await this.settings.mainCurrency(userId));
       if (input.price !== row.price || currency !== row.currency) {
@@ -206,7 +206,7 @@ export class WishlistService {
     await this.db
       .update(wishes)
       .set({ boughtAt: bought ? new Date() : null })
-      .where(eq(wishes.id, id));
+      .where(and(eq(wishes.id, id), eq(wishes.userId, userId)));
     if (bought && record && !row.boughtAt && row.price !== null && row.currency) {
       await this.transactions.create(userId, {
         kind: 'expense',

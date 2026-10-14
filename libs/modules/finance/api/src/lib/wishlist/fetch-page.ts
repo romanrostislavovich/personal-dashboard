@@ -26,7 +26,7 @@ export async function fetchPage(url: string): Promise<{ html: string } | { error
       await response.body?.cancel();
       return { error: `HTTP ${response.status}` };
     }
-    return { html: (await response.text()).slice(0, MAX_LENGTH) };
+    return { html: await readUpTo(response, MAX_LENGTH) };
   } catch (error) {
     if (error instanceof Error && error.name === 'TimeoutError') {
       return { error: 'timeout' };
@@ -36,4 +36,27 @@ export async function fetchPage(url: string): Promise<{ html: string } | { error
     const code = (cause as { code?: string }).code;
     return { error: code ?? (cause instanceof Error ? cause.message : String(cause)) };
   }
+}
+
+/**
+ * The start of a body, `limit` bytes at most: the rest is not downloaded at all (a page of
+ * gigabytes would otherwise be read into memory before being cut).
+ */
+export async function readUpTo(response: Response, limit: number): Promise<string> {
+  if (!response.body) {
+    return '';
+  }
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  while (length < limit) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    chunks.push(value);
+    length += value.length;
+  }
+  await reader.cancel().catch(() => undefined);
+  return new TextDecoder().decode(Buffer.concat(chunks).subarray(0, limit));
 }

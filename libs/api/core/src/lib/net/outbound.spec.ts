@@ -75,6 +75,25 @@ describe('addresses users give', () => {
     expect(String(fetch.mock.calls[1][0])).toBe('http://1.1.1.1/next');
   });
 
+  it('carries the credentials only to the host they were for', async () => {
+    setPrivateAddressesAllowed(false);
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 302, headers: { location: '/same' } }))
+      .mockResolvedValueOnce(
+        new Response(null, { status: 302, headers: { location: 'http://8.8.8.8/other' } }),
+      )
+      .mockResolvedValueOnce(new Response('ok'));
+    vi.stubGlobal('fetch', fetch);
+    await safeFetch('http://1.1.1.1/start', {
+      headers: { Authorization: 'Bearer secret', 'Content-Type': 'application/json' },
+    });
+    const headers = (call: number) => new Headers(fetch.mock.calls[call][1].headers);
+    expect(headers(1).get('authorization')).toBe('Bearer secret');
+    expect(headers(2).get('authorization')).toBeNull();
+    expect(headers(2).get('content-type')).toBe('application/json');
+  });
+
   it('refuses what is not http', async () => {
     await expect(safeFetch('file:///etc/passwd')).rejects.toBeInstanceOf(OutboundBlockedError);
   });

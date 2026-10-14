@@ -1,5 +1,5 @@
 import { app, safeStorage } from 'electron';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FocusSession, FocusSettings } from './focus-timer';
 import { Outage } from './outages';
@@ -60,6 +60,18 @@ const DEFAULTS: StoredState = {
 };
 /** A guard for a computer that stays offline for weeks: the oldest spans give way. */
 const MAX_QUEUE = 50_000;
+/** Changes come every few seconds: they are written together, this long after the first. */
+const SAVE_DELAY_MS = 2_000;
+
+/**
+ * Writes a file whole or not at all: into a temporary file first, then a rename, so a crash or
+ * a power cut in the middle never leaves half a file. Errors are left to the caller.
+ */
+function writeAtomically(path: string, content: string): void {
+  const part = `${path}.part`;
+  writeFileSync(part, content);
+  renameSync(part, path);
+}
 
 /**
  * What the tracker keeps between launches, as JSON in the user folder next to settings.json:
@@ -68,6 +80,7 @@ const MAX_QUEUE = 50_000;
  */
 export class ActivityStore {
   private state: StoredState = this.load();
+  private saveTimer: NodeJS.Timeout | null = null;
 
   get deviceId(): string | null {
     return this.state.device?.id ?? null;
@@ -94,7 +107,13 @@ export class ActivityStore {
       token: encrypted ? safeStorage.encryptString(device.token).toString('base64') : device.token,
       encrypted,
     };
-    this.save();
+    // Kept in a file of its own as well: a broken state file must not unregister the computer.
+    try {
+      writeAtomically(this.devicePath(), JSON.stringify(this.state.device));
+    } catch {
+      // The disk is full: the device still lives in the state file.
+    }
+    this.flush();
   }
 
   get config(): TrackerConfig {
@@ -160,28 +179,57 @@ export class ActivityStore {
     this.save();
   }
 
+  /** Writes what changed now: before the app quits, and after the device changed. */
+  flush(): void {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+    }
+    try {
+      writeAtomically(this.path(), JSON.stringify(this.state));
+    } catch {
+      // The disk is full or the folder is gone: the state lives until the app quits.
+    }
+  }
+
   private path(): string {
     return join(app.getPath('userData'), 'activity.json');
   }
 
-  private load(): StoredState {
-    if (!existsSync(this.path())) {
-      return { ...DEFAULTS };
-    }
-    try {
-      const stored = JSON.parse(readFileSync(this.path(), 'utf8')) as StoredState;
-      // A config saved by an older version lacks the newer fields.
-      return { ...DEFAULTS, ...stored, config: { ...DEFAULTS.config, ...stored.config } };
-    } catch {
-      return { ...DEFAULTS };
-    }
+  private devicePath(): string {
+    return join(app.getPath('userData'), 'activity-device.json');
   }
 
-  private save(): void {
-    try {
-      writeFileSync(this.path(), JSON.stringify(this.state));
-    } catch {
-      // The disk is full or the folder is gone: the state lives until the app quits.
+  private load(): StoredState {
+    const stored = readJson<StoredState>(this.path());
+    // The device file outlives a broken state file (and a state file of an older version).
+    const device = readJson<StoredState['device']>(this.devicePath());
+    if (!stored) {
+      return { ...DEFAULTS, device: device ?? null };
     }
+    // A config saved by an older version lacks the newer fields.
+    return {
+      ...DEFAULTS,
+      ...stored,
+      device: stored.device ?? device ?? null,
+      config: { ...DEFAULTS.config, ...stored.config },
+    };
+  }
+
+  /** Spans arrive every few seconds: they are written together, a moment later. */
+  private save(): void {
+    this.saveTimer ??= setTimeout(() => this.flush(), SAVE_DELAY_MS);
+  }
+}
+
+/** The JSON of a file; `null` when it is missing or broken. */
+function readJson<T>(path: string): T | null {
+  if (!existsSync(path)) {
+    return null;
+  }
+  try {
+    return JSON.parse(readFileSync(path, 'utf8')) as T;
+  } catch {
+    return null;
   }
 }

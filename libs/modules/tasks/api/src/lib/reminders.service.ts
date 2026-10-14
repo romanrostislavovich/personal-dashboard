@@ -114,7 +114,10 @@ export class RemindersService {
 
   async done(userId: string, id: string): Promise<void> {
     await this.find(userId, id);
-    await this.db.update(reminders).set({ status: 'done' }).where(eq(reminders.id, id));
+    await this.db
+      .update(reminders)
+      .set({ status: 'done' })
+      .where(and(eq(reminders.id, id), eq(reminders.userId, userId)));
   }
 
   /** Remind again at another moment. */
@@ -123,7 +126,7 @@ export class RemindersService {
     await this.db
       .update(reminders)
       .set({ remindAt: at, status: 'scheduled' })
-      .where(eq(reminders.id, id));
+      .where(and(eq(reminders.id, id), eq(reminders.userId, userId)));
   }
 
   /** How many reminders the user has answered "done" — for the achievements. */
