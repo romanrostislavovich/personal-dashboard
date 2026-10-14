@@ -10,6 +10,7 @@ const TABS = [
   { path: 'results', labelKey: 'health.tabs.results' },
   { path: 'medications', labelKey: 'health.tabs.medications' },
   { path: 'doctors', labelKey: 'health.tabs.doctors' },
+  { path: 'summary', labelKey: 'health.tabs.summary' },
 ] as const;
 
 /** The Health section: a title, what it is (and is not), the tabs and the subsection. */

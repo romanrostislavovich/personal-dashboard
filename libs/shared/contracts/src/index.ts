@@ -42,3 +42,4 @@ export * from './lib/tasks';
 export * from './lib/weather';
 export * from './lib/health';
 export * from './lib/health-labs';
+export * from './lib/health-summary';

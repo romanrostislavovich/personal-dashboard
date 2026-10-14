@@ -101,9 +101,17 @@ export class ApiClient {
     return this.get<T>(request.url, { query: request.params, signal });
   }
 
-  /** A file (a diary photo): its bytes, for an object URL. */
-  async blob(path: string): Promise<Blob> {
-    const response = await this.sendAuthorized('GET', path, {}, '*/*');
+  /**
+   * A file (a diary photo): its bytes, for an object URL. With a body it is asked for with a
+   * POST — a document made from options that do not belong in an address.
+   */
+  async blob(path: string, body?: unknown): Promise<Blob> {
+    const response = await this.sendAuthorized(
+      body === undefined ? 'GET' : 'POST',
+      path,
+      { body },
+      '*/*',
+    );
     if (!response.ok) {
       throw new ApiError(response.status, await readBody(response));
     }
