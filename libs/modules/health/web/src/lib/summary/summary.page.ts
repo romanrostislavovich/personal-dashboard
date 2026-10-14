@@ -142,7 +142,12 @@ export class SummaryPage {
       if (tab) {
         tab.location.href = url;
       } else {
-        window.location.href = url;
+        // No new tab (the desktop app, a blocked pop-up): the page is saved as a file rather
+        // than put in place of the app, where there is no way back from it.
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'medical-summary.html';
+        link.click();
       }
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     });

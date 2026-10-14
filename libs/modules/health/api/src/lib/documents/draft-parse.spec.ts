@@ -1,4 +1,4 @@
-import { parseDraft } from './draft-parse';
+import { answerShape, parseDraft } from './draft-parse';
 
 describe('parseDraft', () => {
   it('reads the JSON of a visit, even inside a code fence', () => {
@@ -55,5 +55,34 @@ describe('parseDraft', () => {
   it('gives nothing for an answer without JSON', () => {
     expect(parseDraft('I cannot read this document.')).toBeNull();
     expect(parseDraft('{ not json }')).toBeNull();
+  });
+
+  it('takes the lists in the other shapes the models answer in', () => {
+    const draft = parseDraft(
+      JSON.stringify({
+        kind: 'visit',
+        diagnosis: ['F41.1 Generalised anxiety disorder', 'Insomnia'],
+        prescriptions: [
+          'Escitalopram 10 mg in the morning',
+          { drug: 'Melatonin', dose: '3 mg', schedule: 'at night' },
+        ],
+      }),
+    );
+    expect(draft?.diagnoses).toEqual([
+      { code: 'F41.1', title: 'Generalised anxiety disorder', status: 'confirmed' },
+      { title: 'Insomnia', status: 'confirmed' },
+    ]);
+    expect(draft?.medications.map((m) => m.name)).toEqual([
+      'Escitalopram 10 mg in the morning',
+      'Melatonin',
+    ]);
+    expect(draft?.medications[1].dose).toBe('3 mg');
+  });
+
+  it('tells the shape of an answer without its words', () => {
+    expect(answerShape('{"kind":"labs","diagnoses":[],"labValues":[{"name":"x"}]}')).toBe(
+      'kind, diagnoses[0], labValues[1]',
+    );
+    expect(answerShape('Sorry, I cannot read it')).toBe('no JSON (23 characters)');
   });
 });
