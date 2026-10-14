@@ -12,6 +12,7 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { join } from 'node:path';
 import { Pool } from 'pg';
 import { AppConfig } from '../config/env';
+import { configureFieldEncryption } from '../crypto/encrypted-columns';
 
 /** Injection token: `constructor(@Inject(DB) private readonly db: Database)`. */
 export const DB = Symbol('DB');
@@ -35,9 +36,13 @@ const PG_POOL = Symbol('PG_POOL');
     },
     {
       provide: DB,
-      inject: [PG_POOL],
-      // snake_case: the `passwordHash` field in code = the `password_hash` column in the database.
-      useFactory: (pool: Pool) => drizzle({ client: pool, casing: 'snake_case' }),
+      inject: [PG_POOL, ConfigService],
+      useFactory: (pool: Pool, config: AppConfig) => {
+        // Before any row is read: encrypted columns need the key (see encrypted-columns.ts).
+        configureFieldEncryption(config.get('ENCRYPTION_KEY', { infer: true }));
+        // snake_case: the `passwordHash` field in code = the `password_hash` column in the database.
+        return drizzle({ client: pool, casing: 'snake_case' });
+      },
     },
   ],
   exports: [DB],

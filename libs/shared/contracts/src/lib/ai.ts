@@ -74,6 +74,15 @@ export const aiPreferencesSchema = z.object({
   disabledModules: z.array(z.string().trim().min(1).max(50)).max(50).optional(),
   /** Optional sections of the morning digest that are switched on (ids from `digest-options`). */
   digestOptIns: z.array(z.string().trim().min(1).max(100)).max(50).optional(),
+  /**
+   * Sections whose AI requests go through a saved connection of their own (a local Ollama for
+   * Health): module → connection id. Their data then never goes to the shared one — no tools in
+   * the assistant's chat, no digest sections, no stories of Life. The whole map is replaced.
+   */
+  moduleConnections: z
+    .record(z.string().trim().min(1).max(50), z.uuid())
+    .refine((map) => Object.keys(map).length <= 50, 'Too many sections')
+    .optional(),
 });
 export type AiPreferences = z.infer<typeof aiPreferencesSchema>;
 
@@ -87,6 +96,8 @@ export interface AiSettings {
   visionModel: string;
   disabledModules: string[];
   digestOptIns: string[];
+  /** module → connection id; a section not listed uses the active connection. */
+  moduleConnections: Record<string, string>;
   /** At least one connection exists — the AI features work. */
   configured: boolean;
   /** The connection every AI request goes through. */

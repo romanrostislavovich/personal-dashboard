@@ -1,0 +1,83 @@
+:host,
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:host {
+  gap: 24px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 16px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.blood {
+  width: 180px;
+}
+
+.save {
+  align-self: flex-start;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.section {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--pd-border);
+}
+
+.item > mat-icon {
+  margin-top: 8px;
+  color: var(--mat-sys-primary);
+}
+
+.item > mat-icon.severe {
+  color: var(--mat-sys-error);
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.hint.due {
+  color: var(--mat-sys-error);
+}
+
+.error {
+  color: var(--mat-sys-error);
+}

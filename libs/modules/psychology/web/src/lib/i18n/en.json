@@ -39,7 +39,14 @@
     "byWeek": "Week by week",
     "fewWeeks": "A second week with a mood is needed for a line.",
     "duringEvents": "During the events",
-    "duringEventsHint": "The average mood of the days of each event, against the average of the period."
+    "duringEventsHint": "The average mood of the days of each event, against the average of the period.",
+    "duringTreatment": "During treatment",
+    "duringTreatmentHint": "Medications of a psychiatrist or a psychotherapist and diagnoses of the mind from Health, with the average mood during each. What goes together, not the cause.",
+    "ongoing": "now",
+    "periodKinds": {
+      "medication": "medication",
+      "diagnosis": "diagnosis"
+    }
   },
   "checkups": {
     "notDiagnosis": "These short questionnaires are a way to watch yourself over time, not a diagnosis. Only a specialist who talks to you can tell what a score means.",

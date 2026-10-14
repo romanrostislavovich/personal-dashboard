@@ -8,6 +8,41 @@ under **Updating**.
 
 ### Added
 
+- **Health** — one medical history of your own across countries and clinics: visits with
+  their complaints, examination and recommendations, diagnoses by ICD code gathered into
+  conditions with their history, medications (by the active substance too) and the documents
+  — scans, photos, PDFs. Stored encrypted. The ICD-10 dictionary is downloaded from WHO by your
+  own server after you accept WHO's terms (Settings → Integrations); it is never shipped or
+  exported. A dictionary in Russian, Ukrainian or any language is loaded from a CSV or XLSX
+  file of your own.
+- **Health: lab results and studies** — a lab report as the laboratory gave it (its units and
+  its own reference ranges); about 60 common analytes recognised by their names in Ukrainian,
+  Russian, Polish or English, so one analyte from labs in different countries is one chart in
+  one unit, with the laboratory's range as a band and what was out of it marked. Studies
+  (ultrasound, MRI, ECG…) with their conclusions.
+- **Health: a document read by the AI** — a photo or a PDF of a consultation, lab results or a
+  study becomes a draft in its own language: the visit with its clinic, doctor, diagnoses and
+  medications, the lab report line by line, or the study. Nothing is saved until you check the
+  draft beside the original and press Save. From Telegram too: a photo with “🩺 A medical
+  document”. The AI is Health's own connection when it has one.
+- **Health: a summary for a new doctor** — current diagnoses, medications, the latest results
+  with their trend, studies and visits, under headings in Polish, Ukrainian, Russian, English
+  or German, the texts translated by the AI if you ask; a speciality can be left out with
+  everything of it. Opened to print or save as PDF, downloaded for Word, or shared as a link
+  the doctor opens without an account for 1–30 days — revocable, with how often it was
+  opened.
+- **Health and the other sections** — Psychology shows the mood during the treatment of the
+  mind (medications of a psychiatrist or psychotherapist, F-diagnoses); a line of a doctor's
+  recommendations becomes a task in one click; the next visits in the morning digest (when
+  ticked); Health in the command palette; demo data.
+- **Health: the profile and medication reminders** — blood type, allergies, vaccinations with
+  the next dose and operations, first in the summary for a doctor; a reminder to take a
+  medication at its times, with “Taken” and “Skip” in Telegram and on the page, and how the
+  taking went over two weeks; vaccinations due in the digest.
+- **An AI connection of its own for a section** (Settings → AI): a local model for Health, say;
+  the section's data then never reaches the shared connection.
+- **Columns stored encrypted** for modules (`encryptedText()`, `encryptedBytes()`): a dump or a
+  backup holds only ciphertext; the export of one's data writes them decrypted.
 - **Psychology** — a section for watching oneself over time: the patterns of the mood, short
   questionnaires with their history (WHO-5, GAD-7, PHQ-9; self-observation, not a diagnosis)
   and the events of a life — told by their dates or by the age they happened at — saved as an
@@ -23,7 +58,12 @@ under **Updating**.
 
 ### Updating
 
-- Migration 0062 adds `integration_alerts`, 0063–0065 the tables of Psychology.
+- Migration 0062 adds `integration_alerts`, 0063–0065 the tables of Psychology, 0066
+  `ai_settings.module_connections`, 0067 the tables of Health, 0068 its lab results and studies, 0069 the
+  drafts of its documents, 0070 the links for doctors, 0071 the profile
+  and the reminders to take medications.
+- Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
+  key as the server.
 
 ## 0.3.0 — the first public release
 

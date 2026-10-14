@@ -23,7 +23,8 @@ export { TelegramBotService } from './lib/notifications/telegram/telegram-bot.se
 export * from './lib/achievements/achievement-metric';
 export { AchievementsService } from './lib/achievements/achievements.service';
 export * from './lib/ai/ai-tool';
-export { AiService } from './lib/ai/ai.service';
+export { AiService, type CompleteOptions } from './lib/ai/ai.service';
+export { decodeText } from './lib/ai/attachment-text';
 export * from './lib/ai/digest-section';
 export { MorningDigestService } from './lib/ai/morning-digest.service';
 export { ServerActions, type ServerActionHandler } from './lib/sync/server-actions';
@@ -58,6 +59,7 @@ export type {
   MomentSource,
   PeopleSource,
   Period,
+  PeriodSource,
   ProjectRef,
   ProjectSource,
   TimeSpent,

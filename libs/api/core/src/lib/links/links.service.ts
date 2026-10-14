@@ -7,6 +7,7 @@ import {
   ProjectChange,
   ProjectFact,
   ServiceUsage,
+  TimelinePeriod,
 } from '@pd/contracts';
 
 /** A project as the sections are asked about it. */
@@ -65,6 +66,13 @@ export interface MomentSource {
   between(userId: string, from: Date, to: Date): Promise<Moment[]>;
 }
 
+/** A section that knows what lasted over a period: a medication, a condition (Health). */
+export interface PeriodSource {
+  module: string;
+  /** The periods that touch the range. */
+  periods(userId: string, range: Period): Promise<Omit<TimelinePeriod, 'module'>[]>;
+}
+
 /** A section that knows how long was worked on something called by a name. */
 export interface TimeSpentSource {
   module: string;
@@ -99,6 +107,7 @@ export class LinksService {
   private readonly usages: UsageSource[] = [];
   private readonly metrics: DailyMetricSource[] = [];
   private readonly moments: MomentSource[] = [];
+  private readonly periodSources: PeriodSource[] = [];
   private readonly timeSpent: TimeSpentSource[] = [];
   private readonly appPages: AppPage[] = [];
   private readonly people: PeopleSource[] = [];
@@ -117,6 +126,10 @@ export class LinksService {
 
   registerMoments(source: MomentSource): void {
     this.moments.push(source);
+  }
+
+  registerPeriods(source: PeriodSource): void {
+    this.periodSources.push(source);
   }
 
   registerTimeSpent(source: TimeSpentSource): void {
@@ -213,6 +226,17 @@ export class LinksService {
   async momentsBetween(userId: string, from: Date, to: Date): Promise<Moment[]> {
     const moments = await this.collect(this.moments, (source) => source.between(userId, from, to));
     return moments.sort((a, b) => a.at.localeCompare(b.at));
+  }
+
+  /** What lasted over the range across the sections, the latest start first. */
+  async periodsBetween(userId: string, range: Period): Promise<TimelinePeriod[]> {
+    const periods = await this.collect(this.periodSources, async (source) =>
+      (await source.periods(userId, range)).map((period) => ({
+        ...period,
+        module: source.module,
+      })),
+    );
+    return periods.sort((a, b) => b.from.localeCompare(a.from));
   }
 
   /** Seconds worked on each of the names (lower case), by how the time was counted. */

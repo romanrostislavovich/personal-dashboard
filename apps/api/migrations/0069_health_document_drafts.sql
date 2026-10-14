@@ -1,0 +1,1 @@
+ALTER TABLE "health_documents" ADD COLUMN "draft" text;

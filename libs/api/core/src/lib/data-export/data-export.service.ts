@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DATA_ARCHIVE_FORMAT, DataArchiveManifest } from '@pd/contracts';
 import { sql, SQL } from 'drizzle-orm';
 import { Writable } from 'node:stream';
+import { decryptBytes, decryptedRow, encryptedColumnsOf } from '../crypto/encrypted-columns';
 import { DB, Database } from '../database/database.module';
 import { ArchiveWriter, binaryPath, FileReference, MANIFEST_PATH, tablePath } from './data-archive';
 import { exportable, ExportTable, ownedBy, readExportTables } from './export-catalog';
@@ -102,10 +103,17 @@ export class DataExportService {
     await archive.file(tablePath(table.name), async (push) => {
       const select = sql`SELECT (${row} ${sql.join(filled, sql` `)})::text AS row
         FROM ${name} t WHERE ${mine}`;
+      // An archive is readable anywhere: encrypted columns go into it decrypted.
+      const encrypted = encryptedColumnsOf(table.name);
       for await (const rows of cursor<{ row: string }>(tx, select, ROWS_AT_A_TIME)) {
-        const lines = table.binary.length
-          ? rows.map((item) => JSON.stringify(withFileReferences(table, JSON.parse(item.row))))
-          : rows.map((item) => item.row);
+        const lines =
+          table.binary.length || encrypted?.text.size
+            ? rows.map((item) =>
+                JSON.stringify(
+                  withFileReferences(table, decryptedRow(table.name, JSON.parse(item.row))),
+                ),
+              )
+            : rows.map((item) => item.row);
         await push(lines.join('\n') + '\n');
       }
     });
@@ -113,10 +121,14 @@ export class DataExportService {
       const select = sql`SELECT ${row} AS row, t.${sql.identifier(column)} AS content
         FROM ${name} t WHERE ${mine}`;
       type BinaryRow = { row: Record<string, unknown>; content: Buffer | null };
+      const encrypted = encryptedColumnsOf(table.name)?.bytes.has(column);
       for await (const rows of cursor<BinaryRow>(tx, select, BINARY_ROWS_AT_A_TIME)) {
         for (const item of rows.filter((r) => r.content)) {
           const path = binaryPath(table.name, table.primaryKey, column, item.row);
-          await archive.file(path, (push) => push(item.content as Buffer), { compress: false });
+          const content = item.content as Buffer;
+          await archive.file(path, (push) => push(encrypted ? decryptBytes(content) : content), {
+            compress: false,
+          });
         }
       }
     }

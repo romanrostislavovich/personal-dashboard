@@ -21,13 +21,21 @@ export class PsychologyAiTools implements OnModuleInit {
       description:
         "The mood (the diary's, 1–5) over a period: the average, by the day of the week " +
         '(`byWeekday`, Monday is 0), week by week (`weeks`), the longest run of low days in a ' +
-        'row (`longestLowRun`) and the average mood during each event of the period (`events`). ' +
+        'row (`longestLowRun`), the average mood during each event of the period (`events`) ' +
+        'and during the treatment other sections tell (`periods`: a medication, a diagnosis). ' +
         'Useful for "which days of the week are hardest", "how was my mood during the move", ' +
         '"is it getting better". What goes with good and bad days is core_mood_insights. It ' +
         'describes, it does not diagnose: never name a condition.',
       parameters: PERIOD_PARAMETERS,
-      handler: (userId, args) =>
-        this.psychology.patterns(userId, psychologyPatternsQuerySchema.parse(args)),
+      handler: async (userId, args) => {
+        const patterns = await this.psychology.patterns(
+          userId,
+          psychologyPatternsQuerySchema.parse(args),
+        );
+        // A section hidden from the assistant (or with its own AI) keeps its periods away.
+        const hidden = new Set(await this.ai.hiddenFromShared(userId));
+        return { ...patterns, periods: patterns.periods.filter((p) => !hidden.has(p.module)) };
+      },
     });
 
     this.ai.registerTool({

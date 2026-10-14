@@ -1,0 +1,1 @@
+ALTER TABLE "ai_settings" ADD COLUMN "module_connections" jsonb DEFAULT '{}'::jsonb NOT NULL;

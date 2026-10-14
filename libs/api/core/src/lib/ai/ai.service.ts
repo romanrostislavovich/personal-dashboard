@@ -33,6 +33,14 @@ const MAX_TOOL_RESULT_CHARS = 12_000;
 
 export type AskOptions = Omit<PromptOptions, 'hasAttachments'>;
 
+export interface CompleteOptions {
+  /**
+   * The answer keeps the language of the content (what is read out of a document) instead of
+   * the user's; by default it is in the user's language.
+   */
+  keepLanguage?: boolean;
+}
+
 export interface AiAnswer {
   reply: string;
   /** Modules the model took data from. */
@@ -83,6 +91,19 @@ export class AiService {
     return !(await this.connections.disabledModules(userId)).includes(module);
   }
 
+  /**
+   * Whether this module's data may go into a request of the shared connection (a story of Life
+   * across the modules): not for a module switched off or with a connection of its own.
+   */
+  async canShare(userId: string, module: string): Promise<boolean> {
+    return !(await this.hiddenFromShared(userId)).includes(module);
+  }
+
+  /** Modules whose data a tool across the sections leaves out (see `canShare`). */
+  hiddenFromShared(userId: string): Promise<string[]> {
+    return this.connections.hiddenFromShared(userId);
+  }
+
   // --- Model requests ---
 
   /**
@@ -108,7 +129,8 @@ export class AiService {
         content: withAttachments(content, attachments),
       })),
     ];
-    const hidden = new Set(await this.connections.disabledModules(userId));
+    // A section with a connection of its own keeps its data away from the chat's one.
+    const hidden = new Set(await this.hiddenFromShared(userId));
     const tools = this.tools.filter(
       (tool) => !hidden.has(tool.module) && (options.allowWrites || !tool.writes),
     );
@@ -155,25 +177,26 @@ export class AiService {
 
   /**
    * A single request without tools (summaries, rewording). `module` — whose data `content` is:
-   * refused if the user has switched that module off for the AI.
+   * refused if the user has switched that module off for the AI, sent to the module's own
+   * connection if it has one.
    */
   async complete(
     userId: string,
     instruction: string,
     content: string,
     module?: string,
+    options: CompleteOptions = {},
   ): Promise<string> {
     if (module && !(await this.canSee(userId, module))) {
       throw new ForbiddenException(`AI access to ${module} is off`);
     }
-    const connection = await this.requireConnection(userId);
-    const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
+    const connection =
+      (module && (await this.connections.ofModule(userId, module))) ||
+      (await this.requireConnection(userId));
+    const system = await this.withLanguage(userId, `${instruction} ${NO_JUDGEMENT}`, options);
     try {
       const reply = await chatCompletion(connection, [
-        {
-          role: 'system',
-          content: `${instruction} ${NO_JUDGEMENT} Always answer in ${language}.`,
-        },
+        { role: 'system', content: system },
         { role: 'user', content },
       ]);
       return reply.content ?? '';
@@ -186,27 +209,30 @@ export class AiService {
   }
 
   /**
-   * A single request about a picture (a receipt): the connection that reads pictures answers.
-   * `null` — there is none (see AiConnectionsService.vision).
+   * A single request about a picture (a receipt): the module's own connection answers, or else
+   * the one that reads pictures. `null` — there is none (see AiConnectionsService.vision).
    */
   async completeWithImage(
     userId: string,
     instruction: string,
     image: { data: Buffer; mimeType: string },
     module?: string,
+    options: CompleteOptions = {},
   ): Promise<string | null> {
     if (module && !(await this.canSee(userId, module))) {
       throw new ForbiddenException(`AI access to ${module} is off`);
     }
-    const connection = await this.connections.vision(userId);
+    const connection =
+      (module && (await this.connections.ofModule(userId, module))) ||
+      (await this.connections.vision(userId));
     if (!connection) {
       return null;
     }
-    const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
+    const system = await this.withLanguage(userId, instruction, options);
     const url = `data:${image.mimeType};base64,${image.data.toString('base64')}`;
     try {
       const reply = await chatCompletion(connection, [
-        { role: 'system', content: `${instruction} Always answer in ${language}.` },
+        { role: 'system', content: system },
         { role: 'user', content: [{ type: 'image_url', image_url: { url } }] },
       ]);
       return reply.content ?? '';
@@ -216,6 +242,19 @@ export class AiService {
       }
       throw error;
     }
+  }
+
+  /** The instruction, told to answer in the user's language unless the text keeps its own. */
+  private async withLanguage(
+    userId: string,
+    instruction: string,
+    { keepLanguage }: CompleteOptions,
+  ): Promise<string> {
+    if (keepLanguage) {
+      return instruction;
+    }
+    const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
+    return `${instruction} Always answer in ${language}.`;
   }
 
   /** Runs a tool call; `changed` — a write tool actually changed data. */

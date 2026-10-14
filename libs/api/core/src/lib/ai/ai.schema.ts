@@ -55,6 +55,8 @@ export const aiSettings = pgTable('ai_settings', {
   disabledModules: text().array().notNull().default([]),
   /** Opt-in digest sections the user switched on (see DigestSection.optIn). */
   digestOptIns: text().array().notNull().default([]),
+  /** Sections with an AI connection of their own (see AiPreferences.moduleConnections). */
+  moduleConnections: jsonb().$type<Record<string, string>>().notNull().default({}),
 });
 
 /**

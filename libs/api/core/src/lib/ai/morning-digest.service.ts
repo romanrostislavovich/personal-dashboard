@@ -31,8 +31,9 @@ export class MorningDigestService {
 
   /** Sections for today's digest; empty — nothing new, the digest is not sent. */
   async changes(userId: string): Promise<DigestChange[]> {
-    // The digest is written by the AI: modules switched off for it are left out.
-    const hidden = new Set(await this.connections.disabledModules(userId));
+    // The digest is written by the shared AI: modules switched off for it, or with a
+    // connection of their own, are left out.
+    const hidden = new Set(await this.connections.hiddenFromShared(userId));
     const optedIn = new Set(await this.connections.digestOptIns(userId));
     const visible = this.sections.filter(
       (section) => !hidden.has(section.module) && (!section.optIn || optedIn.has(section.id)),
