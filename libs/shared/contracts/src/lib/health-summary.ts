@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import {
+  AllergySeverity,
+  BloodType,
   DiagnosisStatus,
   HealthLabPanel,
   HealthRecord,
@@ -26,6 +28,8 @@ export const healthSummaryOptionsSchema = z.object({
   language: z.enum(SUMMARY_LANGUAGES).default('en'),
   /** The free texts (diagnoses, recommendations, conclusions) translated by the AI. */
   translate: z.boolean().default(false),
+  /** The blood type, allergies, operations and vaccinations. */
+  profile: z.boolean().default(true),
   conditions: z.boolean().default(true),
   /** Conditions ruled out or in remission too. */
   pastConditions: z.boolean().default(false),
@@ -43,6 +47,13 @@ export const healthSummaryOptionsSchema = z.object({
 });
 export type HealthSummaryOptions = z.output<typeof healthSummaryOptionsSchema>;
 export type HealthSummaryOptionsInput = z.input<typeof healthSummaryOptionsSchema>;
+
+export interface SummaryProfile {
+  bloodType: BloodType | null;
+  allergies: { substance: string; reaction: string | null; severity: AllergySeverity | null }[];
+  operations: { title: string; performedOn: LocalDate }[];
+  vaccinations: { vaccine: string; dose: string | null; givenOn: LocalDate }[];
+}
 
 export interface SummaryCondition {
   system: IcdSystem;
@@ -105,6 +116,7 @@ export interface HealthSummary {
   /** The free texts were translated by the AI (the summary says so). */
   translated: boolean;
   /** `null` — the section was not asked for. */
+  profile: SummaryProfile | null;
   conditions: SummaryCondition[] | null;
   medications: SummaryMedication[] | null;
   labs: SummaryLabResult[] | null;
@@ -203,6 +215,25 @@ export function buildHealthSummary(
     madeOn: context.today,
     from,
     translated: false,
+    profile: options.profile
+      ? {
+          bloodType: record.profile.bloodType,
+          allergies: record.profile.allergies.map(({ substance, reaction, severity }) => ({
+            substance,
+            reaction,
+            severity,
+          })),
+          operations: record.profile.operations.map(({ title, performedOn }) => ({
+            title,
+            performedOn,
+          })),
+          vaccinations: record.profile.vaccinations.map(({ vaccine, dose, givenOn }) => ({
+            vaccine,
+            dose,
+            givenOn,
+          })),
+        }
+      : null,
     conditions: options.conditions ? conditions : null,
     medications: options.medications ? medications : null,
     labs: options.labs ? labs : null,

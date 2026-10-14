@@ -24,9 +24,9 @@ export class HealthDigest implements OnModuleInit {
       module: 'health',
       optIn: true,
       description:
-        'Visits to a doctor planned in the next two weeks: the date, the speciality, the ' +
-        'clinic. Mention one that is today or tomorrow, and one new to the list; nothing about ' +
-        'why the visit is.',
+        'Visits to a doctor planned in the next two weeks (the date, the speciality, the ' +
+        'clinic) and vaccinations due in that time. Mention one that is today or tomorrow, and ' +
+        'one new to the list; nothing about why the visit is.',
       // Dates, not "days until": the facts change only when a visit is planned or comes.
       collect: async (userId) => {
         const user = await this.users.findById(userId);
@@ -43,7 +43,10 @@ export class HealthDigest implements OnModuleInit {
             clinic: record.clinics.find((c) => c.id === v.clinicId)?.name ?? null,
           }))
           .sort((a, b) => String(a.date).localeCompare(String(b.date)));
-        return visits.length ? { today, visits } : null;
+        const vaccinations = record.profile.vaccinations
+          .filter((v) => v.nextDueOn && v.nextDueOn >= today && v.nextDueOn <= until)
+          .map((v) => ({ date: v.nextDueOn, vaccine: v.vaccine }));
+        return visits.length || vaccinations.length ? { today, visits, vaccinations } : null;
       },
     });
   }

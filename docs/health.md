@@ -130,8 +130,14 @@ Ministry of Health is OID 1.2.643.5.1.13.13.11.1005 on nsi.rosminzdrav.ru. Later
    from the shared AI); `AutomationsService.runAction` (a line of the recommendations becomes a
    task through `tasks.create`); the next visits in the digest (`optIn`); the command palette;
    demo data across two countries.
-6. **Later** — reminders to take medications, the profile (vaccinations, operations), import from
-   the Polish IKP and the Ukrainian Helsi when they export.
+6. ✅ **Later — the profile and the reminders** — the profile (blood type, notes for an
+   emergency, allergies with their severity, vaccinations with the next dose, operations), in
+   the summary for a doctor first; reminders to take a medication at its times on the user's
+   clock (`health.medication-reminders`, every minute, one row a medication, day and time, a
+   missed time sent within 30 minutes, never later), "Taken" / "Skip" in Telegram and on the
+   page, how the taking went over two weeks; due vaccinations in the digest. Import from the
+   Polish IKP and the Ukrainian Helsi: neither gives an export of its own, so their PDFs go
+   through a document read by the AI (stage 3); a dedicated import waits for a format.
 
 Not done on purpose: achievements for illnesses; medical advice or interpreting results ("this
 means you have…") — only facts: the value, the laboratory's norm, the dynamics.

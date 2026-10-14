@@ -1,9 +1,12 @@
 import { encryptedBytes, encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
 import {
+  AllergySeverity,
+  BloodType,
   DiagnosisStatus,
   HealthDocumentKind,
   HealthStudyKind,
   IcdSystem,
+  IntakeStatus,
   SummaryLanguage,
 } from '@pd/contracts';
 import {
@@ -14,6 +17,7 @@ import {
   pgTable,
   primaryKey,
   text,
+  unique,
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
@@ -125,6 +129,90 @@ export const healthMedications = pgTable(
     stoppedOn: date({ mode: 'string' }),
     stopReason: encryptedText(),
     visitId: uuid().references(() => healthVisits.id, { onDelete: 'set null' }),
+    notes: encryptedText(),
+    /** `HH:mm` on the user's clock to be reminded at; empty — no reminders. */
+    reminderTimes: text().array().notNull().default([]),
+    createdAt: created(),
+    updatedAt: updated(),
+  },
+  (table) => [index().on(table.userId)],
+);
+
+/**
+ * A reminder to take a medication at one of its times on one day, and the answer. One row a
+ * medication, day and time: the job sends it once however often it runs.
+ */
+export const healthIntakes = pgTable(
+  'health_intakes',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: owner(),
+    medicationId: uuid()
+      .notNull()
+      .references(() => healthMedications.id, { onDelete: 'cascade' }),
+    day: date({ mode: 'string' }).notNull(),
+    time: text().notNull(),
+    status: text().$type<IntakeStatus>().notNull().default('pending'),
+    answeredAt: timestamp({ withTimezone: true }),
+    createdAt: created(),
+    updatedAt: updated(),
+  },
+  (table) => [
+    unique().on(table.medicationId, table.day, table.time),
+    index().on(table.userId, table.day),
+  ],
+);
+
+/** What a doctor asks first: the blood type and what to know in an emergency. */
+export const healthProfiles = pgTable('health_profiles', {
+  userId: uuid()
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  bloodType: text().$type<BloodType>(),
+  notes: encryptedText(),
+  updatedAt: updated(),
+});
+
+export const healthAllergies = pgTable(
+  'health_allergies',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: owner(),
+    substance: encryptedText().notNull(),
+    reaction: encryptedText(),
+    severity: text().$type<AllergySeverity>(),
+    since: date({ mode: 'string' }),
+    createdAt: created(),
+    updatedAt: updated(),
+  },
+  (table) => [index().on(table.userId)],
+);
+
+export const healthVaccinations = pgTable(
+  'health_vaccinations',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: owner(),
+    vaccine: encryptedText().notNull(),
+    dose: encryptedText(),
+    givenOn: date({ mode: 'string' }).notNull(),
+    country: text(),
+    nextDueOn: date({ mode: 'string' }),
+    notes: encryptedText(),
+    createdAt: created(),
+    updatedAt: updated(),
+  },
+  (table) => [index().on(table.userId)],
+);
+
+export const healthOperations = pgTable(
+  'health_operations',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: owner(),
+    title: encryptedText().notNull(),
+    performedOn: date({ mode: 'string' }).notNull(),
+    clinic: encryptedText(),
     notes: encryptedText(),
     createdAt: created(),
     updatedAt: updated(),
@@ -271,6 +359,10 @@ registerEncryptedTables(
   healthLabValues,
   healthStudies,
   healthShares,
+  healthProfiles,
+  healthAllergies,
+  healthVaccinations,
+  healthOperations,
 );
 
 export type HealthClinicRow = typeof healthClinics.$inferSelect;
@@ -283,3 +375,7 @@ export type HealthLabPanelRow = typeof healthLabPanels.$inferSelect;
 export type HealthLabValueRow = typeof healthLabValues.$inferSelect;
 export type HealthStudyRow = typeof healthStudies.$inferSelect;
 export type HealthShareRow = typeof healthShares.$inferSelect;
+export type HealthIntakeRow = typeof healthIntakes.$inferSelect;
+export type HealthAllergyRow = typeof healthAllergies.$inferSelect;
+export type HealthVaccinationRow = typeof healthVaccinations.$inferSelect;
+export type HealthOperationRow = typeof healthOperations.$inferSelect;

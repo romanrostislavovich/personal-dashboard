@@ -1,4 +1,6 @@
 import {
+  HealthAllergy,
+  HealthAllergyInput,
   HealthClinic,
   HealthClinicInput,
   HealthDiagnosis,
@@ -10,10 +12,16 @@ import {
   HealthDocumentInput,
   HealthDraftApplied,
   HealthDraftApplyInput,
+  HealthIntake,
+  HealthIntakeAnswer,
   HealthLabPanel,
   HealthLabPanelInput,
   HealthMedication,
   HealthMedicationInput,
+  HealthOperation,
+  HealthOperationInput,
+  HealthProfile,
+  HealthProfileInput,
   HealthRecord,
   HealthShare,
   HealthShareCreated,
@@ -22,6 +30,8 @@ import {
   HealthStudyInput,
   HealthSummaryOptionsInput,
   HealthTaskInput,
+  HealthVaccination,
+  HealthVaccinationInput,
   HealthVisit,
   HealthVisitInput,
   IcdDictionary,
@@ -65,6 +75,20 @@ export function healthApi(api: ApiClient) {
 
     /** A recommendation of a doctor as a task of the TODO list; 404 without Tasks. */
     addTask: (input: HealthTaskInput) => api.post<{ created: boolean }>(`${BASE}/tasks`, input),
+
+    saveProfile: (input: HealthProfileInput) => api.put<HealthProfile>(`${BASE}/profile`, input),
+    saveAllergy: (input: HealthAllergyInput, id?: string) =>
+      save<HealthAllergy>(api, 'allergies', input, id),
+    removeAllergy: (id: string) => api.delete(`${BASE}/allergies/${id}`),
+    saveVaccination: (input: HealthVaccinationInput, id?: string) =>
+      save<HealthVaccination>(api, 'vaccinations', input, id),
+    removeVaccination: (id: string) => api.delete(`${BASE}/vaccinations/${id}`),
+    saveOperation: (input: HealthOperationInput, id?: string) =>
+      save<HealthOperation>(api, 'operations', input, id),
+    removeOperation: (id: string) => api.delete(`${BASE}/operations/${id}`),
+    /** "Taken" or "skipped" for a reminder to take a medication. */
+    answerIntake: (id: string, input: HealthIntakeAnswer) =>
+      api.put<HealthIntake>(`${BASE}/intakes/${id}`, input),
 
     saveDiagnosis: (input: HealthDiagnosisInput, id?: string) =>
       save<HealthDiagnosis>(api, 'diagnoses', input, id),

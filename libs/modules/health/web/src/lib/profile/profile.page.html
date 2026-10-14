@@ -1,0 +1,176 @@
+@if (record.isLoading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+@if (record.error()) {
+  <p class="error" role="alert">{{ 'health.errors.load' | transloco }}</p>
+} @else if (profile(); as profile) {
+  <mat-card appearance="outlined">
+    <mat-card-content class="content">
+      <div class="row">
+        <mat-form-field subscriptSizing="dynamic" class="blood">
+          <mat-label>{{ 'health.profile.bloodType' | transloco }}</mat-label>
+          <mat-select
+            [value]="profile.bloodType ?? ''"
+            (selectionChange)="setBloodType($event.value)"
+          >
+            <mat-option [value]="''">—</mat-option>
+            @for (type of bloodTypes; track type) {
+              <mat-option [value]="type">{{ type }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>{{ 'health.profile.notes' | transloco }}</mat-label>
+        <textarea
+          matInput
+          rows="3"
+          maxlength="5000"
+          [value]="notes() ?? profile.notes ?? ''"
+          (input)="notes.set($any($event.target).value)"
+        ></textarea>
+        <mat-hint>{{ 'health.profile.notesHint' | transloco }}</mat-hint>
+      </mat-form-field>
+      @if (notes() !== null) {
+        <button matButton="filled" class="save" (click)="saveNotes()">
+          {{ 'core.actions.save' | transloco }}
+        </button>
+      }
+      @if (failed()) {
+        <p class="error" role="alert">{{ 'health.errors.save' | transloco }}</p>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <section>
+    <div class="toolbar">
+      <h2 class="section">{{ 'health.profile.allergy.title' | transloco }}</h2>
+      <button matButton="tonal" (click)="edit('allergy')">
+        <mat-icon>add</mat-icon> {{ 'health.profile.allergy.add' | transloco }}
+      </button>
+    </div>
+    @for (allergy of profile.allergies; track allergy.id) {
+      <div class="item">
+        <mat-icon [class.severe]="allergy.severity === 'severe'">
+          {{ allergy.severity === 'severe' ? 'warning' : 'allergy' }}
+        </mat-icon>
+        <span class="body">
+          <b>{{ allergy.substance }}</b>
+          <span class="hint">
+            @if (allergy.severity) {
+              {{ 'health.profile.severities.' + allergy.severity | transloco }}
+            }
+            @if (allergy.reaction) {
+              · {{ allergy.reaction }}
+            }
+          </span>
+        </span>
+        <button
+          matIconButton
+          [attr.aria-label]="'core.actions.edit' | transloco"
+          (click)="edit('allergy', asItem(allergy))"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          matIconButton
+          [attr.aria-label]="'core.actions.delete' | transloco"
+          (click)="remove('allergy', allergy.id, allergy.substance)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    } @empty {
+      <p class="hint">{{ 'health.profile.allergy.empty' | transloco }}</p>
+    }
+  </section>
+
+  <section>
+    <div class="toolbar">
+      <h2 class="section">{{ 'health.profile.vaccination.title' | transloco }}</h2>
+      <button matButton="tonal" (click)="edit('vaccination')">
+        <mat-icon>add</mat-icon> {{ 'health.profile.vaccination.add' | transloco }}
+      </button>
+    </div>
+    @for (vaccination of profile.vaccinations; track vaccination.id) {
+      <div class="item">
+        <mat-icon>vaccines</mat-icon>
+        <span class="body">
+          <b>{{ vaccination.vaccine }}</b>
+          <span class="hint">
+            {{ vaccination.givenOn | date: 'd MMM y' }}
+            @if (vaccination.dose) {
+              · {{ vaccination.dose }}
+            }
+            @if (vaccination.country) {
+              · {{ vaccination.country | pdCountry }}
+            }
+          </span>
+          @if (vaccination.nextDueOn) {
+            <span class="hint" [class.due]="dueSoon(vaccination.nextDueOn)">
+              {{
+                'health.profile.nextDue'
+                  | transloco: { day: (vaccination.nextDueOn | date: 'd MMM y') }
+              }}
+            </span>
+          }
+        </span>
+        <button
+          matIconButton
+          [attr.aria-label]="'core.actions.edit' | transloco"
+          (click)="edit('vaccination', asItem(vaccination))"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          matIconButton
+          [attr.aria-label]="'core.actions.delete' | transloco"
+          (click)="remove('vaccination', vaccination.id, vaccination.vaccine)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    } @empty {
+      <p class="hint">{{ 'health.profile.vaccination.empty' | transloco }}</p>
+    }
+  </section>
+
+  <section>
+    <div class="toolbar">
+      <h2 class="section">{{ 'health.profile.operation.title' | transloco }}</h2>
+      <button matButton="tonal" (click)="edit('operation')">
+        <mat-icon>add</mat-icon> {{ 'health.profile.operation.add' | transloco }}
+      </button>
+    </div>
+    @for (operation of profile.operations; track operation.id) {
+      <div class="item">
+        <mat-icon>healing</mat-icon>
+        <span class="body">
+          <b>{{ operation.title }}</b>
+          <span class="hint">
+            {{ operation.performedOn | date: 'd MMM y' }}
+            @if (operation.clinic) {
+              · {{ operation.clinic }}
+            }
+          </span>
+        </span>
+        <button
+          matIconButton
+          [attr.aria-label]="'core.actions.edit' | transloco"
+          (click)="edit('operation', asItem(operation))"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          matIconButton
+          [attr.aria-label]="'core.actions.delete' | transloco"
+          (click)="remove('operation', operation.id, operation.title)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    } @empty {
+      <p class="hint">{{ 'health.profile.operation.empty' | transloco }}</p>
+    }
+  </section>
+}

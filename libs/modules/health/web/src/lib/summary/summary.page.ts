@@ -22,6 +22,7 @@ import { HealthApi } from '../health.api';
 import { SpecialityPipe } from '../health-labels';
 
 type Section =
+  | 'profile'
   | 'conditions'
   | 'pastConditions'
   | 'medications'
@@ -32,6 +33,7 @@ type Section =
   | 'visitTexts';
 
 const SECTIONS: Section[] = [
+  'profile',
   'conditions',
   'pastConditions',
   'medications',
@@ -76,6 +78,7 @@ export class SummaryPage {
   protected readonly language = signal<SummaryLanguage>('pl');
   protected readonly translate = signal(false);
   protected readonly included = signal<Record<Section, boolean>>({
+    profile: true,
     conditions: true,
     pastConditions: false,
     medications: true,

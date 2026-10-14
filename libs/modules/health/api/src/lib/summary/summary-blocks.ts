@@ -35,6 +35,29 @@ export function summaryBlocks(summary: HealthSummary): SummaryBlock[] {
     blocks.push(...(rows ? table() : [{ kind: 'paragraph', text: t.none, muted: true } as const]));
   };
 
+  // What a doctor must know first: the blood type and the allergies.
+  if (summary.profile) {
+    const { bloodType, allergies } = summary.profile;
+    if (bloodType) {
+      blocks.push({ kind: 'paragraph', text: `${t.bloodType}: ${bloodType}` });
+    }
+    blocks.push({ kind: 'heading', text: t.allergies });
+    blocks.push(
+      allergies.length
+        ? {
+            kind: 'table',
+            head: [t.allergies, t.reaction, ''],
+            rows: allergies.map((a) => [
+              a.substance,
+              a.reaction ?? '',
+              a.severity ? t.severities[a.severity] : '',
+            ]),
+            marked: allergies.map((a) => a.severity === 'severe'),
+          }
+        : { kind: 'paragraph', text: t.noAllergies, muted: true },
+    );
+  }
+
   if (summary.conditions) {
     const conditions = summary.conditions;
     section(t.conditions, conditions.length, () => [
@@ -105,6 +128,30 @@ export function summaryBlocks(summary: HealthSummary): SummaryBlock[] {
         ...(s.conclusion ? [{ kind: 'paragraph' as const, text: s.conclusion, muted: true }] : []),
       ]),
     );
+  }
+
+  if (summary.profile?.operations.length) {
+    const operations = summary.profile.operations;
+    section(t.operations, operations.length, () =>
+      operations.map((o) => ({
+        kind: 'paragraph' as const,
+        text: `${formatDay(o.performedOn)} · ${o.title}`,
+      })),
+    );
+  }
+
+  if (summary.profile?.vaccinations.length) {
+    const vaccinations = summary.profile.vaccinations;
+    section(t.vaccinations, vaccinations.length, () => [
+      {
+        kind: 'table',
+        head: [t.vaccine, t.date],
+        rows: vaccinations.map((v) => [
+          v.dose ? `${v.vaccine} (${v.dose})` : v.vaccine,
+          formatDay(v.givenOn),
+        ]),
+      },
+    ]);
   }
 
   if (summary.visits) {

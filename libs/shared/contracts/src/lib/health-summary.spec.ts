@@ -56,6 +56,16 @@ const record: HealthRecord = {
     panel('p2', '2026-09-01', [glucose(5.2)]),
   ],
   studies: [],
+  profile: {
+    bloodType: 'A+',
+    notes: null,
+    allergies: [
+      { id: 'a1', substance: 'Penicillin', reaction: 'Rash', severity: 'severe', since: null },
+    ],
+    vaccinations: [],
+    operations: [],
+  },
+  intakes: [],
 };
 
 describe('buildHealthSummary', () => {
@@ -67,6 +77,10 @@ describe('buildHealthSummary', () => {
     expect(summary.medications?.map((m) => m.name)).toEqual(['Escitalopram']);
     expect(summary.labs?.[0]).toMatchObject({ value: 5.2, flag: null, earlier: [{ value: 6.1 }] });
     expect(summary.visits?.map((v) => v.visitedOn)).toEqual(['2026-10-13', '2020-05-01']);
+    expect(summary.profile).toMatchObject({
+      bloodType: 'A+',
+      allergies: [{ substance: 'Penicillin', severity: 'severe' }],
+    });
     expect(summary.visits?.[0]).toMatchObject({
       clinic: null,
       doctor: 'Dr. Nowak',
@@ -132,6 +146,7 @@ function medication(id: string, name: string, visitId: string | null, stoppedOn:
     stopReason: null,
     visitId,
     notes: null,
+    reminderTimes: [],
   };
 }
 

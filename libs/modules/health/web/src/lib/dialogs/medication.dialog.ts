@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthMedication, HealthRecord } from '@pd/contracts';
+import { HealthMedication, HealthRecord, parseReminderTimes } from '@pd/contracts';
 import { HealthApi } from '../health.api';
 import { orNull } from '../health-labels';
 
@@ -81,6 +81,11 @@ export interface MedicationDialogData {
           </mat-form-field>
         }
         <mat-form-field>
+          <mat-label>{{ 'health.medication.reminders' | transloco }}</mat-label>
+          <input matInput maxlength="100" formControlName="reminders" placeholder="08:00, 20:00" />
+          <mat-hint>{{ 'health.medication.remindersHint' | transloco }}</mat-hint>
+        </mat-form-field>
+        <mat-form-field>
           <mat-label>{{ 'health.medication.prescribedAt' | transloco }}</mat-label>
           <mat-select formControlName="visitId">
             <mat-option [value]="''">—</mat-option>
@@ -146,6 +151,7 @@ export class MedicationDialog {
     stopReason: this.medication?.stopReason ?? '',
     visitId: this.medication?.visitId ?? this.data.visitId ?? '',
     notes: this.medication?.notes ?? '',
+    reminders: this.medication?.reminderTimes.join(', ') ?? '',
   });
 
   protected async save(): Promise<void> {
@@ -164,6 +170,8 @@ export class MedicationDialog {
           stopReason: value.stoppedOn ? orNull(value.stopReason) : null,
           visitId: orNull(value.visitId),
           notes: orNull(value.notes),
+          // Reminders only while it is taken.
+          reminderTimes: value.stoppedOn ? [] : parseReminderTimes(value.reminders),
         },
         this.medication?.id,
       );

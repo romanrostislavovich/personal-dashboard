@@ -5,6 +5,7 @@ import {
   HealthLabPanel,
   HealthLabValue,
   labSeries,
+  parseReminderTimes,
 } from './health';
 import {
   formatLabRange,
@@ -211,5 +212,12 @@ describe('lab input', () => {
       refHigh: 5.5,
       refText: null,
     });
+  });
+});
+
+describe('parseReminderTimes', () => {
+  it('reads the times as typed, in order, once each', () => {
+    expect(parseReminderTimes('20:00, 8:00; 08.00 25:00 noon')).toEqual(['08:00', '20:00']);
+    expect(parseReminderTimes('')).toEqual([]);
   });
 });

@@ -178,6 +178,11 @@ export const healthMedicationInputSchema = z
     stopReason: optionalText(1000),
     visitId: z.uuid().nullish(),
     notes: optionalText(5000),
+    /** When to remind to take it, `HH:mm` on the user's clock; empty — no reminders. */
+    reminderTimes: z
+      .array(z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:mm'))
+      .max(8)
+      .default([]),
   })
   .refine((m) => !m.stoppedOn || !m.startedOn || m.stoppedOn >= m.startedOn, {
     message: 'The end is before the start',
@@ -196,6 +201,7 @@ export interface HealthMedication {
   stopReason: string | null;
   visitId: string | null;
   notes: string | null;
+  reminderTimes: string[];
 }
 
 // --- Documents ---
@@ -343,6 +349,117 @@ export interface HealthStudy {
   notes: string | null;
 }
 
+// --- The profile: what a doctor asks first ---
+
+export const BLOOD_TYPES = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'] as const;
+export type BloodType = (typeof BLOOD_TYPES)[number];
+
+export const healthProfileInputSchema = z.object({
+  bloodType: z.enum(BLOOD_TYPES).nullish(),
+  /** What a doctor in an emergency should know: implants, a pacemaker, a contact person. */
+  notes: optionalText(5000),
+});
+export type HealthProfileInput = z.input<typeof healthProfileInputSchema>;
+
+export const ALLERGY_SEVERITIES = ['mild', 'moderate', 'severe'] as const;
+export type AllergySeverity = (typeof ALLERGY_SEVERITIES)[number];
+
+export const healthAllergyInputSchema = z.object({
+  /** A medication, a food, pollen… as known. */
+  substance: z.string().trim().min(1).max(200),
+  reaction: optionalText(1000),
+  severity: z.enum(ALLERGY_SEVERITIES).nullish(),
+  since: day.nullish(),
+});
+export type HealthAllergyInput = z.input<typeof healthAllergyInputSchema>;
+
+export interface HealthAllergy {
+  id: string;
+  substance: string;
+  reaction: string | null;
+  severity: AllergySeverity | null;
+  since: LocalDate | null;
+}
+
+export const healthVaccinationInputSchema = z.object({
+  vaccine: z.string().trim().min(1).max(200),
+  /** `1/3`, `booster`. */
+  dose: optionalText(50),
+  givenOn: day,
+  country: country.nullish(),
+  /** When the next dose is due. */
+  nextDueOn: day.nullish(),
+  notes: optionalText(2000),
+});
+export type HealthVaccinationInput = z.input<typeof healthVaccinationInputSchema>;
+
+export interface HealthVaccination {
+  id: string;
+  vaccine: string;
+  dose: string | null;
+  givenOn: LocalDate;
+  country: string | null;
+  nextDueOn: LocalDate | null;
+  notes: string | null;
+}
+
+export const healthOperationInputSchema = z.object({
+  title: z.string().trim().min(1).max(500),
+  performedOn: day,
+  clinic: optionalText(200),
+  notes: optionalText(5000),
+});
+export type HealthOperationInput = z.input<typeof healthOperationInputSchema>;
+
+export interface HealthOperation {
+  id: string;
+  title: string;
+  performedOn: LocalDate;
+  clinic: string | null;
+  notes: string | null;
+}
+
+export interface HealthProfile {
+  bloodType: BloodType | null;
+  notes: string | null;
+  allergies: HealthAllergy[];
+  /** The latest first. */
+  vaccinations: HealthVaccination[];
+  /** The latest first. */
+  operations: HealthOperation[];
+}
+
+// --- Taking medications: the reminders and what was answered ---
+
+export const INTAKE_STATUSES = ['pending', 'taken', 'skipped'] as const;
+export type IntakeStatus = (typeof INTAKE_STATUSES)[number];
+
+/** A reminder sent at a time of a medication, and what the user answered. */
+export interface HealthIntake {
+  id: string;
+  medicationId: string;
+  day: LocalDate;
+  /** `HH:mm` on the user's clock. */
+  time: string;
+  status: IntakeStatus;
+}
+
+export const healthIntakeAnswerSchema = z.object({
+  status: z.enum(['taken', 'skipped']),
+});
+export type HealthIntakeAnswer = z.input<typeof healthIntakeAnswerSchema>;
+
+/** `08:00, 20:00` → `['08:00', '20:00']`; anything else in the list is left out. */
+export function parseReminderTimes(text: string): string[] {
+  const times = text
+    .split(/[,;\s]+/)
+    .map((part) => /^(\d{1,2})[:.](\d{2})$/.exec(part.trim()))
+    .filter((match): match is RegExpExecArray => match !== null)
+    .map(([, hours, minutes]) => `${hours.padStart(2, '0')}:${minutes}`)
+    .filter((time) => /^([01]\d|2[0-3]):[0-5]\d$/.test(time));
+  return [...new Set(times)].sort();
+}
+
 /** Everything at once: a history of one person is small, the page filters it itself. */
 export interface HealthRecord {
   clinics: HealthClinic[];
@@ -356,6 +473,9 @@ export interface HealthRecord {
   labPanels: HealthLabPanel[];
   /** The latest first. */
   studies: HealthStudy[];
+  profile: HealthProfile;
+  /** The reminders of the last 30 days and their answers, the latest first. */
+  intakes: HealthIntake[];
 }
 
 // --- The ICD dictionary (loaded from WHO by the user, never shipped: see docs/health.md) ---

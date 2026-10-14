@@ -11,6 +11,12 @@ const summary: HealthSummary = {
   madeOn: '2026-10-14',
   from: null,
   translated: false,
+  profile: {
+    bloodType: 'O+',
+    allergies: [{ substance: 'Пенициллин', reaction: 'сыпь', severity: 'severe' }],
+    operations: [],
+    vaccinations: [],
+  },
   conditions: [
     {
       system: 'icd10',
@@ -54,6 +60,8 @@ describe('summary blocks', () => {
     const text = JSON.stringify(blocks);
     expect(blocks[0]).toEqual({ kind: 'title', text: 'Podsumowanie historii choroby' });
     expect(text).toContain('Rozpoznania');
+    expect(text).toContain('Grupa krwi: O+');
+    expect(text).toContain('ciężka');
     expect(text).toContain('13.10.2026');
     expect(text).toContain('6.1 mmol/L (powyżej normy)');
     expect(text).toContain('Brak danych.');
@@ -84,10 +92,17 @@ describe('summary docx', () => {
 describe('summary translation', () => {
   it('translates the words, not the codes or the names of medications', () => {
     const texts = translatableTexts(summary);
-    expect(texts).toEqual(['Генерализованное тревожное расстройство', '10 мг', 'утром', 'Глюкоза']);
+    expect(texts).toEqual([
+      'Пенициллин',
+      'сыпь',
+      'Генерализованное тревожное расстройство',
+      '10 мг',
+      'утром',
+      'Глюкоза',
+    ]);
     const translations = parseTranslations(
       texts,
-      '```json\n["Zaburzenie lękowe uogólnione", "10 mg", "rano", "Glukoza"]\n```',
+      '```json\n["Penicylina", "wysypka", "Zaburzenie lękowe uogólnione", "10 mg", "rano", "Glukoza"]\n```',
     );
     const translated = withTranslations(summary, translations);
     expect(translated.translated).toBe(true);
