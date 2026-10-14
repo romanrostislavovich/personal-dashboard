@@ -16,6 +16,7 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { buildAppRoutes } from './app-routes';
 import { authInterceptor } from './auth/auth.interceptor';
 import { AuthService } from './auth/auth.service';
+import { DeviceBackupService } from './backup/device-backup.service';
 import { OfflineService } from './offline/offline.service';
 import { ThemeService } from './theme/theme.service';
 import { provideDashboardModules, WebDashboardModule } from './dashboard-module';
@@ -49,8 +50,10 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
     }),
     provideAppInitializer(async () => {
       const offline = inject(OfflineService);
+      const backup = inject(DeviceBackupService);
       await inject(AuthService).restoreSession();
       offline.start();
+      backup.start();
     }),
     // <mat-icon> uses rounded Material Symbols (loaded in index.html).
     provideAppInitializer(() => {

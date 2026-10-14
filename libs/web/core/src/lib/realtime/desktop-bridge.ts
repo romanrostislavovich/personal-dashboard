@@ -20,6 +20,28 @@ export interface DesktopBridge {
   downloads?: DesktopDownloads;
   /** Disk cleanup of this computer (absent in an older shell). */
   disk?: DesktopDisk;
+  /** Copies of one's data kept on this computer (absent in an older shell). */
+  backup?: DeviceBackup;
+}
+
+/**
+ * A device that keeps the copies of one's data (see DeviceBackupService): the desktop app
+ * today, a phone later. It only stores files; the page fetches them.
+ */
+export interface DeviceBackup {
+  status(): Promise<DeviceBackupStatus>;
+  /** `personal-dashboard-YYYY-MM-DD.zip`: the day's copy is replaced, the oldest go. */
+  save(name: string, data: Uint8Array): Promise<DeviceBackupStatus>;
+  openFolder(): Promise<void>;
+  chooseFolder(): Promise<DeviceBackupStatus>;
+  setKeep(keep: number): Promise<DeviceBackupStatus>;
+}
+
+export interface DeviceBackupStatus {
+  folder: string;
+  keep: number;
+  /** The newest first; `savedAt` is ISO. */
+  copies: { name: string; size: number; savedAt: string }[];
 }
 
 export interface DesktopCapture {

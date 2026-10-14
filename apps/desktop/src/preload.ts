@@ -45,6 +45,14 @@ contextBridge.exposeInMainWorld('desktop', {
     done: (rect: { x: number; y: number; width: number; height: number } | null): Promise<void> =>
       ipcRenderer.invoke('region:done', rect),
   },
+  backup: {
+    status: (): Promise<unknown> => ipcRenderer.invoke('backup:status'),
+    save: (name: string, data: Uint8Array): Promise<unknown> =>
+      ipcRenderer.invoke('backup:save', name, data),
+    openFolder: (): Promise<void> => ipcRenderer.invoke('backup:open-folder'),
+    chooseFolder: (): Promise<unknown> => ipcRenderer.invoke('backup:choose-folder'),
+    setKeep: (keep: number): Promise<unknown> => ipcRenderer.invoke('backup:keep', keep),
+  },
   downloads: {
     take: (id: string): Promise<unknown> => ipcRenderer.invoke('downloads:take', id),
   },
