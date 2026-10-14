@@ -169,6 +169,7 @@ export class AiService {
       };
     } catch (error) {
       if (error instanceof AiRequestError) {
+        this.logger.warn(error.message.slice(0, 500));
         throw new BadRequestException(`AI API error (${error.status})`);
       }
       throw error;
@@ -202,6 +203,7 @@ export class AiService {
       return reply.content ?? '';
     } catch (error) {
       if (error instanceof AiRequestError) {
+        this.logger.warn(error.message.slice(0, 500));
         throw new BadRequestException(`AI API error (${error.status})`);
       }
       throw error;
@@ -238,6 +240,7 @@ export class AiService {
       return reply.content ?? '';
     } catch (error) {
       if (error instanceof AiRequestError) {
+        this.logger.warn(error.message.slice(0, 500));
         throw new BadRequestException(`AI API error (${error.status})`);
       }
       throw error;

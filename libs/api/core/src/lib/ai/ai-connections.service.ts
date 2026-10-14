@@ -225,10 +225,11 @@ export class AiConnectionsService {
       return null;
     }
     const apiKey = await this.secrets.get(userId, apiKeySecret(row.id));
-    return {
-      ...toChatConnection(row, apiKey),
-      model: settings?.visionModel ?? DEFAULT_VISION_MODEL,
-    };
+    // The connection's own model is swapped for the vision one, and with it what it accepts.
+    return toChatConnection(
+      { ...row, model: settings?.visionModel ?? DEFAULT_VISION_MODEL },
+      apiKey,
+    );
   }
 
   /** One saved connection by its id (the security agent may have its own); null — gone. */
@@ -350,8 +351,16 @@ function toChatConnection(
     model,
     apiKey,
     // OpenAI GPT-6 calls tools in Chat Completions only without reasoning (see the client).
-    ...(provider === 'openai' ? { reasoningEffort: 'none' as const } : {}),
+    ...(acceptsReasoningEffort(provider, model) ? { reasoningEffort: 'none' as const } : {}),
   };
+}
+
+/**
+ * Whether the model takes `reasoning_effort`. The older OpenAI models do not and answer 400 to
+ * a request that has it — gpt-4o-mini, the default model for pictures, among them.
+ */
+export function acceptsReasoningEffort(provider: string, model: string): boolean {
+  return provider === 'openai' && !/^(chatgpt-|gpt-3|gpt-4)/i.test(model);
 }
 
 /** A short request: a wrong URL, model or key is reported now, not in the middle of a chat. */
