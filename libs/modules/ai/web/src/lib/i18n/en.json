@@ -109,5 +109,6 @@
   "vision": {
     "title": "Pictures (receipts)",
     "hint": "A photo of a receipt in Telegram becomes an expense: a model that sees pictures reads it — OpenAI gpt-4o-mini, for one (DeepSeek sees none). Each receipt is a paid request."
-  }
+  },
+  "send": "Send"
 }

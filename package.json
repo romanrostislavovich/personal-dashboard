@@ -28,7 +28,8 @@
     "build": "nx run-many -t build -p api web",
     "test": "nx run-many -t test",
     "lint": "nx run-many -t lint",
-    "desktop:package": "nx package desktop"
+    "desktop:package": "nx package desktop",
+    "e2e": "playwright test -c e2e/playwright.config.ts"
   },
   "private": true,
   "dependencies": {
@@ -100,6 +101,7 @@
     "@nx/webpack": "23.2.1",
     "@nx/workspace": "23.2.1",
     "@oxc-project/runtime": "^0.115.0",
+    "@playwright/test": "^1.64.1",
     "@schematics/angular": "22.2.0",
     "@swc-node/register": "1.11.1",
     "@swc/core": "1.15.8",
