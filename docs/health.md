@@ -75,11 +75,19 @@ by searching it in any of the languages, and the AI proposes a code from it when
 document. The sources and their licences decide whether the dictionary is in the repository or
 loaded on the first start (WHO ICD-10, ICD-11, the national lists — see the stage below).
 
+What the licences allow (checked in October 2026): ICD-10 is © WHO and may not be shipped with
+an open-source program, so the user accepts WHO's terms and their own server downloads the
+English ClaML from icdcdn.who.int (done). ICD-11 is CC BY-ND 3.0 IGO and may be bundled as code,
+title and URI, in English and Russian — but its codes are not ICD-10's, and a crosswalk of our
+own is not allowed. Next to load the same way: the Russian ICD-10 of the Ministry of Health
+(НСИ, needs a free key) and ICD-11 en / ru. No Polish or Ukrainian list may be redistributed
+(Ukraine uses ICD-10-AM, licensed to governments only): those titles come from the documents.
+
 ## Stages
 
 0. **Core** — encrypted fields, a connection per section, `/api/medical`; `registerPeriods` and
    `runAction` come with stage 5.
-1. **MVP, by hand** — clinics and doctors, visits, diagnoses, medications, documents uploaded;
+1. ✅ **MVP, by hand** — clinics and doctors, visits, diagnoses, medications, documents uploaded;
    one timeline "the whole history" with filters by country, doctor and speciality.
    **The ICD dictionary** — codes and titles in four languages, searched when a diagnosis is
    entered.

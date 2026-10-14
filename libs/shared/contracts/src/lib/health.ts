@@ -274,3 +274,55 @@ export interface IcdEntry {
   language: string;
   title: string;
 }
+
+// --- Conditions: the diagnoses of one code over the years ---
+
+/** One condition across clinics and countries: every diagnosis of its code, the latest first. */
+export interface HealthCondition {
+  /** `icd10:F41.1`, or `title:<title>` for a diagnosis written without a code. */
+  key: string;
+  system: IcdSystem;
+  code: string | null;
+  /** The wording of the latest diagnosis. */
+  title: string;
+  /** The status of the latest diagnosis. */
+  status: DiagnosisStatus;
+  firstOn: LocalDate;
+  lastOn: LocalDate;
+  diagnoses: HealthDiagnosis[];
+}
+
+/**
+ * The diagnoses grouped by their code (a diagnosis without one by its wording), the condition
+ * diagnosed last first. A condition still confirmed or suspected leads its period.
+ */
+export function healthConditions(diagnoses: readonly HealthDiagnosis[]): HealthCondition[] {
+  const groups = new Map<string, HealthDiagnosis[]>();
+  for (const diagnosis of diagnoses) {
+    const key = diagnosis.code
+      ? `${diagnosis.system}:${diagnosis.code}`
+      : `title:${diagnosis.title.trim().toLowerCase()}`;
+    groups.set(key, [...(groups.get(key) ?? []), diagnosis]);
+  }
+  return [...groups.entries()]
+    .map(([key, items]) => {
+      const sorted = [...items].sort((a, b) => b.diagnosedOn.localeCompare(a.diagnosedOn));
+      const latest = sorted[0];
+      return {
+        key,
+        system: latest.system,
+        code: latest.code,
+        title: latest.title,
+        status: latest.status,
+        firstOn: sorted[sorted.length - 1].diagnosedOn,
+        lastOn: latest.diagnosedOn,
+        diagnoses: sorted,
+      };
+    })
+    .sort(
+      (a, b) =>
+        Number(isActive(b.status)) - Number(isActive(a.status)) || b.lastOn.localeCompare(a.lastOn),
+    );
+}
+
+const isActive = (status: DiagnosisStatus) => status === 'confirmed' || status === 'suspected';

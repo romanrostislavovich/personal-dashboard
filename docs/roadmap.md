@@ -52,6 +52,10 @@
   - **Reminders:** for a day and time on your own clock (the time zone comes from the device),
     one-off or repeating, about a task or on their own; sent to Telegram with "Done", "+1 hour",
     "Tomorrow" and "Another time" buttons and as notifications; `/todo`, `/remind`, `/tasks`
+- **Health (first stage):** one medical history across countries and clinics — visits,
+  diagnoses by ICD code gathered into conditions with their history, medications by brand and
+  active substance, scans and PDFs of the documents; stored encrypted; the ICD-10 dictionary
+  downloaded from WHO by the user's own server (see the plan in [health.md](health.md))
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
 - **Psychology:** watching oneself over time — the patterns of the mood (by the day of the week,
   week by week, low stretches, the mood during the events of a life), short standard
@@ -160,7 +164,10 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 #### Health
 
 Right after the encryption: the history of visits is needed now, and it is the most sensitive
-data of all.
+data of all. The plan in stages: [health.md](health.md). ✅ Stage 1 is done — visits,
+diagnoses by ICD code gathered into conditions, medications, documents, the ICD-10 dictionary
+from WHO, all stored encrypted; next: lab results, a document read by the AI into a draft, the
+summary for a new doctor.
 
 - **Health** — your own medical record: blood type, allergies, chronic conditions, vaccinations,
   operations, doctors and their contacts; medications and when to take them, doctor visits, lab

@@ -8,6 +8,16 @@ under **Updating**.
 
 ### Added
 
+- **Health** — one medical history of your own across countries and clinics: visits with
+  their complaints, examination and recommendations, diagnoses by ICD code gathered into
+  conditions with their history, medications (by the active substance too) and the documents
+  — scans, photos, PDFs. Stored encrypted. The ICD-10 dictionary is downloaded from WHO by your
+  own server after you accept WHO's terms (Settings → Integrations); it is never shipped or
+  exported.
+- **An AI connection of its own for a section** (Settings → AI): a local model for Health, say;
+  the section's data then never reaches the shared connection.
+- **Columns stored encrypted** for modules (`encryptedText()`, `encryptedBytes()`): a dump or a
+  backup holds only ciphertext; the export of one's data writes them decrypted.
 - **Psychology** — a section for watching oneself over time: the patterns of the mood, short
   questionnaires with their history (WHO-5, GAD-7, PHQ-9; self-observation, not a diagnosis)
   and the events of a life — told by their dates or by the age they happened at — saved as an
@@ -23,7 +33,10 @@ under **Updating**.
 
 ### Updating
 
-- Migration 0062 adds `integration_alerts`, 0063–0065 the tables of Psychology.
+- Migration 0062 adds `integration_alerts`, 0063–0065 the tables of Psychology, 0066
+  `ai_settings.module_connections`, 0067 the tables of Health.
+- Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
+  key as the server.
 
 ## 0.3.0 — the first public release
 

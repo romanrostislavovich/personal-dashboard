@@ -1,0 +1,161 @@
+{
+  "title": "Health",
+  "about": "One medical history of your own across countries and clinics: visits, diagnoses, medications and the documents. Kept encrypted. It records facts and never interprets them.",
+  "tabs": {
+    "history": "History",
+    "conditions": "Conditions",
+    "medications": "Medications",
+    "doctors": "Doctors and clinics"
+  },
+  "all": "All",
+  "country": "Country",
+  "contacts": "Contacts",
+  "confirmDelete": "Delete “{{what}}”? It stays in the trash for 30 days.",
+  "errors": {
+    "save": "Could not save. Check the fields and try again.",
+    "load": "Could not load the history."
+  },
+  "specialities": {
+    "general": "General practitioner",
+    "psychiatrist": "Psychiatrist",
+    "psychotherapist": "Psychotherapist",
+    "psychologist": "Psychologist",
+    "neurologist": "Neurologist",
+    "cardiologist": "Cardiologist",
+    "endocrinologist": "Endocrinologist",
+    "gastroenterologist": "Gastroenterologist",
+    "dermatologist": "Dermatologist",
+    "ophthalmologist": "Ophthalmologist",
+    "ent": "ENT",
+    "dentist": "Dentist",
+    "gynecologist": "Gynecologist",
+    "urologist": "Urologist",
+    "orthopedist": "Orthopedist",
+    "surgeon": "Surgeon",
+    "allergist": "Allergist",
+    "pulmonologist": "Pulmonologist"
+  },
+  "languages": {
+    "uk": "Ukrainian",
+    "ru": "Russian",
+    "pl": "Polish",
+    "en": "English"
+  },
+  "systems": {
+    "icd10": "ICD-10",
+    "icd10am": "ICD-10-AM (Ukraine)",
+    "icd11": "ICD-11",
+    "other": "Other"
+  },
+  "statuses": {
+    "suspected": "Suspected",
+    "confirmed": "Confirmed",
+    "ruledOut": "Ruled out",
+    "remission": "In remission"
+  },
+  "documentKinds": {
+    "consultation": "Consultation",
+    "prescription": "Prescription",
+    "labResults": "Lab results",
+    "study": "Study (ultrasound, MRI…)",
+    "discharge": "Discharge summary",
+    "certificate": "Certificate",
+    "other": "Other"
+  },
+  "visit": {
+    "add": "Add a visit",
+    "edit": "Edit the visit",
+    "one": "Visit",
+    "date": "Date",
+    "doctor": "Doctor",
+    "clinic": "Clinic",
+    "language": "Language of the documents",
+    "complaints": "Complaints",
+    "findings": "Examination",
+    "recommendations": "Recommendations",
+    "notes": "Notes",
+    "nextVisitOn": "Next visit",
+    "next": "Next visit: {{day}}"
+  },
+  "diagnosis": {
+    "add": "Add a diagnosis",
+    "edit": "Edit the diagnosis",
+    "one": "Diagnosis",
+    "search": "Find in the ICD dictionary",
+    "searchHint": "By a code (F41) or a word; load the dictionary in Settings → Integrations",
+    "system": "Classification",
+    "code": "Code",
+    "title": "Diagnosis",
+    "titleHint": "As the document words it, in any language",
+    "status": "Status",
+    "date": "Date"
+  },
+  "medication": {
+    "add": "Add a medication",
+    "edit": "Edit the medication",
+    "one": "Medication",
+    "name": "Name",
+    "substance": "Active substance",
+    "substanceHint": "The same in every country, unlike the brand",
+    "dose": "Dose",
+    "schedule": "How to take",
+    "startedOn": "Started",
+    "stoppedOn": "Stopped",
+    "stoppedHint": "Empty — still taken",
+    "stopReason": "Why stopped",
+    "prescribedAt": "Prescribed at the visit",
+    "now": "now",
+    "current": "Taken now",
+    "past": "Taken before",
+    "empty": "No medications yet."
+  },
+  "document": {
+    "add": "Add a document",
+    "edit": "Edit the document",
+    "one": "Document",
+    "choose": "Choose a file",
+    "types": "PDF, JPEG, PNG or WebP, up to 20 MB",
+    "tooBig": "The file is over 20 MB.",
+    "name": "Name",
+    "kind": "Kind",
+    "date": "Date of the document"
+  },
+  "clinic": {
+    "title": "Clinics",
+    "add": "Add a clinic",
+    "edit": "Edit the clinic",
+    "name": "Name",
+    "city": "City",
+    "empty": "No clinics yet."
+  },
+  "doctor": {
+    "title": "Doctors",
+    "add": "Add a doctor",
+    "edit": "Edit the doctor",
+    "name": "Name",
+    "speciality": "Speciality",
+    "empty": "No doctors yet."
+  },
+  "history": {
+    "empty": "No visits yet. Add the latest one — the diagnoses, the medications and the documents go with it.",
+    "nothingFound": "No visits match the filters.",
+    "otherDocuments": "Documents without a visit"
+  },
+  "conditions": {
+    "since": "Since {{day}}",
+    "times": "diagnosed {{count}} times",
+    "empty": "No diagnoses yet."
+  },
+  "icd": {
+    "title": "ICD dictionary",
+    "subtitle": "Health · codes and names of diagnoses",
+    "loaded": "{{system}}, {{language}}: {{count}} codes",
+    "why": "With the dictionary a diagnosis is found by its code or a word. WHO does not allow ICD-10 to be shipped with the dashboard, so your server downloads it from WHO for your own use; it is never exported or shared.",
+    "accept": "I accept the terms of use of",
+    "load": "Download from WHO",
+    "reload": "Download again",
+    "loading": "Downloading and reading the dictionary, about a minute…",
+    "failed": "Could not download the dictionary. Try again later.",
+    "attribution": "International Statistical Classification of Diseases and Related Health Problems, 10th Revision (ICD-10), © World Health Organization."
+  }
+}
