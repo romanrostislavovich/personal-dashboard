@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '@pd/api-core';
+
 const API = 'https://api.steampowered.com';
 const TIMEOUT_MS = 20_000;
 
@@ -141,7 +143,7 @@ export class SteamClient {
     { tolerate = [] as number[] } = {},
   ): Promise<T | null> {
     const query = new URLSearchParams({ key: this.key, format: 'json', ...params });
-    const response = await fetch(`${API}${path}?${query}`, {
+    const response = await fetchWithTimeout(`${API}${path}?${query}`, {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (response.ok) {

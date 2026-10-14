@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@pd/api-core';
 import { githubTokenExpiry } from '../token-expiry';
 
 const API = 'https://api.github.com';
@@ -70,7 +71,7 @@ export class GithubClient {
   }
 
   private async request(path: string): Promise<Response> {
-    const response = await fetch(API + path, {
+    const response = await fetchWithTimeout(API + path, {
       headers: {
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',

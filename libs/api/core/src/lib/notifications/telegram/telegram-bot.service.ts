@@ -11,6 +11,7 @@ import { Locale, SUPPORTED_LOCALES, TelegramLinkResponse } from '@pd/contracts';
 import { Bot, CommandContext, Context, Filter, InlineKeyboard } from 'grammy';
 import type { Chat } from 'grammy/types';
 import { randomBytes } from 'node:crypto';
+import { fetchWithTimeout } from '../../net/outbound';
 import { AppConfig } from '../../config/env';
 import { coreMessages } from '../../i18n/core.messages';
 import { FALLBACK_LOCALE, localize } from '../../i18n/locale';
@@ -59,6 +60,8 @@ interface PendingLink {
  * 2. Opens the `t.me/<bot>?start=<code>` link and presses Start.
  * 3. The bot receives `/start <code>` and saves the chat id for the user.
  */
+/** A file from the chat (a photo, a voice message, a document) is downloaded in this long. */
+const FILE_DOWNLOAD_TIMEOUT_MS = 60_000;
 /** A photo waits this long for the user to say where it goes. */
 const PENDING_PHOTO_TTL_MS = 30 * 60_000;
 /** The photos of an album come as separate messages: the last is waited for this long. */
@@ -536,8 +539,10 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     if (!file?.file_path) {
       throw new Error('Telegram did not return a file path');
     }
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `https://api.telegram.org/file/bot${this.token}/${file.file_path}`,
+      {},
+      FILE_DOWNLOAD_TIMEOUT_MS,
     );
     if (!response.ok) {
       throw new Error(`Telegram file download failed: ${response.status}`);

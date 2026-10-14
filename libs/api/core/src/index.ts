@@ -11,6 +11,7 @@ export * from './lib/users/users.service';
 export * from './lib/projects/projects.schema';
 export * from './lib/projects/projects.service';
 export * from './lib/scheduler/scheduler.service';
+export * from './lib/scheduler/for-each-user';
 export * from './lib/search/search.service';
 export * from './lib/life/life.service';
 export * from './lib/automations/automations.service';
@@ -46,6 +47,8 @@ export {
   OutboundBlockedError,
   privateAddressesAllowed,
   safeFetch,
+  fetchWithTimeout,
+  OUTSIDE_TIMEOUT_MS,
 } from './lib/net/outbound';
 export { IntegrationsService } from './lib/integrations/integrations.service';
 export type { IntegrationSource } from './lib/integrations/integrations.service';
@@ -73,3 +76,4 @@ export type {
   OtherComputerDay,
   OtherComputerSource,
 } from './lib/computer-time/other-computers.service';
+export { withoutTrash } from './lib/trash/trash-triggers';

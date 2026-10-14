@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@pd/api-core';
 import { GithubAuthError } from './github.client';
 
 const GRAPHQL_URL = 'https://api.github.com/graphql';
@@ -17,7 +18,7 @@ export async function githubGraphql<T>(
   variables: Record<string, unknown> = {},
   { allowPartial = false }: GraphqlOptions = {},
 ): Promise<T> {
-  const response = await fetch(GRAPHQL_URL, {
+  const response = await fetchWithTimeout(GRAPHQL_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,

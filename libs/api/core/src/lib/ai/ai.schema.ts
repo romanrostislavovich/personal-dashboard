@@ -21,17 +21,21 @@ import { users } from '../users/users.schema';
  * Saved AI connections: several per user, one of them active (see `aiSettings`).
  * The API key is stored separately in SecretsService under `ai.connection.<id>`.
  */
-export const aiConnections = pgTable('ai_connections', {
-  id: uuid().primaryKey().defaultRandom(),
-  userId: uuid()
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: text().notNull(),
-  provider: text().notNull(),
-  baseUrl: text().notNull(),
-  model: text().notNull(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const aiConnections = pgTable(
+  'ai_connections',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text().notNull(),
+    provider: text().notNull(),
+    baseUrl: text().notNull(),
+    model: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId)],
+);
 
 /** User AI settings: which connection is active, the morning digest, voice recognition. */
 export const aiSettings = pgTable('ai_settings', {
@@ -111,7 +115,7 @@ export const aiMessages = pgTable(
     toolsUsed: text().array().notNull().default([]),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index().on(table.conversationId, table.createdAt)],
+  (table) => [index().on(table.conversationId, table.createdAt), index().on(table.userId)],
 );
 
 /** Changes the assistant made or tried to make (see AiActionsService). */

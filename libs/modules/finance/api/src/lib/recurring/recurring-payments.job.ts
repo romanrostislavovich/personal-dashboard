@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { NotificationsService, SchedulerService, UsersService } from '@pd/api-core';
+import { forEachUser, NotificationsService, SchedulerService, UsersService } from '@pd/api-core';
 import { financeMessages } from '../finance.messages';
 import { RecurringPaymentsService } from './recurring-payments.service';
 import { SubscriptionsService } from './subscriptions.service';
@@ -24,11 +24,11 @@ export class RecurringPaymentsJob implements OnModuleInit {
   }
 
   async run(): Promise<void> {
-    for (const user of await this.users.findAll()) {
+    await forEachUser('finance.recurring-payments', await this.users.findAll(), async (user) => {
       await this.subscriptions.remindTrials(user.id);
       const charged = await this.payments.chargeDue(user.id);
       if (charged.length === 0) {
-        continue;
+        return;
       }
       const text = financeMessages(user.locale);
       await this.notifications.send(user.id, {
@@ -36,6 +36,6 @@ export class RecurringPaymentsJob implements OnModuleInit {
         body: text.chargedBody(charged),
         source: 'finance',
       });
-    }
+    });
   }
 }

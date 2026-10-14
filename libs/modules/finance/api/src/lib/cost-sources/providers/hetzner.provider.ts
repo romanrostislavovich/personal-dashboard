@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { fetchWithTimeout } from '@pd/api-core';
 import { CostMeasurement, CostProviderAdapter, CostProviderAuthError } from '../cost-provider';
 import {
   estimateHetznerMonthlyCost,
@@ -46,7 +47,9 @@ export class HetznerCostProvider implements CostProviderAdapter {
   }
 
   private async get<T>(token: string, path: string): Promise<T> {
-    const response = await fetch(API + path, { headers: { Authorization: `Bearer ${token}` } });
+    const response = await fetchWithTimeout(API + path, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     if (response.status === 401) {
       throw new CostProviderAuthError('Hetzner token is invalid');
     }

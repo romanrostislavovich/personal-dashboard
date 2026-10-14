@@ -57,13 +57,31 @@ under **Updating**.
 - **Demo mode** (`DEMO_MODE=true`): a "Try the demo" button on the login page opens a shared
   account with made-up data in every section, made anew every night. The demo user cannot
   change the account, connect services or upload files, and no background job reaches outside.
+- **Copies on this computer** — the desktop app saves the archive of "Export everything" once a
+  day into a folder of the computer (Settings → Data), the last 14 kept: the data outlives the
+  server and comes back through "Import archive".
+
+### Fixed
+
+- **Background jobs send nothing twice.** A failed run was retried at once, twice, and a run
+  over 15 minutes was taken as hung and started again — reminders and payments repeated. Jobs
+  are no longer retried (a sync that sends nothing may be, with a backoff), may run an hour (the
+  wishlist three), and a job over the users goes on past one user's error and reports it after.
+- **Calls to outside services give up after 30 seconds** (GitHub, GitLab, Bitbucket, WakaTime,
+  Steam, Battle.net, OpenDota, Last.fm, Spotify, Hetzner, DeepSeek, npm, files from Telegram).
+- **`/api/health` checks the database and the background jobs**, and answers 503 when either is
+  down, so Docker sees a broken container.
+- **The trash keeps only what a person deleted**: the daily cleanup of old activity measurements
+  no longer fills it.
+- **The Docker image is published only after CI passes** on the commit.
 
 ### Updating
 
 - Migration 0062 adds `integration_alerts`, 0063–0065 the tables of Psychology, 0066
   `ai_settings.module_connections`, 0067 the tables of Health, 0068 its lab results and studies, 0069 the
   drafts of its documents, 0070 the links for doctors, 0071 the profile
-  and the reminders to take medications, 0072 the pages of its documents.
+  and the reminders to take medications, 0072 the pages of its documents, 0073 the missing
+  indexes (`user_id` and foreign keys of a few dozen tables).
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
   key as the server.
 

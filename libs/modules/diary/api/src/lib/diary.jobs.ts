@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import {
+  forEachUser,
   NotificationsService,
   SchedulerService,
   TelegramBotService,
@@ -160,20 +161,24 @@ export class DiaryJobs implements OnModuleInit {
   }
 
   async remind(): Promise<void> {
-    for (const userId of await this.diary.usersToRemind()) {
-      const user = await this.users.findById(userId);
-      const text = diaryMessages(user?.locale ?? 'en');
-      const day = this.diary.todayDate();
-      await this.notifications.send(userId, {
-        title: text.reminderTitle,
-        body: text.reminderBody,
-        source: 'diary',
-        // One tap rates the day; the bot then asks for a few words.
-        actions: [1, 2, 3, 4, 5].map((mood) => ({
-          label: MOOD_EMOJI[mood],
-          action: `dmood:${day}:${mood}`,
-        })),
-      });
-    }
+    await forEachUser(
+      'diary.evening-reminder',
+      await this.diary.usersToRemind(),
+      async (userId) => {
+        const user = await this.users.findById(userId);
+        const text = diaryMessages(user?.locale ?? 'en');
+        const day = this.diary.todayDate();
+        await this.notifications.send(userId, {
+          title: text.reminderTitle,
+          body: text.reminderBody,
+          source: 'diary',
+          // One tap rates the day; the bot then asks for a few words.
+          actions: [1, 2, 3, 4, 5].map((mood) => ({
+            label: MOOD_EMOJI[mood],
+            action: `dmood:${day}:${mood}`,
+          })),
+        });
+      },
+    );
   }
 }

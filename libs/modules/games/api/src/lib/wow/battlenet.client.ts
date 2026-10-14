@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@pd/api-core';
 import { WowDetails, WowRegion, WowVersion } from '@pd/contracts';
 import { fetchDetails } from './wow-details.fetch';
 
@@ -199,7 +200,7 @@ export class BattlenetClient {
     // Without a locale Blizzard gives the name in every language at once.
     const query = new URLSearchParams({ namespace: namespace('dynamic', ref) });
     const url = `https://${ref.region}.api.blizzard.com/data/wow/realm/index?${query}`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: { Authorization: `Bearer ${await this.accessToken()}` },
     });
     if (!response.ok) {
@@ -227,7 +228,7 @@ export class BattlenetClient {
   private async getHref<T>(region: WowRegion, href: string): Promise<T> {
     const url = new URL(href);
     url.searchParams.set('locale', LOCALES[region]);
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: { Authorization: `Bearer ${await this.accessToken()}` },
     });
     if (!response.ok) {
@@ -243,7 +244,7 @@ export class BattlenetClient {
       locale: LOCALES[ref.region],
     });
     const url = `https://${ref.region}.api.blizzard.com/profile/wow/character/${ref.realm}/${name}${path}?${query}`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: { Authorization: `Bearer ${await this.accessToken()}` },
     });
     if (response.status === 404) {
@@ -259,7 +260,7 @@ export class BattlenetClient {
     if (this.token && this.token.expiresAt > Date.now()) {
       return this.token.value;
     }
-    const response = await fetch('https://oauth.battle.net/token', {
+    const response = await fetchWithTimeout('https://oauth.battle.net/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

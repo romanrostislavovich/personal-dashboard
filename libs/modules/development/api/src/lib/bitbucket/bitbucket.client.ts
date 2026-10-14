@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@pd/api-core';
 import { AccountAuthError } from '../accounts/account-source';
 
 const API = 'https://api.bitbucket.org/2.0';
@@ -67,7 +68,7 @@ export class BitbucketClient {
 
   /** `null` for 404. */
   private async request(address: string): Promise<Response | null> {
-    const response = await fetch(address, {
+    const response = await fetchWithTimeout(address, {
       headers: {
         Authorization: this.authorization,
         Accept: 'application/json',

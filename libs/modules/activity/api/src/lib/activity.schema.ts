@@ -38,23 +38,27 @@ import {
 } from 'drizzle-orm/pg-core';
 
 /** A tracker the user installed: the desktop shell on a computer, later an app on a phone. */
-export const activityDevices = pgTable('activity_devices', {
-  id: uuid().primaryKey().defaultRandom(),
-  userId: uuid()
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: text().notNull(),
-  platform: text().$type<ActivityPlatform>().notNull(),
-  /** SHA-256 of the token the device reports with; the token itself is shown once. */
-  tokenHash: text().notNull().unique(),
-  lastSeenAt: timestamp({ withTimezone: true }),
-  /**
-   * The day each warning about the computer was last sent (a disk running out of space or
-   * failing, overheating, no restart for long): once a day is enough.
-   */
-  alertedOn: jsonb().$type<Partial<Record<ComputerAlert, LocalDate>>>().notNull().default({}),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const activityDevices = pgTable(
+  'activity_devices',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text().notNull(),
+    platform: text().$type<ActivityPlatform>().notNull(),
+    /** SHA-256 of the token the device reports with; the token itself is shown once. */
+    tokenHash: text().notNull().unique(),
+    lastSeenAt: timestamp({ withTimezone: true }),
+    /**
+     * The day each warning about the computer was last sent (a disk running out of space or
+     * failing, overheating, no restart for long): once a day is enough.
+     */
+    alertedOn: jsonb().$type<Partial<Record<ComputerAlert, LocalDate>>>().notNull().default({}),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId)],
+);
 
 /**
  * A stretch of time one window was in front. A tracker cuts a long stretch into pieces of a
@@ -114,7 +118,10 @@ export const activityProjectRules = pgTable(
       .references(() => projects.id, { onDelete: 'cascade' }),
     pattern: text().notNull(),
   },
-  (table) => [unique().on(table.userId, table.projectId, table.pattern)],
+  (table) => [
+    unique().on(table.userId, table.projectId, table.pattern),
+    index().on(table.projectId),
+  ],
 );
 
 export const activitySettings = pgTable('activity_settings', {
@@ -142,18 +149,22 @@ export const activitySettings = pgTable('activity_settings', {
 });
 
 /** "No more than this much a day": in games, at the computer at all, in one program. */
-export const activityLimits = pgTable('activity_limits', {
-  id: uuid().primaryKey().defaultRandom(),
-  userId: uuid()
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  kind: text().$type<ActivityLimitKind>().notNull(),
-  /** The program of an `app` limit. */
-  app: text(),
-  minutes: integer().notNull(),
-  /** The day the limit was last reported as reached: once a day. */
-  notifiedOn: date({ mode: 'string' }),
-});
+export const activityLimits = pgTable(
+  'activity_limits',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    kind: text().$type<ActivityLimitKind>().notNull(),
+    /** The program of an `app` limit. */
+    app: text(),
+    minutes: integer().notNull(),
+    /** The day the limit was last reported as reached: once a day. */
+    notifiedOn: date({ mode: 'string' }),
+  },
+  (table) => [index().on(table.userId)],
+);
 
 /** A focus session (Pomodoro) of a desktop app: its work part, and what distracted from it. */
 export const activityFocusSessions = pgTable(
@@ -176,7 +187,11 @@ export const activityFocusSessions = pgTable(
     completed: boolean().notNull(),
     distractions: jsonb().$type<ActivityFocusSessionInput['distractions']>().notNull(),
   },
-  (table) => [index().on(table.userId, table.startedAt)],
+  (table) => [
+    index().on(table.userId, table.startedAt),
+    index().on(table.deviceId),
+    index().on(table.projectId),
+  ],
 );
 
 /** The state of a computer every few minutes: load, memory, disks. Kept for a month. */
@@ -198,7 +213,7 @@ export const activityHealth = pgTable(
     /** Temperature, battery, network, the system… — what the computer told beyond the basics. */
     system: jsonb().$type<ActivitySystem>(),
   },
-  (table) => [primaryKey({ columns: [table.deviceId, table.at] })],
+  (table) => [primaryKey({ columns: [table.deviceId, table.at] }), index().on(table.userId)],
 );
 
 export type ActivityDeviceRow = typeof activityDevices.$inferSelect;
@@ -220,5 +235,5 @@ export const activityOutages = pgTable(
     startedAt: timestamp({ withTimezone: true }).notNull(),
     endedAt: timestamp({ withTimezone: true }).notNull(),
   },
-  (table) => [index().on(table.deviceId, table.startedAt)],
+  (table) => [index().on(table.deviceId, table.startedAt), index().on(table.userId)],
 );

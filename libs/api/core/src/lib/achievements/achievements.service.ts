@@ -17,6 +17,7 @@ import { localize } from '../i18n/locale';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { UserActivityService } from '../realtime/user-activity.service';
+import { forEachUser } from '../scheduler/for-each-user';
 import { SchedulerService } from '../scheduler/scheduler.service';
 import { ServerActions } from '../sync/server-actions';
 import { UsersService } from '../users/users.service';
@@ -81,11 +82,10 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
       cron: '40 * * * *',
       // Counted from the demo data too: nothing outside is asked.
       demo: true,
-      handler: async () => {
-        for (const user of await this.users.findAll()) {
-          await this.evaluate(user.id);
-        }
-      },
+      handler: async () =>
+        forEachUser('achievements.evaluate', await this.users.findAll(), (user) =>
+          this.evaluate(user.id),
+        ),
     });
 
     if (this.isSyncClient) {

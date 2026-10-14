@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SchedulerService } from '@pd/api-core';
+import { forEachUser, SchedulerService } from '@pd/api-core';
 import { WakatimeService } from './wakatime.service';
 
 /**
@@ -17,11 +17,12 @@ export class WakatimeJob implements OnModuleInit {
     this.scheduler.register({
       name: 'development.wakatime-sync',
       cron: '40 * * * *',
-      handler: async () => {
-        for (const userId of await this.wakatime.connectedUserIds()) {
-          await this.wakatime.sync(userId);
-        }
-      },
+      // It only copies days, and a day not copied in time is lost: worth another try.
+      retry: true,
+      handler: async () =>
+        forEachUser('development.wakatime-sync', await this.wakatime.connectedUserIds(), (userId) =>
+          this.wakatime.sync(userId),
+        ),
     });
   }
 }

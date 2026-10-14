@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@pd/api-core';
 import { AccountAuthError } from '../accounts/account-source';
 
 const API = 'https://gitlab.com/api/v4';
@@ -60,7 +61,7 @@ export class GitlabClient {
     tolerate: number[],
   ): Promise<Response | null> {
     const query = new URLSearchParams(params).toString();
-    const response = await fetch(`${API}${path}${query ? `?${query}` : ''}`, {
+    const response = await fetchWithTimeout(`${API}${path}${query ? `?${query}` : ''}`, {
       headers: { 'PRIVATE-TOKEN': this.token, 'User-Agent': 'personal-dashboard' },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });

@@ -1,4 +1,4 @@
-import { Controller, Get, Global, Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
@@ -41,7 +41,6 @@ import { TrashService } from './trash/trash.service';
 import { SessionsService } from './auth/sessions.service';
 import { TwoFactorService } from './auth/two-factor.service';
 import { AuthService } from './auth/auth.service';
-import { Public } from './auth/public.decorator';
 import { AppConfig, validateEnv } from './config/env';
 import { DatabaseModule } from './database/database.module';
 import { NOTIFICATION_CHANNELS, NotificationChannel } from './notifications/notification-channel';
@@ -52,6 +51,7 @@ import { TelegramChannel } from './notifications/telegram/telegram.channel';
 import { ProjectsController } from './projects/projects.controller';
 import { ProjectsService } from './projects/projects.service';
 import { SchedulerService } from './scheduler/scheduler.service';
+import { HealthController } from './system/health.controller';
 import { LifeMonthJob } from './life/life-month.job';
 import { LifeController } from './life/life.controller';
 import { LifeService } from './life/life.service';
@@ -81,15 +81,6 @@ import { RealtimeController } from './realtime/realtime.controller';
 import { RealtimeService } from './realtime/realtime.service';
 import { UserActivityInterceptor } from './realtime/user-activity.interceptor';
 import { UserActivityService } from './realtime/user-activity.service';
-
-@Controller('health')
-class HealthController {
-  @Public()
-  @Get()
-  check() {
-    return { status: 'ok' };
-  }
-}
 
 /**
  * Core: config, database, auth, projects, scheduler, integration secrets, notifications,
