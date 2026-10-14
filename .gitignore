@@ -64,3 +64,7 @@ deploy/backups/
 /backups/
 # your server's address for deploy.sh
 deploy/deploy.local.env
+
+# Playwright (e2e/)
+e2e/test-results
+e2e/playwright-report

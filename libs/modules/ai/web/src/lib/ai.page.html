@@ -169,6 +169,7 @@
       <button
         matIconButton
         class="send"
+        [attr.aria-label]="'ai.send' | transloco"
         [disabled]="(!draft().trim() && !attachments().length) || thinking() || uploading()"
         (click)="send()"
       >

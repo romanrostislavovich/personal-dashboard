@@ -52,6 +52,12 @@ export const envSchema = z
      * instance with real data.
      */
     DEMO_MODE: z.stringbool().default(false),
+    /**
+     * The limits on what costs — AI messages, uploads, new accounts (see system/rate-limit.ts).
+     * Off only where something else limits the requests (a proxy in front) or for the
+     * end-to-end tests, which make an account per test.
+     */
+    RATE_LIMITS: z.stringbool().default(true),
     /** Language of the first user (ADMIN_EMAIL): en or ru. */
     DEFAULT_LOCALE: z.enum(SUPPORTED_LOCALES).default('en'),
 

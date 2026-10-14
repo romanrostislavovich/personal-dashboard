@@ -55,3 +55,60 @@ jobs:
         run: |
           npx drizzle-kit generate --name ci-check
           git diff --exit-code --quiet -- apps/api/migrations && test -z "$(git status --porcelain apps/api/migrations)"
+
+  # The built image, as it goes to a server, clicked through in a browser: signing in, a diary
+  # entry, a transaction, a message to the AI (a fake model, e2e/fake-ai.mjs). See e2e/README.md.
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: dashboard
+          POSTGRES_PASSWORD: dashboard
+          POSTGRES_DB: dashboard
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dashboard"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci --ignore-scripts
+
+      - name: Build the image
+        run: docker build -t personal-dashboard:e2e .
+
+      # On the host's network: it reaches the database and the fake model at localhost.
+      - name: Start the dashboard
+        run: |
+          docker run -d --name dashboard --network host             -e DATABASE_URL=postgres://dashboard:dashboard@localhost:5432/dashboard             -e JWT_SECRET=$(openssl rand -hex 32) -e ENCRYPTION_KEY=$(openssl rand -hex 32)             -e ALLOW_REGISTRATION=true -e ALLOW_PRIVATE_URLS=true -e RATE_LIMITS=false             personal-dashboard:e2e
+          for i in $(seq 1 60); do curl -sf http://localhost:3300/api/health && exit 0; sleep 2; done
+          docker logs dashboard; exit 1
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Smoke tests
+        run: npm run e2e
+        env:
+          E2E_URL: http://localhost:3300
+          E2E_AI_URL: http://localhost:3397/v1
+
+      - name: The report and the server's log, when a test failed
+        if: failure()
+        run: docker logs dashboard > e2e/playwright-report/server.log 2>&1 || true
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-report
+          path: e2e/playwright-report
+          retention-days: 7

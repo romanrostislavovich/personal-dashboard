@@ -3,11 +3,14 @@ import {
   ExecutionContext,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   SetMetadata,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { AuthUser } from '../auth/current-user.decorator';
+import { AppConfig } from '../config/env';
 
 const RATE_LIMIT = 'rateLimit';
 /** Keys kept at most; the oldest windows give way beyond it. */
@@ -67,10 +70,20 @@ export class RateLimiter {
 @Injectable()
 export class RateLimitGuard implements CanActivate {
   private readonly limiter = new RateLimiter();
+  /** RATE_LIMITS=false: nothing is limited (a proxy does it, or the end-to-end tests run). */
+  private readonly enabled: boolean;
 
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    @Inject(ConfigService) config: AppConfig,
+  ) {
+    this.enabled = config.get('RATE_LIMITS', { infer: true });
+  }
 
   canActivate(context: ExecutionContext): boolean {
+    if (!this.enabled) {
+      return true;
+    }
     const limit = this.reflector.getAllAndOverride<Limit | undefined>(RATE_LIMIT, [
       context.getHandler(),
       context.getClass(),

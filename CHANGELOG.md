@@ -65,6 +65,14 @@ under **Updating**.
   day into a folder of the computer (Settings → Data), the last 14 kept: the data outlives the
   server and comes back through "Import archive".
 
+- **End-to-end smoke tests** (Playwright, `e2e/`): the built image is clicked through in a
+  browser in CI — signing in, a diary entry, a transaction, a message to the AI (a fake model).
+  The image is published only after they pass.
+- **Renovate** (`renovate.json`): dependency updates as pull requests on Monday mornings, grouped
+  (Angular, Nx, NestJS, Electron, minor and patch); security fixes at once.
+- `RATE_LIMITS=false` turns the limits off — for the tests, or behind a proxy that limits.
+- The send button of the AI chat has a name for screen readers.
+
 ### Fixed
 
 - **Background jobs send nothing twice.** A failed run was retried at once, twice, and a run
