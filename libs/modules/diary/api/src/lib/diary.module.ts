@@ -1,4 +1,5 @@
 import { DiaryDemo } from './diary.demo';
+import { DiaryEncryption } from './diary.encryption';
 import { Module } from '@nestjs/common';
 import { DiaryAutomations } from './diary.automations';
 import { DiaryLife } from './diary.life';
@@ -24,6 +25,7 @@ import { DiaryService } from './diary.service';
   providers: [
     DiaryAutomations,
     DiaryDemo,
+    DiaryEncryption,
     DiaryLife,
     DiaryLinks,
     DiaryExport,

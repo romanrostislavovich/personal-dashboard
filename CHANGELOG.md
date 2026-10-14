@@ -57,6 +57,11 @@ under **Updating**.
 - **Demo mode** (`DEMO_MODE=true`): a "Try the demo" button on the login page opens a shared
   account with made-up data in every section, made anew every night. The demo user cannot
   change the account, connect services or upload files, and no background job reaches outside.
+- **The diary and the notes about people are stored encrypted** — the text of an entry, the
+  template, the photos and their captions, the note about a person; a dump or a backup holds
+  only ciphertext. What was written before is encrypted once, on the first start. The tags and
+  the emoji marks of the diary stay plain (the filters read them); the search of the diary
+  reads the entries and searches them in the app.
 - **Pictures are made small before they are stored** — diary photos, receipts and photographed
   medical documents are turned upright, shrunk to 2560 px on the longest side and kept as WebP:
   a phone photo of several megabytes becomes a few hundred kilobytes. The place a photo was
@@ -106,7 +111,8 @@ under **Updating**.
   `ai_settings.module_connections`, 0067 the tables of Health, 0068 its lab results and studies, 0069 the
   drafts of its documents, 0070 the links for doctors, 0071 the profile
   and the reminders to take medications, 0072 the pages of its documents, 0073 the missing
-  indexes (`user_id` and foreign keys of a few dozen tables).
+  indexes (`user_id` and foreign keys of a few dozen tables), 0074 the word count of a diary
+  entry.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
   key as the server.
 

@@ -1,8 +1,7 @@
-import { users } from '@pd/api-core/schema';
+import { encryptedBytes, encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
 import { DiaryMark } from '@pd/contracts';
 import {
   boolean,
-  customType,
   date,
   index,
   integer,
@@ -15,8 +14,11 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-/** Binary data (PostgreSQL `bytea`) as a Node.js Buffer. */
-const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
+/*
+ * What a person writes is stored encrypted (`encryptedText`, see encrypted-columns.ts): the
+ * text of an entry, the template, the photos and their captions. The tags and the emoji marks
+ * stay plain — the filters and the statistics read them in the database.
+ */
 
 /** One entry per day. Notes from Telegram are appended to the current day's entry. */
 export const diaryEntries = pgTable(
@@ -27,7 +29,9 @@ export const diaryEntries = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     day: date({ mode: 'string' }).notNull(),
-    content: text().notNull().default(''),
+    content: encryptedText().notNull().default(''),
+    /** Counted when the entry is saved: the database cannot count the words of ciphertext. */
+    words: integer().notNull().default(0),
     mood: smallint(),
     /** Hashtags from the text — stored separately for fast filtering. */
     tags: text().array().notNull().default([]),
@@ -45,7 +49,7 @@ export const diarySettings = pgTable('diary_settings', {
     .references(() => users.id, { onDelete: 'cascade' }),
   eveningReminder: boolean().notNull().default(false),
   weeklySummary: boolean().notNull().default(false),
-  template: text(),
+  template: encryptedText(),
 });
 
 /**
@@ -62,11 +66,13 @@ export const diaryPhotos = pgTable(
     day: date({ mode: 'string' }).notNull(),
     mimeType: text().notNull(),
     size: integer().notNull(),
-    caption: text(),
-    data: bytea().notNull(),
+    caption: encryptedText(),
+    data: encryptedBytes().notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index().on(table.userId, table.day)],
 );
+
+registerEncryptedTables(diaryEntries, diarySettings, diaryPhotos);
 
 export type DiaryEntryRow = typeof diaryEntries.$inferSelect;

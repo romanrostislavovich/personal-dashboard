@@ -52,6 +52,7 @@ import { ProjectsController } from './projects/projects.controller';
 import { ProjectsService } from './projects/projects.service';
 import { SchedulerService } from './scheduler/scheduler.service';
 import { HealthController } from './system/health.controller';
+import { EncryptExistingService } from './crypto/encrypt-existing.service';
 import { RateLimitGuard } from './system/rate-limit';
 import { LifeMonthJob } from './life/life-month.job';
 import { LifeController } from './life/life.controller';
@@ -136,6 +137,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     // After AuthGuard too: a signed-in user is counted by their account, others by the address.
     { provide: APP_GUARD, useClass: RateLimitGuard },
     DemoService,
+    EncryptExistingService,
     CoreDemo,
     { provide: APP_INTERCEPTOR, useClass: UserActivityInterceptor },
     AuthService,
@@ -213,6 +215,8 @@ import { UserActivityService } from './realtime/user-activity.service';
     IntegrationsService,
     // For a demo instance: a module registers its sample data (see DemoService).
     DemoService,
+    // For columns made encrypted after they had rows (see EncryptExistingService).
+    EncryptExistingService,
     // For the links between the sections: a module registers what it knows (see LinksService).
     LinksService,
     ProjectOverviewService,

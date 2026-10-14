@@ -1,4 +1,4 @@
-import { users } from '@pd/api-core/schema';
+import { encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
 import { index, integer, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
@@ -17,7 +17,8 @@ export const birthdays = pgTable(
     month: smallint(),
     day: smallint(),
     year: smallint(),
-    note: text(),
+    /** What one knows about the person: stored encrypted (see encrypted-columns.ts). */
+    note: encryptedText(),
     remindDaysBefore: integer().array().notNull().default([0, 1, 7]),
     /** The day the person died; `null` — alive. The year is optional. */
     deathMonth: smallint(),
@@ -28,5 +29,7 @@ export const birthdays = pgTable(
   },
   (table) => [index().on(table.userId)],
 );
+
+registerEncryptedTables(birthdays);
 
 export type BirthdayRow = typeof birthdays.$inferSelect;
