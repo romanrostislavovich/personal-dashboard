@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
+import { compressImage, Database, DB } from '@pd/api-core';
 import {
   HEALTH_DOCUMENT_MAX_PAGES,
   HEALTH_DOCUMENT_TYPES,
@@ -281,6 +281,8 @@ export class HealthService {
       throw new BadRequestException('Expected a PDF or an image (JPEG, PNG, WebP)');
     }
     await this.assertOwned(userId, healthVisits, input.visitId, 'Visit');
+    // A photographed page is made small before it is encrypted; a PDF stays as it is.
+    const { data, mimeType } = await compressImage(file);
     const [row] = await this.db
       .insert(healthDocuments)
       .values({
@@ -289,9 +291,9 @@ export class HealthService {
         kind: input.kind,
         documentedOn: input.documentedOn ?? null,
         visitId: input.visitId ?? null,
-        mimeType: file.mimeType,
-        size: file.data.length,
-        data: file.data,
+        mimeType,
+        size: data.length,
+        data,
       })
       .returning(documentColumns);
     return toDocument(row);
@@ -375,13 +377,14 @@ export class HealthService {
     if (pages >= HEALTH_DOCUMENT_MAX_PAGES) {
       throw new BadRequestException(`A document has ${HEALTH_DOCUMENT_MAX_PAGES} pages at most`);
     }
+    const { data, mimeType } = await compressImage(file);
     await this.db.insert(healthDocumentPages).values({
       userId,
       documentId: id,
       page: pages + 1,
-      mimeType: file.mimeType,
-      size: file.data.length,
-      data: file.data,
+      mimeType,
+      size: data.length,
+      data,
     });
     return this.document(userId, id);
   }

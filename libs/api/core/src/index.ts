@@ -78,3 +78,4 @@ export type {
 } from './lib/computer-time/other-computers.service';
 export { withoutTrash } from './lib/trash/trash-triggers';
 export { RateLimit } from './lib/system/rate-limit';
+export { compressImage, type StoredFile } from './lib/files/compress-image';

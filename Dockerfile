@@ -3,8 +3,9 @@
 # Build and run together with the database: docker compose up -d --build
 #
 # Multi-platform (amd64 + arm64) without emulation: everything is built on the build machine's
-# platform and only copied into the target image. This works because all runtime dependencies
-# of the API are pure JavaScript — a dependency with native code would need `npm ci` in stage 3.
+# platform and only copied into the target image. The one dependency with native code — sharp,
+# which makes pictures small — comes as a prebuilt package a platform, and stage 2 picks the one
+# of the target image (`--cpu`, `--os`, `--libc`), so it still needs no emulation.
 
 # --- 1. Build ---
 FROM --platform=$BUILDPLATFORM node:24-alpine AS build
@@ -24,9 +25,10 @@ RUN npm audit --omit=dev --json > dist/apps/api/npm-audit.json || true
 
 # --- 2. Production dependencies of the API ---
 FROM --platform=$BUILDPLATFORM node:24-alpine AS deps
+ARG TARGETARCH
 WORKDIR /app
 COPY --from=build /repo/dist/apps/api/package.json /repo/dist/apps/api/package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm ci --omit=dev --ignore-scripts --os=linux --libc=musl     --cpu="$(if [ "$TARGETARCH" = arm64 ]; then echo arm64; else echo x64; fi)"
 
 # --- 3. Runtime ---
 FROM node:24-alpine
