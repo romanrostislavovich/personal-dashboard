@@ -128,23 +128,11 @@ export function toApplyInput(documentId: string, form: DraftForm): HealthDraftAp
           recommendations: v.recommendations || null,
           nextVisitOn: v.nextVisitOn || null,
         },
+        // The results a visit lists become a lab report of that visit.
+        labPanel: v.labValues.length ? labPanel(v) : null,
       };
     case 'labs':
-      return {
-        ...base,
-        labPanel: {
-          takenOn: v.day,
-          laboratory: v.laboratory || null,
-          country,
-          values: v.labValues.map((line) => ({
-            name: line.name.trim(),
-            analyte: guessAnalyte(line.name) ?? null,
-            unit: line.unit || null,
-            ...parseLabResult(line.result),
-            ...parseLabRange(line.range),
-          })),
-        },
-      };
+      return { ...base, labPanel: labPanel(v) };
     case 'study':
       return {
         ...base,
@@ -158,6 +146,22 @@ export function toApplyInput(documentId: string, form: DraftForm): HealthDraftAp
     default:
       return base;
   }
+}
+
+/** The lab results of the document as one report, taken on its day. */
+function labPanel(v: ReturnType<DraftForm['getRawValue']>): HealthDraftApplyInput['labPanel'] {
+  return {
+    takenOn: v.day,
+    laboratory: v.laboratory || null,
+    country: v.country || null,
+    values: v.labValues.map((line) => ({
+      name: line.name.trim(),
+      analyte: guessAnalyte(line.name) ?? null,
+      unit: line.unit || null,
+      ...parseLabResult(line.result),
+      ...parseLabRange(line.range),
+    })),
+  };
 }
 
 /** The diagnoses and the medications of the document, from its day. */

@@ -118,43 +118,7 @@
           }
 
           @case ('labs') {
-            <mat-form-field>
-              <mat-label>{{ 'health.labs.laboratory' | transloco }}</mat-label>
-              <input matInput maxlength="200" formControlName="laboratory" />
-            </mat-form-field>
-            <div formArrayName="labValues" class="lines">
-              @for (line of form.controls.labValues.controls; track line; let i = $index) {
-                <div class="line" [formGroupName]="i">
-                  <mat-form-field subscriptSizing="dynamic" class="wide">
-                    <mat-label>{{ 'health.labs.name' | transloco }}</mat-label>
-                    <input matInput maxlength="200" formControlName="name" />
-                  </mat-form-field>
-                  <mat-form-field subscriptSizing="dynamic" class="short">
-                    <mat-label>{{ 'health.labs.result' | transloco }}</mat-label>
-                    <input matInput maxlength="200" formControlName="result" />
-                  </mat-form-field>
-                  <mat-form-field subscriptSizing="dynamic" class="short">
-                    <mat-label>{{ 'health.labs.unit' | transloco }}</mat-label>
-                    <input matInput maxlength="30" formControlName="unit" />
-                  </mat-form-field>
-                  <mat-form-field subscriptSizing="dynamic" class="short">
-                    <mat-label>{{ 'health.labs.range' | transloco }}</mat-label>
-                    <input matInput maxlength="200" formControlName="range" />
-                  </mat-form-field>
-                  <button
-                    matIconButton
-                    type="button"
-                    [attr.aria-label]="'core.actions.delete' | transloco"
-                    (click)="form.controls.labValues.removeAt(i)"
-                  >
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </div>
-              }
-            </div>
-            <button matButton type="button" class="add" (click)="addLabLine(form)">
-              <mat-icon>add</mat-icon> {{ 'health.labs.addLine' | transloco }}
-            </button>
+            <!-- Its lines are below, shared with a visit. -->
           }
 
           @case ('study') {
@@ -183,6 +147,48 @@
           @default {
             <p class="hint">{{ 'health.drafts.otherHint' | transloco }}</p>
           }
+        }
+
+        <!-- A visit may list lab results too: they are saved as a report of the visit. -->
+        @if (form.controls.kind.value === 'visit' || form.controls.kind.value === 'labs') {
+          <h3 class="section">{{ 'health.tabs.results' | transloco }}</h3>
+          <mat-form-field>
+            <mat-label>{{ 'health.labs.laboratory' | transloco }}</mat-label>
+            <input matInput maxlength="200" formControlName="laboratory" />
+          </mat-form-field>
+          <div formArrayName="labValues" class="lines">
+            @for (line of form.controls.labValues.controls; track line; let i = $index) {
+              <div class="line" [formGroupName]="i">
+                <mat-form-field subscriptSizing="dynamic" class="wide">
+                  <mat-label>{{ 'health.labs.name' | transloco }}</mat-label>
+                  <input matInput maxlength="200" formControlName="name" />
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic" class="short">
+                  <mat-label>{{ 'health.labs.result' | transloco }}</mat-label>
+                  <input matInput maxlength="200" formControlName="result" />
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic" class="short">
+                  <mat-label>{{ 'health.labs.unit' | transloco }}</mat-label>
+                  <input matInput maxlength="30" formControlName="unit" />
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic" class="short">
+                  <mat-label>{{ 'health.labs.range' | transloco }}</mat-label>
+                  <input matInput maxlength="200" formControlName="range" />
+                </mat-form-field>
+                <button
+                  matIconButton
+                  type="button"
+                  [attr.aria-label]="'core.actions.delete' | transloco"
+                  (click)="form.controls.labValues.removeAt(i)"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+          <button matButton type="button" class="add" (click)="addLabLine(form)">
+            <mat-icon>add</mat-icon> {{ 'health.labs.addLine' | transloco }}
+          </button>
         }
 
         <!-- Whatever the kind: a lab report or a study may also name a diagnosis or prescribe. -->
