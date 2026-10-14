@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { DB, Database } from '@pd/api-core';
 import {
   HEALTH_DOCUMENT_TYPES,
@@ -33,6 +33,8 @@ import {
   HealthVisitRow,
   healthVisits,
 } from './health.schema';
+import { LabsService } from './labs.service';
+import { found, removeOwned } from './owned';
 
 export type ValidClinicInput = z.output<typeof healthClinicInputSchema>;
 export type ValidDoctorInput = z.output<typeof healthDoctorInputSchema>;
@@ -50,29 +52,35 @@ type Owned = typeof healthClinics | typeof healthDoctors | typeof healthVisits;
  */
 @Injectable()
 export class HealthService {
-  constructor(@Inject(DB) private readonly db: Database) {}
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    private readonly labs: LabsService,
+  ) {}
 
   async record(userId: string): Promise<HealthRecord> {
-    const [clinics, doctors, visits, diagnoses, medications, documents] = await Promise.all([
-      this.db.select().from(healthClinics).where(eq(healthClinics.userId, userId)),
-      this.db.select().from(healthDoctors).where(eq(healthDoctors.userId, userId)),
-      this.db
-        .select()
-        .from(healthVisits)
-        .where(eq(healthVisits.userId, userId))
-        .orderBy(desc(healthVisits.visitedOn), desc(healthVisits.createdAt)),
-      this.db
-        .select()
-        .from(healthDiagnoses)
-        .where(eq(healthDiagnoses.userId, userId))
-        .orderBy(desc(healthDiagnoses.diagnosedOn)),
-      this.db.select().from(healthMedications).where(eq(healthMedications.userId, userId)),
-      this.db
-        .select(documentColumns)
-        .from(healthDocuments)
-        .where(eq(healthDocuments.userId, userId))
-        .orderBy(desc(healthDocuments.createdAt)),
-    ]);
+    const [clinics, doctors, visits, diagnoses, medications, documents, labPanels, studies] =
+      await Promise.all([
+        this.db.select().from(healthClinics).where(eq(healthClinics.userId, userId)),
+        this.db.select().from(healthDoctors).where(eq(healthDoctors.userId, userId)),
+        this.db
+          .select()
+          .from(healthVisits)
+          .where(eq(healthVisits.userId, userId))
+          .orderBy(desc(healthVisits.visitedOn), desc(healthVisits.createdAt)),
+        this.db
+          .select()
+          .from(healthDiagnoses)
+          .where(eq(healthDiagnoses.userId, userId))
+          .orderBy(desc(healthDiagnoses.diagnosedOn)),
+        this.db.select().from(healthMedications).where(eq(healthMedications.userId, userId)),
+        this.db
+          .select(documentColumns)
+          .from(healthDocuments)
+          .where(eq(healthDocuments.userId, userId))
+          .orderBy(desc(healthDocuments.createdAt)),
+        this.labs.panels(userId),
+        this.labs.studies(userId),
+      ]);
     return {
       // Names are encrypted, so they are sorted here and not in the query.
       clinics: clinics.map(toClinic).sort(byName),
@@ -81,6 +89,8 @@ export class HealthService {
       diagnoses: diagnoses.map(toDiagnosis),
       medications: medications.map(toMedication).sort(byStart),
       documents: documents.map(toDocument),
+      labPanels,
+      studies,
     };
   }
 
@@ -321,25 +331,14 @@ export class HealthService {
     return found(row, what) as T['$inferSelect'];
   }
 
-  private async remove(
+  private remove(
     userId: string,
     table: Owned | typeof healthDiagnoses | typeof healthMedications | typeof healthDocuments,
     id: string,
     what: string,
   ): Promise<void> {
-    const deleted = await this.db
-      .delete(table)
-      .where(and(eq(table.id, id), eq(table.userId, userId)))
-      .returning({ id: table.id });
-    found(deleted[0], what);
+    return removeOwned(this.db, userId, table, id, what);
   }
-}
-
-function found<T>(row: T | undefined, what: string): T {
-  if (!row) {
-    throw new NotFoundException(`${what} not found`);
-  }
-  return row;
 }
 
 /** Everything of a document but its bytes. */

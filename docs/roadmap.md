@@ -167,7 +167,8 @@ Right after the encryption: the history of visits is needed now, and it is the m
 data of all. The plan in stages: [health.md](health.md). ✅ Stage 1 is done — visits,
 diagnoses by ICD code gathered into conditions, medications, documents, the ICD-10 dictionary
 from WHO, all stored encrypted; next: lab results, a document read by the AI into a draft, the
-summary for a new doctor.
+summary for a new doctor. ✅ Stage 2 too: lab results across laboratories and countries in one
+unit, with the laboratory's own range, and studies with their conclusions.
 
 - **Health** — your own medical record: blood type, allergies, chronic conditions, vaccinations,
   operations, doctors and their contacts; medications and when to take them, doctor visits, lab

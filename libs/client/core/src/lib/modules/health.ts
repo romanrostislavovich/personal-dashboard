@@ -7,9 +7,13 @@ import {
   HealthDoctorInput,
   HealthDocument,
   HealthDocumentInput,
+  HealthLabPanel,
+  HealthLabPanelInput,
   HealthMedication,
   HealthMedicationInput,
   HealthRecord,
+  HealthStudy,
+  HealthStudyInput,
   HealthVisit,
   HealthVisitInput,
   IcdDictionary,
@@ -56,6 +60,15 @@ export function healthApi(api: ApiClient) {
     saveMedication: (input: HealthMedicationInput, id?: string) =>
       save<HealthMedication>(api, 'medications', input, id),
     removeMedication: (id: string) => api.delete(`${BASE}/medications/${id}`),
+
+    /** A lab report with all its lines; changing one replaces the lines as a whole. */
+    saveLabPanel: (input: HealthLabPanelInput, id?: string) =>
+      save<HealthLabPanel>(api, 'labs', input, id),
+    removeLabPanel: (id: string) => api.delete(`${BASE}/labs/${id}`),
+
+    saveStudy: (input: HealthStudyInput, id?: string) =>
+      save<HealthStudy>(api, 'studies', input, id),
+    removeStudy: (id: string) => api.delete(`${BASE}/studies/${id}`),
 
     /** The file goes as a form with its description; empty fields are left out. */
     uploadDocument: (input: HealthDocumentInput, file: Blob) => {

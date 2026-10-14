@@ -93,9 +93,14 @@ Ministry of Health is OID 1.2.643.5.1.13.13.11.1005 on nsi.rosminzdrav.ru. Later
    one timeline "the whole history" with filters by country, doctor and speciality.
    **The ICD dictionary** — codes and titles in four languages, searched when a diagnosis is
    entered.
-2. **Lab results** — panels and values; charts over time with the band of the norm; out of range
+2. ✅ **Lab results** — panels and values; charts over time with the band of the norm; out of range
    marked; one line for an analyte from different laboratories and countries in one unit. Studies
    (ultrasound, MRI…) as conclusions with their files.
+   Done: ~60 analytes with their names in uk / ru / pl / en and their units
+   (`health-labs.ts` in the contracts: `guessAnalyte`, `looseUnit`, `toCanonical`, `labFlag`,
+   `labSeries`); a line keeps the laboratory's own unit and range, the value in the analyte's
+   unit is worked out on reading. Results and ranges are typed as labs write them (`5,6`,
+   `3,9–5,5`, `<5.2`, `отрицательно`).
 3. **A document → a draft → confirmed** — a photo or a PDF in any of the four languages becomes a
    draft of a visit, a lab panel or a study; shown next to the original, corrected and saved.
    Vision for scans. Telegram: a photo captioned `/med` (kept apart from receipt photos).

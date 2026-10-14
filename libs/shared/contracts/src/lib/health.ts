@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CanonicalValue, LabFlag } from './health-labs';
 import { LocalDate } from './local-date';
 
 /**
@@ -232,6 +233,108 @@ export interface HealthDocument {
   createdAt: string;
 }
 
+// --- Lab results ---
+
+const labNumber = z.number().finite();
+
+/** One line of a lab report: an analyte, its value and the laboratory's own range. */
+export const healthLabValueInputSchema = z
+  .object({
+    /** As the report names it: `Глюкоза`, `GLU`, `Glukoza`. */
+    name: z.string().trim().min(1).max(200),
+    /** A key of LAB_ANALYTES when it is one of them (see guessAnalyte). */
+    analyte: z.string().trim().max(50).nullish(),
+    value: labNumber.nullish(),
+    /** A result that is not a number: `negative`, `<0.5`, `не обнаружено`. */
+    textValue: optionalText(200),
+    unit: optionalText(30),
+    refLow: labNumber.nullish(),
+    refHigh: labNumber.nullish(),
+    /** A range that is not two numbers: `negative`, `<5.2`. */
+    refText: optionalText(200),
+  })
+  .refine((line) => line.value != null || Boolean(line.textValue), {
+    message: 'A value or a text result is needed',
+    path: ['value'],
+  });
+export type HealthLabValueInput = z.input<typeof healthLabValueInputSchema>;
+
+export const healthLabPanelInputSchema = z.object({
+  takenOn: day,
+  laboratory: optionalText(200),
+  country: country.nullish(),
+  visitId: z.uuid().nullish(),
+  /** The report itself, among the documents. */
+  documentId: z.uuid().nullish(),
+  notes: optionalText(5000),
+  values: z.array(healthLabValueInputSchema).min(1).max(300),
+});
+export type HealthLabPanelInput = z.input<typeof healthLabPanelInputSchema>;
+
+export interface HealthLabValue {
+  id: string;
+  name: string;
+  analyte: string | null;
+  value: number | null;
+  textValue: string | null;
+  unit: string | null;
+  refLow: number | null;
+  refHigh: number | null;
+  refText: string | null;
+  /** Out of the laboratory's own range. */
+  flag: LabFlag;
+  /** In the analyte's own unit, for one chart across laboratories; `null` — as it is. */
+  canonical: CanonicalValue | null;
+}
+
+export interface HealthLabPanel {
+  id: string;
+  takenOn: LocalDate;
+  laboratory: string | null;
+  country: string | null;
+  visitId: string | null;
+  documentId: string | null;
+  notes: string | null;
+  values: HealthLabValue[];
+}
+
+// --- Studies: ultrasound, MRI, ECG… as their conclusions ---
+
+export const HEALTH_STUDY_KINDS = [
+  'ultrasound',
+  'mri',
+  'ct',
+  'xray',
+  'ecg',
+  'eeg',
+  'endoscopy',
+  'other',
+] as const;
+export type HealthStudyKind = (typeof HEALTH_STUDY_KINDS)[number];
+
+export const healthStudyInputSchema = z.object({
+  kind: z.enum(HEALTH_STUDY_KINDS),
+  /** What was examined: `thyroid`, `brain`, `abdomen`. */
+  area: optionalText(200),
+  performedOn: day,
+  conclusion: optionalText(10_000),
+  visitId: z.uuid().nullish(),
+  documentId: z.uuid().nullish(),
+  notes: optionalText(5000),
+});
+export type HealthStudyInput = z.input<typeof healthStudyInputSchema>;
+
+export interface HealthStudy {
+  id: string;
+  kind: HealthStudyKind;
+  area: string | null;
+  performedOn: LocalDate;
+  conclusion: string | null;
+  visitId: string | null;
+  documentId: string | null;
+  notes: string | null;
+}
+
 /** Everything at once: a history of one person is small, the page filters it itself. */
 export interface HealthRecord {
   clinics: HealthClinic[];
@@ -241,6 +344,10 @@ export interface HealthRecord {
   diagnoses: HealthDiagnosis[];
   medications: HealthMedication[];
   documents: HealthDocument[];
+  /** The latest first. */
+  labPanels: HealthLabPanel[];
+  /** The latest first. */
+  studies: HealthStudy[];
 }
 
 // --- The ICD dictionary (loaded from WHO by the user, never shipped: see docs/health.md) ---
@@ -342,3 +449,73 @@ export function healthConditions(diagnoses: readonly HealthDiagnosis[]): HealthC
 }
 
 const isActive = (status: DiagnosisStatus) => status === 'confirmed' || status === 'suspected';
+
+// --- Lab series: one analyte over the years, for a chart ---
+
+export interface LabPoint {
+  day: LocalDate;
+  value: number;
+  /** The laboratory's range in the unit of the series. */
+  low: number | null;
+  high: number | null;
+  flag: LabFlag;
+  laboratory: string | null;
+  country: string | null;
+  panelId: string;
+}
+
+export interface LabSeries {
+  /** `analyte:glucose`, or `name:<name>|<unit>` for one that is not in LAB_ANALYTES. */
+  key: string;
+  analyte: string | null;
+  /** As the latest report names it. */
+  name: string;
+  unit: string;
+  /** The oldest first. */
+  points: LabPoint[];
+}
+
+/**
+ * Every numeric value, gathered by analyte across laboratories and countries in the analyte's
+ * own unit; one we do not know, or in a unit we cannot convert, is its own series by its name
+ * and unit. The series whose latest value is out of range come first, then by name.
+ */
+export function labSeries(panels: readonly HealthLabPanel[]): LabSeries[] {
+  const series = new Map<string, LabSeries>();
+  const byDay = [...panels].sort((a, b) => a.takenOn.localeCompare(b.takenOn));
+  for (const panel of byDay) {
+    for (const line of panel.values) {
+      if (line.value === null) {
+        continue;
+      }
+      const canonical = line.canonical;
+      const unit = canonical?.unit ?? line.unit ?? '';
+      const key = canonical
+        ? `analyte:${line.analyte}`
+        : `name:${line.name.trim().toLowerCase()}|${unit.toLowerCase()}`;
+      const entry = series.get(key) ?? {
+        key,
+        analyte: canonical ? line.analyte : null,
+        name: line.name,
+        unit,
+        points: [],
+      };
+      entry.name = line.name;
+      entry.points.push({
+        day: panel.takenOn,
+        value: canonical?.value ?? line.value,
+        low: canonical ? canonical.low : line.refLow,
+        high: canonical ? canonical.high : line.refHigh,
+        flag: line.flag,
+        laboratory: panel.laboratory,
+        country: panel.country,
+        panelId: panel.id,
+      });
+      series.set(key, entry);
+    }
+  }
+  const flagged = (s: LabSeries) => Number(s.points[s.points.length - 1].flag !== null);
+  return [...series.values()].sort(
+    (a, b) => flagged(b) - flagged(a) || a.name.localeCompare(b.name),
+  );
+}

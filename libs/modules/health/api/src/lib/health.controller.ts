@@ -23,6 +23,8 @@ import {
   healthDiagnosisInputSchema,
   healthDoctorInputSchema,
   healthDocumentInputSchema,
+  healthLabPanelInputSchema,
+  healthStudyInputSchema,
   healthMedicationInputSchema,
   healthVisitInputSchema,
   ICD_FILE_MAX_BYTES,
@@ -45,6 +47,7 @@ import {
   ValidVisitInput,
 } from './health.service';
 import { IcdDictionaryService } from './icd/icd-dictionary.service';
+import { LabsService, ValidLabPanelInput, ValidStudyInput } from './labs.service';
 
 interface UploadedDocument {
   buffer: Buffer;
@@ -60,6 +63,7 @@ interface UploadedDocument {
 export class HealthController {
   constructor(
     private readonly health: HealthService,
+    private readonly labs: LabsService,
     private readonly icd: IcdDictionaryService,
     private readonly actions: ServerActions,
   ) {}
@@ -192,6 +196,56 @@ export class HealthController {
   @HttpCode(204)
   removeMedication(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.health.removeMedication(user.id, id);
+  }
+
+  // --- Lab results: a report with its lines, saved as a whole ---
+
+  @Post('labs')
+  addLabPanel(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(healthLabPanelInputSchema)) input: ValidLabPanelInput,
+  ) {
+    return this.labs.savePanel(user.id, input);
+  }
+
+  @Put('labs/:id')
+  updateLabPanel(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(healthLabPanelInputSchema)) input: ValidLabPanelInput,
+  ) {
+    return this.labs.savePanel(user.id, input, id);
+  }
+
+  @Delete('labs/:id')
+  @HttpCode(204)
+  removeLabPanel(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.labs.removePanel(user.id, id);
+  }
+
+  // --- Studies ---
+
+  @Post('studies')
+  addStudy(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(healthStudyInputSchema)) input: ValidStudyInput,
+  ) {
+    return this.labs.saveStudy(user.id, input);
+  }
+
+  @Put('studies/:id')
+  updateStudy(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(healthStudyInputSchema)) input: ValidStudyInput,
+  ) {
+    return this.labs.saveStudy(user.id, input, id);
+  }
+
+  @Delete('studies/:id')
+  @HttpCode(204)
+  removeStudy(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.labs.removeStudy(user.id, id);
   }
 
   // --- Documents ---

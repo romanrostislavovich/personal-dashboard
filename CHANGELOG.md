@@ -13,7 +13,13 @@ under **Updating**.
   conditions with their history, medications (by the active substance too) and the documents
   — scans, photos, PDFs. Stored encrypted. The ICD-10 dictionary is downloaded from WHO by your
   own server after you accept WHO's terms (Settings → Integrations); it is never shipped or
-  exported.
+  exported. A dictionary in Russian, Ukrainian or any language is loaded from a CSV or XLSX
+  file of your own.
+- **Health: lab results and studies** — a lab report as the laboratory gave it (its units and
+  its own reference ranges); about 60 common analytes recognised by their names in Ukrainian,
+  Russian, Polish or English, so one analyte from labs in different countries is one chart in
+  one unit, with the laboratory's range as a band and what was out of it marked. Studies
+  (ultrasound, MRI, ECG…) with their conclusions.
 - **An AI connection of its own for a section** (Settings → AI): a local model for Health, say;
   the section's data then never reaches the shared connection.
 - **Columns stored encrypted** for modules (`encryptedText()`, `encryptedBytes()`): a dump or a
@@ -34,7 +40,7 @@ under **Updating**.
 ### Updating
 
 - Migration 0062 adds `integration_alerts`, 0063–0065 the tables of Psychology, 0066
-  `ai_settings.module_connections`, 0067 the tables of Health.
+  `ai_settings.module_connections`, 0067 the tables of Health, 0068 its lab results and studies.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
   key as the server.
 

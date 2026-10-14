@@ -4,6 +4,7 @@ import { HealthController } from './health.controller';
 import { HealthServerActions } from './health.server-actions';
 import { HealthService } from './health.service';
 import { IcdDictionaryService } from './icd/icd-dictionary.service';
+import { LabsService } from './labs.service';
 
 /**
  * Health: one medical history across countries and clinics — visits, diagnoses by ICD code,
@@ -12,6 +13,6 @@ import { IcdDictionaryService } from './icd/icd-dictionary.service';
  */
 @Module({
   controllers: [HealthController],
-  providers: [HealthService, IcdDictionaryService, HealthServerActions, HealthAiTools],
+  providers: [HealthService, LabsService, IcdDictionaryService, HealthServerActions, HealthAiTools],
 })
 export class HealthModule {}
