@@ -104,11 +104,15 @@ export function labLine(
   });
 }
 
-/** What is saved: only the part of the kind the user settled on. */
+/**
+ * What is saved: the part of the kind the user settled on, and the diagnoses and medications
+ * with any kind but "other" — a lab report or a study may name them too.
+ */
 export function toApplyInput(documentId: string, form: DraftForm): HealthDraftApplyInput {
   const v = form.getRawValue();
   const country = v.country || null;
-  const base: HealthDraftApplyInput = { documentId };
+  const base: HealthDraftApplyInput =
+    v.kind === 'other' ? { documentId } : { documentId, ...prescribed(v) };
   switch (v.kind) {
     case 'visit':
       return {
@@ -124,20 +128,6 @@ export function toApplyInput(documentId: string, form: DraftForm): HealthDraftAp
           recommendations: v.recommendations || null,
           nextVisitOn: v.nextVisitOn || null,
         },
-        diagnoses: v.diagnoses.map((d) => ({
-          system: 'icd10',
-          code: d.code ? normalizeIcdCode(d.code) : null,
-          title: d.title.trim(),
-          status: d.status,
-          diagnosedOn: v.day,
-        })),
-        medications: v.medications.map((m) => ({
-          name: m.name.trim(),
-          substance: m.substance || null,
-          dose: m.dose || null,
-          schedule: m.schedule || null,
-          startedOn: v.day,
-        })),
       };
     case 'labs':
       return {
@@ -168,6 +158,28 @@ export function toApplyInput(documentId: string, form: DraftForm): HealthDraftAp
     default:
       return base;
   }
+}
+
+/** The diagnoses and the medications of the document, from its day. */
+function prescribed(
+  v: ReturnType<DraftForm['getRawValue']>,
+): Pick<HealthDraftApplyInput, 'diagnoses' | 'medications'> {
+  return {
+    diagnoses: v.diagnoses.map((d) => ({
+      system: 'icd10',
+      code: d.code ? normalizeIcdCode(d.code) : null,
+      title: d.title.trim(),
+      status: d.status,
+      diagnosedOn: v.day,
+    })),
+    medications: v.medications.map((m) => ({
+      name: m.name.trim(),
+      substance: m.substance || null,
+      dose: m.dose || null,
+      schedule: m.schedule || null,
+      startedOn: v.day,
+    })),
+  };
 }
 
 /** The clinic and the doctor: one already known, or a new one by the name in the document. */
