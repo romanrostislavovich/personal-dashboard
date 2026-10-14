@@ -3,7 +3,7 @@ import { ActivityStore, TrackerConfig } from './activity-store';
 import { BreakReminder } from './break-reminder';
 import { FocusPhase, FocusSession, FocusStatus, FocusTimer } from './focus-timer';
 import { HealthCollector, HealthSnapshot } from './health';
-import { OutageWatch } from './outages';
+import { Outage, OutageWatch } from './outages';
 import { Span, SpanBuilder, WindowSample } from './span-builder';
 import { isMeeting, isPrivateWindow } from './window-rules';
 import { SAMPLE_SECONDS, WindowWatcher } from './window-watcher';
@@ -286,74 +286,37 @@ export class ActivityTracker {
       // Halved when the server finds a batch too large; back to full on the next upload.
       let size = BATCH;
       do {
-        const batch = this.store.queue.slice(0, size);
-        const focus = first ? this.store.focusQueue.slice(0, FOCUS_BATCH) : [];
-        const health = first ? this.pendingHealth : null;
-        const outages = first ? this.store.outageQueue.slice() : [];
+        const batch = this.takeBatch(size, first);
         first = false;
-        const response = await net.fetch(new URL('/api/activity/device/spans', server).href, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Device ${token}` },
-          body: JSON.stringify({
-            spans: batch,
-            ...(focus.length ? { focus } : {}),
-            ...(health ? { health } : {}),
-            ...(outages.length ? { outages } : {}),
-          }),
-          signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
-        });
-        if (response.status === 401) {
-          // The device was removed in the dashboard: this computer no longer reports.
-          this.disable();
-          return;
-        }
-        if (response.status === 413 && batch.length > 1) {
-          // Too large for the server: the same spans go again in smaller batches.
-          size = Math.ceil(batch.length / 2);
-          first = true;
-          continue;
-        }
-        if (response.status === 400 || response.status === 413) {
-          // The server will never take these (a span it finds wrong): they are dropped, or
-          // they would block everything after them for good.
-          this.store.dequeue(batch.length);
-          this.store.dequeueFocus(new Set(focus.map((session) => session.id)));
-          this.store.dequeueOutages(new Set(outages.map((outage) => outage.id)));
-          continue;
-        }
-        if (!response.ok) {
-          // The server answers, but with an error (a restart, a deploy): it is down for us.
-          if (response.status >= 500) {
+        const response = await this.post(server, token, batch);
+        switch (outcomeOf(response.status, batch.spans.length)) {
+          case 'removed':
+            // The device was removed in the dashboard: this computer no longer reports.
+            this.disable();
+            return;
+          case 'too-large':
+            // Too large for the server: the same spans go again in smaller batches.
+            size = Math.ceil(batch.spans.length / 2);
+            first = true;
+            continue;
+          case 'refused':
+            // The server will never take these (a span it finds wrong): they are dropped, or
+            // they would block everything after them for good.
+            this.forget(batch);
+            continue;
+          case 'down':
+            // The server answers, but with an error (a restart, a deploy): it is down for us.
             await this.outages.failed();
-          }
-          return;
+            return;
+          case 'failed':
+            return;
         }
         this.outages.succeeded();
-        const config = (await response.json()) as Partial<TrackerConfig>;
-        if (typeof config.idleMinutes === 'number' && Array.isArray(config.excludedApps)) {
-          const known = this.store.config;
-          this.store.setConfig({
-            idleMinutes: config.idleMinutes,
-            excludedApps: config.excludedApps,
-            watchApps: Array.isArray(config.watchApps) ? config.watchApps : [],
-            breakMinutes:
-              typeof config.breakMinutes === 'number' ? config.breakMinutes : known.breakMinutes,
-            focus: config.focus ?? known.focus,
-            distractingApps: Array.isArray(config.distractingApps)
-              ? config.distractingApps
-              : known.distractingApps,
-            privateWords: Array.isArray(config.privateWords)
-              ? config.privateWords
-              : known.privateWords,
-            meetingApps: Array.isArray(config.meetingApps) ? config.meetingApps : known.meetingApps,
-          });
+        const config = mergedConfig(this.store.config, await response.json());
+        if (config) {
+          this.store.setConfig(config);
         }
-        this.store.dequeue(batch.length);
-        this.store.dequeueFocus(new Set(focus.map((session) => session.id)));
-        this.store.dequeueOutages(new Set(outages.map((outage) => outage.id)));
-        if (health && this.pendingHealth === health) {
-          this.pendingHealth = null;
-        }
+        this.forget(batch);
         this.onChange();
       } while (this.store.queue.length >= size);
     } catch {
@@ -363,8 +326,95 @@ export class ActivityTracker {
       this.uploading = false;
     }
   }
+
+  /** The oldest spans; the first batch of an upload carries the rest of what waits too. */
+  private takeBatch(size: number, first: boolean): Batch {
+    return {
+      spans: this.store.queue.slice(0, size),
+      focus: first ? this.store.focusQueue.slice(0, FOCUS_BATCH) : [],
+      health: first ? this.pendingHealth : null,
+      outages: first ? this.store.outageQueue.slice() : [],
+    };
+  }
+
+  private post(server: string, token: string, batch: Batch): Promise<Response> {
+    return net.fetch(new URL('/api/activity/device/spans', server).href, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Device ${token}` },
+      body: JSON.stringify({
+        spans: batch.spans,
+        ...(batch.focus.length ? { focus: batch.focus } : {}),
+        ...(batch.health ? { health: batch.health } : {}),
+        ...(batch.outages.length ? { outages: batch.outages } : {}),
+      }),
+      signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+    });
+  }
+
+  /** What the server has (or will never take) leaves the store. */
+  private forget(batch: Batch): void {
+    this.store.dequeue(batch.spans.length);
+    this.store.dequeueFocus(new Set(batch.focus.map((session) => session.id)));
+    this.store.dequeueOutages(new Set(batch.outages.map((outage) => outage.id)));
+    if (batch.health && this.pendingHealth === batch.health) {
+      this.pendingHealth = null;
+    }
+  }
 }
 
 function isExcluded(sample: WindowSample, config: TrackerConfig): boolean {
   return config.excludedApps.includes(sample.app.toLowerCase());
+}
+
+/** One upload: spans, and with the first of an upload what else waits. */
+interface Batch {
+  spans: Span[];
+  focus: FocusSession[];
+  health: HealthSnapshot | null;
+  outages: Outage[];
+}
+
+/** What the server's answer to a batch means for the queue. */
+export function outcomeOf(
+  status: number,
+  spans: number,
+): 'sent' | 'removed' | 'too-large' | 'refused' | 'down' | 'failed' {
+  if (status >= 200 && status < 300) {
+    return 'sent';
+  }
+  if (status === 401) {
+    return 'removed';
+  }
+  if (status === 413 && spans > 1) {
+    return 'too-large';
+  }
+  if (status === 400 || status === 413) {
+    return 'refused';
+  }
+  return status >= 500 ? 'down' : 'failed';
+}
+
+/**
+ * The settings the server sent, over the ones known: a field an older server does not send
+ * keeps its value. `null` — the answer is not settings at all.
+ */
+export function mergedConfig(
+  known: TrackerConfig,
+  sent: Partial<TrackerConfig>,
+): TrackerConfig | null {
+  if (typeof sent.idleMinutes !== 'number' || !Array.isArray(sent.excludedApps)) {
+    return null;
+  }
+  const list = (value: string[] | undefined, fallback: string[]) =>
+    Array.isArray(value) ? value : fallback;
+  return {
+    idleMinutes: sent.idleMinutes,
+    excludedApps: sent.excludedApps,
+    watchApps: list(sent.watchApps, []),
+    breakMinutes: typeof sent.breakMinutes === 'number' ? sent.breakMinutes : known.breakMinutes,
+    focus: sent.focus ?? known.focus,
+    distractingApps: list(sent.distractingApps, known.distractingApps),
+    privateWords: list(sent.privateWords, known.privateWords),
+    meetingApps: list(sent.meetingApps, known.meetingApps),
+  };
 }

@@ -54,47 +54,53 @@ export function clothingAdvice(
   weather: DaytimeWeather,
   thermalFeel: ThermalFeel = 0,
 ): ClothingAdvice {
-  const { windSpeedMax, uvIndexMax } = weather;
   const shift = thermalFeel * THERMAL_STEP_DEGREES;
-  const apparentMin = weather.apparentMin + shift;
-  const apparentMax = weather.apparentMax + shift;
-  const outfit = OUTFIT_BELOW.find(([below]) => apparentMin < below)?.[1] ?? 'hot';
-  const extras = new Set<ClothingExtra>();
+  const feel = {
+    min: weather.apparentMin + shift,
+    max: weather.apparentMax + shift,
+  };
+  const outfit = OUTFIT_BELOW.find(([below]) => feel.min < below)?.[1] ?? 'hot';
+  const extras: ClothingExtra[] = [
+    ...(feel.max - feel.min >= LAYERS_SPREAD ? (['layers'] as const) : []),
+    ...rainAndWindExtras(weather, feel.min),
+    ...coldExtras(feel.min),
+    ...sunExtras(weather.uvIndexMax, feel.max),
+  ];
+  return { outfit, extras };
+}
 
-  if (apparentMax - apparentMin >= LAYERS_SPREAD) {
-    extras.add('layers');
-  }
-
+/** An umbrella or a raincoat, shoes for puddles and snow, something against the wind. */
+function rainAndWindExtras(weather: DaytimeWeather, feelMin: number): ClothingExtra[] {
   const snow = weather.conditions.some(isSnow);
   const wet =
     weather.precipitationProbability >= LIKELY_RAIN_PERCENT ||
     weather.precipitation >= SOME_RAIN_MM;
+  const windy = weather.windSpeedMax >= STRONG_WIND;
+  const extras: ClothingExtra[] = [];
   if (wet && !snow) {
-    extras.add(windSpeedMax >= STRONG_WIND ? 'raincoat' : 'umbrella');
+    extras.push(windy ? 'raincoat' : 'umbrella');
   }
   if (snow || (wet && weather.precipitation >= HEAVY_RAIN_MM)) {
-    extras.add('waterproof-shoes');
+    extras.push('waterproof-shoes');
   }
-  if (windSpeedMax >= STRONG_WIND && apparentMin < 15 && !extras.has('raincoat')) {
-    extras.add('windproof');
+  // A raincoat keeps the wind out as well.
+  if (windy && feelMin < 15 && !extras.includes('raincoat')) {
+    extras.push('windproof');
   }
+  return extras;
+}
 
-  if (apparentMin < 5) {
-    extras.add('hat');
-  }
-  if (apparentMin < 0) {
-    extras.add('gloves').add('scarf');
-  }
+function coldExtras(feelMin: number): ClothingExtra[] {
+  return [
+    ...(feelMin < 5 ? (['hat'] as const) : []),
+    ...(feelMin < 0 ? (['gloves', 'scarf'] as const) : []),
+  ];
+}
 
-  if (uvIndexMax >= 5) {
-    extras.add('sunglasses');
-  }
-  if (uvIndexMax >= 6) {
-    extras.add('sunscreen');
-  }
-  if (uvIndexMax >= 5 && apparentMax >= 25) {
-    extras.add('cap');
-  }
-
-  return { outfit, extras: [...extras] };
+function sunExtras(uvIndexMax: number, feelMax: number): ClothingExtra[] {
+  return [
+    ...(uvIndexMax >= 5 ? (['sunglasses'] as const) : []),
+    ...(uvIndexMax >= 6 ? (['sunscreen'] as const) : []),
+    ...(uvIndexMax >= 5 && feelMax >= 25 ? (['cap'] as const) : []),
+  ];
 }

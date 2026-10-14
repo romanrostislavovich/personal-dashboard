@@ -108,29 +108,40 @@ export function parseMythic(
     return null;
   }
   const best = new Map<string, WowMythicRun>();
-  for (const run of runs) {
-    const dungeon = run.dungeon?.name;
-    const level = number(run.keystone_level);
-    if (!dungeon || level === null) {
-      continue;
-    }
-    const parsed: WowMythicRun = {
-      dungeon,
-      level,
-      timed: Boolean(run.is_completed_within_time),
-      durationMs: number(run.duration) ?? 0,
-      completedAt: new Date(number(run.completed_timestamp) ?? 0).toISOString(),
-      rating: round(number(run.mythic_rating?.rating)),
-    };
-    const known = best.get(dungeon);
-    if (!known || (parsed.rating ?? parsed.level) > (known.rating ?? known.level)) {
-      best.set(dungeon, parsed);
+  for (const run of runs.flatMap((raw) => parseMythicRun(raw) ?? [])) {
+    const known = best.get(run.dungeon);
+    if (!known || runScore(run) > runScore(known)) {
+      best.set(run.dungeon, run);
     }
   }
   return {
     rating: Math.round(rating ?? 0),
     runs: [...best.values()].sort((a, b) => b.level - a.level),
   };
+}
+
+type RawMythicRun = NonNullable<RawMythicSeason['best_runs']>[number];
+
+/** A run of a dungeon; `null` — it lacks the dungeon or the key level. */
+function parseMythicRun(run: RawMythicRun): WowMythicRun | null {
+  const dungeon = run.dungeon?.name;
+  const level = number(run.keystone_level);
+  if (!dungeon || level === null) {
+    return null;
+  }
+  return {
+    dungeon,
+    level,
+    timed: Boolean(run.is_completed_within_time),
+    durationMs: number(run.duration) ?? 0,
+    completedAt: new Date(number(run.completed_timestamp) ?? 0).toISOString(),
+    rating: round(number(run.mythic_rating?.rating)),
+  };
+}
+
+/** Which run of a dungeon is the best: by its rating, or by the key level without one. */
+function runScore(run: WowMythicRun): number {
+  return run.rating ?? run.level;
 }
 
 /** The current season is the last of the list. */
