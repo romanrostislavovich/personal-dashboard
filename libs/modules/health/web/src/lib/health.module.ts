@@ -19,6 +19,10 @@ export const healthModule: WebDashboardModule = {
           loadComponent: () => import('./history/history.page').then((m) => m.HistoryPage),
         },
         {
+          path: 'profile',
+          loadComponent: () => import('./profile/profile.page').then((m) => m.ProfilePage),
+        },
+        {
           path: 'conditions',
           loadComponent: () => import('./conditions/conditions.page').then((m) => m.ConditionsPage),
         },

@@ -5,6 +5,13 @@ import { ReadFailure } from './documents/document-reader.service';
 /** Server texts of the section: the replies about a medical document sent to Telegram. */
 const messages = {
   en: {
+    intake: {
+      title: '💊 Time for your medication',
+      buttons: { taken: '✅ Taken', skip: 'Skip' },
+      taken: 'Noted: taken.',
+      skipped: 'Noted: skipped.',
+      gone: 'This reminder is gone.',
+    },
     photoChoice: '🩺 A medical document',
     read: (kind: HealthDraftKind, link: string) =>
       `🩺 ${KINDS.en[kind]} read. Check it and save — nothing is recorded until you do:\n${link}`,
@@ -20,6 +27,13 @@ const messages = {
     } satisfies Record<ReadFailure, string>,
   },
   ru: {
+    intake: {
+      title: '💊 Время принять лекарство',
+      buttons: { taken: '✅ Принял', skip: 'Пропустить' },
+      taken: 'Отмечено: принято.',
+      skipped: 'Отмечено: пропущено.',
+      gone: 'Этого напоминания больше нет.',
+    },
     photoChoice: '🩺 Медицинский документ',
     read: (kind: HealthDraftKind, link: string) =>
       `🩺 ${KINDS.ru[kind]} прочитан(ы). Проверьте и сохраните — пока вы этого не сделаете, ничего не записано:\n${link}`,

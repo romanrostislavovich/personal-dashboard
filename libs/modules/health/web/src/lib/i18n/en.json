@@ -7,7 +7,8 @@
     "medications": "Medications",
     "doctors": "Doctors and clinics",
     "results": "Results",
-    "summary": "For a doctor"
+    "summary": "For a doctor",
+    "profile": "Profile"
   },
   "all": "All",
   "country": "Country",
@@ -112,7 +113,13 @@
     "now": "now",
     "current": "Taken now",
     "past": "Taken before",
-    "empty": "No medications yet."
+    "empty": "No medications yet.",
+    "reminders": "Remind at",
+    "remindersHint": "Times on your clock, like 08:00, 20:00 — a message with “Taken” and “Skip”",
+    "adherence": "taken {{taken}} of {{of}} in 2 weeks",
+    "due": "{{time}} today:",
+    "taken": "Taken",
+    "skip": "Skip"
   },
   "document": {
     "add": "Add a document",
@@ -332,7 +339,8 @@
       "labs": "Latest lab results",
       "studies": "Studies",
       "visits": "Visits",
-      "visitTexts": "Complaints, examination and recommendations of each visit"
+      "visitTexts": "Complaints, examination and recommendations of each visit",
+      "profile": "Blood type, allergies, operations, vaccinations"
     },
     "leaveOut": "Leave out",
     "leaveOutHint": "A speciality left out takes its visits along, with what was diagnosed and prescribed at them.",
@@ -358,5 +366,49 @@
   },
   "digestOptions": {
     "nextVisit": "Upcoming visits to a doctor"
+  },
+  "profile": {
+    "bloodType": "Blood type",
+    "notes": "For an emergency",
+    "notesHint": "What a doctor must know at once: implants, a pacemaker, a contact person.",
+    "nextDue": "next dose: {{day}}",
+    "allergy": {
+      "title": "Allergies",
+      "add": "Add an allergy",
+      "edit": "Edit the allergy",
+      "empty": "No allergies recorded."
+    },
+    "vaccination": {
+      "title": "Vaccinations",
+      "add": "Add a vaccination",
+      "edit": "Edit the vaccination",
+      "empty": "No vaccinations recorded."
+    },
+    "operation": {
+      "title": "Operations",
+      "add": "Add an operation",
+      "edit": "Edit the operation",
+      "empty": "No operations recorded."
+    },
+    "severities": {
+      "mild": "mild",
+      "moderate": "moderate",
+      "severe": "severe"
+    },
+    "fields": {
+      "substance": "To what",
+      "reaction": "Reaction",
+      "severity": "Severity",
+      "since": "Known since",
+      "vaccine": "Vaccine",
+      "dose": "Dose (1/3, booster)",
+      "givenOn": "Given on",
+      "country": "Country (PL, UA…)",
+      "nextDueOn": "Next dose",
+      "notes": "Notes",
+      "title": "Operation",
+      "performedOn": "Date",
+      "clinic": "Clinic"
+    }
   }
 }

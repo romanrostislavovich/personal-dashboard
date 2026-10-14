@@ -1,4 +1,4 @@
-import { DiagnosisStatus, HealthStudyKind, SummaryLanguage } from '@pd/contracts';
+import { AllergySeverity, DiagnosisStatus, HealthStudyKind, SummaryLanguage } from '@pd/contracts';
 
 /**
  * The fixed words of a summary in the doctor's language: headings, statuses, specialities. The
@@ -38,12 +38,28 @@ export interface SummaryText {
   complaints: string;
   findings: string;
   recommendations: string;
+  bloodType: string;
+  allergies: string;
+  noAllergies: string;
+  reaction: string;
+  operations: string;
+  vaccinations: string;
+  vaccine: string;
+  severities: Record<AllergySeverity, string>;
   statuses: Record<DiagnosisStatus, string>;
   studyKinds: Record<HealthStudyKind, string>;
   specialities: Record<string, string>;
 }
 
 const en: SummaryText = {
+  bloodType: 'Blood type',
+  allergies: 'Allergies',
+  noAllergies: 'No known allergies.',
+  reaction: 'Reaction',
+  operations: 'Operations',
+  vaccinations: 'Vaccinations',
+  vaccine: 'Vaccine',
+  severities: { mild: 'mild', moderate: 'moderate', severe: 'severe' },
   title: 'Medical history summary',
   patient: 'Patient',
   madeOn: 'Compiled on',
@@ -118,6 +134,14 @@ const en: SummaryText = {
 };
 
 const pl: SummaryText = {
+  bloodType: 'Grupa krwi',
+  allergies: 'Alergie',
+  noAllergies: 'Brak znanych alergii.',
+  reaction: 'Reakcja',
+  operations: 'Operacje',
+  vaccinations: 'Szczepienia',
+  vaccine: 'Szczepionka',
+  severities: { mild: 'łagodna', moderate: 'umiarkowana', severe: 'ciężka' },
   title: 'Podsumowanie historii choroby',
   patient: 'Pacjent',
   madeOn: 'Sporządzono',
@@ -192,6 +216,14 @@ const pl: SummaryText = {
 };
 
 const uk: SummaryText = {
+  bloodType: 'Група крові',
+  allergies: 'Алергії',
+  noAllergies: 'Відомих алергій немає.',
+  reaction: 'Реакція',
+  operations: 'Операції',
+  vaccinations: 'Щеплення',
+  vaccine: 'Вакцина',
+  severities: { mild: 'легка', moderate: 'помірна', severe: 'важка' },
   title: 'Виписка з історії хвороби',
   patient: 'Пацієнт',
   madeOn: 'Складено',
@@ -266,6 +298,14 @@ const uk: SummaryText = {
 };
 
 const ru: SummaryText = {
+  bloodType: 'Группа крови',
+  allergies: 'Аллергии',
+  noAllergies: 'Известных аллергий нет.',
+  reaction: 'Реакция',
+  operations: 'Операции',
+  vaccinations: 'Прививки',
+  vaccine: 'Вакцина',
+  severities: { mild: 'лёгкая', moderate: 'умеренная', severe: 'тяжёлая' },
   title: 'Выписка из истории болезни',
   patient: 'Пациент',
   madeOn: 'Составлено',
@@ -340,6 +380,14 @@ const ru: SummaryText = {
 };
 
 const de: SummaryText = {
+  bloodType: 'Blutgruppe',
+  allergies: 'Allergien',
+  noAllergies: 'Keine bekannten Allergien.',
+  reaction: 'Reaktion',
+  operations: 'Operationen',
+  vaccinations: 'Impfungen',
+  vaccine: 'Impfstoff',
+  severities: { mild: 'leicht', moderate: 'mittel', severe: 'schwer' },
   title: 'Zusammenfassung der Krankengeschichte',
   patient: 'Patient',
   madeOn: 'Erstellt am',

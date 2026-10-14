@@ -5,11 +5,15 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthMedication, HealthRecord } from '@pd/contracts';
+import { HealthIntake, HealthMedication, HealthRecord } from '@pd/contracts';
 import { HealthDialogs } from '../dialogs/health-dialogs.service';
 import { HealthApi } from '../health.api';
+import { today } from '../health-labels';
 
 /** What is taken now, and what was taken before: when, how much, why it was stopped. */
+/** How far back "taken N of M" counts. */
+const ADHERENCE_DAYS = 14;
+
 @Component({
   selector: 'pd-health-medications-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -71,6 +75,26 @@ import { HealthApi } from '../health.api';
                       {{ 'health.medication.stopReason' | transloco }}: {{ medication.stopReason }}
                     </span>
                   }
+                  @if (medication.reminderTimes.length && !medication.stoppedOn) {
+                    <span class="hint reminders">
+                      <mat-icon>notifications</mat-icon>
+                      {{ medication.reminderTimes.join(', ') }}
+                      @if (adherence(data, medication); as taken) {
+                        · {{ 'health.medication.adherence' | transloco: taken }}
+                      }
+                    </span>
+                    @for (intake of pending(data, medication); track intake.id) {
+                      <span class="intake">
+                        {{ 'health.medication.due' | transloco: { time: intake.time } }}
+                        <button matButton="tonal" (click)="answer(intake, 'taken')">
+                          {{ 'health.medication.taken' | transloco }}
+                        </button>
+                        <button matButton (click)="answer(intake, 'skipped')">
+                          {{ 'health.medication.skip' | transloco }}
+                        </button>
+                      </span>
+                    }
+                  }
                   @if (medication.notes) {
                     <span class="words">{{ medication.notes }}</span>
                   }
@@ -126,6 +150,23 @@ import { HealthApi } from '../health.api';
       min-width: 0;
       overflow-wrap: anywhere;
     }
+    .reminders {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .reminders mat-icon {
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+    }
+    .intake {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
     .words {
       white-space: pre-wrap;
     }
@@ -148,6 +189,31 @@ export class MedicationsPage {
     this.record.hasValue() ? this.record.value() : undefined,
   );
   /** The server sorts them: still taken first. */
+  /** Today's reminders not answered yet: "taken" or "skipped" from the page too. */
+  protected pending(data: HealthRecord, medication: HealthMedication): HealthIntake[] {
+    const day = today();
+    return data.intakes.filter(
+      (i) => i.medicationId === medication.id && i.day === day && i.status === 'pending',
+    );
+  }
+
+  /** Of the answered reminders of the last two weeks, how many were taken. */
+  protected adherence(
+    data: HealthRecord,
+    medication: HealthMedication,
+  ): { taken: number; of: number } | null {
+    const since = new Date(Date.now() - ADHERENCE_DAYS * 86_400_000).toISOString().slice(0, 10);
+    const intakes = data.intakes.filter((i) => i.medicationId === medication.id && i.day >= since);
+    return intakes.length
+      ? { taken: intakes.filter((i) => i.status === 'taken').length, of: intakes.length }
+      : null;
+  }
+
+  protected async answer(intake: HealthIntake, status: 'taken' | 'skipped'): Promise<void> {
+    await this.api.client.answerIntake(intake.id, { status });
+    this.record.reload();
+  }
+
   protected readonly groups = computed(() => {
     const medications = this.data()?.medications ?? [];
     return [

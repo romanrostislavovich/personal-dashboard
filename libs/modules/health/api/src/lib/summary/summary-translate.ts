@@ -12,6 +12,11 @@ export function translatableTexts(summary: HealthSummary): string[] {
       texts.add(text);
     }
   };
+  summary.profile?.allergies.forEach((a) => {
+    add(a.substance);
+    add(a.reaction);
+  });
+  summary.profile?.operations.forEach((o) => add(o.title));
   summary.conditions?.forEach((c) => add(c.title));
   summary.medications?.forEach((m) => {
     add(m.dose);
@@ -42,6 +47,17 @@ export function withTranslations(
   return {
     ...summary,
     translated: translations.size > 0,
+    profile: summary.profile
+      ? {
+          ...summary.profile,
+          allergies: summary.profile.allergies.map((a) => ({
+            ...a,
+            substance: t(a.substance),
+            reaction: t(a.reaction),
+          })),
+          operations: summary.profile.operations.map((o) => ({ ...o, title: t(o.title) })),
+        }
+      : null,
     conditions: summary.conditions?.map((c) => ({ ...c, title: t(c.title) })) ?? null,
     medications:
       summary.medications?.map((m) => ({

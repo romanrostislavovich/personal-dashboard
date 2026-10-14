@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DemoService } from '@pd/api-core';
 import { HealthService } from './health.service';
 import { LabsService } from './labs.service';
+import { ProfileService } from './profile/profile.service';
 
 /**
  * The demo data of Health: a made-up history across two countries — a family doctor in Kyiv,
@@ -14,6 +15,7 @@ export class HealthDemo implements OnModuleInit {
     private readonly demo: DemoService,
     private readonly health: HealthService,
     private readonly labs: LabsService,
+    private readonly profiles: ProfileService,
   ) {}
 
   onModuleInit(): void {
@@ -24,6 +26,23 @@ export class HealthDemo implements OnModuleInit {
   }
 
   private async seed(userId: string, daysAgo: (days: number) => string): Promise<void> {
+    await this.profiles.saveProfile(userId, { bloodType: 'A+' });
+    await this.profiles.saveAllergy(userId, {
+      substance: 'Пеніцилін',
+      reaction: 'Кропив’янка',
+      severity: 'moderate',
+    });
+    await this.profiles.saveVaccination(userId, {
+      vaccine: 'Tetanus, diphtheria (Td)',
+      givenOn: daysAgo(3400),
+      country: 'UA',
+      nextDueOn: daysAgo(-250),
+    });
+    await this.profiles.saveOperation(userId, {
+      title: 'Апендектомія',
+      performedOn: daysAgo(6200),
+      clinic: 'Міська лікарня №1, Київ',
+    });
     const kyiv = await this.health.saveClinic(userId, {
       name: 'Сімейна клініка «Добробут»',
       country: 'UA',
@@ -70,6 +89,7 @@ export class HealthDemo implements OnModuleInit {
       stoppedOn: daysAgo(900),
       stopReason: 'Без нападів пів року',
       visitId: old.id,
+      reminderTimes: [],
     });
 
     const recent = await this.health.saveVisit(userId, {
@@ -97,6 +117,7 @@ export class HealthDemo implements OnModuleInit {
       schedule: 'rano, przed śniadaniem',
       startedOn: daysAgo(20),
       visitId: recent.id,
+      reminderTimes: ['07:30'],
     });
 
     await this.labs.savePanel(userId, {

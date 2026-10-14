@@ -172,7 +172,8 @@ unit, with the laboratory's own range, and studies with their conclusions. ✅ S
 document read by the AI into a draft that is checked beside the original before it is saved,
 from the page or a Telegram photo. ✅ Stage 4: a summary for a new doctor in their language — to
 print, for Word, or as a revocable link. ✅ Stage 5: the treatment over the mood in
-Psychology, recommendations as tasks, the next visit in the digest, search, demo data.
+Psychology, recommendations as tasks, the next visit in the digest, search, demo data. ✅ Stage
+6: the profile (blood type, allergies, vaccinations, operations) and medication reminders.
 
 - **Health** — your own medical record: blood type, allergies, chronic conditions, vaccinations,
   operations, doctors and their contacts; medications and when to take them, doctor visits, lab

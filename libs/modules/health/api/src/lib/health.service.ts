@@ -33,8 +33,13 @@ import {
   HealthVisitRow,
   healthVisits,
 } from './health.schema';
+import { recentIntakes } from './intakes/intakes.service';
 import { LabsService } from './labs.service';
 import { found, removeOwned } from './owned';
+import { readProfile } from './profile/profile.service';
+
+/** How far back the reminders and their answers are read. */
+const INTAKE_DAYS = 30;
 
 export type ValidClinicInput = z.output<typeof healthClinicInputSchema>;
 export type ValidDoctorInput = z.output<typeof healthDoctorInputSchema>;
@@ -81,6 +86,11 @@ export class HealthService {
         this.labs.panels(userId),
         this.labs.studies(userId),
       ]);
+    const since = new Date(Date.now() - INTAKE_DAYS * 86_400_000).toISOString().slice(0, 10);
+    const [profile, intakes] = await Promise.all([
+      readProfile(this.db, userId),
+      recentIntakes(this.db, userId, since),
+    ]);
     return {
       // Names are encrypted, so they are sorted here and not in the query.
       clinics: clinics.map(toClinic).sort(byName),
@@ -91,6 +101,8 @@ export class HealthService {
       documents: documents.map(toDocument),
       labPanels,
       studies,
+      profile,
+      intakes,
     };
   }
 
@@ -236,6 +248,7 @@ export class HealthService {
       stopReason: input.stopReason || null,
       visitId: input.visitId ?? null,
       notes: input.notes || null,
+      reminderTimes: [...new Set(input.reminderTimes)].sort(),
     };
     const [row] = id
       ? await this.db
@@ -424,6 +437,7 @@ function toMedication(row: HealthMedicationRow): HealthMedication {
     stopReason: row.stopReason,
     visitId: row.visitId,
     notes: row.notes,
+    reminderTimes: row.reminderTimes,
   };
 }
 

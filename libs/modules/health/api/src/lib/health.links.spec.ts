@@ -19,6 +19,8 @@ const record: HealthRecord = {
   documents: [],
   labPanels: [],
   studies: [],
+  profile: { bloodType: null, notes: null, allergies: [], vaccinations: [], operations: [] },
+  intakes: [],
 };
 
 describe('mindPeriods', () => {
@@ -102,5 +104,6 @@ function medication(name: string, visitId: string, startedOn: string, stoppedOn:
     stopReason: null,
     visitId,
     notes: null,
+    reminderTimes: [],
   };
 }

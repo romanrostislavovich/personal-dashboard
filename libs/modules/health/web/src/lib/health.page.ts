@@ -6,6 +6,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 /** Subsections of Health: each is a child route, so a tab has its own address. */
 const TABS = [
   { path: 'history', labelKey: 'health.tabs.history' },
+  { path: 'profile', labelKey: 'health.tabs.profile' },
   { path: 'conditions', labelKey: 'health.tabs.conditions' },
   { path: 'results', labelKey: 'health.tabs.results' },
   { path: 'medications', labelKey: 'health.tabs.medications' },

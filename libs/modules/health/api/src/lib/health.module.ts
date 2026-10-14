@@ -10,7 +10,11 @@ import { HealthSearch } from './health.search';
 import { HealthServerActions } from './health.server-actions';
 import { HealthService } from './health.service';
 import { IcdDictionaryService } from './icd/icd-dictionary.service';
+import { IntakesJobs } from './intakes/intakes.jobs';
+import { IntakesService } from './intakes/intakes.service';
 import { LabsService } from './labs.service';
+import { ProfileController } from './profile/profile.controller';
+import { ProfileService } from './profile/profile.service';
 import { SharedSummaryController } from './summary/shared.controller';
 import { SummaryController } from './summary/summary.controller';
 import { SummaryService } from './summary/summary.service';
@@ -21,7 +25,7 @@ import { SummaryService } from './summary/summary.service';
  * module is in docs/health.md.
  */
 @Module({
-  controllers: [HealthController, SummaryController, SharedSummaryController],
+  controllers: [HealthController, ProfileController, SummaryController, SharedSummaryController],
   providers: [
     HealthService,
     LabsService,
@@ -35,6 +39,9 @@ import { SummaryService } from './summary/summary.service';
     HealthDigest,
     HealthSearch,
     HealthDemo,
+    ProfileService,
+    IntakesService,
+    IntakesJobs,
   ],
 })
 export class HealthModule {}
