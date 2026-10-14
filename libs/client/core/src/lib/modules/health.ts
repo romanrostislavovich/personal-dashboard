@@ -14,6 +14,7 @@ import {
   HealthVisitInput,
   IcdDictionary,
   IcdEntry,
+  IcdImportInput,
   IcdLoadInput,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
@@ -76,6 +77,14 @@ export function healthApi(api: ApiClient) {
     dictionaries: () => api.read<IcdDictionary[]>(HEALTH_READS.dictionaries()),
     /** Downloads a dictionary from its publisher on the server; takes a minute. */
     loadDictionary: (input: IcdLoadInput) => api.post<IcdDictionary[]>(`${BASE}/icd/load`, input),
+    /** A dictionary from a CSV or XLSX file the user downloaded themselves. */
+    importDictionary: (input: IcdImportInput, file: Blob, name: string) => {
+      const form = new FormData();
+      form.append('system', input.system);
+      form.append('language', input.language);
+      form.append('file', file, name);
+      return api.post<IcdDictionary[]>(`${BASE}/icd/import`, form);
+    },
     searchIcd: (q: string, limit?: number) =>
       api.read<IcdEntry[]>(apiRequest(`${BASE}/icd/search`, { q, limit })),
   };

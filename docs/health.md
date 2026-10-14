@@ -79,9 +79,11 @@ What the licences allow (checked in October 2026): ICD-10 is © WHO and may not 
 an open-source program, so the user accepts WHO's terms and their own server downloads the
 English ClaML from icdcdn.who.int (done). ICD-11 is CC BY-ND 3.0 IGO and may be bundled as code,
 title and URI, in English and Russian — but its codes are not ICD-10's, and a crosswalk of our
-own is not allowed. Next to load the same way: the Russian ICD-10 of the Ministry of Health
-(НСИ, needs a free key) and ICD-11 en / ru. No Polish or Ukrainian list may be redistributed
-(Ukraine uses ICD-10-AM, licensed to governments only): those titles come from the documents.
+own is not allowed. No Russian, Polish or Ukrainian list may be redistributed either (Ukraine
+uses ICD-10-AM, licensed to governments only), so any of them is loaded from a table the user
+downloads themselves — CSV or XLSX, whatever its columns are called (done: the column of codes
+and the one of titles are found by their content, `icd-table.ts`). The Russian ICD-10 of the
+Ministry of Health is OID 1.2.643.5.1.13.13.11.1005 on nsi.rosminzdrav.ru. Later: ICD-11 en / ru.
 
 ## Stages
 

@@ -156,6 +156,12 @@
     "reload": "Download again",
     "loading": "Downloading and reading the dictionary, about a minute…",
     "failed": "Could not download the dictionary. Try again later.",
-    "attribution": "International Statistical Classification of Diseases and Related Health Problems, 10th Revision (ICD-10), © World Health Organization."
+    "attribution": "International Statistical Classification of Diseases and Related Health Problems, 10th Revision (ICD-10), © World Health Organization.",
+    "fromFile": "From a file of your own",
+    "fromFileHint": "Russian, Ukrainian or Polish titles are not allowed to be shipped either: download the table yourself (CSV or XLSX with a column of codes and one of names — for example the ICD-10 of the Russian Ministry of Health or the Ukrainian НК 025) and load it here. It replaces what was loaded for the same language and classification.",
+    "language": "Language",
+    "chooseFile": "Load a file",
+    "noCodes": "No column of ICD codes was found in the file.",
+    "tooBig": "The file is over 30 MB."
   }
 }

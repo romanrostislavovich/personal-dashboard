@@ -256,6 +256,22 @@ export const icdLoadSchema = z.object({
 });
 export type IcdLoadInput = z.input<typeof icdLoadSchema>;
 
+/** The languages of a dictionary; the ones WHO does not give come from a file of the user's. */
+export const ICD_LANGUAGES = ['uk', 'ru', 'pl', 'en'] as const;
+
+export const ICD_FILE_MAX_BYTES = 30 * 1024 * 1024;
+
+/**
+ * A dictionary from a file the user downloaded themselves (CSV or XLSX with a column of codes
+ * and one of titles): the Russian ICD-10 of the Ministry of Health, the Ukrainian НК 025…
+ * It replaces what was loaded for the same classification and language.
+ */
+export const icdImportSchema = z.object({
+  system: z.enum(['icd10', 'icd10am', 'icd11']),
+  language: z.enum(ICD_LANGUAGES),
+});
+export type IcdImportInput = z.input<typeof icdImportSchema>;
+
 export interface IcdDictionary {
   system: IcdSystem;
   language: string;

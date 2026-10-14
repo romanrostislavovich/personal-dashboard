@@ -25,7 +25,10 @@ import {
   healthDocumentInputSchema,
   healthMedicationInputSchema,
   healthVisitInputSchema,
+  ICD_FILE_MAX_BYTES,
   IcdDictionary,
+  IcdImportInput,
+  icdImportSchema,
   IcdLoadInput,
   icdLoadSchema,
   IcdSearchQuery,
@@ -46,6 +49,7 @@ import { IcdDictionaryService } from './icd/icd-dictionary.service';
 interface UploadedDocument {
   buffer: Buffer;
   mimetype: string;
+  originalname: string;
 }
 
 /**
@@ -242,6 +246,20 @@ export class HealthController {
     @Query(new ZodValidationPipe(icdSearchSchema)) query: IcdSearchQuery,
   ) {
     return this.icd.search(user.id, query);
+  }
+
+  /** From a CSV or XLSX file of the user's (`file`), for its classification and language. */
+  @Post('icd/import')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: ICD_FILE_MAX_BYTES } }))
+  importIcd(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(icdImportSchema)) input: IcdImportInput,
+    @UploadedFile() file: UploadedDocument | undefined,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Expected a CSV or XLSX file in the "file" field');
+    }
+    return this.icd.import(user.id, input, { name: file.originalname, data: file.buffer });
   }
 
   /** Downloads it from its publisher, on the server (a sync client asks the server). */
