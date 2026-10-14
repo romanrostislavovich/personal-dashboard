@@ -23,9 +23,14 @@ import {
   healthDiagnosisInputSchema,
   healthDoctorInputSchema,
   healthDocumentInputSchema,
+  healthLabPanelInputSchema,
+  healthStudyInputSchema,
   healthMedicationInputSchema,
   healthVisitInputSchema,
+  ICD_FILE_MAX_BYTES,
   IcdDictionary,
+  IcdImportInput,
+  icdImportSchema,
   IcdLoadInput,
   icdLoadSchema,
   IcdSearchQuery,
@@ -42,10 +47,12 @@ import {
   ValidVisitInput,
 } from './health.service';
 import { IcdDictionaryService } from './icd/icd-dictionary.service';
+import { LabsService, ValidLabPanelInput, ValidStudyInput } from './labs.service';
 
 interface UploadedDocument {
   buffer: Buffer;
   mimetype: string;
+  originalname: string;
 }
 
 /**
@@ -56,6 +63,7 @@ interface UploadedDocument {
 export class HealthController {
   constructor(
     private readonly health: HealthService,
+    private readonly labs: LabsService,
     private readonly icd: IcdDictionaryService,
     private readonly actions: ServerActions,
   ) {}
@@ -190,6 +198,56 @@ export class HealthController {
     return this.health.removeMedication(user.id, id);
   }
 
+  // --- Lab results: a report with its lines, saved as a whole ---
+
+  @Post('labs')
+  addLabPanel(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(healthLabPanelInputSchema)) input: ValidLabPanelInput,
+  ) {
+    return this.labs.savePanel(user.id, input);
+  }
+
+  @Put('labs/:id')
+  updateLabPanel(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(healthLabPanelInputSchema)) input: ValidLabPanelInput,
+  ) {
+    return this.labs.savePanel(user.id, input, id);
+  }
+
+  @Delete('labs/:id')
+  @HttpCode(204)
+  removeLabPanel(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.labs.removePanel(user.id, id);
+  }
+
+  // --- Studies ---
+
+  @Post('studies')
+  addStudy(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(healthStudyInputSchema)) input: ValidStudyInput,
+  ) {
+    return this.labs.saveStudy(user.id, input);
+  }
+
+  @Put('studies/:id')
+  updateStudy(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(healthStudyInputSchema)) input: ValidStudyInput,
+  ) {
+    return this.labs.saveStudy(user.id, input, id);
+  }
+
+  @Delete('studies/:id')
+  @HttpCode(204)
+  removeStudy(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.labs.removeStudy(user.id, id);
+  }
+
   // --- Documents ---
 
   /** The file in `file`, its description in the other fields of the form. */
@@ -242,6 +300,20 @@ export class HealthController {
     @Query(new ZodValidationPipe(icdSearchSchema)) query: IcdSearchQuery,
   ) {
     return this.icd.search(user.id, query);
+  }
+
+  /** From a CSV or XLSX file of the user's (`file`), for its classification and language. */
+  @Post('icd/import')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: ICD_FILE_MAX_BYTES } }))
+  importIcd(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(icdImportSchema)) input: IcdImportInput,
+    @UploadedFile() file: UploadedDocument | undefined,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Expected a CSV or XLSX file in the "file" field');
+    }
+    return this.icd.import(user.id, input, { name: file.originalname, data: file.buffer });
   }
 
   /** Downloads it from its publisher, on the server (a sync client asks the server). */

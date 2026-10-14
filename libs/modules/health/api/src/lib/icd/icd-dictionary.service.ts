@@ -1,10 +1,25 @@
-import { BadGatewayException, Inject, Injectable, Logger } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
-import { IcdDictionary, IcdEntry, IcdSearchQuery, IcdSource, IcdSystem } from '@pd/contracts';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
+import { DB, Database, decodeText } from '@pd/api-core';
+import {
+  IcdDictionary,
+  IcdEntry,
+  IcdImportInput,
+  IcdSearchQuery,
+  IcdSource,
+  IcdSystem,
+} from '@pd/contracts';
 import { and, asc, count, eq, ilike, or, sql } from 'drizzle-orm';
 import { unzipSync } from 'fflate';
 import { healthIcdCodes } from '../health.schema';
-import { clamlCodes } from './claml';
+import readXlsxFile from 'read-excel-file/node';
+import { ClamlCode, clamlCodes } from './claml';
+import { csvRows, icdTable } from './icd-table';
 
 /** Where each source is downloaded from, and what it holds. */
 const SOURCES: Record<IcdSource, { url: string; system: IcdSystem; language: string }> = {
@@ -50,6 +65,38 @@ export class IcdDictionaryService {
     if (!codes.length) {
       throw new BadGatewayException('The dictionary has no codes: the file may have changed');
     }
+    await this.replace(userId, system, language, codes);
+    this.logger.log(`ICD ${source}: ${codes.length} codes loaded`);
+    return this.dictionaries(userId);
+  }
+
+  /**
+   * A dictionary from a table the user downloaded themselves (CSV or XLSX): no list in Russian
+   * or Ukrainian may be shipped either, but anyone may load the one they have.
+   */
+  async import(
+    userId: string,
+    { system, language }: IcdImportInput,
+    file: { name: string; data: Buffer },
+  ): Promise<IcdDictionary[]> {
+    const rows = file.name.toLowerCase().endsWith('.xlsx')
+      ? (await readXlsxFile(file.data)).flatMap((sheet) => sheet.data)
+      : csvRows(decodeText(file.data));
+    const codes = icdTable(rows);
+    if (!codes.length) {
+      throw new BadRequestException('No column of ICD codes was found in the file');
+    }
+    await this.replace(userId, system, language, codes);
+    this.logger.log(`ICD ${system}/${language}: ${codes.length} codes imported from a file`);
+    return this.dictionaries(userId);
+  }
+
+  private async replace(
+    userId: string,
+    system: IcdSystem,
+    language: string,
+    codes: ClamlCode[],
+  ): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx
         .delete(healthIcdCodes)
@@ -71,8 +118,6 @@ export class IcdDictionaryService {
           .onConflictDoNothing();
       }
     });
-    this.logger.log(`ICD ${source}: ${codes.length} codes loaded`);
-    return this.dictionaries(userId);
   }
 
   /** By the start of a code (`F41`) or by a word of the title, codes first. */

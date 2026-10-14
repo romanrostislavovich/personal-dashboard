@@ -2,10 +2,18 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { IcdSource } from '@pd/contracts';
+import {
+  ICD_FILE_MAX_BYTES,
+  ICD_LANGUAGES,
+  IcdDictionary,
+  IcdImportInput,
+  IcdSource,
+} from '@pd/contracts';
 import { HealthApi } from '../health.api';
 
 /**
@@ -19,8 +27,10 @@ import { HealthApi } from '../health.api';
     MatButtonModule,
     MatCardModule,
     MatCheckboxModule,
+    MatFormFieldModule,
     MatIconModule,
     MatProgressBarModule,
+    MatSelectModule,
     TranslocoPipe,
   ],
   template: `
@@ -62,12 +72,44 @@ import { HealthApi } from '../health.api';
             {{ (loaded().length ? 'health.icd.reload' : 'health.icd.load') | transloco }}
           </button>
         </div>
+
+        <h3 class="section">{{ 'health.icd.fromFile' | transloco }}</h3>
+        <p class="hint">{{ 'health.icd.fromFileHint' | transloco }}</p>
+        <div class="file">
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>{{ 'health.icd.language' | transloco }}</mat-label>
+            <mat-select [value]="language()" (selectionChange)="language.set($event.value)">
+              @for (code of languages; track code) {
+                <mat-option [value]="code">{{ 'health.languages.' + code | transloco }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>{{ 'health.diagnosis.system' | transloco }}</mat-label>
+            <mat-select [value]="system()" (selectionChange)="system.set($event.value)">
+              @for (code of systems; track code) {
+                <mat-option [value]="code">{{ 'health.systems.' + code | transloco }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button matButton="tonal" [disabled]="busy()" (click)="input.click()">
+            <mat-icon>upload_file</mat-icon> {{ 'health.icd.chooseFile' | transloco }}
+          </button>
+          <input
+            #input
+            type="file"
+            hidden
+            accept=".csv,.txt,.xlsx"
+            (change)="importFile($any($event.target).files?.[0]); input.value = ''"
+          />
+        </div>
+
         @if (busy()) {
           <mat-progress-bar mode="indeterminate" />
           <p class="hint">{{ 'health.icd.loading' | transloco }}</p>
         }
         @if (error()) {
-          <p class="error" role="alert">{{ 'health.icd.failed' | transloco }}</p>
+          <p class="error" role="alert">{{ error() | transloco }}</p>
         }
         <p class="attribution">{{ 'health.icd.attribution' | transloco }}</p>
       </mat-card-content>
@@ -94,6 +136,19 @@ import { HealthApi } from '../health.api';
     .attribution {
       font: var(--mat-sys-body-small);
     }
+    .section {
+      margin: 12px 0 0;
+      font: var(--mat-sys-title-small);
+    }
+    .file {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+    .file mat-form-field {
+      width: 200px;
+    }
     .error {
       margin: 0;
       color: var(--mat-sys-error);
@@ -110,15 +165,44 @@ export class IcdDictionaryIntegration {
   );
   protected readonly accepted = signal(false);
   protected readonly busy = signal(false);
-  protected readonly error = signal(false);
+  /** The translation key of the last failure; `null` — none. */
+  protected readonly error = signal<string | null>(null);
 
-  protected async load(source: IcdSource): Promise<void> {
+  protected readonly languages = ICD_LANGUAGES;
+  protected readonly systems = ['icd10', 'icd10am', 'icd11'] as const;
+  protected readonly language = signal<IcdImportInput['language']>('ru');
+  protected readonly system = signal<IcdImportInput['system']>('icd10');
+
+  protected load(source: IcdSource): Promise<void> {
+    return this.run('health.icd.failed', () =>
+      this.api.client.loadDictionary({ source, acceptTerms: true }),
+    );
+  }
+
+  protected importFile(file: File | undefined): Promise<void> {
+    if (!file) {
+      return Promise.resolve();
+    }
+    if (file.size > ICD_FILE_MAX_BYTES) {
+      this.error.set('health.icd.tooBig');
+      return Promise.resolve();
+    }
+    return this.run('health.icd.noCodes', () =>
+      this.api.client.importDictionary(
+        { language: this.language(), system: this.system() },
+        file,
+        file.name,
+      ),
+    );
+  }
+
+  private async run(failure: string, request: () => Promise<IcdDictionary[]>): Promise<void> {
     this.busy.set(true);
-    this.error.set(false);
+    this.error.set(null);
     try {
-      this.dictionaries.set(await this.api.client.loadDictionary({ source, acceptTerms: true }));
+      this.dictionaries.set(await request());
     } catch {
-      this.error.set(true);
+      this.error.set(failure);
     } finally {
       this.busy.set(false);
     }

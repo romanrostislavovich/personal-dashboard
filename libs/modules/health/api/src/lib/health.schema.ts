@@ -1,7 +1,8 @@
 import { encryptedBytes, encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
-import { DiagnosisStatus, HealthDocumentKind, IcdSystem } from '@pd/contracts';
+import { DiagnosisStatus, HealthDocumentKind, HealthStudyKind, IcdSystem } from '@pd/contracts';
 import {
   date,
+  doublePrecision,
   index,
   integer,
   pgTable,
@@ -145,6 +146,71 @@ export const healthDocuments = pgTable(
   (table) => [index().on(table.userId)],
 );
 
+/** A lab report: the day the samples were taken, the laboratory, and its lines. */
+export const healthLabPanels = pgTable(
+  'health_lab_panels',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: owner(),
+    takenOn: date({ mode: 'string' }).notNull(),
+    laboratory: encryptedText(),
+    country: text(),
+    visitId: uuid().references(() => healthVisits.id, { onDelete: 'set null' }),
+    documentId: uuid().references(() => healthDocuments.id, { onDelete: 'set null' }),
+    notes: encryptedText(),
+    createdAt: created(),
+    updatedAt: updated(),
+  },
+  (table) => [index().on(table.userId, table.takenOn)],
+);
+
+/**
+ * A line of a lab report as the laboratory gave it — its own unit and range; the value in the
+ * analyte's unit is worked out on reading (see toCanonical), so a better table fixes old ones.
+ */
+export const healthLabValues = pgTable(
+  'health_lab_values',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: owner(),
+    panelId: uuid()
+      .notNull()
+      .references(() => healthLabPanels.id, { onDelete: 'cascade' }),
+    /** The order of the report. */
+    position: integer().notNull(),
+    name: encryptedText().notNull(),
+    analyte: text(),
+    value: doublePrecision(),
+    textValue: encryptedText(),
+    unit: text(),
+    refLow: doublePrecision(),
+    refHigh: doublePrecision(),
+    refText: encryptedText(),
+    createdAt: created(),
+    updatedAt: updated(),
+  },
+  (table) => [index().on(table.panelId), index().on(table.userId, table.analyte)],
+);
+
+/** Ultrasound, MRI, ECG and the like, as their conclusions. */
+export const healthStudies = pgTable(
+  'health_studies',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: owner(),
+    kind: text().$type<HealthStudyKind>().notNull(),
+    area: encryptedText(),
+    performedOn: date({ mode: 'string' }).notNull(),
+    conclusion: encryptedText(),
+    visitId: uuid().references(() => healthVisits.id, { onDelete: 'set null' }),
+    documentId: uuid().references(() => healthDocuments.id, { onDelete: 'set null' }),
+    notes: encryptedText(),
+    createdAt: created(),
+    updatedAt: updated(),
+  },
+  (table) => [index().on(table.userId, table.performedOn)],
+);
+
 /**
  * The ICD dictionary the user loaded from its publisher (see IcdDictionaryService). It is
  * never shipped with the dashboard and never exported: the publisher's terms allow neither.
@@ -168,6 +234,9 @@ registerEncryptedTables(
   healthDiagnoses,
   healthMedications,
   healthDocuments,
+  healthLabPanels,
+  healthLabValues,
+  healthStudies,
 );
 
 export type HealthClinicRow = typeof healthClinics.$inferSelect;
@@ -176,3 +245,6 @@ export type HealthVisitRow = typeof healthVisits.$inferSelect;
 export type HealthDiagnosisRow = typeof healthDiagnoses.$inferSelect;
 export type HealthMedicationRow = typeof healthMedications.$inferSelect;
 export type HealthDocumentRow = typeof healthDocuments.$inferSelect;
+export type HealthLabPanelRow = typeof healthLabPanels.$inferSelect;
+export type HealthLabValueRow = typeof healthLabValues.$inferSelect;
+export type HealthStudyRow = typeof healthStudies.$inferSelect;

@@ -9,7 +9,9 @@ import { ClinicDialog } from './clinic.dialog';
 import { DiagnosisDialog, DiagnosisDialogData } from './diagnosis.dialog';
 import { DoctorDialog, DoctorDialogData } from './doctor.dialog';
 import { DocumentDialog, DocumentDialogData } from './document.dialog';
+import { LabPanelDialog, LabPanelDialogData } from './lab-panel.dialog';
 import { MedicationDialog, MedicationDialogData } from './medication.dialog';
+import { StudyDialog, StudyDialogData } from './study.dialog';
 import { VisitDialog, VisitDialogData } from './visit.dialog';
 
 /**
@@ -36,6 +38,14 @@ export class HealthDialogs {
 
   document(data: DocumentDialogData) {
     return this.open(DocumentDialog, data);
+  }
+
+  labPanel(data: LabPanelDialogData) {
+    return this.open(LabPanelDialog, data);
+  }
+
+  study(data: StudyDialogData) {
+    return this.open(StudyDialog, data);
   }
 
   clinic(clinic: HealthClinic | null) {

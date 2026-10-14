@@ -7,13 +7,18 @@ import {
   HealthDoctorInput,
   HealthDocument,
   HealthDocumentInput,
+  HealthLabPanel,
+  HealthLabPanelInput,
   HealthMedication,
   HealthMedicationInput,
   HealthRecord,
+  HealthStudy,
+  HealthStudyInput,
   HealthVisit,
   HealthVisitInput,
   IcdDictionary,
   IcdEntry,
+  IcdImportInput,
   IcdLoadInput,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
@@ -56,6 +61,15 @@ export function healthApi(api: ApiClient) {
       save<HealthMedication>(api, 'medications', input, id),
     removeMedication: (id: string) => api.delete(`${BASE}/medications/${id}`),
 
+    /** A lab report with all its lines; changing one replaces the lines as a whole. */
+    saveLabPanel: (input: HealthLabPanelInput, id?: string) =>
+      save<HealthLabPanel>(api, 'labs', input, id),
+    removeLabPanel: (id: string) => api.delete(`${BASE}/labs/${id}`),
+
+    saveStudy: (input: HealthStudyInput, id?: string) =>
+      save<HealthStudy>(api, 'studies', input, id),
+    removeStudy: (id: string) => api.delete(`${BASE}/studies/${id}`),
+
     /** The file goes as a form with its description; empty fields are left out. */
     uploadDocument: (input: HealthDocumentInput, file: Blob) => {
       const form = new FormData();
@@ -76,6 +90,14 @@ export function healthApi(api: ApiClient) {
     dictionaries: () => api.read<IcdDictionary[]>(HEALTH_READS.dictionaries()),
     /** Downloads a dictionary from its publisher on the server; takes a minute. */
     loadDictionary: (input: IcdLoadInput) => api.post<IcdDictionary[]>(`${BASE}/icd/load`, input),
+    /** A dictionary from a CSV or XLSX file the user downloaded themselves. */
+    importDictionary: (input: IcdImportInput, file: Blob, name: string) => {
+      const form = new FormData();
+      form.append('system', input.system);
+      form.append('language', input.language);
+      form.append('file', file, name);
+      return api.post<IcdDictionary[]>(`${BASE}/icd/import`, form);
+    },
     searchIcd: (q: string, limit?: number) =>
       api.read<IcdEntry[]>(apiRequest(`${BASE}/icd/search`, { q, limit })),
   };

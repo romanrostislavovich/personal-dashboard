@@ -23,6 +23,10 @@ export const healthModule: WebDashboardModule = {
           loadComponent: () => import('./conditions/conditions.page').then((m) => m.ConditionsPage),
         },
         {
+          path: 'results',
+          loadComponent: () => import('./results/results.page').then((m) => m.ResultsPage),
+        },
+        {
           path: 'medications',
           loadComponent: () =>
             import('./medications/medications.page').then((m) => m.MedicationsPage),
@@ -44,6 +48,12 @@ export const healthModule: WebDashboardModule = {
       labelKey: 'health.tabs.conditions',
       icon: 'diagnosis',
       url: '/health/conditions',
+    },
+    {
+      id: 'health.results',
+      labelKey: 'health.tabs.results',
+      icon: 'labs',
+      url: '/health/results',
     },
     {
       id: 'health.medications',

@@ -8,7 +8,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthDocument, HealthRecord, HealthVisit } from '@pd/contracts';
+import { HealthDocument, HealthLabPanel, HealthRecord, HealthVisit } from '@pd/contracts';
 import { HealthDialogs } from '../dialogs/health-dialogs.service';
 import { HealthApi } from '../health.api';
 import { CountryPipe, SpecialityPipe } from '../health-labels';
@@ -171,6 +171,37 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
                 </span>
               </div>
             }
+            @for (panel of panelsOf(data, visit); track panel.id) {
+              <div class="line">
+                <mat-icon>labs</mat-icon>
+                <span>
+                  {{ 'health.labs.one' | transloco }}
+                  @if (panel.laboratory) {
+                    · {{ panel.laboratory }}
+                  }
+                  <span class="hint">
+                    · {{ 'health.labs.lines' | transloco: { count: panel.values.length } }}
+                    @if (outOfRange(panel); as out) {
+                      · {{ 'health.labs.outOfRange' | transloco: { count: out } }}
+                    }
+                  </span>
+                </span>
+              </div>
+            }
+            @for (study of studiesOf(data, visit); track study.id) {
+              <div class="line">
+                <mat-icon>radiology</mat-icon>
+                <span>
+                  <b>{{ 'health.studyKinds.' + study.kind | transloco }}</b>
+                  @if (study.area) {
+                    {{ study.area }}
+                  }
+                  @if (study.conclusion) {
+                    <span class="hint">· {{ study.conclusion }}</span>
+                  }
+                </span>
+              </div>
+            }
             @for (document of documentsOf(data, visit); track document.id) {
               <button matButton class="document" (click)="open(document)">
                 <mat-icon>{{
@@ -193,6 +224,12 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
               </button>
               <button matButton (click)="addMedication(data, visit)">
                 <mat-icon>add</mat-icon> {{ 'health.medication.one' | transloco }}
+              </button>
+              <button matButton (click)="addPanel(data, visit)">
+                <mat-icon>add</mat-icon> {{ 'health.labs.one' | transloco }}
+              </button>
+              <button matButton (click)="addStudy(data, visit)">
+                <mat-icon>add</mat-icon> {{ 'health.study.one' | transloco }}
               </button>
               <button matButton (click)="addDocument(visit)">
                 <mat-icon>add</mat-icon> {{ 'health.document.one' | transloco }}
@@ -379,6 +416,31 @@ export class HistoryPage {
 
   protected medicationsOf(data: HealthRecord, visit: HealthVisit) {
     return data.medications.filter((medication) => medication.visitId === visit.id);
+  }
+
+  protected panelsOf(data: HealthRecord, visit: HealthVisit) {
+    return data.labPanels.filter((panel) => panel.visitId === visit.id);
+  }
+
+  protected studiesOf(data: HealthRecord, visit: HealthVisit) {
+    return data.studies.filter((study) => study.visitId === visit.id);
+  }
+
+  /** How many lines are out of the laboratory's range; `0` is not shown. */
+  protected outOfRange(panel: HealthLabPanel): number {
+    return panel.values.filter((line) => line.flag).length;
+  }
+
+  protected async addPanel(record: HealthRecord, visit: HealthVisit): Promise<void> {
+    if (await this.dialogs.labPanel({ record, visitId: visit.id, day: visit.visitedOn })) {
+      this.record.reload();
+    }
+  }
+
+  protected async addStudy(record: HealthRecord, visit: HealthVisit): Promise<void> {
+    if (await this.dialogs.study({ record, visitId: visit.id, day: visit.visitedOn })) {
+      this.record.reload();
+    }
   }
 
   protected documentsOf(data: HealthRecord, visit: HealthVisit) {

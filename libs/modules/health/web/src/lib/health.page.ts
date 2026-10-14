@@ -7,6 +7,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 const TABS = [
   { path: 'history', labelKey: 'health.tabs.history' },
   { path: 'conditions', labelKey: 'health.tabs.conditions' },
+  { path: 'results', labelKey: 'health.tabs.results' },
   { path: 'medications', labelKey: 'health.tabs.medications' },
   { path: 'doctors', labelKey: 'health.tabs.doctors' },
 ] as const;
