@@ -1,10 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { ComponentType } from '@angular/cdk/portal';
 import { TranslocoService } from '@jsverse/transloco';
 import { HealthClinic, HealthDocument } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { HealthApi } from '../health.api';
+import { DraftReviewData, DraftReviewDialog } from '../drafts/draft-review.dialog';
 import { ClinicDialog } from './clinic.dialog';
 import { DiagnosisDialog, DiagnosisDialogData } from './diagnosis.dialog';
 import { DoctorDialog, DoctorDialogData } from './doctor.dialog';
@@ -48,6 +49,11 @@ export class HealthDialogs {
     return this.open(StudyDialog, data);
   }
 
+  /** A document read by the AI, to check and save. */
+  review(data: DraftReviewData) {
+    return this.open(DraftReviewDialog, data, { maxWidth: '96vw' });
+  }
+
   clinic(clinic: HealthClinic | null) {
     return this.open(ClinicDialog, clinic);
   }
@@ -79,8 +85,16 @@ export class HealthDialogs {
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
-  private async open<D, C>(component: ComponentType<C>, data: D): Promise<boolean> {
-    const ref = this.dialog.open<C, D, boolean>(component, { data, autoFocus: 'first-tabbable' });
+  private async open<D, C>(
+    component: ComponentType<C>,
+    data: D,
+    config: MatDialogConfig<D> = {},
+  ): Promise<boolean> {
+    const ref = this.dialog.open<C, D, boolean>(component, {
+      data,
+      autoFocus: 'first-tabbable',
+      ...config,
+    });
     return (await firstValueFrom(ref.afterClosed())) === true;
   }
 }

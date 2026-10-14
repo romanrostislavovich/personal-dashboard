@@ -33,6 +33,14 @@ const MAX_TOOL_RESULT_CHARS = 12_000;
 
 export type AskOptions = Omit<PromptOptions, 'hasAttachments'>;
 
+export interface CompleteOptions {
+  /**
+   * The answer keeps the language of the content (what is read out of a document) instead of
+   * the user's; by default it is in the user's language.
+   */
+  keepLanguage?: boolean;
+}
+
 export interface AiAnswer {
   reply: string;
   /** Modules the model took data from. */
@@ -177,6 +185,7 @@ export class AiService {
     instruction: string,
     content: string,
     module?: string,
+    options: CompleteOptions = {},
   ): Promise<string> {
     if (module && !(await this.canSee(userId, module))) {
       throw new ForbiddenException(`AI access to ${module} is off`);
@@ -184,10 +193,10 @@ export class AiService {
     const connection =
       (module && (await this.connections.ofModule(userId, module))) ||
       (await this.requireConnection(userId));
-    const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
+    const system = await this.withLanguage(userId, instruction, options);
     try {
       const reply = await chatCompletion(connection, [
-        { role: 'system', content: `${instruction} Always answer in ${language}.` },
+        { role: 'system', content: system },
         { role: 'user', content },
       ]);
       return reply.content ?? '';
@@ -208,6 +217,7 @@ export class AiService {
     instruction: string,
     image: { data: Buffer; mimeType: string },
     module?: string,
+    options: CompleteOptions = {},
   ): Promise<string | null> {
     if (module && !(await this.canSee(userId, module))) {
       throw new ForbiddenException(`AI access to ${module} is off`);
@@ -218,11 +228,11 @@ export class AiService {
     if (!connection) {
       return null;
     }
-    const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
+    const system = await this.withLanguage(userId, instruction, options);
     const url = `data:${image.mimeType};base64,${image.data.toString('base64')}`;
     try {
       const reply = await chatCompletion(connection, [
-        { role: 'system', content: `${instruction} Always answer in ${language}.` },
+        { role: 'system', content: system },
         { role: 'user', content: [{ type: 'image_url', image_url: { url } }] },
       ]);
       return reply.content ?? '';
@@ -232,6 +242,19 @@ export class AiService {
       }
       throw error;
     }
+  }
+
+  /** The instruction, told to answer in the user's language unless the text keeps its own. */
+  private async withLanguage(
+    userId: string,
+    instruction: string,
+    { keepLanguage }: CompleteOptions,
+  ): Promise<string> {
+    if (keepLanguage) {
+      return instruction;
+    }
+    const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
+    return `${instruction} Always answer in ${language}.`;
   }
 
   /** Runs a tool call; `changed` — a write tool actually changed data. */

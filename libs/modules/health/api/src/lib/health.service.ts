@@ -16,7 +16,7 @@ import {
   HealthVisit,
   healthVisitInputSchema,
 } from '@pd/contracts';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { PgTable } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import {
@@ -350,6 +350,7 @@ const documentColumns = {
   visitId: healthDocuments.visitId,
   mimeType: healthDocuments.mimeType,
   size: healthDocuments.size,
+  hasDraft: sql<boolean>`${healthDocuments.draft} is not null`,
   createdAt: healthDocuments.createdAt,
 };
 
@@ -426,7 +427,9 @@ function toMedication(row: HealthMedicationRow): HealthMedication {
   };
 }
 
-function toDocument(row: Omit<HealthDocumentRow, 'data' | 'userId' | 'updatedAt'>): HealthDocument {
+function toDocument(
+  row: Omit<HealthDocumentRow, 'data' | 'draft' | 'userId' | 'updatedAt'> & { hasDraft: boolean },
+): HealthDocument {
   return {
     id: row.id,
     name: row.name,
@@ -435,6 +438,7 @@ function toDocument(row: Omit<HealthDocumentRow, 'data' | 'userId' | 'updatedAt'
     visitId: row.visitId,
     mimeType: row.mimeType,
     size: row.size,
+    hasDraft: row.hasDraft,
     createdAt: row.createdAt.toISOString(),
   };
 }

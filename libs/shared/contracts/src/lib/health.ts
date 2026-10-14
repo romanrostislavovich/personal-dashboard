@@ -230,6 +230,8 @@ export interface HealthDocument {
   visitId: string | null;
   mimeType: string;
   size: number;
+  /** The AI has read it and the draft waits to be checked (see HealthDocumentDraft). */
+  hasDraft: boolean;
   createdAt: string;
 }
 
@@ -518,4 +520,111 @@ export function labSeries(panels: readonly HealthLabPanel[]): LabSeries[] {
   return [...series.values()].sort(
     (a, b) => flagged(b) - flagged(a) || a.name.localeCompare(b.name),
   );
+}
+
+// --- A document read by the AI: a draft the user checks before anything is saved ---
+
+/** What a document turned out to be. */
+export const HEALTH_DRAFT_KINDS = ['visit', 'labs', 'study', 'other'] as const;
+export type HealthDraftKind = (typeof HEALTH_DRAFT_KINDS)[number];
+
+const draftText = (max: number) => z.string().trim().max(max).nullish().catch(null);
+const draftDay = z.iso.date().nullish().catch(null);
+
+/**
+ * A draft read out of a document: everything is optional, and anything the AI got wrong is
+ * dropped rather than refused (`catch`), so a half-read document still gives a half-filled
+ * form. The user corrects it and saves it (`healthDraftApplySchema`).
+ */
+export const healthDocumentDraftSchema = z.object({
+  kind: z.enum(HEALTH_DRAFT_KINDS).catch('other'),
+  /** The language of the document: `uk`, `ru`, `pl`, `en`. */
+  language: draftText(10),
+  day: draftDay,
+  country: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{2}$/)
+    .transform((code) => code.toUpperCase())
+    .nullish()
+    .catch(null),
+  clinic: draftText(200),
+  doctor: draftText(200),
+  speciality: draftText(100),
+  complaints: draftText(10_000),
+  findings: draftText(10_000),
+  recommendations: draftText(10_000),
+  nextVisitOn: draftDay,
+  diagnoses: z
+    .array(
+      z.object({
+        code: draftText(20),
+        // An empty one is dropped after (see parseDraft), not the whole list.
+        title: z.string().trim().max(500).catch(''),
+        status: z.enum(DIAGNOSIS_STATUSES).catch('confirmed'),
+      }),
+    )
+    .max(30)
+    .catch([]),
+  medications: z
+    .array(
+      z.object({
+        name: z.string().trim().max(200).catch(''),
+        substance: draftText(200),
+        dose: draftText(200),
+        schedule: draftText(500),
+      }),
+    )
+    .max(30)
+    .catch([]),
+  laboratory: draftText(200),
+  labValues: z
+    .array(
+      z.object({
+        name: z.string().trim().max(200).catch(''),
+        /** As printed: `5,6`, `отрицательно`. */
+        result: z
+          .union([z.string(), z.number()])
+          .transform((value) => String(value).trim().slice(0, 200))
+          .catch(''),
+        unit: draftText(30),
+        /** As printed: `3,9–5,5`, `<5.2`. */
+        range: draftText(200),
+      }),
+    )
+    .max(300)
+    .catch([]),
+  studyKind: z.enum(HEALTH_STUDY_KINDS).nullish().catch(null),
+  studyArea: draftText(200),
+  conclusion: draftText(10_000),
+});
+export type HealthDocumentDraft = z.output<typeof healthDocumentDraftSchema>;
+
+/**
+ * Saves a checked draft at once: the clinic and the doctor (an existing one by id, or a new one
+ * by name), then a visit with its diagnoses and medications, a lab report or a study; the
+ * document is attached to what was made.
+ */
+export const healthDraftApplySchema = z.object({
+  documentId: z.uuid(),
+  clinicId: z.uuid().nullish(),
+  newClinic: healthClinicInputSchema.nullish(),
+  doctorId: z.uuid().nullish(),
+  newDoctor: healthDoctorInputSchema.omit({ clinicId: true }).nullish(),
+  visit: healthVisitInputSchema.omit({ clinicId: true, doctorId: true }).nullish(),
+  diagnoses: z
+    .array(healthDiagnosisInputSchema.omit({ visitId: true }))
+    .max(30)
+    .default([]),
+  medications: z.array(healthMedicationInputSchema).max(30).default([]),
+  labPanel: healthLabPanelInputSchema.omit({ visitId: true, documentId: true }).nullish(),
+  study: healthStudyInputSchema.omit({ visitId: true, documentId: true }).nullish(),
+});
+export type HealthDraftApplyInput = z.input<typeof healthDraftApplySchema>;
+
+/** What a saved draft made. */
+export interface HealthDraftApplied {
+  visitId: string | null;
+  labPanelId: string | null;
+  studyId: string | null;
 }

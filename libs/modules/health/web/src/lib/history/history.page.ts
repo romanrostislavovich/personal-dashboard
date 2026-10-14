@@ -1,5 +1,14 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -96,6 +105,15 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
     @if (record.error()) {
       <p class="error" role="alert">{{ 'health.errors.load' | transloco }}</p>
     } @else if (data(); as data) {
+      @if (drafts().length) {
+        <div class="drafts" role="status">
+          <mat-icon>auto_awesome</mat-icon>
+          <span>{{ 'health.drafts.waiting' | transloco: { count: drafts().length } }}</span>
+          <button matButton="filled" (click)="review(data, drafts()[0])">
+            {{ 'health.drafts.checkOne' | transloco }}
+          </button>
+        </div>
+      }
       @for (visit of visits(); track visit.id) {
         <mat-card appearance="outlined">
           <mat-card-content class="visit">
@@ -263,6 +281,20 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
               }
             </span>
             <span class="spacer"></span>
+            @if (document.hasDraft) {
+              <button matButton="tonal" (click)="review(data, document)">
+                <mat-icon>fact_check</mat-icon> {{ 'health.drafts.checkOne' | transloco }}
+              </button>
+            } @else {
+              <button
+                matIconButton
+                [attr.aria-label]="'health.drafts.readWithAi' | transloco"
+                [matTooltip]="'health.drafts.readWithAi' | transloco"
+                (click)="review(data, document)"
+              >
+                <mat-icon>auto_awesome</mat-icon>
+              </button>
+            }
             <button
               matIconButton
               [attr.aria-label]="'core.actions.edit' | transloco"
@@ -351,6 +383,19 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
       border-top: 1px solid var(--pd-border);
       padding-top: 4px;
     }
+    .drafts {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--pd-radius-small);
+      background: var(--mat-sys-secondary-container);
+      color: var(--mat-sys-on-secondary-container);
+    }
+    .drafts span {
+      flex: 1;
+    }
     .section {
       margin: 8px 0 0;
       font: var(--mat-sys-title-small);
@@ -368,6 +413,8 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
 export class HistoryPage {
   private readonly api = inject(HealthApi);
   private readonly dialogs = inject(HealthDialogs);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly record = this.api.record();
   /** The history once it is here (`value()` of a failed resource throws). */
@@ -394,9 +441,29 @@ export class HistoryPage {
     );
   });
 
+  /** Documents the AI has read whose drafts wait to be checked. */
+  protected readonly drafts = computed(() =>
+    (this.data()?.documents ?? []).filter((document) => document.hasDraft),
+  );
+
   protected readonly looseDocuments = computed(() =>
     (this.data()?.documents ?? []).filter((document) => !document.visitId),
   );
+
+  constructor() {
+    // `?draft=<document>`: the link of the Telegram reply opens that document's draft.
+    effect(() => {
+      const data = this.data();
+      const id = this.route.snapshot.queryParamMap.get('draft');
+      const document = data?.documents.find((d) => d.id === id);
+      if (data && id) {
+        void this.router.navigate([], { queryParams: { draft: null }, replaceUrl: true });
+        if (document) {
+          void untracked(() => this.review(data, document));
+        }
+      }
+    });
+  }
 
   protected filter(change: Partial<Filters>): void {
     this.filters.update((filters) => ({ ...filters, ...change }));
@@ -498,6 +565,12 @@ export class HistoryPage {
     if (
       await this.dialogs.remove(document.name, () => this.api.client.removeDocument(document.id))
     ) {
+      this.record.reload();
+    }
+  }
+
+  protected async review(record: HealthRecord, document: HealthDocument): Promise<void> {
+    if (await this.dialogs.review({ record, document })) {
       this.record.reload();
     }
   }

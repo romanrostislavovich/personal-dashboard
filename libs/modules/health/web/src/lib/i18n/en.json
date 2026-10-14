@@ -273,5 +273,35 @@
     "fibrinogen": "Fibrinogen",
     "lithium": "Lithium",
     "valproate": "Valproic acid"
+  },
+  "drafts": {
+    "title": "Check what the AI read",
+    "original": "The original",
+    "check": "The AI only copies the document and can be wrong. Compare every field with the original — nothing is saved until you press “Save”.",
+    "reading": "The AI is reading the document, up to a minute…",
+    "again": "Read again",
+    "kind": "What the document is",
+    "kinds": {
+      "visit": "Visit",
+      "labs": "Lab results",
+      "study": "Study",
+      "other": "Something else"
+    },
+    "newClinic": "A new clinic…",
+    "newDoctor": "A new doctor…",
+    "otherHint": "Nothing will be made of it: the document stays as it is.",
+    "drop": "Drop the draft",
+    "save": "Save",
+    "checkOne": "Check",
+    "readWithAi": "Read with AI",
+    "waiting": "Documents read by the AI wait to be checked: {{count}}",
+    "failed": {
+      "scanned": "This PDF is a scan without text: upload its pages as photos.",
+      "noAi": "The AI is not connected (Settings → AI).",
+      "noVision": "None of the AI connections reads pictures: pick one in Settings → AI (OpenAI, or a vision model of Ollama).",
+      "aiOff": "Health is switched off for the AI (Settings → AI).",
+      "aiFailed": "The AI did not answer. Try again later.",
+      "unreadable": "Nothing could be read out of the document."
+    }
   }
 }

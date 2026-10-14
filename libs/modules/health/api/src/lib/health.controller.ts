@@ -23,6 +23,7 @@ import {
   healthDiagnosisInputSchema,
   healthDoctorInputSchema,
   healthDocumentInputSchema,
+  healthDraftApplySchema,
   healthLabPanelInputSchema,
   healthStudyInputSchema,
   healthMedicationInputSchema,
@@ -36,6 +37,7 @@ import {
   IcdSearchQuery,
   icdSearchSchema,
 } from '@pd/contracts';
+import { DocumentReaderService, ValidDraftApply } from './documents/document-reader.service';
 import { HEALTH_ACTIONS } from './health.server-actions';
 import {
   HealthService,
@@ -64,6 +66,7 @@ export class HealthController {
   constructor(
     private readonly health: HealthService,
     private readonly labs: LabsService,
+    private readonly reader: DocumentReaderService,
     private readonly icd: IcdDictionaryService,
     private readonly actions: ServerActions,
   ) {}
@@ -279,6 +282,35 @@ export class HealthController {
   async documentFile(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     const { data, mimeType } = await this.health.documentFile(user.id, id);
     return new StreamableFile(data, { type: mimeType });
+  }
+
+  // --- A document read by the AI: a draft, checked and saved by the user ---
+
+  /** Reads it now (a minute at most) and keeps the draft next to it. */
+  @Post('documents/:id/read')
+  readDocument(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.reader.read(user.id, id);
+  }
+
+  /** The draft waiting to be checked; `null` — none. */
+  @Get('documents/:id/draft')
+  async documentDraft(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return { draft: await this.reader.draft(user.id, id) };
+  }
+
+  @Delete('documents/:id/draft')
+  @HttpCode(204)
+  dropDraft(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.reader.dropDraft(user.id, id);
+  }
+
+  /** Saves a checked draft as one change (see DocumentReaderService.apply). */
+  @Post('drafts/apply')
+  applyDraft(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(healthDraftApplySchema)) input: ValidDraftApply,
+  ) {
+    return this.reader.apply(user.id, input);
   }
 
   @Delete('documents/:id')

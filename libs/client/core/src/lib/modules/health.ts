@@ -6,7 +6,10 @@ import {
   HealthDoctor,
   HealthDoctorInput,
   HealthDocument,
+  HealthDocumentDraft,
   HealthDocumentInput,
+  HealthDraftApplied,
+  HealthDraftApplyInput,
   HealthLabPanel,
   HealthLabPanelInput,
   HealthMedication,
@@ -86,6 +89,16 @@ export function healthApi(api: ApiClient) {
     /** The bytes, for an object URL (a link cannot send the auth header). */
     documentFile: (id: string) => api.blob(`${BASE}/documents/${id}/file`),
     removeDocument: (id: string) => api.delete(`${BASE}/documents/${id}`),
+
+    /** The AI reads the document into a draft (kept next to it); takes up to a minute. */
+    readDocument: (id: string) => api.post<HealthDocumentDraft>(`${BASE}/documents/${id}/read`, {}),
+    /** The draft waiting to be checked, if any. */
+    documentDraft: (id: string) =>
+      api.read<{ draft: HealthDocumentDraft | null }>(apiRequest(`${BASE}/documents/${id}/draft`)),
+    dropDraft: (id: string) => api.delete(`${BASE}/documents/${id}/draft`),
+    /** Saves a checked draft at once: the visit, the lab report or the study, with the document. */
+    applyDraft: (input: HealthDraftApplyInput) =>
+      api.post<HealthDraftApplied>(`${BASE}/drafts/apply`, input),
 
     dictionaries: () => api.read<IcdDictionary[]>(HEALTH_READS.dictionaries()),
     /** Downloads a dictionary from its publisher on the server; takes a minute. */
