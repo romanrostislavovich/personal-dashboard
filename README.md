@@ -42,21 +42,22 @@ in one place on your own server, with notifications and an assistant in Telegram
 
 ## Sections
 
-|                    |                                                                                     |
-| ------------------ | ----------------------------------------------------------------------------------- |
-| 💰 **Finance**     | wallets, main currency, budgets, subscriptions, savings goals, wishlist price watch |
-| 📔 **Diary**       | Markdown per day, mood, tags, photos, year heatmap, "on this day"                   |
-| 🧠 **Psychology**  | mood patterns, check-ups, life events with Excel / Word export                      |
-| 🩺 **Health**      | one medical history across countries: visits, ICD diagnoses, medications, documents |
-| ✅ **Tasks**       | TODO list with repeating tasks, reminders at your local time                        |
-| 👨‍💻 **Development** | repositories, stars, releases, npm downloads, contribution streaks, coding time     |
-| 🎧 **Music**       | listening history and tops, now playing, your own tracks' stats                     |
-| 🎮 **Games**       | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP)           |
-| ⏱️ **Activity**    | time at the computer per program, project and day, Pomodoro                         |
-| 📡 **Monitoring**  | uptime every 5 minutes, response time, SSL expiry, down / up alerts                 |
-| 🌤️ **Weather**     | today and the week ahead, what to wear — tuned to how you take the cold             |
-| 🎂 **Birthdays**   | countdowns and reminders                                                            |
-| 🚀 **Projects**    | your sites and services — finance, monitoring and AI refer to them                  |
+|                    |                                                                                                                   |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| 💰 **Finance**     | wallets, main currency, budgets, subscriptions, savings goals, wishlist price watch                               |
+| 📔 **Diary**       | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                 |
+| 🧠 **Psychology**  | mood patterns, check-ups, life events with Excel / Word export                                                    |
+| 🔑 **Passwords**   | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext |
+| 🩺 **Health**      | one medical history across countries: visits, ICD diagnoses, medications, documents                               |
+| ✅ **Tasks**       | TODO list with repeating tasks, reminders at your local time                                                      |
+| 👨‍💻 **Development** | repositories, stars, releases, npm downloads, contribution streaks, coding time                                   |
+| 🎧 **Music**       | listening history and tops, now playing, your own tracks' stats                                                   |
+| 🎮 **Games**       | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP)                                         |
+| ⏱️ **Activity**    | time at the computer per program, project and day, Pomodoro                                                       |
+| 📡 **Monitoring**  | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                               |
+| 🌤️ **Weather**     | today and the week ahead, what to wear — tuned to how you take the cold                                           |
+| 🎂 **Birthdays**   | countdowns and reminders                                                                                          |
+| 🚀 **Projects**    | your sites and services — finance, monitoring and AI refer to them                                                |
 
 Every section is a module: hide what you do not use, or [write your own](docs/architecture.md).
 

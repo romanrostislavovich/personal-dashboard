@@ -1,0 +1,9 @@
+{
+  "name": "vault-api",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/modules/vault/api/src",
+  "projectType": "library",
+  "tags": ["scope:api", "type:module"],
+  "// targets": "to see all targets run: nx show project vault-api --web",
+  "targets": {}
+}

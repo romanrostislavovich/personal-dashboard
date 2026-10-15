@@ -57,6 +57,11 @@ under **Updating**.
 - **Demo mode** (`DEMO_MODE=true`): a "Try the demo" button on the login page opens a shared
   account with made-up data in every section, made anew every night. The demo user cannot
   change the account, connect services or upload files, and no background job reaches outside.
+- **Passwords** — a password vault like 1Password: logins and secure notes encrypted on the
+  device with a key of the master password (PBKDF2-SHA256, AES-256-GCM); the server and the AI
+  see only ciphertext. A recovery key shown once opens it when the master password is
+  forgotten; the vault locks itself after 10 minutes; a password generator and a strength meter.
+  Changing the master password asks for the account password too.
 - **The diary and the notes about people are stored encrypted** — the text of an entry, the
   template, the photos and their captions, the note about a person; a dump or a backup holds
   only ciphertext. What was written before is encrypted once, on the first start. The tags and
@@ -112,7 +117,7 @@ under **Updating**.
   drafts of its documents, 0070 the links for doctors, 0071 the profile
   and the reminders to take medications, 0072 the pages of its documents, 0073 the missing
   indexes (`user_id` and foreign keys of a few dozen tables), 0074 the word count of a diary
-  entry.
+  entry, 0075 the password vault.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
   key as the server.
 

@@ -196,6 +196,8 @@ import { UserActivityService } from './realtime/user-activity.service';
     },
   ],
   exports: [
+    // For a module that asks for the account password again (the password vault).
+    AuthService,
     UsersService,
     ProjectsService,
     SchedulerService,

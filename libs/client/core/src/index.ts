@@ -19,3 +19,7 @@ export * from './lib/modules/health';
 export * from './lib/modules/psychology';
 export * from './lib/modules/small-modules';
 export * from './lib/modules/tasks';
+export * from './lib/modules/vault';
+export * from './lib/vault/vault-crypto';
+export * from './lib/vault/password-generator';
+export * from './lib/vault/password-strength';

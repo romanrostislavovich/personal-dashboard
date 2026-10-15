@@ -526,6 +526,13 @@
       "when": 1792012298673,
       "tag": "0074_diary_words",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1792016666717,
+      "tag": "0075_vault",
+      "breakpoints": true
     }
   ]
 }
