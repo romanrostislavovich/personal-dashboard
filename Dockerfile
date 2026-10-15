@@ -1,5 +1,6 @@
 # One image for everything: NestJS API + the built Angular frontend (the API serves it as static files)
-# + the code of the desktop shell, which installed desktop apps update themselves from.
+# + the code of the desktop shell and the browser extension, which installed apps update
+# themselves from.
 # Build and run together with the database: docker compose up -d --build
 #
 # Multi-platform (amd64 + arm64) without emulation: everything is built on the build machine's
@@ -18,7 +19,7 @@ RUN npm ci --ignore-scripts
 
 COPY . .
 # The API build writes package.json and package-lock.json with only its own dependencies next to it.
-RUN npx nx run-many -t build -p api,web,desktop
+RUN npx nx run-many -t build -p api,web,desktop,extension
 # What npm knows about vulnerabilities in the packages that ship, as of this build: the
 # security agent reads it (it exits non-zero when it finds any — that is not a failed build).
 RUN npm audit --omit=dev --json > dist/apps/api/npm-audit.json || true
@@ -35,12 +36,14 @@ FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
     WEB_DIST_PATH=/app/web \
-    DESKTOP_BUNDLE_PATH=/app/desktop-bundle
+    DESKTOP_BUNDLE_PATH=/app/desktop-bundle \
+    EXTENSION_BUNDLE_PATH=/app/extension-bundle
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /repo/dist/apps/api ./
 COPY --from=build /repo/dist/apps/web/browser ./web
 COPY --from=build /repo/dist/apps/desktop/bundle ./desktop-bundle
+COPY --from=build /repo/dist/apps/extension ./extension-bundle
 
 EXPOSE 3300
 USER node

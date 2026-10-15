@@ -67,6 +67,11 @@ under **Updating**.
   phishing warning), offers to save or update a login typed into a page, makes passwords and
   puts them into the fields for a new one. The vault is opened in the extension with the master
   password; the server still sees only ciphertext.
+- **Settings → Apps** — the desktop app, the browser extension and (later) the mobile one in one
+  place: installers from your own server (Windows, Linux; macOS from GitHub Releases), the zip
+  of the extension, and every computer and browser that runs an app with its version — an old
+  one shows that an update has not come. The extension updates itself like the desktop app: the
+  app keeps its folder at the server's version and the extension reloads with the new files.
 - **The diary and the notes about people are stored encrypted** — the text of an entry, the
   template, the photos and their captions, the note about a person; a dump or a backup holds
   only ciphertext. What was written before is encrypted once, on the first start. The tags and

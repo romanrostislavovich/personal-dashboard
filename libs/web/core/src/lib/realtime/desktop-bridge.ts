@@ -22,6 +22,24 @@ export interface DesktopBridge {
   disk?: DesktopDisk;
   /** Copies of one's data kept on this computer (absent in an older shell). */
   backup?: DeviceBackup;
+  /** Settings → Apps: this computer's version, the browser extension's folder (absent in an older shell). */
+  apps?: DesktopApps;
+}
+
+/** The desktop app in Settings → Apps (see apps/desktop/src/update/extension-keeper.ts). */
+export interface DesktopApps {
+  info(): Promise<DesktopAppsInfo>;
+  /** Opens the folder Chrome loads the extension from (downloads it first if needed). */
+  openExtensionFolder(): Promise<void>;
+}
+
+export interface DesktopAppsInfo {
+  /** This computer's line in the list of devices. */
+  installId: string;
+  /** The fingerprint of the running code; `null` — run from the sources. */
+  version: string | null;
+  /** The browser extension, kept up to date by the app. */
+  extension: { folder: string; version: string | null };
 }
 
 /**

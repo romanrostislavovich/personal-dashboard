@@ -1,5 +1,7 @@
 import {
   Achievement,
+  AppInstallReport,
+  AppsOverview,
   AuthClient as AuthClientKind,
   AuthConfig,
   AutomationRule,
@@ -113,6 +115,8 @@ export const CORE_READS = {
   lifeStory: (period: string) => apiRequest('/api/life/story', { period }),
   /** Every connection to an outside service with its state. */
   integrations: () => apiRequest('/api/integrations'),
+  /** Settings → Apps: what can be installed, and the devices that run it. */
+  apps: () => apiRequest('/api/apps'),
   automations: () => apiRequest('/api/automations'),
   /** The triggers and actions the modules registered. */
   automationsCatalog: () => apiRequest('/api/automations/catalog'),
@@ -202,6 +206,16 @@ export function achievementsApi(api: ApiClient) {
     list: () => api.read<Achievement[]>(CORE_READS.achievements()),
     /** Counts all achievements again; what is not earned today is taken back. */
     recount: () => api.post<void>(`${API_PATHS.achievements}/recount`, {}),
+  };
+}
+
+/** The apps (desktop, the browser extension): downloads, and the devices that run them. */
+export function appsApi(api: ApiClient) {
+  return {
+    overview: () => api.read<AppsOverview>(CORE_READS.apps()),
+    /** An app says it runs on this device, and which version. */
+    report: (report: AppInstallReport) => api.post<void>('/api/apps/installs', report),
+    forget: (id: string) => api.delete(`/api/apps/installs/${id}`),
   };
 }
 

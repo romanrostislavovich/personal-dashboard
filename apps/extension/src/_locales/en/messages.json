@@ -232,5 +232,17 @@
   },
   "error_failed": {
     "message": "Something went wrong. Try again."
+  },
+  "updateReady": {
+    "message": "A new version is ready."
+  },
+  "updateReload": {
+    "message": "Reload"
+  },
+  "updateOutdated": {
+    "message": "A new version is out, and it has not come here."
+  },
+  "updateHow": {
+    "message": "How to update"
   }
 }

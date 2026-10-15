@@ -6,21 +6,26 @@ password, so the server still sees only ciphertext.
 
 ## Install
 
-The extension is installed by hand, not from the Chrome Web Store:
+The extension is installed by hand, not from the Chrome Web Store. **Settings → Apps** of the
+dashboard has it, and the steps:
 
-```bash
-npx nx build extension          # → dist/apps/extension
-```
+- **With the desktop app on the computer** (Settings → Apps opened inside the app): the app keeps
+  the extension in a folder of its own (`%APPDATA%/Personal Dashboard/browser-extension`) and
+  shows it. In `chrome://extensions` turn on **Developer mode**, **Load unpacked** → that folder.
+  It then **updates itself**: the app brings every new version from the server into the folder
+  (every 2 hours, as its own code), and the extension reloads with the new files within 30
+  minutes — not while its popup is open. The vault is unlocked again after an update.
+- **Without it**: download the zip, unzip it into a folder that stays, load it the same way.
+  It does not update itself then: when the server has had a newer version for 3 hours, the
+  popup says so, and the new zip is loaded the same way.
 
-1. Open `chrome://extensions` and turn on **Developer mode** (top right).
-2. **Load unpacked** → choose the `dist/apps/extension` folder.
-3. Pin it to the toolbar (the puzzle icon → the pin), click it, and sign in: the dashboard's
-   address (`https://…`), your email and password, then the code if two-factor sign-in is on.
-4. Unlock with the master password. The vault must exist already — it is created on the
-   dashboard (Passwords), where the recovery key is shown.
+Then pin it to the toolbar (the puzzle icon → the pin), click it, and sign in: the dashboard's
+address (`https://…`), your email and password, then the code if two-factor sign-in is on.
+Unlock with the master password; the vault itself is created on the dashboard (Passwords),
+where the recovery key is shown. Edge, Brave and other Chromium browsers load it the same way.
 
-After an update: build again and press the reload arrow of the extension in `chrome://extensions`.
-Edge, Brave and other Chromium browsers load it the same way.
+For development: `npx nx build extension` → load `dist/apps/extension`, and press the reload
+arrow in `chrome://extensions` after a build.
 
 ## What it does
 

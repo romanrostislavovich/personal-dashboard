@@ -38,6 +38,12 @@ export interface PopupState {
   /** The active tab, when it is a web page. */
   page: { url: string; site: string } | null;
   offer: SaveOffer | null;
+  update: {
+    /** The server has had a newer version for hours and it has not come (no desktop app here). */
+    outdated: boolean;
+    /** Newer files are on the disk already: a reload runs them. */
+    waitingReload: boolean;
+  };
 }
 
 export interface Generated {
@@ -72,6 +78,8 @@ export type PopupRequest =
   | { type: 'dismiss-offer'; never: boolean }
   /** Sites where saving is never offered, and taking one off the list. */
   | { type: 'never-sites' }
+  /** Runs the newer files on the disk now (it happens by itself when the popup is closed). */
+  | { type: 'reload' }
   | { type: 'forget-never'; site: string };
 
 /** From a content script, about its own tab. */

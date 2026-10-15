@@ -45,6 +45,11 @@ contextBridge.exposeInMainWorld('desktop', {
     done: (rect: { x: number; y: number; width: number; height: number } | null): Promise<void> =>
       ipcRenderer.invoke('region:done', rect),
   },
+  /** Settings → Apps: this computer's line in the list of devices, the extension's folder. */
+  apps: {
+    info: (): Promise<unknown> => ipcRenderer.invoke('apps:info'),
+    openExtensionFolder: (): Promise<void> => ipcRenderer.invoke('apps:open-extension-folder'),
+  },
   backup: {
     status: (): Promise<unknown> => ipcRenderer.invoke('backup:status'),
     save: (name: string, data: Uint8Array): Promise<unknown> =>

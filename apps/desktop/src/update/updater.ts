@@ -30,6 +30,24 @@ export type UpdateState =
   | { kind: 'error' };
 
 /**
+ * The server's address for downloading code: over HTTPS even when it is saved as `http://…`
+ * (plain HTTP could be changed on the way); this computer itself is the one exception.
+ */
+export function secureOrigin(serverUrl: string | null): string | null {
+  try {
+    const url = new URL(serverUrl ?? '');
+    const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+    if (!local && url.protocol === 'http:') {
+      url.protocol = 'https:';
+      url.port = '';
+    }
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Updates of the shell without an installer: the server the app is connected to serves the
  * bundle of its own version (`/desktop-updates/bundle.json` and the files it lists). When it
  * differs from the one running, the files are downloaded, checked against the hashes of the
@@ -57,6 +75,11 @@ export class AppUpdater {
   /** When the server last answered a check: the tray shows that "no updates" is fresh. */
   get checkedAt(): Date | null {
     return this.checked;
+  }
+
+  /** The fingerprint of the code that is running, as the server's bundle.json has it. */
+  get fullVersion(): string | null {
+    return this.running?.version ?? null;
   }
 
   /** The code that is running, for the tray: the first characters of its fingerprint. */
@@ -135,17 +158,8 @@ export class AppUpdater {
    * over HTTPS all the same; this computer itself (a local instance) is the one exception.
    */
   private feed(): string | null {
-    try {
-      const url = new URL(this.serverUrl() ?? '');
-      const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-      if (!local && url.protocol === 'http:') {
-        url.protocol = 'https:';
-        url.port = '';
-      }
-      return url.origin + UPDATES_PATH;
-    } catch {
-      return null;
-    }
+    const origin = secureOrigin(this.serverUrl());
+    return origin ? origin + UPDATES_PATH : null;
   }
 
   private async download(url: string): Promise<Buffer> {

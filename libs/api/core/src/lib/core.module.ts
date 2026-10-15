@@ -25,6 +25,8 @@ import { CoreDemo } from './demo/core.demo';
 import { CoreIntegrations } from './integrations/core.integrations';
 import { IntegrationsController } from './integrations/integrations.controller';
 import { IntegrationsService } from './integrations/integrations.service';
+import { AppsController } from './apps/apps.controller';
+import { AppsService } from './apps/apps.service';
 import { OutboundPolicy } from './net/outbound-policy';
 import { LinksService } from './links/links.service';
 import { ProjectOverviewService } from './links/project-overview.service';
@@ -121,8 +123,10 @@ import { UserActivityService } from './realtime/user-activity.service';
     LifeController,
     AutomationsController,
     IntegrationsController,
+    AppsController,
   ],
   providers: [
+    AppsService,
     SearchService,
     LifeService,
     LifeMonthJob,

@@ -19,13 +19,23 @@ import { DataSettingsComponent } from './data-settings.component';
 import { DeviceBackupSettingsComponent } from './device-backup-settings.component';
 import { IntegrationStatusComponent } from './integration-status.component';
 import { AutomationsSettingsComponent } from '../automations/automations-settings.component';
+import { AppsSettingsComponent } from './apps-settings.component';
 
 /** Tabs of the page, as `?tab=` names them: module pages link to `integrations`. */
-const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 'system'] as const;
+const TABS = [
+  'account',
+  'appearance',
+  'integrations',
+  'automations',
+  'data',
+  'apps',
+  'system',
+] as const;
 
 /**
  * Settings: the account, the look (theme), every connection to an outside service (Telegram and what the modules
- * register as `integrations`), the data (sync, backups, export and import, trash) and how the instance itself is
+ * register as `integrations`), the data (sync, backups, export and import, trash), the apps (desktop, the browser
+ * extension) and how the instance itself is
  * doing (background jobs, the log of errors).
  */
 @Component({
@@ -44,6 +54,7 @@ const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 's
     DataSettingsComponent,
     DeviceBackupSettingsComponent,
     AutomationsSettingsComponent,
+    AppsSettingsComponent,
     SyncSettingsComponent,
     SystemSettingsComponent,
     TelegramSettingsComponent,
@@ -97,6 +108,12 @@ const TABS = ['account', 'appearance', 'integrations', 'automations', 'data', 's
           <pd-data-settings />
           <pd-trash-settings />
         </div>
+      </mat-tab>
+
+      <mat-tab [label]="'core.settings.tabs.apps' | transloco">
+        <ng-template matTabContent>
+          <pd-apps-settings />
+        </ng-template>
       </mat-tab>
 
       <mat-tab [label]="'core.settings.tabs.system' | transloco">

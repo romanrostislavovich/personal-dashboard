@@ -82,3 +82,9 @@ export { compressImage, type StoredFile } from './lib/files/compress-image';
 export { EncryptExistingService, type EncryptedLater } from './lib/crypto/encrypt-existing.service';
 /** For a module that asks for the account password again (see AuthService.checkPassword). */
 export { AuthService } from './lib/auth/auth.service';
+/** Where the apps update themselves and are downloaded from (apps/api serves the folders). */
+export {
+  DESKTOP_DOWNLOADS_PATH,
+  DESKTOP_UPDATES_PATH,
+  EXTENSION_UPDATES_PATH,
+} from './lib/apps/app-files';

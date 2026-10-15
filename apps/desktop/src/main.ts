@@ -12,12 +12,13 @@ import { join } from 'node:path';
 import { noticeText } from './activity/notices';
 import { ActivityTracker, TrackerNotice } from './activity/tracker';
 import { BackupStatus, listCopies, saveCopy } from './backup/backup-folder';
-import { backupFolder, loadSettings, saveSettings } from './settings-store';
+import { backupFolder, installId, loadSettings, saveSettings } from './settings-store';
 import { Capture } from './capture/capture';
 import { DiskCleaner } from './disk/disk-cleaner';
 import { DiskFix } from './disk/disk-fixes';
 import { StatementWatch } from './downloads/statement-watch';
 import { createTray } from './tray';
+import { ExtensionKeeper } from './update/extension-keeper';
 import { AppUpdater } from './update/updater';
 
 /**
@@ -60,6 +61,8 @@ const updater = new AppUpdater(
   () => refreshTray(),
   () => installUpdateWhenOutOfSight(),
 );
+/** The browser extension's folder, updated from the server as the shell is. */
+const extension = new ExtensionKeeper(serverUrl);
 
 let startHidden = process.argv.includes('--hidden');
 
@@ -99,6 +102,7 @@ function bootstrap(): void {
       // keeps its own copy): the button asks for both.
       check: () => {
         void updater.check();
+        void extension.check();
         mainWindow?.webContents.send('desktop:check-update');
       },
       install: installUpdate,
@@ -122,6 +126,7 @@ function bootstrap(): void {
   statements.start();
   capture.register();
   updater.start();
+  extension.start();
   openDashboard();
 }
 
@@ -281,6 +286,17 @@ function registerIpc(): void {
     return content ? { name: statement.name, base64: content.toString('base64') } : null;
   });
   // The copies of one's data: the page fetches the archive, the shell keeps it in a folder.
+  // Settings → Apps: this computer in the list of devices, and the extension's folder.
+  ipcMain.handle('apps:info', () => ({
+    installId: installId(),
+    version: updater.fullVersion,
+    extension: extension.status(),
+  }));
+  ipcMain.handle('apps:open-extension-folder', async () => {
+    await extension.check();
+    await mkdir(extension.folder, { recursive: true });
+    await shell.openPath(extension.folder);
+  });
   ipcMain.handle('backup:status', () => backupStatus());
   ipcMain.handle('backup:save', async (_event, name: string, data: Uint8Array) => {
     const settings = loadSettings();

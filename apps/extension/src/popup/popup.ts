@@ -29,7 +29,14 @@ const app = document.getElementById('app') as HTMLElement;
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
 const popup: Popup = {
-  state: { server: null, email: null, vault: 'signed-out', page: null, offer: null },
+  state: {
+    server: null,
+    email: null,
+    vault: 'signed-out',
+    page: null,
+    offer: null,
+    update: { outdated: false, waitingReload: false },
+  },
 
   async reload() {
     try {
@@ -42,7 +49,9 @@ const popup: Popup = {
   },
 
   show(view) {
-    app.replaceChildren(view);
+    app.replaceChildren(
+      ...[updateBanner(popup.state), view].filter((node): node is HTMLElement => !!node),
+    );
   },
 
   toast(text) {
@@ -85,6 +94,37 @@ function viewFor(state: PopupState): HTMLElement {
     case 'unlocked':
       return itemsView(popup);
   }
+}
+
+/** A newer version: on the disk already (reload), or on the server only (download it). */
+function updateBanner(state: PopupState): HTMLElement | null {
+  if (state.update.waitingReload) {
+    return h(
+      'div',
+      { class: 'update' },
+      h('span', { text: t('updateReady') }),
+      h('button', {
+        class: 'button text small',
+        type: 'button',
+        text: t('updateReload'),
+        onClick: () => void ask({ type: 'reload' }),
+      }),
+    );
+  }
+  if (state.update.outdated) {
+    return h(
+      'div',
+      { class: 'update' },
+      h('span', { text: t('updateOutdated') }),
+      h('button', {
+        class: 'button text small',
+        type: 'button',
+        text: t('updateHow'),
+        onClick: () => popup.openDashboard('/settings?tab=apps'),
+      }),
+    );
+  }
+  return null;
 }
 
 /** The server cannot be reached (or answered with an error): say so, and let it be tried again. */

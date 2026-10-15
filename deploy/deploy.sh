@@ -73,6 +73,39 @@ keep_rollback_point() {
     ls -1t backups/pre-deploy-*.dump | tail -n +4 | xargs -r rm -f"
 }
 
+# What the desktop installers are made of, besides the app's code (which updates itself):
+# Electron and electron-builder, the loader and the base it starts, the icon, the version.
+installers_key() {
+  {
+    node -p "const l = require('./package-lock.json').packages;
+      [l['node_modules/electron'].version, l['node_modules/electron-builder'].version,
+       require('./package.json').version].join(' ')"
+    cat apps/desktop/electron-builder.yml apps/desktop/icon.png apps/desktop/src/loader.ts
+    grep -h 'SHELL_VERSION =' apps/desktop/src/update/bundle-store.ts
+  } | sha256sum | cut -c1-16
+}
+
+# The installers of Settings → Apps (Windows, Linux), in downloads/desktop on the server: built
+# in Docker and uploaded only when installers_key changes — rarely, they are 250 MB. The folder
+# is swapped whole inside downloads/, which the app container sees live.
+upload_desktop_installers() {
+  local key on_server
+  key=$(installers_key)
+  on_server=$(remote "cat $REMOTE_DIR/downloads/desktop/installers.json 2>/dev/null" |
+    grep -o '"key": *"[^"]*"' | cut -d'"' -f4 || true)
+  [ "$key" = "$on_server" ] && return 0
+  step "Building the desktop installers (Electron, the loader or the icon changed; ~10 min the first time)"
+  rm -rf dist/server-installers
+  docker buildx build -f deploy/desktop-installers.Dockerfile --build-arg "KEY=$key" \
+    --build-arg "VERSION=$(node -p "require('./package.json').version")" \
+    --output type=local,dest=dist/server-installers --quiet . >/dev/null
+  step "Uploading the desktop installers"
+  remote "rm -rf $REMOTE_DIR/downloads/desktop.new && mkdir -p $REMOTE_DIR/downloads/desktop.new"
+  scp -q -i "$DEPLOY_SSH_KEY" dist/server-installers/* "$DEPLOY_HOST:$REMOTE_DIR/downloads/desktop.new/"
+  remote "cd $REMOTE_DIR/downloads && rm -rf desktop.old &&
+    { [ ! -d desktop ] || mv desktop desktop.old; } && mv desktop.new desktop && rm -rf desktop.old"
+}
+
 # --rollback: the previous image; the database from before the update if its schema changed.
 rollback() {
   step "Rolling back"
@@ -120,7 +153,7 @@ remote true || {
   exit 1
 }
 remote 'command -v docker >/dev/null || (curl -fsSL https://get.docker.com | sh) >/dev/null 2>&1'
-remote "mkdir -p $REMOTE_DIR/backups $REMOTE_DIR/security"
+remote "mkdir -p $REMOTE_DIR/backups $REMOTE_DIR/security $REMOTE_DIR/downloads"
 $ROLLBACK && rollback
 case "$(remote uname -m)" in
   x86_64) PLATFORM=linux/amd64 ;;
@@ -135,6 +168,8 @@ docker buildx build --platform "$PLATFORM" -t "$IMAGE" --load --quiet . >/dev/nu
 
 step "Uploading the image"
 docker save "$IMAGE" | gzip -1 | remote 'gunzip | docker load' | tail -1
+
+upload_desktop_installers
 
 keep_rollback_point
 

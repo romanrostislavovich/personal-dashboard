@@ -286,7 +286,8 @@
       "data": "Data",
       "system": "System",
       "appearance": "Appearance",
-      "automations": "Automations"
+      "automations": "Automations",
+      "apps": "Apps"
     },
     "integrationsIntro": "Connections to outside services: where notifications go, where the modules take their data from, which AI answers.",
     "openIntegrations": "Connect in Settings → Integrations",
@@ -374,6 +375,52 @@
       "now": "Make a copy now",
       "open": "Open the folder",
       "change": "Change the folder"
+    },
+    "apps": {
+      "soon": "Coming later",
+      "serverVersion": "On this server: {{version}}",
+      "platforms": {
+        "windows": "Windows",
+        "macos": "macOS (GitHub)",
+        "linux": "Linux",
+        "chrome": "Chrome",
+        "android": "Android",
+        "ios": "iOS"
+      },
+      "desktop": {
+        "title": "Desktop app",
+        "about": "A tray app for Windows, macOS and Linux: native notifications, time at the computer, focus sessions, quick capture, copies of your data on the disk — and it keeps the browser extension up to date.",
+        "updates": "It updates itself from this server every 2 hours, with no installer: a new installer is needed only for a new Electron (the tray says so)."
+      },
+      "extension": {
+        "title": "Browser extension",
+        "about": "The password vault in Chrome, Edge or Brave: fills logins, offers to save new ones, makes strong passwords. Encrypted on the device with your master password.",
+        "withDesktop": {
+          "folder": "The desktop app keeps the extension in this folder:",
+          "updates": "It updates itself: the app brings every new version into the folder, and the extension reloads with it (you unlock the vault again after an update)."
+        },
+        "openFolder": "Open the folder",
+        "chrome": "Open chrome://extensions and switch on Developer mode (top right).",
+        "loadFolder": "Press \"Load unpacked\" and choose that folder. Then sign in to the extension with this dashboard's address.",
+        "zip": "Download the extension",
+        "unzip": "Unzip it into a folder that stays (not Downloads).",
+        "notOnServer": "This server has no extension to hand out (it runs from the sources).",
+        "withoutDesktop": "Without the desktop app the extension does not update itself: it says when a new version is out, and you load the new zip the same way. With the desktop app on this computer, load it from the app's folder instead (Settings → Apps inside the app) — then it updates by itself."
+      },
+      "mobile": {
+        "title": "Mobile app",
+        "about": "Android and iOS — not made yet. It will be here, and it will update itself from this server too."
+      },
+      "devices": {
+        "title": "My devices",
+        "subtitle": "Where the apps run, and whether the newest version has come there",
+        "this": "this computer",
+        "seen": "seen {{date}}",
+        "current": "Up to date",
+        "outdated": "Old version",
+        "forget": "Forget the device (it comes back when its app reports again)",
+        "none": "No device has reported yet: an app reports itself a minute after it starts."
+      }
     }
   },
   "toast": {
