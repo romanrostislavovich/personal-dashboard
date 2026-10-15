@@ -38,6 +38,8 @@ export const RECOUNT_ACTION = 'achievements.recount';
 
 /** A burst of changes (typing with autosave, several saves) triggers one check. */
 const ACTIVITY_DEBOUNCE_MS = 3_000;
+/** How many metrics are measured at the same time. */
+const MEASURED_AT_ONCE = 6;
 
 /**
  * Achievements engine. Modules register metrics (see AchievementMetric); the engine checks them
@@ -275,13 +277,19 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     metrics: AchievementMetric[],
     values: Map<string, number>,
   ): Promise<void> {
-    for (const metric of metrics) {
-      try {
-        values.set(metric.id, await metric.measure(userId));
-      } catch (error) {
-        this.logger.warn(`Achievement metric ${metric.id} failed: ${error}`);
+    // A few at a time: ~150 metrics one by one made a check slow, all at once would take the
+    // connections of the pool.
+    const queue = [...metrics];
+    const worker = async () => {
+      for (let metric = queue.shift(); metric; metric = queue.shift()) {
+        try {
+          values.set(metric.id, await metric.measure(userId));
+        } catch (error) {
+          this.logger.warn(`Achievement metric ${metric.id} failed: ${error}`);
+        }
       }
-    }
+    };
+    await Promise.all(Array.from({ length: MEASURED_AT_ONCE }, worker));
   }
 
   /** Live event for open dashboards and one message for Telegram. */
