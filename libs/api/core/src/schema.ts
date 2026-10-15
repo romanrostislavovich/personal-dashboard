@@ -12,8 +12,9 @@ export * from './lib/sync/sync.schema';
 export * from './lib/integrations/integrations.schema';
 export * from './lib/apps/apps.schema';
 
-/** Columns stored encrypted (see encrypted-columns.ts). */
+/** Columns stored encrypted (see encrypted-columns.ts); the key is set by a module's db test too. */
 export {
+  configureFieldEncryption,
   encryptedBytes,
   encryptedText,
   registerEncryptedTables,

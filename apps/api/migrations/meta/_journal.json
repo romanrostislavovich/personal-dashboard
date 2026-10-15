@@ -540,6 +540,13 @@
       "when": 1792083505838,
       "tag": "0076_app_installs",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1792091237590,
+      "tag": "0077_habits",
+      "breakpoints": true
     }
   ]
 }

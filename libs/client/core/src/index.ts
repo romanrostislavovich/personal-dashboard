@@ -23,3 +23,4 @@ export * from './lib/modules/vault';
 export * from './lib/vault/vault-crypto';
 export * from './lib/vault/password-generator';
 export * from './lib/vault/password-strength';
+export * from './lib/modules/habits';

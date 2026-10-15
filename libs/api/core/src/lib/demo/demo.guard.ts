@@ -12,6 +12,7 @@ const ALLOWED_WRITES = [
   // The language, the theme, the layout of the home page, the time zone of the device.
   '/api/auth/me',
   '/api/tasks',
+  '/api/habits',
   '/api/diary/entries',
   '/api/diary/settings',
   '/api/birthdays',
