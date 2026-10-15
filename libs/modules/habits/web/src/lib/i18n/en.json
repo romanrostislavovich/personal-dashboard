@@ -1,0 +1,64 @@
+{
+  "title": "Habits",
+  "intro": "What you quit or cut down. Every day since the start counts as clean unless you mark it — here, by the evening question in Telegram, or by telling the assistant. A slip starts the run again, but nothing you reached is taken away.",
+  "empty": "No habits yet. Start with one of the buttons above.",
+  "confirmDelete": "Delete «{{name}}» with all its days?",
+  "kinds": {
+    "alcohol": "Alcohol",
+    "smoking": "Smoking",
+    "custom": "My habit"
+  },
+  "start": {
+    "alcohol": "I quit drinking",
+    "smoking": "I quit smoking",
+    "custom": "A habit of my own"
+  },
+  "goals": {
+    "quit": "Not at all",
+    "less": "Less",
+    "lessThan": "At most {{days}} day(s) a week"
+  },
+  "dialog": {
+    "edit": "Edit the habit",
+    "name": "What you quit",
+    "nameHint": "Sugar, social media at night, energy drinks…",
+    "goal": "The goal",
+    "maxDays": "Days a week at most",
+    "maxDaysHint": "A week within it counts toward achievements",
+    "startedOn": "Counting from",
+    "unit": "Counted in (optional)",
+    "unitHint": {
+      "alcohol": "glasses, bottles…",
+      "smoking": "cigarettes",
+      "custom": "times, pieces…"
+    },
+    "ask": "Ask me in Telegram in the evening",
+    "askAt": "At",
+    "askHint": "«A day without it?» with «Yes» and «It happened». No answer — the day counts as clean.",
+    "start": "Start counting"
+  },
+  "card": {
+    "since": "since {{day}}",
+    "more": "More",
+    "streak": "days in a row",
+    "best": "best run: {{days}}",
+    "clean": "clean days: {{days}}",
+    "thisWeek": "this week: {{used}} of {{max}}",
+    "weeks": "weeks within the limit: {{weeks}}",
+    "calendar": "The last 12 weeks",
+    "calendarHint": "A click on a day marks it as a day with it, another click takes the mark off.",
+    "dayClean": "clean",
+    "dayUsed": "with it",
+    "usedToday": "It happened today",
+    "undoToday": "Undo today",
+    "howMuch": "How many {{unit}}? (empty — not counted)"
+  },
+  "widget": {
+    "days": "{{days}} d",
+    "empty": "Nothing tracked yet.",
+    "all": "All habits"
+  },
+  "errors": {
+    "load": "The habits could not be loaded."
+  }
+}

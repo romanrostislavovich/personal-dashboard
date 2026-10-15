@@ -67,6 +67,13 @@ under **Updating**.
   phishing warning), offers to save or update a login typed into a page, makes passwords and
   puts them into the fields for a new one. The vault is opened in the extension with the master
   password; the server still sees only ciphertext.
+- **Habits** — a section for what you quit or cut down: alcohol, smoking or a habit of your
+  own. "I quit drinking" starts the count; every day after is clean unless marked — on the
+  page (a calendar of 12 weeks, "It happened today"), by an evening question in Telegram ("A day
+  without alcohol?" — "Yes" / "It happened", then how much) or by telling the assistant. The
+  goal is not at all, or at most N days a week; a day can carry an amount. Achievements from
+  the first day to a thousand days, for alcohol and smoking each; a slip starts the run again
+  and takes nothing away. Names are stored encrypted. Migration 0077.
 - **Health: a diagnosis is taken off** — a condition gets "Take off the diagnosis": recovered
   (a new status), ruled out or in remission, kept in its history. "Ruled out" now means the
   diagnosis did not hold (it read "Снят" in Russian before; that is the new "recovered").
@@ -139,7 +146,7 @@ under **Updating**.
   drafts of its documents, 0070 the links for doctors, 0071 the profile
   and the reminders to take medications, 0072 the pages of its documents, 0073 the missing
   indexes (`user_id` and foreign keys of a few dozen tables), 0074 the word count of a diary
-  entry, 0075 the password vault.
+  entry, 0075 the password vault, 0076 the devices of Settings → Apps, 0077 the habits.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
   key as the server.
 

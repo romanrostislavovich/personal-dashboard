@@ -63,6 +63,9 @@
   passwords (installed by hand, updated by the desktop app)
 - **Apps:** Settings → Apps — installers from your own server, and every device with the version
   of its app
+- **Habits:** quitting or cutting down alcohol, smoking or one's own — the run of clean days
+  from "I quit", days marked on the page, by an evening question in Telegram or by the
+  assistant; achievements from a day to a thousand days
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
 - **Psychology:** watching oneself over time — the patterns of the mood (by the day of the week,
   week by week, low stretches, the mood during the events of a life), short standard

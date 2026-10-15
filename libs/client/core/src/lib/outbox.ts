@@ -36,6 +36,8 @@ const QUEUEABLE = [
   /^\/api\/finance\/(transactions|recurring-payments)(\/|$)/,
   /^\/api\/birthdays(\/|$)/,
   /^\/api\/projects(\/|$)/,
+  // A day of a habit marked: the same mark sent again changes nothing.
+  /^\/api\/habits\/[^/]+\/days\/[^/]+$/,
 ];
 
 export function isQueueable(method: string, path: string, body: unknown): boolean {

@@ -47,6 +47,7 @@ in one place on your own server, with notifications and an assistant in Telegram
 | 💰 **Finance**     | wallets, main currency, budgets, subscriptions, savings goals, wishlist price watch                               |
 | 📔 **Diary**       | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                 |
 | 🧠 **Psychology**  | mood patterns, check-ups, life events with Excel / Word export                                                    |
+| 🌱 **Habits**      | quitting or cutting down alcohol, smoking or your own: the run of clean days, an evening question in Telegram     |
 | 🔑 **Passwords**   | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext |
 | 🩺 **Health**      | one medical history across countries: visits, ICD diagnoses, medications, documents                               |
 | ✅ **Tasks**       | TODO list with repeating tasks, reminders at your local time                                                      |

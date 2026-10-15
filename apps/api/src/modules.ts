@@ -10,6 +10,7 @@ import { PsychologyModule } from '@pd/psychology-api';
 import { ActivityModule } from '@pd/activity-api';
 import { TasksModule } from '@pd/tasks-api';
 import { VaultModule } from '@pd/vault-api';
+import { HabitsModule } from '@pd/habits-api';
 import { WeatherModule } from '@pd/weather-api';
 
 /**
@@ -27,6 +28,7 @@ export const enabledModules = [
   PsychologyModule,
   HealthModule,
   VaultModule,
+  HabitsModule,
   MusicModule,
   GamesModule,
   WeatherModule,
