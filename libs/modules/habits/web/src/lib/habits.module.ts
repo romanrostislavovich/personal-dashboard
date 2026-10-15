@@ -6,7 +6,7 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const habitsModule: WebDashboardModule = {
   id: 'habits',
-  nav: { labelKey: 'habits.title', icon: 'spa' },
+  nav: { labelKey: 'habits.title', icon: 'spa', group: 'me' },
   loadRoutes: async () => [
     { path: '', loadComponent: () => import('./habits.page').then((m) => m.HabitsPage) },
   ],

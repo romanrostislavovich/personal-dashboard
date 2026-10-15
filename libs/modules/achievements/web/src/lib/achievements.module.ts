@@ -6,7 +6,7 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const achievementsModule: WebDashboardModule = {
   id: 'achievements',
-  nav: { labelKey: 'achievements.title', icon: 'emoji_events' },
+  nav: { labelKey: 'achievements.title', icon: 'emoji_events', group: 'bottom' },
   loadRoutes: async () => [
     {
       path: '',

@@ -7,7 +7,7 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const psychologyModule: WebDashboardModule = {
   id: 'psychology',
-  nav: { labelKey: 'psychology.title', icon: 'psychology' },
+  nav: { labelKey: 'psychology.title', icon: 'psychology', group: 'me' },
   // The page holds the tabs; every subsection is its child route.
   loadRoutes: async () => [
     {

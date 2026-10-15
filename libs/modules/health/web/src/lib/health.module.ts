@@ -6,7 +6,7 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const healthModule: WebDashboardModule = {
   id: 'health',
-  nav: { labelKey: 'health.title', icon: 'medical_information' },
+  nav: { labelKey: 'health.title', icon: 'medical_information', group: 'me' },
   // The page holds the tabs; every subsection is its child route.
   loadRoutes: async () => [
     {

@@ -3,7 +3,7 @@ import { WebDashboardModule } from '@pd/web-core';
 /** Web part of the Diary module. Plugged in at apps/web/src/app/modules.ts. */
 export const diaryModule: WebDashboardModule = {
   id: 'diary',
-  nav: { labelKey: 'diary.title', icon: 'menu_book' },
+  nav: { labelKey: 'diary.title', icon: 'menu_book', group: 'me' },
   loadRoutes: async () => [
     { path: '', loadComponent: () => import('./diary.page').then((m) => m.DiaryPage) },
   ],

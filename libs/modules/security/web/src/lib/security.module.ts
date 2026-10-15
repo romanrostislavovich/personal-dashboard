@@ -6,7 +6,7 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const securityModule: WebDashboardModule = {
   id: 'security',
-  nav: { labelKey: 'security.title', icon: 'shield' },
+  nav: { labelKey: 'security.title', icon: 'shield', group: 'safety' },
   loadRoutes: async () => [
     { path: '', loadComponent: () => import('./security.page').then((m) => m.SecurityPage) },
   ],

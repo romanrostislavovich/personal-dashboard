@@ -6,7 +6,7 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const vaultModule: WebDashboardModule = {
   id: 'vault',
-  nav: { labelKey: 'vault.title', icon: 'key' },
+  nav: { labelKey: 'vault.title', icon: 'key', group: 'safety' },
   loadRoutes: async () => [
     { path: '', loadComponent: () => import('./vault.page').then((m) => m.VaultPage) },
   ],

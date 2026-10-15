@@ -3,7 +3,7 @@ import { WebDashboardModule } from '@pd/web-core';
 /** Web part of the Games module. Plugged in at apps/web/src/app/modules.ts. */
 export const gamesModule: WebDashboardModule = {
   id: 'games',
-  nav: { labelKey: 'games.title', icon: 'sports_esports' },
+  nav: { labelKey: 'games.title', icon: 'sports_esports', group: 'leisure' },
   loadRoutes: async () => [
     { path: '', loadComponent: () => import('./games.page').then((m) => m.GamesPage) },
   ],
