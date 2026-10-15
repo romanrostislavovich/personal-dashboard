@@ -4,7 +4,14 @@
     "dashboard": "Главная",
     "projects": "Проекты",
     "settings": "Настройки",
-    "logout": "Выйти"
+    "logout": "Выйти",
+    "groups": {
+      "things": "Дела",
+      "me": "Я",
+      "work": "Работа",
+      "leisure": "Досуг",
+      "safety": "Безопасность"
+    }
   },
   "actions": {
     "add": "Добавить",

@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
 import { DB, Database } from '../database/database.module';
+import { UsersService } from '../users/users.service';
 import { AiConnectionsService } from './ai-connections.service';
 import { CollectedSection, DigestChange, digestChanges } from './digest-changes';
 import { DigestSection } from './digest-section';
@@ -18,6 +19,7 @@ export class MorningDigestService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly connections: AiConnectionsService,
+    private readonly users: UsersService,
   ) {}
 
   register(section: DigestSection): void {
@@ -32,8 +34,11 @@ export class MorningDigestService {
   /** Sections for today's digest; empty — nothing new, the digest is not sent. */
   async changes(userId: string): Promise<DigestChange[]> {
     // The digest is written by the shared AI: modules switched off for it, or with a
-    // connection of their own, are left out.
-    const hidden = new Set(await this.connections.hiddenFromShared(userId));
+    // connection of their own, are left out — and so are the sections the user hid.
+    const hidden = new Set([
+      ...(await this.connections.hiddenFromShared(userId)),
+      ...this.users.hiddenSections(await this.users.findById(userId)),
+    ]);
     const optedIn = new Set(await this.connections.digestOptIns(userId));
     const visible = this.sections.filter(
       (section) => !hidden.has(section.module) && (!section.optIn || optedIn.has(section.id)),

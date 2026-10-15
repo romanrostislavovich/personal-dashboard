@@ -381,10 +381,21 @@ export interface HealthStudy {
 export const BLOOD_TYPES = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'] as const;
 export type BloodType = (typeof BLOOD_TYPES)[number];
 
+/** Whom to call in an emergency (the ICE card). */
+export const emergencyContactSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  phone: z.string().trim().min(3).max(40),
+  /** Who it is: "wife", "brother", "my doctor". */
+  relation: z.string().trim().max(50).default(''),
+});
+export type EmergencyContact = z.output<typeof emergencyContactSchema>;
+
 export const healthProfileInputSchema = z.object({
   bloodType: z.enum(BLOOD_TYPES).nullish(),
   /** What a doctor in an emergency should know: implants, a pacemaker, a contact person. */
   notes: optionalText(5000),
+  /** Left out — kept as they are. */
+  emergencyContacts: z.array(emergencyContactSchema).max(5).optional(),
 });
 export type HealthProfileInput = z.input<typeof healthProfileInputSchema>;
 
@@ -449,6 +460,7 @@ export interface HealthOperation {
 export interface HealthProfile {
   bloodType: BloodType | null;
   notes: string | null;
+  emergencyContacts: EmergencyContact[];
   allergies: HealthAllergy[];
   /** The latest first. */
   vaccinations: HealthVaccination[];

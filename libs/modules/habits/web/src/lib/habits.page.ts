@@ -4,11 +4,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Habit, HabitInput, HabitKind } from '@pd/contracts';
+import { Habit, HabitInput, HabitKind, isBuilding } from '@pd/contracts';
 import { firstValueFrom, Observable } from 'rxjs';
 import { HabitCardAction, HabitCardComponent } from './habit-card.component';
 import { HabitDialog, HabitDialogData } from './habit.dialog';
-import { HABIT_ICONS, HabitsApi } from './habits.api';
+import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
 
 /**
  * Habits: "I quit drinking", "I quit smoking", or one's own, each with its run of clean days.
@@ -34,6 +34,9 @@ import { HABIT_ICONS, HabitsApi } from './habits.api';
           <span class="emoji">{{ icons[kind] }}</span> {{ 'habits.start.' + kind | transloco }}
         </button>
       }
+      <button matButton="tonal" (click)="start('custom', true)">
+        <span class="emoji">{{ buildIcon }}</span> {{ 'habits.start.build' | transloco }}
+      </button>
     </div>
     @if (habits.isLoading()) {
       <mat-progress-bar mode="indeterminate" />
@@ -90,10 +93,11 @@ export class HabitsPage {
 
   protected readonly kinds: HabitKind[] = ['alcohol', 'smoking', 'custom'];
   protected readonly icons = HABIT_ICONS;
+  protected readonly buildIcon = BUILD_ICON;
   protected readonly habits = this.api.list();
 
-  protected async start(kind: HabitKind): Promise<void> {
-    const input = await this.open({ kind });
+  protected async start(kind: HabitKind, build = false): Promise<void> {
+    const input = await this.open({ kind, build });
     if (input) {
       await this.run(this.api.create(input));
     }
@@ -103,14 +107,14 @@ export class HabitsPage {
     switch (action.type) {
       case 'mark':
         await this.run(
-          this.api.mark(habit.id, action.day, { status: 'used', amount: action.amount }),
+          this.api.mark(habit.id, action.day, { status: action.status, amount: action.amount }),
         );
         break;
       case 'unmark':
         await this.run(this.api.unmark(habit.id, action.day));
         break;
       case 'edit': {
-        const input = await this.open({ kind: habit.kind, habit });
+        const input = await this.open({ kind: habit.kind, habit, build: isBuilding(habit.goal) });
         if (input) {
           await this.run(this.api.update(habit.id, input));
         }

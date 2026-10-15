@@ -98,11 +98,18 @@ export interface BotDocument {
  */
 export type BotDocumentHandler = (user: UserRow, document: BotDocument) => Promise<string>;
 
+/** A reply with buttons under it (see BotAction for what a press does). */
+export interface BotReply {
+  text: string;
+  buttons: { label: string; action: string }[];
+}
+
 /**
  * Handles plain text messages (not commands) — the AI assistant.
- * Returns the bot reply. Only one handler owns free text — the first registered.
+ * Returns the bot reply, with buttons when it asks something. Only one handler owns free text
+ * — the first registered.
  */
-export type BotTextHandler = (user: UserRow, text: string) => Promise<string>;
+export type BotTextHandler = (user: UserRow, text: string) => Promise<string | BotReply>;
 
 /** A voice message (or an audio file) sent to the bot. */
 export interface BotVoice {

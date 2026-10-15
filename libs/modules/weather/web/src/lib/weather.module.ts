@@ -3,7 +3,7 @@ import { WebDashboardModule } from '@pd/web-core';
 /** Web part of the Weather module. Plugged in at apps/web/src/app/modules.ts. */
 export const weatherModule: WebDashboardModule = {
   id: 'weather',
-  nav: { labelKey: 'weather.title', icon: 'partly_cloudy_day' },
+  nav: { labelKey: 'weather.title', icon: 'partly_cloudy_day', menu: false },
   loadRoutes: async () => [
     { path: '', loadComponent: () => import('./weather.page').then((m) => m.WeatherPage) },
   ],

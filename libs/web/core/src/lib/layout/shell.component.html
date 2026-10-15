@@ -20,10 +20,32 @@
       @for (item of mainNav(); track item.path) {
         <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
       }
+      @for (group of groups(); track group.id) {
+        <button
+          type="button"
+          class="nav-group"
+          [attr.aria-expanded]="isOpen(group)"
+          (click)="toggle(group)"
+        >
+          <mat-icon>{{ group.icon }}</mat-icon>
+          <span>{{ 'core.nav.groups.' + group.id | transloco }}</span>
+          @if (!isOpen(group)) {
+            <span class="count">{{ group.items.length }}</span>
+          }
+          <mat-icon class="chevron">{{ isOpen(group) ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+        @if (isOpen(group)) {
+          <div class="nav-group-items">
+            @for (item of group.items; track item.path) {
+              <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
+            }
+          </div>
+        }
+      }
     </nav>
 
     <nav class="nav bottom-nav">
-      @for (item of bottomNav; track item.path) {
+      @for (item of bottomNav(); track item.path) {
         <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
       }
     </nav>

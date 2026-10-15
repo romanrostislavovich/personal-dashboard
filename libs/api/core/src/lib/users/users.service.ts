@@ -46,6 +46,14 @@ export class UsersService {
    * told it, the server's own zone (APP_TIMEZONE). Everything about "today" and "at 9:00" for a
    * user goes through this — the server may stand anywhere.
    */
+  /**
+   * The sections the user hid (Settings → Appearance): out of the menu, the digest and the
+   * notifications. The account's layout — a device may hide more for itself only.
+   */
+  hiddenSections(user: Pick<UserRow, 'layout'> | undefined): string[] {
+    return user?.layout?.layout.hiddenSections ?? [];
+  }
+
   timeZoneOf(user: Pick<UserRow, 'timeZone'> | undefined): string {
     return user?.timeZone ?? this.config.get('APP_TIMEZONE', { infer: true });
   }

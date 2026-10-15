@@ -51,6 +51,8 @@ export interface AiAnswer {
   reply: string;
   /** Modules the model took data from. */
   toolsUsed: string[];
+  /** A tool asked to confirm a deletion or an overwrite: the reply asks "shall I?". */
+  awaitsConfirmation?: boolean;
 }
 
 /**
@@ -143,16 +145,18 @@ export class AiService {
     const turn = ++this.turns;
     /** Write tools that changed data in this turn. */
     const changes: string[] = [];
+    let asked = false;
     const run = (conversation: ChatMessage[]) =>
       runToolLoop({
         messages: conversation,
         tools,
         complete: (current, definitions) => chatCompletion(connection, current, definitions),
         runTool: async (tool, rawArgs) => {
-          const { output, changed } = await this.runTool(userId, tool, rawArgs, turn);
+          const { output, changed, asks } = await this.runTool(userId, tool, rawArgs, turn);
           if (changed && tool) {
             changes.push(tool.name);
           }
+          asked ||= asks === true;
           return output;
         },
         maxRounds: MAX_TOOL_ROUNDS,
@@ -161,7 +165,7 @@ export class AiService {
       const first = await run(messages);
       // "Recorded!" without a write tool call means nothing was saved: make the model fix it.
       if (!options.allowWrites || changes.length > 0 || !claimsChange(first.reply)) {
-        return first;
+        return { ...first, awaitsConfirmation: asked };
       }
       this.logger.warn(`AI claimed a change without a tool call; asking again`);
       const second = await run([
@@ -172,6 +176,7 @@ export class AiService {
       return {
         reply: second.reply,
         toolsUsed: [...new Set([...first.toolsUsed, ...second.toolsUsed])],
+        awaitsConfirmation: asked,
       };
     } catch (error) {
       if (error instanceof AiRequestError) {
@@ -276,7 +281,7 @@ export class AiService {
     tool: AiTool | undefined,
     rawArgs: string,
     turn: number,
-  ): Promise<{ output: string; changed: boolean }> {
+  ): Promise<{ output: string; changed: boolean; asks?: boolean }> {
     if (!tool) {
       return { output: JSON.stringify({ error: 'Unknown tool' }), changed: false };
     }
@@ -300,7 +305,11 @@ export class AiService {
       ) {
         const willAffect = await tool.confirm(userId, args);
         await log('asked');
-        return { output: JSON.stringify(confirmationRequest(willAffect)), changed: false };
+        return {
+          output: JSON.stringify(confirmationRequest(willAffect)),
+          changed: false,
+          asks: true,
+        };
       }
       const value = await tool.handler(userId, args);
       await log('done');

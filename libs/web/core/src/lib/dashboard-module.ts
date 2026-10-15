@@ -14,8 +14,12 @@ export interface WebDashboardModule {
    * (`'birthdays.title' | transloco`).
    */
   id: string;
-  /** Side menu item. `labelKey` is a translation key, `icon` is a Material Icon name. */
-  nav: { labelKey: string; icon: string };
+  /**
+   * Side menu item. `labelKey` is a translation key, `icon` is a Material Icon name; `group` puts
+   * it in a group of the menu (none — at the top level), `menu: false` keeps it out of the menu
+   * (reached from its widget and the command palette).
+   */
+  nav: { labelKey: string; icon: string; group?: NavGroupId; menu?: false };
   /** Module pages, loaded lazily. */
   loadRoutes: () => Promise<Routes>;
   /** Module translations per language: `{ ru: () => import('./i18n/ru.json') }`. */
@@ -30,6 +34,13 @@ export interface WebDashboardModule {
    */
   integrations?: DashboardIntegration[];
 }
+
+/**
+ * The groups of the side menu, in their order of the menu: a group shows where its first
+ * section is. `bottom` is not a group: the sections next to Settings.
+ */
+export const NAV_GROUPS = ['things', 'me', 'work', 'leisure', 'safety', 'bottom'] as const;
+export type NavGroupId = (typeof NAV_GROUPS)[number];
 
 /**
  * A line of the command palette: a page inside the section (`url`), or an action on the text

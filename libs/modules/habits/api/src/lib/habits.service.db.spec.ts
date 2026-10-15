@@ -115,6 +115,32 @@ describe.skipIf(!ADMIN_URL)('HabitsService', () => {
     const after = await service.get(userId, habit.id);
     expect(after.recent).toEqual([{ day: '2026-10-15', status: 'used', amount: 2.5 }]);
   });
+
+  it('a habit to build: asked in the evening, "Done" marks the day, "Not today" takes it off', async () => {
+    const userId = await addUser();
+    const habit = await service.create(userId, {
+      kind: 'custom',
+      name: 'Gym',
+      goal: 'daily',
+      maxDaysPerWeek: null,
+      timesPerWeek: null,
+      unit: null,
+      startedOn: '2026-10-10',
+      askAt: '20:00',
+    });
+    await service.askDue(new Date('2026-10-15T20:01:00Z'));
+    const question = sent.find((message) => message.userId === userId);
+    expect(question?.title).toBe('🌙 «Gym» today — done?');
+    const done = question?.actions?.find((a) => a.action.startsWith('hb:d:'))?.action ?? '';
+    const user = (await db.execute(sql`SELECT * FROM users WHERE id = ${userId}`)).rows[0];
+    expect(await service.answerButton(user as never, done.slice('hb:'.length))).toContain('Done!');
+    expect((await service.get(userId, habit.id)).recent).toEqual([
+      { day: '2026-10-15', status: 'done', amount: null },
+    ]);
+    const notToday = done.replace('hb:d:', 'n:');
+    await service.answerButton(user as never, notToday);
+    expect((await service.get(userId, habit.id)).recent).toEqual([]);
+  });
 });
 
 /** Waits for the closed connections to leave, then drops the scratch database. */

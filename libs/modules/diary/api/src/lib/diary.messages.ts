@@ -10,7 +10,10 @@ const messages = {
     reminderBody: 'How was your day? Tap a mood — then I will ask for a couple of words.',
     checkInAskWords: (emoji: string) =>
       `${emoji} Saved. A few words about the day? Your next message goes to the diary.`,
-    weeklyTitle: '📔 Your week in the diary',
+    weeklyTitle: '📔 Your week',
+    weeklyAnswer: '✍️ Answer',
+    weeklyAnswerAsk: 'Write your answers in one message: they go to today’s diary entry.',
+    weeklyAnswerPrefix: 'Looking back at the week:',
     moodDescription: 'Rate today: /mood 1–5',
     moodUsage: 'Send a number from 1 (bad) to 5 (great), e.g. /mood 4',
     moodSaved: (emoji: string) => `${emoji} Mood for today is saved`,
@@ -26,7 +29,10 @@ const messages = {
     reminderBody: 'Как прошёл день? Нажми на настроение — потом спрошу пару слов.',
     checkInAskWords: (emoji: string) =>
       `${emoji} Записал. Пару слов о дне? Следующее сообщение пойдёт в дневник.`,
-    weeklyTitle: '📔 Неделя в дневнике',
+    weeklyTitle: '📔 Твоя неделя',
+    weeklyAnswer: '✍️ Ответить',
+    weeklyAnswerAsk: 'Напиши ответы одним сообщением — они попадут в сегодняшнюю запись дневника.',
+    weeklyAnswerPrefix: 'Оглядываясь на неделю:',
     moodDescription: 'Оценить день: /mood 1–5',
     moodUsage: 'Отправь число от 1 (плохо) до 5 (отлично), например /mood 4',
     moodSaved: (emoji: string) => `${emoji} Настроение дня сохранено`,

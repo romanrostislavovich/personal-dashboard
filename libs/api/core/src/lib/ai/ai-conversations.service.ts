@@ -52,12 +52,12 @@ export class AiConversationsService {
       ...(question.attachments?.length ? { attachments: question.attachments } : {}),
     };
     const history = [...(await this.context(conversation.id)), message];
-    const { reply, toolsUsed } = await this.ai.ask(userId, history, options);
+    const { reply, toolsUsed, awaitsConfirmation } = await this.ai.ask(userId, history, options);
     await this.append(userId, conversation, [
       message,
       { role: 'assistant', content: reply, toolsUsed },
     ]);
-    return { conversationId: conversation.id, reply, toolsUsed };
+    return { conversationId: conversation.id, reply, toolsUsed, awaitsConfirmation };
   }
 
   async list(userId: string): Promise<AiConversation[]> {

@@ -15,6 +15,7 @@ import {
   HabitDayInput,
   HabitDayStatus,
   habitStats,
+  isBuilding,
   LocalDate,
   parseLocalDate,
   toLocalDate,
@@ -149,6 +150,18 @@ export class HabitsService {
   async answerButton(user: UserRow, payload: string): Promise<BotActionReply> {
     const [what, id, day] = payload.split(':');
     const text = habitsMessages(user.locale);
+    // A habit to build: done, or not today (no mark).
+    if (what === 'd' || what === 'n') {
+      try {
+        const habit =
+          what === 'd'
+            ? await this.mark(user.id, id, day, { status: 'done' })
+            : await this.unmark(user.id, id, day);
+        return what === 'd' ? text.done(habit.stats.currentStreak) : text.notToday;
+      } catch {
+        return text.gone;
+      }
+    }
     const status: HabitDayStatus = what === 'u' ? 'used' : 'clean';
     let habit: Habit;
     try {
@@ -194,6 +207,18 @@ export class HabitsService {
     }
     const text = habitsMessages(user.locale);
     const streak = (await this.get(user.id, habit.id)).stats.currentStreak;
+    if (isBuilding(habit.goal)) {
+      await this.notifications.send(user.id, {
+        title: text.question.build(habit.name ?? ''),
+        body: text.buildBody(streak),
+        source: 'habits',
+        actions: [
+          { label: text.buttons.done, action: `${HABIT_ACTION}:d:${habit.id}:${day}` },
+          { label: text.buttons.notToday, action: `${HABIT_ACTION}:n:${habit.id}:${day}` },
+        ],
+      });
+      return;
+    }
     await this.notifications.send(user.id, {
       title:
         habit.kind === 'custom'
@@ -237,6 +262,7 @@ function fields(input: ValidHabitInput) {
     name: input.kind === 'custom' ? input.name : null,
     goal: input.goal,
     maxDaysPerWeek: input.goal === 'less' ? (input.maxDaysPerWeek ?? 0) : null,
+    timesPerWeek: input.goal === 'weekly' ? (input.timesPerWeek ?? 1) : null,
     unit: input.unit,
     startedOn: input.startedOn,
     askAt: input.askAt ?? null,
@@ -256,6 +282,7 @@ function toHabit(row: HabitRow, marks: HabitDayRow[], today: LocalDate): Habit {
     name: row.name,
     goal: row.goal,
     maxDaysPerWeek: row.maxDaysPerWeek,
+    timesPerWeek: row.timesPerWeek,
     unit: row.unit,
     startedOn: row.startedOn,
     askAt: row.askAt,

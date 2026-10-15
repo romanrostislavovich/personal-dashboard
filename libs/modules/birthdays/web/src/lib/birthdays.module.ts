@@ -3,7 +3,7 @@ import { WebDashboardModule } from '@pd/web-core';
 /** Web part of the Birthdays module. Plugged in at apps/web/src/app/modules.ts. */
 export const birthdaysModule: WebDashboardModule = {
   id: 'birthdays',
-  nav: { labelKey: 'birthdays.title', icon: 'cake' },
+  nav: { labelKey: 'birthdays.title', icon: 'cake', group: 'things' },
   loadRoutes: async () => [
     { path: '', loadComponent: () => import('./birthdays.page').then((m) => m.BirthdaysPage) },
   ],

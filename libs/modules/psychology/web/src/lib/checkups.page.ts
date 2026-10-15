@@ -14,6 +14,7 @@ import {
 import { SparklineComponent, SparklinePoint } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { PsychologyApi, today } from './psychology.api';
+import { QuestionnaireReminderComponent } from './questionnaire-reminder.component';
 
 /**
  * Check-ups: short standard questionnaires filled in from time to time, so a change is seen
@@ -31,11 +32,13 @@ import { PsychologyApi, today } from './psychology.api';
     MatIconModule,
     TranslocoPipe,
     SparklineComponent,
+    QuestionnaireReminderComponent,
   ],
   template: `
     <p class="notice">
       <mat-icon inline>info</mat-icon> {{ 'psychology.checkups.notDiagnosis' | transloco }}
     </p>
+    <pd-questionnaire-reminder />
 
     @if (taking(); as test) {
       <mat-card appearance="outlined">

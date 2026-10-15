@@ -242,3 +242,51 @@ mat-sidenav-content {
   color: var(--mat-sys-on-tertiary-container);
   font: var(--mat-sys-body-medium);
 }
+
+// A group of the menu: a heading that folds its sections, which sit a little inward.
+.nav-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 12px;
+  font: var(--mat-sys-label-medium);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+  background: none;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  mat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+  }
+
+  .count {
+    margin-left: auto;
+    font: var(--mat-sys-label-small);
+  }
+
+  .chevron {
+    margin-left: auto;
+  }
+
+  .count + .chevron {
+    margin-left: 4px;
+  }
+}
+
+.nav-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  padding-left: 12px;
+}

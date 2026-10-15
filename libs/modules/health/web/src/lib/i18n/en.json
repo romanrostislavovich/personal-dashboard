@@ -424,5 +424,25 @@
       "performedOn": "Date",
       "clinic": "Clinic"
     }
+  },
+  "ice": {
+    "title": "ICE card — in case of emergency",
+    "hint": "What a paramedic needs at once, from your record: print it for the wallet, or set it as the lock screen of your phone — its QR code is read by any camera, with no app.",
+    "contacts": "Whom to call",
+    "name": "Name",
+    "phone": "Phone",
+    "relation": "Who it is",
+    "addContact": "Add a contact",
+    "print": "Print",
+    "lockScreen": "Picture for the lock screen",
+    "card": {
+      "title": "ICE",
+      "blood": "Blood type",
+      "allergies": "Allergies",
+      "conditions": "Conditions",
+      "medications": "Medications",
+      "notes": "Important",
+      "contacts": "Call"
+    }
   }
 }

@@ -167,6 +167,8 @@ export interface AiChatResponse {
   reply: string;
   /** Which data the model requested — shown under the answer. */
   toolsUsed: string[];
+  /** The answer asks to confirm a deletion or an overwrite ("Yes" / "No"). */
+  awaitsConfirmation?: boolean;
 }
 
 /** A stored message; file texts stay on the server, the client gets their names. */

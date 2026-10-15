@@ -4,7 +4,14 @@
     "dashboard": "Home",
     "projects": "Projects",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Log out",
+    "groups": {
+      "things": "Things to do",
+      "me": "Me",
+      "work": "Work",
+      "leisure": "Leisure",
+      "safety": "Security"
+    }
   },
   "actions": {
     "add": "Add",

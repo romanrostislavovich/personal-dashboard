@@ -30,6 +30,8 @@ export const habits = pgTable(
     name: encryptedText(),
     goal: text().$type<HabitGoal>().notNull(),
     maxDaysPerWeek: smallint(),
+    /** For a habit to build a few days a week: how many. */
+    timesPerWeek: smallint(),
     unit: encryptedText(),
     startedOn: date({ mode: 'string' }).notNull(),
     /** The evening question in Telegram, `HH:mm`; `null` — none. */

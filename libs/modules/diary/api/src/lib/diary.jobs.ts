@@ -23,6 +23,9 @@ const TELEGRAM_MAX_LENGTH = 4000;
  *   bot asks how the day was, a button sets the mood, the next message goes to the entry;
  * - on Sundays at 20:00, an AI summary of the week (for those who enabled it).
  */
+/** The button under the Sunday review: the answers go to the diary. */
+const WEEKLY_ACTION = 'dwr';
+
 @Injectable()
 export class DiaryJobs implements OnModuleInit {
   private readonly logger = new Logger(DiaryJobs.name);
@@ -133,6 +136,23 @@ export class DiaryJobs implements OnModuleInit {
       handler: () => this.remind(),
     });
 
+    this.telegram.registerAction({
+      name: WEEKLY_ACTION,
+      handler: async (user) => {
+        const text = diaryMessages(user.locale);
+        return {
+          reply: text.weeklyAnswerAsk,
+          expectText: async (author, answer) => {
+            await this.diary.appendToToday(
+              author.id,
+              `${diaryMessages(author.locale).weeklyAnswerPrefix}\n${answer}`,
+            );
+            return diaryMessages(author.locale).saved;
+          },
+        };
+      },
+    });
+
     this.scheduler.register({
       name: 'diary.weekly-summary',
       cron: '0 20 * * 0',
@@ -143,15 +163,18 @@ export class DiaryJobs implements OnModuleInit {
   async sendWeeklySummaries(): Promise<void> {
     for (const userId of await this.diary.usersWithWeeklySummary()) {
       try {
-        const summary = await this.summaries.summarize(userId, this.diary.lastWeek());
-        if (!summary) {
+        const review = await this.summaries.weeklyReview(userId, this.diary.lastWeek());
+        if (!review) {
           continue;
         }
         const user = await this.users.findById(userId);
+        const text = diaryMessages(user?.locale ?? 'en');
         await this.notifications.send(userId, {
-          title: diaryMessages(user?.locale ?? 'en').weeklyTitle,
-          body: summary,
+          title: text.weeklyTitle,
+          body: review,
           source: 'diary',
+          // The answers to its questions go to today's entry.
+          actions: [{ label: text.weeklyAnswer, action: `${WEEKLY_ACTION}:a` }],
         });
       } catch (error) {
         // For example, the AI is not configured — skip this user, send to the rest.

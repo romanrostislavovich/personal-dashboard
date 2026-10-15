@@ -62,3 +62,44 @@ describe('the numbers of a habit', () => {
     expect(habitStats({ ...less, goal: 'quit' }, marks, '2026-10-15').weeksWithinLimit).toBe(0);
   });
 });
+
+describe('the numbers of a habit to build', () => {
+  const done = (...days: string[]): HabitDay[] =>
+    days.map((day) => ({ day, status: 'done', amount: null }));
+
+  it('every day: days in a row done; today not done yet keeps the run', () => {
+    const habit = { goal: 'daily' as const, maxDaysPerWeek: null, startedOn: '2026-10-01' };
+    const marks = done('2026-10-02', '2026-10-03', '2026-10-05', '2026-10-06', '2026-10-07');
+    expect(habitStats(habit, marks, '2026-10-08')).toMatchObject({
+      currentStreak: 3,
+      bestStreak: 3,
+      doneDays: 5,
+    });
+    // A whole day missed (the 8th) breaks it the day after.
+    expect(habitStats(habit, marks, '2026-10-09').currentStreak).toBe(0);
+  });
+
+  it('a few days a week: weeks in a row with enough of them', () => {
+    const habit = {
+      goal: 'weekly' as const,
+      maxDaysPerWeek: null,
+      timesPerWeek: 2,
+      startedOn: '2026-09-28',
+    };
+    // Weeks from Monday: 09-28 (2 — yes), 10-05 (1 — no), 10-12 (2 — yes); this week 10-19: 1.
+    const marks = done(
+      '2026-09-29',
+      '2026-10-01',
+      '2026-10-06',
+      '2026-10-13',
+      '2026-10-15',
+      '2026-10-20',
+    );
+    expect(habitStats(habit, marks, '2026-10-21')).toMatchObject({
+      currentStreak: 1,
+      bestStreak: 1,
+      doneThisWeek: 1,
+      doneDays: 6,
+    });
+  });
+});

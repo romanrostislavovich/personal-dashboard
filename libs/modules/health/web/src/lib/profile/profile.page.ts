@@ -14,6 +14,7 @@ import { firstValueFrom } from 'rxjs';
 import { HealthDialogs } from '../dialogs/health-dialogs.service';
 import { HealthApi } from '../health.api';
 import { CountryPipe } from '../health-labels';
+import { IceCardComponent } from './ice-card.component';
 import { ProfileItemData, ProfileItemDialog, ProfileItemKind } from './profile-item.dialog';
 
 /**
@@ -26,6 +27,7 @@ import { ProfileItemData, ProfileItemDialog, ProfileItemKind } from './profile-i
   imports: [
     CountryPipe,
     DatePipe,
+    IceCardComponent,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
