@@ -106,6 +106,7 @@
     "@swc-node/register": "1.11.1",
     "@swc/core": "1.15.8",
     "@swc/helpers": "0.5.18",
+    "@types/chrome": "^0.3.5",
     "@types/node": "^24.0.0",
     "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",

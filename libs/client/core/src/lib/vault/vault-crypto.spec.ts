@@ -8,6 +8,7 @@ import {
   formatRecoveryKey,
   parseRecoveryKey,
   randomBytes,
+  restoreVaultKey,
   rewrapVault,
   unlockVault,
   unlockWithRecoveryKey,
@@ -62,6 +63,12 @@ describe('the vault', () => {
     expect(await decryptItem(await unlockWithRecoveryKey(changed, recoveryKey), data)).toEqual(
       item,
     );
+  });
+
+  it('opens again from the raw key a client kept while the vault was unlocked', async () => {
+    const { vaultKey } = await createVault('master', ROUNDS);
+    const data = await encryptItem(vaultKey, item);
+    expect(await decryptItem(await restoreVaultKey(vaultKey.raw), data)).toEqual(item);
   });
 
   it('notices an item that was changed on the way', async () => {

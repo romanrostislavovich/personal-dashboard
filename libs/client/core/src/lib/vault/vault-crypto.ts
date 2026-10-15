@@ -93,6 +93,15 @@ export async function rewrapVault(
   };
 }
 
+/**
+ * The open vault again from its raw bytes — for a client whose process does not live as long as
+ * the unlocked vault (the extension's service worker sleeps after 30 seconds and keeps the bytes
+ * in the browser's memory meanwhile). Never from anything written to disk.
+ */
+export function restoreVaultKey(raw: Uint8Array): Promise<VaultKey> {
+  return openKey(raw);
+}
+
 export async function encryptItem(vaultKey: VaultKey, item: VaultItem): Promise<string> {
   const plain = new TextEncoder().encode(JSON.stringify(item));
   return toBase64(await seal(vaultKey.key, plain));

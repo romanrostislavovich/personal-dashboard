@@ -95,7 +95,8 @@ Caddy, daily backups and one-command updates: [docs/deploy.md](docs/deploy.md). 
 `ghcr.io/romanrostislavovich/personal-dashboard`.
 
 Desktop installers are in [Releases](https://github.com/romanrostislavovich/personal-dashboard/releases)
-— [docs/desktop.md](docs/desktop.md). Run a local copy that works offline and syncs with the
+— [docs/desktop.md](docs/desktop.md). The password vault in Chrome (fills, saves, generates):
+[apps/extension](apps/extension/README.md). Run a local copy that works offline and syncs with the
 server: [docs/sync.md](docs/sync.md).
 
 ## Development

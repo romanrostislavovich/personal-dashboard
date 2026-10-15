@@ -1,0 +1,236 @@
+{
+  "extName": {
+    "message": "Personal Dashboard — Пароли"
+  },
+  "extDescription": {
+    "message": "Хранилище паролей вашего Personal Dashboard: заполняет логины, сохраняет новые, создаёт надёжные пароли. Шифруется на этом устройстве."
+  },
+  "commandFill": {
+    "message": "Заполнить логин на этой странице"
+  },
+  "saveBarSave": {
+    "message": "Сохранить пароль для $1?"
+  },
+  "saveBarUpdate": {
+    "message": "Обновить пароль для $1?"
+  },
+  "saveBarLocked": {
+    "message": "Сохранить пароль для $1? Разблокируйте хранилище в расширении, чтобы сохранить."
+  },
+  "saveBarNoLogin": {
+    "message": "Без логина"
+  },
+  "saveBarNever": {
+    "message": "Никогда для этого сайта"
+  },
+  "saveBarNotNow": {
+    "message": "Не сейчас"
+  },
+  "saveBarSaveButton": {
+    "message": "Сохранить"
+  },
+  "saveBarUpdateButton": {
+    "message": "Обновить"
+  },
+  "retry": {
+    "message": "Повторить"
+  },
+  "signIn": {
+    "message": "Войти"
+  },
+  "signInTitle": {
+    "message": "Вход в ваш дашборд"
+  },
+  "signInHint": {
+    "message": "Адрес вашего дашборда и аккаунт. Пароли остаются зашифрованными: хранилище открывается только мастер-паролем."
+  },
+  "server": {
+    "message": "Адрес дашборда"
+  },
+  "email": {
+    "message": "Email"
+  },
+  "password": {
+    "message": "Пароль"
+  },
+  "codeTitle": {
+    "message": "Двухфакторный вход"
+  },
+  "codeHint": {
+    "message": "Код из приложения-аутентификатора или код восстановления."
+  },
+  "code": {
+    "message": "Код"
+  },
+  "unlock": {
+    "message": "Разблокировать"
+  },
+  "unlocking": {
+    "message": "Разблокировка…"
+  },
+  "lockedTitle": {
+    "message": "Хранилище заблокировано"
+  },
+  "masterPassword": {
+    "message": "Мастер-пароль"
+  },
+  "forgotMaster": {
+    "message": "Забыли? Ключ восстановления вводится на дашборде"
+  },
+  "noVaultTitle": {
+    "message": "Хранилища ещё нет"
+  },
+  "noVaultHint": {
+    "message": "Создайте его на дашборде (раздел «Пароли»): выберите мастер-пароль и сохраните ключ восстановления. Потом разблокируйте здесь."
+  },
+  "openDashboard": {
+    "message": "Открыть дашборд"
+  },
+  "signOut": {
+    "message": "Выйти"
+  },
+  "search": {
+    "message": "Поиск"
+  },
+  "generator": {
+    "message": "Генератор паролей"
+  },
+  "lock": {
+    "message": "Заблокировать"
+  },
+  "neverSites": {
+    "message": "Исключённые сайты"
+  },
+  "loading": {
+    "message": "Загрузка…"
+  },
+  "unreadable": {
+    "message": "Не удалось открыть записей: $1."
+  },
+  "forThisSite": {
+    "message": "Для $1"
+  },
+  "allItems": {
+    "message": "Все"
+  },
+  "nothingFound": {
+    "message": "Ничего не найдено"
+  },
+  "fill": {
+    "message": "Заполнить"
+  },
+  "copyUsername": {
+    "message": "Копировать логин"
+  },
+  "copyPassword": {
+    "message": "Копировать пароль"
+  },
+  "copiedUsername": {
+    "message": "Логин скопирован"
+  },
+  "copiedPassword": {
+    "message": "Пароль скопирован"
+  },
+  "copyNote": {
+    "message": "Копировать заметку"
+  },
+  "copiedNote": {
+    "message": "Заметка скопирована"
+  },
+  "kindNote": {
+    "message": "Защищённая заметка"
+  },
+  "kindLogin": {
+    "message": "Логин"
+  },
+  "noForm": {
+    "message": "На этой странице нет формы входа"
+  },
+  "otherSite": {
+    "message": "Этот логин для $1, а страница — $2. Страница, похожая на чужой сайт, может быть фишингом. Всё равно заполнить?"
+  },
+  "cancel": {
+    "message": "Отмена"
+  },
+  "fillAnyway": {
+    "message": "Всё равно заполнить"
+  },
+  "saved": {
+    "message": "Сохранено в хранилище"
+  },
+  "length": {
+    "message": "Длина"
+  },
+  "lengthValue": {
+    "message": "Длина: $1"
+  },
+  "strength_weak": {
+    "message": "Слабый"
+  },
+  "strength_fair": {
+    "message": "Средний"
+  },
+  "strength_strong": {
+    "message": "Надёжный"
+  },
+  "back": {
+    "message": "Назад"
+  },
+  "regenerate": {
+    "message": "Другой"
+  },
+  "digits": {
+    "message": "Цифры"
+  },
+  "symbols": {
+    "message": "Символы"
+  },
+  "copy": {
+    "message": "Копировать"
+  },
+  "fillNewPassword": {
+    "message": "Вставить на страницу"
+  },
+  "noNewPasswordField": {
+    "message": "На этой странице нет поля для пароля"
+  },
+  "offerAgain": {
+    "message": "Снова предлагать"
+  },
+  "neverSitesEmpty": {
+    "message": "Сохранение предлагается на всех сайтах."
+  },
+  "error_signed_out": {
+    "message": "Сессия закончилась: войдите снова."
+  },
+  "error_unreachable": {
+    "message": "Дашборд недоступен. Проверьте подключение."
+  },
+  "error_not_dashboard": {
+    "message": "По этому адресу дашборд не отвечает."
+  },
+  "error_insecure_server": {
+    "message": "Нужен адрес с https: по обычному http пароль можно перехватить."
+  },
+  "error_wrong_password": {
+    "message": "Неверный email или пароль."
+  },
+  "error_wrong_code": {
+    "message": "Неверный код."
+  },
+  "error_wrong_master": {
+    "message": "Неверный мастер-пароль."
+  },
+  "error_no_vault": {
+    "message": "Хранилище ещё не создано."
+  },
+  "error_locked": {
+    "message": "Хранилище заблокировано."
+  },
+  "error_not_allowed": {
+    "message": "Не разрешено."
+  },
+  "error_failed": {
+    "message": "Что-то пошло не так. Попробуйте ещё раз."
+  }
+}

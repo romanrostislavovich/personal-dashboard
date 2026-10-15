@@ -40,6 +40,9 @@ Apps (`apps/*`) are thin hosts with no business logic — only the list of enabl
 - `apps/api/src/modules.ts`
 - `apps/web/src/app/modules.ts`
 
+The browser extension (`apps/extension`, the password vault in Chrome) is a client like the web
+app: plain TypeScript on the client core, no module of its own.
+
 ## Key decisions
 
 | Decision                             | Why                                                                                                                                                                                                                                  |
