@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { PsychologyAchievements } from './psychology.achievements';
 import { PsychologyAiTools } from './psychology.ai-tools';
 import { PsychologyController } from './psychology.controller';
 import { PsychologyDemo } from './psychology.demo';
@@ -12,6 +13,12 @@ import { PsychologyService } from './psychology.service';
  */
 @Module({
   controllers: [PsychologyController],
-  providers: [PsychologyService, PsychologyAiTools, PsychologyLinks, PsychologyDemo],
+  providers: [
+    PsychologyService,
+    PsychologyAiTools,
+    PsychologyLinks,
+    PsychologyDemo,
+    PsychologyAchievements,
+  ],
 })
 export class PsychologyModule {}

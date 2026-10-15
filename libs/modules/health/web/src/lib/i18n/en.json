@@ -54,7 +54,8 @@
     "suspected": "Suspected",
     "confirmed": "Confirmed",
     "ruledOut": "Ruled out",
-    "remission": "In remission"
+    "remission": "In remission",
+    "resolved": "Resolved (recovered)"
   },
   "documentKinds": {
     "consultation": "Consultation",
@@ -94,7 +95,8 @@
     "title": "Diagnosis",
     "titleHint": "As the document words it, in any language",
     "status": "Status",
-    "date": "Date"
+    "date": "Date",
+    "close": "Take off the diagnosis"
   },
   "medication": {
     "add": "Add a medication",
@@ -345,7 +347,7 @@
     "include": "What goes in",
     "sections": {
       "conditions": "Current diagnoses",
-      "pastConditions": "Past diagnoses (ruled out, in remission)",
+      "pastConditions": "Past diagnoses (resolved, ruled out, in remission)",
       "medications": "Medications taken now",
       "pastMedications": "Medications taken before",
       "labs": "Latest lab results",

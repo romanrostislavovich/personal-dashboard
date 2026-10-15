@@ -119,7 +119,25 @@ export interface HealthVisit {
 export const ICD_SYSTEMS = ['icd10', 'icd10am', 'icd11', 'other'] as const;
 export type IcdSystem = (typeof ICD_SYSTEMS)[number];
 
-export const DIAGNOSIS_STATUSES = ['suspected', 'confirmed', 'ruledOut', 'remission'] as const;
+/**
+ * - `suspected`, `confirmed` — the condition goes on;
+ * - `remission` — it quieted down, and may come back;
+ * - `resolved` — over: the person recovered and the diagnosis was taken off;
+ * - `ruledOut` — it was never there: the diagnosis did not hold.
+ */
+export const DIAGNOSIS_STATUSES = [
+  'suspected',
+  'confirmed',
+  'remission',
+  'resolved',
+  'ruledOut',
+] as const;
+/** What a diagnosis is taken off with (Conditions → "Take off the diagnosis"). */
+export const CLOSING_STATUSES = [
+  'resolved',
+  'ruledOut',
+  'remission',
+] as const satisfies readonly DiagnosisStatus[];
 export type DiagnosisStatus = (typeof DIAGNOSIS_STATUSES)[number];
 
 /** `F41.1`, `F32`, `6A70.1`: kept as written in the document, only its case and spaces fixed. */

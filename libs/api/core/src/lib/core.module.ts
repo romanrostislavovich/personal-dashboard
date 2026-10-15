@@ -19,6 +19,7 @@ import { TrashController } from './trash/trash.controller';
 import { DataController } from './data-export/data.controller';
 import { OtherComputersService } from './computer-time/other-computers.service';
 import { LinksAchievements } from './links/links.achievements';
+import { SectionsAchievements } from './achievements/sections.achievements';
 import { DemoGuard } from './demo/demo.guard';
 import { DemoService } from './demo/demo.service';
 import { CoreDemo } from './demo/core.demo';
@@ -155,6 +156,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     CoreIntegrations,
     LinksService,
     LinksAchievements,
+    SectionsAchievements,
     ProjectOverviewService,
     SignInLog,
     SecurityService,

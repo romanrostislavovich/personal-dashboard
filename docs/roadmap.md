@@ -95,7 +95,9 @@
   clothing advice that follows how you take the cold —
   on its page, on the home page and in the morning digest; the city comes from the browser's
   location until you pick another
-- **Achievements:** 340+ achievements across all modules, rarities, XP and player level
+- **Achievements:** 400+ achievements across all modules, rarities, XP and player level; in
+  Health and Psychology only care counts — medications taken on time, a diagnosis taken off, a
+  questionnaire month after month — never an illness or a score
 - **AI:** chat over your data (DeepSeek / OpenAI / Ollama / any OpenAI-compatible API), which
   also searches your own history ("when was I in Prague?") and links the days it found,
   `/ask` in Telegram, morning digest at the time you choose (the weather and only what changed since the previous

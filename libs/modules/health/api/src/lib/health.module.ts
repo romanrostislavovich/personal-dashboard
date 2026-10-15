@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DocumentReaderService } from './documents/document-reader.service';
 import { HealthTelegram } from './documents/health-telegram';
+import { HealthAchievements } from './health.achievements';
 import { HealthAiTools } from './health.ai-tools';
 import { HealthController } from './health.controller';
 import { HealthDemo } from './health.demo';
@@ -42,6 +43,7 @@ import { SummaryService } from './summary/summary.service';
     ProfileService,
     IntakesService,
     IntakesJobs,
+    HealthAchievements,
   ],
 })
 export class HealthModule {}

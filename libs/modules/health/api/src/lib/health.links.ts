@@ -55,8 +55,8 @@ export function mindPeriods(record: HealthRecord, range: Period): Omit<TimelineP
       title: c.code ? `${c.code} ${c.title}` : c.title,
       subtitle: null,
       from: c.firstOn,
-      // In remission — over at its last diagnosis; otherwise still going on.
-      to: c.status === 'remission' ? c.lastOn : null,
+      // In remission or taken off — over at its last diagnosis; otherwise still going on.
+      to: c.status === 'remission' || c.status === 'resolved' ? c.lastOn : null,
     }));
   return [...medications, ...conditions].filter(
     (period) => period.from <= range.to && (period.to === null || period.to >= range.from),

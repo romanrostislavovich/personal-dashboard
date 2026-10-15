@@ -34,7 +34,7 @@ in one place on your own server, with notifications and an assistant in Telegram
   reminders, daily limits on games, disk cleanup advice from the AI
 - 🛡️ **Security agent** — watches sign-ins, the server (SSH, firewall, open ports), your computers
   and repositories every hour; an AI investigates every morning and tells what to fix
-- 🏆 **360+ achievements** across all sections, with XP and a player level
+- 🏆 **400+ achievements** across all sections, with XP and a player level
 - 🎨 **Comfortable** — Ctrl+K opens any page and searches all your data, themes and accents, a
   home page you arrange yourself, an installable app that opens offline
 - 🔒 **Yours** — your server, tokens encrypted, two-factor sign-in, a 30-day trash, an offline

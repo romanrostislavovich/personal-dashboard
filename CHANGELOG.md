@@ -67,6 +67,15 @@ under **Updating**.
   phishing warning), offers to save or update a login typed into a page, makes passwords and
   puts them into the fields for a new one. The vault is opened in the extension with the master
   password; the server still sees only ciphertext.
+- **Health: a diagnosis is taken off** — a condition gets "Take off the diagnosis": recovered
+  (a new status), ruled out or in remission, kept in its history. "Ruled out" now means the
+  diagnosis did not hold (it read "Снят" in Russian before; that is the new "recovered").
+- **More achievements (400+)** — in Health only care counts: medications taken on schedule day
+  after day, a diagnosis taken off; Psychology: a questionnaire month after month, the events of
+  a life; Finance: months within the budgets, months in the black, savings goals reached,
+  receipts read from photos; Life: goals of the year reached, a day many sections tell about;
+  the assistant, automations that ran, two-factor sign-in, fixed security findings, the
+  password vault and a month of uptime.
 - **Passwords in the fields of a page** — a key icon in login fields with a menu of the site's
   logins; in a sign-up, a strong password (filled into both fields and saved to the vault at
   once) and the emails and logins you use most. The vault unlocks from the menu too.

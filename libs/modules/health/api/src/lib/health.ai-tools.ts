@@ -21,7 +21,7 @@ export class HealthAiTools implements OnModuleInit {
         "The user's own medical history across countries and clinics: `visits` (visitedOn, " +
         'country, speciality, complaints, findings, recommendations, nextVisitOn, clinicId, ' +
         'doctorId), `diagnoses` (ICD system and code, the title as the document words it, ' +
-        'status: suspected / confirmed / ruledOut / remission, diagnosedOn, visitId), ' +
+        'status: suspected / confirmed / remission / resolved (recovered, taken off) / ruledOut (never there), diagnosedOn, visitId), ' +
         '`medications` (name, active substance, dose, schedule, startedOn, stoppedOn — null: ' +
         'still taken, stopReason), `labPanels` (lab reports: takenOn, laboratory and `values` — ' +
         "each line as written with its value, unit, the laboratory's own range refLow–refHigh, " +

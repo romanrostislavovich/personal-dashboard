@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
+  CLOSING_STATUSES,
   DIAGNOSIS_STATUSES,
   DiagnosisStatus,
   HealthDiagnosis,
@@ -26,6 +27,11 @@ export interface DiagnosisDialogData {
   /** A new diagnosis of a visit: its id and day. */
   visitId?: string;
   day?: string;
+  /**
+   * Taking a condition's diagnosis off: a new entry of the same code, recovered by default
+   * (or ruled out, or in remission), on today.
+   */
+  closing?: { system: IcdSystem; code: string | null; title: string };
 }
 
 const SEARCH_DELAY_MS = 250;
@@ -49,7 +55,14 @@ const SEARCH_DELAY_MS = 250;
   ],
   template: `
     <h2 mat-dialog-title>
-      {{ (data.diagnosis ? 'health.diagnosis.edit' : 'health.diagnosis.add') | transloco }}
+      {{
+        (data.closing
+          ? 'health.diagnosis.close'
+          : data.diagnosis
+            ? 'health.diagnosis.edit'
+            : 'health.diagnosis.add'
+        ) | transloco
+      }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
@@ -159,21 +172,22 @@ export class DiagnosisDialog implements OnDestroy {
   private readonly ref = inject(MatDialogRef<DiagnosisDialog, boolean>);
 
   protected readonly systems = ICD_SYSTEMS;
-  protected readonly statuses = DIAGNOSIS_STATUSES;
+  protected readonly statuses = this.data.closing ? CLOSING_STATUSES : DIAGNOSIS_STATUSES;
   protected readonly found = signal<IcdEntry[]>([]);
   protected readonly busy = signal(false);
   protected readonly error = signal(false);
   private timer: ReturnType<typeof setTimeout> | undefined;
 
   private readonly diagnosis = this.data.diagnosis;
+  private readonly start = startValues(this.data);
   protected readonly form = inject(NonNullableFormBuilder).group({
-    system: (this.diagnosis?.system ?? 'icd10') as IcdSystem,
-    code: this.diagnosis?.code ?? '',
-    title: [this.diagnosis?.title ?? '', Validators.required],
-    status: (this.diagnosis?.status ?? 'confirmed') as DiagnosisStatus,
-    diagnosedOn: [this.diagnosis?.diagnosedOn ?? this.data.day ?? today(), Validators.required],
-    visitId: this.diagnosis?.visitId ?? this.data.visitId ?? '',
-    notes: this.diagnosis?.notes ?? '',
+    system: this.start.system,
+    code: this.start.code,
+    title: [this.start.title, Validators.required],
+    status: this.start.status,
+    diagnosedOn: [this.start.diagnosedOn, Validators.required],
+    visitId: this.start.visitId,
+    notes: this.start.notes,
   });
 
   protected readonly display = (entry: IcdEntry | string | null) =>
@@ -230,4 +244,30 @@ export class DiagnosisDialog implements OnDestroy {
   ngOnDestroy(): void {
     clearTimeout(this.timer);
   }
+}
+
+/** What the form starts with: the diagnosis edited, the condition taken off, or a new one. */
+function startValues(data: DiagnosisDialogData) {
+  const diagnosis = data.diagnosis;
+  if (diagnosis) {
+    return {
+      system: diagnosis.system,
+      code: diagnosis.code ?? '',
+      title: diagnosis.title,
+      status: diagnosis.status,
+      diagnosedOn: diagnosis.diagnosedOn,
+      visitId: diagnosis.visitId ?? '',
+      notes: diagnosis.notes ?? '',
+    };
+  }
+  const closing = data.closing;
+  return {
+    system: closing?.system ?? ('icd10' as IcdSystem),
+    code: closing?.code ?? '',
+    title: closing?.title ?? '',
+    status: (closing ? 'resolved' : 'confirmed') as DiagnosisStatus,
+    diagnosedOn: data.day ?? today(),
+    visitId: data.visitId ?? '',
+    notes: '',
+  };
 }
