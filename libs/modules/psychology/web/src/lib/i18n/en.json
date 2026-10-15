@@ -162,5 +162,14 @@
         "severe": "High — please talk to a specialist"
       }
     }
+  },
+  "reminder": {
+    "title": "A questionnaire on a schedule",
+    "hint": "A message in Telegram with the link, unless you took it within the period anyway",
+    "test": "Remind me of",
+    "off": "Nothing",
+    "every": "Every",
+    "days": "{{days}} days",
+    "at": "At"
   }
 }

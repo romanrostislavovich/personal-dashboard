@@ -4,6 +4,7 @@ import { PsychologyAiTools } from './psychology.ai-tools';
 import { PsychologyController } from './psychology.controller';
 import { PsychologyDemo } from './psychology.demo';
 import { PsychologyLinks } from './psychology.links';
+import { PsychologyReminders } from './psychology.reminders';
 import { PsychologyService } from './psychology.service';
 
 /**
@@ -19,6 +20,7 @@ import { PsychologyService } from './psychology.service';
     PsychologyLinks,
     PsychologyDemo,
     PsychologyAchievements,
+    PsychologyReminders,
   ],
 })
 export class PsychologyModule {}

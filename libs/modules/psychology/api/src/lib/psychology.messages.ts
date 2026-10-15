@@ -12,6 +12,10 @@ const messages = {
     /** Stands in the "From" column of an event told by age. */
     age: (from: number, to: number | null) => (to == null ? `Age ${from}` : `Age ${from}–${to}`),
     feelings: { '-2': 'Very hard', '-1': 'Hard', '0': 'Neutral', '1': 'Good', '2': 'Very good' },
+    reminderTitle: (test: string) => `🪞 Time for ${test}`,
+    reminderBody: (since: number | null, link: string) =>
+      `${since === null ? 'A couple of minutes to see how you are.' : `${since} days since the last one.`}
+${link}`,
   },
   ru: {
     eventsTitle: 'События',
@@ -28,6 +32,10 @@ const messages = {
       '1': 'Хорошо',
       '2': 'Очень хорошо',
     },
+    reminderTitle: (test: string) => `🪞 Время для ${test}`,
+    reminderBody: (since: number | null, link: string) =>
+      `${since === null ? 'Пара минут, чтобы посмотреть, как вы.' : `С прошлого раза прошло ${since} дн.`}
+${link}`,
   },
 };
 

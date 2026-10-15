@@ -78,7 +78,12 @@ export class PsychologyService {
       .select()
       .from(psychologySettings)
       .where(eq(psychologySettings.userId, userId));
-    return { birthYear: row?.birthYear ?? null };
+    return {
+      birthYear: row?.birthYear ?? null,
+      reminderTest: (row?.reminderTest as PsychologySettings['reminderTest']) ?? null,
+      reminderEveryDays: row?.reminderEveryDays ?? 30,
+      reminderAt: row?.reminderAt ?? '20:00',
+    };
   }
 
   /** Only what is given is changed. */

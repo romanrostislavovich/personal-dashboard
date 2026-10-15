@@ -57,6 +57,12 @@ export const psychologySettings = pgTable('psychology_settings', {
     .references(() => users.id, { onDelete: 'cascade' }),
   /** Puts the events told by age among the dated ones. */
   birthYear: smallint(),
+  /** A questionnaire to be reminded of (`who5`…), every so many days, at a time of day. */
+  reminderTest: text(),
+  reminderEveryDays: smallint(),
+  reminderAt: text(),
+  /** The day the last reminder went out: not again before the period passes. */
+  remindedOn: date({ mode: 'string' }),
 });
 
 export type PsychologyEventRow = typeof psychologyEvents.$inferSelect;

@@ -232,14 +232,32 @@ export interface PsychologyAssessment {
 }
 
 /** `PUT /api/psychology/settings`: only what is sent is changed. */
+/** How often a questionnaire can be reminded of. */
+export const REMINDER_PERIODS = [7, 14, 30] as const;
+
 export const psychologySettingsSchema = z.object({
   birthYear: z.number().int().min(1900).max(2100).nullable().optional(),
+  /** A questionnaire to be reminded of in Telegram; `null` — none. */
+  reminderTest: z.enum(['who5', 'gad7', 'phq9']).nullable().optional(),
+  reminderEveryDays: z
+    .number()
+    .int()
+    .refine((days) => (REMINDER_PERIODS as readonly number[]).includes(days))
+    .optional(),
+  reminderAt: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:mm')
+    .optional(),
 });
 export type PsychologySettingsInput = z.infer<typeof psychologySettingsSchema>;
 
 export interface PsychologySettings {
   /** Puts the events told by age among the dated ones; `null` — not given. */
   birthYear: number | null;
+  /** A questionnaire reminded of in Telegram every `reminderEveryDays` days at `reminderAt`. */
+  reminderTest: 'who5' | 'gad7' | 'phq9' | null;
+  reminderEveryDays: number;
+  reminderAt: string;
 }
 
 // --- Patterns: the mood over time ---
