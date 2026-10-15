@@ -174,6 +174,8 @@ export const healthProfiles = pgTable('health_profiles', {
     .references(() => users.id, { onDelete: 'cascade' }),
   bloodType: text().$type<BloodType>(),
   notes: encryptedText(),
+  /** The contacts of the ICE card, as JSON (see emergencyContactSchema): encrypted too. */
+  emergencyContacts: encryptedText(),
   updatedAt: updated(),
 });
 

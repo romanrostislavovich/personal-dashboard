@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DB, Database } from '@pd/api-core';
 import {
+  EmergencyContact,
+  emergencyContactSchema,
   HealthAllergy,
   healthAllergyInputSchema,
   HealthOperation,
@@ -29,6 +31,16 @@ export type ValidVaccinationInput = z.output<typeof healthVaccinationInputSchema
 export type ValidOperationInput = z.output<typeof healthOperationInputSchema>;
 
 /** The profile of a user as one piece: the blood type, the notes and the three lists. */
+/** The contacts as stored; a broken value is none, not an error on the page. */
+function readContacts(stored: string | null): EmergencyContact[] {
+  try {
+    const parsed = z.array(emergencyContactSchema).safeParse(JSON.parse(stored ?? '[]'));
+    return parsed.success ? parsed.data : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function readProfile(db: Database, userId: string): Promise<HealthProfile> {
   const [[profile], allergies, vaccinations, operations] = await Promise.all([
     db.select().from(healthProfiles).where(eq(healthProfiles.userId, userId)),
@@ -47,6 +59,7 @@ export async function readProfile(db: Database, userId: string): Promise<HealthP
   return {
     bloodType: profile?.bloodType ?? null,
     notes: profile?.notes ?? null,
+    emergencyContacts: readContacts(profile?.emergencyContacts ?? null),
     // The substances are encrypted: sorted here, a severe allergy first.
     allergies: allergies.map(toAllergy).sort(bySeverity),
     vaccinations: vaccinations.map(toVaccination),
@@ -67,7 +80,13 @@ export class ProfileService {
   }
 
   async saveProfile(userId: string, input: ValidProfileInput): Promise<HealthProfile> {
-    const values = { bloodType: input.bloodType ?? null, notes: input.notes || null };
+    const values = {
+      bloodType: input.bloodType ?? null,
+      notes: input.notes || null,
+      ...(input.emergencyContacts
+        ? { emergencyContacts: JSON.stringify(input.emergencyContacts) }
+        : {}),
+    };
     await this.db
       .insert(healthProfiles)
       .values({ userId, ...values })

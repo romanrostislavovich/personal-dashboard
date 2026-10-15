@@ -173,4 +173,8 @@
       <p class="hint">{{ 'health.profile.operation.empty' | transloco }}</p>
     }
   </section>
+
+  @if (record.value(); as data) {
+    <pd-health-ice-card [record]="data" (saved)="record.reload()" />
+  }
 }
