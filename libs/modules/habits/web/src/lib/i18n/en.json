@@ -11,12 +11,16 @@
   "start": {
     "alcohol": "I quit drinking",
     "smoking": "I quit smoking",
-    "custom": "A habit of my own"
+    "custom": "A habit of my own",
+    "build": "A new habit"
   },
   "goals": {
     "quit": "Not at all",
     "less": "Less",
-    "lessThan": "At most {{days}} day(s) a week"
+    "lessThan": "At most {{days}} day(s) a week",
+    "daily": "Every day",
+    "weekly": "A few days a week",
+    "weeklyTimes": "{{times}} day(s) a week"
   },
   "dialog": {
     "edit": "Edit the habit",
@@ -35,7 +39,9 @@
     "ask": "Ask me in Telegram in the evening",
     "askAt": "At",
     "askHint": "«A day without it?» with «Yes» and «It happened». No answer — the day counts as clean.",
-    "start": "Start counting"
+    "start": "Start counting",
+    "timesPerWeek": "Days a week",
+    "buildNameHint": "Sport, reading, a walk, water…"
   },
   "card": {
     "since": "since {{day}}",
@@ -51,7 +57,13 @@
     "dayUsed": "with it",
     "usedToday": "It happened today",
     "undoToday": "Undo today",
-    "howMuch": "How many {{unit}}? (empty — not counted)"
+    "howMuch": "How many {{unit}}? (empty — not counted)",
+    "weeksInRow": "weeks in a row",
+    "done": "days done: {{days}}",
+    "thisWeekDone": "this week: {{done}} of {{times}}",
+    "dayDone": "done",
+    "doneToday": "Done today",
+    "calendarHintBuild": "A click on a day marks it done, another click takes the mark off."
   },
   "widget": {
     "days": "{{days}} d",

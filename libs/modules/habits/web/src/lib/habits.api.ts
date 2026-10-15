@@ -42,5 +42,6 @@ export function localToday(): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/** The emoji of a kind. */
+/** The emoji of a kind to quit, and of a habit to build. */
 export const HABIT_ICONS = { alcohol: '🍷', smoking: '🚬', custom: '✨' } as const;
+export const BUILD_ICON = '💪';

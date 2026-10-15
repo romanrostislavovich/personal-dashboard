@@ -5,7 +5,7 @@ import {
   AchievementTierTuple,
   LocalizedText,
 } from '@pd/api-core';
-import { Habit, HabitKind } from '@pd/contracts';
+import { Habit, HabitKind, isBuilding } from '@pd/contracts';
 import { HabitsService } from './habits.service';
 
 /** The days in a row of a streak, from a day to almost three years. */
@@ -55,12 +55,89 @@ export class HabitsAchievements implements OnModuleInit {
         id: `habits.${kind}-streak`,
         module: 'habits',
         measure: async (userId) =>
-          best(await this.habits.list(userId), kind, (habit) => habit.stats.bestStreak),
+          best(quitting(await this.habits.list(userId)), kind, (habit) => habit.stats.bestStreak),
         tiers: achievementTiers(
           ...STREAK_GOALS.map((goal, index) => streakTier(kind, goal, index)),
         ),
       });
     }
+
+    this.achievements.register({
+      id: 'habits.build-streak',
+      module: 'habits',
+      measure: async (userId) =>
+        best(
+          (await this.habits.list(userId)).filter((habit) => habit.goal === 'daily'),
+          null,
+          (habit) => habit.stats.bestStreak,
+        ),
+      tiers: achievementTiers(
+        [
+          7,
+          '🔥',
+          { en: 'A week of a new habit', ru: 'Неделя новой привычки' },
+          { en: 'A habit done 7 days in a row', ru: 'Привычка 7 дней подряд' },
+        ],
+        [
+          30,
+          '🧱',
+          { en: 'It sticks', ru: 'Закрепилось' },
+          { en: 'A habit done 30 days in a row', ru: 'Привычка 30 дней подряд' },
+        ],
+        [
+          100,
+          '🏗️',
+          { en: 'Built to last', ru: 'Построено на века' },
+          { en: 'A habit done 100 days in a row', ru: 'Привычка 100 дней подряд' },
+        ],
+        [
+          365,
+          '🗿',
+          { en: 'Part of me', ru: 'Часть меня' },
+          { en: 'A habit done 365 days in a row', ru: 'Привычка 365 дней подряд' },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'habits.build-weeks',
+      module: 'habits',
+      measure: async (userId) =>
+        best(
+          (await this.habits.list(userId)).filter((habit) => habit.goal === 'weekly'),
+          null,
+          (habit) => habit.stats.bestStreak,
+        ),
+      tiers: achievementTiers(
+        [
+          4,
+          '📅',
+          { en: 'A month on target', ru: 'Месяц по плану' },
+          {
+            en: '4 weeks in a row with a habit as often as planned',
+            ru: '4 недели подряд привычка столько раз, сколько задумано',
+          },
+        ],
+        [
+          12,
+          '🎯',
+          { en: 'A quarter on target', ru: 'Квартал по плану' },
+          {
+            en: '12 weeks in a row with a habit as often as planned',
+            ru: '12 недель подряд привычка столько раз, сколько задумано',
+          },
+        ],
+        [
+          52,
+          '🏆',
+          { en: 'A year on target', ru: 'Год по плану' },
+          {
+            en: '52 weeks in a row with a habit as often as planned',
+            ru: '52 недели подряд привычка столько раз, сколько задумано',
+          },
+        ],
+      ),
+    });
 
     this.achievements.register({
       id: 'habits.weeks-within-limit',
@@ -102,7 +179,11 @@ export class HabitsAchievements implements OnModuleInit {
       id: 'habits.clean-days-year',
       module: 'habits',
       measure: async (userId) =>
-        best(await this.habits.list(userId), null, (habit) => habit.stats.cleanDaysThisYear),
+        best(
+          quitting(await this.habits.list(userId)),
+          null,
+          (habit) => habit.stats.cleanDaysThisYear,
+        ),
       tiers: achievementTiers(
         [
           100,
@@ -134,6 +215,11 @@ export class HabitsAchievements implements OnModuleInit {
       ),
     });
   }
+}
+
+/** The habits to quit or cut down (not the ones to build). */
+function quitting(habits: Habit[]): Habit[] {
+  return habits.filter((habit) => !isBuilding(habit.goal));
 }
 
 /** The highest number among the habits (of one kind). */

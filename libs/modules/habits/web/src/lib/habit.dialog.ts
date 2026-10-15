@@ -8,11 +8,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Habit, HabitGoal, HabitInput, HabitKind } from '@pd/contracts';
-import { HABIT_ICONS, localToday } from './habits.api';
+import { BUILD_ICON, HABIT_ICONS, localToday } from './habits.api';
 
 export interface HabitDialogData {
   kind: HabitKind;
   habit?: Habit;
+  /** A habit to build (every day, or a few days a week), not one to quit. */
+  build?: boolean;
 }
 
 /** The evening question asks at this time unless set otherwise. */
@@ -39,7 +41,14 @@ const DEFAULT_ASK_AT = '21:00';
   template: `
     <h2 mat-dialog-title>
       {{ icon }}
-      {{ (data.habit ? 'habits.dialog.edit' : 'habits.start.' + data.kind) | transloco }}
+      {{
+        (data.habit
+          ? 'habits.dialog.edit'
+          : data.build
+            ? 'habits.start.build'
+            : 'habits.start.' + data.kind
+        ) | transloco
+      }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
@@ -47,15 +56,38 @@ const DEFAULT_ASK_AT = '21:00';
           <mat-form-field>
             <mat-label>{{ 'habits.dialog.name' | transloco }}</mat-label>
             <input matInput maxlength="100" formControlName="name" required cdkFocusInitial />
-            <mat-hint>{{ 'habits.dialog.nameHint' | transloco }}</mat-hint>
+            <mat-hint>
+              {{
+                (data.build ? 'habits.dialog.buildNameHint' : 'habits.dialog.nameHint') | transloco
+              }}
+            </mat-hint>
           </mat-form-field>
         }
 
         <span class="label">{{ 'habits.dialog.goal' | transloco }}</span>
         <mat-button-toggle-group formControlName="goal" [hideSingleSelectionIndicator]="true">
-          <mat-button-toggle value="quit">{{ 'habits.goals.quit' | transloco }}</mat-button-toggle>
-          <mat-button-toggle value="less">{{ 'habits.goals.less' | transloco }}</mat-button-toggle>
+          @if (data.build) {
+            <mat-button-toggle value="daily">{{
+              'habits.goals.daily' | transloco
+            }}</mat-button-toggle>
+            <mat-button-toggle value="weekly">{{
+              'habits.goals.weekly' | transloco
+            }}</mat-button-toggle>
+          } @else {
+            <mat-button-toggle value="quit">{{
+              'habits.goals.quit' | transloco
+            }}</mat-button-toggle>
+            <mat-button-toggle value="less">{{
+              'habits.goals.less' | transloco
+            }}</mat-button-toggle>
+          }
         </mat-button-toggle-group>
+        @if (form.controls.goal.value === 'weekly') {
+          <mat-form-field>
+            <mat-label>{{ 'habits.dialog.timesPerWeek' | transloco }}</mat-label>
+            <input matInput type="number" min="1" max="7" formControlName="timesPerWeek" />
+          </mat-form-field>
+        }
         @if (form.controls.goal.value === 'less') {
           <mat-form-field>
             <mat-label>{{ 'habits.dialog.maxDays' | transloco }}</mat-label>
@@ -69,11 +101,13 @@ const DEFAULT_ASK_AT = '21:00';
             <mat-label>{{ 'habits.dialog.startedOn' | transloco }}</mat-label>
             <input matInput type="date" formControlName="startedOn" required />
           </mat-form-field>
-          <mat-form-field>
-            <mat-label>{{ 'habits.dialog.unit' | transloco }}</mat-label>
-            <input matInput maxlength="30" formControlName="unit" />
-            <mat-hint>{{ 'habits.dialog.unitHint.' + data.kind | transloco }}</mat-hint>
-          </mat-form-field>
+          @if (!data.build) {
+            <mat-form-field>
+              <mat-label>{{ 'habits.dialog.unit' | transloco }}</mat-label>
+              <input matInput maxlength="30" formControlName="unit" />
+              <mat-hint>{{ 'habits.dialog.unitHint.' + data.kind | transloco }}</mat-hint>
+            </mat-form-field>
+          }
         </div>
 
         <mat-slide-toggle formControlName="ask">
@@ -129,13 +163,14 @@ const DEFAULT_ASK_AT = '21:00';
 export class HabitDialog {
   protected readonly data = inject<HabitDialogData>(MAT_DIALOG_DATA);
   private readonly ref = inject(MatDialogRef<HabitDialog, HabitInput>);
-  protected readonly icon = HABIT_ICONS[this.data.kind];
+  protected readonly icon = this.data.build ? BUILD_ICON : HABIT_ICONS[this.data.kind];
 
   private readonly habit = this.data.habit;
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: this.habit?.name ?? '',
-    goal: (this.habit?.goal ?? 'quit') as HabitGoal,
+    goal: (this.habit?.goal ?? (this.data.build ? 'daily' : 'quit')) as HabitGoal,
     maxDaysPerWeek: this.habit?.maxDaysPerWeek ?? 2,
+    timesPerWeek: this.habit?.timesPerWeek ?? 3,
     unit: this.habit?.unit ?? '',
     startedOn: [this.habit?.startedOn ?? localToday(), Validators.required],
     ask: this.habit ? !!this.habit.askAt : true,
@@ -149,7 +184,8 @@ export class HabitDialog {
       name: this.data.kind === 'custom' ? value.name.trim() : null,
       goal: value.goal,
       maxDaysPerWeek: value.goal === 'less' ? Number(value.maxDaysPerWeek) : null,
-      unit: value.unit.trim() || null,
+      timesPerWeek: value.goal === 'weekly' ? Number(value.timesPerWeek) : null,
+      unit: this.data.build ? null : value.unit.trim() || null,
       startedOn: value.startedOn,
       askAt: value.ask ? value.askAt : null,
     });

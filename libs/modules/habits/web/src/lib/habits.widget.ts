@@ -3,8 +3,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Habit } from '@pd/contracts';
-import { HABIT_ICONS, HabitsApi } from './habits.api';
+import { Habit, isBuilding } from '@pd/contracts';
+import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
 
 /** Home widget: the run of clean days of every habit. */
 @Component({
@@ -19,7 +19,7 @@ import { HABIT_ICONS, HabitsApi } from './habits.api';
       <mat-card-content class="list">
         @for (habit of habits.value(); track habit.id) {
           <div class="row">
-            <span class="icon">{{ icons[habit.kind] }}</span>
+            <span class="icon">{{ icon(habit) }}</span>
             <span class="name">{{ name(habit) }}</span>
             <span class="days">
               {{ 'habits.widget.days' | transloco: { days: habit.stats.currentStreak } }}
@@ -66,8 +66,11 @@ import { HABIT_ICONS, HabitsApi } from './habits.api';
 })
 export class HabitsWidget {
   private readonly transloco = inject(TranslocoService);
-  protected readonly icons = HABIT_ICONS;
   protected readonly habits = inject(HabitsApi).list();
+
+  protected icon(habit: Habit): string {
+    return isBuilding(habit.goal) ? BUILD_ICON : HABIT_ICONS[habit.kind];
+  }
 
   protected name(habit: Habit): string {
     return habit.kind === 'custom'
