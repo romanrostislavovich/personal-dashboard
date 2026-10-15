@@ -1,0 +1,236 @@
+{
+  "extName": {
+    "message": "Personal Dashboard — Passwords"
+  },
+  "extDescription": {
+    "message": "Your password vault from your Personal Dashboard: fills logins, saves new ones, makes strong passwords. Encrypted on this device."
+  },
+  "commandFill": {
+    "message": "Fill the login for this page"
+  },
+  "saveBarSave": {
+    "message": "Save the password for $1?"
+  },
+  "saveBarUpdate": {
+    "message": "Update the password for $1?"
+  },
+  "saveBarLocked": {
+    "message": "Save the password for $1? Unlock the vault in the extension to save it."
+  },
+  "saveBarNoLogin": {
+    "message": "Without a login"
+  },
+  "saveBarNever": {
+    "message": "Never for this site"
+  },
+  "saveBarNotNow": {
+    "message": "Not now"
+  },
+  "saveBarSaveButton": {
+    "message": "Save"
+  },
+  "saveBarUpdateButton": {
+    "message": "Update"
+  },
+  "retry": {
+    "message": "Try again"
+  },
+  "signIn": {
+    "message": "Sign in"
+  },
+  "signInTitle": {
+    "message": "Sign in to your dashboard"
+  },
+  "signInHint": {
+    "message": "The address of your dashboard and your account. The passwords stay encrypted: the vault opens only with your master password."
+  },
+  "server": {
+    "message": "Dashboard address"
+  },
+  "email": {
+    "message": "Email"
+  },
+  "password": {
+    "message": "Password"
+  },
+  "codeTitle": {
+    "message": "Two-factor sign-in"
+  },
+  "codeHint": {
+    "message": "The code from your authenticator app, or a recovery code."
+  },
+  "code": {
+    "message": "Code"
+  },
+  "unlock": {
+    "message": "Unlock"
+  },
+  "unlocking": {
+    "message": "Unlocking…"
+  },
+  "lockedTitle": {
+    "message": "The vault is locked"
+  },
+  "masterPassword": {
+    "message": "Master password"
+  },
+  "forgotMaster": {
+    "message": "Forgot it? The recovery key works on the dashboard"
+  },
+  "noVaultTitle": {
+    "message": "No vault yet"
+  },
+  "noVaultHint": {
+    "message": "Create it on the dashboard (Passwords): choose a master password and keep the recovery key. Then unlock it here."
+  },
+  "openDashboard": {
+    "message": "Open the dashboard"
+  },
+  "signOut": {
+    "message": "Sign out"
+  },
+  "search": {
+    "message": "Search"
+  },
+  "generator": {
+    "message": "Password generator"
+  },
+  "lock": {
+    "message": "Lock"
+  },
+  "neverSites": {
+    "message": "Ignored sites"
+  },
+  "loading": {
+    "message": "Loading…"
+  },
+  "unreadable": {
+    "message": "$1 item(s) could not be opened."
+  },
+  "forThisSite": {
+    "message": "For $1"
+  },
+  "allItems": {
+    "message": "Everything"
+  },
+  "nothingFound": {
+    "message": "Nothing found"
+  },
+  "fill": {
+    "message": "Fill"
+  },
+  "copyUsername": {
+    "message": "Copy the login"
+  },
+  "copyPassword": {
+    "message": "Copy the password"
+  },
+  "copiedUsername": {
+    "message": "The login is copied"
+  },
+  "copiedPassword": {
+    "message": "The password is copied"
+  },
+  "copyNote": {
+    "message": "Copy the note"
+  },
+  "copiedNote": {
+    "message": "The note is copied"
+  },
+  "kindNote": {
+    "message": "Secure note"
+  },
+  "kindLogin": {
+    "message": "Login"
+  },
+  "noForm": {
+    "message": "No login form on this page"
+  },
+  "otherSite": {
+    "message": "This login is for $1, and the page is $2. A page that looks like another site may be phishing. Fill it anyway?"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "fillAnyway": {
+    "message": "Fill anyway"
+  },
+  "saved": {
+    "message": "Saved to the vault"
+  },
+  "length": {
+    "message": "Length"
+  },
+  "lengthValue": {
+    "message": "Length: $1"
+  },
+  "strength_weak": {
+    "message": "Weak"
+  },
+  "strength_fair": {
+    "message": "Fair"
+  },
+  "strength_strong": {
+    "message": "Strong"
+  },
+  "back": {
+    "message": "Back"
+  },
+  "regenerate": {
+    "message": "Another one"
+  },
+  "digits": {
+    "message": "Digits"
+  },
+  "symbols": {
+    "message": "Symbols"
+  },
+  "copy": {
+    "message": "Copy"
+  },
+  "fillNewPassword": {
+    "message": "Fill into the page"
+  },
+  "noNewPasswordField": {
+    "message": "No password field on this page"
+  },
+  "offerAgain": {
+    "message": "Offer again"
+  },
+  "neverSitesEmpty": {
+    "message": "Saving is offered on every site."
+  },
+  "error_signed_out": {
+    "message": "The session is over: sign in again."
+  },
+  "error_unreachable": {
+    "message": "The dashboard cannot be reached. Check the connection."
+  },
+  "error_not_dashboard": {
+    "message": "No dashboard answers at this address."
+  },
+  "error_insecure_server": {
+    "message": "Use an https address: over plain http the password could be read on the way."
+  },
+  "error_wrong_password": {
+    "message": "Wrong email or password."
+  },
+  "error_wrong_code": {
+    "message": "Wrong code."
+  },
+  "error_wrong_master": {
+    "message": "Wrong master password."
+  },
+  "error_no_vault": {
+    "message": "The vault is not created yet."
+  },
+  "error_locked": {
+    "message": "The vault is locked."
+  },
+  "error_not_allowed": {
+    "message": "Not allowed."
+  },
+  "error_failed": {
+    "message": "Something went wrong. Try again."
+  }
+}

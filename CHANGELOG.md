@@ -62,6 +62,11 @@ under **Updating**.
   see only ciphertext. A recovery key shown once opens it when the master password is
   forgotten; the vault locks itself after 10 minutes; a password generator and a strength meter.
   Changing the master password asks for the account password too.
+- **Passwords in Chrome** — a browser extension (`apps/extension`, installed by hand): fills
+  the logins of the page (Ctrl+Shift+L, or from the popup; a login of another site only after a
+  phishing warning), offers to save or update a login typed into a page, makes passwords and
+  puts them into the fields for a new one. The vault is opened in the extension with the master
+  password; the server still sees only ciphertext.
 - **The diary and the notes about people are stored encrypted** — the text of an entry, the
   template, the photos and their captions, the note about a person; a dump or a backup holds
   only ciphertext. What was written before is encrypted once, on the first start. The tags and

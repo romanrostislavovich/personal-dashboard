@@ -59,7 +59,8 @@
 - **Passwords:** a password vault like 1Password — logins and secure notes encrypted on the
   device with a key of the master password, so the server and the AI keep only ciphertext; a
   recovery key shown once, locks itself after 10 minutes, a password generator and a strength
-  meter
+  meter; a Chrome extension fills the logins of a page, offers to save new ones and makes
+  passwords (installed by hand)
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
 - **Psychology:** watching oneself over time — the patterns of the mood (by the day of the week,
   week by week, low stretches, the mood during the events of a life), short standard

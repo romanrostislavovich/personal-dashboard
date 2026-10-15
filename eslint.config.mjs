@@ -38,6 +38,11 @@ export default [
               onlyDependOnLibsWithTags: ['scope:web', 'scope:client', 'scope:shared'],
             },
             {
+              // The browser extension: a client of the client core, like the web app.
+              sourceTag: 'scope:extension',
+              onlyDependOnLibsWithTags: ['scope:client', 'scope:shared'],
+            },
+            {
               sourceTag: 'scope:desktop',
               onlyDependOnLibsWithTags: [],
             },
