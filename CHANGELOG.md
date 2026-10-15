@@ -67,6 +67,24 @@ under **Updating**.
   phishing warning), offers to save or update a login typed into a page, makes passwords and
   puts them into the fields for a new one. The vault is opened in the extension with the master
   password; the server still sees only ciphertext.
+- **The side menu in groups** — Things to do, Me, Work, Leisure, Security; a group folds (kept
+  in the browser) and stays open while one of its pages is. Weather left the menu (its widget
+  opens it), Projects moved into Work.
+- **A hidden section stays quiet** — out of the morning digest and the notifications too, not
+  only out of the menu.
+- **Telegram:** `/spent 12 coffee` (or `/spent 12 EUR taxi`) records an expense of today in a
+  category you have; a question of the assistant to confirm a deletion comes with Yes / No
+  buttons.
+- **Habits to build** — every day or a few days a week (sport, reading, a walk): a day counts
+  when it is marked done; achievements of their own; the runs in the morning digest when they
+  pass a milestone.
+- **Psychology: a questionnaire on a schedule** — WHO-5, GAD-7 or PHQ-9 every 7, 14 or 30 days,
+  a reminder in Telegram with the link.
+- **Health: the ICE card** — emergency contacts in the profile; the card printed for the wallet
+  or as a picture for the lock screen with a QR code.
+- **A review of the week** — the Sunday summary looks at every section, asks 2–3 questions, and
+  the answers go to the diary.
+- **Life:** the weather of a day in the feed.
 - **Habits** — a section for what you quit or cut down: alcohol, smoking or a habit of your
   own. "I quit drinking" starts the count; every day after is clean unless marked — on the
   page (a calendar of 12 weeks, "It happened today"), by an evening question in Telegram ("A day
@@ -146,7 +164,8 @@ under **Updating**.
   drafts of its documents, 0070 the links for doctors, 0071 the profile
   and the reminders to take medications, 0072 the pages of its documents, 0073 the missing
   indexes (`user_id` and foreign keys of a few dozen tables), 0074 the word count of a diary
-  entry, 0075 the password vault, 0076 the devices of Settings → Apps, 0077 the habits.
+  entry, 0075 the password vault, 0076 the devices of Settings → Apps, 0077 the habits, 0078 the habits to build, 0079
+  the questionnaire reminders, 0080 the emergency contacts.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
   key as the server.
 

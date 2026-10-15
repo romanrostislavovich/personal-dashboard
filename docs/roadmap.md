@@ -52,6 +52,10 @@
   - **Reminders:** for a day and time on your own clock (the time zone comes from the device),
     one-off or repeating, about a task or on their own; sent to Telegram with "Done", "+1 hour",
     "Tomorrow" and "Another time" buttons and as notifications; `/todo`, `/remind`, `/tasks`
+- **Health: the ICE card** — whom to call, the blood type, the allergies, the conditions and the
+  medications, printed or as a picture for the lock screen with a QR code
+- **A review of the week** on Sundays — the AI looks back at the week across the sections and
+  asks 2–3 questions; the answers go to the diary
 - **Health (first stage):** one medical history across countries and clinics — visits,
   diagnoses by ICD code gathered into conditions with their history, medications by brand and
   active substance, scans and PDFs of the documents; stored encrypted; the ICD-10 dictionary
@@ -65,9 +69,10 @@
   of its app
 - **Habits:** quitting or cutting down alcohol, smoking or one's own — the run of clean days
   from "I quit", days marked on the page, by an evening question in Telegram or by the
-  assistant; achievements from a day to a thousand days
+  assistant; achievements from a day to a thousand days. Habits to build too (every day or a
+  few days a week), and the runs in the morning digest
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
-- **Psychology:** watching oneself over time — the patterns of the mood (by the day of the week,
+- **Psychology:** a questionnaire on a schedule (a reminder in Telegram); watching oneself over time — the patterns of the mood (by the day of the week,
   week by week, low stretches, the mood during the events of a life), short standard
   questionnaires with their history (WHO-5, GAD-7, PHQ-9 — never a diagnosis), and events with
   their periods or the age they happened at, saved as an Excel workbook or a Word document
@@ -181,14 +186,13 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   image is published only after CI passes; the desktop queue survives a crash; every write
   names the user
 
+- ✅ **Quick wins** — hidden sections stay out of the digest and the notifications; "Yes / No"
+  buttons under a question to confirm in Telegram and `/spent 12 coffee`; the weather in the Life
+  feed; the achievements measured six at a time; the side menu in groups
+
 #### Quick wins
 
-- **Hidden sections in the digest and notifications** — today hiding a section only takes it out
-  of the menu and the home page; the server does not know about it
-- **Telegram:** "Yes / No" buttons to confirm a deletion; quick commands like `/spent 12 coffee`
-- **Life: more** — the weather in the day feed (it is already compared with the mood) and steps
-- **Achievements measured in parallel** — the ~150 metrics are measured one after another on
-  every check
+- **Life: steps** — in the day feed, once the steps come from somewhere (a phone, a band)
 
 ### Next
 
@@ -201,8 +205,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   and emergency fund runway in months of autonomy based on current spending velocity
 - **Finance: subscription and leak audit** — automated detection of creeping price increases,
   hidden or forgotten recurring charges, and warnings before renewal dates
-- **Health: emergency ICE card** — an exportable offline card (and phone lock screen image / QR)
-  with blood type, critical allergies, active medications and emergency contacts for first responders
 - **Health: prescriptions into interactive tasks** — medical recommendations and prescriptions
   converted directly into tasks and interactive Telegram reminders with dosage confirmation buttons
 - **Quick capture (2-second rule)** — minimal global entry (desktop hotkey and mobile PWA
@@ -220,15 +222,8 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   of a phone
 - **Push notifications** — in the browser, the desktop app and on phones (the PWA, without
   Telegram), next to Telegram; switched off per kind of notification or all at once
-- **Habits: to build, not only to quit** — the section counts what one quits or cuts down; next:
-  habits to make (sport, water, reading, a walk) with a target a day or a week, and the runs in
-  the morning digest
-- **Weekly review on Sunday** — the AI sums up the week across the sections and asks 2–3
-  questions; the answers go to the diary, the main thing of the next week to the tasks
 - **Challenges of the week** — every Monday three personal challenges from the user's own data
   ("2 focus sessions a day", "at most 10 h of games", "5 diary entries"), a result and XP at the end
-- **Psychology: a questionnaire on a schedule** — a reminder to take WHO-5, GAD-7 or PHQ-9 as
-  often as the user picks (e.g. WHO-5 every two weeks), in Telegram with a link to it
 - **Psychology: a gentle warning** — when the results of a questionnaire stay worse for several
   times in a row (never a diagnosis), a quiet message with where to get help, the contacts of
   your own doctor first if Health has them
