@@ -20,6 +20,7 @@ import { FinanceController } from './finance.controller';
 import { FinanceServerActions } from './finance.server-actions';
 import { RecurringPaymentsJob } from './recurring/recurring-payments.job';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
+import { SpentTelegram } from './transactions/spent.telegram';
 import { TransactionsService } from './transactions/transactions.service';
 import { BudgetsService } from './budgets/budgets.service';
 import { ReceiptsService } from './receipts/receipts.service';
@@ -38,6 +39,7 @@ import { WishlistService } from './wishlist/wishlist.service';
 @Module({
   controllers: [FinanceController, CostSourcesController, WishlistController],
   providers: [
+    SpentTelegram,
     FinanceAutomations,
     FinanceDemo,
     FinanceIntegrations,
