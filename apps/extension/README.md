@@ -29,6 +29,15 @@ arrow in `chrome://extensions` after a build.
 
 ## What it does
 
+- **In the fields themselves.** A login or password field of a sign-in gets a key icon, and
+  the menu under it lists the logins of the site — a click fills the form. In a sign-up the
+  password field offers **Use a strong password**: both fields are filled and the login is
+  saved to the vault at once (sending the form adds the login typed in it), and the email or
+  login field suggests the ones you use most. With the vault locked the icon stays and its
+  menu unlocks it. Typing into the field or Esc closes the menu. The menu is a page of the
+  extension in a frame: the site cannot read what it lists, and a press counts only when the
+  browser says the menu is fully in sight (so a site cannot cover it to steal a click).
+
 - **Fill.** The logins of the open page are on top of the list (and their number is on the
   icon); **Fill** puts the login and the password into the page. `Ctrl+Shift+L` fills the first
   login of the page without opening the popup. A login of another site is filled only after a

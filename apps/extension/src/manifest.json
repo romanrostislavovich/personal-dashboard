@@ -14,9 +14,15 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "__MSG_extName__",
-    "default_icon": { "16": "icons/16.png", "32": "icons/32.png" }
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png"
+    }
   },
-  "background": { "service_worker": "background.js", "type": "module" },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
@@ -29,11 +35,23 @@
   "host_permissions": ["http://*/*", "https://*/*"],
   "commands": {
     "_execute_action": {
-      "suggested_key": { "default": "Ctrl+Shift+Y", "mac": "Command+Shift+Y" }
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      }
     },
     "fill-login": {
-      "suggested_key": { "default": "Ctrl+Shift+L", "mac": "Command+Shift+L" },
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
+      },
       "description": "__MSG_commandFill__"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["inline-menu.html", "inline-menu.js", "inline-menu.css"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ]
 }

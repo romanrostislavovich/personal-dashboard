@@ -10,6 +10,26 @@
 /** The vault on the server: not created yet, locked here, or open here. */
 export type VaultStatus = 'none' | 'locked' | 'unlocked';
 
+/**
+ * What a field of a page is for, for the menu under it (content/forms.ts tells):
+ * - `username`, `password` — signing in: the logins of the site;
+ * - `new-password` — a sign-up or a change of password: a strong password;
+ * - `signup-username` — the login or email of a sign-up: the ones the user tends to use.
+ */
+export type FieldKind = 'username' | 'password' | 'new-password' | 'signup-username';
+
+/** What the menu under a field shows (inline-menu). */
+export interface MenuState {
+  vault: VaultStatus | 'signed-out';
+  kind: FieldKind;
+  /** The site of the frame the field is in. */
+  site: string;
+  /** For signing in: the logins of the site, without their passwords. */
+  logins: { id: string; title: string; username: string }[];
+  /** For a sign-up's login: the user's emails and logins, the most used first. */
+  suggestions: string[];
+}
+
 /** A login as the popup lists it — without its password, which is asked for when needed. */
 export interface ItemSummary {
   id: string;
@@ -78,9 +98,18 @@ export type PopupRequest =
   | { type: 'dismiss-offer'; never: boolean }
   /** Sites where saving is never offered, and taking one off the list. */
   | { type: 'never-sites' }
+  | { type: 'forget-never'; site: string }
   /** Runs the newer files on the disk now (it happens by itself when the popup is closed). */
   | { type: 'reload' }
-  | { type: 'forget-never'; site: string };
+  // The menu under a field (inline-menu.html, a page of the extension in a frame of the page);
+  // `token` is the field it was opened for (see background/inline.ts).
+  | { type: 'menu-state'; token: string }
+  | { type: 'menu-fill'; token: string; id: string }
+  | { type: 'menu-fill-text'; token: string; value: string }
+  /** A strong password into the fields for a new one, and into the vault at once. */
+  | { type: 'menu-generate'; token: string }
+  | { type: 'menu-unlock'; token: string; masterPassword: string }
+  | { type: 'menu-open-popup' };
 
 /** From a content script, about its own tab. */
 export type ContentRequest =
@@ -90,13 +119,27 @@ export type ContentRequest =
   | { type: 'submitted'; username: string; password: string }
   | { type: 'offer' }
   | { type: 'save-offer'; mode: 'save' | 'update' }
-  | { type: 'dismiss-offer'; never: boolean };
+  | { type: 'dismiss-offer'; never: boolean }
+  /**
+   * A field the vault helps with got the focus (`explicit` — its key icon was clicked): the
+   * token of a menu for it, or `null` when nothing is worth showing.
+   */
+  | { type: 'menu-open'; kind: FieldKind; fieldId: string; explicit: boolean };
 
 /** From the background to a content script. */
 export type PageCommand =
   | { type: 'fill'; username: string; password: string }
   /** A new password from the generator: into the fields for a new one. */
-  | { type: 'fill-new-password'; password: string };
+  | { type: 'fill-new-password'; password: string }
+  /** One value into the field the menu was opened for. */
+  | { type: 'fill-field'; fieldId: string; value: string }
+  | { type: 'close-menu' };
+
+/** A content script's answer to a fill; `login` — what the form's login field holds now. */
+export interface FillAnswer {
+  filled: boolean;
+  login?: string;
+}
 
 /** Every answer of the background: a value, or a code of what went wrong (see ERROR_CODES). */
 export type Reply<T> = { ok: true; value: T } | { ok: false; error: ErrorCode };
