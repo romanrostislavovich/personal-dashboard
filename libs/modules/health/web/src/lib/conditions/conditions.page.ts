@@ -5,7 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthDiagnosis, healthConditions, HealthRecord } from '@pd/contracts';
+import { HealthCondition, HealthDiagnosis, healthConditions, HealthRecord } from '@pd/contracts';
 import { HealthDialogs } from '../dialogs/health-dialogs.service';
 import { HealthApi } from '../health.api';
 import { CountryPipe, SpecialityPipe } from '../health-labels';
@@ -50,6 +50,11 @@ import { CountryPipe, SpecialityPipe } from '../health-labels';
               <span class="status" [class.active]="isActive(condition.status)">
                 {{ 'health.statuses.' + condition.status | transloco }}
               </span>
+              @if (isActive(condition.status)) {
+                <button matButton (click)="close(data, condition)">
+                  <mat-icon>task_alt</mat-icon> {{ 'health.diagnosis.close' | transloco }}
+                </button>
+              }
             </div>
             <p class="hint">
               {{
@@ -194,6 +199,14 @@ export class ConditionsPage {
   protected async add(): Promise<void> {
     const record = this.data();
     if (record && (await this.dialogs.diagnosis({ record }))) {
+      this.record.reload();
+    }
+  }
+
+  /** The diagnosis taken off: recovered, ruled out or in remission — kept in its history. */
+  protected async close(record: HealthRecord, condition: HealthCondition): Promise<void> {
+    const closing = { system: condition.system, code: condition.code, title: condition.title };
+    if (await this.dialogs.diagnosis({ record, closing })) {
       this.record.reload();
     }
   }

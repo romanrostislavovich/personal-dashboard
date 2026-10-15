@@ -1,16 +1,33 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
 import { and, count, eq, isNotNull, SQL, sql } from 'drizzle-orm';
-import { costSources, recurringPayments, transactions, wishes } from './finance.schema';
+import { BudgetsService } from './budgets/budgets.service';
+import {
+  costSources,
+  financeReceipts,
+  recurringPayments,
+  savingsGoals,
+  transactions,
+  wishes,
+} from './finance.schema';
 import { SubscriptionsService } from './recurring/subscriptions.service';
+import { TransactionsService } from './transactions/transactions.service';
 
-/** Finance achievements: for how many months the records have been kept. */
+/** How far back the budgets are checked month by month. */
+const BUDGET_MONTHS_BACK = 12;
+
+/**
+ * Finance achievements: keeping the records, and the habits they show — months within the
+ * budgets, months with more coming in than going out, savings goals reached.
+ */
 @Injectable()
 export class FinanceAchievements implements OnModuleInit {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly achievements: AchievementsService,
     private readonly subscriptions: SubscriptionsService,
+    private readonly budgets: BudgetsService,
+    private readonly transactionsService: TransactionsService,
   ) {}
 
   onModuleInit(): void {
@@ -18,6 +35,141 @@ export class FinanceAchievements implements OnModuleInit {
     this.registerAutomation();
     this.registerWishlist();
     this.registerSubscriptionUse();
+    this.registerHabits();
+  }
+
+  /** Good habits the records show, not how many there are. */
+  private registerHabits(): void {
+    this.achievements.register({
+      id: 'finance.budget-months',
+      module: 'finance',
+      measure: (userId) => this.monthsWithinBudgets(userId),
+      tiers: achievementTiers(
+        [
+          1,
+          '🎯',
+          { en: 'Within the budget', ru: 'В рамках бюджета' },
+          {
+            en: 'A whole month without going over any budget',
+            ru: 'Целый месяц без превышения бюджетов',
+          },
+        ],
+        [
+          3,
+          '📏',
+          { en: 'Disciplined', ru: 'Дисциплина' },
+          {
+            en: '3 months in a row without going over any budget',
+            ru: '3 месяца подряд без превышения бюджетов',
+          },
+        ],
+        [
+          12,
+          '🏦',
+          { en: 'A year on budget', ru: 'Год по бюджету' },
+          {
+            en: '12 months in a row without going over any budget',
+            ru: '12 месяцев подряд без превышения бюджетов',
+          },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'finance.positive-months',
+      module: 'finance',
+      measure: (userId) => this.positiveMonths(userId),
+      tiers: achievementTiers(
+        [
+          3,
+          '📈',
+          { en: 'In the black', ru: 'В плюсе' },
+          {
+            en: '3 months in a row with more income than expenses',
+            ru: '3 месяца подряд доходы больше расходов',
+          },
+        ],
+        [
+          6,
+          '💹',
+          { en: 'Half a year in the black', ru: 'Полгода в плюсе' },
+          {
+            en: '6 months in a row with more income than expenses',
+            ru: '6 месяцев подряд доходы больше расходов',
+          },
+        ],
+        [
+          12,
+          '🏛️',
+          { en: 'A year in the black', ru: 'Год в плюсе' },
+          {
+            en: '12 months in a row with more income than expenses',
+            ru: '12 месяцев подряд доходы больше расходов',
+          },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'finance.goals-reached',
+      module: 'finance',
+      measure: async (userId) => {
+        const [row] = await this.db
+          .select({ value: count() })
+          .from(savingsGoals)
+          .where(and(eq(savingsGoals.userId, userId), isNotNull(savingsGoals.reachedAt)));
+        return row?.value ?? 0;
+      },
+      tiers: achievementTiers(
+        [
+          1,
+          '🐷',
+          { en: 'Piggy bank full', ru: 'Копилка полна' },
+          { en: 'A savings goal reached', ru: 'Цель накоплений достигнута' },
+        ],
+        [
+          3,
+          '💰',
+          { en: 'Saver', ru: 'Накопитель' },
+          { en: 'Three savings goals reached', ru: 'Три цели накоплений достигнуты' },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'finance.receipts',
+      module: 'finance',
+      measure: async (userId) => {
+        const [row] = await this.db
+          .select({ value: count() })
+          .from(financeReceipts)
+          .where(eq(financeReceipts.userId, userId));
+        return row?.value ?? 0;
+      },
+      tiers: achievementTiers(
+        [
+          1,
+          '📸',
+          { en: 'Snap the receipt', ru: 'Щёлк — и чек' },
+          {
+            en: 'A photo of a receipt became an expense',
+            ru: 'Фото чека превратилось в расход',
+          },
+        ],
+        [
+          10,
+          '🧾',
+          { en: 'Receipt collector', ru: 'Собиратель чеков' },
+          { en: '10 receipts read from photos', ru: '10 чеков прочитано с фото' },
+        ],
+        [
+          50,
+          '🗃️',
+          { en: 'Paperless', ru: 'Без бумажек' },
+          { en: '50 receipts read from photos', ru: '50 чеков прочитано с фото' },
+        ],
+      ),
+    });
   }
 
   /**
@@ -184,6 +336,57 @@ export class FinanceAchievements implements OnModuleInit {
     });
   }
 
+  /**
+   * The finished months, the last first, within every budget — until one went over or had no
+   * records at all. The budgets have no history: a month is held against today's limits.
+   */
+  private async monthsWithinBudgets(userId: string): Promise<number> {
+    let kept = 0;
+    for (const month of finishedMonths(BUDGET_MONTHS_BACK)) {
+      const budgets = await this.budgets.list(userId, month);
+      if (!budgets.length || !(await this.hasTransactions(userId, month))) {
+        break;
+      }
+      if (budgets.some((budget) => budget.spent > budget.limit)) {
+        break;
+      }
+      kept++;
+    }
+    return kept;
+  }
+
+  /** The longest run of finished months in a row with more income than expenses. */
+  private async positiveMonths(userId: string): Promise<number> {
+    const [lastFinished] = finishedMonths(1);
+    const { months } = await this.transactionsService.cashFlowInMain(userId, {
+      from: '1970-01-01',
+      to: lastDayOf(lastFinished),
+    });
+    let best = 0;
+    let run = 0;
+    let previous: string | null = null;
+    for (const { month, income, expense } of months) {
+      const follows = previous !== null && nextMonth(previous) === month;
+      run = income > expense ? (follows ? run + 1 : 1) : 0;
+      best = Math.max(best, run);
+      previous = month;
+    }
+    return best;
+  }
+
+  private async hasTransactions(userId: string, month: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ value: count() })
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          sql`to_char(${transactions.occurredOn}, 'YYYY-MM') = ${month}`,
+        ),
+      );
+    return (row?.value ?? 0) > 0;
+  }
+
   private async monthsWithTransactions(userId: string): Promise<number> {
     const [row] = await this.db
       .select({
@@ -201,4 +404,25 @@ export class FinanceAchievements implements OnModuleInit {
     const [row] = await this.db.select({ value: count() }).from(table).where(where);
     return row?.value ?? 0;
   }
+}
+
+/** The finished months (`YYYY-MM`), the last one first. */
+function finishedMonths(howMany: number): string[] {
+  const now = new Date();
+  return Array.from({ length: howMany }, (_, index) => {
+    const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1 - index, 1));
+    return day.toISOString().slice(0, 7);
+  });
+}
+
+/** `2026-12` → `2027-01`. */
+function nextMonth(month: string): string {
+  const [year, number] = month.split('-').map(Number);
+  return new Date(Date.UTC(year, number, 1)).toISOString().slice(0, 7);
+}
+
+/** `2026-02` → `2026-02-28`. */
+function lastDayOf(month: string): string {
+  const [year, number] = month.split('-').map(Number);
+  return new Date(Date.UTC(year, number, 0)).toISOString().slice(0, 10);
 }

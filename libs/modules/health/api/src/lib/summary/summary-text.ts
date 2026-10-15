@@ -100,6 +100,7 @@ const en: SummaryText = {
     confirmed: 'confirmed',
     ruledOut: 'ruled out',
     remission: 'in remission',
+    resolved: 'resolved',
   },
   studyKinds: {
     ultrasound: 'Ultrasound',
@@ -182,6 +183,7 @@ const pl: SummaryText = {
     confirmed: 'potwierdzone',
     ruledOut: 'wykluczone',
     remission: 'remisja',
+    resolved: 'wyleczone',
   },
   studyKinds: {
     ultrasound: 'USG',
@@ -262,8 +264,9 @@ const uk: SummaryText = {
   statuses: {
     suspected: 'попередній',
     confirmed: 'підтверджений',
-    ruledOut: 'знятий',
+    ruledOut: 'виключений',
     remission: 'ремісія',
+    resolved: 'знятий (одужання)',
   },
   studyKinds: {
     ultrasound: 'УЗД',
@@ -344,8 +347,9 @@ const ru: SummaryText = {
   statuses: {
     suspected: 'предварительный',
     confirmed: 'подтверждён',
-    ruledOut: 'снят',
+    ruledOut: 'исключён',
     remission: 'ремиссия',
+    resolved: 'снят (выздоровление)',
   },
   studyKinds: {
     ultrasound: 'УЗИ',
@@ -428,6 +432,7 @@ const de: SummaryText = {
     confirmed: 'gesichert',
     ruledOut: 'ausgeschlossen',
     remission: 'in Remission',
+    resolved: 'ausgeheilt',
   },
   studyKinds: {
     ultrasound: 'Ultraschall',

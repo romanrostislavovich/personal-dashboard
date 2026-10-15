@@ -31,7 +31,7 @@ export const healthSummaryOptionsSchema = z.object({
   /** The blood type, allergies, operations and vaccinations. */
   profile: z.boolean().default(true),
   conditions: z.boolean().default(true),
-  /** Conditions ruled out or in remission too. */
+  /** Conditions resolved, ruled out or in remission too. */
   pastConditions: z.boolean().default(false),
   medications: z.boolean().default(true),
   pastMedications: z.boolean().default(false),

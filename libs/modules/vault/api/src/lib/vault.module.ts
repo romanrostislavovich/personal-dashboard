@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { VaultAchievements } from './vault.achievements';
 import { VaultController } from './vault.controller';
 import { VaultService } from './vault.service';
 
@@ -8,6 +9,6 @@ import { VaultService } from './vault.service';
  */
 @Module({
   controllers: [VaultController],
-  providers: [VaultService],
+  providers: [VaultService, VaultAchievements],
 })
 export class VaultModule {}
