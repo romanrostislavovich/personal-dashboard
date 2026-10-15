@@ -283,6 +283,25 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **A module generator** — `nx g @pd/tools:module`: the api and web libraries, contracts, the
   requests of the client core, i18n and the registration in one command instead of ten steps
 
+#### Browser extension
+
+- **Wishlist in one click** — "To the wishlist" on a product page: the name and the price read
+  from the page, then Finance watches the price as it does today
+- **Focus mode** — while a focus session of the desktop app runs, the distracting sites are
+  blocked; a habit like "social media" counts a visit to such a site as a day with it
+- **Time in the browser by site** — Activity sees only "Chrome, 3 hours"; the extension knows the
+  sites: "YouTube 1 h, GitHub 2 h", and daily limits per site
+- **From the context menu** — the selected text to a task or the diary, the page to "read later"
+  (a task with its link), the site to Monitoring
+- **Subscriptions at checkout** — on the page that sells a subscription, an offer to add it to
+  Finance → Subscriptions with its price and period
+- **Ctrl+K in any tab** — the dashboard's search (tasks, entries, passwords) without switching to
+  it
+- **Browsing history** — the pages visited (the address, the title, when and how long) kept
+  encrypted, never from private windows, with sites left out and a time to keep them; searched
+  from Ctrl+K and asked of the assistant ("the article about X I read last week"), the sites of
+  a day in Life
+
 #### Desktop
 
 - **Desktop: quick input from anywhere** — a global shortcut opens a small window over every
