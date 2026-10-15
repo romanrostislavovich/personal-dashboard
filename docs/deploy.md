@@ -127,6 +127,16 @@ clear message and nothing is lost.
 Migrations are applied automatically on start. To pin a version instead of following `main`, set
 `IMAGE_TAG=0.2.0` in the server's `.env`.
 
+The installed apps follow the server by themselves: the desktop app and the browser extension
+fetch their code from it (`/desktop-updates`, `/extension-updates`), see Settings → Apps.
+
+`deploy/deploy.sh` also puts the desktop installers for Windows and Linux on the server
+(`downloads/desktop`, served at `/downloads/desktop` for Settings → Apps). They are built in
+Docker (`deploy/desktop-installers.Dockerfile`, with Wine — an x86-64 computer) only when what
+they are made of changes: Electron, the loader, the icon or the version — rarely, they are about
+250 MB, and the code inside updates itself anyway. Without them (an image from GHCR) Settings →
+Apps links to GitHub Releases; macOS is always there, a `.dmg` is built only on a Mac.
+
 ## Backups
 
 - `./backups/dashboard-YYYY-MM-DD.dump` on the server, daily, 14 days (`BACKUP_KEEP_DAYS`).

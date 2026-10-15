@@ -33,6 +33,16 @@ newer version, checks it against the hashes of its manifest and restarts into it
 is in the tray. No installer is run, so nothing asks for administrator rights. A new installer is
 needed only when the app moves to a newer Electron — the tray menu says so.
 
+The app also keeps the browser extension (the password vault in Chrome) up to date: it holds
+the extension in its own folder (`%APPDATA%/Personal Dashboard/browser-extension`), brings it to
+the server's version (`/extension-updates`) on the same checks, and the extension, loaded from
+that folder, reloads itself with the new files. Settings → Apps inside the app shows the folder
+and the steps ([apps/extension](../apps/extension/README.md)).
+
+Settings → Apps lists the installers (Windows and Linux from your own server, macOS from GitHub
+Releases) and every computer and browser that runs an app, with its version: an old one there
+means the update has not come.
+
 ```bash
 npm run dev:desktop           # Electron on top of the dev server
 npm run desktop:package       # build an installer → dist/desktop-installers

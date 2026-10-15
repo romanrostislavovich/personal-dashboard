@@ -91,6 +91,16 @@ export const envSchema = z
      * desktop apps update themselves from `/desktop-updates` (apps/desktop/src/update).
      */
     DESKTOP_BUNDLE_PATH: z.string().optional(),
+    /**
+     * Path to the built browser extension (dist/apps/extension, with its zip); if set, the
+     * desktop app keeps the extension's folder up to date from `/extension-updates`.
+     */
+    EXTENSION_BUNDLE_PATH: z.string().optional(),
+    /**
+     * Path to the desktop installers deploy/deploy.sh puts on the server (`installers.json` and
+     * the files); served at `/downloads/desktop`. Without it Settings → Apps links to GitHub.
+     */
+    DESKTOP_INSTALLERS_PATH: z.string().optional(),
 
     /** Two-way sync between a local instance and a server, see docs/sync.md. */
     SYNC_MODE: z.enum(SYNC_MODES).default('off'),

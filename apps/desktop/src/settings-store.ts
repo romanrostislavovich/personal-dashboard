@@ -1,5 +1,6 @@
 import { app } from 'electron';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 
 export interface DesktopSettings {
@@ -16,6 +17,8 @@ export interface DesktopSettings {
   backupFolder: string | null;
   /** How many copies are kept. */
   backupKeep: number;
+  /** This computer in Settings → Apps: made once, so it is one line however often it reports. */
+  installId: string | null;
 }
 
 const DEFAULTS: DesktopSettings = {
@@ -24,6 +27,7 @@ const DEFAULTS: DesktopSettings = {
   startHiddenOnce: false,
   backupFolder: null,
   backupKeep: 14,
+  installId: null,
 };
 
 /** Documents\Personal Dashboard\Backups: where a person looks for their files. */
@@ -46,6 +50,17 @@ export function loadSettings(): DesktopSettings {
   } catch {
     return DEFAULTS;
   }
+}
+
+/** The id of this computer in Settings → Apps; made on the first call. */
+export function installId(): string {
+  const settings = loadSettings();
+  if (settings.installId) {
+    return settings.installId;
+  }
+  const id = randomUUID();
+  saveSettings({ ...settings, installId: id });
+  return id;
 }
 
 export function saveSettings(settings: DesktopSettings): void {

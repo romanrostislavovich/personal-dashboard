@@ -295,3 +295,16 @@ footer .who {
   background: var(--text);
   border-radius: 8px;
 }
+
+.update {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 8px 16px;
+  font-size: 13px;
+  color: var(--on-tonal);
+  background: var(--tonal);
+}
+.update span {
+  flex: 1;
+}

@@ -39,9 +39,12 @@ services:
       BACKUP_DIR: /backups
       # The hourly report of security-scan.sh about the server itself, for the security agent.
       SECURITY_DIR: /security
+      # The desktop installers deploy.sh puts there, for Settings → Apps (GitHub without them).
+      DESKTOP_INSTALLERS_PATH: /downloads/desktop
     volumes:
       - ./backups:/backups:ro
       - ./security:/security:ro
+      - ./downloads:/downloads:ro
     depends_on:
       db:
         condition: service_healthy

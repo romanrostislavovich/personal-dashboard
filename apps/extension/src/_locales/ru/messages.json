@@ -232,5 +232,17 @@
   },
   "error_failed": {
     "message": "Что-то пошло не так. Попробуйте ещё раз."
+  },
+  "updateReady": {
+    "message": "Новая версия готова."
+  },
+  "updateReload": {
+    "message": "Перезагрузить"
+  },
+  "updateOutdated": {
+    "message": "Вышла новая версия, но сюда она не пришла."
+  },
+  "updateHow": {
+    "message": "Как обновить"
   }
 }

@@ -533,6 +533,13 @@
       "when": 1792016666717,
       "tag": "0075_vault",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1792083505838,
+      "tag": "0076_app_installs",
+      "breakpoints": true
     }
   ]
 }

@@ -23,6 +23,7 @@ import {
   saveOffer,
 } from './capture';
 import { activeTab, fillLogin, fillNewPassword } from './fill';
+import { checkForUpdate, scheduleSelfUpdate, UPDATE_ALARM, updateStatus } from './self-update';
 import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
 
 /*
@@ -44,7 +45,16 @@ chrome.runtime.onMessage.addListener((message, sender, reply: (answer: Reply<unk
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === LOCK_ALARM) {
     void lockEverywhere();
+  } else if (alarm.name === UPDATE_ALARM) {
+    void checkForUpdate();
   }
+});
+
+// The extension updates itself from its folder on the disk (see self-update.ts).
+chrome.runtime.onInstalled.addListener(() => scheduleSelfUpdate());
+chrome.runtime.onStartup.addListener(() => {
+  scheduleSelfUpdate();
+  void checkForUpdate();
 });
 
 // The computer is locked: so is the vault.
@@ -126,6 +136,9 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
       return withActiveTab((tabId) => saveOffer(tabId, message.mode));
     case 'dismiss-offer':
       return withActiveTab((tabId) => dismissOffer(tabId, message.never));
+    case 'reload':
+      chrome.runtime.reload();
+      return undefined;
     case 'never-sites':
       return neverSites();
     case 'forget-never':
@@ -170,6 +183,7 @@ async function popupState(): Promise<PopupState> {
     vault,
     page: tab ? { url: tab.url, site: siteName(tab.url) } : null,
     offer: tab && vault !== 'signed-out' ? await offerFor(tab.id) : null,
+    update: await updateStatus(),
   };
 }
 

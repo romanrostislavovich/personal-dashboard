@@ -10,6 +10,7 @@ export * from './lib/life/life.schema';
 export * from './lib/automations/automations.schema';
 export * from './lib/sync/sync.schema';
 export * from './lib/integrations/integrations.schema';
+export * from './lib/apps/apps.schema';
 
 /** Columns stored encrypted (see encrypted-columns.ts). */
 export {

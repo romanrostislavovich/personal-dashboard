@@ -33,6 +33,8 @@ const NOT_TRASHED = new Set([
   'integration_alerts',
   // Loaded from its publisher again when needed (Health's ICD dictionary).
   'health_icd_codes',
+  // A device that told which version it runs: it tells again.
+  'app_installs',
 ]);
 
 /**
