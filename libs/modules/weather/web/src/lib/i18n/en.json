@@ -79,5 +79,9 @@
     "temperature": "Temperature",
     "rain": "Rain, mm",
     "sun": "Sunshine"
+  },
+  "life": {
+    "range": "{{min}}…{{max}}°C · rain {{rain}} mm",
+    "mean": "{{temp}}°C on average · rain {{rain}} mm"
   }
 }

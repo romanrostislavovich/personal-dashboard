@@ -238,7 +238,10 @@ export class SectionsAchievements implements OnModuleInit {
   private async fullestDay(userId: string): Promise<number> {
     const today = toLocalDate(todayIn(this.users.timeZoneOf(await this.users.findById(userId))));
     const yesterday = toLocalDate(addDays(parseLocalDate(today), -1));
-    const days = await Promise.all([today, yesterday].map((day) => this.life.day(userId, day)));
+    // The weather is in every day's feed: it tells nothing about how full the day was.
+    const days = await Promise.all(
+      [today, yesterday].map((day) => this.life.day(userId, day, ['weather'])),
+    );
     return Math.max(...days.map((day) => new Set(day.events.map((event) => event.module)).size));
   }
 }
