@@ -13,6 +13,7 @@ import { monitoringModule } from '@pd/monitoring-web';
 import { musicModule } from '@pd/music-web';
 import { psychologyModule } from '@pd/psychology-web';
 import { tasksModule } from '@pd/tasks-web';
+import { vaultModule } from '@pd/vault-web';
 import { weatherModule } from '@pd/weather-web';
 import { WebDashboardModule } from '@pd/web-core';
 
@@ -28,6 +29,7 @@ export const enabledModules: WebDashboardModule[] = [
   diaryModule,
   psychologyModule,
   healthModule,
+  vaultModule,
   financeModule,
   birthdaysModule,
   developmentModule,

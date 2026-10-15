@@ -80,3 +80,5 @@ export { withoutTrash } from './lib/trash/trash-triggers';
 export { RateLimit } from './lib/system/rate-limit';
 export { compressImage, type StoredFile } from './lib/files/compress-image';
 export { EncryptExistingService, type EncryptedLater } from './lib/crypto/encrypt-existing.service';
+/** For a module that asks for the account password again (see AuthService.checkPassword). */
+export { AuthService } from './lib/auth/auth.service';

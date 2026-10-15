@@ -56,6 +56,10 @@
   diagnoses by ICD code gathered into conditions with their history, medications by brand and
   active substance, scans and PDFs of the documents; stored encrypted; the ICD-10 dictionary
   downloaded from WHO by the user's own server (see the plan in [health.md](health.md))
+- **Passwords:** a password vault like 1Password — logins and secure notes encrypted on the
+  device with a key of the master password, so the server and the AI keep only ciphertext; a
+  recovery key shown once, locks itself after 10 minutes, a password generator and a strength
+  meter
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
 - **Psychology:** watching oneself over time — the patterns of the mood (by the day of the week,
   week by week, low stretches, the mood during the events of a life), short standard
@@ -155,11 +159,15 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 #### Data and security
 
-- **Encryption of sensitive data** — the diary, the medical record, notes about people and the
+- ✅ **Encryption of sensitive data** — the diary, the medical record, notes about people and the
   password vault are stored encrypted; for such modules the AI can be limited to a local model
-  (Ollama), so they never go to an outside API
+  (Ollama), so they never go to an outside API. Done: the vault is the last of them, encrypted
+  on the device with the master password
 - **Encrypted off-site backup** — the daily dump encrypted and sent to Backblaze B2 or S3, so the
   data outlives the server
+- **Attachment storage optimization** — compress images, receipts, and medical scans before
+  encrypting and saving, with an optional local filesystem or S3 object storage adapter to prevent
+  PostgreSQL database bloat over years of use
 
 #### Health
 
@@ -249,6 +257,17 @@ Psychology, recommendations as tasks, the next visit in the digest, search, demo
 - **Finance: the bank directly (open banking)** — transactions come from the bank every day
   (GoCardless Bank Account Data: free in the EU, mBank, PKO, Revolut), no statements needed;
   budgets, subscriptions and rules pick them up
+- **Finance: net worth and runway calculation** — total net worth tracking, monthly burn rate,
+  and emergency fund runway in months of autonomy based on current spending velocity
+- **Finance: subscription and leak audit** — automated detection of creeping price increases,
+  hidden or forgotten recurring charges, and warnings before renewal dates
+- **Health: emergency ICE card** — an exportable offline card (and phone lock screen image / QR)
+  with blood type, critical allergies, active medications and emergency contacts for first responders
+- **Health: prescriptions into interactive tasks** — medical recommendations and prescriptions
+  converted directly into tasks and interactive Telegram reminders with dosage confirmation buttons
+- **Quick capture (2-second rule)** — minimal global entry (desktop hotkey and mobile PWA
+  shortcuts) with instant natural language parsing ("15 coffee", "headache right side",
+  "doctor tomorrow at 14:00") to eliminate recording friction
 - **Notifications through an outbox** — a notification is sent once today, lost on an error and
   never deduplicated; a `notifications` table (a dedupe key, a status, attempts) and delivery
   by a job with a backoff (Telegram's `retry_after` too); a flapping site or a repeated price
@@ -301,6 +320,8 @@ Psychology, recommendations as tasks, the next visit in the digest, search, demo
 - **Sync across versions** — today any difference of the migrations stops sync; a peer whose
   migrations are the start of yours is accepted, the status says "the server is N migrations
   ahead", and a notification tells when the two drift apart
+- **Data portability and open formats** — continuous standardized export (Markdown, JSON-LD,
+  CSV/Parquet) for vendor independence and offline accessibility without running the backend
 - **`updatedAt` on every table a user edits** — "edited at" in the UI and a check that the AI and
   a second tab do not overwrite each other's change (If-Match)
 - **Observability** — JSON logs in production with a request or job id; `/metrics` (job runs,
@@ -345,11 +366,14 @@ Psychology, recommendations as tasks, the next visit in the digest, search, demo
 #### AI and links between modules
 
 - **AI memory** — facts about the user the assistant keeps between conversations
+- **Local semantic search & RAG** — vector embeddings (`pgvector` or `sqlite-vec`) across personal
+  history (diary entries, medical records, notes, past tasks) for semantic recall ("when did I last have
+  these symptoms?" or "how did I resolve that issue two years ago?")
 - **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
   Cursor can read and change your data directly, without its own chat
 - **AI: what it costs** — the tokens of every answer are kept (today `usage` is thrown away) per
   connection, model and day; the spend of a day and a month in the AI settings, a monthly limit
-  per connection
+  per connection; automatic fallback to local models (Ollama) for background extraction tasks
 - **AI: fewer tools a request** — all ~97 tools go with every request and every round today; the
   modules a question needs are picked first, and only their tools are offered (cheaper, and small
   Ollama models choose better)

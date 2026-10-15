@@ -1,0 +1,89 @@
+{
+  "title": "Passwords",
+  "about": "Your logins and secure notes, encrypted on this device with your master password. The server keeps only ciphertext: neither it nor the AI can read them.",
+  "strength": {
+    "weak": "Weak",
+    "fair": "Fair",
+    "strong": "Strong"
+  },
+  "setup": {
+    "title": "Create your vault",
+    "hint": "Choose a master password: it opens the vault and never leaves this device. It cannot be reset — if you forget it, only the recovery key opens the vault.",
+    "master": "Master password",
+    "repeat": "Repeat it",
+    "mismatch": "The passwords do not match",
+    "short": "At least 12 characters",
+    "weakMaster": "Make it stronger: a long phrase of several words is easy to remember",
+    "create": "Create the vault",
+    "creating": "Creating… (a few seconds: the key is derived slowly on purpose)"
+  },
+  "recovery": {
+    "title": "Your recovery key",
+    "hint": "It opens the vault if you forget the master password. It is shown only now: save it in a safe place, outside this computer (print it, write it down). Anyone with it and your account can open the vault.",
+    "copy": "Copy",
+    "download": "Save as a file",
+    "saved": "I have saved the recovery key",
+    "continue": "Open the vault"
+  },
+  "unlock": {
+    "title": "The vault is locked",
+    "master": "Master password",
+    "unlock": "Unlock",
+    "unlocking": "Unlocking…",
+    "wrong": "Wrong master password",
+    "forgot": "Forgot it? Use the recovery key",
+    "recoveryKey": "Recovery key",
+    "newMaster": "New master password",
+    "accountPassword": "Your account password",
+    "recover": "Open and set the new password",
+    "wrongRecovery": "Wrong recovery key",
+    "back": "Back",
+    "wrongAccount": "Wrong account password"
+  },
+  "list": {
+    "search": "Search",
+    "add": "New item",
+    "empty": "The vault is empty. Add a login or a secure note.",
+    "nothing": "Nothing found",
+    "copyUser": "Copy the login",
+    "copyPassword": "Copy the password",
+    "copied": "Copied",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Delete «{{title}}»? It stays in the trash for 30 days.",
+    "unreadable": "{{count}} item(s) could not be opened.",
+    "lock": "Lock",
+    "changeMaster": "Change the master password",
+    "autoLock": "Locks itself after 10 minutes without use."
+  },
+  "item": {
+    "add": "New item",
+    "edit": "Edit the item",
+    "kinds": {
+      "login": "Login",
+      "note": "Secure note"
+    },
+    "title": "Title",
+    "url": "Website",
+    "urlHint": "Several — on separate lines",
+    "username": "Login or email",
+    "password": "Password",
+    "show": "Show",
+    "hide": "Hide",
+    "generate": "Generate",
+    "length": "Length: {{length}}",
+    "digits": "Digits",
+    "symbols": "Symbols",
+    "notes": "Notes",
+    "favorite": "Favorite"
+  },
+  "change": {
+    "title": "Change the master password",
+    "hint": "The items stay as they are; the recovery key keeps working.",
+    "newMaster": "New master password",
+    "repeat": "Repeat it",
+    "accountPassword": "Your account password",
+    "save": "Change",
+    "done": "The master password is changed"
+  }
+}
