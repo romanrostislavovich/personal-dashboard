@@ -25,6 +25,7 @@ import {
   BotDocumentHandler,
   BotPhotoChoice,
   BotPhotoHandler,
+  BotReply,
   BotTextHandler,
   BotVoice,
   BotVoiceTranscriber,
@@ -317,7 +318,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   }
 
   /** Text from the chat or from a voice message: `/command args` or a message to the assistant. */
-  private async handleText(user: UserRow, text: string): Promise<string> {
+  private async handleText(user: UserRow, text: string): Promise<string | BotReply> {
     const command = /^\/(\w+)(?:@\w+)?\s*([\s\S]*)$/.exec(text.trim());
     if (command) {
       const found = this.commands.find((c) => c.command === command[1].toLowerCase());
@@ -459,9 +460,12 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   }
 
   /** An empty reply: the handler has answered on its own (a message with buttons). */
-  private async answer(ctx: Context, user: UserRow, reply: string): Promise<void> {
-    if (reply) {
-      await ctx.reply(reply);
+  private async answer(ctx: Context, user: UserRow, reply: string | BotReply): Promise<void> {
+    const { text, buttons } = typeof reply === 'string' ? { text: reply, buttons: [] } : reply;
+    if (text) {
+      const keyboard = new InlineKeyboard();
+      buttons.forEach(({ label, action }) => keyboard.text(label, action));
+      await ctx.reply(text, buttons.length ? { reply_markup: keyboard } : {});
     }
     this.activity.touched(user.id);
   }

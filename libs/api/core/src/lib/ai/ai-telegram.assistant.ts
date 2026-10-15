@@ -1,7 +1,12 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { AiAttachment } from '@pd/contracts';
 import { coreMessages } from '../i18n/core.messages';
-import { BotDocument, BotTranscription, BotVoice } from '../notifications/telegram/bot-command';
+import {
+  BotDocument,
+  BotReply,
+  BotTranscription,
+  BotVoice,
+} from '../notifications/telegram/bot-command';
 import { TelegramBotService } from '../notifications/telegram/telegram-bot.service';
 import { UserRow } from '../users/users.schema';
 import { AiConnectionsService } from './ai-connections.service';
@@ -12,6 +17,8 @@ import { transcribe } from './openai-compatible.client';
 
 /** Telegram limits a message to 4096 characters. */
 const TELEGRAM_LIMIT = 4000;
+/** The buttons under a question to confirm: `aic:y` / `aic:n`. */
+const CONFIRM_ACTION = 'aic';
 
 /**
  * The AI in Telegram:
@@ -56,6 +63,18 @@ export class AiTelegramAssistant implements OnModuleInit {
       handler: (user, args) => this.switchModel(user, args),
     });
     this.telegram.registerTextHandler((user, text) => this.assist(user, text));
+    // "Yes" / "No" under a question to confirm: the same as typing the word.
+    this.telegram.registerAction({
+      name: CONFIRM_ACTION,
+      handler: async (user, payload) => {
+        const messages = coreMessages(user.locale);
+        const reply = await this.assist(
+          user,
+          payload === 'y' ? messages.confirmYesWord : messages.confirmNoWord,
+        );
+        return typeof reply === 'string' ? reply : reply.text;
+      },
+    });
     this.telegram.registerDocumentHandler((user, document) =>
       this.assistWithDocument(user, document),
     );
@@ -129,7 +148,8 @@ export class AiTelegramAssistant implements OnModuleInit {
         name: document.fileName,
         data: await document.download(),
       });
-      return await this.assist(user, document.caption, [attachment]);
+      const reply = await this.assist(user, document.caption, [attachment]);
+      return typeof reply === 'string' ? reply : reply.text;
     } catch (error) {
       if (error instanceof AttachmentError) {
         return error.reason === 'unsupported'
@@ -141,20 +161,36 @@ export class AiTelegramAssistant implements OnModuleInit {
     }
   }
 
-  /** One turn of the assistant in the current conversation (shared with the web chat). */
-  private async assist(user: UserRow, text: string, attachments?: AiAttachment[]): Promise<string> {
+  /**
+   * One turn of the assistant in the current conversation (shared with the web chat). When it
+   * asks to confirm a deletion or an overwrite, "Yes" and "No" come as buttons.
+   */
+  private async assist(
+    user: UserRow,
+    text: string,
+    attachments?: AiAttachment[],
+  ): Promise<string | BotReply> {
     const messages = coreMessages(user.locale);
     if (!(await this.ai.isConfigured(user.id))) {
       return messages.askNotConfigured;
     }
     try {
       // The file text is saved with the message: a follow-up ("yes, add them") needs it.
-      const { reply } = await this.conversations.ask(
+      const { reply, awaitsConfirmation } = await this.conversations.ask(
         user.id,
         { content: text, attachments },
         { plainText: true, allowWrites: true },
       );
-      return reply.slice(0, TELEGRAM_LIMIT) || '🤷';
+      const answer = reply.slice(0, TELEGRAM_LIMIT) || '🤷';
+      return awaitsConfirmation
+        ? {
+            text: answer,
+            buttons: [
+              { label: messages.confirmYes, action: `${CONFIRM_ACTION}:y` },
+              { label: messages.confirmNo, action: `${CONFIRM_ACTION}:n` },
+            ],
+          }
+        : answer;
     } catch (error) {
       this.logger.warn(`Telegram assistant failed for ${user.id}: ${error}`);
       return messages.assistantFailed;
