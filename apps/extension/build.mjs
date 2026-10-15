@@ -5,6 +5,7 @@
 //   background.js                  the service worker (src/background/background.ts)
 //   content.js                     the content script of every page (src/content/content.ts)
 //   popup.html, popup.css, popup.js
+//   inline-menu.html, .css, .js    the menu under a login field, in a frame of the page
 //   icons/*.png
 //   bundle.json                    the fingerprint (`version`) and the sha512 of every file
 //   personal-dashboard-extension.zip   all of the above, to download (not in bundle.json)
@@ -45,12 +46,12 @@ await build({
   outfile: join(OUT, 'background.js'),
 });
 // A content script is a classic script, not a module.
-for (const entry of ['content/content.ts', 'popup/popup.ts']) {
+for (const entry of ['content/content.ts', 'popup/popup.ts', 'menu/inline-menu.ts']) {
   await build({
     ...shared,
     format: 'iife',
     entryPoints: [join(SOURCE, entry)],
-    outfile: join(OUT, `${entry.split('/')[0]}.js`),
+    outfile: join(OUT, `${entry.split('/')[1].replace('.ts', '')}.js`),
   });
 }
 
@@ -68,6 +69,8 @@ for (const file of files(join(SOURCE, '_locales')).concat(files(join(SOURCE, 'ic
 }
 copy('popup/popup.html', 'popup.html');
 copy('popup/popup.css', 'popup.css');
+copy('menu/inline-menu.html', 'inline-menu.html');
+copy('menu/inline-menu.css', 'inline-menu.css');
 
 // The fingerprint of everything but the manifest, which then carries it as its version.
 const hashes = () =>

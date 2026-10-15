@@ -244,5 +244,29 @@
   },
   "updateHow": {
     "message": "Как обновить"
+  },
+  "menuTitle": {
+    "message": "Personal Dashboard: логины"
+  },
+  "menuSignedOut": {
+    "message": "Войдите в расширение, чтобы заполнять логины здесь."
+  },
+  "menuNoVault": {
+    "message": "Сначала создайте хранилище паролей на дашборде."
+  },
+  "menuNoLogins": {
+    "message": "Для $1 нет сохранённых логинов."
+  },
+  "menuNoSuggestions": {
+    "message": "В хранилище пока нет email и логинов."
+  },
+  "menuStrongPassword": {
+    "message": "Использовать надёжный пароль"
+  },
+  "menuStrongPasswordHint": {
+    "message": "Заполнит оба поля и сразу сохранится в хранилище"
+  },
+  "menuOpenExtension": {
+    "message": "Открыть расширение"
   }
 }

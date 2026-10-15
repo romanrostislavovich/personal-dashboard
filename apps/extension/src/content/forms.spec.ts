@@ -1,4 +1,11 @@
-import { fillLogin, fillNewPassword, findLoginFields, readSubmitted } from './forms';
+import {
+  classifyField,
+  fillLogin,
+  fillNewPassword,
+  findLoginFields,
+  readSubmitted,
+  typedLogin,
+} from './forms';
 
 function page(html: string): Document {
   document.body.innerHTML = html;
@@ -77,5 +84,57 @@ describe('login forms', () => {
     });
     const search = page(`<form><input name="q" value="cats"></form>`);
     expect(readSubmitted(search.querySelector('form') as HTMLFormElement, search)).toBeNull();
+  });
+
+  it('tells a sign-in from a sign-up and a change of password', () => {
+    const kind = (doc: Document, selector: string) =>
+      classifyField(doc.querySelector(selector) as HTMLInputElement, doc);
+
+    const signIn = page(`
+      <input name="q" placeholder="Search">
+      <form><input name="email"><input type="password" id="p"><button>Sign in</button></form>`);
+    expect([kind(signIn, '[name=email]'), kind(signIn, '#p'), kind(signIn, '[name=q]')]).toEqual([
+      'username',
+      'password',
+      null,
+    ]);
+
+    const signUp = page(`
+      <form>
+        <input name="fullname"><input type="email" name="email">
+        <input type="password" id="a"><input type="password" id="b">
+        <button>Create account</button>
+      </form>`);
+    expect([
+      kind(signUp, '[name=fullname]'),
+      kind(signUp, '[name=email]'),
+      kind(signUp, '#a'),
+      kind(signUp, '#b'),
+    ]).toEqual([null, 'signup-username', 'new-password', 'new-password']);
+
+    const change = page(`
+      <form><input type="password" id="old"><input type="password" id="new"><input type="password" id="again"></form>`);
+    expect([kind(change, '#old'), kind(change, '#new'), kind(change, '#again')]).toEqual([
+      'password',
+      'new-password',
+      'new-password',
+    ]);
+  });
+
+  it('knows a sign-up by its button even with one password field', () => {
+    const doc = page(
+      `<form><input name="login"><input type="password" id="p"><button>Регистрация</button></form>`,
+    );
+    expect(classifyField(doc.querySelector('#p') as HTMLInputElement, doc)).toBe('new-password');
+    expect(classifyField(doc.querySelector('[name=login]') as HTMLInputElement, doc)).toBe(
+      'signup-username',
+    );
+  });
+
+  it('reads the login typed into a sign-up', () => {
+    const doc = page(
+      `<form><input type="email" value=" me@example.com "><input type="password"></form>`,
+    );
+    expect(typedLogin(doc)).toBe('me@example.com');
   });
 });

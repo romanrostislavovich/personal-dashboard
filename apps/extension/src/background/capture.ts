@@ -2,6 +2,7 @@ import { OpenVaultItem } from '@pd/contracts';
 import { SaveOffer } from '../shared/messages';
 import { matchesPage, siteName, siteOf } from '../shared/site';
 import { readJson, writeJson } from './storage';
+import { DRAFT_SOURCE } from './inline';
 import { isUnlocked, itemFields, saveItem, vaultItems, vaultStatus } from './vault';
 
 /*
@@ -74,6 +75,10 @@ export async function offerFor(tabId: number, page = false): Promise<SaveOffer |
     }
     return { mode: 'locked', ...offer };
   }
+  if (await completeDraft(pending)) {
+    await drop(tabId);
+    return null;
+  }
   const same = await sameLogins(pending);
   if (same.some((item) => item.password === pending.password)) {
     await drop(tabId);
@@ -121,6 +126,28 @@ export async function dismissOffer(tabId: number, never: boolean): Promise<void>
 /** A closed tab takes its offer with it. */
 export async function forgetTab(tabId: number): Promise<void> {
   await drop(tabId);
+}
+
+/**
+ * A password made in the menu of a sign-up was saved at once (inline.ts); the sent form brings
+ * the login that goes with it: the saved item gets it, and nothing more is offered.
+ */
+async function completeDraft(pending: Pending): Promise<boolean> {
+  const { items } = await vaultItems({ use: false });
+  const draft = items.find(
+    (item) =>
+      item.source?.app === DRAFT_SOURCE &&
+      item.password === pending.password &&
+      matchesPage(item.urls, pending.url),
+  );
+  if (!draft) {
+    return false;
+  }
+  // Without `source`: a complete login now, like any other.
+  const { kind, title, urls, password, notes, favorite } = draft;
+  const username = pending.username || draft.username;
+  await saveItem({ kind, title, urls, username, password, notes, favorite }, draft.id);
+  return true;
 }
 
 async function sameLogins(pending: Pending): Promise<OpenVaultItem[]> {

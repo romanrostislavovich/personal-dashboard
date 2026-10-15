@@ -67,6 +67,9 @@ under **Updating**.
   phishing warning), offers to save or update a login typed into a page, makes passwords and
   puts them into the fields for a new one. The vault is opened in the extension with the master
   password; the server still sees only ciphertext.
+- **Passwords in the fields of a page** — a key icon in login fields with a menu of the site's
+  logins; in a sign-up, a strong password (filled into both fields and saved to the vault at
+  once) and the emails and logins you use most. The vault unlocks from the menu too.
 - **Settings → Apps** — the desktop app, the browser extension and (later) the mobile one in one
   place: installers from your own server (Windows, Linux; macOS from GitHub Releases), the zip
   of the extension, and every computer and browser that runs an app with its version — an old

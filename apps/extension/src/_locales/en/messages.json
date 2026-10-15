@@ -244,5 +244,29 @@
   },
   "updateHow": {
     "message": "How to update"
+  },
+  "menuTitle": {
+    "message": "Personal Dashboard: logins"
+  },
+  "menuSignedOut": {
+    "message": "Sign in to the extension to fill logins here."
+  },
+  "menuNoVault": {
+    "message": "Create the password vault on the dashboard first."
+  },
+  "menuNoLogins": {
+    "message": "No saved logins for $1."
+  },
+  "menuNoSuggestions": {
+    "message": "No emails or logins in the vault yet."
+  },
+  "menuStrongPassword": {
+    "message": "Use a strong password"
+  },
+  "menuStrongPasswordHint": {
+    "message": "Fills both fields and is saved to the vault at once"
+  },
+  "menuOpenExtension": {
+    "message": "Open the extension"
   }
 }

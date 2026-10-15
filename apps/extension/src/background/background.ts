@@ -23,6 +23,7 @@ import {
   saveOffer,
 } from './capture';
 import { activeTab, fillLogin, fillNewPassword } from './fill';
+import { menuFill, menuFillText, menuGenerate, menuState, menuUnlock, openMenu } from './inline';
 import { checkForUpdate, scheduleSelfUpdate, UPDATE_ALARM, updateStatus } from './self-update';
 import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
 
@@ -98,6 +99,10 @@ function isPopup(sender: chrome.runtime.MessageSender): boolean {
 }
 
 async function fromPopup(message: PopupRequest): Promise<unknown> {
+  const menu = fromMenu(message);
+  if (menu) {
+    return menu;
+  }
   switch (message.type) {
     case 'state':
       return popupState();
@@ -146,6 +151,26 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
   }
 }
 
+/** The menu under a field (inline-menu); `null` — not one of its messages. */
+function fromMenu(message: PopupRequest): Promise<unknown> | null {
+  switch (message.type) {
+    case 'menu-state':
+      return menuState(message.token);
+    case 'menu-fill':
+      return menuFill(message.token, message.id);
+    case 'menu-fill-text':
+      return menuFillText(message.token, message.value);
+    case 'menu-generate':
+      return menuGenerate(message.token);
+    case 'menu-unlock':
+      return menuUnlock(message.token, message.masterPassword).then(refreshBadge);
+    case 'menu-open-popup':
+      return openPopupWindow();
+    default:
+      return null;
+  }
+}
+
 /** A content script asks only about its own tab; the frame's address is the browser's word. */
 async function fromContent(
   message: ContentRequest,
@@ -165,6 +190,25 @@ async function fromContent(
       return saveOffer(tabId, message.mode);
     case 'dismiss-offer':
       return dismissOffer(tabId, message.never);
+    case 'menu-open':
+      return openMenu(sender, message.kind, message.fieldId, message.explicit);
+  }
+}
+
+/**
+ * The popup, from the menu of a field: the toolbar's popup when the browser lets it open, a
+ * small window of it otherwise (no click to open it on has reached here).
+ */
+async function openPopupWindow(): Promise<void> {
+  try {
+    await chrome.action.openPopup();
+  } catch {
+    await chrome.windows.create({
+      url: chrome.runtime.getURL('popup.html'),
+      type: 'popup',
+      width: 400,
+      height: 600,
+    });
   }
 }
 

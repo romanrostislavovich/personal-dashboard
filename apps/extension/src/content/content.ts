@@ -1,11 +1,19 @@
-import { ask, PageCommand, SaveOffer } from '../shared/messages';
-import { fillLogin, fillNewPassword, passwordFields, readSubmitted } from './forms';
+import { ask, FillAnswer, PageCommand, SaveOffer } from '../shared/messages';
+import {
+  fillField,
+  fillLogin,
+  fillNewPassword,
+  passwordFields,
+  readSubmitted,
+  typedLogin,
+} from './forms';
+import { closeMenu, fieldById, setupInline } from './inline';
 import { showSaveBar } from './save-bar';
 
 /*
  * The content script, in every frame of every page. It tells the background about login forms
- * and logins being sent, fills what the background sends, and shows the offer to save. It never
- * asks for a password: it has no way to.
+ * and logins being sent, fills what the background sends, shows the offer to save and the menu
+ * under a login field (inline.ts). It never asks for a password: it has no way to.
  */
 
 /** After a form is sent without a reload (a sign-in in a single-page app), ask for the offer. */
@@ -17,14 +25,34 @@ const SEND_HINT = /sign|log ?in|continue|next|submit|войти|вход|дал�
 let lastSent = '';
 
 chrome.runtime.onMessage.addListener(
-  (command: PageCommand, _sender, reply: (answer: { filled: boolean }) => void) => {
-    if (command.type === 'fill') {
-      reply({ filled: fillLogin(document, command.username, command.password) });
-    } else if (command.type === 'fill-new-password') {
-      reply({ filled: fillNewPassword(document, command.password) });
+  (command: PageCommand, _sender, reply: (answer: FillAnswer) => void) => {
+    switch (command.type) {
+      case 'fill':
+        reply({ filled: fillLogin(document, command.username, command.password) });
+        break;
+      case 'fill-new-password': {
+        const filled = fillNewPassword(document, command.password);
+        reply({ filled, login: typedLogin(document) });
+        break;
+      }
+      case 'fill-field': {
+        const field = fieldById(command.fieldId);
+        if (field?.isConnected) {
+          fillField(field, command.value);
+        }
+        reply({ filled: !!field?.isConnected });
+        break;
+      }
+      case 'close-menu':
+        closeMenu();
+        reply({ filled: false });
+        break;
     }
   },
 );
+
+// The key icon and the menu in login and sign-up fields.
+setupInline();
 
 // A login form now, or one drawn later by the page's own scripts.
 watchForLoginForm();
@@ -56,6 +84,9 @@ document.addEventListener(
 // Only the page itself shows the bar, not a frame inside it.
 if (window === window.top) {
   void offerToSave();
+  // The page that sent the form may have been left before the background noted what was sent:
+  // asked again a moment later (a page gets an offer once, so it is never shown twice).
+  setTimeout(() => void offerToSave(), OFFER_DELAY_MS);
 }
 
 function watchForLoginForm(): void {
