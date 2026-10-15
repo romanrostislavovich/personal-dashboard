@@ -462,10 +462,12 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   /** An empty reply: the handler has answered on its own (a message with buttons). */
   private async answer(ctx: Context, user: UserRow, reply: string | BotReply): Promise<void> {
     const { text, buttons } = typeof reply === 'string' ? { text: reply, buttons: [] } : reply;
-    if (text) {
+    if (text && buttons.length) {
       const keyboard = new InlineKeyboard();
       buttons.forEach(({ label, action }) => keyboard.text(label, action));
-      await ctx.reply(text, buttons.length ? { reply_markup: keyboard } : {});
+      await ctx.reply(text, { reply_markup: keyboard });
+    } else if (text) {
+      await ctx.reply(text);
     }
     this.activity.touched(user.id);
   }
