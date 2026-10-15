@@ -18,6 +18,14 @@ set -euo pipefail
 export MSYS_NO_PATHCONV=1 # Git Bash on Windows: keep /opt/... as it is
 
 cd "$(dirname "$0")/.."
+# One deploy at a time: two would build into the same folders and race on the server.
+LOCK=dist/.deploy.lock
+mkdir -p dist
+if ! mkdir "$LOCK" 2>/dev/null; then
+  echo "Another deploy is running (or one was killed: remove $LOCK if not)." >&2
+  exit 1
+fi
+trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
 # shellcheck source=/dev/null
 [ -f deploy/deploy.local.env ] && . deploy/deploy.local.env
 : "${DEPLOY_HOST:?Set DEPLOY_HOST (e.g. root@1.2.3.4) in deploy/deploy.local.env}"
@@ -95,15 +103,20 @@ upload_desktop_installers() {
     grep -o '"key": *"[^"]*"' | cut -d'"' -f4 || true)
   [ "$key" = "$on_server" ] && return 0
   step "Building the desktop installers (Electron, the loader or the icon changed; ~10 min the first time)"
-  rm -rf dist/server-installers
+  # Called with `||`: set -e is off in here, so every step says whether it worked.
+  rm -rf dist/server-installers || return 1
   docker buildx build -f deploy/desktop-installers.Dockerfile --build-arg "KEY=$key" \
     --build-arg "VERSION=$(node -p "require('./package.json').version")" \
-    --output type=local,dest=dist/server-installers --quiet . >/dev/null
+    --output type=local,dest=dist/server-installers --quiet . >/dev/null || return 1
+  # Both installers and the list, or nothing goes to the server.
+  ls dist/server-installers/*.exe dist/server-installers/*.AppImage \
+    dist/server-installers/installers.json >/dev/null || return 1
   step "Uploading the desktop installers"
-  remote "rm -rf $REMOTE_DIR/downloads/desktop.new && mkdir -p $REMOTE_DIR/downloads/desktop.new"
-  scp -q -i "$DEPLOY_SSH_KEY" dist/server-installers/* "$DEPLOY_HOST:$REMOTE_DIR/downloads/desktop.new/"
-  remote "cd $REMOTE_DIR/downloads && rm -rf desktop.old &&
-    { [ ! -d desktop ] || mv desktop desktop.old; } && mv desktop.new desktop && rm -rf desktop.old"
+  remote "rm -rf $REMOTE_DIR/downloads/desktop.new && mkdir -p $REMOTE_DIR/downloads/desktop.new" &&
+    scp -q -i "$DEPLOY_SSH_KEY" dist/server-installers/* \
+      "$DEPLOY_HOST:$REMOTE_DIR/downloads/desktop.new/" &&
+    remote "cd $REMOTE_DIR/downloads && rm -rf desktop.old &&
+      { [ ! -d desktop ] || mv desktop desktop.old; } && mv desktop.new desktop && rm -rf desktop.old"
 }
 
 # --rollback: the previous image; the database from before the update if its schema changed.
@@ -168,8 +181,6 @@ docker buildx build --platform "$PLATFORM" -t "$IMAGE" --load --quiet . >/dev/nu
 
 step "Uploading the image"
 docker save "$IMAGE" | gzip -1 | remote 'gunzip | docker load' | tail -1
-
-upload_desktop_installers
 
 keep_rollback_point
 
@@ -246,6 +257,11 @@ remote "docker image prune -f >/dev/null
   keep=\$(grep -h -E '^(IMAGE|PREVIOUS_IMAGE)=' $REMOTE_DIR/.env $REMOTE_DIR/rollback.env 2>/dev/null | cut -d= -f2-)
   docker images personal-dashboard --format '{{.Repository}}:{{.Tag}}' |
     grep -v -x -F \"\$keep\" | xargs -r docker rmi >/dev/null 2>&1 || true"
+
+# After the app runs: the installers are a convenience, and a failed build of them must not keep
+# the update from the server.
+upload_desktop_installers ||
+  echo "The desktop installers were not updated: Settings → Apps keeps the previous ones." >&2
 
 step "Done"
 ip="${DEPLOY_HOST#*@}"
