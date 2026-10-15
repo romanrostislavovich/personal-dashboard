@@ -165,98 +165,30 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 ### Now
 
-#### Data and security
+#### Done from this list
 
 - ✅ **Encryption of sensitive data** — the diary, the medical record, notes about people and the
-  password vault are stored encrypted; for such modules the AI can be limited to a local model
-  (Ollama), so they never go to an outside API. Done: the vault is the last of them, encrypted
-  on the device with the master password
-- **Encrypted off-site backup** — the daily dump encrypted and sent to Backblaze B2 or S3, so the
-  data outlives the server
-- **Attachment storage optimization** — compress images, receipts, and medical scans before
-  encrypting and saving, with an optional local filesystem or S3 object storage adapter to prevent
-  PostgreSQL database bloat over years of use
-
-#### Health
-
-Right after the encryption: the history of visits is needed now, and it is the most sensitive
-data of all. The plan in stages: [health.md](health.md). ✅ Stage 1 is done — visits,
-diagnoses by ICD code gathered into conditions, medications, documents, the ICD-10 dictionary
-from WHO, all stored encrypted; next: lab results, a document read by the AI into a draft, the
-summary for a new doctor. ✅ Stage 2 too: lab results across laboratories and countries in one
-unit, with the laboratory's own range, and studies with their conclusions. ✅ Stage 3: a
-document read by the AI into a draft that is checked beside the original before it is saved,
-from the page or a Telegram photo. ✅ Stage 4: a summary for a new doctor in their language — to
-print, for Word, or as a revocable link. ✅ Stage 5: the treatment over the mood in
-Psychology, recommendations as tasks, the next visit in the digest, search, demo data. ✅ Stage
-6: the profile (blood type, allergies, vaccinations, operations) and medication reminders.
-
-- **Health** — your own medical record: blood type, allergies, chronic conditions, vaccinations,
-  operations, doctors and their contacts; medications and when to take them, doctor visits, lab
-  results with charts (a PDF of the results is parsed by the AI, like a bank statement is today)
-- **Health: one history across countries and clinics** — a life spread over several countries
-  (Ukraine, Belarus, Poland) and clinics leaves the history in pieces no one doctor sees; the
-  dashboard keeps one of your own:
-  - **a visit** — the date, the country, the clinic, the doctor and their speciality (a
-    psychiatrist, a therapist, any other), the complaints, the diagnosis, the recommendations,
-    the medications prescribed, the next visit; the documents of the visit (a scan, a photo, a
-    PDF) kept with it
-  - **a document is read by the AI** — a photo or a PDF in Ukrainian, Russian, Polish or English
-    becomes a visit: the diagnosis, the recommendations and the medications filled in, checked by
-    you before it is saved; the original is always kept
-  - **diagnoses by ICD-10 / ICD-11 code** — one code across countries and languages, so the same
-    condition from three clinics is one line with its history: when it was first set, who
-    confirmed or changed it, when it came back
-  - **in dynamics** — a timeline of every visit, diagnosis and medication (started, dose changed,
-    stopped and why); a recommendation becomes a task or a reminder in one click; a diagnosis or a
-    medication of the psychiatrist is shown in Psychology next to the mood and the questionnaires
-    of the same time (through the links of the core)
-  - **for a new doctor** — a summary of the history in the doctor's language (the AI translates,
-    the codes stay), as a PDF or a link that works for a few days and can be revoked; you pick what
-    goes in (e.g. not the psychiatry for a dentist)
-  - stored encrypted, and its AI may be limited to a local model (see "Encryption of sensitive
-    data")
-
-#### Tests and CI
-
-- **End-to-end smoke tests** (Playwright): sign-in, a diary entry, a transaction, an AI message
-- **Dependency updates** (Renovate)
+  password vault stored encrypted (the vault on the device, with the master password); the AI of
+  such sections can be limited to a local model (Ollama)
+- ✅ **Health** — every stage of [health.md](health.md): one history across countries and
+  clinics, ICD diagnoses gathered into conditions (and taken off: recovered, ruled out, in
+  remission), lab results, documents read by the AI, a summary for a new doctor, the profile,
+  medication reminders
+- ✅ **Tests and CI** — end-to-end smoke tests (Playwright) on the built image, Renovate
+- ✅ **Reliability** — background jobs send nothing twice; every outside call gives up after 30
+  seconds; the missing indexes (migration 0073); `/api/health` checks the database and the jobs;
+  the trash keeps only what a person deleted; sign-in hardening and limits on what costs; the
+  image is published only after CI passes; the desktop queue survives a crash; every write
+  names the user
 
 #### Quick wins
 
 - **Hidden sections in the digest and notifications** — today hiding a section only takes it out
-  of the menu and the home page
+  of the menu and the home page; the server does not know about it
 - **Telegram:** "Yes / No" buttons to confirm a deletion; quick commands like `/spent 12 coffee`
 - **Life: more** — the weather in the day feed (it is already compared with the mood) and steps
-
-#### Reliability
-
-- **Background jobs send nothing twice** — pg-boss retries a failed job at once (2 times) and
-  expires it after 15 minutes, so a job that fails on one user, or runs long (the wishlist prices),
-  sends its notifications again; every job that loops over the users catches the error per user
-  (birthday reminders, recurring payments, WakaTime, Last.fm, achievements), queue options per job
-  (expiry, no retries for the ones that notify, a backoff)
-- **Every call to an outside service has a timeout** — GitHub, WakaTime, npm, Battle.net,
-  OpenDota, Spotify, Hetzner, DeepSeek and Telegram wait forever today; one shared `fetchJson`
-  with a timeout, `Retry-After` / rate-limit reset read, the user skipped until the reset
-- **Indexes** — `finance_transactions` has none on `user_id` (and the date); the `user_id` and
-  foreign keys of recurring payments, wishes, goal contributions, monitors, birthdays and reminders
-- **A real health check** — `/health` answers "ok" even without the database; a readiness check
-  (`SELECT 1`, pg-boss started, migrations applied) for the Docker healthcheck
-- **The trash keeps only what a person deleted** — the daily cleanup of `activity_health` and
-  `activity_outages` fills the trash today
-- **Auth hardening** — the API key of an AI connection is not carried over a redirect to another
-  host (`safeFetch`); the current password in "change password" is throttled; the sign-in
-  throttle never forgets a lock still in force; a global rate limit for the rest of the API
-  (AI chat, registration, import)
-- **The image is published only after CI passes** — today a commit that breaks CI is still built
-  and deployed
-- **Desktop: the offline queue survives a crash** — written atomically (a temporary file and a
-  rename), saves debounced, a broken file never loses the device token; a rejected batch (400 / 413) is dropped or split instead of blocking the queue; a timeout on the upload; the window
-  watcher survives a missing PowerShell and never runs twice
-- **Smaller things** — a rule of Activity checks the project is the user's; every write filters
-  by `userId`, not only by `id`; the achievements are measured in parallel; the monitors are
-  checked with a limit and `allSettled`; the wishlist reads at most its limit of a page
+- **Achievements measured in parallel** — the ~150 metrics are measured one after another on
+  every check
 
 ### Next
 
@@ -288,7 +220,9 @@ Psychology, recommendations as tasks, the next visit in the digest, search, demo
   of a phone
 - **Push notifications** — in the browser, the desktop app and on phones (the PWA, without
   Telegram), next to Telegram; switched off per kind of notification or all at once
-- **Habits** — a habit tracker module, in the digest too
+- **Habits: to build, not only to quit** — the section counts what one quits or cuts down; next:
+  habits to make (sport, water, reading, a walk) with a target a day or a week, and the runs in
+  the morning digest
 - **Weekly review on Sunday** — the AI sums up the week across the sections and asks 2–3
   questions; the answers go to the diary, the main thing of the next week to the tasks
 - **Challenges of the week** — every Monday three personal challenges from the user's own data
@@ -486,6 +420,14 @@ Psychology, recommendations as tasks, the next visit in the digest, search, demo
   own that knows its data and tools in depth (finance, the diary, development, activity…), and a
   general one that takes a question, hands its parts to the agents concerned and puts their
   answers together; the security agent already works apart like this
+
+#### Data and storage
+
+- **Encrypted off-site backup** — the daily dump encrypted and sent to Backblaze B2 or S3, so the
+  data outlives the server (today it is kept on the server and on the computer of the sync)
+- **Attachment storage** — photos are made small already; the files themselves (scans, receipts,
+  photos of the diary) moved out of PostgreSQL to the file system or S3, so the database does
+  not grow with them over the years
 
 #### Big steps
 
