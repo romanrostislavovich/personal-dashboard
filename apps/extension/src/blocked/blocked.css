@@ -1,0 +1,76 @@
+/* The page instead of a closed site, in the dashboard's colours, light or dark as the system. */
+:root {
+  --primary: #3f51b5;
+  --on-primary: #fff;
+  --tonal: #e0e0ff;
+  --on-tonal: #1a237e;
+  --surface: #fbf8ff;
+  --text: #1b1b1f;
+  --muted: #5d5e66;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #bac3ff;
+    --on-primary: #08218a;
+    --tonal: #3c4277;
+    --on-tonal: #dfe0ff;
+    --surface: #131318;
+    --text: #e4e1e9;
+    --muted: #c6c5d0;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--surface);
+  color: var(--text);
+  font:
+    16px/1.5 system-ui,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+main {
+  max-width: 480px;
+  text-align: center;
+}
+.emoji {
+  font-size: 56px;
+  line-height: 1;
+}
+h1 {
+  margin: 16px 0 8px;
+  font-size: 24px;
+  font-weight: 500;
+}
+p {
+  margin: 0 0 24px;
+  color: var(--muted);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+button {
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 20px;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--tonal);
+  color: var(--on-tonal);
+}
+button.primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}

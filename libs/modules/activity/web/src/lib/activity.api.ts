@@ -12,6 +12,7 @@ import {
   ActivityProjectRuleInput,
   ActivitySettings,
   ActivitySettingsUpdate,
+  ActivitySiteTime,
   ActivityOtherComputer,
   ActivityStats,
   ActivityComputer,
@@ -115,8 +116,28 @@ export class ActivityApi {
     return fromCore(() => this.activity.saveLimits(limits));
   }
 
+  /**
+   * Replaces the limits of some kinds and keeps the others as the server has them now: two
+   * cards of the settings (programs, sites) each change their own.
+   */
+  replaceLimits(kinds: ActivityLimitInput['kind'][], limits: ActivityLimitInput[]) {
+    return fromCore(async () => {
+      const kept = (await this.activity.limits())
+        .filter((limit) => !kinds.includes(limit.kind))
+        .map(({ kind, app, minutes }) => ({ kind, app, minutes }));
+      await this.activity.saveLimits([...kept, ...limits]);
+    });
+  }
+
   diskAdvice(report: DiskReport) {
     return fromCore(() => this.activity.diskAdvice(report));
+  }
+
+  /** The time of each site, as the browser extension records it. */
+  sites(period: () => ActivityPeriod) {
+    return httpResource<ActivitySiteTime[]>(() => ACTIVITY_READS.sites(period()), {
+      defaultValue: [],
+    });
   }
 
   computers() {

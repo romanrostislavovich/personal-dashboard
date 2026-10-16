@@ -87,6 +87,9 @@
     />
     <ng-container *ngTemplateOutlet="top; context: { title: 'activity.byApp', items: apps() }" />
     <ng-container
+      *ngTemplateOutlet="top; context: { title: 'activity.bySite', items: siteShares() }"
+    />
+    <ng-container
       *ngTemplateOutlet="top; context: { title: 'activity.byProject', items: projects() }"
     />
     @if (byDevice().length > 1) {

@@ -294,5 +294,17 @@
   },
   "usage": {
     "seconds": "at the computer"
+  },
+  "bySite": "By site",
+  "browser": {
+    "title": "Browser",
+    "hint": "What the browser extension does: it counts the time on each site (only the site, never the address of a page; never private windows and sites with a private word), closes distracting sites during a focus session of the desktop app, and closes a site whose daily time is spent. \"Open anyway\" lets it in for 5 minutes.",
+    "track": "Count the time on each site",
+    "distracting": "Closed during a focus session",
+    "distractingHint": "A subdomain counts too: youtube.com closes m.youtube.com.",
+    "site": "Site",
+    "limits": "Daily limits of sites",
+    "limitsHint": "Every browser with the extension together; once the time is spent, the site is closed until tomorrow.",
+    "addLimit": "Add a limit"
   }
 }

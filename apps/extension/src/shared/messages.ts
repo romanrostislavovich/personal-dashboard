@@ -101,6 +101,9 @@ export type PopupRequest =
   | { type: 'forget-never'; site: string }
   /** Runs the newer files on the disk now (it happens by itself when the popup is closed). */
   | { type: 'reload' }
+  // The page shown instead of a closed site (blocked.html): why it is closed, and "open anyway".
+  | { type: 'blocked-info'; back: string }
+  | { type: 'pass-site'; site: string }
   // The menu under a field (inline-menu.html, a page of the extension in a frame of the page);
   // `token` is the field it was opened for (see background/inline.ts).
   | { type: 'menu-state'; token: string }

@@ -65,6 +65,8 @@ export class OverviewPage {
     ...(this.deviceId() ? { deviceId: this.deviceId() as string } : {}),
   }));
   protected readonly stats = this.api.stats(this.period);
+  /** The browser is one device for all the sites: they do not follow the device filter. */
+  private readonly sites = this.api.sites(() => lastDays(this.days()));
 
   protected readonly activeDays = computed(
     () => (this.stats.value()?.days ?? []).filter((day) => day.seconds > 0).length,
@@ -114,6 +116,14 @@ export class OverviewPage {
     this.shares((this.stats.value()?.apps ?? []).slice(0, TOP_APPS)),
   );
   protected readonly projects = computed(() => this.shares(this.stats.value()?.projects));
+  protected readonly siteShares = computed(() =>
+    this.shares(
+      this.sites
+        .value()
+        .slice(0, TOP_APPS)
+        .map(({ site, seconds }) => ({ name: site, seconds })),
+    ),
+  );
   /** Computers without the tracker whose time another service knows (a work laptop). */
   protected readonly otherComputers = computed(() => this.stats.value()?.otherComputers ?? []);
   protected readonly otherSeconds = computed(() =>
