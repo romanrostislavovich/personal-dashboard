@@ -24,6 +24,8 @@ export class SpotifyService {
   // One-time states and access tokens live in memory — enough for a single API instance.
   private readonly pendingStates = new Map<string, { userId: string; expiresAt: number }>();
   private readonly accessTokens = new Map<string, SpotifyTokens>();
+  /** The app's own token, for the search of the catalogue. */
+  private appToken: SpotifyTokens | null = null;
 
   constructor(
     @Inject(ConfigService) config: AppConfig,
@@ -40,6 +42,20 @@ export class SpotifyService {
 
   get isAvailable(): boolean {
     return this.client !== null;
+  }
+
+  /**
+   * The link of a song in Spotify, found with the app's own token (no user needed); `null` —
+   * Spotify is not set up on the server, or the song is not there.
+   */
+  async findTrack(track: string, artist: string | null): Promise<string | null> {
+    if (!this.client) {
+      return null;
+    }
+    if (!this.appToken || this.appToken.expiresAt.getTime() < Date.now() + 60_000) {
+      this.appToken = await this.client.appToken();
+    }
+    return this.client.findTrack(this.appToken.accessToken, track, artist);
   }
 
   isConnected(userId: string): Promise<boolean> {

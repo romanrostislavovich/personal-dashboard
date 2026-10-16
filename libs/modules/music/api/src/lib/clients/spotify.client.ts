@@ -79,6 +79,34 @@ export class SpotifyClient {
     };
   }
 
+  /** A token of the app itself (no user): enough to search the catalogue. */
+  appToken(): Promise<SpotifyTokens> {
+    return this.requestToken({ grant_type: 'client_credentials' });
+  }
+
+  /** The link of the song in Spotify that best matches; `null` — none found. */
+  async findTrack(
+    accessToken: string,
+    track: string,
+    artist: string | null,
+  ): Promise<string | null> {
+    const q = artist ? `track:${track} artist:${artist}` : track;
+    const params = new URLSearchParams({ q, type: 'track', limit: '1' });
+    const response = await fetchWithTimeout(`${API}/search?${params}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (response.status === 401) {
+      throw new SpotifyAuthError('Spotify access token expired');
+    }
+    if (!response.ok) {
+      throw new Error(`Spotify API ${response.status}`);
+    }
+    const data = (await response.json()) as {
+      tracks?: { items: { external_urls: { spotify: string } }[] };
+    };
+    return data.tracks?.items[0]?.external_urls.spotify ?? null;
+  }
+
   private async requestToken(body: Record<string, string>): Promise<SpotifyTokens> {
     const response = await fetchWithTimeout(`${ACCOUNTS}/api/token`, {
       method: 'POST',

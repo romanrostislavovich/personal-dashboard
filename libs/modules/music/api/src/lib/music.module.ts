@@ -1,6 +1,7 @@
 import { MusicIntegrations } from './music.integrations';
 import { MusicDemo } from './music.demo';
 import { Module } from '@nestjs/common';
+import { SongLinksService } from './song-links.service';
 import { MusicLife } from './music.life';
 import { MusicLinks } from './music.links';
 import { MusicSearch } from './music.search';
@@ -31,6 +32,7 @@ import { SpotifyService } from './spotify.service';
 @Module({
   controllers: [MusicController, SoundcloudController],
   providers: [
+    SongLinksService,
     MusicDemo,
     MusicIntegrations,
     MusicLife,

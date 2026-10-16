@@ -136,6 +136,8 @@
     "copyYoutube": "Copy the YouTube Music link",
     "copySpotify": "Copy the Spotify link",
     "send": "Send…",
-    "copied": "Link copied"
+    "copied": "Link copied",
+    "finding": "Looking for the song…",
+    "search": "(search)"
   }
 }

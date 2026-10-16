@@ -141,7 +141,9 @@ under **Updating**.
   server.
 - **Music: share a song** — every song (playing now, the recent ones, the top) opens in
   YouTube Music or Spotify, its link there is copied, or it is sent through the system's share
-  sheet.
+  sheet. The links go straight to the song: found on YouTube Music by its own search, on
+  Spotify through its API (with `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` set); a song
+  not found gets a link to the search.
 - **Notifications through an outbox** — every notification is written down first: the same one
   within its window goes out once (a price that jumps back and forth is told once in 12 hours),
   and a Telegram message that failed (a 429, the network) is tried again with a backoff —

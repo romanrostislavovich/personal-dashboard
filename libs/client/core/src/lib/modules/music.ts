@@ -5,6 +5,8 @@ import {
   MusicTopPeriod,
   MusicTops,
   NowPlaying,
+  SongLinks,
+  SongLinksQuery,
   SoundcloudConnectInput,
   SoundcloudStats,
   SoundcloudTrackUpdate,
@@ -29,6 +31,9 @@ export function musicApi(api: ApiClient) {
     stats: () => api.read<MusicStats>(MUSIC_READS.stats()),
     tops: (period: MusicTopPeriod) => api.read<MusicTops | null>(MUSIC_READS.tops(period)),
     nowPlaying: () => api.read<NowPlaying | null>(MUSIC_READS.nowPlaying()),
+    /** The links straight to a song on YouTube Music and Spotify ("Share"). */
+    songLinks: (song: SongLinksQuery) =>
+      api.read<SongLinks>(apiRequest(`${BASE}/song-links`, { ...song })),
 
     connectLastfm: (input: LastfmSettingsInput) => api.put<void>(`${BASE}/lastfm`, input),
     disconnectLastfm: () => api.delete(`${BASE}/lastfm`),
