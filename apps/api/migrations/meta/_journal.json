@@ -582,6 +582,13 @@
       "when": 1792166120963,
       "tag": "0082_ai_usage",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1792166675570,
+      "tag": "0083_activity_sites",
+      "breakpoints": true
     }
   ]
 }

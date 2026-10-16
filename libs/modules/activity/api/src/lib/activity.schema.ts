@@ -6,6 +6,7 @@ import {
   ActivityLimitKind,
   ActivityPlatform,
   ActivitySystem,
+  DEFAULT_DISTRACTING_SITES,
   LocalDate,
 } from '@pd/contracts';
 
@@ -55,6 +56,8 @@ export const activityDevices = pgTable(
      * failing, overheating, no restart for long): once a day is enough.
      */
     alertedOn: jsonb().$type<Partial<Record<ComputerAlert, LocalDate>>>().notNull().default({}),
+    /** A focus session runs on it until then (the browser extension closes distracting sites). */
+    focusUntil: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index().on(table.userId)],
@@ -146,7 +149,31 @@ export const activitySettings = pgTable('activity_settings', {
   skippedComputers: text().array().notNull().default([]),
   /** Minutes a task done today adds to the limit of games (the tasks come through the core). */
   gamesMinutesPerTask: integer().notNull().default(0),
+  /** The browser extension records the time on each site. */
+  trackSites: boolean().notNull().default(true),
+  /** Sites the extension keeps closed during a focus session. */
+  distractingSites: text().array().notNull().default(DEFAULT_DISTRACTING_SITES),
 });
+
+/**
+ * A stretch of time one site was in front, as the browser extension saw it: the site only,
+ * never the address or the title of the page.
+ */
+export const activitySiteVisits = pgTable(
+  'activity_site_visits',
+  {
+    /** Made by the extension: a batch sent twice does not double the time. */
+    id: uuid().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    site: text().notNull(),
+    startedAt: timestamp({ withTimezone: true }).notNull(),
+    endedAt: timestamp({ withTimezone: true }).notNull(),
+    seconds: integer().notNull(),
+  },
+  (table) => [index().on(table.userId, table.startedAt)],
+);
 
 /** "No more than this much a day": in games, at the computer at all, in one program. */
 export const activityLimits = pgTable(

@@ -78,8 +78,17 @@ export class ActivityTracker {
         ended === 'focus' ? { kind: 'focus-ended', next, held, minutes } : { kind: 'break-ended' },
       );
     },
-    changed: () => this.onChange(),
+    changed: () => {
+      // The browser extension closes the distracting sites while a work part runs: it learns
+      // of one starting or ending through the server, so that is told right away.
+      if (this.focusUntil() !== this.toldFocusUntil) {
+        void this.upload();
+      }
+      this.onChange();
+    },
   });
+  /** The end of the work part as last told to the server; `undefined` — not told yet. */
+  private toldFocusUntil: string | null | undefined = undefined;
 
   constructor(
     private readonly serverUrl: () => string | null,
@@ -337,11 +346,18 @@ export class ActivityTracker {
     };
   }
 
-  private post(server: string, token: string, batch: Batch): Promise<Response> {
-    return net.fetch(new URL('/api/activity/device/spans', server).href, {
+  /** When the running work part ends; `null` — none runs (a break is not one). */
+  private focusUntil(): string | null {
+    return this.focus.working ? this.focus.status().endsAt : null;
+  }
+
+  private async post(server: string, token: string, batch: Batch): Promise<Response> {
+    const focusUntil = this.focusUntil();
+    const response = await net.fetch(new URL('/api/activity/device/spans', server).href, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Device ${token}` },
       body: JSON.stringify({
+        focusUntil,
         spans: batch.spans,
         ...(batch.focus.length ? { focus: batch.focus } : {}),
         ...(batch.health ? { health: batch.health } : {}),
@@ -349,6 +365,10 @@ export class ActivityTracker {
       }),
       signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
     });
+    if (response.ok) {
+      this.toldFocusUntil = focusUntil;
+    }
+    return response;
   }
 
   /** What the server has (or will never take) leaves the store. */

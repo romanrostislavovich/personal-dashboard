@@ -46,7 +46,8 @@ export function reachedLimits(
     0,
   );
   return limits.flatMap((limit) => {
-    if (limit.notifiedOn === day) {
+    // A site's limit is the browser extension's: it closes the site, no message needed.
+    if (limit.notifiedOn === day || limit.kind === 'site') {
       return [];
     }
     const used =

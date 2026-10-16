@@ -1,5 +1,8 @@
 import {
   ActivityApp,
+  ActivityBrowserConfig,
+  ActivitySiteTime,
+  ActivitySiteVisitInput,
   ActivityAppUpdate,
   ActivityDayQuery,
   ActivityDevice,
@@ -43,6 +46,8 @@ export const ACTIVITY_READS = {
   limits: () => apiRequest(`${BASE}/limits`),
   /** The computers with their latest state (disks, load) and the last day of it. */
   computers: () => apiRequest(`${BASE}/computers`),
+  /** The time of each site in a period (the browser extension records it). */
+  sites: (period: ActivityPeriod) => apiRequest(`${BASE}/sites`, period),
 };
 
 export function activityApi(api: ApiClient) {
@@ -77,6 +82,13 @@ export function activityApi(api: ApiClient) {
     computers: () => api.read<ActivityComputer[]>(ACTIVITY_READS.computers()),
     /** What to delete from a full disk, from what the desktop app's scan found. */
     diskAdvice: (report: DiskReport) => api.post<DiskAdvice>(`${BASE}/disk-advice`, report),
+    sites: (period: ActivityPeriod) => api.read<ActivitySiteTime[]>(ACTIVITY_READS.sites(period)),
+    /**
+     * The browser extension: the visits it recorded (none is fine); the answer is what it
+     * follows — the focus session now, the sites to close, the limits.
+     */
+    recordSites: (visits: ActivitySiteVisitInput[]) =>
+      api.post<ActivityBrowserConfig & { saved: number }>(`${BASE}/sites`, { visits }),
   };
 }
 
