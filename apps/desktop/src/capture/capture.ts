@@ -3,6 +3,7 @@ import {
   clipboard,
   desktopCapturer,
   globalShortcut,
+  ClipboardItem,
   NativeImage,
   screen,
 } from 'electron';
@@ -24,10 +25,15 @@ export class Capture {
   private window: BrowserWindow | null = null;
   private overlay: BrowserWindow | null = null;
   private screenshot: { image: NativeImage; scale: number } | null = null;
+  /** The piece of the screen in the editor (assets/annotate.html). */
+  private editor: BrowserWindow | null = null;
+  private piece: NativeImage | null = null;
 
   constructor(
     private readonly serverUrl: () => string | null,
     private readonly notify: (title: string, body: string) => void,
+    /** Keeps a finished screenshot in the folder of screenshots; returns where it went. */
+    private readonly keep: (png: Buffer) => Promise<string>,
   ) {}
 
   /** Taken shortcuts (another program has them) are told about once. */
@@ -77,7 +83,67 @@ export class Capture {
       width: Math.round(rect.width * shot.scale),
       height: Math.round(rect.height * shot.scale),
     });
-    this.open({ kind: 'image', base64: piece.toPNG().toString('base64') });
+    void this.openEditor(piece, shot.scale);
+  }
+
+  /** For the editor: the piece to draw on. */
+  editorImage(): string | null {
+    return this.piece?.toDataURL() ?? null;
+  }
+
+  /**
+   * The editor is done. `save` — into the folder (synced with the server) and the clipboard;
+   * `actions` — the same, then the window that makes it a task or a diary photo; `copy` — the
+   * clipboard only.
+   */
+  async editorDone(png: Buffer, action: 'save' | 'actions' | 'copy'): Promise<void> {
+    // The clipboard of Electron follows the browser's: a PNG goes in as an item.
+    await clipboard.write([
+      new ClipboardItem({ 'image/png': new Blob([new Uint8Array(png)], { type: 'image/png' }) }),
+    ]);
+    this.editor?.close();
+    if (action === 'copy') {
+      return;
+    }
+    try {
+      await this.keep(png);
+    } catch (error) {
+      this.notify('Скриншот не сохранён', error instanceof Error ? error.message : String(error));
+    }
+    if (action === 'actions') {
+      this.open({ kind: 'image', base64: png.toString('base64') });
+    }
+  }
+
+  editorCancelled(): void {
+    this.editor?.close();
+  }
+
+  /** A window the size of the piece (within the screen), with the tools on top. */
+  private async openEditor(piece: NativeImage, scale: number): Promise<void> {
+    this.editor?.close();
+    this.piece = piece;
+    const area = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workAreaSize;
+    const { width, height } = piece.getSize();
+    this.editor = new BrowserWindow({
+      width: Math.min(area.width, Math.max(720, Math.round(width / scale) + 40)),
+      height: Math.min(area.height, Math.max(420, Math.round(height / scale) + 110)),
+      alwaysOnTop: true,
+      autoHideMenuBar: true,
+      title: 'Скриншот — Personal Dashboard',
+      icon: join(__dirname, 'assets', 'icon.png'),
+      webPreferences: {
+        preload: join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        sandbox: true,
+      },
+    });
+    this.editor.on('closed', () => {
+      this.editor = null;
+      this.piece = null;
+    });
+    await this.editor.loadFile(join(__dirname, 'assets', 'annotate.html'));
+    this.editor.focus();
   }
 
   private async captureText(): Promise<void> {

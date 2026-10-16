@@ -213,6 +213,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   and emergency fund runway in months of autonomy based on current spending velocity
 - **Finance: subscription and leak audit** — automated detection of creeping price increases,
   hidden or forgotten recurring charges, and warnings before renewal dates
+- **Finance: subscription action hub** — critical date calendar for contract renewals, price lock
+  expirations, and service terms (rent, internet, B2B tools, insurance) with AI-generated
+  cancellation and renegotiation draft letters in English and Polish
 - **Health: prescriptions into interactive tasks** — medical recommendations and prescriptions
   converted directly into tasks and interactive Telegram reminders with dosage confirmation buttons
 - **Quick capture (2-second rule)** — minimal global entry (desktop hotkey and mobile PWA
@@ -232,6 +235,12 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   your own doctor first if Health has them
 - **Psychology: the events of a life on the chart of the mood** — the periods of the events laid
   over the mood and the questionnaires, to see what went along with what
+- **Energy and cognitive load tracker** — a 5-point physical and mental energy rating in quick
+  check-ins (Body Battery); automatic cognitive load scoring based on window context switches,
+  commit frequency, and focus session lengths
+- **Emergency offline runbook** — a password-protected compact offline PWA/PDF bundle with critical
+  emergency data (ICE card, insurance policies, active prescriptions, ID document copies, emergency
+  credentials) accessible on a mobile device without network or when the self-hosted server is offline
 - **Tilt detector** — three Dota losses in a row or two hours of games after midnight → a gentle
   "maybe enough?"; win rate by the time of day and after N matches in a row
 - **Sleep from the computer** — the first and the last activity of a day are known already (and
