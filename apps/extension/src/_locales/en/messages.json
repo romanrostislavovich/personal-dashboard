@@ -409,5 +409,59 @@
   },
   "copied": {
     "message": "Copied"
+  },
+  "commandAssistant": {
+    "message": "Open the assistant beside the page"
+  },
+  "sidepanelPlaceholder": {
+    "message": "Ask the assistant…"
+  },
+  "sidepanelSend": {
+    "message": "Send"
+  },
+  "sidepanelNew": {
+    "message": "New conversation"
+  },
+  "sidepanelEmpty": {
+    "message": "Ask anything about your dashboard, or about this page."
+  },
+  "sidepanelSignIn": {
+    "message": "Sign in to the dashboard in the extension's popup first."
+  },
+  "sidepanelFailed": {
+    "message": "The assistant did not answer: is the AI set up on the dashboard?"
+  },
+  "sidepanelThinking": {
+    "message": "Thinking…"
+  },
+  "sidepanelUsed": {
+    "message": "looked at"
+  },
+  "sidepanelYes": {
+    "message": "Yes"
+  },
+  "sidepanelNo": {
+    "message": "No"
+  },
+  "sidepanelQuickSummary": {
+    "message": "Sum up this page"
+  },
+  "sidepanelQuickSummaryPrompt": {
+    "message": "Sum up the page open in my browser in a few points."
+  },
+  "sidepanelQuickTask": {
+    "message": "Save to tasks"
+  },
+  "sidepanelQuickTaskPrompt": {
+    "message": "Add a task to read the page open in my browser, with its link."
+  },
+  "sidepanelQuickExplain": {
+    "message": "Explain the selection"
+  },
+  "sidepanelQuickExplainPrompt": {
+    "message": "Explain the text I selected on the page in my browser."
+  },
+  "assistantPanel": {
+    "message": "Open beside the page"
   }
 }

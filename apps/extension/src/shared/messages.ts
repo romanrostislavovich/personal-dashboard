@@ -119,6 +119,11 @@ export type PopupRequest =
   | { type: 'mcp-info' }
   | { type: 'mcp-create'; name: string; scope: 'read' | 'write' }
   | { type: 'mcp-revoke'; id: string }
+  // The assistant beside the page (sidepanel): the conversation shared with the dashboard.
+  | { type: 'chat-current' }
+  | { type: 'chat-new' }
+  | { type: 'chat-send'; content: string; conversationId?: string }
+  | { type: 'open-assistant' }
   | { type: 'pass-site'; site: string }
   // The menu under a field (inline-menu.html, a page of the extension in a frame of the page);
   // `token` is the field it was opened for (see background/inline.ts).

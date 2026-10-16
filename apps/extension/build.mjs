@@ -7,6 +7,7 @@
 //   popup.html, popup.css, popup.js
 //   inline-menu.html, .css, .js    the menu under a login field, in a frame of the page
 //   blocked.html, .css, .js        instead of a site kept closed (a focus session, a limit)
+//   sidepanel.html, .css, .js      the assistant beside the page (Chrome's side panel)
 //   icons/*.png
 //   bundle.json                    the fingerprint (`version`) and the sha512 of every file
 //   personal-dashboard-extension.zip   all of the above, to download (not in bundle.json)
@@ -52,6 +53,7 @@ for (const entry of [
   'popup/popup.ts',
   'menu/inline-menu.ts',
   'blocked/blocked.ts',
+  'sidepanel/sidepanel.ts',
 ]) {
   await build({
     ...shared,
@@ -79,6 +81,8 @@ copy('menu/inline-menu.html', 'inline-menu.html');
 copy('menu/inline-menu.css', 'inline-menu.css');
 copy('blocked/blocked.html', 'blocked.html');
 copy('blocked/blocked.css', 'blocked.css');
+copy('sidepanel/sidepanel.html', 'sidepanel.html');
+copy('sidepanel/sidepanel.css', 'sidepanel.css');
 
 // The fingerprint of everything but the manifest, which then carries it as its version.
 const hashes = () =>

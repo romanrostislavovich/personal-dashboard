@@ -108,6 +108,19 @@ export async function assistantView(popup: Popup, back: () => void): Promise<HTM
       h('h1', { text: t('assistant') }),
     ),
     h('p', { class: 'hint', text: t(state.online ? 'assistantOnline' : 'assistantOffline') }),
+    h('button', {
+      class: 'button filled',
+      type: 'button',
+      text: t('assistantPanel'),
+      // Opened from the popup's click: the side panel needs the user's gesture.
+      onClick: () =>
+        void chrome.windows.getCurrent().then(async (current) => {
+          if (current.id !== undefined) {
+            await chrome.sidePanel.open({ windowId: current.id });
+            window.close();
+          }
+        }),
+    }),
     toggle('currentPage'),
     toggle('pageText'),
     toggle('openTabs'),

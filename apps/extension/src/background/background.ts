@@ -44,7 +44,7 @@ import {
   startDevice,
   stopDevice,
 } from './device';
-import { accessTokensApi } from '@pd/client-core';
+import { accessTokensApi, aiApi } from '@pd/client-core';
 import { signedInClient } from './account';
 import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
 
@@ -124,6 +124,8 @@ chrome.tabs.onRemoved.addListener((tabId) => void forgetTab(tabId));
 chrome.commands.onCommand.addListener((command) => {
   if (command === 'fill-login') {
     void fillFirstLogin();
+  } else if (command === 'open-assistant') {
+    void openAssistant();
   }
 });
 
@@ -219,6 +221,15 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
         name: String(message.name).slice(0, 60),
         scope: message.scope === 'write' ? 'write' : 'read',
       });
+    case 'chat-current':
+      return aiApi((await signedInClient()).api).currentConversation();
+    case 'chat-new':
+      return aiApi((await signedInClient()).api).startConversation();
+    case 'chat-send':
+      return aiApi((await signedInClient()).api).chat({
+        content: String(message.content).slice(0, 20_000),
+        ...(message.conversationId ? { conversationId: String(message.conversationId) } : {}),
+      });
     case 'mcp-revoke':
       return accessTokensApi((await signedInClient()).api).revoke(String(message.id));
     case 'blocked-info':
@@ -299,6 +310,14 @@ async function openPopupWindow(): Promise<void> {
       width: 400,
       height: 600,
     });
+  }
+}
+
+/** The assistant beside the page of the window in front (a shortcut, the popup's button). */
+async function openAssistant(): Promise<void> {
+  const window = await chrome.windows.getLastFocused({ windowTypes: ['normal'] }).catch(() => null);
+  if (window?.id !== undefined) {
+    await chrome.sidePanel.open({ windowId: window.id });
   }
 }
 
