@@ -122,6 +122,26 @@ under **Updating**.
   day into a folder of the computer (Settings → Data), the last 14 kept: the data outlives the
   server and comes back through "Import archive".
 
+- **Notifications through an outbox** — every notification is written down first: the same one
+  within its window goes out once (a price that jumps back and forth is told once in 12 hours),
+  and a Telegram message that failed (a 429, the network) is tried again with a backoff —
+  a minute, five, half an hour, two hours, six. Settings → Integrations shows what became of
+  the latest ones.
+- **Telegram: long messages are split** — an answer of the assistant, a digest or a monthly
+  story over 4096 characters goes as several messages instead of being cut.
+- **AI: what it costs** — the tokens of every request are counted per connection, model and
+  day (the cached part too). With the prices of a million tokens the AI settings show the spend
+  of today and of the month, and a monthly limit stops the chat once it is spent; background
+  work (summaries, reading documents) goes on with a local model (Ollama) when there is one.
+- **AI: the prompt cache works** — the time is the last line of the system prompt, so the
+  tools and the rules are read from the provider's cache (cheaper and faster).
+- **Browser extension: time by site** — the time on each site (only the site, never the page;
+  never private windows) in Activity, for the assistant too ("how long was I on YouTube this
+  week").
+- **Browser extension: focus mode and limits of sites** — while a focus session of the desktop
+  app runs, the distracting sites are closed; a site with a daily limit closes once its time is
+  spent. "Open anyway" lets it in for 5 minutes. Set in Activity → Settings → Browser.
+
 - **End-to-end smoke tests** (Playwright, `e2e/`): the built image is clicked through in a
   browser in CI — signing in, a diary entry, a transaction, a message to the AI (a fake model).
   The image is published only after they pass.
@@ -165,7 +185,11 @@ under **Updating**.
   and the reminders to take medications, 0072 the pages of its documents, 0073 the missing
   indexes (`user_id` and foreign keys of a few dozen tables), 0074 the word count of a diary
   entry, 0075 the password vault, 0076 the devices of Settings → Apps, 0077 the habits, 0078 the habits to build, 0079
-  the questionnaire reminders, 0080 the emergency contacts.
+  the questionnaire reminders, 0080 the emergency contacts, 0081 the notification outbox, 0082
+  the AI's tokens and the prices of its connections, 0083 the time by site and the focus
+  session of a device.
+- The browser extension and the desktop app need their new versions for the time by site and
+  the focus mode; both update by themselves.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same
   key as the server.
 

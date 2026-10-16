@@ -189,6 +189,14 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - ✅ **Quick wins** — hidden sections stay out of the digest and the notifications; "Yes / No"
   buttons under a question to confirm in Telegram and `/spent 12 coffee`; the weather in the Life
   feed; the achievements measured six at a time; the side menu in groups
+- ✅ **Notifications through an outbox** — sent once within a window, retried with a backoff
+  (Telegram's `retry_after` too), the delivery log in Settings → Integrations
+- ✅ **Telegram: long messages are split** instead of cut at 4096 characters
+- ✅ **AI: the prompt cache works** — the time goes last in the system prompt
+- ✅ **AI: what it costs** — tokens per connection, model and day; the spend with the prices; a
+  monthly limit; background work falls back to Ollama
+- ✅ **Browser extension: time by site and focus mode** — the time on each site in Activity and
+  for the assistant; distracting sites closed during a focus session; daily limits of sites
 
 #### Quick wins
 
@@ -210,11 +218,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Quick capture (2-second rule)** — minimal global entry (desktop hotkey and mobile PWA
   shortcuts) with instant natural language parsing ("15 coffee", "headache right side",
   "doctor tomorrow at 14:00") to eliminate recording friction
-- **Notifications through an outbox** — a notification is sent once today, lost on an error and
-  never deduplicated; a `notifications` table (a dedupe key, a status, attempts) and delivery
-  by a job with a backoff (Telegram's `retry_after` too); a flapping site or a repeated price
-  change sends one message, not ten. The notification centre below is built on it; before it,
-  a delivery log in Settings → System (sent, failed, deduplicated)
 - **Notification centre and quiet hours** — the history of every notification with filters;
   nothing at night, one summary in the morning; minor ones gathered into one message an hour
 - **A calendar feed (ICS)** — a private link with the birthdays, days of memory, reminders, due
@@ -282,10 +285,8 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 - **Wishlist in one click** — "To the wishlist" on a product page: the name and the price read
   from the page, then Finance watches the price as it does today
-- **Focus mode** — while a focus session of the desktop app runs, the distracting sites are
-  blocked; a habit like "social media" counts a visit to such a site as a day with it
-- **Time in the browser by site** — Activity sees only "Chrome, 3 hours"; the extension knows the
-  sites: "YouTube 1 h, GitHub 2 h", and daily limits per site
+- **Sites and habits** — a habit like "social media" counts a visit to such a site as a day
+  with it (time by site and focus mode are done)
 - **From the context menu** — the selected text to a task or the diary, the page to "read later"
   (a task with its link), the site to Monitoring
 - **Subscriptions at checkout** — on the page that sells a subscription, an offer to add it to
@@ -314,7 +315,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 #### New modules
 
-- **Password storage** — an encrypted vault for passwords and secrets inside the dashboard
 - **Time tracker** — track time per project or task (focus sessions are done, see Activity)
 - **Calendar** — Google Calendar / CalDAV: today's meetings in the morning digest, linked to the
   time tracker and tasks
@@ -327,14 +327,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   these symptoms?" or "how did I resolve that issue two years ago?")
 - **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
   Cursor can read and change your data directly, without its own chat
-- **AI: what it costs** — the tokens of every answer are kept (today `usage` is thrown away) per
-  connection, model and day; the spend of a day and a month in the AI settings, a monthly limit
-  per connection; automatic fallback to local models (Ollama) for background extraction tasks
 - **AI: fewer tools a request** — all ~97 tools go with every request and every round today; the
   modules a question needs are picked first, and only their tools are offered (cheaper, and small
   Ollama models choose better)
-- **AI: the prompt cache works** — the time of day is the first line of the system prompt, so the
-  cache of DeepSeek and OpenAI misses every minute; the stable part goes first, the time last
 - **AI: a budget for the history** — a file is sent again in every round of the next 20
   messages (up to 180k characters); after its turn a file becomes a short summary, the oldest
   turns are dropped over the budget
@@ -350,8 +345,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **AI: progress while it works** — "looking at finance…", "searching the diary…" over the live
   events, before streaming the answer itself
 - **AI: what it read** — the action log also keeps which read tools of which modules were called
-- **Telegram: long messages are split** — today an answer is cut at 4096 characters and a long
-  notification fails
 
 #### For new users
 
