@@ -19,6 +19,8 @@ export interface DesktopSettings {
   backupKeep: number;
   /** This computer in Settings → Apps: made once, so it is one line however often it reports. */
   installId: string | null;
+  /** Where the screenshots go (screenshots/screenshot-folder.ts); `null` — the default one. */
+  screenshotsFolder: string | null;
 }
 
 const DEFAULTS: DesktopSettings = {
@@ -28,11 +30,17 @@ const DEFAULTS: DesktopSettings = {
   backupFolder: null,
   backupKeep: 14,
   installId: null,
+  screenshotsFolder: null,
 };
 
 /** Documents\Personal Dashboard\Backups: where a person looks for their files. */
 export function backupFolder(settings: DesktopSettings): string {
   return settings.backupFolder ?? join(app.getPath('documents'), 'Personal Dashboard', 'Backups');
+}
+
+/** Pictures\Personal Dashboard: where the screenshots of the app go and are synced. */
+export function screenshotsFolder(settings: DesktopSettings): string {
+  return settings.screenshotsFolder ?? join(app.getPath('pictures'), 'Personal Dashboard');
 }
 
 /** Settings are stored as JSON in the user folder (%APPDATA%/Personal Dashboard). */

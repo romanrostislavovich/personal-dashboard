@@ -75,6 +75,12 @@ export const envSchema = z
     TELEGRAM_BOT_TOKEN: z.string().optional(),
 
     /**
+     * A LanguageTool server that checks the writing (the Writing section, the browser extension,
+     * the desktop app): `http://languagetool:8010` in Docker. Without it only the AI rewrites.
+     */
+    LANGUAGETOOL_URL: z.url().optional(),
+
+    /**
      * The address the dashboard is opened at. OAuth integrations (Spotify) need it
      * to send the user back. Spotify does not accept `localhost` — only 127.0.0.1.
      */

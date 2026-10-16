@@ -122,6 +122,26 @@ under **Updating**.
   day into a folder of the computer (Settings → Data), the last 14 kept: the data outlives the
   server and comes back through "Import archive".
 
+- **Writing** — spelling, grammar and punctuation in Russian, Ukrainian, English and Polish,
+  checked by LanguageTool on your own server (the texts never leave it), each line in its own
+  language; a dictionary, rules switched off, and rewrites by the AI (fix everything, shorter,
+  polite, formal, friendly). A page to check a text, and the same marks everywhere one writes.
+- **Browser extension: Writing in every field** — the mistakes underlined in textareas, inputs
+  and rich editors (Gmail, GitHub, Jira), a card of fixes under the caret, the AI's rewrites from
+  the badge of the field; a fix is typed in as the person would, so Ctrl+Z undoes it.
+- **Desktop: Writing in every program** — the field one types in, in any program, is read
+  through Windows UI Automation and its mistakes are underlined over it; the card of a mistake
+  never takes the focus from the program. Programs that give no positions of their words (some
+  Qt apps) get no marks; browsers are left to the extension.
+- **Screenshots** — Ctrl+Alt+S in the desktop app opens an editor on the chosen piece of the
+  screen: arrows, boxes, ovals, a marker, text, numbered marks, pixelation. Saved into
+  Pictures\Personal Dashboard (a folder a month) and the clipboard, and kept the same as the
+  server and every other computer: delete one anywhere and it goes everywhere; a file changed
+  on two computers is kept twice, and a folder that lost most of its files never empties the
+  server.
+- **Music: share a song** — every song (playing now, the recent ones, the top) opens in
+  YouTube Music or Spotify, its link there is copied, or it is sent through the system's share
+  sheet.
 - **Notifications through an outbox** — every notification is written down first: the same one
   within its window goes out once (a price that jumps back and forth is told once in 12 hours),
   and a Telegram message that failed (a 429, the network) is tried again with a backoff —
@@ -187,7 +207,10 @@ under **Updating**.
   entry, 0075 the password vault, 0076 the devices of Settings → Apps, 0077 the habits, 0078 the habits to build, 0079
   the questionnaire reminders, 0080 the emergency contacts, 0081 the notification outbox, 0082
   the AI's tokens and the prices of its connections, 0083 the time by site and the focus
-  session of a device.
+  session of a device, 0084 the settings of Writing, 0085 the screenshots.
+- `deploy/compose.yml` gets a `languagetool` service, and `LANGUAGETOOL_URL` points the app at
+  it; for `npm run dev` start it with `docker compose up -d languagetool` and set
+  `LANGUAGETOOL_URL=http://localhost:8010`.
 - The browser extension and the desktop app need their new versions for the time by site and
   the focus mode; both update by themselves.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same

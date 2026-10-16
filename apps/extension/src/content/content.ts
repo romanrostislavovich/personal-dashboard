@@ -9,6 +9,7 @@ import {
 } from './forms';
 import { closeMenu, fieldById, setupInline } from './inline';
 import { showSaveBar } from './save-bar';
+import { setupWriting } from './writing/writing';
 
 /*
  * The content script, in every frame of every page. It tells the background about login forms
@@ -53,6 +54,9 @@ chrome.runtime.onMessage.addListener(
 
 // The key icon and the menu in login and sign-up fields.
 setupInline();
+
+// Spelling and grammar in the fields one writes in (Writing of the dashboard).
+setupWriting();
 
 // A login form now, or one drawn later by the page's own scripts.
 watchForLoginForm();

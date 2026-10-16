@@ -19,6 +19,17 @@ services:
       interval: 5s
       retries: 10
 
+  # Spelling and grammar for the Writing section: set LANGUAGETOOL_URL=http://localhost:8010 in
+  # .env for `npm run dev` (docker compose up -d languagetool), or it is reached as below.
+  languagetool:
+    image: erikvl87/languagetool:6.8
+    restart: unless-stopped
+    environment:
+      Java_Xms: 256m
+      Java_Xmx: 768m
+    ports:
+      - '127.0.0.1:8010:8010'
+
   app:
     build: .
     restart: unless-stopped
@@ -27,6 +38,7 @@ services:
       DATABASE_URL: postgres://dashboard:dashboard@db:5432/dashboard
       # A sync client keeps copies of the server's daily dumps here (docs/deploy.md, "Backups").
       BACKUP_COPY_DIR: /backups
+      LANGUAGETOOL_URL: http://languagetool:8010
     volumes:
       - ./backups:/backups
     ports:

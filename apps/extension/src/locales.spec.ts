@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { WRITING_ISSUE_KINDS, WRITING_REWRITE_MODES } from '@pd/contracts';
 import { ERROR_CODES } from './shared/messages';
 
 const SOURCE = import.meta.dirname;
@@ -35,6 +36,8 @@ describe('the texts of the extension', () => {
     // Built from a value: the error codes and the strength of a password.
     ERROR_CODES.forEach((code) => asked.add(`error_${code.replace(/-/g, '_')}`));
     ['weak', 'fair', 'strong'].forEach((level) => asked.add(`strength_${level}`));
+    WRITING_ISSUE_KINDS.forEach((kind) => asked.add(`writingKind_${kind}`));
+    WRITING_REWRITE_MODES.forEach((mode) => asked.add(`writingRewrite_${mode}`));
 
     const known = new Set(messages('en'));
     expect([...asked].filter((key) => !known.has(key))).toEqual([]);

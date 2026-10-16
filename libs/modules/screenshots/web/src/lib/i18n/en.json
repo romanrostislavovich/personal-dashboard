@@ -1,0 +1,15 @@
+{
+  "title": "Screenshots",
+  "intro": "Pieces of the screen taken with Ctrl+Alt+S in the desktop app, with what you drew on them. They are kept in a folder of every computer and here, the same everywhere: delete one anywhere, and it goes everywhere.",
+  "desktopOnly": "Screenshots are taken in the desktop app (Ctrl+Alt+S); its folder syncs with this list.",
+  "syncing": "Syncing…",
+  "synced": "Synced at {{at}}",
+  "open": "Open the folder",
+  "change": "Change the folder",
+  "syncNow": "Sync now",
+  "empty": "No screenshots yet.",
+  "more": "Show more",
+  "download": "Download",
+  "close": "Close",
+  "confirmDelete": "Delete the screenshot here and from the folders of every computer?"
+}

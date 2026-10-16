@@ -128,5 +128,14 @@
   },
   "usage": {
     "plays": "прослушиваний"
+  },
+  "share": {
+    "title": "Поделиться",
+    "openYoutube": "Открыть в YouTube Music",
+    "openSpotify": "Открыть в Spotify",
+    "copyYoutube": "Скопировать ссылку YouTube Music",
+    "copySpotify": "Скопировать ссылку Spotify",
+    "send": "Отправить…",
+    "copied": "Ссылка скопирована"
   }
 }

@@ -1,0 +1,118 @@
+.intro,
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+.intro {
+  margin: 0 0 16px;
+}
+
+.folder mat-card-content {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.path {
+  overflow-wrap: anywhere;
+}
+.meta {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+.error {
+  color: var(--mat-sys-error);
+}
+
+h2 {
+  margin: 24px 0 8px;
+  font: var(--mat-sys-title-medium);
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+  gap: 12px;
+}
+.shot {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 1px solid var(--pd-border);
+  border-radius: var(--pd-radius-small);
+  overflow: hidden;
+  background: var(--pd-card);
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+  &:hover {
+    background: var(--pd-card-hover);
+  }
+  img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top left;
+    background: var(--mat-sys-surface-container);
+  }
+}
+.caption {
+  padding: 6px 8px;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+.more {
+  margin-top: 16px;
+}
+
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgb(0 0 0 / 80%);
+  img {
+    max-width: 100%;
+    max-height: calc(100vh - 96px);
+    object-fit: contain;
+    border-radius: 4px;
+  }
+}
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-out;
+}
+.viewer img,
+.viewer-bar {
+  position: relative;
+}
+.viewer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 24px;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  span {
+    padding: 0 8px;
+    font: var(--mat-sys-body-small);
+  }
+}

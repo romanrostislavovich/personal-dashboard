@@ -45,6 +45,72 @@ contextBridge.exposeInMainWorld('desktop', {
     done: (rect: { x: number; y: number; width: number; height: number } | null): Promise<void> =>
       ipcRenderer.invoke('region:done', rect),
   },
+  /** The editor of a screenshot (assets/annotate.html): the piece, and what was made of it. */
+  annotate: {
+    image: (): Promise<string | null> => ipcRenderer.invoke('annotate:image'),
+    done: (data: Uint8Array, action: 'save' | 'actions' | 'copy'): Promise<void> =>
+      ipcRenderer.invoke('annotate:done', data, action),
+    cancel: (): Promise<void> => ipcRenderer.invoke('annotate:cancel'),
+  },
+  /**
+   * Writing in every program: the page tells the settings, and checks the texts the app reads
+   * from the fields of other programs (it holds the session).
+   */
+  writing: {
+    configure: (config: { enabled: boolean; ignoredApps: string[] }): Promise<void> =>
+      ipcRenderer.invoke('writing:configure', config),
+    onCheck: (check: (text: string) => Promise<unknown>): void => {
+      ipcRenderer.on(
+        'writing:check',
+        (_event, { id, payload }: { id: number; payload: string }) => {
+          void check(String(payload))
+            .catch(() => null)
+            .then((value) => ipcRenderer.send('writing:answer', { id, value }));
+        },
+      );
+    },
+    onIgnore: (ignore: (what: { word?: string; ruleId?: string }) => Promise<void>): void => {
+      ipcRenderer.on(
+        'writing:ignore',
+        (_event, { id, payload }: { id: number; payload: object }) => {
+          void ignore(payload)
+            .catch(() => undefined)
+            .then(() => ipcRenderer.send('writing:answer', { id, value: true }));
+        },
+      );
+    },
+  },
+  /** The marks over the screen (assets/writing-overlay.html). */
+  writingOverlay: {
+    onMarks: (callback: (marks: unknown[]) => void): void => {
+      ipcRenderer.on('writing-overlay:marks', (_event, marks: unknown[]) => callback(marks));
+    },
+  },
+  /** The card of a mistake (assets/writing-card.html). */
+  writingCard: {
+    onShow: (callback: (shown: unknown) => void): void => {
+      ipcRenderer.on('writing-card:show', (_event, shown: unknown) => callback(shown));
+    },
+    choose: (choice: { action: string; value?: string }): Promise<void> =>
+      ipcRenderer.invoke('writing-card:choose', choice),
+    height: (height: number): Promise<void> => ipcRenderer.invoke('writing-card:height', height),
+  },
+  /** The folder of screenshots: the dashboard's page syncs it with the server. */
+  screenshots: {
+    status: (): Promise<unknown> => ipcRenderer.invoke('screenshots:status'),
+    list: (): Promise<unknown> => ipcRenderer.invoke('screenshots:list'),
+    read: (name: string): Promise<Uint8Array> => ipcRenderer.invoke('screenshots:read', name),
+    write: (name: string, data: Uint8Array): Promise<void> =>
+      ipcRenderer.invoke('screenshots:write', name, data),
+    remove: (name: string): Promise<void> => ipcRenderer.invoke('screenshots:remove', name),
+    rename: (from: string, to: string): Promise<void> =>
+      ipcRenderer.invoke('screenshots:rename', from, to),
+    openFolder: (): Promise<void> => ipcRenderer.invoke('screenshots:open-folder'),
+    chooseFolder: (): Promise<unknown> => ipcRenderer.invoke('screenshots:choose-folder'),
+    onChanged: (callback: () => void): void => {
+      ipcRenderer.on('screenshots:changed', () => callback());
+    },
+  },
   /** Settings → Apps: this computer's line in the list of devices, the extension's folder. */
   apps: {
     info: (): Promise<unknown> => ipcRenderer.invoke('apps:info'),

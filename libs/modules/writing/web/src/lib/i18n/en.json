@@ -1,0 +1,73 @@
+{
+  "title": "Writing",
+  "intro": "Spelling, grammar and punctuation in Russian, Ukrainian, English and Polish, checked on your own server (LanguageTool), and rewrites by the AI when you ask. The browser extension and the desktop app check the same way.",
+  "tabs": { "check": "Check", "settings": "Settings" },
+  "editor": {
+    "label": "Text to check",
+    "placeholder": "Type or paste a text…",
+    "found": "{{count}} to look at",
+    "copy": "Copy",
+    "remove": "(remove)",
+    "addWord": "Add to the dictionary",
+    "neverShow": "Never show this"
+  },
+  "rewrite": {
+    "title": "The AI's version",
+    "fix": "Fix everything",
+    "shorter": "Shorter",
+    "polite": "More polite",
+    "formal": "Formal",
+    "friendly": "Friendly",
+    "accept": "Use it",
+    "discard": "Discard"
+  },
+  "kinds": {
+    "spelling": "Spelling",
+    "grammar": "Grammar",
+    "punctuation": "Punctuation",
+    "style": "Style",
+    "typography": "Typography",
+    "other": "Other"
+  },
+  "languages": {
+    "auto": "Told by the text",
+    "ru-RU": "Russian",
+    "uk-UA": "Ukrainian",
+    "en-US": "English (US)",
+    "en-GB": "English (UK)",
+    "pl-PL": "Polish"
+  },
+  "settings": {
+    "title": "How it is checked",
+    "noLanguageTool": "LanguageTool is not set up on the server (LANGUAGETOOL_URL): only the AI rewrites work.",
+    "enabled": "Check as I type in the browser extension and the desktop app",
+    "language": "Language",
+    "english": "English",
+    "picky": "Strict: style and typography too",
+    "empty": "None yet",
+    "dictionary": {
+      "title": "Dictionary",
+      "hint": "Words that are right (names, terms): never marked as misspelt.",
+      "add": "A word"
+    },
+    "disabledRules": {
+      "title": "Rules switched off",
+      "hint": "Added by “Never show this” on a mistake; remove one to see it again."
+    },
+    "ignoredSites": {
+      "title": "Sites left alone",
+      "hint": "The browser extension does not check on them.",
+      "add": "A site, e.g. docs.google.com"
+    },
+    "ignoredApps": {
+      "title": "Programs left alone",
+      "hint": "The desktop app does not check in them (the name of the process, e.g. code).",
+      "add": "A program"
+    }
+  },
+  "errors": {
+    "check": "The check failed: is LanguageTool running?",
+    "tooOften": "Too many checks a minute: a moment, please.",
+    "rewrite": "The AI could not rewrite the text."
+  }
+}

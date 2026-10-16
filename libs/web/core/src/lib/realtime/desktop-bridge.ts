@@ -1,4 +1,5 @@
-import { DiskAdvice, DiskFix, DiskReport } from '@pd/contracts';
+import { ScreenshotFolder } from '@pd/client-core';
+import { DiskAdvice, DiskFix, DiskReport, WritingIssue } from '@pd/contracts';
 /**
  * What the desktop app (Electron preload) adds to the page as `window.desktop`.
  * In a regular browser it is absent.
@@ -24,6 +25,32 @@ export interface DesktopBridge {
   backup?: DeviceBackup;
   /** Settings → Apps: this computer's version, the browser extension's folder (absent in an older shell). */
   apps?: DesktopApps;
+  /** The folder of screenshots, kept the same as the server (absent in an older shell). */
+  screenshots?: DesktopScreenshots;
+  /** Writing in every program of the computer (absent in an older shell). */
+  writing?: DesktopWriting;
+}
+
+/**
+ * Writing in the fields of other programs: the app reads them and draws the marks, the page
+ * checks the texts (it holds the session) and tells the settings.
+ */
+export interface DesktopWriting {
+  configure(config: { enabled: boolean; ignoredApps: string[] }): Promise<void>;
+  onCheck(check: (text: string) => Promise<WritingIssue[]>): void;
+  onIgnore(ignore: (what: { word?: string; ruleId?: string }) => Promise<void>): void;
+}
+
+/**
+ * The folder the screenshots of the desktop app are saved to: the page syncs it with the
+ * server (see the Screenshots module); the app only reads and writes its files.
+ */
+export interface DesktopScreenshots extends ScreenshotFolder {
+  status(): Promise<{ folder: string }>;
+  chooseFolder(): Promise<{ folder: string }>;
+  openFolder(): Promise<void>;
+  /** Called when a file of the folder changed (a new screenshot, one deleted in Explorer). */
+  onChanged(callback: () => void): void;
 }
 
 /** The desktop app in Settings → Apps (see apps/desktop/src/update/extension-keeper.ts). */

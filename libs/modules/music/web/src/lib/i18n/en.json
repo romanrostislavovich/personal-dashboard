@@ -128,5 +128,14 @@
   },
   "usage": {
     "plays": "plays"
+  },
+  "share": {
+    "title": "Share",
+    "openYoutube": "Open in YouTube Music",
+    "openSpotify": "Open in Spotify",
+    "copyYoutube": "Copy the YouTube Music link",
+    "copySpotify": "Copy the Spotify link",
+    "send": "Send…",
+    "copied": "Link copied"
   }
 }

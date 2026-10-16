@@ -1,4 +1,5 @@
 import { ApiError, generatePassword, passwordStrength } from '@pd/client-core';
+import { WRITING_CHECK_MAX, WRITING_REWRITE_MAX } from '@pd/contracts';
 import {
   ContentRequest,
   ERROR_CODES,
@@ -34,6 +35,7 @@ import {
   SITES_ALARM,
   sitesTick,
 } from './sites';
+import { checkWriting, ignoreInWriting, rewriteWriting, writingState } from './writing';
 import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
 
 /*
@@ -228,6 +230,19 @@ async function fromContent(
       return dismissOffer(tabId, message.never);
     case 'menu-open':
       return openMenu(sender, message.kind, message.fieldId, message.explicit);
+    // The frame's own address decides, never what the page says it is.
+    case 'writing-state':
+      return writingState(sender.url);
+    case 'writing-check':
+      return checkWriting(sender.url, String(message.text).slice(0, WRITING_CHECK_MAX));
+    case 'writing-rewrite':
+      return rewriteWriting(
+        sender.url,
+        String(message.text).slice(0, WRITING_REWRITE_MAX),
+        message.mode,
+      );
+    case 'writing-ignore':
+      return ignoreInWriting(message.word, message.ruleId);
   }
 }
 

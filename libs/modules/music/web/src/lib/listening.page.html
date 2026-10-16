@@ -64,7 +64,7 @@
       <mat-card-content class="tops-grid">
         @if (tops.value(); as t) {
           <pd-top-list titleKey="music.tops.artists" [items]="t.artists" />
-          <pd-top-list titleKey="music.tops.tracks" [items]="t.tracks" />
+          <pd-top-list titleKey="music.tops.tracks" [items]="t.tracks" [songs]="true" />
           <pd-top-list titleKey="music.tops.albums" [items]="t.albums" />
         }
       </mat-card-content>
@@ -85,6 +85,7 @@
                 ><b>{{ r.track }}</b> — {{ r.artist }}</span
               >
               <span class="muted">{{ r.playedAt | date: 'd MMM, HH:mm' }}</span>
+              <pd-song-share [track]="r.track" [artist]="r.artist" />
             </li>
           }
         </ul>

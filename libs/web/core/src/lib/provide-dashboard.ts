@@ -2,6 +2,7 @@ import { registerLocaleData } from '@angular/common';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import localeRu from '@angular/common/locales/ru';
 import {
+  Injector,
   EnvironmentProviders,
   inject,
   isDevMode,
@@ -53,10 +54,18 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
       const offline = inject(OfflineService);
       const backup = inject(DeviceBackupService);
       const desktopInstall = inject(DesktopInstallService);
+      const injector = inject(Injector);
       await inject(AuthService).restoreSession();
       offline.start();
       backup.start();
       desktopInstall.start();
+      // The modules' own background work; one that fails to load leaves the others.
+      for (const module of modules) {
+        void module
+          .loadStart?.()
+          .then((start) => start(injector))
+          .catch((error: unknown) => console.error(`${module.id}: ${error}`));
+      }
     }),
     // <mat-icon> uses rounded Material Symbols (loaded in index.html).
     provideAppInitializer(() => {

@@ -12,7 +12,15 @@ import { join } from 'node:path';
 import { noticeText } from './activity/notices';
 import { ActivityTracker, TrackerNotice } from './activity/tracker';
 import { BackupStatus, listCopies, saveCopy } from './backup/backup-folder';
-import { backupFolder, installId, loadSettings, saveSettings } from './settings-store';
+import {
+  backupFolder,
+  installId,
+  loadSettings,
+  saveSettings,
+  screenshotsFolder,
+} from './settings-store';
+import { ScreenshotFolder, screenshotName } from './screenshots/screenshot-folder';
+import { DesktopWriting, Issue } from './writing/desktop-writing';
 import { Capture } from './capture/capture';
 import { DiskCleaner } from './disk/disk-cleaner';
 import { DiskFix } from './disk/disk-fixes';
@@ -44,7 +52,48 @@ const serverUrl = (): string | null => process.env['DASHBOARD_URL'] ?? loadSetti
 const tracker = new ActivityTracker(serverUrl, () => refreshTray(), showNotice);
 const disk = new DiskCleaner();
 /** Ctrl+Alt+C / Ctrl+Alt+S from any program: text or a screenshot to a task or the diary. */
-const capture = new Capture(serverUrl, (title, body) => notify(title, body, showWindow));
+/** The folder of screenshots, synced with the server by the dashboard's page. */
+const screenshots = new ScreenshotFolder(
+  () => screenshotsFolder(loadSettings()),
+  () => mainWindow?.webContents.send('screenshots:changed'),
+);
+/**
+ * Writing in every program: the checks go through the dashboard's page (it holds the session),
+ * asked by a message and answered with the same id; no answer in time — no marks.
+ */
+const pageRequests = new Map<number, (answer: unknown) => void>();
+let pageRequestId = 0;
+function askPage<T>(channel: string, payload: unknown): Promise<T | null> {
+  const contents = mainWindow?.webContents;
+  if (!contents) {
+    return Promise.resolve(null);
+  }
+  const id = ++pageRequestId;
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      pageRequests.delete(id);
+      resolve(null);
+    }, 15_000);
+    pageRequests.set(id, (answer) => {
+      clearTimeout(timer);
+      resolve(answer as T);
+    });
+    contents.send(channel, { id, payload });
+  });
+}
+const writing = new DesktopWriting({
+  check: (text) => askPage<Issue[]>('writing:check', text),
+  ignore: async (what) => void (await askPage('writing:ignore', what)),
+});
+
+const capture = new Capture(
+  serverUrl,
+  (title, body) => notify(title, body, showWindow),
+  async (png) => {
+    await screenshots.ensure(loadSettings().screenshotsFolder === null);
+    return screenshots.save(screenshotName(new Date()), png);
+  },
+);
 /** A bank statement saved to Downloads: offered for import into Finance through the AI. */
 const statements = new StatementWatch((statement) =>
   notify('Похоже на выписку банка', `${statement.name} — импортировать в Финансы?`, () => {
@@ -125,6 +174,9 @@ function bootstrap(): void {
   tracker.start();
   statements.start();
   capture.register();
+  void screenshots
+    .ensure(loadSettings().screenshotsFolder === null)
+    .then(() => screenshots.watch());
   updater.start();
   extension.start();
   openDashboard();
@@ -269,6 +321,28 @@ function registerIpc(): void {
   ipcMain.handle('capture:pending', () => capture.current());
   ipcMain.handle('capture:close', () => capture.close());
   ipcMain.handle('region:image', () => capture.overlayImage());
+  ipcMain.handle('annotate:image', () => capture.editorImage());
+  ipcMain.handle('annotate:done', (_event, data: Uint8Array, action: string) =>
+    data instanceof Uint8Array && ['save', 'actions', 'copy'].includes(action)
+      ? capture.editorDone(Buffer.from(data), action as 'save' | 'actions' | 'copy')
+      : undefined,
+  );
+  ipcMain.handle('annotate:cancel', () => capture.editorCancelled());
+  registerScreenshotsIpc();
+  ipcMain.on('writing:answer', (_event, answer: { id: number; value: unknown }) => {
+    pageRequests.get(answer?.id)?.(answer.value);
+    pageRequests.delete(answer?.id);
+  });
+  ipcMain.handle(
+    'writing:configure',
+    (_event, config: { enabled?: unknown; ignoredApps?: unknown }) =>
+      writing.configure({
+        enabled: config?.enabled === true,
+        ignoredApps: Array.isArray(config?.ignoredApps)
+          ? config.ignoredApps.filter((app): app is string => typeof app === 'string')
+          : [],
+      }),
+  );
   ipcMain.handle(
     'region:done',
     (_event, rect: { x: number; y: number; width: number; height: number } | null) =>
@@ -399,12 +473,51 @@ function quitApp(): void {
   );
 }
 
-app.on('will-quit', () => capture.unregister());
+app.on('will-quit', () => {
+  capture.unregister();
+  writing.stop();
+});
 
 // The app lives in the tray, so closing all windows does not quit it.
 app.on('window-all-closed', () => undefined);
 
 /** The folder of the copies and what is in it. */
+/** The folder of screenshots for the dashboard's page, which syncs it with the server. */
+function registerScreenshotsIpc(): void {
+  const status = () => ({ folder: screenshotsFolder(loadSettings()) });
+  const name = (value: unknown) => String(value);
+  ipcMain.handle('screenshots:status', status);
+  ipcMain.handle('screenshots:list', () => screenshots.list());
+  ipcMain.handle('screenshots:read', (_event, file: unknown) => screenshots.read(name(file)));
+  ipcMain.handle('screenshots:write', (_event, file: unknown, data: unknown) =>
+    data instanceof Uint8Array ? screenshots.write(name(file), data) : undefined,
+  );
+  ipcMain.handle('screenshots:remove', (_event, file: unknown) => screenshots.remove(name(file)));
+  ipcMain.handle('screenshots:rename', (_event, from: unknown, to: unknown) =>
+    screenshots.rename(name(from), name(to)),
+  );
+  ipcMain.handle('screenshots:open-folder', async () => {
+    const folder = screenshotsFolder(loadSettings());
+    await mkdir(folder, { recursive: true });
+    await shell.openPath(folder);
+  });
+  ipcMain.handle('screenshots:choose-folder', async () => {
+    const options = {
+      title: 'Папка для скриншотов',
+      defaultPath: screenshotsFolder(loadSettings()),
+      properties: ['openDirectory' as const, 'createDirectory' as const],
+    };
+    const picked = mainWindow
+      ? await dialog.showOpenDialog(mainWindow, options)
+      : await dialog.showOpenDialog(options);
+    if (!picked.canceled && picked.filePaths[0]) {
+      saveSettings({ ...loadSettings(), screenshotsFolder: picked.filePaths[0] });
+      screenshots.watch();
+    }
+    return status();
+  });
+}
+
 async function backupStatus(): Promise<BackupStatus> {
   const settings = loadSettings();
   const folder = backupFolder(settings);

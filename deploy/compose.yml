@@ -41,6 +41,8 @@ services:
       SECURITY_DIR: /security
       # The desktop installers deploy.sh puts there, for Settings → Apps (GitHub without them).
       DESKTOP_INSTALLERS_PATH: /downloads/desktop
+      # Checks the writing (spelling, grammar) for the Writing section, the extension, the app.
+      LANGUAGETOOL_URL: http://languagetool:8010
     volumes:
       - ./backups:/backups:ro
       - ./security:/security:ro
@@ -48,6 +50,17 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    <<: *logging
+
+  # Spelling and grammar (ru, uk, en, pl and more), on this server: the texts never leave it.
+  # Java's memory is capped; without n-gram data it needs well under a gigabyte.
+  languagetool:
+    image: erikvl87/languagetool:6.8
+    restart: unless-stopped
+    environment:
+      Java_Xms: 256m
+      Java_Xmx: 768m
+    # No published port: only the app asks it.
     <<: *logging
 
   caddy:

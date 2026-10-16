@@ -3,12 +3,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { NowPlaying } from '@pd/contracts';
+import { SongShareComponent } from './song-share.component';
 
 /** Current track card: cover, title, artist and (for Spotify) progress. */
 @Component({
   selector: 'pd-now-playing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, MatProgressBarModule, TranslocoPipe],
+  imports: [MatIconModule, MatProgressBarModule, TranslocoPipe, SongShareComponent],
   template: `
     @let t = track();
     <div class="now">
@@ -38,6 +39,7 @@ import { NowPlaying } from '@pd/contracts';
           <mat-progress-bar mode="determinate" [value]="progress()" />
         }
       </div>
+      <pd-song-share [track]="t.track" [artist]="t.artist" [url]="t.url" />
     </div>
   `,
   styles: `

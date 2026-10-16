@@ -2,12 +2,13 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { MusicTopItem } from '@pd/contracts';
+import { SongShareComponent } from './song-share.component';
 
 /** Top 10: position, title, play count and a bar relative to the leader. */
 @Component({
   selector: 'pd-top-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, TranslocoPipe],
+  imports: [DecimalPipe, TranslocoPipe, SongShareComponent],
   template: `
     <h3 class="title">{{ titleKey() | transloco }}</h3>
     <ol class="list">
@@ -29,6 +30,9 @@ import { MusicTopItem } from '@pd/contracts';
             }
             <span class="bar" [style.width.%]="item.share"></span>
           </div>
+          @if (songs()) {
+            <pd-song-share [track]="item.name" [artist]="item.artist" />
+          }
         </li>
       } @empty {
         <li class="empty">{{ 'music.tops.empty' | transloco }}</li>
@@ -105,6 +109,8 @@ import { MusicTopItem } from '@pd/contracts';
 export class TopListComponent {
   readonly titleKey = input.required<string>();
   readonly items = input.required<MusicTopItem[]>();
+  /** A list of songs: each gets its "Share". */
+  readonly songs = input(false);
 
   protected readonly rows = computed(() => {
     const items = this.items();

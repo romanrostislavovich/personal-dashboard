@@ -195,6 +195,11 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - ✅ **AI: the prompt cache works** — the time goes last in the system prompt
 - ✅ **AI: what it costs** — tokens per connection, model and day; the spend with the prices; a
   monthly limit; background work falls back to Ollama
+- ✅ **Writing** — LanguageTool on the server and the AI's rewrites; the Writing page, the
+  browser extension in every field, the desktop app in every program (UI Automation)
+- ✅ **Screenshots** — the editor of Ctrl+Alt+S (arrows, boxes, text, numbers, pixelation), a
+  folder of every computer synced with the server, the Screenshots page
+- ✅ **Music: share a song** — open it in YouTube Music or Spotify, copy the link, send it
 - ✅ **Browser extension: time by site and focus mode** — the time on each site in Activity and
   for the assistant; distracting sites closed during a focus session; daily limits of sites
 
@@ -213,6 +218,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   and emergency fund runway in months of autonomy based on current spending velocity
 - **Finance: subscription and leak audit** — automated detection of creeping price increases,
   hidden or forgotten recurring charges, and warnings before renewal dates
+- **Finance: subscription action hub** — critical date calendar for contract renewals, price lock
+  expirations, and service terms (rent, internet, B2B tools, insurance) with AI-generated
+  cancellation and renegotiation draft letters in English and Polish
 - **Health: prescriptions into interactive tasks** — medical recommendations and prescriptions
   converted directly into tasks and interactive Telegram reminders with dosage confirmation buttons
 - **Quick capture (2-second rule)** — minimal global entry (desktop hotkey and mobile PWA
@@ -232,6 +240,12 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   your own doctor first if Health has them
 - **Psychology: the events of a life on the chart of the mood** — the periods of the events laid
   over the mood and the questionnaires, to see what went along with what
+- **Energy and cognitive load tracker** — a 5-point physical and mental energy rating in quick
+  check-ins (Body Battery); automatic cognitive load scoring based on window context switches,
+  commit frequency, and focus session lengths
+- **Emergency offline runbook** — a password-protected compact offline PWA/PDF bundle with critical
+  emergency data (ICE card, insurance policies, active prescriptions, ID document copies, emergency
+  credentials) accessible on a mobile device without network or when the self-hosted server is offline
 - **Tilt detector** — three Dota losses in a row or two hours of games after midnight → a gentle
   "maybe enough?"; win rate by the time of day and after N matches in a row
 - **Sleep from the computer** — the first and the last activity of a day are known already (and
@@ -254,6 +268,10 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   job did not report in time), DNS, a keyword on the page, ping
 - **CI status of the repositories** — failed GitHub Actions and deploys shown in Development and
   in the digest
+- **Developer impact hub and portfolio generator** — aggregated open-source and professional impact
+  tracking (npm download dynamics, GitHub star growth velocity, mentoring hours); one-click
+  generation and export of an up-to-date Markdown/HTML resume and portfolio from repository metrics
+  and verified profile data
 
 #### Engineering
 
@@ -404,6 +422,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 #### Desktop
 
+- **Writing: Ctrl+Alt+G where there are no marks** — in a program that gives no positions of
+  its words (Telegram Desktop and other Qt apps): the selected text is checked and rewritten in a
+  small window, and put back in its place
 - **Desktop: quick input from anywhere** — a global shortcut opens a small window over every
   program: a task, a reminder, an expense, a diary note, without switching to the dashboard
 - **Desktop: voice notes** — a shortcut, speak, the text (speech recognition) goes to the diary or
@@ -429,6 +450,10 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Local semantic search & RAG** — vector embeddings (`pgvector` or `sqlite-vec`) across personal
   history (diary entries, medical records, notes, past tasks) for semantic recall ("when did I last have
   these symptoms?" or "how did I resolve that issue two years ago?")
+- **Nightly AI housekeeping** — zero-cost local LLM (Ollama) background jobs during the night for
+  routine maintenance: auto-categorization of uncategorized transactions, diary tag deduplication and
+  linking, associating orphan tasks with projects, and drafting a crisp morning briefing without cloud
+  API token costs
 - **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
   Cursor can read and change your data directly, without its own chat
 - **AI: fewer tools a request** — all ~97 tools go with every request and every round today; the
@@ -520,6 +545,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   tools or core insights: modules do not depend on each other). The AI looks for such links across
   all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you
   were sad, you listened to this music and did that"
+- **Causal correlation engine** — statistical cross-module correlation and regression analysis:
+  sleep duration and bedtime vs. next-day WakaTime/activity productivity, food delivery/impulse
+  expenses vs. GAD-7 anxiety scores, late-night gaming sessions vs. mood and habit streaks
 - **Automations: more triggers and actions** — matches, a new release, a birthday today; a
   transaction or a diary mood as an action
 - **Automations: webhooks and a public API** with tokens
