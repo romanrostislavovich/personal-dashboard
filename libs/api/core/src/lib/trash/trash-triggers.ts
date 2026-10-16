@@ -35,6 +35,8 @@ const NOT_TRASHED = new Set([
   'health_icd_codes',
   // A device that told which version it runs: it tells again.
   'app_installs',
+  // The log of notifications, kept a month.
+  'notification_outbox',
 ]);
 
 /**

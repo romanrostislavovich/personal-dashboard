@@ -428,6 +428,21 @@
         "forget": "Forget the device (it comes back when its app reports again)",
         "none": "No device has reported yet: an app reports itself a minute after it starts."
       }
+    },
+    "deliveries": {
+      "title": "Notification delivery",
+      "hint": "The latest notifications and what became of them. A failed one is tried again; the same one within a few minutes goes out once.",
+      "week": "Last 7 days",
+      "empty": "No notifications yet.",
+      "attempts": "tries: {{count}}",
+      "nextAt": "next try at {{at}}",
+      "statuses": {
+        "sending": "Sending",
+        "pending": "Will retry",
+        "sent": "Sent",
+        "failed": "Failed",
+        "deduplicated": "Repeat, skipped"
+      }
     }
   },
   "toast": {

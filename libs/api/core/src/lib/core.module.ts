@@ -48,6 +48,7 @@ import { AppConfig, validateEnv } from './config/env';
 import { DatabaseModule } from './database/database.module';
 import { NOTIFICATION_CHANNELS, NotificationChannel } from './notifications/notification-channel';
 import { NotificationsController } from './notifications/notifications.controller';
+import { NotificationOutbox } from './notifications/notification-outbox';
 import { NotificationsService } from './notifications/notifications.service';
 import { TelegramBotService } from './notifications/telegram/telegram-bot.service';
 import { TelegramChannel } from './notifications/telegram/telegram.channel';
@@ -170,6 +171,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     SchedulerService,
     SecretsService,
     NotificationsService,
+    NotificationOutbox,
     TelegramBotService,
     TelegramChannel,
     RealtimeService,

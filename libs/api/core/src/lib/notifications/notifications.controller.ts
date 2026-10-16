@@ -1,8 +1,9 @@
 import { BadRequestException, Controller, Delete, Get, HttpCode, Post } from '@nestjs/common';
-import { NotificationSettings, TelegramLinkResponse } from '@pd/contracts';
+import { NotificationLog, NotificationSettings, TelegramLinkResponse } from '@pd/contracts';
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
 import { UsersService } from '../users/users.service';
 import { coreMessages } from '../i18n/core.messages';
+import { NotificationOutbox } from './notification-outbox';
 import { NotificationsService } from './notifications.service';
 import { TelegramBotService } from './telegram/telegram-bot.service';
 
@@ -11,6 +12,7 @@ export class NotificationsController {
   constructor(
     private readonly users: UsersService,
     private readonly notifications: NotificationsService,
+    private readonly outbox: NotificationOutbox,
     private readonly telegram: TelegramBotService,
   ) {}
 
@@ -20,6 +22,12 @@ export class NotificationsController {
     return {
       telegram: { available: this.telegram.isAvailable, connected: Boolean(row?.telegramChatId) },
     };
+  }
+
+  /** What became of the latest notifications: sent, tried again, failed, sent once. */
+  @Get('log')
+  log(@CurrentUser() user: AuthUser): Promise<NotificationLog> {
+    return this.outbox.log(user.id);
   }
 
   @Post('telegram/link')

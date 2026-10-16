@@ -65,6 +65,7 @@ export const API_PATHS = {
   telegram: '/api/notifications/telegram',
   telegramLink: '/api/notifications/telegram/link',
   testNotification: '/api/notifications/test',
+  notificationLog: '/api/notifications/log',
   syncStatus: '/api/sync/status',
   syncRun: '/api/sync/run',
   syncResync: '/api/sync/resync',
@@ -94,6 +95,8 @@ export const CORE_READS = {
   search: (q: string) => apiRequest(API_PATHS.search, { q }),
   achievements: () => apiRequest(API_PATHS.achievements),
   notificationSettings: () => apiRequest(API_PATHS.notificationSettings),
+  /** What became of the latest notifications (sent, tried again, failed). */
+  notificationLog: () => apiRequest(API_PATHS.notificationLog),
   syncStatus: () => apiRequest(API_PATHS.syncStatus),
   syncConflicts: () => apiRequest(API_PATHS.syncConflicts),
   syncParked: () => apiRequest(API_PATHS.syncParked),

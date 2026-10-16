@@ -36,6 +36,8 @@ const NOT_EXPORTED = new Set([
   'integration_alerts',
   // Health's ICD dictionary: the publisher's terms allow no copies; it is loaded again from WHO.
   'health_icd_codes',
+  // The delivery log of notifications: a working note, its rows hold a hash of the server's key.
+  'notification_outbox',
 ]);
 
 export const USER_COLUMN = 'user_id';
