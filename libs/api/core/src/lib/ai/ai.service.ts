@@ -17,12 +17,8 @@ import { NO_JUDGEMENT, PromptOptions, systemPrompt } from './ai-prompt';
 import { AiTool } from './ai-tool';
 import { withAttachments } from './attachment-text';
 import { claimsChange, FAKE_CHANGE_CORRECTION } from './claims-change';
-import {
-  AiRequestError,
-  ChatConnection,
-  chatCompletion,
-  ChatMessage,
-} from './openai-compatible.client';
+import { AiLimitError, AiUsageService } from './ai-usage.service';
+import { AiRequestError, ChatConnection, ChatMessage } from './openai-compatible.client';
 import { callKey, PendingConfirmations } from './pending-confirmations';
 import { runToolLoop } from './tool-loop';
 
@@ -75,6 +71,7 @@ export class AiService {
     private readonly users: UsersService,
     private readonly actions: AiActionsService,
     private readonly links: LinksService,
+    private readonly usage: AiUsageService,
   ) {}
 
   registerTool(tool: AiTool): void {
@@ -150,7 +147,8 @@ export class AiService {
       runToolLoop({
         messages: conversation,
         tools,
-        complete: (current, definitions) => chatCompletion(connection, current, definitions),
+        complete: (current, definitions) =>
+          this.usage.complete(userId, connection, current, definitions),
         runTool: async (tool, rawArgs) => {
           const { output, changed, asks } = await this.runTool(userId, tool, rawArgs, turn);
           if (changed && tool) {
@@ -179,11 +177,7 @@ export class AiService {
         awaitsConfirmation: asked,
       };
     } catch (error) {
-      if (error instanceof AiRequestError) {
-        this.logger.warn(error.message.slice(0, 500));
-        throw new BadRequestException(`AI API error (${error.status})`);
-      }
-      throw error;
+      throw this.requestFailed(error);
     }
   }
 
@@ -206,18 +200,27 @@ export class AiService {
       (module && (await this.connections.ofModule(userId, module))) ||
       (await this.requireConnection(userId));
     const system = await this.withLanguage(userId, `${instruction} ${NO_JUDGEMENT}`, options);
+    const messages: ChatMessage[] = [
+      { role: 'system', content: system },
+      { role: 'user', content },
+    ];
     try {
-      const reply = await chatCompletion(connection, [
-        { role: 'system', content: system },
-        { role: 'user', content },
-      ]);
+      const reply = await this.usage
+        .complete(userId, connection, messages)
+        .catch(async (error: unknown) => {
+          // Background work goes on with a local model once the limit is spent.
+          const local =
+            error instanceof AiLimitError &&
+            (await this.connections.localFallback(userId, connection.id));
+          if (!local) {
+            throw error;
+          }
+          this.logger.log(`${error.message}; a local model answers instead`);
+          return this.usage.complete(userId, local, messages);
+        });
       return reply.content ?? '';
     } catch (error) {
-      if (error instanceof AiRequestError) {
-        this.logger.warn(error.message.slice(0, 500));
-        throw new BadRequestException(`AI API error (${error.status})`);
-      }
-      throw error;
+      throw this.requestFailed(error);
     }
   }
 
@@ -248,18 +251,26 @@ export class AiService {
       image_url: { url: `data:${one.mimeType};base64,${one.data.toString('base64')}` },
     }));
     try {
-      const reply = await chatCompletion(connection, [
+      const reply = await this.usage.complete(userId, connection, [
         { role: 'system', content: system },
         { role: 'user', content },
       ]);
       return reply.content ?? '';
     } catch (error) {
-      if (error instanceof AiRequestError) {
-        this.logger.warn(error.message.slice(0, 500));
-        throw new BadRequestException(`AI API error (${error.status})`);
-      }
-      throw error;
+      throw this.requestFailed(error);
     }
+  }
+
+  /** What the user is told when a request fails: the provider's words stay in the log. */
+  private requestFailed(error: unknown): unknown {
+    if (error instanceof AiRequestError) {
+      this.logger.warn(error.message.slice(0, 500));
+      return new BadRequestException(`AI API error (${error.status})`);
+    }
+    if (error instanceof AiLimitError) {
+      return new AiLimitException(error.connectionName, error.message);
+    }
+    return error;
   }
 
   /** The instruction, told to answer in the user's language unless the text keeps its own. */
@@ -339,6 +350,16 @@ export class AiService {
       throw new BadRequestException('AI is not configured');
     }
     return connection;
+  }
+}
+
+/** The monthly limit of the connection is spent (see AiUsageService). */
+export class AiLimitException extends BadRequestException {
+  constructor(
+    readonly connectionName: string,
+    message: string,
+  ) {
+    super(message);
   }
 }
 

@@ -23,6 +23,8 @@ export interface ToolDefinition {
 }
 
 export interface ChatConnection {
+  /** The saved connection it is (see AiUsageService: the tokens are counted by it). */
+  id?: string;
   baseUrl: string;
   model: string;
   apiKey: string | null;
@@ -51,12 +53,37 @@ export class AiRequestError extends Error {
 
 const TIMEOUT_MS = 120_000;
 
+/** What a request cost in tokens, as the provider reports it. */
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  /** The part of the prompt read from the provider's cache (cheaper). */
+  cachedTokens: number;
+}
+
+/** The `usage` of an answer: OpenAI's names, DeepSeek's for the cache. */
+interface RawUsage {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  prompt_tokens_details?: { cached_tokens?: number };
+  prompt_cache_hit_tokens?: number;
+}
+
 /** A single `POST {baseUrl}/chat/completions` request; returns the assistant message. */
 export async function chatCompletion(
   connection: ChatConnection,
   messages: ChatMessage[],
   tools: ToolDefinition[] = [],
 ): Promise<Extract<ChatMessage, { role: 'assistant' }>> {
+  return (await chatCompletionWithUsage(connection, messages, tools)).message;
+}
+
+/** The same, with the tokens it took; `usage` is null when the server does not tell. */
+export async function chatCompletionWithUsage(
+  connection: ChatConnection,
+  messages: ChatMessage[],
+  tools: ToolDefinition[] = [],
+): Promise<{ message: Extract<ChatMessage, { role: 'assistant' }>; usage: TokenUsage | null }> {
   // The address is the user's: not into the server's own network (see net/outbound.ts).
   const response = await safeFetch(`${connection.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
     method: 'POST',
@@ -81,8 +108,20 @@ export async function chatCompletion(
   }
   const data = (await response.json()) as {
     choices: { message: Extract<ChatMessage, { role: 'assistant' }> }[];
+    usage?: RawUsage;
   };
-  return data.choices[0].message;
+  return { message: data.choices[0].message, usage: tokenUsage(data.usage) };
+}
+
+export function tokenUsage(raw: RawUsage | undefined): TokenUsage | null {
+  if (!raw || raw.prompt_tokens === undefined) {
+    return null;
+  }
+  return {
+    promptTokens: raw.prompt_tokens,
+    completionTokens: raw.completion_tokens ?? 0,
+    cachedTokens: raw.prompt_tokens_details?.cached_tokens ?? raw.prompt_cache_hit_tokens ?? 0,
+  };
 }
 
 export interface AudioFile {

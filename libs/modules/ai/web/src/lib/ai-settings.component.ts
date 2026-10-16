@@ -70,6 +70,26 @@ import { AiModuleAccessComponent } from './ai-module-access.component';
               <span class="details"
                 >{{ 'ai.settings.providers.' + c.provider | transloco }} · {{ c.model }}</span
               >
+              @if (c.usage.month.requests > 0) {
+                <span class="details" [class.over]="overLimit(c)">
+                  {{ 'ai.usage.today' | transloco }}:
+                  {{ tokens(c.usage.today.promptTokens + c.usage.today.completionTokens) }}
+                  @if (c.usage.today.cost !== null) {
+                    · {{ money(c.usage.today.cost) }}
+                  }
+                  · {{ 'ai.usage.month' | transloco }}:
+                  {{ tokens(c.usage.month.promptTokens + c.usage.month.completionTokens) }}
+                  @if (c.usage.month.cost !== null) {
+                    · {{ money(c.usage.month.cost) }}
+                    @if (c.monthlyLimit) {
+                      {{ 'ai.usage.of' | transloco: { limit: money(c.monthlyLimit) } }}
+                    }
+                  }
+                  @if (c.usage.month.cachedTokens > 0) {
+                    · {{ 'ai.usage.cached' | transloco: { percent: cachedPercent(c) } }}
+                  }
+                </span>
+              }
             </span>
             @if (c.id === settings().activeConnectionId) {
               <span class="badge">{{ 'ai.connections.active' | transloco }}</span>
@@ -313,6 +333,9 @@ import { AiModuleAccessComponent } from './ai-module-access.component';
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .details.over {
+      color: var(--mat-sys-error);
+    }
     .badge {
       padding: 2px 10px;
       border-radius: 12px;
@@ -390,6 +413,32 @@ export class AiSettingsComponent {
 
   async loadActions(): Promise<void> {
     this.actions.set(await firstValueFrom(this.api.actions()));
+  }
+
+  /** 1.2k, 3.4M: the tokens of a period at a glance. */
+  protected tokens(count: number): string {
+    return new Intl.NumberFormat(this.transloco.getActiveLang(), {
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    }).format(count);
+  }
+
+  protected money(usd: number): string {
+    return new Intl.NumberFormat(this.transloco.getActiveLang(), {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: usd < 1 ? 3 : 2,
+    }).format(usd);
+  }
+
+  /** How much of the prompt this month came from the provider's cache. */
+  protected cachedPercent({ usage }: AiConnection): number {
+    return Math.round((usage.month.cachedTokens / Math.max(1, usage.month.promptTokens)) * 100);
+  }
+
+  protected overLimit(connection: AiConnection): boolean {
+    const cost = connection.usage.month.cost;
+    return connection.monthlyLimit !== null && cost !== null && cost >= connection.monthlyLimit;
   }
 
   async edit(connection: AiConnection | null): Promise<void> {

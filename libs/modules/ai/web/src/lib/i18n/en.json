@@ -110,5 +110,16 @@
     "title": "Pictures (receipts)",
     "hint": "A photo of a receipt in Telegram becomes an expense: a model that sees pictures reads it — OpenAI gpt-4o-mini, for one (DeepSeek sees none). Each receipt is a paid request."
   },
-  "send": "Send"
+  "send": "Send",
+  "usage": {
+    "pricesHint": "Prices of a million tokens from the provider's price list: then the spend is shown in dollars, and a monthly limit can be set. When it is reached, the chat stops, and background work goes to a local model (Ollama) if there is one.",
+    "priceInput": "Prompt, 1M",
+    "priceOutput": "Answer, 1M",
+    "monthlyLimit": "Limit a month",
+    "limitNeedsPrices": "A limit is in dollars: fill in both prices.",
+    "today": "today",
+    "month": "month",
+    "of": "of {{limit}}",
+    "cached": "{{percent}}% from cache"
+  }
 }

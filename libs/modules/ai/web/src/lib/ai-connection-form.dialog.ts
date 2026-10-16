@@ -82,6 +82,27 @@ const PROVIDER_NAMES: Record<AiProvider, string> = {
           />
           <mat-hint>{{ 'ai.settings.apiKeyHint' | transloco }}</mat-hint>
         </mat-form-field>
+        <p class="hint">{{ 'ai.usage.pricesHint' | transloco }}</p>
+        <div class="row three">
+          <mat-form-field>
+            <mat-label>{{ 'ai.usage.priceInput' | transloco }}</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="priceInput" />
+            <span matTextPrefix>$&nbsp;</span>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>{{ 'ai.usage.priceOutput' | transloco }}</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="priceOutput" />
+            <span matTextPrefix>$&nbsp;</span>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>{{ 'ai.usage.monthlyLimit' | transloco }}</mat-label>
+            <input matInput type="number" min="0" step="1" formControlName="monthlyLimit" />
+            <span matTextPrefix>$&nbsp;</span>
+          </mat-form-field>
+        </div>
+        @if (limitWithoutPrices()) {
+          <p class="error">{{ 'ai.usage.limitNeedsPrices' | transloco }}</p>
+        }
         @if (error(); as key) {
           <p class="error">{{ key | transloco }}</p>
         }
@@ -90,7 +111,11 @@ const PROVIDER_NAMES: Record<AiProvider, string> = {
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}
         </button>
-        <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+        <button
+          matButton="filled"
+          type="submit"
+          [disabled]="form.invalid || limitWithoutPrices() || busy()"
+        >
           {{ (busy() ? 'ai.connections.checking' : 'ai.settings.save') | transloco }}
         </button>
       </mat-dialog-actions>
@@ -108,9 +133,22 @@ const PROVIDER_NAMES: Record<AiProvider, string> = {
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
+    .row.three {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .hint {
+      margin: 4px 0 8px;
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-on-surface-variant);
+    }
     .error {
       margin: 0;
       color: var(--mat-sys-error);
+    }
+    @media (max-width: 600px) {
+      .row.three {
+        grid-template-columns: 1fr;
+      }
     }
   `,
 })
@@ -133,7 +171,16 @@ export class AiConnectionFormDialog {
     ],
     model: [this.connection?.model ?? AI_PROVIDER_PRESETS.deepseek.model, Validators.required],
     apiKey: [''],
+    priceInput: [this.connection?.priceInput ?? null, Validators.min(0)],
+    priceOutput: [this.connection?.priceOutput ?? null, Validators.min(0)],
+    monthlyLimit: [this.connection?.monthlyLimit ?? null, Validators.min(0)],
   });
+
+  /** A limit is in money: it is counted from both prices. */
+  protected readonly limitWithoutPrices = () => {
+    const { priceInput, priceOutput, monthlyLimit } = this.form.getRawValue();
+    return Boolean(monthlyLimit) && (priceInput === null || priceOutput === null);
+  };
 
   /** A provider was selected — fill in its default address, model and name. */
   applyPreset(provider: AiProvider): void {
@@ -147,12 +194,15 @@ export class AiConnectionFormDialog {
   }
 
   async save(): Promise<void> {
-    const { apiKey, ...rest } = this.form.getRawValue();
+    const { apiKey, monthlyLimit, ...rest } = this.form.getRawValue();
     this.busy.set(true);
     this.error.set(null);
     try {
       const settings = await firstValueFrom(
-        this.api.saveConnection({ ...rest, apiKey: apiKey || undefined }, this.connection?.id),
+        this.api.saveConnection(
+          { ...rest, monthlyLimit: monthlyLimit || null, apiKey: apiKey || undefined },
+          this.connection?.id,
+        ),
       );
       this.dialogRef.close(settings);
     } catch (error) {

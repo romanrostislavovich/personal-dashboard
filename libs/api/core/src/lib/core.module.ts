@@ -5,6 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AchievementsController } from './achievements/achievements.controller';
 import { AchievementsService } from './achievements/achievements.service';
 import { AiConnectionsService } from './ai/ai-connections.service';
+import { AiUsageService } from './ai/ai-usage.service';
 import { AiController } from './ai/ai.controller';
 import { AiTelegramAssistant } from './ai/ai-telegram.assistant';
 import { AiActionsService } from './ai/ai-actions.service';
@@ -180,6 +181,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     AchievementsService,
     AiService,
     AiConnectionsService,
+    AiUsageService,
     AiConversationsService,
     AiActionsService,
     CoreAiTools,

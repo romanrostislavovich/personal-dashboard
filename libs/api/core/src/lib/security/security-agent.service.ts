@@ -9,10 +9,10 @@ import {
 import { z } from 'zod';
 import { AiConnectionsService } from '../ai/ai-connections.service';
 import { AiTool, NO_PARAMETERS } from '../ai/ai-tool';
+import { AiLimitError, AiUsageService } from '../ai/ai-usage.service';
 import {
   AiRequestError,
   ChatConnection,
-  chatCompletion,
   ChatMessage,
   ToolDefinition,
 } from '../ai/openai-compatible.client';
@@ -120,6 +120,7 @@ export class SecurityAgent {
   constructor(
     private readonly security: SecurityService,
     private readonly connections: AiConnectionsService,
+    private readonly usage: AiUsageService,
     private readonly users: UsersService,
   ) {}
 
@@ -153,7 +154,7 @@ export class SecurityAgent {
         },
       ],
       tools: this.tools(userId, reported),
-      complete: (messages, tools) => this.ask(connection, messages, tools),
+      complete: (messages, tools) => this.ask(userId, connection, messages, tools),
       runTool: async (tool, rawArgs) => {
         if (!tool) {
           return JSON.stringify({ error: 'Unknown tool' });
@@ -210,7 +211,7 @@ export class SecurityAgent {
     }
     const user = await this.users.findById(userId);
     const { area, severity, title, details, fix } = finding;
-    const reply = await this.ask(connection, [
+    const reply = await this.ask(userId, connection, [
       {
         role: 'system',
         content: GUIDE_INSTRUCTION.replace('LANGUAGE', coreMessages(user?.locale).aiLanguage),
@@ -231,15 +232,18 @@ export class SecurityAgent {
 
   /** One request to the model; what the provider says about a failure stays in the log. */
   private ask(
+    userId: string,
     connection: ChatConnection,
     messages: ChatMessage[],
     tools: ToolDefinition[] = [],
   ): Promise<Extract<ChatMessage, { role: 'assistant' }>> {
-    return chatCompletion(connection, messages, tools).catch((error: unknown) => {
+    return this.usage.complete(userId, connection, messages, tools).catch((error: unknown) => {
       this.logger.warn(`The agent's model did not answer: ${String(error).slice(0, 300)}`);
       throw error instanceof AiRequestError
         ? new BadGatewayException(`The AI provider refused the request (${error.status})`)
-        : new BadGatewayException('The AI provider is unreachable');
+        : error instanceof AiLimitError
+          ? new BadGatewayException(error.message)
+          : new BadGatewayException('The AI provider is unreachable');
     });
   }
 
