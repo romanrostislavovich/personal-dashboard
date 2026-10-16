@@ -122,6 +122,17 @@ under **Updating**.
   day into a folder of the computer (Settings → Data), the last 14 kept: the data outlives the
   server and comes back through "Import archive".
 
+- **Claude and other AI clients (MCP)** — the dashboard is an MCP server (`/api/mcp`): Claude
+  Desktop, Claude Code and Cursor use the assistant's tools with an access token (read only, or
+  read and change; Settings → Integrations, or the extension's popup). A deletion is confirmed
+  by calling it again; changes are in the AI's action log; sections switched off for the AI,
+  and those on a connection of their own, stay hidden. See docs/mcp.md.
+- **Devices add tools of their own** — while online, the browser extension offers the page in
+  front (its text only if allowed), the open tabs and opening a link; the desktop app, the
+  window in front and the latest screenshots — to MCP clients and to the dashboard's assistant.
+- **The assistant beside the page** — the extension's side panel (Alt+Shift+A): the same
+  conversation as in the dashboard and Telegram, with buttons to sum up the page, save it to
+  tasks, or explain the selection.
 - **Writing** — spelling, grammar and punctuation in Russian, Ukrainian, English and Polish,
   checked by LanguageTool on your own server (the texts never leave it), each line in its own
   language; a dictionary, rules switched off, and rewrites by the AI (fix everything, shorter,
@@ -209,7 +220,7 @@ under **Updating**.
   entry, 0075 the password vault, 0076 the devices of Settings → Apps, 0077 the habits, 0078 the habits to build, 0079
   the questionnaire reminders, 0080 the emergency contacts, 0081 the notification outbox, 0082
   the AI's tokens and the prices of its connections, 0083 the time by site and the focus
-  session of a device, 0084 the settings of Writing, 0085 the screenshots.
+  session of a device, 0084 the settings of Writing, 0085 the screenshots, 0086 the access tokens of MCP clients.
 - `deploy/compose.yml` gets a `languagetool` service, and `LANGUAGETOOL_URL` points the app at
   it; for `npm run dev` start it with `docker compose up -d languagetool` and set
   `LANGUAGETOOL_URL=http://localhost:8010`.
