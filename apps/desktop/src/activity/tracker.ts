@@ -60,6 +60,8 @@ export class ActivityTracker {
   private readonly watcher = new WindowWatcher((sample) => this.onSample(sample));
   private locked = false;
   private uploading = false;
+  /** The window in front, as last sampled (for the assistant's computer_front_window). */
+  private front: (WindowSample & { at: number }) | null = null;
   /** A call is in front (or was a moment ago): the app keeps quiet. */
   private meetingUntil = 0;
   private readonly outages = new OutageWatch((outage) => this.store.enqueueOutage(outage));
@@ -160,6 +162,18 @@ export class ActivityTracker {
     this.store.flush();
   }
 
+  /**
+   * The window in front as the tracker last saw it (a private one without its title, an
+   * excluded program not at all), with how long there has been no input; `null` — none.
+   */
+  frontWindow(): { app: string; name: string | null; title: string; idleSeconds: number } | null {
+    if (!this.front) {
+      return null;
+    }
+    const { app, name, title } = this.front;
+    return { app, name, title, idleSeconds: powerMonitor.getSystemIdleTime() };
+  }
+
   focusStatus(): FocusStatus & { available: boolean } {
     return { ...this.focus.status(), available: !!this.store.deviceId };
   }
@@ -209,6 +223,7 @@ export class ActivityTracker {
     });
     this.followMeeting(sample, now);
     if (!sample || this.locked || this.paused || isExcluded(sample, config)) {
+      this.front = null;
       this.keep(this.spans.feed(null, now));
       return;
     }
@@ -216,6 +231,7 @@ export class ActivityTracker {
     if (isPrivateWindow(sample.title, config.privateWords)) {
       sample = { ...sample, title: '' };
     }
+    this.front = { ...sample, at: now };
     if (
       idleMs < config.idleMinutes * 60_000 &&
       config.distractingApps.includes(sample.app.toLowerCase())

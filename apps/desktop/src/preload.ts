@@ -95,6 +95,10 @@ contextBridge.exposeInMainWorld('desktop', {
       ipcRenderer.invoke('writing-card:choose', choice),
     height: (height: number): Promise<void> => ipcRenderer.invoke('writing-card:height', height),
   },
+  /** What this computer tells the assistant as a device (see the device link of the page). */
+  device: {
+    frontWindow: (): Promise<unknown> => ipcRenderer.invoke('device:front-window'),
+  },
   /** The folder of screenshots: the dashboard's page syncs it with the server. */
   screenshots: {
     status: (): Promise<unknown> => ipcRenderer.invoke('screenshots:status'),
