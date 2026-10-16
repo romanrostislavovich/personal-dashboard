@@ -443,6 +443,32 @@
         "failed": "Failed",
         "deduplicated": "Repeat, skipped"
       }
+    },
+    "mcp": {
+      "title": "AI clients (MCP)",
+      "hint": "Claude Desktop, Claude Code, Cursor and other MCP clients use the assistant's tools with your data. Sections switched off for the AI, and the ones with an AI connection of their own, stay hidden from them.",
+      "name": "Where it is used",
+      "namePlaceholder": "Claude Desktop at home",
+      "scope": "Access",
+      "scopes": {
+        "read": "Read only",
+        "write": "Read and change"
+      },
+      "create": "Create a token",
+      "once": "The token is in the lines below now and will not be shown again: copy what you need.",
+      "clients": {
+        "claudeCode": "Claude Code (a command in the terminal)",
+        "claudeDesktop": "Claude Desktop (claude_desktop_config.json, needs Node.js)",
+        "cursor": "Cursor (~/.cursor/mcp.json)"
+      },
+      "copy": "Copy",
+      "tokens": "Tokens",
+      "created": "made",
+      "used": "used",
+      "neverUsed": "not used yet",
+      "revoke": "Revoke",
+      "noTokens": "No tokens yet.",
+      "confirmRevoke": "Revoke the token? The client using it loses access at once."
     }
   },
   "toast": {

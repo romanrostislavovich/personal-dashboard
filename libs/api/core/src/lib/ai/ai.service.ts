@@ -86,6 +86,38 @@ export class AiService {
     return (await this.connections.active(userId)) !== null;
   }
 
+  // --- Outside clients (MCP: Claude Desktop, Claude Code, Cursor) ---
+
+  /**
+   * The tools an outside client may use: those of the modules it may see (see
+   * AiConnectionsService.hiddenFromOutside), and with a `read` token only the ones that read.
+   */
+  async outsideTools(userId: string, scope: 'read' | 'write'): Promise<AiTool[]> {
+    const hidden = new Set(await this.connections.hiddenFromOutside(userId));
+    return this.tools.filter(
+      (tool) => !hidden.has(tool.module) && (scope === 'write' || !tool.writes),
+    );
+  }
+
+  /**
+   * A call of an outside client, run as the assistant runs one: logged when it changes data;
+   * a deletion first only tells what it will affect, and runs when the same call comes again
+   * (each call of an outside client counts as a turn of its own).
+   */
+  async callOutside(
+    userId: string,
+    name: string,
+    args: Record<string, unknown>,
+    scope: 'read' | 'write',
+  ): Promise<{ output: string; isError: boolean }> {
+    const tool = (await this.outsideTools(userId, scope)).find((one) => one.name === name);
+    if (!tool) {
+      return { output: JSON.stringify({ error: `No tool ${name} for this token` }), isError: true };
+    }
+    const { output } = await this.runTool(userId, tool, JSON.stringify(args), ++this.turns);
+    return { output, isError: output.startsWith('{"error"') };
+  }
+
   /** Modules that give the AI data: the ones the user can switch off in the AI settings. */
   modules(): string[] {
     return [...new Set(this.tools.map((tool) => tool.module))].sort();

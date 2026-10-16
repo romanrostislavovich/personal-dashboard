@@ -1,4 +1,7 @@
 import {
+  AccessTokenCreated,
+  AccessTokenInput,
+  McpInfo,
   Achievement,
   AppInstallReport,
   AppsOverview,
@@ -66,6 +69,8 @@ export const API_PATHS = {
   telegramLink: '/api/notifications/telegram/link',
   testNotification: '/api/notifications/test',
   notificationLog: '/api/notifications/log',
+  accessTokens: '/api/access-tokens',
+  accessToken: (id: string) => `/api/access-tokens/${encodeURIComponent(id)}`,
   syncStatus: '/api/sync/status',
   syncRun: '/api/sync/run',
   syncResync: '/api/sync/resync',
@@ -97,6 +102,8 @@ export const CORE_READS = {
   notificationSettings: () => apiRequest(API_PATHS.notificationSettings),
   /** What became of the latest notifications (sent, tried again, failed). */
   notificationLog: () => apiRequest(API_PATHS.notificationLog),
+  /** Where an MCP client connects, and the access tokens. */
+  mcp: () => apiRequest(API_PATHS.accessTokens),
   syncStatus: () => apiRequest(API_PATHS.syncStatus),
   syncConflicts: () => apiRequest(API_PATHS.syncConflicts),
   syncParked: () => apiRequest(API_PATHS.syncParked),
@@ -238,6 +245,17 @@ export function notificationsApi(api: ApiClient) {
     linkTelegram: () => api.post<TelegramLinkResponse>(API_PATHS.telegramLink, {}),
     unlinkTelegram: () => api.delete(API_PATHS.telegram),
     sendTest: () => api.post<void>(API_PATHS.testNotification, {}),
+  };
+}
+
+/** Access tokens of the outside AI clients (MCP: Claude Desktop, Claude Code, Cursor). */
+export function accessTokensApi(api: ApiClient) {
+  return {
+    info: () => api.read<McpInfo>(CORE_READS.mcp()),
+    /** The token is in the answer once. */
+    create: (input: AccessTokenInput) =>
+      api.post<AccessTokenCreated>(API_PATHS.accessTokens, input),
+    revoke: (id: string) => api.delete(API_PATHS.accessToken(id)),
   };
 }
 

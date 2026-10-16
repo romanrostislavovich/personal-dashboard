@@ -39,6 +39,8 @@ const NOT_TRASHED = new Set([
   'app_installs',
   // The log of notifications, kept a month.
   'notification_outbox',
+  // A revoked token must stay revoked.
+  'access_tokens',
 ]);
 
 /**

@@ -433,6 +433,32 @@
         "failed": "Не доставлено",
         "deduplicated": "Повтор, пропущено"
       }
+    },
+    "mcp": {
+      "title": "AI-клиенты (MCP)",
+      "hint": "Claude Desktop, Claude Code, Cursor и другие MCP-клиенты пользуются инструментами ассистента с вашими данными. Разделы, выключенные для AI, и разделы со своим подключением AI от них скрыты.",
+      "name": "Где используется",
+      "namePlaceholder": "Claude Desktop дома",
+      "scope": "Доступ",
+      "scopes": {
+        "read": "Только чтение",
+        "write": "Чтение и изменение"
+      },
+      "create": "Создать токен",
+      "once": "Токен подставлен в строки ниже и больше показан не будет: скопируйте, что нужно.",
+      "clients": {
+        "claudeCode": "Claude Code (команда в терминале)",
+        "claudeDesktop": "Claude Desktop (claude_desktop_config.json, нужен Node.js)",
+        "cursor": "Cursor (~/.cursor/mcp.json)"
+      },
+      "copy": "Копировать",
+      "tokens": "Токены",
+      "created": "создан",
+      "used": "использован",
+      "neverUsed": "ещё не использовался",
+      "revoke": "Отозвать",
+      "noTokens": "Токенов пока нет.",
+      "confirmRevoke": "Отозвать токен? Клиент с ним сразу потеряет доступ."
     }
   },
   "register": {

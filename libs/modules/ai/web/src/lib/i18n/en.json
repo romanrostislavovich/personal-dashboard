@@ -76,7 +76,8 @@
     "title": "What the AI sees",
     "hint": "A switched-off module sends nothing to the AI provider: the assistant cannot read or change it, the morning digest and diary summaries leave it out. A module may have a connection of its own (say, a local Ollama for Health): its requests go only there, and its data stays out of the chat, the digest and the stories of Life.",
     "shared": "Shared connection",
-    "connection": "The AI connection of {{module}}"
+    "connection": "The AI connection of {{module}}",
+    "mcp": "Give {{module}} to MCP clients too (Claude Desktop, Cursor: a cloud model)"
   },
   "log": {
     "title": "What the assistant changed",
