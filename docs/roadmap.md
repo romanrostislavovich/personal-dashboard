@@ -199,6 +199,7 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   browser extension in every field, the desktop app in every program (UI Automation)
 - ✅ **Screenshots** — the editor of Ctrl+Alt+S (arrows, boxes, text, numbers, pixelation), a
   folder of every computer synced with the server, the Screenshots page
+- ✅ **Music: share a song** — open it in YouTube Music or Spotify, copy the link, send it
 - ✅ **Browser extension: time by site and focus mode** — the time on each site in Activity and
   for the assistant; distracting sites closed during a focus session; daily limits of sites
 
@@ -424,8 +425,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Writing: Ctrl+Alt+G where there are no marks** — in a program that gives no positions of
   its words (Telegram Desktop and other Qt apps): the selected text is checked and rewritten in a
   small window, and put back in its place
-- **Music: share a song** — a button on every song that opens it in YouTube Music or Spotify (a
-  link to send)
 - **Desktop: quick input from anywhere** — a global shortcut opens a small window over every
   program: a task, a reminder, an expense, a diary note, without switching to the dashboard
 - **Desktop: voice notes** — a shortcut, speak, the text (speech recognition) goes to the diary or

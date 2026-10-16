@@ -85,3 +85,28 @@ export interface MusicStats {
   playsByDay: { day: LocalDate; plays: number }[];
   recent: RecentTrack[];
 }
+
+/** Where a song opens to be listened to or sent: found by its artist and title. */
+export interface SongLinks {
+  youtubeMusic: string;
+  spotify: string;
+}
+
+/**
+ * The links of a song on YouTube Music and Spotify. The search of each finds it by "artist
+ * title"; a Spotify link known already (the song playing in Spotify) is used as it is.
+ */
+export function songLinks(song: {
+  track: string;
+  artist: string | null;
+  url?: string | null;
+}): SongLinks {
+  const query = [song.artist, song.track].filter(Boolean).join(' ');
+  const spotifyTrack = song.url && /^https:\/\/open\.spotify\.com\/track\//.test(song.url);
+  return {
+    youtubeMusic: `https://music.youtube.com/search?q=${encodeURIComponent(query)}`,
+    spotify: spotifyTrack
+      ? (song.url as string)
+      : `https://open.spotify.com/search/${encodeURIComponent(query)}`,
+  };
+}

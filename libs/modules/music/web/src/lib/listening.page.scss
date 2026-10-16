@@ -70,9 +70,14 @@
   li {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 12px;
-    padding: 6px 0;
+    padding: 2px 0;
     border-top: 1px solid var(--mat-sys-outline-variant);
+    // The song first, its time and its "Share" at the end.
+    > span:first-child {
+      flex: 1;
+    }
   }
 
   li:first-child {

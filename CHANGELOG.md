@@ -139,6 +139,9 @@ under **Updating**.
   server and every other computer: delete one anywhere and it goes everywhere; a file changed
   on two computers is kept twice, and a folder that lost most of its files never empties the
   server.
+- **Music: share a song** — every song (playing now, the recent ones, the top) opens in
+  YouTube Music or Spotify, its link there is copied, or it is sent through the system's share
+  sheet.
 - **Notifications through an outbox** — every notification is written down first: the same one
   within its window goes out once (a price that jumps back and forth is told once in 12 hours),
   and a Telegram message that failed (a 429, the network) is tried again with a backoff —
