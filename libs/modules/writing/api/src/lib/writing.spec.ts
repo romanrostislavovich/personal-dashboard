@@ -72,5 +72,7 @@ describe('writing', () => {
       expect(en.language).toBe('en-US');
       expect(en.issues.length).toBeGreaterThan(0);
     },
+    // A server loading a language for the first time, or busy with other tests, takes a while.
+    30_000,
   );
 });
