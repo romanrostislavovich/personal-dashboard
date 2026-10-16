@@ -17,6 +17,7 @@ import { NO_JUDGEMENT, PromptOptions, systemPrompt } from './ai-prompt';
 import { AiTool } from './ai-tool';
 import { withAttachments } from './attachment-text';
 import { claimsChange, FAKE_CHANGE_CORRECTION } from './claims-change';
+import { DeviceToolsService } from '../devices/device-tools.service';
 import { AiLimitError, AiUsageService } from './ai-usage.service';
 import { AiRequestError, ChatConnection, ChatMessage } from './openai-compatible.client';
 import { callKey, PendingConfirmations } from './pending-confirmations';
@@ -72,7 +73,13 @@ export class AiService {
     private readonly actions: AiActionsService,
     private readonly links: LinksService,
     private readonly usage: AiUsageService,
+    private readonly devices: DeviceToolsService,
   ) {}
+
+  /** The tools of the sections, and those of the user's devices online now. */
+  private toolsOf(userId: string): AiTool[] {
+    return [...this.tools, ...this.devices.toolsFor(userId)];
+  }
 
   registerTool(tool: AiTool): void {
     if (tool.confirm && !tool.writes) {
@@ -94,7 +101,7 @@ export class AiService {
    */
   async outsideTools(userId: string, scope: 'read' | 'write'): Promise<AiTool[]> {
     const hidden = new Set(await this.connections.hiddenFromOutside(userId));
-    return this.tools.filter(
+    return this.toolsOf(userId).filter(
       (tool) => !hidden.has(tool.module) && (scope === 'write' || !tool.writes),
     );
   }
@@ -168,7 +175,7 @@ export class AiService {
     ];
     // A section with a connection of its own keeps its data away from the chat's one.
     const hidden = new Set(await this.hiddenFromShared(userId));
-    const tools = this.tools.filter(
+    const tools = this.toolsOf(userId).filter(
       (tool) => !hidden.has(tool.module) && (options.allowWrites || !tool.writes),
     );
     const turn = ++this.turns;
