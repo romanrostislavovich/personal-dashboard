@@ -1,0 +1,136 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// The field and the copy of its text with the marks lie on top of each other: the same box,
+// font and wrapping, so a mark falls exactly under its word.
+.editor {
+  position: relative;
+  height: min(50vh, 420px);
+}
+.marks,
+textarea {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+  font: var(--mat-sys-body-large);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.marks {
+  color: transparent;
+  pointer-events: none;
+  border-color: transparent;
+}
+textarea {
+  resize: none;
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  caret-color: var(--mat-sys-primary);
+  outline: none;
+  &:focus {
+    border-color: var(--mat-sys-primary);
+  }
+}
+
+$kinds: (
+  spelling: var(--mat-sys-error),
+  grammar: var(--pd-rarity-legendary),
+  punctuation: var(--pd-rarity-epic),
+  style: var(--mat-sys-primary),
+  typography: var(--mat-sys-outline),
+  other: var(--mat-sys-outline),
+);
+
+.mark {
+  text-decoration: underline wavy;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  border-radius: 2px;
+  @each $kind, $colour in $kinds {
+    &.#{$kind} {
+      text-decoration-color: $colour;
+    }
+  }
+  &.active {
+    background: color-mix(in srgb, var(--mat-sys-primary) 18%, transparent);
+  }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.status {
+  flex: 1;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+.error {
+  color: var(--mat-sys-error);
+}
+.rewrite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.proposal-text {
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.issues {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  li {
+    display: flex;
+    gap: 12px;
+    padding: 10px 6px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 6px;
+    &.active {
+      background: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+    }
+  }
+}
+.kind {
+  flex: 0 0 auto;
+  min-width: 96px;
+  font: var(--mat-sys-label-medium);
+  @each $kind, $colour in $kinds {
+    &.#{$kind} {
+      color: $colour;
+    }
+  }
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.word {
+  font-weight: 500;
+}
+.message {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+.fixes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

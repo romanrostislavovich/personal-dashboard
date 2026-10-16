@@ -12,6 +12,7 @@ import { TasksModule } from '@pd/tasks-api';
 import { VaultModule } from '@pd/vault-api';
 import { HabitsModule } from '@pd/habits-api';
 import { WeatherModule } from '@pd/weather-api';
+import { WritingModule } from '@pd/writing-api';
 
 /**
  * Enabled dashboard modules (backend part).
@@ -32,4 +33,5 @@ export const enabledModules = [
   MusicModule,
   GamesModule,
   WeatherModule,
+  WritingModule,
 ];
