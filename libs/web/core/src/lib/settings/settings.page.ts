@@ -11,6 +11,7 @@ import { ProfileSettingsComponent } from './profile-settings.component';
 import { SectionsSettingsComponent } from './sections-settings.component';
 import { SecuritySettingsComponent } from './security-settings.component';
 import { SyncSettingsComponent } from './sync-settings.component';
+import { McpSettingsComponent } from './mcp-settings.component';
 import { NotificationLogComponent } from './notification-log.component';
 import { SystemSettingsComponent } from './system-settings.component';
 import { TelegramSettingsComponent } from './telegram-settings.component';
@@ -58,6 +59,7 @@ const TABS = [
     AppsSettingsComponent,
     SyncSettingsComponent,
     NotificationLogComponent,
+    McpSettingsComponent,
     SystemSettingsComponent,
     TelegramSettingsComponent,
     ThemeSettingsComponent,
@@ -92,6 +94,7 @@ const TABS = [
         <div class="grid">
           <pd-telegram-settings />
           <pd-notification-log />
+          <pd-mcp-settings />
           @for (integration of integrations(); track integration.id) {
             <ng-container *ngComponentOutlet="integration.component" />
           }

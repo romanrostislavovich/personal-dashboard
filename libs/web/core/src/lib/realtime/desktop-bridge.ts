@@ -29,6 +29,18 @@ export interface DesktopBridge {
   screenshots?: DesktopScreenshots;
   /** Writing in every program of the computer (absent in an older shell). */
   writing?: DesktopWriting;
+  /** What the computer tells the assistant as a device (absent in an older shell). */
+  device?: DesktopDevice;
+}
+
+/** The window in front of the computer, as the tracker sees it (a private one without title). */
+export interface DesktopDevice {
+  frontWindow(): Promise<{
+    app: string;
+    name: string | null;
+    title: string;
+    idleSeconds: number;
+  } | null>;
 }
 
 /**

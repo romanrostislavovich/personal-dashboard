@@ -110,6 +110,11 @@ export const aiPreferencesSchema = z.object({
     .record(z.string().trim().min(1).max(50), z.uuid())
     .refine((map) => Object.keys(map).length <= 50, 'Too many sections')
     .optional(),
+  /**
+   * Sections with a connection of their own that outside AI clients (MCP: Claude Desktop,
+   * Cursor) may read anyway; the others with one stay hidden from them.
+   */
+  mcpModules: z.array(z.string().trim().min(1).max(50)).max(50).optional(),
 });
 export type AiPreferences = z.infer<typeof aiPreferencesSchema>;
 
@@ -125,6 +130,8 @@ export interface AiSettings {
   digestOptIns: string[];
   /** module → connection id; a section not listed uses the active connection. */
   moduleConnections: Record<string, string>;
+  /** Sections with a connection of their own that MCP clients may read anyway. */
+  mcpModules: string[];
   /** At least one connection exists — the AI features work. */
   configured: boolean;
   /** The connection every AI request goes through. */

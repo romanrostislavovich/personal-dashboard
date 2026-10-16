@@ -49,6 +49,10 @@ import { AppConfig, validateEnv } from './config/env';
 import { DatabaseModule } from './database/database.module';
 import { NOTIFICATION_CHANNELS, NotificationChannel } from './notifications/notification-channel';
 import { NotificationsController } from './notifications/notifications.controller';
+import { AccessTokensService } from './mcp/access-tokens.service';
+import { DeviceSocket } from './devices/device-socket';
+import { DeviceToolsService } from './devices/device-tools.service';
+import { AccessTokensController, McpController } from './mcp/mcp.controller';
 import { NotificationOutbox } from './notifications/notification-outbox';
 import { NotificationsService } from './notifications/notifications.service';
 import { TelegramBotService } from './notifications/telegram/telegram-bot.service';
@@ -117,6 +121,8 @@ import { UserActivityService } from './realtime/user-activity.service';
     SecurityController,
     ProjectsController,
     NotificationsController,
+    McpController,
+    AccessTokensController,
     AchievementsController,
     AiController,
     RealtimeController,
@@ -173,6 +179,9 @@ import { UserActivityService } from './realtime/user-activity.service';
     SecretsService,
     NotificationsService,
     NotificationOutbox,
+    AccessTokensService,
+    DeviceToolsService,
+    DeviceSocket,
     TelegramBotService,
     TelegramChannel,
     RealtimeService,

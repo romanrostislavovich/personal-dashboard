@@ -603,6 +603,13 @@
       "when": 1792173715374,
       "tag": "0085_screenshots",
       "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1792190988793,
+      "tag": "0086_mcp",
+      "breakpoints": true
     }
   ]
 }

@@ -31,7 +31,7 @@
       "run_at": "document_idle"
     }
   ],
-  "permissions": ["storage", "alarms", "idle", "webNavigation", "clipboardWrite"],
+  "permissions": ["storage", "alarms", "idle", "webNavigation", "clipboardWrite", "sidePanel"],
   "host_permissions": ["http://*/*", "https://*/*"],
   "commands": {
     "_execute_action": {
@@ -46,6 +46,13 @@
         "mac": "Command+Shift+L"
       },
       "description": "__MSG_commandFill__"
+    },
+    "open-assistant": {
+      "suggested_key": {
+        "default": "Alt+Shift+A",
+        "mac": "Alt+Shift+A"
+      },
+      "description": "__MSG_commandAssistant__"
     }
   },
   "web_accessible_resources": [
@@ -53,5 +60,8 @@
       "resources": ["inline-menu.html", "inline-menu.js", "inline-menu.css"],
       "matches": ["http://*/*", "https://*/*"]
     }
-  ]
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
 }

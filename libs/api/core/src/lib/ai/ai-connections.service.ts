@@ -65,6 +65,7 @@ export class AiConnectionsService {
       disabledModules: stored.disabledModules,
       digestOptIns: stored.digestOptIns,
       moduleConnections: stored.moduleConnections,
+      mcpModules: stored.mcpModules,
     };
   }
 
@@ -85,6 +86,19 @@ export class AiConnectionsService {
     const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
     const activeId = activeRow(await this.rows(userId), settings?.activeConnectionId)?.id;
     return hiddenFromShared(settings ?? {}, activeId);
+  }
+
+  /**
+   * Modules an outside AI client (MCP) never gets: the ones switched off for the AI, and the
+   * ones with a connection of their own unless the user let MCP clients read them.
+   */
+  async hiddenFromOutside(userId: string): Promise<string[]> {
+    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    const allowed = new Set(settings?.mcpModules ?? []);
+    const own = Object.keys(settings?.moduleConnections ?? {}).filter(
+      (module) => !allowed.has(module),
+    );
+    return [...new Set([...(settings?.disabledModules ?? []), ...own])];
   }
 
   /**
@@ -391,6 +405,7 @@ function defaultSettings(userId: string): typeof aiSettings.$inferSelect {
     disabledModules: [],
     digestOptIns: [],
     moduleConnections: {},
+    mcpModules: [],
   };
 }
 

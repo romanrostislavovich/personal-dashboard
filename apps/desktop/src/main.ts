@@ -329,6 +329,7 @@ function registerIpc(): void {
   );
   ipcMain.handle('annotate:cancel', () => capture.editorCancelled());
   registerScreenshotsIpc();
+  ipcMain.handle('device:front-window', () => tracker.frontWindow());
   ipcMain.on('writing:answer', (_event, answer: { id: number; value: unknown }) => {
     pageRequests.get(answer?.id)?.(answer.value);
     pageRequests.delete(answer?.id);

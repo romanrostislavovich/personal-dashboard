@@ -36,6 +36,16 @@ import { AiPreferences, AiSettings } from '@pd/contracts';
           </mat-select>
         </mat-form-field>
       </div>
+      @if (settings().moduleConnections[module.id]) {
+        <!-- A section kept on its own connection is hidden from outside AI clients too, unless… -->
+        <mat-slide-toggle
+          class="mcp"
+          [checked]="settings().mcpModules.includes(module.id)"
+          (change)="setMcp(module.id, $event.checked)"
+        >
+          {{ 'ai.privacy.mcp' | transloco: { module: module.name } }}
+        </mat-slide-toggle>
+      }
     }
   `,
   styles: `
@@ -54,6 +64,11 @@ import { AiPreferences, AiSettings } from '@pd/contracts';
       width: 160px;
       flex-shrink: 0;
     }
+    .mcp {
+      grid-column: 1 / -1;
+      margin: -4px 0 4px 16px;
+      font: var(--mat-sys-body-small);
+    }
   `,
 })
 export class AiModuleAccessComponent {
@@ -65,6 +80,12 @@ export class AiModuleAccessComponent {
   protected setVisible(module: string, visible: boolean): void {
     const others = this.settings().disabledModules.filter((m) => m !== module);
     this.save.emit({ disabledModules: visible ? others : [...others, module] });
+  }
+
+  /** Outside AI clients (MCP) may read a section kept on a connection of its own. */
+  protected setMcp(module: string, allowed: boolean): void {
+    const others = this.settings().mcpModules.filter((m) => m !== module);
+    this.save.emit({ mcpModules: allowed ? [...others, module] : others });
   }
 
   /** `null` — back to the shared connection. */

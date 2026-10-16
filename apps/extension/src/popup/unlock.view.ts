@@ -71,6 +71,13 @@ export function accountBar(popup: Popup): HTMLElement {
     'div',
     { class: 'account' },
     h('span', { class: 'who', text: popup.state.email ?? '' }),
+    // The assistant's tools of this browser work without the vault: reached from here too.
+    h('button', {
+      class: 'button text small',
+      type: 'button',
+      text: t('assistant'),
+      onClick: () => popup.assistant(() => void popup.reload()),
+    }),
     iconButton('logout', t('signOut'), () => {
       void ask({ type: 'sign-out' }).finally(() => void popup.reload());
     }),

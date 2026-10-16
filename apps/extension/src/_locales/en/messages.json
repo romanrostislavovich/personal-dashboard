@@ -349,5 +349,119 @@
   },
   "writingRewriteFailed": {
     "message": "The AI could not rewrite the text."
+  },
+  "assistant": {
+    "message": "Assistant"
+  },
+  "assistantOnline": {
+    "message": "This browser is online: the dashboard's assistant and the AI clients (Claude over MCP) may use what is switched on below."
+  },
+  "assistantOffline": {
+    "message": "Not connected to the dashboard yet: it connects by itself in a moment."
+  },
+  "assistantTool_currentPage": {
+    "message": "The page in front: address, title, selected text"
+  },
+  "assistantTool_pageText": {
+    "message": "The text of that page too"
+  },
+  "assistantTool_openTabs": {
+    "message": "The open tabs"
+  },
+  "assistantTool_openUrl": {
+    "message": "Open links in a new tab"
+  },
+  "mcpTitle": {
+    "message": "Claude and other AI clients (MCP)"
+  },
+  "mcpHint": {
+    "message": "Claude Desktop, Claude Code and Cursor use your dashboard with an access token at this address."
+  },
+  "mcpName": {
+    "message": "Where it is used"
+  },
+  "mcpNamePlaceholder": {
+    "message": "Claude Desktop at home"
+  },
+  "mcpScope": {
+    "message": "Access"
+  },
+  "mcpScopeRead": {
+    "message": "Read only"
+  },
+  "mcpScopeWrite": {
+    "message": "Read and change"
+  },
+  "mcpCreate": {
+    "message": "Create a token"
+  },
+  "mcpOnce": {
+    "message": "Copy the token now: it will not be shown again."
+  },
+  "mcpRevoke": {
+    "message": "Revoke"
+  },
+  "mcpNoTokens": {
+    "message": "No tokens yet."
+  },
+  "mcpHowTo": {
+    "message": "How to connect a client — on the dashboard"
+  },
+  "copied": {
+    "message": "Copied"
+  },
+  "commandAssistant": {
+    "message": "Open the assistant beside the page"
+  },
+  "sidepanelPlaceholder": {
+    "message": "Ask the assistant…"
+  },
+  "sidepanelSend": {
+    "message": "Send"
+  },
+  "sidepanelNew": {
+    "message": "New conversation"
+  },
+  "sidepanelEmpty": {
+    "message": "Ask anything about your dashboard, or about this page."
+  },
+  "sidepanelSignIn": {
+    "message": "Sign in to the dashboard in the extension's popup first."
+  },
+  "sidepanelFailed": {
+    "message": "The assistant did not answer: is the AI set up on the dashboard?"
+  },
+  "sidepanelThinking": {
+    "message": "Thinking…"
+  },
+  "sidepanelUsed": {
+    "message": "looked at"
+  },
+  "sidepanelYes": {
+    "message": "Yes"
+  },
+  "sidepanelNo": {
+    "message": "No"
+  },
+  "sidepanelQuickSummary": {
+    "message": "Sum up this page"
+  },
+  "sidepanelQuickSummaryPrompt": {
+    "message": "Sum up the page open in my browser in a few points."
+  },
+  "sidepanelQuickTask": {
+    "message": "Save to tasks"
+  },
+  "sidepanelQuickTaskPrompt": {
+    "message": "Add a task to read the page open in my browser, with its link."
+  },
+  "sidepanelQuickExplain": {
+    "message": "Explain the selection"
+  },
+  "sidepanelQuickExplainPrompt": {
+    "message": "Explain the text I selected on the page in my browser."
+  },
+  "assistantPanel": {
+    "message": "Open beside the page"
   }
 }

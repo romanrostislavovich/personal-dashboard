@@ -38,6 +38,8 @@ const NOT_EXPORTED = new Set([
   'health_icd_codes',
   // The delivery log of notifications: a working note, its rows hold a hash of the server's key.
   'notification_outbox',
+  // The hashes of the tokens of outside AI clients: made again where the data goes.
+  'access_tokens',
 ]);
 
 export const USER_COLUMN = 'user_id';

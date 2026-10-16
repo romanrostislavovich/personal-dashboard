@@ -195,6 +195,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - ✅ **AI: the prompt cache works** — the time goes last in the system prompt
 - ✅ **AI: what it costs** — tokens per connection, model and day; the spend with the prices; a
   monthly limit; background work falls back to Ollama
+- ✅ **MCP server** — the assistant's tools for Claude Desktop, Claude Code and Cursor with
+  access tokens (read / read and change); devices add tools of their own (the page in front, the
+  tabs, the window in front); the assistant beside the page in the extension's side panel
 - ✅ **Writing** — LanguageTool on the server and the AI's rewrites; the Writing page, the
   browser extension in every field, the desktop app in every program (UI Automation)
 - ✅ **Screenshots** — the editor of Ctrl+Alt+S (arrows, boxes, text, numbers, pixelation), a
@@ -454,8 +457,8 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   routine maintenance: auto-categorization of uncategorized transactions, diary tag deduplication and
   linking, associating orphan tasks with projects, and drafting a crisp morning briefing without cloud
   API token costs
-- **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
-  Cursor can read and change your data directly, without its own chat
+- **MCP: Claude.ai connectors** — OAuth sign-in for the custom connectors of claude.ai and the
+  Claude phone apps (the MCP server itself is done, with access tokens)
 - **AI: fewer tools a request** — all ~97 tools go with every request and every round today; the
   modules a question needs are picked first, and only their tools are offered (cheaper, and small
   Ollama models choose better)

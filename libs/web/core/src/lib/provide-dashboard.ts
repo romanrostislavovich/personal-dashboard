@@ -18,6 +18,7 @@ import { buildAppRoutes } from './app-routes';
 import { authInterceptor } from './auth/auth.interceptor';
 import { AuthService } from './auth/auth.service';
 import { DeviceBackupService } from './backup/device-backup.service';
+import { DesktopDeviceService } from './realtime/desktop-device.service';
 import { DesktopInstallService } from './apps/desktop-install.service';
 import { OfflineService } from './offline/offline.service';
 import { ThemeService } from './theme/theme.service';
@@ -54,11 +55,13 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
       const offline = inject(OfflineService);
       const backup = inject(DeviceBackupService);
       const desktopInstall = inject(DesktopInstallService);
+      const desktopDevice = inject(DesktopDeviceService);
       const injector = inject(Injector);
       await inject(AuthService).restoreSession();
       offline.start();
       backup.start();
       desktopInstall.start();
+      desktopDevice.start();
       // The modules' own background work; one that fails to load leaves the others.
       for (const module of modules) {
         void module

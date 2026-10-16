@@ -349,5 +349,119 @@
   },
   "writingRewriteFailed": {
     "message": "AI не смог переписать текст."
+  },
+  "assistant": {
+    "message": "Ассистент"
+  },
+  "assistantOnline": {
+    "message": "Браузер на связи: ассистент дашборда и AI-клиенты (Claude по MCP) могут пользоваться тем, что включено ниже."
+  },
+  "assistantOffline": {
+    "message": "Пока не на связи с дашбордом: подключится сам через несколько секунд."
+  },
+  "assistantTool_currentPage": {
+    "message": "Страница впереди: адрес, заголовок, выделенный текст"
+  },
+  "assistantTool_pageText": {
+    "message": "И текст этой страницы"
+  },
+  "assistantTool_openTabs": {
+    "message": "Открытые вкладки"
+  },
+  "assistantTool_openUrl": {
+    "message": "Открывать ссылки в новой вкладке"
+  },
+  "mcpTitle": {
+    "message": "Claude и другие AI-клиенты (MCP)"
+  },
+  "mcpHint": {
+    "message": "Claude Desktop, Claude Code и Cursor работают с вашим дашбордом по токену доступа на этом адресе."
+  },
+  "mcpName": {
+    "message": "Где используется"
+  },
+  "mcpNamePlaceholder": {
+    "message": "Claude Desktop дома"
+  },
+  "mcpScope": {
+    "message": "Доступ"
+  },
+  "mcpScopeRead": {
+    "message": "Только чтение"
+  },
+  "mcpScopeWrite": {
+    "message": "Чтение и изменение"
+  },
+  "mcpCreate": {
+    "message": "Создать токен"
+  },
+  "mcpOnce": {
+    "message": "Скопируйте токен сейчас: больше он показан не будет."
+  },
+  "mcpRevoke": {
+    "message": "Отозвать"
+  },
+  "mcpNoTokens": {
+    "message": "Токенов пока нет."
+  },
+  "mcpHowTo": {
+    "message": "Как подключить клиента — в дашборде"
+  },
+  "copied": {
+    "message": "Скопировано"
+  },
+  "commandAssistant": {
+    "message": "Открыть ассистента сбоку страницы"
+  },
+  "sidepanelPlaceholder": {
+    "message": "Спросите ассистента…"
+  },
+  "sidepanelSend": {
+    "message": "Отправить"
+  },
+  "sidepanelNew": {
+    "message": "Новая беседа"
+  },
+  "sidepanelEmpty": {
+    "message": "Спросите что угодно о своём дашборде или об этой странице."
+  },
+  "sidepanelSignIn": {
+    "message": "Сначала войдите в дашборд во всплывающем окне расширения."
+  },
+  "sidepanelFailed": {
+    "message": "Ассистент не ответил: настроен ли AI в дашборде?"
+  },
+  "sidepanelThinking": {
+    "message": "Думаю…"
+  },
+  "sidepanelUsed": {
+    "message": "смотрел"
+  },
+  "sidepanelYes": {
+    "message": "Да"
+  },
+  "sidepanelNo": {
+    "message": "Нет"
+  },
+  "sidepanelQuickSummary": {
+    "message": "Кратко о странице"
+  },
+  "sidepanelQuickSummaryPrompt": {
+    "message": "Перескажи кратко, по пунктам, страницу, открытую в моём браузере."
+  },
+  "sidepanelQuickTask": {
+    "message": "В задачи"
+  },
+  "sidepanelQuickTaskPrompt": {
+    "message": "Добавь задачу прочитать страницу, открытую в моём браузере, со ссылкой на неё."
+  },
+  "sidepanelQuickExplain": {
+    "message": "Объясни выделенное"
+  },
+  "sidepanelQuickExplainPrompt": {
+    "message": "Объясни текст, который я выделил на странице в браузере."
+  },
+  "assistantPanel": {
+    "message": "Открыть сбоку страницы"
   }
 }

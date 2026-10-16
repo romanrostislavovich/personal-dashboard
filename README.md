@@ -98,7 +98,8 @@ Caddy, daily backups and one-command updates: [docs/deploy.md](docs/deploy.md). 
 Desktop installers are in [Releases](https://github.com/romanrostislavovich/personal-dashboard/releases)
 — [docs/desktop.md](docs/desktop.md). The password vault in Chrome (fills, saves, generates):
 [apps/extension](apps/extension/README.md). Run a local copy that works offline and syncs with the
-server: [docs/sync.md](docs/sync.md).
+server: [docs/sync.md](docs/sync.md). Use your data from Claude Desktop, Claude Code or Cursor
+(MCP): [docs/mcp.md](docs/mcp.md).
 
 ## Development
 

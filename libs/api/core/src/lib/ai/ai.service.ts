@@ -17,6 +17,7 @@ import { NO_JUDGEMENT, PromptOptions, systemPrompt } from './ai-prompt';
 import { AiTool } from './ai-tool';
 import { withAttachments } from './attachment-text';
 import { claimsChange, FAKE_CHANGE_CORRECTION } from './claims-change';
+import { DeviceToolsService } from '../devices/device-tools.service';
 import { AiLimitError, AiUsageService } from './ai-usage.service';
 import { AiRequestError, ChatConnection, ChatMessage } from './openai-compatible.client';
 import { callKey, PendingConfirmations } from './pending-confirmations';
@@ -72,7 +73,13 @@ export class AiService {
     private readonly actions: AiActionsService,
     private readonly links: LinksService,
     private readonly usage: AiUsageService,
+    private readonly devices: DeviceToolsService,
   ) {}
+
+  /** The tools of the sections, and those of the user's devices online now. */
+  private toolsOf(userId: string): AiTool[] {
+    return [...this.tools, ...this.devices.toolsFor(userId)];
+  }
 
   registerTool(tool: AiTool): void {
     if (tool.confirm && !tool.writes) {
@@ -84,6 +91,38 @@ export class AiService {
 
   async isConfigured(userId: string): Promise<boolean> {
     return (await this.connections.active(userId)) !== null;
+  }
+
+  // --- Outside clients (MCP: Claude Desktop, Claude Code, Cursor) ---
+
+  /**
+   * The tools an outside client may use: those of the modules it may see (see
+   * AiConnectionsService.hiddenFromOutside), and with a `read` token only the ones that read.
+   */
+  async outsideTools(userId: string, scope: 'read' | 'write'): Promise<AiTool[]> {
+    const hidden = new Set(await this.connections.hiddenFromOutside(userId));
+    return this.toolsOf(userId).filter(
+      (tool) => !hidden.has(tool.module) && (scope === 'write' || !tool.writes),
+    );
+  }
+
+  /**
+   * A call of an outside client, run as the assistant runs one: logged when it changes data;
+   * a deletion first only tells what it will affect, and runs when the same call comes again
+   * (each call of an outside client counts as a turn of its own).
+   */
+  async callOutside(
+    userId: string,
+    name: string,
+    args: Record<string, unknown>,
+    scope: 'read' | 'write',
+  ): Promise<{ output: string; isError: boolean }> {
+    const tool = (await this.outsideTools(userId, scope)).find((one) => one.name === name);
+    if (!tool) {
+      return { output: JSON.stringify({ error: `No tool ${name} for this token` }), isError: true };
+    }
+    const { output } = await this.runTool(userId, tool, JSON.stringify(args), ++this.turns);
+    return { output, isError: output.startsWith('{"error"') };
   }
 
   /** Modules that give the AI data: the ones the user can switch off in the AI settings. */
@@ -136,7 +175,7 @@ export class AiService {
     ];
     // A section with a connection of its own keeps its data away from the chat's one.
     const hidden = new Set(await this.hiddenFromShared(userId));
-    const tools = this.tools.filter(
+    const tools = this.toolsOf(userId).filter(
       (tool) => !hidden.has(tool.module) && (options.allowWrites || !tool.writes),
     );
     const turn = ++this.turns;

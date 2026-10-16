@@ -95,6 +95,8 @@ export const aiSettings = pgTable('ai_settings', {
   digestOptIns: text().array().notNull().default([]),
   /** Sections with an AI connection of their own (see AiPreferences.moduleConnections). */
   moduleConnections: jsonb().$type<Record<string, string>>().notNull().default({}),
+  /** Sections with a connection of their own that MCP clients may read anyway. */
+  mcpModules: text().array().notNull().default([]),
 });
 
 /**
