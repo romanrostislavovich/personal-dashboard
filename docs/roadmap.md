@@ -283,20 +283,124 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 #### Browser extension
 
+##### Now / quick wins
+
+- **Browser companion positioning** — the extension becomes the Personal Dashboard browser
+  companion, not only a password manager: Vault, Capture, Focus / Activity and AI Context in one
+  small tool
 - **Wishlist in one click** — "To the wishlist" on a product page: the name and the price read
   from the page, then Finance watches the price as it does today
-- **Sites and habits** — a habit like "social media" counts a visit to such a site as a day
-  with it (time by site and focus mode are done)
+- **Select price manually** — when the extension cannot find the product price, the user can click
+  the price on the page and save the selector or value for that wishlist item
+- **Wishlist improvements** — detect product name, price, image, currency, stock state, variants
+  and discounts; allow "notify below this price", "back in stock" and linking a wish to a savings
+  goal
 - **From the context menu** — the selected text to a task or the diary, the page to "read later"
   (a task with its link), the site to Monitoring
+- **Universal quick capture** — one click or shortcut from any page to add selected text, the
+  current URL or a screenshot to a task, diary entry, read-later item, Monitoring target,
+  Wishlist item or an AI question
+- **Ctrl+K in any tab** — the dashboard's search and commands without switching to it: search
+  tasks, diary, read-later items and passwords; add tasks and expenses; start focus sessions;
+  ask AI; open modules; fill passwords; save pages; add wishlist items and monitored sites
+- **AI side panel for the current page** — a browser side panel that can summarize the current
+  page, explain selected text, extract tasks, find prices or subscription terms, save key points
+  to the diary and ask the dashboard assistant with explicit user approval
+- **AI page privacy controls** — page content is never sent automatically; the user can send only
+  selected text, the readable article or the whole page, with allowlists, denylists and private
+  windows ignored
 - **Subscriptions at checkout** — on the page that sells a subscription, an offer to add it to
   Finance → Subscriptions with its price and period
-- **Ctrl+K in any tab** — the dashboard's search (tasks, entries, passwords) without switching to
-  it
+- **Subscription detector** — recognize checkout and pricing pages with monthly, yearly, trial and
+  renewal terms; suggest adding the subscription to Finance with price, currency, period, renewal
+  date, cancellation URL and a reminder before the trial ends
+- **Ask dashboard about this page** — a command that sends selected page context to the assistant
+  and can save the answer, create tasks, add diary notes or link the page to a project
+- **Receipt and invoice import from the browser** — import an order page, invoice page or PDF as a
+  Finance expense, with merchant, amount, currency, date, category, project and the original file
+  or screenshot attached
+- **Sites and habits** — a habit like "social media" counts a visit to such a site as a day
+  with it (time by site and focus mode are done)
+- **Focus mode improvements** — block URL patterns and not only domains, add temporary exceptions
+  with a reason, "allow 5 minutes", hard mode until the end of a focus session, break mode
+  allowlists and a blocked page that shows the current focus task
+
+##### Next
+
+- **Smart read later and bookmarks** — save pages with title, author, canonical URL, reading time,
+  clean article text, AI summary, tags, full-text search and reminders to read later
 - **Browsing history** — the pages visited (the address, the title, when and how long) kept
   encrypted, never from private windows, with sites left out and a time to keep them; searched
   from Ctrl+K and asked of the assistant ("the article about X I read last week"), the sites of
   a day in Life
+- **Browser activity intelligence** — categorize domains as work, social, video, shopping, docs,
+  news and other; show context switching, repeated distractions, focus interruptions and the
+  sites most connected with low productivity
+- **Project-aware browsing** — attach domains, GitHub repositories, documentation, staging sites,
+  admin panels and billing pages to Projects, so browser time and saved pages are linked to the
+  right project
+- **Client-side checks for Monitoring** — add the current site to Monitoring and optionally test
+  it from the browser too: page load, blank screen, broken assets, redirect loops, certificate
+  warnings, mixed content and basic Web Vitals
+- **Frontend error collector for own sites** — on allowlisted domains owned by the user, collect
+  console errors, uncaught exceptions, failed network requests, route, browser info and screenshot;
+  create a task or Monitoring incident from them
+- **Security assistant in the browser** — warn about HTTP login forms, suspicious lookalike
+  domains, password reuse, weak passwords, pages that ask for recovery codes and unsafe login
+  forms
+- **Secret paste warning** — when the user pastes something that looks like an API key, JWT,
+  private key, npm token, GitHub token or `.env` content into a web page, ask for confirmation
+  before the paste continues
+- **Vault health in the popup** — show reused, weak, old and potentially compromised passwords,
+  saved sites without two-factor authentication and logins saved for insecure HTTP pages
+- **TOTP autofill** — store TOTP secrets encrypted in the vault, show one-time codes in the
+  popup, fill detected OTP fields and support multiple accounts on the same domain
+- **Identity autofill** — encrypted personal profiles for filling name, address, phone, company,
+  tax ID and social links, with separate personal, business and minimal profiles
+- **Domain aliases and custom matching rules** — allow the user to define which domains belong to
+  the same login and which domains must never share credentials
+- **Safer clipboard handling** — after copying a password or TOTP code, clear the clipboard after
+  a short time if it still contains the copied secret
+- **Webmail capture by explicit action** — from Gmail, Outlook, Proton and other webmail pages,
+  selected text or the current message can become a task, reminder, finance document, parcel
+  tracking item, health visit or AI question without automatic mailbox reading
+- **Parcel tracking from selected text** — detect tracking numbers in selected text or pages and
+  add them to Parcel tracking with a guessed carrier or a user-picked one
+- **Warranty and return-window capture** — when a purchase page contains warranty or return
+  deadlines, save them as document reminders or tasks
+- **Explain this bill** — on billing pages for cloud, AI, hosting and SaaS providers, import or
+  analyze the bill, detect what changed, connect the cost to a project and create Finance records
+- **Extension privacy dashboard** — show which permissions are enabled, which domains are allowed
+  or ignored, what was sent to the server, browsing-history status, retention period, last sync
+  and a button to delete browser-collected data
+- **Progressive permissions** — request browser permissions only when the matching feature is
+  enabled: forms for the vault, activeTab for capture, tabs for sessions, history only for
+  encrypted browsing history, and host permissions only for allowlisted domains
+- **Never collect here** — a one-click deny rule for the current site; banks, government portals,
+  medical portals, adult sites, password reset pages and webmail are excluded by default unless
+  explicitly enabled
+
+##### Later
+
+- **Web media history** — track YouTube, YouTube Music, Spotify Web, SoundCloud, Bandcamp, Twitch
+  and podcast pages as browser media activity, with title, artist or channel, URL and duration
+- **Browser now playing** — send the currently playing browser media to Music as a fallback or
+  complement to Last.fm, Spotify and the desktop app
+- **Meeting detector** — detect Google Meet, Zoom and Teams web meetings, record them as Activity,
+  link them to a project or calendar item and offer to save notes or create follow-up tasks after
+  the meeting
+- **Localhost and staging helper** — on localhost, staging and own domains, quickly attach the
+  page to a project, capture Angular or frontend errors, save screenshots and create bug tasks
+- **Tab sessions** — save the current browser window as a named session, link it to a project,
+  restore it later, summarize open tabs, close duplicates and ask the assistant what the user was
+  researching
+- **Learning mode** — save articles, docs, videos and courses to a learning plan, track reading
+  or watching time, extract flashcards and generate small quizzes from the current page
+- **Gentle anti-procrastination** — detect long distraction sessions, repeated social media opens
+  during focus, late-night browsing and daily limits, then suggest breaks or blocking without
+  guilt-driven wording
+- **Health document capture** — from medical portals, explicitly save appointment details,
+  prescriptions, lab PDFs and recommendations into Health, tasks or medication reminders
 
 #### Desktop
 
