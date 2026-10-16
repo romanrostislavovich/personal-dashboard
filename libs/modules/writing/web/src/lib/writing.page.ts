@@ -5,6 +5,7 @@ import { WritingConfig } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { WritingEditorComponent } from './writing-editor.component';
 import { WritingSettingsComponent } from './writing-settings.component';
+import { DesktopWritingService } from './desktop-writing.service';
 import { WritingApi } from './writing.api';
 
 /**
@@ -47,6 +48,7 @@ import { WritingApi } from './writing.api';
 export class WritingPage {
   private readonly api = inject(WritingApi);
   private readonly editor = viewChild(WritingEditorComponent);
+  private readonly desktop = inject(DesktopWritingService);
 
   protected readonly config = this.api.settings();
 
@@ -58,5 +60,6 @@ export class WritingPage {
 
   protected saved(config: WritingConfig): void {
     this.config.set(config);
+    this.desktop.apply(config);
   }
 }

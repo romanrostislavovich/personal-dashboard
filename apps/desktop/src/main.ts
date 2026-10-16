@@ -20,6 +20,7 @@ import {
   screenshotsFolder,
 } from './settings-store';
 import { ScreenshotFolder, screenshotName } from './screenshots/screenshot-folder';
+import { DesktopWriting, Issue } from './writing/desktop-writing';
 import { Capture } from './capture/capture';
 import { DiskCleaner } from './disk/disk-cleaner';
 import { DiskFix } from './disk/disk-fixes';
@@ -56,6 +57,35 @@ const screenshots = new ScreenshotFolder(
   () => screenshotsFolder(loadSettings()),
   () => mainWindow?.webContents.send('screenshots:changed'),
 );
+/**
+ * Writing in every program: the checks go through the dashboard's page (it holds the session),
+ * asked by a message and answered with the same id; no answer in time — no marks.
+ */
+const pageRequests = new Map<number, (answer: unknown) => void>();
+let pageRequestId = 0;
+function askPage<T>(channel: string, payload: unknown): Promise<T | null> {
+  const contents = mainWindow?.webContents;
+  if (!contents) {
+    return Promise.resolve(null);
+  }
+  const id = ++pageRequestId;
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      pageRequests.delete(id);
+      resolve(null);
+    }, 15_000);
+    pageRequests.set(id, (answer) => {
+      clearTimeout(timer);
+      resolve(answer as T);
+    });
+    contents.send(channel, { id, payload });
+  });
+}
+const writing = new DesktopWriting({
+  check: (text) => askPage<Issue[]>('writing:check', text),
+  ignore: async (what) => void (await askPage('writing:ignore', what)),
+});
+
 const capture = new Capture(
   serverUrl,
   (title, body) => notify(title, body, showWindow),
@@ -299,6 +329,20 @@ function registerIpc(): void {
   );
   ipcMain.handle('annotate:cancel', () => capture.editorCancelled());
   registerScreenshotsIpc();
+  ipcMain.on('writing:answer', (_event, answer: { id: number; value: unknown }) => {
+    pageRequests.get(answer?.id)?.(answer.value);
+    pageRequests.delete(answer?.id);
+  });
+  ipcMain.handle(
+    'writing:configure',
+    (_event, config: { enabled?: unknown; ignoredApps?: unknown }) =>
+      writing.configure({
+        enabled: config?.enabled === true,
+        ignoredApps: Array.isArray(config?.ignoredApps)
+          ? config.ignoredApps.filter((app): app is string => typeof app === 'string')
+          : [],
+      }),
+  );
   ipcMain.handle(
     'region:done',
     (_event, rect: { x: number; y: number; width: number; height: number } | null) =>
@@ -429,7 +473,10 @@ function quitApp(): void {
   );
 }
 
-app.on('will-quit', () => capture.unregister());
+app.on('will-quit', () => {
+  capture.unregister();
+  writing.stop();
+});
 
 // The app lives in the tray, so closing all windows does not quit it.
 app.on('window-all-closed', () => undefined);

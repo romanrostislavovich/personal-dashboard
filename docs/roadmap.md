@@ -263,6 +263,10 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   job did not report in time), DNS, a keyword on the page, ping
 - **CI status of the repositories** — failed GitHub Actions and deploys shown in Development and
   in the digest
+- **Developer impact hub and portfolio generator** — aggregated open-source and professional impact
+  tracking (npm download dynamics, GitHub star growth velocity, mentoring hours); one-click
+  generation and export of an up-to-date Markdown/HTML resume and portfolio from repository metrics
+  and verified profile data
 
 #### Engineering
 
@@ -438,6 +442,10 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Local semantic search & RAG** — vector embeddings (`pgvector` or `sqlite-vec`) across personal
   history (diary entries, medical records, notes, past tasks) for semantic recall ("when did I last have
   these symptoms?" or "how did I resolve that issue two years ago?")
+- **Nightly AI housekeeping** — zero-cost local LLM (Ollama) background jobs during the night for
+  routine maintenance: auto-categorization of uncategorized transactions, diary tag deduplication and
+  linking, associating orphan tasks with projects, and drafting a crisp morning briefing without cloud
+  API token costs
 - **MCP server** — the dashboard exposes its tools over MCP, so Claude Desktop, Claude Code or
   Cursor can read and change your data directly, without its own chat
 - **AI: fewer tools a request** — all ~97 tools go with every request and every round today; the
@@ -529,6 +537,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   tools or core insights: modules do not depend on each other). The AI looks for such links across
   all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you
   were sad, you listened to this music and did that"
+- **Causal correlation engine** — statistical cross-module correlation and regression analysis:
+  sleep duration and bedtime vs. next-day WakaTime/activity productivity, food delivery/impulse
+  expenses vs. GAD-7 anxiety scores, late-night gaming sessions vs. mood and habit streaks
 - **Automations: more triggers and actions** — matches, a new release, a birthday today; a
   transaction or a diary mood as an action
 - **Automations: webhooks and a public API** with tokens

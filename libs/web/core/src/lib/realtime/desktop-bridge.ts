@@ -1,5 +1,5 @@
 import { ScreenshotFolder } from '@pd/client-core';
-import { DiskAdvice, DiskFix, DiskReport } from '@pd/contracts';
+import { DiskAdvice, DiskFix, DiskReport, WritingIssue } from '@pd/contracts';
 /**
  * What the desktop app (Electron preload) adds to the page as `window.desktop`.
  * In a regular browser it is absent.
@@ -27,6 +27,18 @@ export interface DesktopBridge {
   apps?: DesktopApps;
   /** The folder of screenshots, kept the same as the server (absent in an older shell). */
   screenshots?: DesktopScreenshots;
+  /** Writing in every program of the computer (absent in an older shell). */
+  writing?: DesktopWriting;
+}
+
+/**
+ * Writing in the fields of other programs: the app reads them and draws the marks, the page
+ * checks the texts (it holds the session) and tells the settings.
+ */
+export interface DesktopWriting {
+  configure(config: { enabled: boolean; ignoredApps: string[] }): Promise<void>;
+  onCheck(check: (text: string) => Promise<WritingIssue[]>): void;
+  onIgnore(ignore: (what: { word?: string; ruleId?: string }) => Promise<void>): void;
 }
 
 /**

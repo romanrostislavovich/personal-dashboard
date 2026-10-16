@@ -14,4 +14,9 @@ export const writingModule: WebDashboardModule = {
     en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
+  // In the desktop app: the fields of every program are checked too.
+  loadStart: async () => {
+    const { DesktopWritingService } = await import('./desktop-writing.service');
+    return (injector) => injector.get(DesktopWritingService).start();
+  },
 };
