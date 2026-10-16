@@ -17,6 +17,7 @@ import { vaultModule } from '@pd/vault-web';
 import { habitsModule } from '@pd/habits-web';
 import { weatherModule } from '@pd/weather-web';
 import { writingModule } from '@pd/writing-web';
+import { screenshotsModule } from '@pd/screenshots-web';
 import { WebDashboardModule } from '@pd/web-core';
 
 /**
@@ -35,6 +36,7 @@ export const enabledModules: WebDashboardModule[] = [
   habitsModule,
   financeModule,
   writingModule,
+  screenshotsModule,
   birthdaysModule,
   developmentModule,
   monitoringModule,

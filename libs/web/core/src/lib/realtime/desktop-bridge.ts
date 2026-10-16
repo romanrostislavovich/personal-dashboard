@@ -1,3 +1,4 @@
+import { ScreenshotFolder } from '@pd/client-core';
 import { DiskAdvice, DiskFix, DiskReport } from '@pd/contracts';
 /**
  * What the desktop app (Electron preload) adds to the page as `window.desktop`.
@@ -24,6 +25,20 @@ export interface DesktopBridge {
   backup?: DeviceBackup;
   /** Settings → Apps: this computer's version, the browser extension's folder (absent in an older shell). */
   apps?: DesktopApps;
+  /** The folder of screenshots, kept the same as the server (absent in an older shell). */
+  screenshots?: DesktopScreenshots;
+}
+
+/**
+ * The folder the screenshots of the desktop app are saved to: the page syncs it with the
+ * server (see the Screenshots module); the app only reads and writes its files.
+ */
+export interface DesktopScreenshots extends ScreenshotFolder {
+  status(): Promise<{ folder: string }>;
+  chooseFolder(): Promise<{ folder: string }>;
+  openFolder(): Promise<void>;
+  /** Called when a file of the folder changed (a new screenshot, one deleted in Explorer). */
+  onChanged(callback: () => void): void;
 }
 
 /** The desktop app in Settings → Apps (see apps/desktop/src/update/extension-keeper.ts). */

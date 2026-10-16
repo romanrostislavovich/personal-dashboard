@@ -25,3 +25,4 @@ export * from './lib/vault/password-generator';
 export * from './lib/vault/password-strength';
 export * from './lib/modules/habits';
 export * from './lib/modules/writing';
+export * from './lib/modules/screenshots';

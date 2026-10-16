@@ -33,6 +33,11 @@ export interface WebDashboardModule {
    * place — Settings → Integrations — not on the module's pages.
    */
   integrations?: DashboardIntegration[];
+  /**
+   * Work of the module in the background once the app has started and the session is known
+   * (the sync of a folder of the desktop app): loaded then, run with the app's injector.
+   */
+  loadStart?: () => Promise<(injector: Injector) => void>;
 }
 
 /**

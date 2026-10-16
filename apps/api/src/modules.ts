@@ -8,6 +8,7 @@ import { MonitoringModule } from '@pd/monitoring-api';
 import { MusicModule } from '@pd/music-api';
 import { PsychologyModule } from '@pd/psychology-api';
 import { ActivityModule } from '@pd/activity-api';
+import { ScreenshotsModule } from '@pd/screenshots-api';
 import { TasksModule } from '@pd/tasks-api';
 import { VaultModule } from '@pd/vault-api';
 import { HabitsModule } from '@pd/habits-api';
@@ -34,4 +35,5 @@ export const enabledModules = [
   GamesModule,
   WeatherModule,
   WritingModule,
+  ScreenshotsModule,
 ];
