@@ -36,6 +36,16 @@ import {
   sitesTick,
 } from './sites';
 import { checkWriting, ignoreInWriting, rewriteWriting, writingState } from './writing';
+import {
+  deviceActive,
+  deviceOnline,
+  deviceSettings,
+  saveDeviceSettings,
+  startDevice,
+  stopDevice,
+} from './device';
+import { accessTokensApi } from '@pd/client-core';
+import { signedInClient } from './account';
 import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
 
 /*
@@ -45,6 +55,10 @@ import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './
 
 // Session storage for the extension's own pages and this worker only — never content scripts.
 void chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
+
+// The browser as a device of the dashboard: its tools for the assistant while it is online.
+// Started whenever the worker starts; the link's own pings keep the worker awake.
+void startDevice();
 
 chrome.runtime.onMessage.addListener((message, sender, reply: (answer: Reply<unknown>) => void) => {
   route(message, sender).then(
@@ -84,8 +98,14 @@ chrome.idle.onStateChanged.addListener((state) => {
 });
 
 // What is in front changed: the visit of a site ends or starts (see sites.ts).
-chrome.tabs.onActivated.addListener(() => void noteFront());
-chrome.windows.onFocusChanged.addListener(() => void noteFront());
+chrome.tabs.onActivated.addListener(() => {
+  void noteFront();
+  deviceActive();
+});
+chrome.windows.onFocusChanged.addListener(() => {
+  void noteFront();
+  deviceActive();
+});
 chrome.tabs.onUpdated.addListener((_tabId, change) => {
   if (change.url !== undefined || change.audible !== undefined) {
     void noteFront();
@@ -141,11 +161,16 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
     case 'state':
       return popupState();
     case 'sign-in':
-      return signIn(message.server, message.email, message.password);
+      return signIn(message.server, message.email, message.password).then(async (result) => {
+        await startDevice();
+        return result;
+      });
     case 'sign-in-code':
-      return completeSignIn(message.challengeToken, message.code);
+      await completeSignIn(message.challengeToken, message.code);
+      return startDevice();
     case 'sign-out':
       await lockEverywhere();
+      stopDevice();
       return signOut();
     case 'unlock':
       await unlock(message.masterPassword);
@@ -182,6 +207,20 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
       return neverSites();
     case 'forget-never':
       return forgetNever(message.site);
+    case 'assistant-state':
+      await startDevice();
+      return { online: deviceOnline(), settings: await deviceSettings() };
+    case 'assistant-settings':
+      return saveDeviceSettings(message.update);
+    case 'mcp-info':
+      return accessTokensApi((await signedInClient()).api).info();
+    case 'mcp-create':
+      return accessTokensApi((await signedInClient()).api).create({
+        name: String(message.name).slice(0, 60),
+        scope: message.scope === 'write' ? 'write' : 'read',
+      });
+    case 'mcp-revoke':
+      return accessTokensApi((await signedInClient()).api).revoke(String(message.id));
     case 'blocked-info':
       return (await blockOf(message.back))?.block ?? null;
     case 'pass-site':

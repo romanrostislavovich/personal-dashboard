@@ -349,5 +349,65 @@
   },
   "writingRewriteFailed": {
     "message": "AI не смог переписать текст."
+  },
+  "assistant": {
+    "message": "Ассистент"
+  },
+  "assistantOnline": {
+    "message": "Браузер на связи: ассистент дашборда и AI-клиенты (Claude по MCP) могут пользоваться тем, что включено ниже."
+  },
+  "assistantOffline": {
+    "message": "Пока не на связи с дашбордом: подключится сам через несколько секунд."
+  },
+  "assistantTool_currentPage": {
+    "message": "Страница впереди: адрес, заголовок, выделенный текст"
+  },
+  "assistantTool_pageText": {
+    "message": "И текст этой страницы"
+  },
+  "assistantTool_openTabs": {
+    "message": "Открытые вкладки"
+  },
+  "assistantTool_openUrl": {
+    "message": "Открывать ссылки в новой вкладке"
+  },
+  "mcpTitle": {
+    "message": "Claude и другие AI-клиенты (MCP)"
+  },
+  "mcpHint": {
+    "message": "Claude Desktop, Claude Code и Cursor работают с вашим дашбордом по токену доступа на этом адресе."
+  },
+  "mcpName": {
+    "message": "Где используется"
+  },
+  "mcpNamePlaceholder": {
+    "message": "Claude Desktop дома"
+  },
+  "mcpScope": {
+    "message": "Доступ"
+  },
+  "mcpScopeRead": {
+    "message": "Только чтение"
+  },
+  "mcpScopeWrite": {
+    "message": "Чтение и изменение"
+  },
+  "mcpCreate": {
+    "message": "Создать токен"
+  },
+  "mcpOnce": {
+    "message": "Скопируйте токен сейчас: больше он показан не будет."
+  },
+  "mcpRevoke": {
+    "message": "Отозвать"
+  },
+  "mcpNoTokens": {
+    "message": "Токенов пока нет."
+  },
+  "mcpHowTo": {
+    "message": "Как подключить клиента — в дашборде"
+  },
+  "copied": {
+    "message": "Скопировано"
   }
 }

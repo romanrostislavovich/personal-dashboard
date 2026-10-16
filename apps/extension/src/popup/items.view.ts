@@ -40,6 +40,12 @@ export function itemsView(popup: Popup): HTMLElement {
       h('button', {
         class: 'button text small',
         type: 'button',
+        text: t('assistant'),
+        onClick: () => popup.assistant(() => void popup.reload()),
+      }),
+      h('button', {
+        class: 'button text small',
+        type: 'button',
         text: t('signOut'),
         onClick: () => void ask({ type: 'sign-out' }).finally(() => void popup.reload()),
       }),

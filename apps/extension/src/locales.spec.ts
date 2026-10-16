@@ -38,6 +38,9 @@ describe('the texts of the extension', () => {
     ['weak', 'fair', 'strong'].forEach((level) => asked.add(`strength_${level}`));
     WRITING_ISSUE_KINDS.forEach((kind) => asked.add(`writingKind_${kind}`));
     WRITING_REWRITE_MODES.forEach((mode) => asked.add(`writingRewrite_${mode}`));
+    ['currentPage', 'pageText', 'openTabs', 'openUrl'].forEach((tool) =>
+      asked.add(`assistantTool_${tool}`),
+    );
 
     const known = new Set(messages('en'));
     expect([...asked].filter((key) => !known.has(key))).toEqual([]);

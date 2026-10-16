@@ -349,5 +349,65 @@
   },
   "writingRewriteFailed": {
     "message": "The AI could not rewrite the text."
+  },
+  "assistant": {
+    "message": "Assistant"
+  },
+  "assistantOnline": {
+    "message": "This browser is online: the dashboard's assistant and the AI clients (Claude over MCP) may use what is switched on below."
+  },
+  "assistantOffline": {
+    "message": "Not connected to the dashboard yet: it connects by itself in a moment."
+  },
+  "assistantTool_currentPage": {
+    "message": "The page in front: address, title, selected text"
+  },
+  "assistantTool_pageText": {
+    "message": "The text of that page too"
+  },
+  "assistantTool_openTabs": {
+    "message": "The open tabs"
+  },
+  "assistantTool_openUrl": {
+    "message": "Open links in a new tab"
+  },
+  "mcpTitle": {
+    "message": "Claude and other AI clients (MCP)"
+  },
+  "mcpHint": {
+    "message": "Claude Desktop, Claude Code and Cursor use your dashboard with an access token at this address."
+  },
+  "mcpName": {
+    "message": "Where it is used"
+  },
+  "mcpNamePlaceholder": {
+    "message": "Claude Desktop at home"
+  },
+  "mcpScope": {
+    "message": "Access"
+  },
+  "mcpScopeRead": {
+    "message": "Read only"
+  },
+  "mcpScopeWrite": {
+    "message": "Read and change"
+  },
+  "mcpCreate": {
+    "message": "Create a token"
+  },
+  "mcpOnce": {
+    "message": "Copy the token now: it will not be shown again."
+  },
+  "mcpRevoke": {
+    "message": "Revoke"
+  },
+  "mcpNoTokens": {
+    "message": "No tokens yet."
+  },
+  "mcpHowTo": {
+    "message": "How to connect a client — on the dashboard"
+  },
+  "copied": {
+    "message": "Copied"
   }
 }

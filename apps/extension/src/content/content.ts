@@ -1,4 +1,4 @@
-import { ask, FillAnswer, PageCommand, SaveOffer } from '../shared/messages';
+import { ask, FillAnswer, PageCommand, PageSnapshot, SaveOffer } from '../shared/messages';
 import {
   fillField,
   fillLogin,
@@ -26,7 +26,7 @@ const SEND_HINT = /sign|log ?in|continue|next|submit|войти|вход|дал�
 let lastSent = '';
 
 chrome.runtime.onMessage.addListener(
-  (command: PageCommand, _sender, reply: (answer: FillAnswer) => void) => {
+  (command: PageCommand, _sender, reply: (answer: FillAnswer | PageSnapshot) => void) => {
     switch (command.type) {
       case 'fill':
         reply({ filled: fillLogin(document, command.username, command.password) });
@@ -47,6 +47,12 @@ chrome.runtime.onMessage.addListener(
       case 'close-menu':
         closeMenu();
         reply({ filled: false });
+        break;
+      case 'snapshot':
+        // Only the page itself answers, not a frame inside it.
+        if (window === window.top) {
+          reply(snapshot(command.withText));
+        }
         break;
     }
   },
@@ -164,6 +170,23 @@ async function offerToSave(): Promise<void> {
       dismiss: (never) => void ask({ type: 'dismiss-offer', never }).catch(() => undefined),
     });
   }
+}
+
+/** The page's text cut at this length: enough for an article, never a whole book. */
+const SNAPSHOT_TEXT_MAX = 30_000;
+
+/** What the page shows: the selection, and its readable text (the article, or the body). */
+function snapshot(withText: boolean): PageSnapshot {
+  const selection = (document.getSelection()?.toString() ?? '').trim().slice(0, 5000);
+  if (!withText) {
+    return { selection, text: null };
+  }
+  const main = document.querySelector('article, main, [role="main"]') ?? document.body;
+  const text = (main instanceof HTMLElement ? main.innerText : (main?.textContent ?? ''))
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+    .slice(0, SNAPSHOT_TEXT_MAX);
+  return { selection, text };
 }
 
 function delay(ms: number): Promise<void> {

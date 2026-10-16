@@ -308,3 +308,39 @@ footer .who {
 .update span {
   flex: 1;
 }
+
+/* The assistant and Claude: switches, a secret to copy. */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.secret {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--surface-high);
+}
+.secret code {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font:
+    12px ui-monospace,
+    Consolas,
+    monospace;
+}
+.form select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}

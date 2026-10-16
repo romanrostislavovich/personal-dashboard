@@ -1,5 +1,6 @@
 import { ask, ErrorCode, ExtensionError, PopupState } from '../shared/messages';
 import { h, t } from './dom';
+import { assistantView } from './assistant.view';
 import { generatorView } from './generator.view';
 import { itemsView } from './items.view';
 import { neverSitesView } from './never-sites.view';
@@ -22,6 +23,8 @@ export interface Popup {
   errorText(error: unknown): string;
   generator(back: () => void): void;
   neverSites(back: () => void): void;
+  /** The assistant and Claude: this browser's tools, the access tokens of MCP. */
+  assistant(back: () => void): void;
   openDashboard(path?: string): void;
 }
 
@@ -73,6 +76,12 @@ const popup: Popup = {
 
   neverSites(back) {
     void neverSitesView(popup, back).then((view) => popup.show(view));
+  },
+
+  assistant(back) {
+    void assistantView(popup, back)
+      .then((view) => popup.show(view))
+      .catch((error: unknown) => popup.show(problemView(popup.errorText(error))));
   },
 
   openDashboard(path = '') {

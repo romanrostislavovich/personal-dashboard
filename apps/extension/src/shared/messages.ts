@@ -105,6 +105,20 @@ export type PopupRequest =
   | { type: 'reload' }
   // The page shown instead of a closed site (blocked.html): why it is closed, and "open anyway".
   | { type: 'blocked-info'; back: string }
+  // The assistant and Claude (popup → "Assistant"): what this browser offers, the tokens of MCP.
+  | { type: 'assistant-state' }
+  | {
+      type: 'assistant-settings';
+      update: Partial<{
+        currentPage: boolean;
+        pageText: boolean;
+        openTabs: boolean;
+        openUrl: boolean;
+      }>;
+    }
+  | { type: 'mcp-info' }
+  | { type: 'mcp-create'; name: string; scope: 'read' | 'write' }
+  | { type: 'mcp-revoke'; id: string }
   | { type: 'pass-site'; site: string }
   // The menu under a field (inline-menu.html, a page of the extension in a frame of the page);
   // `token` is the field it was opened for (see background/inline.ts).
@@ -144,7 +158,15 @@ export type PageCommand =
   | { type: 'fill-new-password'; password: string }
   /** One value into the field the menu was opened for. */
   | { type: 'fill-field'; fieldId: string; value: string }
-  | { type: 'close-menu' };
+  | { type: 'close-menu' }
+  /** What the page shows, for the assistant's `browser_current_page`. */
+  | { type: 'snapshot'; withText: boolean };
+
+/** A page's answer to `snapshot`: the selection, and its readable text when asked. */
+export interface PageSnapshot {
+  selection: string;
+  text: string | null;
+}
 
 /** Whether the fields of a page are checked, and what the server can do. */
 export interface WritingState {
