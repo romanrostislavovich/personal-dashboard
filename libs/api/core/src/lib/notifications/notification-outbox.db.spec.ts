@@ -46,7 +46,7 @@ describe.skipIf(!ADMIN_URL)('NotificationOutbox', { timeout: 60_000 }, () => {
       .insert(users)
       .values({ id: userId, email: 'outbox@test.local', passwordHash: 'x', displayName: 'Test' });
     outbox = new NotificationOutbox(db as unknown as Database);
-  });
+  }, 60_000);
 
   afterAll(async () => {
     await pool?.end();

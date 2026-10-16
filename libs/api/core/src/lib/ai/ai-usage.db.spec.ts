@@ -63,7 +63,7 @@ describe.skipIf(!ADMIN_URL)('AiUsageService', { timeout: 60_000 }, () => {
       timeZoneOf: () => 'UTC',
     };
     usage = new AiUsageService(db as unknown as Database, usersService as never);
-  });
+  }, 60_000);
 
   afterAll(async () => {
     await pool?.end();

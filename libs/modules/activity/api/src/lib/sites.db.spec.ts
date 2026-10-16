@@ -50,7 +50,7 @@ describe.skipIf(!ADMIN_URL)('SitesService', { timeout: 60_000 }, () => {
     };
     const activity = new ActivityService(db as never, users as never, {} as never, {} as never);
     sites = new SitesService(db as never, activity);
-  });
+  }, 60_000);
 
   afterAll(async () => {
     await pool?.end();
