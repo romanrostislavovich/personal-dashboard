@@ -568,6 +568,27 @@
       "when": 1792101123304,
       "tag": "0080_emergency_contacts",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1792165579617,
+      "tag": "0081_notification_outbox",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1792166120963,
+      "tag": "0082_ai_usage",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1792166675570,
+      "tag": "0083_activity_sites",
+      "breakpoints": true
     }
   ]
 }

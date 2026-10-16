@@ -357,6 +357,8 @@ export class WishlistService {
       title: now < was ? text.wishCheaperTitle(row.name) : text.wishPricierTitle(row.name),
       body: text.wishPriceBody(was, now, currency, isLowest, row.url),
       source: 'finance',
+      // A price that jumps back and forth is told once in a while, not at every check.
+      dedupe: { key: `finance.wish-price:${row.id}`, minutes: 12 * 60 },
     });
     await this.automations.emit(row.userId, 'finance.wish-price', {
       direction: now < was ? 'down' : 'up',

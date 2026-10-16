@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { ActivityLinks } from './activity.links';
 import { ActivityService } from './activity.service';
 import { digestTimeline } from './timeline-digest';
+import { SitesService } from './sites.service';
 import { WellbeingService } from './wellbeing.service';
 
 const TIME = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
@@ -27,9 +28,23 @@ export class ActivityAiTools implements OnModuleInit {
     private readonly users: UsersService,
     private readonly links: ActivityLinks,
     private readonly wellbeing: WellbeingService,
+    private readonly sites: SitesService,
   ) {}
 
   onModuleInit(): void {
+    this.ai.registerTool({
+      name: 'activity_sites',
+      module: 'activity',
+      description:
+        'Time in the browser by site for a period (the browser extension records it: the ' +
+        'site only, e.g. youtube.com, never the page), the most visited first, in seconds. ' +
+        'Useful for "how long was I on YouTube this week". Empty — the extension is not ' +
+        'installed or counts nothing.',
+      parameters: PERIOD_PARAMETERS,
+      handler: async (userId, args) =>
+        this.sites.times(userId, activityPeriodSchema.omit({ deviceId: true }).parse(args)),
+    });
+
     this.ai.registerTool({
       name: 'activity_limits',
       module: 'activity',

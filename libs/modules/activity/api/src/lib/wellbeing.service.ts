@@ -21,6 +21,7 @@ import {
   addDays,
   LocalDate,
   parseLocalDate,
+  siteOf,
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
@@ -200,7 +201,17 @@ export class WellbeingService {
   /** The whole set at once; a limit that stays keeps its "reported today". */
   async saveLimits(userId: string, limits: ActivityLimitInput[]): Promise<void> {
     const key = (limit: { kind: string; app: string | null }) => `${limit.kind}:${limit.app ?? ''}`;
-    const unique = [...new Map(limits.map((limit) => [key(limit), limit])).values()];
+    // A site as the user typed it (`https://www.youtube.com/`) is kept as its domain.
+    const normalized = limits.map((limit) =>
+      limit.kind === 'site' && limit.app
+        ? {
+            ...limit,
+            app:
+              siteOf(limit.app.includes('://') ? limit.app : `https://${limit.app}`) ?? limit.app,
+          }
+        : limit,
+    );
+    const unique = [...new Map(normalized.map((limit) => [key(limit), limit])).values()];
     await this.db.transaction(async (tx) => {
       const existing = await tx
         .select()

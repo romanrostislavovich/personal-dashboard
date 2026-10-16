@@ -9,6 +9,7 @@ export * from './lib/search';
 export * from './lib/activity';
 export * from './lib/activity-wellbeing';
 export * from './lib/activity-disk';
+export * from './lib/activity-sites';
 export * from './lib/life';
 export * from './lib/automations';
 export * from './lib/projects';

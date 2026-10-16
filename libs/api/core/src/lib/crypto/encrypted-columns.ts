@@ -1,6 +1,6 @@
 import { toSnakeCase } from 'drizzle-orm/casing';
 import { customType, getTableConfig, PgTable } from 'drizzle-orm/pg-core';
-import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes } from 'node:crypto';
 
 /**
  * Columns stored encrypted (the diagnoses of Health, its scans): AES-256-GCM with a key derived
@@ -20,10 +20,23 @@ const TEXT_PREFIX = 'enc:v1:';
 const BYTES_MAGIC = Buffer.from('PDENC1');
 
 let key: Buffer | null = null;
+let hashKey: Buffer | null = null;
 
 /** Called once on start; a key of its own, apart from the one of SecretsService. */
 export function configureFieldEncryption(secret: string): void {
   key = Buffer.from(hkdfSync('sha256', secret, 'personal-dashboard', 'encrypted-columns.v1', 32));
+  hashKey = Buffer.from(hkdfSync('sha256', secret, 'personal-dashboard', 'keyed-hash.v1', 32));
+}
+
+/**
+ * A fingerprint of a secret text to compare by (the same notification twice): HMAC-SHA256, so a
+ * dump does not let anyone guess a short text by hashing candidates.
+ */
+export function keyedHash(text: string): string {
+  if (!hashKey) {
+    throw new Error('keyedHash() is used before configureFieldEncryption()');
+  }
+  return createHmac('sha256', hashKey).update(text).digest('base64url');
 }
 
 function requireKey(): Buffer {

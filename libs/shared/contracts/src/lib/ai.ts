@@ -18,15 +18,37 @@ export const AI_PROVIDER_PRESETS: Record<AiProvider, { baseUrl: string; model: s
  * A saved AI connection: provider, address, model and key. The user keeps several (e.g. DeepSeek
  * and OpenAI) and switches the active one in one click — say, when a balance runs out.
  */
-export const aiConnectionInputSchema = z.object({
-  name: z.string().trim().min(1).max(60),
-  provider: z.enum(AI_PROVIDERS),
-  baseUrl: z.url(),
-  model: z.string().trim().min(1).max(100),
-  /** Empty — keep the saved key (Ollama has no key at all). */
-  apiKey: z.string().trim().max(500).optional(),
-});
+export const aiConnectionInputSchema = z
+  .object({
+    name: z.string().trim().min(1).max(60),
+    provider: z.enum(AI_PROVIDERS),
+    baseUrl: z.url(),
+    model: z.string().trim().min(1).max(100),
+    /** Empty — keep the saved key (Ollama has no key at all). */
+    apiKey: z.string().trim().max(500).optional(),
+    /** USD for a million tokens of the prompt and of the answer (the provider's price list). */
+    priceInput: z.number().min(0).max(1000).nullable().optional(),
+    priceOutput: z.number().min(0).max(1000).nullable().optional(),
+    /** At most this many USD a calendar month; the requests stop until the next one. */
+    monthlyLimit: z.number().positive().max(100_000).nullable().optional(),
+  })
+  .refine(
+    // A limit in money is counted from the prices.
+    (input) =>
+      input.monthlyLimit == null || (input.priceInput != null && input.priceOutput != null),
+    { message: 'A monthly limit needs both prices', path: ['monthlyLimit'] },
+  );
 export type AiConnectionInput = z.infer<typeof aiConnectionInputSchema>;
+
+/** The tokens of a period; `cost` in USD — null without the prices of the connection. */
+export interface AiUsageTotals {
+  requests: number;
+  promptTokens: number;
+  completionTokens: number;
+  /** Of the prompt tokens, the ones read from the provider's cache. */
+  cachedTokens: number;
+  cost: number | null;
+}
 
 export interface AiConnection {
   id: string;
@@ -35,6 +57,11 @@ export interface AiConnection {
   baseUrl: string;
   model: string;
   hasApiKey: boolean;
+  priceInput: number | null;
+  priceOutput: number | null;
+  monthlyLimit: number | null;
+  /** On the user's own clock. */
+  usage: { today: AiUsageTotals; month: AiUsageTotals };
 }
 
 /** When the morning digest is sent until the user picks another time. */

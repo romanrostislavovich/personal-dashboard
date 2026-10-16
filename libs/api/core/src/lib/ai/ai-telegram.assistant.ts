@@ -14,9 +14,8 @@ import { AiConversationsService } from './ai-conversations.service';
 import { AiService } from './ai.service';
 import { AttachmentError, attachmentText } from './attachment-text';
 import { transcribe } from './openai-compatible.client';
+import { AiLimitException } from './ai.service';
 
-/** Telegram limits a message to 4096 characters. */
-const TELEGRAM_LIMIT = 4000;
 /** The buttons under a question to confirm: `aic:y` / `aic:n`. */
 const CONFIRM_ACTION = 'aic';
 
@@ -92,7 +91,8 @@ export class AiTelegramAssistant implements OnModuleInit {
     const { reply } = await this.ai.ask(user.id, [{ role: 'user', content: question }], {
       plainText: true,
     });
-    return reply.slice(0, TELEGRAM_LIMIT);
+    // A long one is split into several messages by the bot.
+    return reply;
   }
 
   /** `/model` lists the connections, `/model 2` makes the second one active. */
@@ -181,7 +181,7 @@ export class AiTelegramAssistant implements OnModuleInit {
         { content: text, attachments },
         { plainText: true, allowWrites: true },
       );
-      const answer = reply.slice(0, TELEGRAM_LIMIT) || '🤷';
+      const answer = reply || '🤷';
       return awaitsConfirmation
         ? {
             text: answer,
@@ -193,7 +193,9 @@ export class AiTelegramAssistant implements OnModuleInit {
         : answer;
     } catch (error) {
       this.logger.warn(`Telegram assistant failed for ${user.id}: ${error}`);
-      return messages.assistantFailed;
+      return error instanceof AiLimitException
+        ? messages.assistantLimit(error.connectionName)
+        : messages.assistantFailed;
     }
   }
 }

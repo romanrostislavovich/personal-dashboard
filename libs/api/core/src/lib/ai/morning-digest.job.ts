@@ -10,9 +10,6 @@ import { AiConnectionsService } from './ai-connections.service';
 import { AiService } from './ai.service';
 import { MorningDigestService } from './morning-digest.service';
 
-/** Telegram limits a message to 4096 characters. */
-const TELEGRAM_LIMIT = 4000;
-
 const MORNING_DIGEST_INSTRUCTION = [
   "You write the user's morning digest for Telegram. You get JSON: today's date and sections,",
   "each with a `description`, today's `facts` and `previous` — the facts of the previous digest",
@@ -82,7 +79,7 @@ export class MorningDigestJob implements OnModuleInit {
     const reply = await this.ai.complete(userId, MORNING_DIGEST_INSTRUCTION, JSON.stringify(data));
     await this.notifications.send(userId, {
       title: coreMessages((await this.users.findById(userId))?.locale).morningDigestTitle,
-      body: reply.slice(0, TELEGRAM_LIMIT),
+      body: reply,
       source: 'ai',
     });
     await this.digest.markSent(userId, changes);

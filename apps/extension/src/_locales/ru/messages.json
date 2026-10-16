@@ -1,9 +1,9 @@
 {
   "extName": {
-    "message": "Personal Dashboard — Пароли"
+    "message": "Personal Dashboard"
   },
   "extDescription": {
-    "message": "Хранилище паролей вашего Personal Dashboard: заполняет логины, сохраняет новые, создаёт надёжные пароли. Шифруется на этом устройстве."
+    "message": "Ваш Personal Dashboard в браузере: заполняет и сохраняет пароли из хранилища (шифруется на этом устройстве), считает время на каждом сайте и закрывает отвлекающие сайты во время фокус-сессии."
   },
   "commandFill": {
     "message": "Заполнить логин на этой странице"
@@ -268,5 +268,29 @@
   },
   "menuOpenExtension": {
     "message": "Открыть расширение"
+  },
+  "blockedFocusTitle": {
+    "message": "Идёт фокус-сессия"
+  },
+  "blockedFocusHint": {
+    "message": "$1 закрыт до $2, пока сессия не закончится."
+  },
+  "blockedLimitTitle": {
+    "message": "Время на $1 на сегодня вышло"
+  },
+  "blockedLimitHint": {
+    "message": "Сегодня: $1 из $2. Откроется завтра."
+  },
+  "blockedClose": {
+    "message": "Закрыть вкладку"
+  },
+  "blockedAnyway": {
+    "message": "Всё равно открыть на 5 минут"
+  },
+  "blockedHours": {
+    "message": "$1 ч $2 мин"
+  },
+  "blockedMinutes": {
+    "message": "$1 мин"
   }
 }

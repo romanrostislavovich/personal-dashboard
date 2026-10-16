@@ -14,6 +14,10 @@ import {
 } from '@nestjs/common';
 import { AuthUser, CurrentUser, Public, ZodValidationPipe } from '@pd/api-core';
 import {
+  ActivityBrowserConfig,
+  ActivitySiteTime,
+  ActivitySiteVisits,
+  activitySiteVisitsSchema,
   ActivityFocusMusic,
   ActivityApp,
   ActivityAppUpdate,
@@ -53,6 +57,7 @@ import { ActivityLinks } from './activity.links';
 import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
 import { DiskAdviceService } from './disk/disk-advice.service';
+import { SitesService } from './sites.service';
 import { WellbeingService } from './wellbeing.service';
 
 /**
@@ -69,6 +74,7 @@ export class ActivityController {
     private readonly wellbeing: WellbeingService,
     private readonly diskAdvice: DiskAdviceService,
     private readonly links: ActivityLinks,
+    private readonly sites: SitesService,
   ) {}
 
   // --- A tracker ---
@@ -90,10 +96,37 @@ export class ActivityController {
       await this.wellbeing.saveHealth(device, body.health);
     }
     await this.wellbeing.saveOutages(device, body.outages ?? []);
+    if (body.focusUntil !== undefined) {
+      await this.sites.setFocus(device, body.focusUntil);
+    }
     if (saved > 0) {
       await this.wellbeing.checkLimits(device.userId);
     }
     return { saved, ...(await this.activity.config(device.userId)) };
+  }
+
+  // --- The browser extension (the user's own session) ---
+
+  /**
+   * Saves the time on the sites the extension recorded and answers with what it follows (the
+   * focus session now, the sites to close, the limits), so one request a minute does both.
+   */
+  @Post('sites')
+  async recordSites(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(activitySiteVisitsSchema)) body: ActivitySiteVisits,
+  ): Promise<ActivityBrowserConfig & { saved: number }> {
+    const saved = await this.sites.record(user.id, body.visits);
+    return { saved, ...(await this.sites.browserConfig(user.id)) };
+  }
+
+  /** The time of each site in a period, the most visited first. */
+  @Get('sites')
+  siteTimes(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(activityPeriodSchema)) period: ActivityPeriod,
+  ): Promise<ActivitySiteTime[]> {
+    return this.sites.times(user.id, period);
   }
 
   // --- The user ---

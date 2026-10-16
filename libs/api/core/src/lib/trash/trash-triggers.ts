@@ -27,6 +27,8 @@ const NOT_TRASHED = new Set([
   'user_secrets',
   'monitoring_check_results',
   'ai_actions',
+  // The tokens of a connection: gone with it.
+  'ai_usage',
   'morning_digest_snapshots',
   'security_reports',
   // A note of what the user was told about: nothing to restore.
@@ -35,6 +37,8 @@ const NOT_TRASHED = new Set([
   'health_icd_codes',
   // A device that told which version it runs: it tells again.
   'app_installs',
+  // The log of notifications, kept a month.
+  'notification_outbox',
 ]);
 
 /**

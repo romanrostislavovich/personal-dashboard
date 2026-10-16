@@ -17,6 +17,7 @@ import { SecretsService } from '../secrets/secrets.service';
 import { users } from '../users/users.schema';
 import { UsersService } from '../users/users.service';
 import { AiConnectionRow, aiConnections, aiSettings } from './ai.schema';
+import { AiUsageService } from './ai-usage.service';
 import { isDigestDue } from './digest-schedule';
 import {
   AiRequestError,
@@ -40,13 +41,15 @@ export class AiConnectionsService {
     @Inject(DB) private readonly db: Database,
     private readonly secrets: SecretsService,
     private readonly users: UsersService,
+    private readonly usage: AiUsageService,
   ) {}
 
   async settings(userId: string): Promise<AiSettings> {
     const rows = await this.rows(userId);
     const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
     // Oldest first: the order of the Telegram `/model` list.
-    const connections = await Promise.all(rows.map((row) => this.toConnection(userId, row)));
+    const usage = await this.usage.summary(userId, rows);
+    const connections = await Promise.all(rows.map((row) => this.toConnection(userId, row, usage)));
     // A user who never saved the settings has the defaults of the table.
     const stored = settings ?? defaultSettings(userId);
     return {
@@ -306,7 +309,12 @@ export class AiConnectionsService {
       .onConflictDoUpdate({ target: aiSettings.userId, set: { activeConnectionId: id } });
   }
 
-  private async toConnection(userId: string, row: AiConnectionRow): Promise<AiConnection> {
+  private async toConnection(
+    userId: string,
+    row: AiConnectionRow,
+    usage: Awaited<ReturnType<AiUsageService['summary']>>,
+  ): Promise<AiConnection> {
+    const none = { requests: 0, promptTokens: 0, completionTokens: 0, cachedTokens: 0, cost: null };
     return {
       id: row.id,
       name: row.name,
@@ -314,7 +322,22 @@ export class AiConnectionsService {
       baseUrl: row.baseUrl,
       model: row.model,
       hasApiKey: await this.secrets.has(userId, apiKeySecret(row.id)),
+      priceInput: row.priceInput,
+      priceOutput: row.priceOutput,
+      monthlyLimit: row.monthlyLimit,
+      usage: usage.get(row.id) ?? { today: none, month: none },
     };
+  }
+
+  /**
+   * A local model (Ollama) to do the background work (summaries, extraction) when the chosen
+   * connection's monthly limit is spent; null — there is none besides `exceptId`.
+   */
+  async localFallback(userId: string, exceptId?: string): Promise<ChatConnection | null> {
+    const row = (await this.rows(userId)).find(
+      (one) => one.provider === 'ollama' && one.id !== exceptId,
+    );
+    return row ? toChatConnection(row, await this.secrets.get(userId, apiKeySecret(row.id))) : null;
   }
 }
 
@@ -340,8 +363,17 @@ function activeRow(
   return rows.find((row) => row.id === activeId) ?? rows[0];
 }
 
-function connectionFields({ name, provider, baseUrl, model }: AiConnectionInput) {
-  return { name, provider, baseUrl, model };
+function connectionFields(input: AiConnectionInput) {
+  const { name, provider, baseUrl, model } = input;
+  return {
+    name,
+    provider,
+    baseUrl,
+    model,
+    priceInput: input.priceInput ?? null,
+    priceOutput: input.priceOutput ?? null,
+    monthlyLimit: input.monthlyLimit ?? null,
+  };
 }
 
 /** The settings of a user who never saved any: the defaults of `ai_settings`. */
@@ -363,10 +395,16 @@ function defaultSettings(userId: string): typeof aiSettings.$inferSelect {
 }
 
 function toChatConnection(
-  { provider, baseUrl, model }: { provider: string; baseUrl: string; model: string },
+  {
+    id,
+    provider,
+    baseUrl,
+    model,
+  }: { id?: string; provider: string; baseUrl: string; model: string },
   apiKey: string | null,
 ): ChatConnection {
   return {
+    id,
     baseUrl,
     model,
     apiKey,

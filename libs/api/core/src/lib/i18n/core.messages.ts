@@ -24,6 +24,8 @@ const messages = {
     confirmNoWord: 'No',
     assistantFailed:
       'The AI request failed. Check the connection in Settings → Integrations or switch the model: /model',
+    assistantLimit: (name: string) =>
+      `The monthly limit of "${name}" is spent. Raise it in the AI settings or switch the model: /model`,
     modelDescription: 'Switch the AI model: /model 2',
     modelList: (lines: string[]) =>
       `🤖 AI connections:\n${lines.join('\n')}\n\nSwitch: /model <number>`,
@@ -97,6 +99,8 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
     confirmNoWord: 'Нет',
     assistantFailed:
       'Запрос к AI не удался. Проверь подключение в Настройки → Интеграции или переключи модель: /model',
+    assistantLimit: (name: string) =>
+      `Месячный лимит «${name}» исчерпан. Подними его в настройках AI или переключи модель: /model`,
     modelDescription: 'Переключить модель AI: /model 2',
     modelList: (lines: string[]) =>
       `🤖 Подключения AI:\n${lines.join('\n')}\n\nПереключить: /model <номер>`,

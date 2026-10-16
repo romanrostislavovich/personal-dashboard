@@ -16,6 +16,7 @@ import { TrackerCardComponent } from '../tracker-card.component';
 import { OtherComputersSettingsComponent } from './other-computers-settings.component';
 import { PrivacySettingsComponent } from './privacy-settings.component';
 import { WellbeingSettingsComponent } from './wellbeing-settings.component';
+import { BrowserSettingsComponent } from './browser-settings.component';
 
 const IDLE_MINUTES = [1, 2, 3, 5, 10, 15, 30, 60];
 
@@ -38,6 +39,7 @@ const IDLE_MINUTES = [1, 2, 3, 5, 10, 15, 30, 60];
     TranslocoPipe,
     TrackerCardComponent,
     WellbeingSettingsComponent,
+    BrowserSettingsComponent,
     OtherComputersSettingsComponent,
     PrivacySettingsComponent,
   ],

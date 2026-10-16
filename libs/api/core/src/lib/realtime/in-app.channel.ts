@@ -10,6 +10,7 @@ import { RealtimeService } from './realtime.service';
 @Injectable()
 export class InAppChannel implements NotificationChannel {
   readonly name = 'in-app';
+  readonly durable = false;
 
   constructor(private readonly realtime: RealtimeService) {}
 

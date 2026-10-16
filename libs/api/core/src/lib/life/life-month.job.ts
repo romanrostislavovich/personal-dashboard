@@ -16,7 +16,6 @@ import { LifeService } from './life.service';
 
 /** The summaries come on the 1st, from this hour of the user's own clock. */
 const SEND_FROM = '10:00';
-const TELEGRAM_LIMIT = 4000;
 
 /**
  * Every hour: the goals of the year just reached; on the 1st of a month the summary of the past
@@ -110,7 +109,7 @@ export class LifeMonthJob implements OnModuleInit {
     if (!story && !notes.length && !(await this.hasNumbers(userId, period))) {
       return;
     }
-    const body = [story?.text, ...notes].filter(Boolean).join('\n\n').slice(0, TELEGRAM_LIMIT);
+    const body = [story?.text, ...notes].filter(Boolean).join('\n\n');
     await this.notifications.send(userId, {
       title,
       body: `${body ? `${body}\n\n` : ''}${text.lifeMonthLink} ${this.publicUrl}/life/${page}`,

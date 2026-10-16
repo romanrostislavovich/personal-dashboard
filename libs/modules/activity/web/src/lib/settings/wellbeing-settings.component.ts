@@ -279,7 +279,13 @@ export class WellbeingSettingsComponent {
 
   private async saveLimits(limits: ActivityLimitInput[]): Promise<void> {
     this.limits.set(limits);
-    await firstValueFrom(this.api.saveLimits(limits));
+    // The limits of sites are the browser card's: they stay as the server has them.
+    await firstValueFrom(
+      this.api.replaceLimits(
+        ['games', 'total', 'app'],
+        limits.filter((limit) => limit.kind !== 'site'),
+      ),
+    );
     this.limitsResource.reload();
   }
 }

@@ -30,6 +30,7 @@ import {
   BotVoice,
   BotVoiceTranscriber,
 } from './bot-command';
+import { splitMessage } from './split-message';
 
 /** Telegram hides "typing…" after 5 seconds; AI answers can take longer. */
 const TYPING_REFRESH_MS = 4_000;
@@ -309,7 +310,9 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       await this.answer(ctx, user, result.reply);
       return;
     }
-    await ctx.reply(`🎤 ${result.text}`);
+    for (const part of splitMessage(`🎤 ${result.text}`)) {
+      await ctx.reply(part);
+    }
     await this.answer(
       ctx,
       user,
@@ -462,12 +465,16 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   /** An empty reply: the handler has answered on its own (a message with buttons). */
   private async answer(ctx: Context, user: UserRow, reply: string | BotReply): Promise<void> {
     const { text, buttons } = typeof reply === 'string' ? { text: reply, buttons: [] } : reply;
-    if (text && buttons.length) {
-      const keyboard = new InlineKeyboard();
-      buttons.forEach(({ label, action }) => keyboard.text(label, action));
-      await ctx.reply(text, { reply_markup: keyboard });
-    } else if (text) {
-      await ctx.reply(text);
+    // A long answer goes as several messages; the buttons are under the last one.
+    const parts = splitMessage(text);
+    for (const [index, part] of parts.entries()) {
+      if (index === parts.length - 1 && buttons.length) {
+        const keyboard = new InlineKeyboard();
+        buttons.forEach(({ label, action }) => keyboard.text(label, action));
+        await ctx.reply(part, { reply_markup: keyboard });
+      } else {
+        await ctx.reply(part);
+      }
     }
     this.activity.touched(user.id);
   }
@@ -506,7 +513,10 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     };
   }
 
-  /** `actions` become buttons under the message (see NotificationAction). */
+  /**
+   * `actions` become buttons under the message (see NotificationAction). A text over Telegram's
+   * limit goes as several messages, the buttons under the last one.
+   */
   async sendMessage(
     chatId: string,
     html: string,
@@ -519,10 +529,14 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       }
       keyboard.text(label, action);
     });
-    await this.bot?.api.sendMessage(chatId, html, {
-      parse_mode: 'HTML',
-      ...(actions.length ? { reply_markup: keyboard } : {}),
-    });
+    const parts = splitMessage(html);
+    for (const [index, part] of parts.entries()) {
+      const last = index === parts.length - 1;
+      await this.bot?.api.sendMessage(chatId, part, {
+        parse_mode: 'HTML',
+        ...(last && actions.length ? { reply_markup: keyboard } : {}),
+      });
+    }
   }
 
   /** Shows "typing…" until a slow reply (an AI answer) is ready. */

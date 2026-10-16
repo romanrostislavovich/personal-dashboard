@@ -94,15 +94,21 @@ export type ActivityFocusSettings = z.infer<typeof activityFocusSettingsSchema>;
 
 // --- Daily limits ---
 
-/** `games` — time in games; `total` — at the computer at all; `app` — one program. */
-export const ACTIVITY_LIMIT_KINDS = ['games', 'total', 'app'] as const;
+/**
+ * `games` — time in games; `total` — at the computer at all; `app` — one program; `site` — one
+ * site in the browser (the extension closes it once the limit is reached).
+ */
+export const ACTIVITY_LIMIT_KINDS = ['games', 'total', 'app', 'site'] as const;
 export type ActivityLimitKind = (typeof ACTIVITY_LIMIT_KINDS)[number];
 
 export const activityLimitSchema = z
   .object({
     kind: z.enum(ACTIVITY_LIMIT_KINDS),
-    /** The program of an `app` limit (its process name); `null` for the others. */
-    app: z.string().trim().toLowerCase().min(1).max(120).nullable(),
+    /**
+     * The program of an `app` limit (its process name), the domain of a `site` one
+     * (`youtube.com`); `null` for the others.
+     */
+    app: z.string().trim().toLowerCase().min(1).max(253).nullable(),
     minutes: z
       .number()
       .int()
@@ -110,8 +116,8 @@ export const activityLimitSchema = z
       .max(24 * 60),
   })
   .refine(
-    (limit) => (limit.kind === 'app') === !!limit.app,
-    'Only a program limit names a program',
+    (limit) => (limit.kind === 'app' || limit.kind === 'site') === !!limit.app,
+    'Only a limit of a program or a site names one',
   );
 export type ActivityLimitInput = z.infer<typeof activityLimitSchema>;
 

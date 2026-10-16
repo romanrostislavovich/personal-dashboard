@@ -17,6 +17,7 @@ import {
   ActivityStats,
   ActivityTimelineEntry,
   addDays,
+  DEFAULT_DISTRACTING_SITES,
   LocalDate,
   parseLocalDate,
   toLocalDate,
@@ -54,6 +55,8 @@ const DEFAULT_SETTINGS: ActivitySettings = {
   summaryTime: '21:00',
   skippedComputers: [],
   gamesMinutesPerTask: 0,
+  trackSites: true,
+  distractingSites: DEFAULT_DISTRACTING_SITES,
 };
 /** "From the beginning" for the services asked about a period. */
 const EVER_SINCE = '2000-01-01';
@@ -179,6 +182,8 @@ export class ActivityService {
           summaryTime: row.summaryTime,
           skippedComputers: row.skippedComputers,
           gamesMinutesPerTask: row.gamesMinutesPerTask,
+          trackSites: row.trackSites,
+          distractingSites: row.distractingSites,
         }
       : DEFAULT_SETTINGS;
   }

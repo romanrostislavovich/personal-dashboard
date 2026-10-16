@@ -6,6 +6,7 @@ import {
   activityHealthSchema,
   activityOutageSchema,
 } from './activity-wellbeing';
+import { siteDomainSchema } from './activity-sites';
 import { LocalDate } from './local-date';
 
 /** What a program is for: the groups the Activity section adds time up by. */
@@ -213,6 +214,11 @@ export const activityIngestSchema = z.object({
   health: activityHealthSchema.optional(),
   /** Times the server could not be reached, sent once it can be again. */
   outages: z.array(activityOutageSchema).max(100).optional(),
+  /**
+   * A focus session runs on this computer until then; `null` — none. The browser extension
+   * keeps the distracting sites closed meanwhile (see ActivityBrowserConfig).
+   */
+  focusUntil: moment.nullable().optional(),
 });
 export type ActivityIngest = z.infer<typeof activityIngestSchema>;
 
@@ -264,6 +270,10 @@ export const activitySettingsSchema = z
      * depend on the tasks. The tasks belong to another section: the core tells their number.
      */
     gamesMinutesPerTask: z.number().int().min(0).max(120),
+    /** The browser extension records the time on each site. */
+    trackSites: z.boolean(),
+    /** Sites the extension keeps closed during a focus session. */
+    distractingSites: z.array(siteDomainSchema).max(100),
   })
   .extend(activityFocusSettingsSchema.shape);
 export type ActivitySettings = z.infer<typeof activitySettingsSchema>;

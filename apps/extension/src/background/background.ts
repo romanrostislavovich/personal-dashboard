@@ -25,6 +25,15 @@ import {
 import { activeTab, fillLogin, fillNewPassword } from './fill';
 import { menuFill, menuFillText, menuGenerate, menuState, menuUnlock, openMenu } from './inline';
 import { checkForUpdate, scheduleSelfUpdate, UPDATE_ALARM, updateStatus } from './self-update';
+import {
+  blockOf,
+  guardNavigation,
+  noteFront,
+  passSite,
+  scheduleSites,
+  SITES_ALARM,
+  sitesTick,
+} from './sites';
 import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
 
 /*
@@ -48,20 +57,43 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     void lockEverywhere();
   } else if (alarm.name === UPDATE_ALARM) {
     void checkForUpdate();
+  } else if (alarm.name === SITES_ALARM) {
+    void sitesTick();
   }
 });
 
 // The extension updates itself from its folder on the disk (see self-update.ts).
-chrome.runtime.onInstalled.addListener(() => scheduleSelfUpdate());
+chrome.runtime.onInstalled.addListener(() => {
+  scheduleSelfUpdate();
+  scheduleSites();
+});
 chrome.runtime.onStartup.addListener(() => {
   scheduleSelfUpdate();
+  scheduleSites();
   void checkForUpdate();
 });
 
-// The computer is locked: so is the vault.
+// The computer is locked: so is the vault. Away or back: the time on a site stops or goes on.
 chrome.idle.onStateChanged.addListener((state) => {
   if (state === 'locked') {
     void lockEverywhere();
+  }
+  void noteFront();
+});
+
+// What is in front changed: the visit of a site ends or starts (see sites.ts).
+chrome.tabs.onActivated.addListener(() => void noteFront());
+chrome.windows.onFocusChanged.addListener(() => void noteFront());
+chrome.tabs.onUpdated.addListener((_tabId, change) => {
+  if (change.url !== undefined || change.audible !== undefined) {
+    void noteFront();
+  }
+});
+
+// A page of a site kept closed (a focus session, a spent limit): the extension's page instead.
+chrome.webNavigation.onCommitted.addListener((details) => {
+  if (details.frameId === 0) {
+    void guardNavigation(details.tabId, details.url);
   }
 });
 
@@ -148,6 +180,10 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
       return neverSites();
     case 'forget-never':
       return forgetNever(message.site);
+    case 'blocked-info':
+      return (await blockOf(message.back))?.block ?? null;
+    case 'pass-site':
+      return passSite(message.site);
   }
 }
 

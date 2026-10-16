@@ -7,7 +7,9 @@ import {
 import {
   boolean,
   date,
+  doublePrecision,
   index,
+  integer,
   jsonb,
   pgTable,
   primaryKey,
@@ -32,9 +34,41 @@ export const aiConnections = pgTable(
     provider: text().notNull(),
     baseUrl: text().notNull(),
     model: text().notNull(),
+    /** What a million tokens cost, in USD, as the provider's price list says; null — unknown. */
+    priceInput: doublePrecision(),
+    priceOutput: doublePrecision(),
+    /** At most this much a calendar month, in USD (needs the prices); null — no limit. */
+    monthlyLimit: doublePrecision(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index().on(table.userId)],
+);
+
+/**
+ * The tokens each connection took a day, by model (one connection reads pictures with another
+ * model): what the AI costs, and whether a monthly limit is reached (see AiUsageService).
+ */
+export const aiUsage = pgTable(
+  'ai_usage',
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    connectionId: uuid()
+      .notNull()
+      .references(() => aiConnections.id, { onDelete: 'cascade' }),
+    /** The user's own day. */
+    day: date({ mode: 'string' }).notNull(),
+    model: text().notNull(),
+    promptTokens: integer().notNull().default(0),
+    completionTokens: integer().notNull().default(0),
+    cachedTokens: integer().notNull().default(0),
+    requests: integer().notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.connectionId, table.day, table.model] }),
+    index().on(table.userId, table.day),
+  ],
 );
 
 /** User AI settings: which connection is active, the morning digest, voice recognition. */

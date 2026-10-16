@@ -1,9 +1,9 @@
 {
   "extName": {
-    "message": "Personal Dashboard — Passwords"
+    "message": "Personal Dashboard"
   },
   "extDescription": {
-    "message": "Your password vault from your Personal Dashboard: fills logins, saves new ones, makes strong passwords. Encrypted on this device."
+    "message": "Your Personal Dashboard in the browser: fills and saves passwords from your vault (encrypted on this device), counts the time on each site, and keeps distracting sites closed during a focus session."
   },
   "commandFill": {
     "message": "Fill the login for this page"
@@ -268,5 +268,29 @@
   },
   "menuOpenExtension": {
     "message": "Open the extension"
+  },
+  "blockedFocusTitle": {
+    "message": "A focus session is on"
+  },
+  "blockedFocusHint": {
+    "message": "$1 stays closed until $2, when the session ends."
+  },
+  "blockedLimitTitle": {
+    "message": "The day's time on $1 is spent"
+  },
+  "blockedLimitHint": {
+    "message": "Today: $1 of $2. It opens again tomorrow."
+  },
+  "blockedClose": {
+    "message": "Close the tab"
+  },
+  "blockedAnyway": {
+    "message": "Open anyway for 5 minutes"
+  },
+  "blockedHours": {
+    "message": "$1 h $2 min"
+  },
+  "blockedMinutes": {
+    "message": "$1 min"
   }
 }
