@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { songLinks, SongLinks } from '@pd/contracts';
+import { findOnSpotifyWeb } from './clients/spotify-web.client';
 import { findOnYoutubeMusic } from './clients/youtube-music.client';
 import { SpotifyService } from './spotify.service';
 
@@ -34,9 +35,7 @@ export class SongLinksService {
       findOnYoutubeMusic(query).catch((error) => this.failed('YouTube Music', error)),
       search.spotifyExact
         ? Promise.resolve(search.spotify)
-        : this.spotify
-            .findTrack(song.track, song.artist)
-            .catch((error) => this.failed('Spotify', error)),
+        : this.findOnSpotify(song.track, song.artist),
     ]);
     const links: SongLinks = {
       youtubeMusic: youtube ?? search.youtubeMusic,
@@ -52,6 +51,20 @@ export class SongLinksService {
       this.cache.set(key, links);
     }
     return links;
+  }
+
+  /**
+   * Spotify's API when the server has its app keys (exact); without them, or when it found
+   * nothing, the song's page found on the web and checked by its title.
+   */
+  private async findOnSpotify(track: string, artist: string | null): Promise<string | null> {
+    const viaApi = this.spotify.isAvailable
+      ? await this.spotify.findTrack(track, artist).catch((error) => this.failed('Spotify', error))
+      : null;
+    return (
+      viaApi ??
+      (await findOnSpotifyWeb(track, artist).catch((error) => this.failed('Spotify web', error)))
+    );
   }
 
   private failed(service: string, error: unknown): null {
