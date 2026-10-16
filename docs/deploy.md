@@ -24,6 +24,10 @@ Ubuntu 24.04, a location close to you (Falkenstein / Nuremberg for Central Europ
 - Enable **Backups** (daily snapshots of the whole server).
 - Create a **Firewall**: inbound TCP 22, 80, 443 and UDP 443; attach it to the server.
 
+Besides the app and the database the server runs **LanguageTool** (the spelling and grammar of
+Writing): its Java is capped at 768 MB, so with 4 GB there is room enough; on a 2 GB server take
+the `languagetool` service out of `compose.yml` — only the AI rewrites of Writing stay.
+
 Keep the dashboard off the servers of the sites it monitors: if they share a machine, you learn
 nothing when that machine goes down.
 
