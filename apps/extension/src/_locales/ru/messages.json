@@ -3,7 +3,7 @@
     "message": "Personal Dashboard"
   },
   "extDescription": {
-    "message": "Ваш Personal Dashboard в браузере: заполняет и сохраняет пароли из хранилища (шифруется на этом устройстве), считает время на каждом сайте и закрывает отвлекающие сайты во время фокус-сессии."
+    "message": "Ваш Personal Dashboard в браузере: заполняет и сохраняет пароли из хранилища (шифруется на этом устройстве), проверяет орфографию и грамматику, пока вы пишете, считает время на каждом сайте и закрывает отвлекающие сайты во время фокус-сессии."
   },
   "commandFill": {
     "message": "Заполнить логин на этой странице"
@@ -292,5 +292,62 @@
   },
   "blockedMinutes": {
     "message": "$1 мин"
+  },
+  "writingBadge": {
+    "message": "Замечаний: $1. Нажмите, чтобы AI переписал текст"
+  },
+  "writingKind_spelling": {
+    "message": "Орфография"
+  },
+  "writingKind_grammar": {
+    "message": "Грамматика"
+  },
+  "writingKind_punctuation": {
+    "message": "Пунктуация"
+  },
+  "writingKind_style": {
+    "message": "Стиль"
+  },
+  "writingKind_typography": {
+    "message": "Типографика"
+  },
+  "writingKind_other": {
+    "message": "Другое"
+  },
+  "writingRemove": {
+    "message": "(удалить)"
+  },
+  "writingAddWord": {
+    "message": "Добавить «$1» в словарь"
+  },
+  "writingNeverShow": {
+    "message": "Больше не показывать"
+  },
+  "writingRewrite_fix": {
+    "message": "Исправить всё"
+  },
+  "writingRewrite_shorter": {
+    "message": "Короче"
+  },
+  "writingRewrite_polite": {
+    "message": "Вежливее"
+  },
+  "writingRewrite_formal": {
+    "message": "Деловито"
+  },
+  "writingRewrite_friendly": {
+    "message": "Дружелюбно"
+  },
+  "writingThinking": {
+    "message": "AI переписывает…"
+  },
+  "writingAccept": {
+    "message": "Заменить текст"
+  },
+  "writingDiscard": {
+    "message": "Отклонить"
+  },
+  "writingRewriteFailed": {
+    "message": "AI не смог переписать текст."
   }
 }

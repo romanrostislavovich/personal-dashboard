@@ -7,6 +7,8 @@
  * a page only when the background decides to fill them (see background/fill.ts).
  */
 
+import type { WritingRewriteMode } from '@pd/contracts';
+
 /** The vault on the server: not created yet, locked here, or open here. */
 export type VaultStatus = 'none' | 'locked' | 'unlocked';
 
@@ -127,7 +129,13 @@ export type ContentRequest =
    * A field the vault helps with got the focus (`explicit` — its key icon was clicked): the
    * token of a menu for it, or `null` when nothing is worth showing.
    */
-  | { type: 'menu-open'; kind: FieldKind; fieldId: string; explicit: boolean };
+  | { type: 'menu-open'; kind: FieldKind; fieldId: string; explicit: boolean }
+  // Writing (content/writing): whether to check on this page, a check, a rewrite, a word or a
+  // rule to leave alone — always about the text the person is typing in a field of the page.
+  | { type: 'writing-state' }
+  | { type: 'writing-check'; text: string }
+  | { type: 'writing-rewrite'; text: string; mode: WritingRewriteMode }
+  | { type: 'writing-ignore'; word?: string; ruleId?: string };
 
 /** From the background to a content script. */
 export type PageCommand =
@@ -137,6 +145,12 @@ export type PageCommand =
   /** One value into the field the menu was opened for. */
   | { type: 'fill-field'; fieldId: string; value: string }
   | { type: 'close-menu' };
+
+/** Whether the fields of a page are checked, and what the server can do. */
+export interface WritingState {
+  check: boolean;
+  rewrite: boolean;
+}
 
 /** A content script's answer to a fill; `login` — what the form's login field holds now. */
 export interface FillAnswer {

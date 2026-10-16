@@ -1,6 +1,6 @@
 import { WritingIssue } from '@pd/contracts';
 import { checkWithLanguageTool, kindOf } from './language-tool.client';
-import { paragraphs, withoutKnownWords } from './writing.service';
+import { paragraphs, sameScript, withoutKnownWords } from './writing.service';
 
 /** A LanguageTool server to check against, e.g. `docker compose up -d languagetool`. */
 const LANGUAGETOOL_URL = process.env['TEST_LANGUAGETOOL_URL'];
@@ -17,14 +17,21 @@ describe('writing', () => {
     expect(kindOf({ issueType: 'duplication', category: { id: 'MISC' } })).toBe('other');
   });
 
-  it('cuts a text into its paragraphs, with where each starts', () => {
-    const text = 'Привет!\n\nHello there.\n  \n\nCześć';
+  it('cuts a text into its lines, with where each starts', () => {
+    const text = 'Привет!\nHello there.\n  \n\nCześć';
     expect(paragraphs(text)).toEqual([
       { offset: 0, text: 'Привет!' },
-      { offset: 9, text: 'Hello there.' },
-      { offset: 25, text: '\nCześć' },
+      { offset: 8, text: 'Hello there.' },
+      { offset: 25, text: 'Cześć' },
     ]);
     expect(paragraphs('  ')).toEqual([]);
+  });
+
+  it('tells whether a short line is written in the alphabet of a language', () => {
+    expect(sameScript('ok, thanks', 'en-US')).toBe(true);
+    expect(sameScript('ok, dzięki', 'pl-PL')).toBe(true);
+    expect(sameScript('как дила?', 'en-US')).toBe(false);
+    expect(sameScript('як справи?', 'uk-UA')).toBe(true);
   });
 
   it('leaves the words of the dictionary unmarked, whatever their case', () => {

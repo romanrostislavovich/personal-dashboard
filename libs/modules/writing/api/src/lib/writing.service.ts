@@ -24,7 +24,9 @@ import { checkWithLanguageTool, LanguageToolRequest } from './language-tool.clie
 import { REWRITE_INSTRUCTIONS } from './rewrite-instructions';
 import { writingSettings } from './writing.schema';
 
-/** The same paragraph is asked about again and again as one types around it. */
+/** A line shorter than this tells too little to tell its language by. */
+const SHORT_LINE = 20;
+/** The same line is asked about again and again as one types around it. */
 const CACHE_SIZE = 1000;
 
 /**
@@ -105,19 +107,35 @@ export class WritingService {
       disabledRules: settings.disabledRules,
       motherTongue: (await this.users.findById(userId))?.locale,
     };
-    // Each paragraph on its own: a message may be half Russian, half English, and LanguageTool
-    // tells one language a request. Typing changes one paragraph, the rest come from the cache.
-    const checked = await Promise.all(
-      paragraphs(input.text).map(async (paragraph) => ({
-        offset: paragraph.offset,
-        length: paragraph.text.length,
-        result: await this.checkParagraph({ ...request, text: paragraph.text }),
-      })),
-    );
-    const longest = checked.reduce<(typeof checked)[number] | null>(
+    // Each line on its own: a message may be half Russian, half English, and LanguageTool
+    // tells one language a request. Typing changes one line, the rest come from the cache.
+    // A line too short to tell its language by is checked in the language of the longest one.
+    const lines = paragraphs(input.text);
+    const checkLine = async (line: (typeof lines)[number], language: string) => ({
+      offset: line.offset,
+      length: line.text.length,
+      result: await this.checkParagraph({ ...request, text: line.text, language }),
+    });
+    const long = lines.filter((line) => line.text.trim().length >= SHORT_LINE);
+    const told = await Promise.all(long.map((line) => checkLine(line, request.language)));
+    const longest = told.reduce<(typeof told)[number] | null>(
       (best, one) => (!best || one.length > best.length ? one : best),
       null,
     );
+    const fallback = longest?.result.language ?? request.language;
+    const short = await Promise.all(
+      lines
+        .filter((line) => line.text.trim().length < SHORT_LINE)
+        .map((line) =>
+          checkLine(
+            line,
+            request.language === 'auto' && sameScript(line.text, fallback)
+              ? fallback
+              : request.language,
+          ),
+        ),
+    );
+    const checked = [...told, ...short];
     const issues = checked.flatMap(({ offset, result }) =>
       result.issues.map((issue) => ({ ...issue, offset: issue.offset + offset })),
     );
@@ -162,10 +180,10 @@ export class WritingService {
   }
 }
 
-/** The paragraphs of a text (split at empty lines) with where each starts; blank ones left out. */
+/** The lines of a text with where each starts; blank ones left out. */
 export function paragraphs(text: string): { offset: number; text: string }[] {
   const result: { offset: number; text: string }[] = [];
-  const breaks = /\n[ \t]*\n/g;
+  const breaks = /\n\s*/g;
   let start = 0;
   for (const match of text.matchAll(breaks)) {
     result.push({ offset: start, text: text.slice(start, match.index) });
@@ -173,6 +191,15 @@ export function paragraphs(text: string): { offset: number; text: string }[] {
   }
   result.push({ offset: start, text: text.slice(start) });
   return result.filter((paragraph) => paragraph.text.trim());
+}
+
+/**
+ * Whether a short line is written in the alphabet of a language: "ok" goes with an English or a
+ * Polish text, "привет" never does — then the line tells its language itself.
+ */
+export function sameScript(text: string, language: string): boolean {
+  const cyrillic = /[Ѐ-ӿ]/.test(text);
+  return cyrillic === /^(ru|uk|be|bg|sr|mk)\b/.test(language);
 }
 
 /** A misspelling of a word in the dictionary is not one (names, terms, slang). */

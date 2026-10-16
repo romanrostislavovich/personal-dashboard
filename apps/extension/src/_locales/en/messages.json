@@ -3,7 +3,7 @@
     "message": "Personal Dashboard"
   },
   "extDescription": {
-    "message": "Your Personal Dashboard in the browser: fills and saves passwords from your vault (encrypted on this device), counts the time on each site, and keeps distracting sites closed during a focus session."
+    "message": "Your Personal Dashboard in the browser: fills and saves passwords from your vault (encrypted on this device), checks spelling and grammar as you write, counts the time on each site, and keeps distracting sites closed during a focus session."
   },
   "commandFill": {
     "message": "Fill the login for this page"
@@ -292,5 +292,62 @@
   },
   "blockedMinutes": {
     "message": "$1 min"
+  },
+  "writingBadge": {
+    "message": "Mistakes: $1. Click for the AI's rewrites"
+  },
+  "writingKind_spelling": {
+    "message": "Spelling"
+  },
+  "writingKind_grammar": {
+    "message": "Grammar"
+  },
+  "writingKind_punctuation": {
+    "message": "Punctuation"
+  },
+  "writingKind_style": {
+    "message": "Style"
+  },
+  "writingKind_typography": {
+    "message": "Typography"
+  },
+  "writingKind_other": {
+    "message": "Other"
+  },
+  "writingRemove": {
+    "message": "(remove)"
+  },
+  "writingAddWord": {
+    "message": "Add “$1” to the dictionary"
+  },
+  "writingNeverShow": {
+    "message": "Never show this"
+  },
+  "writingRewrite_fix": {
+    "message": "Fix everything"
+  },
+  "writingRewrite_shorter": {
+    "message": "Shorter"
+  },
+  "writingRewrite_polite": {
+    "message": "More polite"
+  },
+  "writingRewrite_formal": {
+    "message": "Formal"
+  },
+  "writingRewrite_friendly": {
+    "message": "Friendly"
+  },
+  "writingThinking": {
+    "message": "The AI is rewriting…"
+  },
+  "writingAccept": {
+    "message": "Replace the text"
+  },
+  "writingDiscard": {
+    "message": "Discard"
+  },
+  "writingRewriteFailed": {
+    "message": "The AI could not rewrite the text."
   }
 }
