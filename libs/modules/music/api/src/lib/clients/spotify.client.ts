@@ -90,7 +90,15 @@ export class SpotifyClient {
     track: string,
     artist: string | null,
   ): Promise<string | null> {
-    const q = artist ? `track:${track} artist:${artist}` : track;
+    // The fields first (exact); a remix written another way ("- X Remix" or "(X Remix)") is
+    // missed by them, and found by the plain words.
+    const strict = artist
+      ? await this.search(accessToken, `track:${track} artist:${artist}`)
+      : null;
+    return strict ?? (await this.search(accessToken, [artist, track].filter(Boolean).join(' ')));
+  }
+
+  private async search(accessToken: string, q: string): Promise<string | null> {
     const params = new URLSearchParams({ q, type: 'track', limit: '1' });
     const response = await fetchWithTimeout(`${API}/search?${params}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
