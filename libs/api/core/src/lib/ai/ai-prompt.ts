@@ -118,7 +118,6 @@ export function systemPrompt(
   const now = zonedDateTime(new Date(), timeZone);
   return [
     `You are the assistant of ${user?.displayName ?? 'the user'}'s personal dashboard.`,
-    `Now it is ${now.date} ${now.time} for the user, time zone ${timeZone}.`,
     `Always answer in ${coreMessages(user?.locale).aiLanguage}, briefly and to the point.`,
     'Get any data about the user only through the tools and never make things up;',
     'if there is no data, say so. Always state currencies for amounts.',
@@ -133,5 +132,8 @@ export function systemPrompt(
     ...(plainText ? [] : pageLinks(pages ?? [])),
     ...(allowWrites ? WRITE_RULES : []),
     ...(hasAttachments ? ATTACHMENT_RULES : []),
+    // Last: it changes every minute, and the providers cache a request by its start — the tools
+    // and everything above stay the same and are read from the cache (cheaper and faster).
+    `Now it is ${now.date} ${now.time} for the user, time zone ${timeZone}.`,
   ].join(' ');
 }

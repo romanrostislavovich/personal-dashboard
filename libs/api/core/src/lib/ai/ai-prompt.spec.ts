@@ -25,4 +25,18 @@ describe('systemPrompt', () => {
       );
     }
   });
+
+  it('keeps the time last, so a minute later the prompt starts the same (the provider cache)', () => {
+    vi.useFakeTimers({ now: new Date('2026-10-16T10:00:00Z') });
+    const before = systemPrompt(undefined, 'Europe/Warsaw', { pages });
+    vi.setSystemTime(new Date('2026-10-16T10:01:00Z'));
+    const after = systemPrompt(undefined, 'Europe/Warsaw', { pages });
+    vi.useRealTimers();
+    const tail = before.lastIndexOf('Now it is');
+    expect(before).not.toBe(after);
+    expect(after.slice(0, tail)).toBe(before.slice(0, tail));
+    expect(before.slice(tail)).toBe(
+      'Now it is 2026-10-16 12:00 for the user, time zone Europe/Warsaw.',
+    );
+  });
 });
