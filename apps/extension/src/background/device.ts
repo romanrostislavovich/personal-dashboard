@@ -138,9 +138,7 @@ function tools(): DeviceTool[] {
 
 async function currentPage(withText: boolean): Promise<unknown> {
   // A browser window, not the popup or a window of the extension's own pages.
-  const window = await chrome.windows
-    .getLastFocused({ windowTypes: ['normal'] })
-    .catch(() => null);
+  const window = await chrome.windows.getLastFocused({ windowTypes: ['normal'] }).catch(() => null);
   if (!window?.id || window.incognito) {
     return { page: null, note: 'No normal browser window in front' };
   }
