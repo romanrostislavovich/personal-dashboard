@@ -136,6 +136,8 @@
     "copyYoutube": "Скопировать ссылку YouTube Music",
     "copySpotify": "Скопировать ссылку Spotify",
     "send": "Отправить…",
-    "copied": "Ссылка скопирована"
+    "copied": "Ссылка скопирована",
+    "finding": "Ищу трек…",
+    "search": "(поиск)"
   }
 }

@@ -17,11 +17,15 @@ import {
   MusicSettings,
   MusicTopPeriod,
   NowPlaying,
+  SongLinks,
+  SongLinksQuery,
+  songLinksQuerySchema,
 } from '@pd/contracts';
 import { z } from 'zod';
 import { LastfmHistoryImport } from './lastfm-history.import';
 import { LastfmService } from './lastfm.service';
 import { SoundcloudService } from './soundcloud/soundcloud.service';
+import { SongLinksService } from './song-links.service';
 import { SpotifyService } from './spotify.service';
 import { MUSIC_ACTIONS } from './music.server-actions';
 
@@ -33,6 +37,7 @@ export class MusicController {
     private readonly history: LastfmHistoryImport,
     private readonly spotify: SpotifyService,
     private readonly soundcloud: SoundcloudService,
+    private readonly songLinks: SongLinksService,
   ) {}
 
   @Get('settings')
@@ -77,6 +82,14 @@ export class MusicController {
   @Get('now-playing')
   async nowPlaying(@CurrentUser() user: AuthUser): Promise<NowPlaying | null> {
     return (await this.spotify.nowPlaying(user.id)) ?? (await this.lastfm.nowPlaying(user.id));
+  }
+
+  /** "Share" of a song: the links straight to it on YouTube Music and Spotify. */
+  @Get('song-links')
+  findSongLinks(
+    @Query(new ZodValidationPipe(songLinksQuerySchema)) song: SongLinksQuery,
+  ): Promise<SongLinks> {
+    return this.songLinks.find({ track: song.track, artist: song.artist ?? null, url: song.url });
   }
 
   // --- Last.fm ---
