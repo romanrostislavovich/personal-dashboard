@@ -556,6 +556,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   graph, a matrix and a pair day by day; the assistant's `core_correlations`. New daily numbers
   for it: every habit, GAD-7 / PHQ-9 / WHO-5, games late at night, spending by category, commits,
   words in the diary, Dota 2 matches
+- ✅ **Before and after** — Life → Links: every daily number around the start or the end of a
+  period of Health (a diagnosis, a medication), judged against the ordinary dates of the same
+  history; the assistant's `core_before_after`
 - **Correlation engine: sleep** — the hours and the time of going to bed, once a source of sleep
   (a phone, a watch) is connected
 - **Automations: more triggers and actions** — matches, a new release, a birthday today; a

@@ -12,6 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CORE_READS } from '@pd/client-core';
 import { Correlation, CorrelationMetric, Correlations } from '@pd/contracts';
+import { BeforeAfterComponent } from './before-after.component';
 import { CorrelationGraphComponent } from './correlation-graph.component';
 import { CorrelationMatrixComponent } from './correlation-matrix.component';
 import { CorrelationScatterComponent } from './correlation-scatter.component';
@@ -37,6 +38,7 @@ function localDate(date: Date): string {
   selector: 'pd-links-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    BeforeAfterComponent,
     CorrelationGraphComponent,
     CorrelationMatrixComponent,
     CorrelationScatterComponent,

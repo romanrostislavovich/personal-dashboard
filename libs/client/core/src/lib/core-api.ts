@@ -123,6 +123,8 @@ export const CORE_READS = {
   /** How every daily number goes with every other; the regression explains `target`. */
   correlations: (from: string, to: string, target?: string) =>
     apiRequest('/api/life/correlations', { from, to, ...(target ? { target } : {}) }),
+  /** Every daily number before and after the start or the end of a period of Health. */
+  beforeAfter: (weeks: number) => apiRequest('/api/life/before-after', { weeks }),
   lifeGoals: (year: number) => apiRequest('/api/life/goals', { year }),
   /** What a goal of a year can be counted from. */
   lifeMetrics: () => apiRequest('/api/life/metrics'),

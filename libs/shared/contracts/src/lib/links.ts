@@ -228,6 +228,80 @@ export const correlationsQuerySchema = z.object({
 });
 export type CorrelationsQuery = z.infer<typeof correlationsQuerySchema>;
 
+// --- Before and after an event of a life (Life → Links) ---
+
+/** The windows "before and after" compare, in weeks. */
+export const BEFORE_AFTER_WEEKS = [2, 4, 8] as const;
+
+/** A date things may have changed at: the start or the end of a period (a diagnosis, a drug). */
+export interface BeforeAfterEvent {
+  /** Stable for the page's choice: the source, the kind, the title, the date and the edge. */
+  id: string;
+  module: string;
+  /** `medication`, `diagnosis`. */
+  kind: string;
+  title: string;
+  subtitle: string | null;
+  on: LocalDate;
+  /** The period began on that day, or ended. */
+  edge: 'start' | 'end';
+}
+
+/** One daily number around an event: the windows before and after it compared. */
+export interface BeforeAfterChange {
+  key: string;
+  module: string;
+  labelKey: string;
+  label?: string;
+  unit: DailyMetric['unit'];
+  currency?: string;
+  /** The averages of the windows, and the days with a value in each. */
+  before: number;
+  after: number;
+  daysBefore: number;
+  daysAfter: number;
+  /** `after` − `before`, in the number's own unit. */
+  difference: number;
+  /** Of a quantity, against `before`; `null` for a reading or a `before` of zero. */
+  differencePercent: number | null;
+  /**
+   * The chance of a change this large by itself: measured in the spread of the changes at the
+   * ordinary dates of the history (a placebo test), so the seasons, the trends and the days
+   * that follow each other are in it. `null` — too little history to tell.
+   */
+  p: number | null;
+  /** `p` corrected for the number of numbers compared (Benjamini–Hochberg). */
+  q: number | null;
+  /** Changed beyond what ordinary weeks do. */
+  changed: boolean;
+  /** The values of the windows, for the chart around the date. */
+  values: { day: LocalDate; value: number }[];
+}
+
+export interface BeforeAfterResult {
+  event: BeforeAfterEvent;
+  /** Calendar days after the event in its window so far (an event of last week has few). */
+  daysAfter: number;
+  /** Enough days after the event to compare; otherwise `changes` is empty. */
+  enough: boolean;
+  /** The changed numbers first, then by `p`. */
+  changes: BeforeAfterChange[];
+}
+
+export interface BeforeAfter {
+  weeks: number;
+  results: BeforeAfterResult[];
+}
+
+export const beforeAfterQuerySchema = z.object({
+  weeks: z.coerce
+    .number()
+    .int()
+    .refine((value) => (BEFORE_AFTER_WEEKS as readonly number[]).includes(value))
+    .default(4),
+});
+export type BeforeAfterQuery = z.infer<typeof beforeAfterQuerySchema>;
+
 // --- People ---
 
 /** Something a section keeps about a person: a gift idea of the wishlist. */

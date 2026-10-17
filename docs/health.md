@@ -35,7 +35,8 @@ Angular.
    Settings → AI → "What the AI sees" (`moduleConnections`). A section with a connection of its
    own is kept out of everything the shared connection gets — the assistant's tools, the digest,
    the stories of Life, `core_day` (`AiService.hiddenFromShared`); a link of Health that reaches
-   the assistant through a tool across the sections (mood insights, a project) must check it too.
+   the assistant through a tool across the sections (mood insights, a project, before and after)
+   must check it too.
 3. **Periods in `LinksService`** (`registerPeriods`) — "a medication from … to …", "a diagnosis
    since …"; Psychology lays them over the mood.
 4. **`AutomationsService.runAction()`** — a recommendation becomes a task or a reminder through

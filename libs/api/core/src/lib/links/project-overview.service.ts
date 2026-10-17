@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
   addDays,
+  BeforeAfter,
+  BeforeAfterQuery,
   Correlations,
   CorrelationsQuery,
   MoodInsights,
@@ -15,6 +17,7 @@ import {
 import { ProjectsService } from '../projects/projects.service';
 import { UsersService } from '../users/users.service';
 import { LinksService, Period, ProjectRef } from './links.service';
+import { beforeAfter } from './before-after/before-after';
 import { correlations } from './correlations/correlations';
 import { moodInsights } from './mood-insights';
 import { lastMonths, monthOf } from './project-months';
@@ -117,5 +120,33 @@ export class ProjectOverviewService {
       (metric) => !hidden.includes(metric.module),
     );
     return correlations(metrics, period, query.target);
+  }
+
+  /**
+   * Every daily number before and after the dates a life may have changed at (see beforeAfter):
+   * the periods of the last two years, with a year more of history to compare with. The
+   * `hidden` sections are left out, their periods too.
+   */
+  async beforeAfter(
+    userId: string,
+    query: BeforeAfterQuery,
+    hidden: string[] = [],
+  ): Promise<BeforeAfter> {
+    const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
+    const today = zonedDateTime(new Date(), timeZone).date;
+    const range = { from: toLocalDate(addDays(parseLocalDate(today), -1095)), to: today };
+    const recent = toLocalDate(addDays(parseLocalDate(today), -730));
+    const periods = (await this.links.periodsBetween(userId, { from: recent, to: today })).filter(
+      (period) => !hidden.includes(period.module),
+    );
+    if (!periods.length) {
+      return { weeks: query.weeks, results: [] };
+    }
+    const metrics = (await this.links.dailyMetrics(userId, range)).filter(
+      (metric) => !hidden.includes(metric.module),
+    );
+    const result = beforeAfter(metrics, periods, range, query.weeks);
+    // A period that began before the two years can still have ended within them.
+    return { ...result, results: result.results.filter((item) => item.event.on >= recent) };
   }
 }

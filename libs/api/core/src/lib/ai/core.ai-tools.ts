@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
   lifeDayQuerySchema,
+  beforeAfterQuerySchema,
   correlationsQuerySchema,
   moodInsightsQuerySchema,
   projectInputSchema,
@@ -207,6 +208,53 @@ export class CoreAiTools implements OnModuleInit {
               slope,
             })),
           regression: found.regression,
+        };
+      },
+    });
+    this.ai.registerTool({
+      name: 'core_before_after',
+      module: 'life',
+      description:
+        'How the daily numbers of the sections changed at the dates a life may have changed at — ' +
+        'the start or the end of a period of Health (a mental-health diagnosis, a medication ' +
+        'prescribed by a psychiatrist or a psychotherapist): the average of `weeks` weeks before ' +
+        'against the weeks after, with `p` — the chance of a change this large by itself, ' +
+        'measured in the spread of the changes at the ordinary dates of the history (a placebo ' +
+        'test: the seasons and trends are in it) — and `q` corrected ' +
+        'for the number of numbers. Only the numbers that `changed` are returned. `enough: ' +
+        'false` — too few days after the date yet. It is an observation, not a medical ' +
+        'judgement and not proof of a cause: say so, gently; suggest discussing it with the doctor.',
+      parameters: {
+        type: 'object',
+        properties: { weeks: { type: 'number', description: '2, 4 (default) or 8' } },
+      },
+      // Nothing of a section the AI must not see: Health hidden — no periods at all.
+      handler: async (userId, args) => {
+        const found = await this.overviews.beforeAfter(
+          userId,
+          beforeAfterQuerySchema.parse(args),
+          await this.ai.hiddenFromShared(userId),
+        );
+        return {
+          weeks: found.weeks,
+          results: found.results.map(({ event, daysAfter, enough, changes }) => ({
+            event: { title: event.title, kind: event.kind, edge: event.edge, on: event.on },
+            daysAfter,
+            enough,
+            changed: changes
+              .filter((change) => change.changed)
+              .map(({ key, label, unit, before, after, difference, differencePercent, p, q }) => ({
+                key,
+                label,
+                unit,
+                before,
+                after,
+                difference,
+                differencePercent,
+                p,
+                q,
+              })),
+          })),
         };
       },
     });
