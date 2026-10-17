@@ -291,7 +291,9 @@
     "games": "In games",
     "firstUse": "First at the computer",
     "lastUse": "Last at the computer",
-    "lateGames": "In games late at night (23–4)"
+    "lateGames": "In games late at night (23–4)",
+    "browser": "In the browser",
+    "site": "On a site"
   },
   "usage": {
     "seconds": "at the computer"

@@ -46,12 +46,18 @@ describe('DeviceToolsService', () => {
     device(service, 'd1', 'u1', 'Chrome');
     device(service, 'd2', 'u1', 'Edge');
     device(service, 'd3', 'u2', 'Firefox');
+    // The device used last wins: a moment apart, as two uses within one millisecond tie.
+    const now = Date.now();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(now + 1_000);
     service.markActive('d1');
     expect(await service.call('u1', 'browser_current_page', {})).toBe('Chrome');
+    vi.setSystemTime(now + 2_000);
     service.markActive('d2');
     expect(await service.call('u1', 'browser_current_page', {})).toBe('Edge');
     service.disconnected('d1');
     service.disconnected('d2');
     await expect(service.call('u1', 'browser_current_page', {})).rejects.toThrow('No device');
+    vi.useRealTimers();
   });
 });

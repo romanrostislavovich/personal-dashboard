@@ -52,9 +52,10 @@ export function beforeAfter(
 export function eventsOf(periods: TimelinePeriod[], today: LocalDate): BeforeAfterEvent[] {
   const events = new Map<string, BeforeAfterEvent>();
   for (const period of periods) {
+    // A period of one day (an event of a life) is one date, not a start and an end.
     const edges: [BeforeAfterEvent['edge'], LocalDate | null][] = [
       ['start', period.from],
-      ['end', period.to],
+      ['end', period.to === period.from ? null : period.to],
     ];
     for (const [edge, on] of edges) {
       if (on && on <= today) {

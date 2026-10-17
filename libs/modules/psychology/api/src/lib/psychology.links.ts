@@ -8,16 +8,17 @@ import {
   QUESTIONNAIRES,
   toLocalDate,
 } from '@pd/contracts';
-import { and, asc, eq, gte, lte } from 'drizzle-orm';
-import { psychologyAssessments } from './psychology.schema';
+import { and, asc, eq, gte, isNotNull, lte, or, isNull } from 'drizzle-orm';
+import { psychologyAssessments, psychologyEvents } from './psychology.schema';
 
 /** The questionnaires ask about the last two weeks: a score is of the 14 days up to its day. */
 const WEEKS_ASKED_DAYS = 14;
 
 /**
  * What psychology tells the other sections (see LinksService): its pages for the assistant's
- * links, and the scores of the questionnaires (WHO-5, GAD-7, PHQ-9) as daily numbers — each
- * over the two weeks it asks about, so the links engine compares it with those days.
+ * links, the scores of the questionnaires (WHO-5, GAD-7, PHQ-9) as daily numbers — each over
+ * the two weeks it asks about, so the links engine compares it with those days — and the dated
+ * events of a life as periods, the dates "before and after" compares around.
  */
 @Injectable()
 export class PsychologyLinks implements OnModuleInit {
@@ -27,6 +28,32 @@ export class PsychologyLinks implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    this.links.registerPeriods({
+      module: 'psychology',
+      periods: async (userId, range) => {
+        const e = psychologyEvents;
+        const rows = await this.db
+          .select({ title: e.title, from: e.startedOn, to: e.endedOn })
+          .from(e)
+          .where(
+            and(
+              eq(e.userId, userId),
+              isNotNull(e.startedOn),
+              lte(e.startedOn, range.to),
+              or(isNull(e.endedOn), gte(e.endedOn, range.from)),
+            ),
+          );
+        // Only the dated ones: an age does not say which days. An event without an end is a day.
+        return rows.map((row) => ({
+          kind: 'event',
+          title: row.title,
+          subtitle: null,
+          from: row.from as string,
+          to: row.to ?? row.from,
+        }));
+      },
+    });
+
     this.links.registerDailyMetrics({
       module: 'psychology',
       metrics: async (userId, period) => {

@@ -241,6 +241,7 @@
   "links": {
     "dotaMatches": "Матчи Dota 2",
     "dotaLateMatches": "Матчи Dota 2 поздно ночью",
-    "dotaWins": "Выигранные матчи Dota 2"
+    "dotaWins": "Выигранные матчи Dota 2",
+    "steam": "В Steam"
   }
 }

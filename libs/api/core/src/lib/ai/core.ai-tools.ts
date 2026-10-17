@@ -216,8 +216,8 @@ export class CoreAiTools implements OnModuleInit {
       module: 'life',
       description:
         'How the daily numbers of the sections changed at the dates a life may have changed at — ' +
-        'the start or the end of a period of Health (a mental-health diagnosis, a medication ' +
-        'prescribed by a psychiatrist or a psychotherapist): the average of `weeks` weeks before ' +
+        'the start or the end of a period of Health (any diagnosis, any medication) and the ' +
+        'dated events of a life in Psychology: the average of `weeks` weeks before ' +
         'against the weeks after, with `p` — the chance of a change this large by itself, ' +
         'measured in the spread of the changes at the ordinary dates of the history (a placebo ' +
         'test: the seasons and trends are in it) — and `q` corrected ' +

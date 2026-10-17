@@ -1,12 +1,19 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DB, Database, LinksService, UsersService } from '@pd/api-core';
-import { addDays, LocalDate, parseLocalDate, toLocalDate, zonedToUtc } from '@pd/contracts';
+import {
+  addDays,
+  DailyMetric,
+  LocalDate,
+  parseLocalDate,
+  toLocalDate,
+  zonedToUtc,
+} from '@pd/contracts';
 import { and, eq, gte, isNotNull, isNull, lt, sql } from 'drizzle-orm';
 import { tasks } from './tasks.schema';
 
 /**
  * What tasks tell the other sections (see LinksService): the tasks of a project for its
- * overview, and the tasks done on every day.
+ * overview, and the tasks done and the tasks that came up on every day.
  */
 @Injectable()
 export class TasksLinks implements OnModuleInit {
@@ -58,17 +65,39 @@ export class TasksLinks implements OnModuleInit {
           .where(and(eq(tasks.userId, userId), await this.doneWithin(userId, period)))
           // By position: the time zone is a parameter (see ActivityService.stats).
           .groupBy(sql`1`);
-        return days.length
-          ? [
-              {
-                key: 'tasks.done',
-                module: 'tasks',
-                labelKey: 'tasks.links.done',
-                unit: 'count',
-                days: days.map(({ day: date, done }) => ({ day: date, value: done })),
-              },
-            ]
-          : [];
+        // The tasks that came up: what landed on the day, done or not.
+        const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
+        const created = await this.db
+          .select({
+            day: sql<LocalDate>`to_char(${tasks.createdAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`,
+            count: sql<number>`count(*)::int`,
+          })
+          .from(tasks)
+          .where(
+            and(
+              eq(tasks.userId, userId),
+              gte(tasks.createdAt, zonedToUtc({ date: period.from, time: '00:00' }, timeZone)),
+              lt(tasks.createdAt, zonedToUtc({ date: after, time: '00:00' }, timeZone)),
+            ),
+          )
+          .groupBy(sql`1`);
+        const metrics: DailyMetric[] = [
+          {
+            key: 'tasks.done',
+            module: 'tasks',
+            labelKey: 'tasks.links.done',
+            unit: 'count',
+            days: days.map(({ day: date, done }) => ({ day: date, value: done })),
+          },
+          {
+            key: 'tasks.created',
+            module: 'tasks',
+            labelKey: 'tasks.links.created',
+            unit: 'count',
+            days: created.map(({ day: date, count }) => ({ day: date, value: count })),
+          },
+        ];
+        return metrics.filter((metric) => metric.days.length);
       },
     });
 

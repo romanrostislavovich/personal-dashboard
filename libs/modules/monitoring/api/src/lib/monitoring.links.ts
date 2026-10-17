@@ -2,11 +2,14 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DB, Database, LinksService, ProjectOverviewService, UsersService } from '@pd/api-core';
 import {
   addDays,
+  DailyMetric,
+  LocalDate,
   Moment,
   parseLocalDate,
   ProjectChange,
   ProjectFact,
   toLocalDate,
+  zonedDateTime,
   zonedToUtc,
 } from '@pd/contracts';
 import { and, asc, eq, gte, inArray, lt } from 'drizzle-orm';
@@ -45,7 +48,8 @@ export interface IncidentReport {
 
 /**
  * Monitoring and the other sections (see LinksService): the uptime of a project's sites for its
- * overview, and what changed in the code before a site went down.
+ * overview, what changed in the code before a site went down, and the minutes the sites were
+ * down on every day (a day of an incident is a day of its own for the links of Life).
  */
 @Injectable()
 export class MonitoringLinks implements OnModuleInit {
@@ -93,6 +97,11 @@ export class MonitoringLinks implements OnModuleInit {
         ];
       },
     });
+    this.links.registerDailyMetrics({
+      module: 'monitoring',
+      metrics: (userId, period) => this.downDays(userId, period),
+    });
+
     this.links.registerPages([
       { module: 'monitoring', path: '/monitoring', description: 'sites: uptime, response, SSL' },
     ]);
@@ -158,6 +167,47 @@ export class MonitoringLinks implements OnModuleInit {
     const project = await this.overviews.ref(userId, projectId);
     const since = new Date(moment.getTime() - SUSPECT_HOURS * HOUR_MS);
     return (await this.links.projectChanges(userId, project, since, moment)).slice(0, MAX_CHANGES);
+  }
+
+  /** The minutes all the sites were down, on the day each incident began. */
+  private async downDays(
+    userId: string,
+    period: { from: LocalDate; to: LocalDate },
+  ): Promise<DailyMetric[]> {
+    const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
+    const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
+    const sites = await this.history(
+      userId,
+      zonedToUtc({ date: period.from, time: '00:00' }, timeZone),
+      zonedToUtc({ date: after, time: '00:00' }, timeZone),
+    );
+    const checked = sites.flatMap((site) => site.checks);
+    if (!checked.length) {
+      return [];
+    }
+    // Every day a check was made is a day of zero unless something went down.
+    const days = new Map<LocalDate, number>();
+    for (const check of checked) {
+      days.set(zonedDateTime(check.checkedAt, timeZone).date, 0);
+    }
+    for (const site of sites) {
+      for (const incident of incidentsOf(site.checks)) {
+        const day = zonedDateTime(incident.from, timeZone).date;
+        // Still down: until now.
+        const minutes =
+          minutesOf(incident) ?? Math.round((Date.now() - incident.from.getTime()) / 60_000);
+        days.set(day, (days.get(day) ?? 0) + minutes);
+      }
+    }
+    return [
+      {
+        key: 'monitoring.downMinutes',
+        module: 'monitoring',
+        labelKey: 'monitoring.links.downMinutes',
+        unit: 'count',
+        days: [...days].map(([day, value]) => ({ day, value })),
+      },
+    ];
   }
 
   /** The checks of the user's sites between two moments, oldest first, per site. */

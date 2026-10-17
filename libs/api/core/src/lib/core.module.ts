@@ -10,6 +10,7 @@ import { AiController } from './ai/ai.controller';
 import { AiTelegramAssistant } from './ai/ai-telegram.assistant';
 import { AiActionsService } from './ai/ai-actions.service';
 import { AiConversationsService } from './ai/ai-conversations.service';
+import { AiLinks } from './ai/ai.links';
 import { CoreAiTools } from './ai/core.ai-tools';
 import { MorningDigestJob } from './ai/morning-digest.job';
 import { MorningDigestService } from './ai/morning-digest.service';
@@ -196,6 +197,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     AiConversationsService,
     AiActionsService,
     CoreAiTools,
+    AiLinks,
     AiTelegramAssistant,
     MorningDigestService,
     MorningDigestJob,

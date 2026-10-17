@@ -444,5 +444,10 @@
       "notes": "Important",
       "contacts": "Call"
     }
+  },
+  "links": {
+    "intakes": "Medications taken",
+    "visits": "Visits to doctors",
+    "lab": "Lab result"
   }
 }
