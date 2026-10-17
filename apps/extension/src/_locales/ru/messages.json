@@ -77,9 +77,6 @@
   "forgotMaster": {
     "message": "Забыли? Ключ восстановления вводится на дашборде"
   },
-  "noVaultTitle": {
-    "message": "Хранилища ещё нет"
-  },
   "noVaultHint": {
     "message": "Создайте его на дашборде (раздел «Пароли»): выберите мастер-пароль и сохраните ключ восстановления. Потом разблокируйте здесь."
   },
@@ -294,7 +291,7 @@
     "message": "$1 мин"
   },
   "writingBadge": {
-    "message": "Замечаний: $1. Нажмите, чтобы AI переписал текст"
+    "message": "Замечаний: $1. Нажмите, чтобы увидеть список и исправления"
   },
   "writingKind_spelling": {
     "message": "Орфография"
@@ -463,5 +460,65 @@
   },
   "assistantPanel": {
     "message": "Открыть сбоку страницы"
+  },
+  "writingBadgeClean": {
+    "message": "Ошибок не найдено"
+  },
+  "writingBadgeIdle": {
+    "message": "Текст здесь проверяет ваш дашборд"
+  },
+  "writingIssues": {
+    "message": "Замечаний: $1"
+  },
+  "writingFixAll": {
+    "message": "Исправить всё"
+  },
+  "writingOffHere": {
+    "message": "Не на этом сайте"
+  },
+  "writingSettings": {
+    "message": "Настройки"
+  },
+  "writingTitle": {
+    "message": "Проверка текста"
+  },
+  "writingNotSetUp": {
+    "message": "LanguageTool на сервере ещё не настроен: владелец задаёт его в Настройки → Интеграции."
+  },
+  "writingOffEverywhere": {
+    "message": "Проверка выключена в настройках дашборда."
+  },
+  "writingTurnOn": {
+    "message": "Включить"
+  },
+  "writingOnSite": {
+    "message": "Проверять на $1"
+  },
+  "writingOnSiteHint": {
+    "message": "Орфография и грамматика подчёркиваются по мере ввода; значок в углу поля открывает исправления."
+  },
+  "writingOffSiteHint": {
+    "message": "Поля этого сайта не проверяются."
+  },
+  "vaultTitle": {
+    "message": "Пароли"
+  },
+  "vaultOpenHint": {
+    "message": "Хранилище открыто."
+  },
+  "vaultLockedHint": {
+    "message": "Заблокировано. Мастер-пароль спрашивается, только когда нужен логин — здесь или по ключу в поле входа."
+  },
+  "vaultLogins": {
+    "message": "Логины"
+  },
+  "unlockToSave": {
+    "message": "Разблокируйте, чтобы сохранить логин для $1."
+  },
+  "writingChecking": {
+    "message": "Проверяю…"
+  },
+  "writingOffFailed": {
+    "message": "Не удалось выключить проверку на этом сайте. Это можно сделать в настройках раздела «Текст» на дашборде."
   }
 }

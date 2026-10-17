@@ -16,7 +16,7 @@ const MIN_DIFFERENCE_PERCENT = 15;
  * A day without a quantity (hours, money, plays) is a day of zero; a day without a reading
  * (the temperature, a time of the day) is a day nobody measured, and is left out.
  */
-const READINGS: DailyMetric['unit'][] = ['degrees', 'clock', 'score'];
+const READINGS: DailyMetric['unit'][] = ['degrees', 'clock', 'score', 'percent'];
 /**
  * A reading is compared by the difference itself — percent of a temperature or of an hour of
  * the day means nothing: this much of it is worth showing.
@@ -25,6 +25,7 @@ const MIN_READING_DIFFERENCE: Partial<Record<DailyMetric['unit'], number>> = {
   degrees: 2,
   clock: 0.5,
   score: 0.5,
+  percent: 10,
 };
 
 const average = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -82,6 +83,7 @@ export function moodInsights(
           key: metric.key,
           module: metric.module,
           labelKey: metric.labelKey,
+          ...(metric.label ? { label: metric.label } : {}),
           unit: metric.unit,
           currency: metric.currency,
           onGoodDays: Math.round(onGoodDays * 100) / 100,

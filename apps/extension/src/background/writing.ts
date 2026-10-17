@@ -5,8 +5,9 @@ import {
   WritingCheckResult,
   WritingConfig,
   WritingRewriteMode,
+  WritingSettingsUpdate,
 } from '@pd/contracts';
-import { WritingState } from '../shared/messages';
+import { PageCommand, WritingPopupState, WritingState } from '../shared/messages';
 import { signedInClient } from './account';
 import { readJson, writeJson } from './storage';
 
@@ -62,6 +63,52 @@ export async function ignoreInWriting(word?: string, ruleId?: string): Promise<v
   }
 }
 
+/** For the popup: fresh from the server, as it may be just what the user came to change. */
+export async function writingPopupState(url: string): Promise<WritingPopupState | null> {
+  const site = siteOf(url);
+  if (!site) {
+    return null;
+  }
+  const config = await writingConfig({ fresh: true });
+  return {
+    available: config.canCheck,
+    enabled: config.enabled,
+    onSite: !config.ignoredSites.some((one) => isSiteOf(site, one)),
+  };
+}
+
+/** On or off on the site of this address (the popup's switch, the badge's "not here"). */
+export async function setWritingOnSite(url: string | undefined, on: boolean): Promise<void> {
+  const site = url ? siteOf(url) : null;
+  if (!site) {
+    return;
+  }
+  const config = await writingConfig({ fresh: true });
+  const others = config.ignoredSites.filter((one) => !isSiteOf(site, one));
+  await saveWriting({ ignoredSites: on ? others : [...others, site] });
+}
+
+/** Writing on or off everywhere, as in the settings of the dashboard. */
+export async function setWritingEnabled(on: boolean): Promise<void> {
+  await saveWriting({ enabled: on });
+}
+
+async function saveWriting(update: WritingSettingsUpdate): Promise<void> {
+  const config = await writingApi((await signedInClient()).api).saveSettings(update);
+  await writeJson(chrome.storage.local, CONFIG_KEY, { config, at: Date.now() } satisfies Cached);
+  await tellTabs();
+}
+
+/** The pages ask whether to check once: told to ask again. */
+async function tellTabs(): Promise<void> {
+  const command: PageCommand = { type: 'writing-changed' };
+  for (const tab of await chrome.tabs.query({})) {
+    if (tab.id !== undefined) {
+      void chrome.tabs.sendMessage(tab.id, command).catch(() => undefined);
+    }
+  }
+}
+
 /** A page that the settings leave alone gets nothing, whatever its script asks. */
 async function allowedOn(url: string | undefined): Promise<void> {
   if (!(await writingState(url)).check) {
@@ -69,9 +116,9 @@ async function allowedOn(url: string | undefined): Promise<void> {
   }
 }
 
-async function writingConfig(): Promise<WritingConfig> {
+async function writingConfig({ fresh = false } = {}): Promise<WritingConfig> {
   const cached = await readJson<Cached | null>(chrome.storage.local, CONFIG_KEY, null);
-  if (cached && Date.now() - cached.at < CONFIG_TTL_MS) {
+  if (!fresh && cached && Date.now() - cached.at < CONFIG_TTL_MS) {
     return cached.config;
   }
   const config = await writingApi((await signedInClient()).api).settings();

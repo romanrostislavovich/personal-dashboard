@@ -20,10 +20,11 @@ export function itemsView(popup: Popup): HTMLElement {
     h(
       'div',
       { class: 'toolbar' },
+      iconButton('back', t('back'), () => popup.home()),
       search,
-      iconButton('key', t('generator'), () => popup.generator(() => void popup.reload())),
+      iconButton('key', t('generator'), () => popup.generator(() => popup.vault())),
       iconButton('open', t('openDashboard'), () => popup.openDashboard('/vault')),
-      iconButton('lock', t('lock'), () => void ask({ type: 'lock' }).then(() => popup.reload())),
+      iconButton('lock', t('lock'), () => void ask({ type: 'lock' }).then(() => popup.home())),
     ),
     popup.state.offer ? offerBanner(popup, popup.state.offer) : null,
     list,
@@ -35,13 +36,13 @@ export function itemsView(popup: Popup): HTMLElement {
         class: 'button text small',
         type: 'button',
         text: t('neverSites'),
-        onClick: () => popup.neverSites(() => void popup.reload()),
+        onClick: () => popup.neverSites(() => popup.vault()),
       }),
       h('button', {
         class: 'button text small',
         type: 'button',
         text: t('assistant'),
-        onClick: () => popup.assistant(() => void popup.reload()),
+        onClick: () => popup.assistant(() => popup.vault()),
       }),
       h('button', {
         class: 'button text small',
@@ -189,7 +190,8 @@ function confirmOtherSite(
 }
 
 /** "Save the password for example.com?" — what was typed into the page and is not in the vault. */
-function offerBanner(popup: Popup, offer: SaveOffer): HTMLElement {
+/** A login typed into the page and not in the vault yet: save it, not now, never here. */
+export function offerBanner(popup: Popup, offer: SaveOffer): HTMLElement {
   const answer = (message: Parameters<typeof ask>[0], done?: string) =>
     void ask(message)
       .then(() => (done ? popup.toast(done) : undefined))

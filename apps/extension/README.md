@@ -1,8 +1,9 @@
 # Browser extension (Chrome)
 
-The password vault in the browser: it fills logins, offers to save the ones you type and makes
-strong passwords. It talks to your own dashboard; the vault is opened here with the master
-password, so the server still sees only ciphertext.
+The dashboard in the browser: the spelling and grammar of what you type (as Grammarly), the
+password vault — it fills logins, offers to save the ones you type and makes strong passwords —
+and the assistant beside the page. It talks to your own dashboard; the vault is opened here with
+the master password, so the server still sees only ciphertext.
 
 ## Install
 
@@ -21,14 +22,23 @@ dashboard has it, and the steps:
 
 Then pin it to the toolbar (the puzzle icon → the pin), click it, and sign in: the dashboard's
 address (`https://…`), your email and password, then the code if two-factor sign-in is on.
-Unlock with the master password; the vault itself is created on the dashboard (Passwords),
-where the recovery key is shown. Edge, Brave and other Chromium browsers load it the same way.
+The popup opens on the check of the writing on the page in front, the vault and the tools; the
+master password is asked only when a login is wanted (**Logins**, the key in a login field, or
+`Ctrl+Shift+L`). The vault itself is created on the dashboard (Passwords), where the recovery
+key is shown. Edge, Brave and other Chromium browsers load it the same way.
 
 For development: `npx nx build extension` → load `dist/apps/extension`, and press the reload
 arrow in `chrome://extensions` after a build.
 
 ## What it does
 
+- **Writing, as Grammarly.** A field you write in gets a badge in its corner as soon as it has
+  the focus. After a pause the text is checked by LanguageTool on your server: mistakes are
+  underlined (red — spelling, yellow — grammar…), a click on one opens its fixes, and the badge
+  shows their number. The badge opens the panel of the field: the mistakes in a list, **Fix
+  all**, the AI's rewrites of the whole text (shorter, politer…), **Not on this site**. The
+  popup switches the check on or off for the site in front. Passwords, logins, search boxes
+  and code editors are never checked; the text goes nowhere but your own server.
 - **In the fields themselves.** A login or password field of a sign-in gets a key icon, and
   the menu under it lists the logins of the site — a click fills the form. In a sign-up the
   password field offers **Use a strong password**: both fields are filled and the login is

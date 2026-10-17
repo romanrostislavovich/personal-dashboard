@@ -344,3 +344,36 @@ footer .who {
   color: var(--text);
   font: inherit;
 }
+
+/* The home view: the writing on this page, the vault, the tools. */
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-high);
+}
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.card-title svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--primary);
+}
+.card .toggle {
+  font-weight: 500;
+}
+.actions.start {
+  justify-content: flex-start;
+}
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

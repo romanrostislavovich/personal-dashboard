@@ -237,5 +237,10 @@
   },
   "usage": {
     "minutes": "min played"
+  },
+  "links": {
+    "dotaMatches": "Dota 2 matches",
+    "dotaLateMatches": "Dota 2 matches late at night",
+    "dotaWins": "Dota 2 matches won"
   }
 }

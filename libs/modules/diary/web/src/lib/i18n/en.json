@@ -165,7 +165,8 @@
     "text": "Text"
   },
   "links": {
-    "mood": "Mood"
+    "mood": "Mood",
+    "words": "Words in the diary"
   },
   "dayContext": {
     "title": "What the day was like"

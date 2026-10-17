@@ -77,9 +77,6 @@
   "forgotMaster": {
     "message": "Forgot it? The recovery key works on the dashboard"
   },
-  "noVaultTitle": {
-    "message": "No vault yet"
-  },
   "noVaultHint": {
     "message": "Create it on the dashboard (Passwords): choose a master password and keep the recovery key. Then unlock it here."
   },
@@ -294,7 +291,7 @@
     "message": "$1 min"
   },
   "writingBadge": {
-    "message": "Mistakes: $1. Click for the AI's rewrites"
+    "message": "Mistakes: $1. Click for the list and the fixes"
   },
   "writingKind_spelling": {
     "message": "Spelling"
@@ -463,5 +460,65 @@
   },
   "assistantPanel": {
     "message": "Open beside the page"
+  },
+  "writingBadgeClean": {
+    "message": "No mistakes found"
+  },
+  "writingBadgeIdle": {
+    "message": "The writing here is checked by your dashboard"
+  },
+  "writingIssues": {
+    "message": "Mistakes: $1"
+  },
+  "writingFixAll": {
+    "message": "Fix all"
+  },
+  "writingOffHere": {
+    "message": "Not on this site"
+  },
+  "writingSettings": {
+    "message": "Settings"
+  },
+  "writingTitle": {
+    "message": "Writing check"
+  },
+  "writingNotSetUp": {
+    "message": "LanguageTool is not set up on the server yet: the owner sets it in Settings → Integrations."
+  },
+  "writingOffEverywhere": {
+    "message": "The check is off in the settings of the dashboard."
+  },
+  "writingTurnOn": {
+    "message": "Turn on"
+  },
+  "writingOnSite": {
+    "message": "Check on $1"
+  },
+  "writingOnSiteHint": {
+    "message": "Spelling and grammar are underlined as you type; the badge in the corner of a field opens the fixes."
+  },
+  "writingOffSiteHint": {
+    "message": "Fields of this site are left alone."
+  },
+  "vaultTitle": {
+    "message": "Passwords"
+  },
+  "vaultOpenHint": {
+    "message": "The vault is open here."
+  },
+  "vaultLockedHint": {
+    "message": "Locked. The master password is asked only when a login is wanted — here, or from the key in a login field."
+  },
+  "vaultLogins": {
+    "message": "Logins"
+  },
+  "unlockToSave": {
+    "message": "Unlock to save the login for $1."
+  },
+  "writingChecking": {
+    "message": "Checking…"
+  },
+  "writingOffFailed": {
+    "message": "Could not turn it off for this site. It can be done in the settings of Writing on the dashboard."
   }
 }

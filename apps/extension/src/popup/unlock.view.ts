@@ -3,7 +3,10 @@ import { field, h, iconButton, t } from './dom';
 import type { Popup } from './popup';
 import { busy } from './sign-in.view';
 
-/** The vault is locked: the master password opens it. Forgotten — the dashboard has the way back. */
+/**
+ * The vault is locked and a login is wanted: the master password opens it. Forgotten — the
+ * dashboard has the way back.
+ */
 export function unlockView(popup: Popup): HTMLElement {
   const master = h('input', {
     type: 'password',
@@ -34,8 +37,15 @@ export function unlockView(popup: Popup): HTMLElement {
         });
       },
     },
-    accountBar(popup),
-    h('h1', { text: t('lockedTitle') }),
+    h(
+      'div',
+      { class: 'heading' },
+      iconButton('back', t('back'), () => popup.home()),
+      h('h1', { text: t('lockedTitle') }),
+    ),
+    popup.state.offer?.mode === 'locked'
+      ? h('p', { class: 'hint', text: t('unlockToSave', popup.state.offer.site) })
+      : null,
     field(t('masterPassword'), master),
     error,
     submit,
@@ -43,23 +53,6 @@ export function unlockView(popup: Popup): HTMLElement {
       class: 'button text',
       type: 'button',
       text: t('forgotMaster'),
-      onClick: () => popup.openDashboard('/vault'),
-    }),
-  );
-}
-
-/** Signed in, but the vault is not created yet: that is done on the dashboard. */
-export function noVaultView(popup: Popup): HTMLElement {
-  return h(
-    'section',
-    { class: 'view' },
-    accountBar(popup),
-    h('h1', { text: t('noVaultTitle') }),
-    h('p', { class: 'hint', text: t('noVaultHint') }),
-    h('button', {
-      class: 'button filled',
-      type: 'button',
-      text: t('openDashboard'),
       onClick: () => popup.openDashboard('/vault'),
     }),
   );

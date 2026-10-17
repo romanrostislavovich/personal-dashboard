@@ -297,7 +297,8 @@ reports })`: the account, the last refresh, its error, the expiry of the token w
   goes through the core. A module registers in `<module>.links.ts`: what it knows about a
   project (`registerProject`: facts for the project page `/projects/:id`, and the changes
   between two moments — commits before a site went down), a number for every day
-  (`registerDailyMetrics`: compared on the days of a good and a bad mood), the use of a
+  (`registerDailyMetrics`: compared on the days of a good and a bad mood, and every one with
+  every other by the links engine of Life → Links — `links/correlations/`), the use of a
   service by the name its payment has (`registerUsage`), what happened between two moments
   (`registerMoments`: the music of a focus session), the time spent on something by its name
   (`registerTimeSpent`: the focus time of a task and the time of the windows named after it),

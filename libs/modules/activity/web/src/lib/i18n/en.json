@@ -290,7 +290,8 @@
     "hours": "At the computer",
     "games": "In games",
     "firstUse": "First at the computer",
-    "lastUse": "Last at the computer"
+    "lastUse": "Last at the computer",
+    "lateGames": "In games late at night (23–4)"
   },
   "usage": {
     "seconds": "at the computer"

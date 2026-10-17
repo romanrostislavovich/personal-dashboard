@@ -12,6 +12,9 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  Correlations,
+  CorrelationsQuery,
+  correlationsQuerySchema,
   LifeDay,
   LifeDayQuery,
   lifeDayQuerySchema,
@@ -58,6 +61,15 @@ export class LifeController {
     @Query(new ZodValidationPipe(moodInsightsQuerySchema)) query: MoodInsightsQuery,
   ): Promise<MoodInsights> {
     return this.overviews.moodInsights(user.id, query);
+  }
+
+  /** How every daily number of the sections goes with every other, and what predicts one. */
+  @Get('correlations')
+  correlations(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(correlationsQuerySchema)) query: CorrelationsQuery,
+  ): Promise<Correlations> {
+    return this.overviews.correlations(user.id, query);
   }
 
   @Get('day')

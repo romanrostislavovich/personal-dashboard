@@ -199,7 +199,8 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   access tokens (read / read and change); devices add tools of their own (the page in front, the
   tabs, the window in front); the assistant beside the page in the extension's side panel
 - ✅ **Writing** — LanguageTool on the server and the AI's rewrites; the Writing page, the
-  browser extension in every field, the desktop app in every program (UI Automation)
+  browser extension in every field (as Grammarly: the badge from the focus, the panel with the
+  mistakes, "fix all", "not on this site"), the desktop app in every program (UI Automation)
 - ✅ **Screenshots** — the editor of Ctrl+Alt+S (arrows, boxes, text, numbers, pixelation), a
   folder of every computer synced with the server, the Screenshots page
 - ✅ **Music: share a song** — open it in YouTube Music or Spotify, copy the link, send it
@@ -548,9 +549,15 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   tools or core insights: modules do not depend on each other). The AI looks for such links across
   all modules (mood, music, activity, fitness, tasks) and shows them in the digest, e.g. "when you
   were sad, you listened to this music and did that"
-- **Causal correlation engine** — statistical cross-module correlation and regression analysis:
-  sleep duration and bedtime vs. next-day WakaTime/activity productivity, food delivery/impulse
-  expenses vs. GAD-7 anxiety scores, late-night gaming sessions vs. mood and habit streaks
+- ✅ **Causal correlation engine** — Life → Links: every daily number of every section against
+  every other, of the same day and of the next one (Spearman, corrected for the days' own trends
+  and for the number of pairs), "comes before" when it tells about tomorrow beyond tomorrow's own
+  yesterday, a regression of what predicts a chosen number; the strongest links in words, a
+  graph, a matrix and a pair day by day; the assistant's `core_correlations`. New daily numbers
+  for it: every habit, GAD-7 / PHQ-9 / WHO-5, games late at night, spending by category, commits,
+  words in the diary, Dota 2 matches
+- **Correlation engine: sleep** — the hours and the time of going to bed, once a source of sleep
+  (a phone, a watch) is connected
 - **Automations: more triggers and actions** — matches, a new release, a birthday today; a
   transaction or a diary mood as an action
 - **Automations: webhooks and a public API** with tokens

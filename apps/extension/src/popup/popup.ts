@@ -2,20 +2,29 @@ import { ask, ErrorCode, ExtensionError, PopupState } from '../shared/messages';
 import { h, t } from './dom';
 import { assistantView } from './assistant.view';
 import { generatorView } from './generator.view';
+import { homeView } from './home.view';
 import { itemsView } from './items.view';
 import { neverSitesView } from './never-sites.view';
 import { signInView } from './sign-in.view';
-import { noVaultView, unlockView } from './unlock.view';
+import { unlockView } from './unlock.view';
 
 /*
  * The popup: one view at a time, chosen by the state the background reports. It keeps nothing
  * itself — the session and the open vault are the background's (see background/background.ts).
+ *
+ * It opens on the home view (the writing on this page, the vault, the tools); the master
+ * password is asked only when the logins are wanted (`vault()`), or when the shortcut that
+ * fills a login opened the popup.
  */
 
 export interface Popup {
   state: PopupState;
   /** Asks the background for the state again and shows the view that fits it. */
   reload(): Promise<void>;
+  /** Back to the home view (the state asked again). */
+  home(): void;
+  /** The logins: the unlock form first when the vault is locked. */
+  vault(): void;
   show(view: HTMLElement): void;
   /** A short message at the bottom. */
   toast(text: string): void;
@@ -30,6 +39,8 @@ export interface Popup {
 
 const app = document.getElementById('app') as HTMLElement;
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
+/** Where the user is: the home view, or the vault (and its unlock form). */
+let place: 'home' | 'vault' = 'home';
 
 const popup: Popup = {
   state: {
@@ -38,6 +49,8 @@ const popup: Popup = {
     vault: 'signed-out',
     page: null,
     offer: null,
+    writing: null,
+    unlockAsked: false,
     update: { outdated: false, waitingReload: false },
   },
 
@@ -48,6 +61,19 @@ const popup: Popup = {
       popup.show(problemView(popup.errorText(error)));
       return;
     }
+    if (popup.state.unlockAsked) {
+      place = 'vault';
+    }
+    popup.show(viewFor(popup.state));
+  },
+
+  home() {
+    place = 'home';
+    void popup.reload();
+  },
+
+  vault() {
+    place = 'vault';
     popup.show(viewFor(popup.state));
   },
 
@@ -93,16 +119,16 @@ const popup: Popup = {
 };
 
 function viewFor(state: PopupState): HTMLElement {
-  switch (state.vault) {
-    case 'signed-out':
-      return signInView(popup);
-    case 'none':
-      return noVaultView(popup);
-    case 'locked':
-      return unlockView(popup);
-    case 'unlocked':
-      return itemsView(popup);
+  if (state.vault === 'signed-out') {
+    return signInView(popup);
   }
+  if (place === 'vault' && state.vault === 'locked') {
+    return unlockView(popup);
+  }
+  if (place === 'vault' && state.vault === 'unlocked') {
+    return itemsView(popup);
+  }
+  return homeView(popup);
 }
 
 /** A newer version: on the disk already (reload), or on the server only (download it). */

@@ -1,0 +1,211 @@
+<div class="links">
+  <div class="controls">
+    <mat-button-toggle-group
+      hideSingleSelectionIndicator
+      [value]="days()"
+      [attr.aria-label]="'life.period' | transloco"
+      (change)="days.set($event.value)"
+    >
+      @for (option of periods; track option) {
+        <mat-button-toggle [value]="option">
+          {{ 'life.mood.days' | transloco: { days: option } }}
+        </mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  </div>
+  <p class="caution">
+    <mat-icon>info</mat-icon>
+    <span>{{ 'life.links.caution' | transloco }}</span>
+  </p>
+
+  @if (data.isLoading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (data.error()) {
+    <p class="error">{{ 'life.links.failed' | transloco }}</p>
+  } @else if (data.value(); as found) {
+    @if (!strong().length) {
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <p class="hint">
+            {{ 'life.links.none' | transloco: { metrics: found.metrics.length } }}
+          </p>
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>insights</mat-icon>
+          <mat-card-title>{{ 'life.links.top.title' | transloco }}</mat-card-title>
+          <mat-card-subtitle>
+            {{
+              'life.links.top.hint'
+                | transloco: { links: strong().length, metrics: found.metrics.length }
+            }}
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <ul class="top">
+            @for (pair of listed(); track pair.a + pair.b + pair.lag) {
+              <li>
+                <button type="button" (click)="choose(pair)">
+                  <span class="dots">
+                    <span class="dot" [style.background]="color(pair.a)"></span>
+                    <span class="dot" [style.background]="color(pair.b)"></span>
+                  </span>
+                  <span class="text">
+                    <span>{{ sentence(pair) }}</span>
+                    <span class="meta">
+                      <span class="strength" [class]="strength(pair.rho)">
+                        {{ 'life.links.strength.' + strength(pair.rho) | transloco }}
+                        · ρ {{ pair.rho | number: '1.2-2' }}
+                      </span>
+                      · {{ 'life.links.days' | transloco: { days: pair.n } }}
+                      @if (leads(pair)) {
+                        ·
+                        <span class="leads" [matTooltip]="'life.links.leadsHint' | transloco">
+                          {{ 'life.links.leads' | transloco }}
+                        </span>
+                      }
+                    </span>
+                  </span>
+                  <span
+                    class="bar"
+                    [class.minus]="pair.rho < 0"
+                    [style.--width]="(pair.rho < 0 ? -pair.rho : pair.rho) * 100 + '%'"
+                  ></span>
+                </button>
+              </li>
+            }
+          </ul>
+          @if (strong().length > listed().length || showAll()) {
+            <button matButton (click)="showAll.set(!showAll())">
+              {{ (showAll() ? 'life.links.top.less' : 'life.links.top.all') | transloco }}
+            </button>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <div class="grid">
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>hub</mat-icon>
+            <mat-card-title>{{ 'life.links.graph.title' | transloco }}</mat-card-title>
+            <mat-card-subtitle>{{ 'life.links.graph.hint' | transloco }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <pd-correlation-graph
+              [metrics]="found.metrics"
+              [links]="strong()"
+              [target]="found.regression?.target ?? null"
+              (choose)="explain($event)"
+              (pick)="choose($event)"
+            />
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card appearance="outlined" id="pd-links-pair">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>scatter_plot</mat-icon>
+            <mat-card-title>{{ 'life.links.pair.title' | transloco }}</mat-card-title>
+            @if (pair(); as shown) {
+              <mat-card-subtitle>{{ sentence(shown.pair) }}</mat-card-subtitle>
+            }
+          </mat-card-header>
+          <mat-card-content>
+            @if (pair(); as shown) {
+              <pd-correlation-scatter [a]="shown.a" [b]="shown.b" [pair]="shown.pair" />
+              <dl class="numbers">
+                <dt>ρ</dt>
+                <dd>{{ shown.pair.rho | number: '1.2-2' }}</dd>
+                <dt>{{ 'life.links.pair.chance' | transloco }}</dt>
+                <dd>{{ shown.pair.q < 0.001 ? '< 0.1%' : (shown.pair.q | percent: '1.0-1') }}</dd>
+                <dt>{{ 'life.links.pair.days' | transloco }}</dt>
+                <dd>{{ shown.pair.n }}</dd>
+                @if (shown.pair.beyondItself !== null) {
+                  <dt>{{ 'life.links.pair.beyond' | transloco }}</dt>
+                  <dd>{{ shown.pair.beyondItself | number: '1.2-2' }}</dd>
+                }
+              </dl>
+              <p class="hint">
+                {{
+                  (shown.pair.lag ? 'life.links.pair.hintNext' : 'life.links.pair.hintSame')
+                    | transloco
+                }}
+              </p>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+
+    <mat-card appearance="outlined" id="pd-links-regression">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>functions</mat-icon>
+        <mat-card-title>{{ 'life.links.regression.title' | transloco }}</mat-card-title>
+        <mat-card-subtitle>{{ 'life.links.regression.hint' | transloco }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ 'life.links.regression.target' | transloco }}</mat-label>
+          <mat-select
+            [value]="found.regression?.target ?? target()"
+            (selectionChange)="target.set($event.value)"
+          >
+            @for (metric of targets(); track metric.key) {
+              <mat-option [value]="metric.key">{{ name(metric) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        @if (found.regression; as regression) {
+          <p class="hint">
+            {{
+              'life.links.regression.explained'
+                | transloco: { share: (regression.r2 | percent: '1.0-0'), days: regression.n }
+            }}
+          </p>
+          <div class="terms">
+            @for (term of regression.terms; track term.key + term.lag) {
+              <span class="term-name" [class.muted]="term.p >= 0.05">
+                {{ nameOf(term.key) }}
+                @if (term.lag) {
+                  <span class="muted">({{ 'life.links.dayBefore' | transloco }})</span>
+                }
+              </span>
+              <span class="term-bar">
+                <span
+                  [class.minus]="term.beta < 0"
+                  [class.muted]="term.p >= 0.05"
+                  [style.width.%]="barWidth(term.beta, regression.terms)"
+                ></span>
+              </span>
+              <span class="term-value" [class.muted]="term.p >= 0.05">
+                {{ term.beta > 0 ? '+' : '' }}{{ term.beta | number: '1.2-2' }}
+              </span>
+            }
+          </div>
+          <p class="hint">{{ 'life.links.regression.legend' | transloco }}</p>
+        } @else {
+          <p class="hint">{{ 'life.links.regression.few' | transloco }}</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    @if (strong().length) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>grid_on</mat-icon>
+          <mat-card-title>{{ 'life.links.matrix.title' | transloco }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <pd-correlation-matrix
+            [metrics]="found.metrics"
+            [correlations]="found.correlations"
+            (pick)="choose($event)"
+          />
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+</div>

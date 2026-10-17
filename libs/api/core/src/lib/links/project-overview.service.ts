@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
   addDays,
+  Correlations,
+  CorrelationsQuery,
   MoodInsights,
   parseLocalDate,
   ProjectFact,
@@ -13,6 +15,7 @@ import {
 import { ProjectsService } from '../projects/projects.service';
 import { UsersService } from '../users/users.service';
 import { LinksService, Period, ProjectRef } from './links.service';
+import { correlations } from './correlations/correlations';
 import { moodInsights } from './mood-insights';
 import { lastMonths, monthOf } from './project-months';
 
@@ -96,5 +99,23 @@ export class ProjectOverviewService {
   /** What goes with the days of a good mood and of a bad one (see moodInsights). */
   async moodInsights(userId: string, period: Period): Promise<MoodInsights> {
     return moodInsights(await this.links.dailyMetrics(userId, period), period);
+  }
+
+  /**
+   * How every daily number goes with every other (see correlations); the numbers of the
+   * `hidden` sections are left out (for the assistant: those its AI must not see).
+   */
+  async correlations(
+    userId: string,
+    query: CorrelationsQuery,
+    hidden: string[] = [],
+  ): Promise<Correlations> {
+    // Two years at most: enough to see a link, and the pairs stay quick to compare.
+    const earliest = toLocalDate(addDays(parseLocalDate(query.to), -730));
+    const period = { from: query.from < earliest ? earliest : query.from, to: query.to };
+    const metrics = (await this.links.dailyMetrics(userId, period)).filter(
+      (metric) => !hidden.includes(metric.module),
+    );
+    return correlations(metrics, period, query.target);
   }
 }

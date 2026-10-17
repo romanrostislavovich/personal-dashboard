@@ -3,7 +3,8 @@
   "tabs": {
     "day": "Day",
     "summary": "Summary",
-    "goals": "Goals"
+    "goals": "Goals",
+    "links": "Links"
   },
   "day": "Day",
   "previous": "The day before",
@@ -56,5 +57,58 @@
     "good": "Good days",
     "bad": "Bad days",
     "same": "Nothing differs noticeably between good and bad days."
+  },
+  "links": {
+    "weekend": "Weekend",
+    "caution": "Links show what goes together and what comes before what — not what causes what. A third thing (a busy week, an illness) can be behind both. The chance of an accident is corrected for the number of pairs compared and for the days' own trends.",
+    "failed": "Could not count the links. Please try later.",
+    "none": "No strong links yet among {{metrics}} daily numbers. They need weeks of data: mark the mood in the diary, keep the tracker on, and come back in a while.",
+    "days": "{{days}} days",
+    "sameDay": "Same day",
+    "nextDay": "next day",
+    "dayBefore": "the day before",
+    "together": "More {{a}} — more {{b}} the same day",
+    "against": "More {{a}} — less {{b}} the same day",
+    "thenMore": "After a day of more {{a}}, more {{b}} the next day",
+    "thenLess": "After a day of more {{a}}, less {{b}} the next day",
+    "leads": "comes before",
+    "leadsHint": "It tells about the next day even with that day's own yesterday held fixed (Granger's idea): a hint of the order, still not proof of a cause.",
+    "strength": {
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong"
+    },
+    "top": {
+      "title": "The strongest links",
+      "hint": "{{links}} strong links among {{metrics}} daily numbers. A click shows the pair day by day.",
+      "all": "Show all",
+      "less": "Show fewer"
+    },
+    "graph": {
+      "title": "The map of links",
+      "hint": "A line — the same day, an arrow — to the next day; the theme's colour — together, red — against. A click on a number explains it below."
+    },
+    "pair": {
+      "title": "A pair day by day",
+      "chance": "Chance of an accident",
+      "days": "Days compared",
+      "beyond": "Beyond its own yesterday",
+      "hintSame": "Each point is a day. The line is the trend that fits them best.",
+      "hintNext": "Each point is a day: across — that day, up — the next one. The line is the trend that fits them best."
+    },
+    "regression": {
+      "title": "What predicts a number",
+      "hint": "A regression: the numbers most linked to it together, each with the others held fixed.",
+      "target": "Number to explain",
+      "explained": "Together they explain {{share}} of its change from day to day ({{days}} days).",
+      "legend": "Bars: the change of the number, in its usual spreads, for one usual spread of the other, the rest held fixed. Faded — could be an accident (p ≥ 5%).",
+      "few": "Not enough days with this number and the numbers linked to it to fit a regression."
+    },
+    "matrix": {
+      "title": "All pairs",
+      "lag": "Which days are compared",
+      "hintSame": "Every pair of the same day; a dot marks a strong link. A click shows the pair.",
+      "hintNext": "A row's day against the column's next day; a dot marks a strong link."
+    }
   }
 }

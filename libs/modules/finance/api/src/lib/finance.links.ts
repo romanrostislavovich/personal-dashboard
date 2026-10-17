@@ -4,6 +4,10 @@ import { ProjectFact } from '@pd/contracts';
 import { TransactionsService } from './transactions/transactions.service';
 import { WishlistService } from './wishlist/wishlist.service';
 
+/** The categories of spending that get a daily number of their own, and the days one needs. */
+const CATEGORIES = 8;
+const CATEGORY_MIN_DAYS = 10;
+
 /**
  * What finance tells the other sections (see LinksService): the money of a project for its
  * overview, the money spent on every day (what goes with a good or a bad day), and the wishes
@@ -55,19 +59,39 @@ export class FinanceLinks implements OnModuleInit {
     this.links.registerDailyMetrics({
       module: 'finance',
       metrics: async (userId, period) => {
-        const { mainCurrency, byDay } = await this.transactions.expensesByDayInMain(userId, period);
-        return byDay.size
-          ? [
-              {
-                key: 'finance.spent',
-                module: 'finance',
-                labelKey: 'finance.links.spent',
-                unit: 'money',
-                currency: mainCurrency,
-                days: [...byDay].map(([day, value]) => ({ day, value })),
-              },
-            ]
-          : [];
+        const { mainCurrency, byDay, byCategory } = await this.transactions.expensesByDayInMain(
+          userId,
+          period,
+        );
+        if (!byDay.size) {
+          return [];
+        }
+        // The categories spent on most often: a rare one has too few days to compare.
+        const categories = [...byCategory]
+          .filter(([, days]) => days.size >= CATEGORY_MIN_DAYS)
+          .sort((a, b) => b[1].size - a[1].size)
+          .slice(0, CATEGORIES);
+        return [
+          {
+            key: 'finance.spent',
+            module: 'finance',
+            labelKey: 'finance.links.spent',
+            unit: 'money',
+            currency: mainCurrency,
+            days: [...byDay].map(([day, value]) => ({ day, value })),
+          },
+          ...categories.map(([category, days]) => ({
+            key: `finance.spent.${category.toLowerCase()}`,
+            module: 'finance',
+            labelKey: 'finance.links.spentOn',
+            label: category,
+            unit: 'money' as const,
+            currency: mainCurrency,
+            partOf: 'finance.spent',
+            // From the first day of all the spending: a day without this category is a zero.
+            days: [...byDay.keys()].map((day) => ({ day, value: days.get(day) ?? 0 })),
+          })),
+        ];
       },
     });
 
