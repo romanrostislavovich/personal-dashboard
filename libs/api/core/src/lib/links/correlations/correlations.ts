@@ -35,6 +35,22 @@ const MAX_TERMS = 6;
 const DAYS_PER_TERM = 10;
 /** A predictor is tried in the regression only when its own correlation is under this p. */
 const TERM_MAX_P = 0.2;
+/**
+ * A link to the next day is strong only when it holds with that day's own yesterday held fixed
+ * at least this much; below it, it only repeats the link of the same day.
+ */
+const MIN_BEYOND = 0.15;
+/**
+ * The season of a number: the average of the days this far before and after. It is taken away
+ * before comparing, so "more games and warmer in summer" is not a link — what is left is how a
+ * day differs from the weeks around it.
+ */
+const SEASON_DAYS = 14;
+/**
+ * Sections of what happens around the person (the weather, the calendar): compared with the
+ * person's numbers, never with each other — the sun and the temperature are physics.
+ */
+const SURROUNDINGS = new Set(['weather', 'life']);
 
 /** A day a number does not mean anything on is left out; a quantity's empty day is a zero. */
 const READINGS: DailyMetric['unit'][] = ['degrees', 'clock', 'score', 'percent'];
@@ -46,7 +62,10 @@ type Series = Map<LocalDate, number>;
 
 interface Prepared {
   metric: DailyMetric;
+  /** The values as they were: for the page's charts. */
   series: Series;
+  /** Each value less its season (see SEASON_DAYS): what the links are counted on. */
+  daily: Series;
   /** The correlation of a day with the day before: how slowly the number changes. */
   auto: number;
 }
@@ -56,8 +75,10 @@ interface Prepared {
  * and of the next one, with what predicts a chosen number when the others are held fixed.
  *
  * It finds what goes together and what comes before what; that is not proof that one causes
- * the other — the page says so. Two things keep chance out: the p-values allow for the days'
- * own trends (see effectiveDays), and they are corrected for the number of pairs compared.
+ * the other — the page says so. Several things keep chance out: the seasons are taken away
+ * (see SEASON_DAYS), the p-values allow for the days' own trends (see effectiveDays) and are
+ * corrected for the number of pairs compared, and a link to the next day must hold beyond that
+ * day's own yesterday (see MIN_BEYOND).
  */
 export function correlations(
   metrics: DailyMetric[],
@@ -74,7 +95,10 @@ export function correlations(
   const all: Correlation[] = found.map((pair, index) => ({
     ...pair,
     q: round(q[index], 4),
-    strong: q[index] < MAX_Q && Math.abs(pair.rho) >= MIN_RHO,
+    strong:
+      q[index] < MAX_Q &&
+      Math.abs(pair.rho) >= MIN_RHO &&
+      (pair.lag === 0 || Math.abs(pair.beyondItself ?? 0) >= MIN_BEYOND),
   }));
   all.sort((a, b) => Number(b.strong) - Number(a.strong) || Math.abs(b.rho) - Math.abs(a.rho));
 
@@ -107,7 +131,32 @@ function prepare(metric: DailyMetric, days: LocalDate[]): Prepared {
       }
     }
   }
-  return { metric, series, auto: autocorrelation(series, days) };
+  const daily = withoutSeason(series, days);
+  return { metric, series, daily, auto: autocorrelation(daily, days) };
+}
+
+/** Each value less the average of its own values within SEASON_DAYS around it. */
+function withoutSeason(series: Series, days: LocalDate[]): Series {
+  const values = days.map((day) => series.get(day));
+  const result: Series = new Map();
+  days.forEach((day, index) => {
+    const value = values[index];
+    if (value === undefined) {
+      return;
+    }
+    let sum = 0;
+    let count = 0;
+    const last = Math.min(days.length - 1, index + SEASON_DAYS);
+    for (let i = Math.max(0, index - SEASON_DAYS); i <= last; i++) {
+      const near = values[i];
+      if (near !== undefined) {
+        sum += near;
+        count++;
+      }
+    }
+    result.set(day, value - sum / count);
+  });
+  return result;
 }
 
 function autocorrelation(series: Series, days: LocalDate[]): number {
@@ -130,7 +179,7 @@ function pairs(prepared: Prepared[]): Pair[] {
   const sorted = [...prepared].sort((a, b) => a.metric.key.localeCompare(b.metric.key));
   for (const a of sorted) {
     for (const b of sorted) {
-      if (a === b || related(a.metric, b.metric)) {
+      if (a === b || related(a.metric, b.metric) || surroundings(a.metric, b.metric)) {
         continue;
       }
       // Of the same day, a pair once; of the next day, both ways round.
@@ -148,6 +197,11 @@ function pairs(prepared: Prepared[]): Pair[] {
   return result;
 }
 
+/** Two numbers of what happens around the person: their link is not about the person. */
+function surroundings(a: DailyMetric, b: DailyMetric): boolean {
+  return SURROUNDINGS.has(a.module) && SURROUNDINGS.has(b.module);
+}
+
 /** A number and a part of it go together by themselves. */
 function related(a: DailyMetric, b: DailyMetric): boolean {
   return a.partOf === b.key || b.partOf === a.key;
@@ -158,15 +212,15 @@ function compare(a: Prepared, b: Prepared, lag: 0 | 1): Pair | null {
   const y: number[] = [];
   // For a lag: b of the same day as a, held fixed in beyondItself.
   const z: number[] = [];
-  for (const [day, value] of a.series) {
+  for (const [day, value] of a.daily) {
     const next = lag ? shift(day, 1) : day;
-    const later = b.series.get(next);
+    const later = b.daily.get(next);
     if (later === undefined) {
       continue;
     }
     x.push(value);
     y.push(later);
-    z.push(b.series.get(day) ?? NaN);
+    z.push(b.daily.get(day) ?? NaN);
   }
   if (x.length < MIN_DAYS) {
     return null;
@@ -270,10 +324,10 @@ function rowsOf(
 ): number[][] {
   const series = terms.map((term) => prepared.find((item) => item.metric.key === term.key));
   const rows: number[][] = [];
-  for (const [day, value] of goal.series) {
+  for (const [day, value] of goal.daily) {
     const row = [value];
     terms.forEach((term, index) => {
-      row.push(series[index]?.series.get(term.lag ? shift(day, -1) : day) ?? NaN);
+      row.push(series[index]?.daily.get(term.lag ? shift(day, -1) : day) ?? NaN);
     });
     if (row.every((cell) => !Number.isNaN(cell))) {
       rows.push(row);
