@@ -200,10 +200,13 @@ export class PsychologyService {
     );
     const days = mood?.days ?? [];
     // The treatment Health tells, through the core: Psychology does not know Health.
-    const periods = (await this.links.periodsBetween(userId, period)).map((item) => ({
-      ...item,
-      mood: moodDuring(days, item.from, item.to, period),
-    }));
+    // Only the treatment of the mind: the rest of Health, and its own events, are not for here.
+    const periods = (await this.links.periodsBetween(userId, period))
+      .filter((item) => item.mind)
+      .map((item) => ({
+        ...item,
+        mood: moodDuring(days, item.from, item.to, period),
+      }));
     return { ...moodPatterns(days, events, period), periods };
   }
 }

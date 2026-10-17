@@ -1,5 +1,5 @@
 import { HealthRecord } from '@pd/contracts';
-import { mindPeriods } from './health.links';
+import { healthPeriods, labMetrics, visitsMetric } from './health.links';
 import { healthHits } from './health.search';
 
 const record: HealthRecord = {
@@ -23,10 +23,14 @@ const record: HealthRecord = {
   intakes: [],
 };
 
-describe('mindPeriods', () => {
-  it('tells the treatment of the mind only, still going on or over', () => {
-    const periods = mindPeriods(record, { from: '2019-01-01', to: '2026-12-31' });
-    expect(periods).toEqual([
+describe('healthPeriods', () => {
+  it('tells every period, the treatment of the mind marked, still going on or over', () => {
+    const periods = healthPeriods(record, { from: '2019-01-01', to: '2026-12-31' });
+    expect(
+      periods
+        .filter((period) => period.mind)
+        .map(({ kind, title, subtitle, from, to }) => ({ kind, title, subtitle, from, to })),
+    ).toEqual([
       {
         kind: 'medication',
         title: 'Escitalopram',
@@ -45,8 +49,74 @@ describe('mindPeriods', () => {
     ]);
   });
 
+  it('tells the rest of the history too, not as the mind', () => {
+    const periods = healthPeriods(record, { from: '2019-01-01', to: '2026-12-31' });
+    expect(periods.filter((period) => !period.mind).map((period) => period.title)).toEqual([
+      'Salbutamol',
+      'J45 Asthma',
+    ]);
+  });
+
   it('leaves out what does not touch the range', () => {
-    expect(mindPeriods(record, { from: '2021-01-01', to: '2021-12-31' })).toEqual([]);
+    expect(
+      healthPeriods(record, { from: '2021-01-01', to: '2021-12-31' }).map((p) => p.title),
+    ).toEqual(['Salbutamol', 'J45 Asthma']);
+    expect(healthPeriods(record, { from: '2010-01-01', to: '2010-12-31' })).toEqual([]);
+  });
+});
+
+describe('the daily numbers of Health', () => {
+  it('counts the visits of a day', () => {
+    expect(visitsMetric(record, { from: '2026-01-01', to: '2026-12-31' }).days).toEqual([
+      { day: '2026-10-13', value: 2 },
+    ]);
+  });
+
+  it('makes every analyte a reading, in its canonical unit', () => {
+    const value = (name: string, number: number, unit: string, canonical: number | null) => ({
+      id: name,
+      name,
+      analyte: name.toLowerCase(),
+      value: number,
+      textValue: null,
+      unit,
+      refLow: null,
+      refHigh: null,
+      refText: null,
+      flag: null,
+      canonical:
+        canonical === null ? null : { value: canonical, unit: 'nmol/L', low: null, high: null },
+    });
+    const panel = (takenOn: string, values: ReturnType<typeof value>[]) => ({
+      id: takenOn,
+      takenOn,
+      laboratory: null,
+      country: null,
+      visitId: null,
+      documentId: null,
+      notes: null,
+      values,
+    });
+    const metrics = labMetrics(
+      {
+        ...record,
+        labPanels: [
+          panel('2026-03-01', [value('Vitamin D', 20, 'ng/mL', 50)]),
+          panel('2026-06-01', [value('Vitamin D', 125, 'nmol/L', 125)]),
+        ],
+      } as never,
+      { from: '2026-01-01', to: '2026-12-31' },
+    );
+    expect(metrics).toEqual([
+      expect.objectContaining({
+        label: 'Vitamin D (nmol/L)',
+        unit: 'score',
+        days: [
+          { day: '2026-03-01', value: 50 },
+          { day: '2026-06-01', value: 125 },
+        ],
+      }),
+    ]);
   });
 });
 

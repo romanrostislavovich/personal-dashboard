@@ -1,11 +1,30 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DB, Database, LinksService } from '@pd/api-core';
-import { ActivityFocusMusic, ActivityPeriod, ProjectFact } from '@pd/contracts';
-import { and, asc, eq, gt, isNotNull, lt } from 'drizzle-orm';
-import { activityDevices, activityFocusSessions, activityOutages } from './activity.schema';
+import {
+  ActivityFocusMusic,
+  ActivityPeriod,
+  addDays,
+  DailyMetric,
+  LocalDate,
+  parseLocalDate,
+  ProjectFact,
+  toLocalDate,
+  zonedToUtc,
+} from '@pd/contracts';
+import { and, asc, eq, gt, gte, isNotNull, lt, sql } from 'drizzle-orm';
+import {
+  activityDevices,
+  activityFocusSessions,
+  activityOutages,
+  activitySiteVisits,
+} from './activity.schema';
 import { ActivityService } from './activity.service';
 import { focusMusic, FocusWithPlays, timeByName, timeByTitle } from './focus-music';
 import { WellbeingService } from './wellbeing.service';
+
+/** The sites that get a daily number of their own, and the days one needs. */
+const SITES = 6;
+const SITE_MIN_DAYS = 10;
 
 const HOUR = 3600;
 /** Windows named after a task are looked for this far back. */
@@ -122,7 +141,8 @@ export class ActivityLinks implements OnModuleInit {
       metrics: async (userId, period) => {
         const stats = await this.activity.stats(userId, period);
         if (!stats.totalSeconds) {
-          return [];
+          // No tracker on the computer: the browser's sites may still be known.
+          return this.sites(userId, period);
         }
         const focus = await this.wellbeing.focusStats(userId, period);
         const games = await this.activity.gamesByDay(userId, period);
@@ -147,6 +167,7 @@ export class ActivityLinks implements OnModuleInit {
             unit: 'hours' as const,
             days: hours([...games].map(([day, seconds]) => ({ day, seconds }))),
           },
+          ...(await this.sites(userId, period)),
           {
             key: 'activity.lateGames',
             module: 'activity',
@@ -235,5 +256,67 @@ export class ActivityLinks implements OnModuleInit {
       });
     }
     return focusMusic(withPlays);
+  }
+
+  /**
+   * The time in the browser of every day (the extension's), and on each of the sites most
+   * often open — a part of it.
+   */
+  private async sites(userId: string, period: ActivityPeriod): Promise<DailyMetric[]> {
+    const timeZone = await this.activity.timeZone(userId);
+    const v = activitySiteVisits;
+    const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
+    const rows = await this.db
+      .select({
+        day: sql<LocalDate>`to_char(${v.startedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`,
+        site: v.site,
+        seconds: sql<number>`sum(${v.seconds})::int`,
+      })
+      .from(v)
+      .where(
+        and(
+          eq(v.userId, userId),
+          gte(v.startedAt, zonedToUtc({ date: period.from, time: '00:00' }, timeZone)),
+          lt(v.startedAt, zonedToUtc({ date: after, time: '00:00' }, timeZone)),
+        ),
+      )
+      // By position: the time zone is a parameter (see ActivityService.stats).
+      .groupBy(sql`1`, v.site);
+    if (!rows.length) {
+      return [];
+    }
+    const total = new Map<LocalDate, number>();
+    const bySite = new Map<string, Map<LocalDate, number>>();
+    for (const row of rows) {
+      total.set(row.day, (total.get(row.day) ?? 0) + row.seconds);
+      const days = bySite.get(row.site) ?? new Map<LocalDate, number>();
+      days.set(row.day, row.seconds);
+      bySite.set(row.site, days);
+    }
+    const hours = (days: Map<LocalDate, number>, all: Iterable<LocalDate>) =>
+      [...all].map((day) => ({ day, value: (days.get(day) ?? 0) / 3600 }));
+    // The sites open on the most days: a rare one has too few days to compare.
+    const top = [...bySite]
+      .filter(([, days]) => days.size >= SITE_MIN_DAYS)
+      .sort((a, b) => b[1].size - a[1].size)
+      .slice(0, SITES);
+    return [
+      {
+        key: 'activity.browser',
+        module: 'activity',
+        labelKey: 'activity.links.browser',
+        unit: 'hours',
+        days: hours(total, total.keys()),
+      },
+      ...top.map(([site, days]) => ({
+        key: `activity.site.${site}`,
+        module: 'activity',
+        labelKey: 'activity.links.site',
+        label: site,
+        unit: 'hours' as const,
+        partOf: 'activity.browser',
+        days: hours(days, total.keys()),
+      })),
+    ];
   }
 }

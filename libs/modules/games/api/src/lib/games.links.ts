@@ -11,8 +11,8 @@ const MIN_NAME = 4;
 /**
  * What games tell the other sections (see LinksService): the play time of Steam for the time
  * at the computer — also on a console or a computer without the tracker —, whether a game
- * that is paid for is played, and the matches of Dota 2 of every day (how many, how many won,
- * how many late at night).
+ * that is paid for is played, the hours of Steam and the matches of Dota 2 of every day (how
+ * many, how many won, how many late at night).
  */
 @Injectable()
 export class GamesLinks implements OnModuleInit {
@@ -27,7 +27,10 @@ export class GamesLinks implements OnModuleInit {
   onModuleInit(): void {
     this.links.registerDailyMetrics({
       module: 'games',
-      metrics: (userId, period) => this.dotaDays(userId, period),
+      metrics: async (userId, period) => [
+        ...(await this.dotaDays(userId, period)),
+        ...(await this.steamDays(userId, period)),
+      ],
     });
 
     this.computers.register({
@@ -71,6 +74,28 @@ export class GamesLinks implements OnModuleInit {
     this.links.registerPages([
       { module: 'games', path: '/games', description: 'Steam, Dota 2 and WoW accounts' },
     ]);
+  }
+
+  /** The hours of Steam of every day, on any computer or console. */
+  private async steamDays(
+    userId: string,
+    period: { from: LocalDate; to: LocalDate },
+  ): Promise<DailyMetric[]> {
+    const perDay = new Map<LocalDate, number>();
+    for (const { day, minutes } of await this.play.days(userId, period.from, period.to)) {
+      perDay.set(day, (perDay.get(day) ?? 0) + minutes);
+    }
+    return perDay.size
+      ? [
+          {
+            key: 'games.steam',
+            module: 'games',
+            labelKey: 'games.links.steam',
+            unit: 'hours',
+            days: [...perDay].map(([day, minutes]) => ({ day, value: minutes / 60 })),
+          },
+        ]
+      : [];
   }
 
   /**

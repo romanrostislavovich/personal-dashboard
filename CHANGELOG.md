@@ -8,6 +8,12 @@ under **Updating**.
 
 ### Added
 
+- **Life → Links: every section** — Health joins with every medication and condition as a date
+  for "before and after" and with daily numbers (medications taken, visits, every lab analyte);
+  the dated events of Psychology are dates too; new daily numbers: the time in the browser and
+  on the sites most often open, the hours of Steam, the minutes the monitored sites were down,
+  the screenshots, the tasks that came up and the messages to the assistant. Psychology still
+  lays only the treatment of the mind over the mood.
 - **Life → Links: before and after** — at the start or the end of a period Health tells (a
   mental-health diagnosis, a medication of a psychiatrist or a psychotherapist), every daily
   number of the weeks before against the weeks after (2, 4 or 8), with a mini chart around the

@@ -11,5 +11,8 @@
   "more": "Show more",
   "download": "Download",
   "close": "Close",
-  "confirmDelete": "Delete the screenshot here and from the folders of every computer?"
+  "confirmDelete": "Delete the screenshot here and from the folders of every computer?",
+  "links": {
+    "taken": "Screenshots"
+  }
 }

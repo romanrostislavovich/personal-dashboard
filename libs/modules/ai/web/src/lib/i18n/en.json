@@ -122,5 +122,8 @@
     "month": "month",
     "of": "of {{limit}}",
     "cached": "{{percent}}% from cache"
+  },
+  "links": {
+    "messages": "Messages to the assistant"
   }
 }

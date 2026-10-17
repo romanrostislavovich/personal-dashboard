@@ -342,4 +342,9 @@ export interface TimelinePeriod {
   subtitle: string | null;
   from: LocalDate;
   to: LocalDate | null;
+  /**
+   * A treatment of the mind (a psychiatrist's medication, an ICD chapter F condition):
+   * Psychology lays only those over the mood. Not set — not a period of treatment.
+   */
+  mind?: boolean;
 }

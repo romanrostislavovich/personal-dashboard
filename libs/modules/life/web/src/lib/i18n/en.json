@@ -112,7 +112,7 @@
     },
     "beforeAfter": {
       "title": "Before and after",
-      "hint": "How your days changed at a date of Health: the weeks before against the weeks after.",
+      "hint": "How your days changed at a date of Health (a diagnosis, a medication) or an event of Psychology: the weeks before against the weeks after.",
       "event": "Date",
       "window": "Weeks on each side",
       "weeks": "{{weeks}} wk",
