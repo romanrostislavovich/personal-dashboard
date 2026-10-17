@@ -110,4 +110,67 @@ describe('correlations', () => {
     expect(few.metrics.map((item) => item.key)).toEqual([WEEKEND_METRIC]);
     expect(few.regression).toBeNull();
   });
+
+  describe('what is not a link', () => {
+    const YEAR = 365;
+    const year = { from: FROM, to: day(YEAR - 1) };
+    const noisy = noise(23);
+    const season = Array.from({ length: YEAR }, (_, i) => Math.sin((2 * Math.PI * i) / YEAR));
+    const yearly = (key: string, values: number[], unit: DailyMetric['unit'] = 'hours') => ({
+      ...metric(key, []),
+      unit,
+      days: values.map((value, index) => ({ day: day(index), value })),
+    });
+    // A slow common cause of both: each day like the day before.
+    const common: number[] = [];
+    season.forEach((_, i) => common.push((i ? 0.85 * common[i - 1] : 0) + noisy()));
+    const found = correlations(
+      [
+        // More games and warmer in summer, but day to day the two have nothing to do.
+        yearly(
+          'games.dotaMatches',
+          season.map((s) => 4 + 3 * s + noisy()),
+          'count',
+        ),
+        yearly(
+          'weather.temperature',
+          season.map((s) => 15 + 10 * s + noisy()),
+          'degrees',
+        ),
+        yearly(
+          'weather.sun',
+          season.map((s) => 8 + 4 * s + noisy()),
+        ),
+        // Two that go together on the same day only.
+        yearly(
+          'music.plays',
+          common.map((c) => 20 + 10 * c + noisy()),
+          'count',
+        ),
+        yearly(
+          'development.coding',
+          common.map((c) => 4 + 2 * c + noisy()),
+        ),
+      ],
+      year,
+    );
+    const pair = (a: string, b: string, lag: 0 | 1) =>
+      found.correlations.find((one) => one.a === a && one.b === b && one.lag === lag);
+
+    it('takes the seasons away: summer is not a link', () => {
+      expect(pair('games.dotaMatches', 'weather.temperature', 0)?.strong).toBe(false);
+    });
+
+    it('never compares the weather with the weather', () => {
+      expect(pair('weather.sun', 'weather.temperature', 0)).toBeUndefined();
+      expect(pair('weather.sun', 'weather.temperature', 1)).toBeUndefined();
+    });
+
+    it('keeps a link of the same day, not its echo on the next day', () => {
+      expect(pair('development.coding', 'music.plays', 0)?.strong).toBe(true);
+      const echo = pair('development.coding', 'music.plays', 1);
+      expect(Math.abs(echo?.rho ?? 0)).toBeGreaterThan(0.25);
+      expect(echo?.strong).toBe(false);
+    });
+  });
 });

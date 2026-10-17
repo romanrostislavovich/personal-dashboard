@@ -181,9 +181,15 @@ export interface Correlation {
    * tells about tomorrow's `b` more than today's `b` does (Granger's idea). `null` for lag 0.
    */
   beyondItself: number | null;
-  /** How much `b` changes for one unit of `a`, in their own units (least squares). */
+  /**
+   * How much `b` changes for one unit of `a`, in their own units (least squares), on how the
+   * days differ from the weeks around them.
+   */
   slope: number;
-  /** Strong and not an accident: q under the threshold, |rho| over it. */
+  /**
+   * Strong and not an accident: q under the threshold, |rho| over it, and for the next day —
+   * holding beyond that day's own yesterday.
+   */
   strong: boolean;
 }
 

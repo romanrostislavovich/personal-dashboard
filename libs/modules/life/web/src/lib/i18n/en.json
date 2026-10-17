@@ -60,7 +60,7 @@
   },
   "links": {
     "weekend": "Weekend",
-    "caution": "Links show what goes together and what comes before what — not what causes what. A third thing (a busy week, an illness) can be behind both. The chance of an accident is corrected for the number of pairs compared and for the days' own trends.",
+    "caution": "Links show what goes together and what comes before what — not what causes what. A third thing (a busy week, an illness) can be behind both. The seasons are taken away (each day is compared with the weeks around it, so “more games and warmer in summer” is not a link), and the chance of an accident is corrected for the number of pairs and for the days' own trends.",
     "failed": "Could not count the links. Please try later.",
     "none": "No strong links yet among {{metrics}} daily numbers. They need weeks of data: mark the mood in the diary, keep the tracker on, and come back in a while.",
     "days": "{{days}} days",
@@ -93,8 +93,8 @@
       "chance": "Chance of an accident",
       "days": "Days compared",
       "beyond": "Beyond its own yesterday",
-      "hintSame": "Each point is a day. The line is the trend that fits them best.",
-      "hintNext": "Each point is a day: across — that day, up — the next one. The line is the trend that fits them best."
+      "hintSame": "Each point is a day. The line is how the two change together from day to day, the seasons taken away.",
+      "hintNext": "Each point is a day: across — that day, up — the next one. The line is how the two change together from day to day, the seasons taken away."
     },
     "regression": {
       "title": "What predicts a number",

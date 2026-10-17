@@ -9,8 +9,10 @@ under **Updating**.
 ### Added
 
 - **Life → Links** — the links engine: every daily number of every section against every other,
-  of the same day and of the next one, with the chance of an accident corrected for the days'
-  own trends and for the number of pairs; "comes before" when a number tells about tomorrow
+  of the same day and of the next one, with the seasons taken away (each day against the weeks
+  around it) and the chance of an accident corrected for the days' own trends and for the
+  number of pairs; the weather is not compared with the weather, and a link to the next day
+  counts only beyond that day's own yesterday; "comes before" when a number tells about tomorrow
   beyond tomorrow's own yesterday; what predicts a chosen number with the others held fixed (a
   regression). Shown as the strongest links in words, a graph, a matrix of every pair and one
   pair day by day; the assistant gets `core_correlations`. New daily numbers for it and for
