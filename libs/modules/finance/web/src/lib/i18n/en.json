@@ -271,6 +271,7 @@
   "links": {
     "income": "Income",
     "expense": "Expenses",
-    "spent": "Money spent"
+    "spent": "Money spent",
+    "spentOn": "Spent on a category"
   }
 }

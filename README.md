@@ -26,7 +26,9 @@ in one place on your own server, with notifications and an assistant in Telegram
 - 📖 **Life** — one feed of any day across every section, a "Wrapped" of the month or the year
   written by the AI, goals of a year counted from your data, questions to your own history
 - 🔗 **Sections that know each other** — a project with its hours, commits, money and uptime on
-  one page; what goes with your good and bad days; the last commit before a site went down;
+  one page; what goes with your good and bad days, and every daily number against every other
+  (Life → Links: correlations of the same and the next day, a graph, what predicts your mood);
+  the last commit before a site went down;
   subscriptions you pay for and do not use
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by
   22:00 → a reminder; describe the rule in a sentence and the AI builds it

@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
   lifeDayQuerySchema,
+  correlationsQuerySchema,
   moodInsightsQuerySchema,
   projectInputSchema,
   projectOverviewQuerySchema,
@@ -156,7 +157,61 @@ export class CoreAiTools implements OnModuleInit {
       handler: (userId, args) =>
         this.overviews.moodInsights(userId, moodInsightsQuerySchema.parse(args)),
     });
+    this.ai.registerTool({
+      name: 'core_correlations',
+      module: 'life',
+      description:
+        'Links between the daily numbers of all the sections: every one against every other, ' +
+        'of the same day (lag 0) and of the next day (lag 1: `a` of a day, `b` of the day ' +
+        'after), by Spearman correlation `rho`, with `q` — the p-value corrected for the ' +
+        'number of pairs (and for the days’ own trends). Only the strong links are returned. ' +
+        '`beyondItself` (lag 1) — the correlation with yesterday’s `b` held fixed: when it ' +
+        'stays strong, `a` comes before `b` and tells about it (Granger’s idea). ' +
+        '`regression` — what predicts `target` (the mood by default) with the others held ' +
+        'fixed: standardized `beta`, adjusted `r2`. It is still not proof of a cause: say so. ' +
+        'Use a long period (three months and more).',
+      parameters: {
+        type: 'object',
+        properties: {
+          ...PERIOD_PARAMETERS.properties,
+          target: {
+            type: 'string',
+            description: 'The key of the number to explain, e.g. diary.mood, development.coding',
+          },
+        },
+        required: PERIOD_PARAMETERS.required,
+      },
+      // The numbers of a section the AI must not see stay out (switched off, or its own model).
+      handler: async (userId, args) => {
+        const found = await this.overviews.correlations(
+          userId,
+          correlationsQuerySchema.parse(args),
+          await this.ai.hiddenFromShared(userId),
+        );
+        // The values of every day are for the page's charts, not for the model.
+        return {
+          from: found.from,
+          to: found.to,
+          metrics: found.metrics.map(({ key, label, unit, days }) => ({ key, label, unit, days })),
+          links: found.correlations
+            .filter((pair) => pair.strong)
+            .slice(0, 40)
+            .map(({ a, b, lag, rho, n, q, beyondItself, slope }) => ({
+              a,
+              b,
+              lag,
+              rho,
+              n,
+              q,
+              beyondItself,
+              slope,
+            })),
+          regression: found.regression,
+        };
+      },
+    });
     this.links.registerPages([
+      { module: 'life', path: '/life/links', description: 'links between the daily numbers' },
       { module: 'projects', path: '/projects', description: 'all projects' },
       {
         module: 'projects',

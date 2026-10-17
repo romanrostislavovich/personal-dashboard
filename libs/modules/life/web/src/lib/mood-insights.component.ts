@@ -66,7 +66,7 @@ function localDate(date: Date): string {
               <span class="head">{{ 'life.mood.bad' | transloco }}</span>
               <span class="head"></span>
               @for (item of data.insights; track item.key) {
-                <span>{{ item.labelKey | transloco }}</span>
+                <span>{{ item.label ?? (item.labelKey | transloco) }}</span>
                 @for (value of [item.onGoodDays, item.onBadDays]; track $index) {
                   <span class="number">
                     @switch (item.unit) {
@@ -81,6 +81,9 @@ function localDate(date: Date): string {
                       }
                       @case ('clock') {
                         {{ clock(value) }}
+                      }
+                      @case ('percent') {
+                        {{ value | number: '1.0-0' }}%
                       }
                       @default {
                         {{ value | number: '1.0-1' }}
@@ -157,7 +160,8 @@ export class MoodInsightsComponent {
       const minutes = Math.round(value * 60);
       return `${sign}${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`;
     }
-    return `${sign}${Math.round(value * 10) / 10}${item.unit === 'degrees' ? '°' : ''}`;
+    const suffix = item.unit === 'degrees' ? '°' : item.unit === 'percent' ? '%' : '';
+    return `${sign}${Math.round(value * 10) / 10}${suffix}`;
   }
 
   protected readonly periods = PERIODS;

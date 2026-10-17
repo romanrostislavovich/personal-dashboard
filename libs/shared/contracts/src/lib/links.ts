@@ -90,9 +90,19 @@ export interface DailyMetric {
   key: string;
   module: string;
   labelKey: string;
-  /** `clock` — a time of the day in hours (23.5 — half past eleven; over 24 — after midnight). */
-  unit: 'hours' | 'money' | 'count' | 'score' | 'degrees' | 'clock';
+  /** A name of the user's own (a habit, a category of spending), shown instead of `labelKey`. */
+  label?: string;
+  /**
+   * `clock` — a time of the day in hours (23.5 — half past eleven; over 24 — after midnight);
+   * `percent` — a share of the day's things, 0–100 (the matches won).
+   */
+  unit: 'hours' | 'money' | 'count' | 'score' | 'degrees' | 'clock' | 'percent';
   currency?: string;
+  /**
+   * The key of a number this one is a part of (the spending on food of all the spending): the
+   * two go together by themselves, so they are never compared.
+   */
+  partOf?: string;
   days: { day: LocalDate; value: number }[];
 }
 
@@ -101,6 +111,7 @@ export interface MoodInsight {
   key: string;
   module: string;
   labelKey: string;
+  label?: string;
   unit: DailyMetric['unit'];
   currency?: string;
   /** The average of the number on the days of each kind. */
@@ -132,6 +143,84 @@ export interface MoodInsights {
 
 export const moodInsightsQuerySchema = z.object({ from: z.iso.date(), to: z.iso.date() });
 export type MoodInsightsQuery = z.infer<typeof moodInsightsQuerySchema>;
+
+// --- Links between the daily numbers (Life → Links) ---
+
+/** A daily number as the links engine saw it: its days, aligned to the period. */
+export interface CorrelationMetric {
+  key: string;
+  module: string;
+  labelKey: string;
+  label?: string;
+  unit: DailyMetric['unit'];
+  currency?: string;
+  /** Days that have a value (a quantity's zero days inside its own range count). */
+  days: number;
+  /** The value of every day it has one: for the scatter of a pair. */
+  values: { day: LocalDate; value: number }[];
+}
+
+/**
+ * How two daily numbers go together. `lag` 1 — `a` of a day against `b` of the next one
+ * ("a short night, a slow next day"); 0 — of the same day (then `a` and `b` are in key order).
+ */
+export interface Correlation {
+  a: string;
+  b: string;
+  lag: 0 | 1;
+  /** Spearman's rank correlation, −1…1. */
+  rho: number;
+  /** Days both have a value on. */
+  n: number;
+  /** The chance of a correlation this strong by accident, the days' own trends allowed for. */
+  p: number;
+  /** `p` corrected for how many pairs were compared (Benjamini–Hochberg). */
+  q: number;
+  /**
+   * For a lag of a day: the correlation with `b` of the day before held fixed — whether `a`
+   * tells about tomorrow's `b` more than today's `b` does (Granger's idea). `null` for lag 0.
+   */
+  beyondItself: number | null;
+  /** How much `b` changes for one unit of `a`, in their own units (least squares). */
+  slope: number;
+  /** Strong and not an accident: q under the threshold, |rho| over it. */
+  strong: boolean;
+}
+
+/** What predicts a number, the others held fixed: a multiple regression. */
+export interface CorrelationRegression {
+  target: string;
+  /** Days with a value of the target and of every predictor. */
+  n: number;
+  /** The share of the target's day-to-day change the predictors explain, 0–1 (adjusted). */
+  r2: number;
+  terms: {
+    key: string;
+    /** `1` — of the day before the target's day. */
+    lag: 0 | 1;
+    /** Standardized coefficient: the change of the target, in its spreads, for one spread of this. */
+    beta: number;
+    p: number;
+  }[];
+}
+
+export interface Correlations {
+  from: LocalDate;
+  to: LocalDate;
+  metrics: CorrelationMetric[];
+  /** Every pair compared, the strongest first. */
+  correlations: Correlation[];
+  /** For `target` of the query; `null` — too few days, or no such number. */
+  regression: CorrelationRegression | null;
+}
+
+export const correlationsQuerySchema = z.object({
+  from: z.iso.date(),
+  to: z.iso.date(),
+  /** The number the regression explains; the mood when not given. */
+  target: z.string().max(120).optional(),
+});
+export type CorrelationsQuery = z.infer<typeof correlationsQuerySchema>;
 
 // --- People ---
 

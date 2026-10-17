@@ -126,6 +126,7 @@ export class ActivityLinks implements OnModuleInit {
         }
         const focus = await this.wellbeing.focusStats(userId, period);
         const games = await this.activity.gamesByDay(userId, period);
+        const lateGames = await this.activity.gamesByDay(userId, period, { late: true });
         const bounds = await this.activity.dayBounds(userId, period);
         const hours = (days: { day: string; seconds: number }[]) =>
           days
@@ -145,6 +146,14 @@ export class ActivityLinks implements OnModuleInit {
             labelKey: 'activity.links.games',
             unit: 'hours' as const,
             days: hours([...games].map(([day, seconds]) => ({ day, seconds }))),
+          },
+          {
+            key: 'activity.lateGames',
+            module: 'activity',
+            labelKey: 'activity.links.lateGames',
+            unit: 'hours' as const,
+            partOf: 'activity.games',
+            days: hours([...lateGames].map(([day, seconds]) => ({ day, seconds }))),
           },
           {
             key: 'activity.focus',

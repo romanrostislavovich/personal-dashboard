@@ -1,7 +1,8 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DB, Database, LinksService, ProjectRef } from '@pd/api-core';
-import { ProjectChange, ProjectFact } from '@pd/contracts';
-import { and, eq, gte, lte } from 'drizzle-orm';
+import { DailyMetric, ProjectChange, ProjectFact } from '@pd/contracts';
+import { and, eq, gte, lte, sum } from 'drizzle-orm';
+import { codeAccountDays } from './accounts/accounts.schema';
 import { AccountTokensService } from './accounts/account-tokens.service';
 import { GithubTokenService } from './github/github-token.service';
 import { GithubClient } from './github/github.client';
@@ -16,7 +17,7 @@ const MAX_REPOS = 3;
 /**
  * What development tells the other sections (see LinksService): the coding time and the
  * repositories of a project, the commits and releases before a moment (what changed before a
- * site went down), the coding hours of every day.
+ * site went down), the coding hours and the commits of every day.
  */
 @Injectable()
 export class DevelopmentLinks implements OnModuleInit {
@@ -49,17 +50,40 @@ export class DevelopmentLinks implements OnModuleInit {
               lte(wakatimeDays.day, to),
             ),
           );
-        return days.length
-          ? [
-              {
-                key: 'development.coding',
-                module: 'development',
-                labelKey: 'development.links.coding',
-                unit: 'hours',
-                days: days.map(({ day, seconds }) => ({ day, value: seconds / 3600 })),
-              },
-            ]
-          : [];
+        // Of every code account (GitHub, GitLab, Bitbucket) together.
+        const commits = await this.db
+          .select({
+            day: codeAccountDays.day,
+            commits: sum(codeAccountDays.commits).mapWith(Number),
+          })
+          .from(codeAccountDays)
+          .where(
+            and(
+              eq(codeAccountDays.userId, userId),
+              gte(codeAccountDays.day, from),
+              lte(codeAccountDays.day, to),
+            ),
+          )
+          .groupBy(codeAccountDays.day);
+        const metrics: DailyMetric[] = [
+          {
+            key: 'development.coding',
+            module: 'development',
+            labelKey: 'development.links.coding',
+            unit: 'hours',
+            days: days.map(({ day, seconds }) => ({ day, value: seconds / 3600 })),
+          },
+          {
+            key: 'development.commits',
+            module: 'development',
+            labelKey: 'development.links.commits',
+            unit: 'count',
+            days: commits
+              .filter((row) => row.commits > 0)
+              .map(({ day, commits: value }) => ({ day, value })),
+          },
+        ];
+        return metrics.filter((metric) => metric.days.length);
       },
     });
 

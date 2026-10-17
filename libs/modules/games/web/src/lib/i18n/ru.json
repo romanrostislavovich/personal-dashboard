@@ -237,5 +237,10 @@
   },
   "usage": {
     "minutes": "мин в игре"
+  },
+  "links": {
+    "dotaMatches": "Матчи Dota 2",
+    "dotaLateMatches": "Матчи Dota 2 поздно ночью",
+    "dotaWins": "Выигранные матчи Dota 2"
   }
 }

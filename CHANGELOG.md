@@ -8,6 +8,20 @@ under **Updating**.
 
 ### Added
 
+- **Life → Links** — the links engine: every daily number of every section against every other,
+  of the same day and of the next one, with the chance of an accident corrected for the days'
+  own trends and for the number of pairs; "comes before" when a number tells about tomorrow
+  beyond tomorrow's own yesterday; what predicts a chosen number with the others held fixed (a
+  regression). Shown as the strongest links in words, a graph, a matrix of every pair and one
+  pair day by day; the assistant gets `core_correlations`. New daily numbers for it and for
+  "what goes with good days": every habit, GAD-7 / PHQ-9 / WHO-5 over the two weeks they ask
+  about, games late at night, spending by category, commits, words in the diary, Dota 2 matches
+  (played, late at night, won).
+- **The extension as Grammarly** — the badge appears in a field as soon as it has the focus,
+  shows that the text is being checked, and opens the panel of the field: the mistakes in a
+  list, **Fix all**, the AI's rewrites, **Not on this site**. The popup opens on the check of
+  the page in front (on or off for its site), the vault and the tools: the master password is
+  asked only when a login is wanted. Logins and search boxes are no longer checked.
 - **Server keys in Settings → Integrations** — the Telegram bot's token, the Spotify app's
   Client ID and Secret and the LanguageTool server's address are set by the owner in their
   cards instead of `.env`: checked with the service before they are kept, applied at once

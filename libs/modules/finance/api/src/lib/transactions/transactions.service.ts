@@ -67,16 +67,24 @@ export class TransactionsService {
     return { mainCurrency: main, byCategory };
   }
 
-  /** Personal expenses per day in the main currency (the money of the projects is not a day's). */
+  /**
+   * Personal expenses per day in the main currency (the money of the projects is not a day's),
+   * in all and by category.
+   */
   async expensesByDayInMain(
     userId: string,
     period: { from: string; to: string },
-  ): Promise<{ mainCurrency: string; byDay: Map<string, number> }> {
+  ): Promise<{
+    mainCurrency: string;
+    byDay: Map<string, number>;
+    byCategory: Map<string, Map<string, number>>;
+  }> {
     const rows = await this.db
       .select({
         amount: transactions.amount,
         currency: transactions.currency,
         day: transactions.occurredOn,
+        category: transactions.category,
       })
       .from(transactions)
       .where(
@@ -93,10 +101,15 @@ export class TransactionsService {
       (r) => r.day,
     );
     const byDay = new Map<string, number>();
-    rows.forEach((row, index) =>
-      byDay.set(row.day, (byDay.get(row.day) ?? 0) + (values[index] ?? 0)),
-    );
-    return { mainCurrency: main, byDay };
+    const byCategory = new Map<string, Map<string, number>>();
+    rows.forEach((row, index) => {
+      const value = values[index] ?? 0;
+      byDay.set(row.day, (byDay.get(row.day) ?? 0) + value);
+      const days = byCategory.get(row.category) ?? new Map<string, number>();
+      days.set(row.day, (days.get(row.day) ?? 0) + value);
+      byCategory.set(row.category, days);
+    });
+    return { mainCurrency: main, byDay, byCategory };
   }
 
   private changed(userId: string): void {

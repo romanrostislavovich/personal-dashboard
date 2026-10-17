@@ -171,5 +171,10 @@
     "every": "Every",
     "days": "{{days}} days",
     "at": "At"
+  },
+  "links": {
+    "who5": "Well-being (WHO-5)",
+    "gad7": "Anxiety (GAD-7)",
+    "phq9": "Depression (PHQ-9)"
   }
 }

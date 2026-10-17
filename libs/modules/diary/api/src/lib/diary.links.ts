@@ -1,6 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DB, Database, LinksService, MOOD_METRIC } from '@pd/api-core';
-import { and, eq, gte, isNotNull, lte } from 'drizzle-orm';
+import { DailyMetric } from '@pd/contracts';
+import { and, eq, gte, lte } from 'drizzle-orm';
 import { diaryEntries } from './diary.schema';
 
 /**
@@ -19,25 +20,34 @@ export class DiaryLinks implements OnModuleInit {
       module: 'diary',
       metrics: async (userId, { from, to }) => {
         const days = await this.db
-          .select({ day: diaryEntries.day, mood: diaryEntries.mood })
+          .select({ day: diaryEntries.day, mood: diaryEntries.mood, words: diaryEntries.words })
           .from(diaryEntries)
           .where(
             and(
               eq(diaryEntries.userId, userId),
-              isNotNull(diaryEntries.mood),
               gte(diaryEntries.day, from),
               lte(diaryEntries.day, to),
             ),
           );
-        return [
+        const metrics: DailyMetric[] = [
           {
             key: MOOD_METRIC,
             module: 'diary',
             labelKey: 'diary.links.mood',
             unit: 'score',
-            days: days.map(({ day, mood }) => ({ day, value: mood ?? 0 })),
+            days: days.flatMap(({ day, mood }) => (mood === null ? [] : [{ day, value: mood }])),
+          },
+          {
+            key: 'diary.words',
+            module: 'diary',
+            labelKey: 'diary.links.words',
+            unit: 'count',
+            days: days
+              .filter(({ words }) => words > 0)
+              .map(({ day, words }) => ({ day, value: words })),
           },
         ];
+        return metrics.filter((metric) => metric.days.length);
       },
     });
 

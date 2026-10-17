@@ -367,15 +367,32 @@ export class ActivityService {
       .groupBy(sql`1`);
   }
 
-  /** The tracker's own time in games per day of a period. */
-  async gamesByDay(userId: string, period: ActivityPeriod): Promise<Map<LocalDate, number>> {
+  /**
+   * The tracker's own time in games per day of a period. `late` — only the time started from
+   * 23:00 to 04:00, counted to the evening it began on (a game at one at night is the day's).
+   */
+  async gamesByDay(
+    userId: string,
+    period: ActivityPeriod,
+    { late = false } = {},
+  ): Promise<Map<LocalDate, number>> {
     const timeZone = await this.timeZone(userId);
     const s = activitySpans;
-    const day = sql<LocalDate>`to_char(${s.startedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`;
+    const local = sql`(${s.startedAt} AT TIME ZONE ${timeZone})`;
+    const day = late
+      ? sql<LocalDate>`to_char(${local} - interval '4 hours', 'YYYY-MM-DD')`
+      : sql<LocalDate>`to_char(${local}, 'YYYY-MM-DD')`;
     const rows = await this.db
       .select({ day, app: s.app, seconds: sql<number>`sum(${s.seconds})::int` })
       .from(s)
-      .where(this.within(userId, period, timeZone))
+      .where(
+        and(
+          this.within(userId, period, timeZone),
+          late
+            ? sql`(extract(hour from ${local}) >= 23 or extract(hour from ${local}) < 4)`
+            : undefined,
+        ),
+      )
       .groupBy(sql`1`, s.app);
     const chosen = await this.chosenCategories(userId);
     const games = new Map<LocalDate, number>();
