@@ -1,11 +1,32 @@
+import { z } from 'zod';
+
 export interface NotificationSettings {
   telegram: {
-    /** The bot is configured on the server (TELEGRAM_BOT_TOKEN is set). */
+    /** The bot is running: the owner set its token (Settings → Integrations). */
     available: boolean;
     /** The user has linked their Telegram chat. */
     connected: boolean;
+    /** For the owner, who sets the bot; `null` for the others. */
+    bot: TelegramBotState | null;
   };
 }
+
+export interface TelegramBotState {
+  tokenSet: boolean;
+  /** The bot's name in Telegram, once it runs. */
+  username: string | null;
+  /** Why the bot with this token did not start. */
+  error: string | null;
+}
+
+/** `PUT /api/notifications/telegram/bot`: the token @BotFather gave (`123456:ABC…`). */
+export const telegramBotInputSchema = z.object({
+  token: z
+    .string()
+    .trim()
+    .regex(/^\d{5,}:[\w-]{30,}$/),
+});
+export type TelegramBotInput = z.infer<typeof telegramBotInputSchema>;
 
 export interface TelegramLinkResponse {
   /** A link like https://t.me/<bot>?start=<code>; open it and press "Start". */

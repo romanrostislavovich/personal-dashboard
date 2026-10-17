@@ -11,6 +11,7 @@ import {
   SoundcloudConnectInput,
   SoundcloudStats,
   SoundcloudTrackUpdate,
+  SpotifyAppInput,
 } from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
@@ -59,6 +60,15 @@ export class MusicApi {
 
   disconnectSpotify() {
     return fromCore(() => this.music.disconnectSpotify());
+  }
+
+  /** The owner sets the keys of the server's Spotify app. */
+  setSpotifyApp(input: SpotifyAppInput) {
+    return fromCore(() => this.music.setSpotifyApp(input));
+  }
+
+  removeSpotifyApp() {
+    return fromCore(() => this.music.removeSpotifyApp());
   }
 
   /** The user's own tracks on SoundCloud; `null` — not connected. */

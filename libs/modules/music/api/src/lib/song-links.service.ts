@@ -58,7 +58,7 @@ export class SongLinksService {
    * nothing, the song's page found on the web and checked by its title.
    */
   private async findOnSpotify(track: string, artist: string | null): Promise<string | null> {
-    const viaApi = this.spotify.isAvailable
+    const viaApi = (await this.spotify.isAvailable())
       ? await this.spotify.findTrack(track, artist).catch((error) => this.failed('Spotify', error))
       : null;
     return (

@@ -34,4 +34,13 @@ export class WritingApi {
   rewrite(input: WritingRewriteInput) {
     return fromCore(() => this.writing.rewrite(input));
   }
+
+  /** The owner sets the server's LanguageTool. */
+  setLanguageTool(url: string) {
+    return fromCore(() => this.writing.setLanguageTool({ url }));
+  }
+
+  removeLanguageTool() {
+    return fromCore(() => this.writing.removeLanguageTool());
+  }
 }

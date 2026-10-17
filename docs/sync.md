@@ -31,7 +31,6 @@ with the same email and password.
    SYNC_MODE=server
    SYNC_TOKEN=<the token>
    ENCRYPTION_KEY=<the same as on your computer>
-   TELEGRAM_BOT_TOKEN=<your bot>
    ```
    Start it with an **empty database** and without `ADMIN_EMAIL`: your user and all data arrive
    with the first sync. (In sync mode the first user is never created automatically: two users
@@ -46,7 +45,8 @@ with the same email and password.
    SYNC_INTERVAL_SECONDS=60
    SYNC_PEER_NAME=home-pc
    ```
-   `TELEGRAM_BOT_TOKEN` may stay set: the client only sends notifications, and the bot answers
+   The keys of the server (the Telegram bot, the Spotify app, LanguageTool — Settings →
+   Integrations) sync like the rest: the client only sends notifications, and the bot answers
    from the server. Connect Telegram (the "Connect" button in settings) on the server.
 4. Restart both. **Settings → Sync** shows the state; "Sync now" runs it right away.
 

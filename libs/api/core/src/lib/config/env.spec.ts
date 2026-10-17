@@ -21,11 +21,10 @@ describe('validateEnv', () => {
       ...valid,
       SYNC_TOKEN: '',
       SYNC_SERVER_URL: '',
-      TELEGRAM_BOT_TOKEN: '',
     });
     expect(env.SYNC_MODE).toBe('off');
     expect(env.SYNC_TOKEN).toBeUndefined();
-    expect(env.TELEGRAM_BOT_TOKEN).toBeUndefined();
+    expect(env.SYNC_SERVER_URL).toBeUndefined();
   });
 
   it('refuses to start without the secrets or with short ones', () => {

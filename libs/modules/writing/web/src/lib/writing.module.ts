@@ -14,6 +14,12 @@ export const writingModule: WebDashboardModule = {
     en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
+  integrations: [
+    {
+      id: 'writing.language-tool',
+      loadComponent: () => import('./writing.integration').then((m) => m.WritingIntegration),
+    },
+  ],
   // In the desktop app: the fields of every program are checked too.
   loadStart: async () => {
     const { DesktopWritingService } = await import('./desktop-writing.service');

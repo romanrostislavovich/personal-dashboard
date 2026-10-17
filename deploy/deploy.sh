@@ -206,7 +206,7 @@ if ! remote "test -f $REMOTE_DIR/.env"; then
     echo "ENCRYPTION_KEY=$ENCRYPTION_KEY"
     echo "SYNC_MODE=server"
     echo "SYNC_TOKEN=$SYNC_TOKEN"
-    for key in APP_TIMEZONE DEFAULT_LOCALE TELEGRAM_BOT_TOKEN SPOTIFY_CLIENT_ID SPOTIFY_CLIENT_SECRET; do
+    for key in APP_TIMEZONE DEFAULT_LOCALE; do
       value="$(local_value "$key")"
       [ -n "$value" ] && echo "$key=$value"
     done

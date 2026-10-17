@@ -31,12 +31,33 @@ export interface MusicSettings {
     history: LastfmHistoryStatus | null;
   };
   spotify: {
-    /** SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET are set on the server. */
+    /** The owner set the keys of the server's Spotify app (Settings → Integrations). */
     available: boolean;
     connected: boolean;
+    /** For the owner, who sets the app; `null` for the others. */
+    app: SpotifyAppState | null;
   };
   soundcloud: SoundcloudSettings;
 }
+
+export interface SpotifyAppState {
+  clientId: string | null;
+  /** What to put into the app's Redirect URIs at developer.spotify.com. */
+  redirectUri: string;
+}
+
+/** `PUT /api/music/spotify/app`: the keys of an app at developer.spotify.com. */
+export const spotifyAppInputSchema = z.object({
+  clientId: z
+    .string()
+    .trim()
+    .regex(/^[0-9a-f]{32}$/i),
+  clientSecret: z
+    .string()
+    .trim()
+    .regex(/^[0-9a-f]{32}$/i),
+});
+export type SpotifyAppInput = z.infer<typeof spotifyAppInputSchema>;
 
 export interface NowPlaying {
   source: 'spotify' | 'lastfm';

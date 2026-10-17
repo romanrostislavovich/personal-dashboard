@@ -1,6 +1,14 @@
-import { Body, Controller, Get, HttpCode, Post, Put } from '@nestjs/common';
-import { AuthUser, CurrentUser, RateLimit, ZodValidationPipe } from '@pd/api-core';
+import { Body, Controller, Delete, Get, HttpCode, Post, Put } from '@nestjs/common';
 import {
+  AuthUser,
+  CurrentUser,
+  RateLimit,
+  ServerKeysService,
+  ZodValidationPipe,
+} from '@pd/api-core';
+import {
+  LanguageToolInput,
+  languageToolInputSchema,
   WritingCheck,
   WritingCheckResult,
   writingCheckSchema,
@@ -21,7 +29,28 @@ import { WritingService } from './writing.service';
  */
 @Controller('writing')
 export class WritingController {
-  constructor(private readonly writing: WritingService) {}
+  constructor(
+    private readonly writing: WritingService,
+    private readonly keys: ServerKeysService,
+  ) {}
+
+  /** The owner sets the LanguageTool server, once for every user. */
+  @Put('language-tool')
+  @HttpCode(204)
+  async setLanguageTool(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(languageToolInputSchema)) input: LanguageToolInput,
+  ): Promise<void> {
+    await this.keys.assertOwner(user.id);
+    await this.writing.setLanguageTool(input.url);
+  }
+
+  @Delete('language-tool')
+  @HttpCode(204)
+  async removeLanguageTool(@CurrentUser() user: AuthUser): Promise<void> {
+    await this.keys.assertOwner(user.id);
+    await this.writing.removeLanguageTool();
+  }
 
   @Get('settings')
   settings(@CurrentUser() user: AuthUser): Promise<WritingConfig> {

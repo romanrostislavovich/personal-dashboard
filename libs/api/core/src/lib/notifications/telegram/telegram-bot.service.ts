@@ -16,6 +16,7 @@ import { AppConfig } from '../../config/env';
 import { coreMessages } from '../../i18n/core.messages';
 import { FALLBACK_LOCALE, localize } from '../../i18n/locale';
 import { UserActivityService } from '../../realtime/user-activity.service';
+import { ServerKeysService } from '../../server-keys/server-keys.service';
 import { UserRow } from '../../users/users.schema';
 import { UsersService } from '../../users/users.service';
 import { NotificationAction } from '../notification-channel';
@@ -40,6 +41,8 @@ const LINK_CODE_TTL_MS = 10 * 60 * 1000;
 const EXPECTED_TEXT_TTL_MS = 10 * 60 * 1000;
 /** Buttons in a row under a message. */
 const BUTTONS_PER_ROW = 3;
+/** How often the token set in Settings → Integrations is looked at again. */
+const RELOAD_MS = 60_000;
 /** The Bot API does not let bots download larger files. */
 const DOWNLOAD_LIMIT_BYTES = 20 * 1024 * 1024;
 
@@ -89,7 +92,8 @@ type PhotoEntry = { choice: BotPhotoChoice; handler: BotPhotoHandler };
 @Injectable()
 export class TelegramBotService implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly logger = new Logger(TelegramBotService.name);
-  private readonly bot: Bot | null;
+  /** Running while the owner has set a token that works (Settings → Integrations). */
+  private bot: Bot | null = null;
   // Codes live in memory for 10 minutes — enough for a single API instance.
   private readonly pendingLinks = new Map<string, PendingLink>();
   private readonly commands: BotCommand[] = [];
@@ -104,7 +108,12 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   private documentHandler: BotDocumentHandler | null = null;
   private textHandler: BotTextHandler | null = null;
   private voiceTranscriber: BotVoiceTranscriber | null = null;
-  private readonly token: string | undefined;
+  private token: string | null = null;
+  /** Why the bot with the token set did not start. */
+  private botError: string | null = null;
+  /** One change of the token at a time. */
+  private reloading: Promise<void> = Promise.resolve();
+  private reloadTimer: ReturnType<typeof setInterval> | undefined;
   /** A sync client leaves receiving messages to the server (see docs/sync.md). */
   private readonly isSyncClient: boolean;
 
@@ -112,10 +121,9 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     @Inject(ConfigService) config: AppConfig,
     private readonly users: UsersService,
     private readonly activity: UserActivityService,
+    private readonly keys: ServerKeysService,
   ) {
-    this.token = config.get('TELEGRAM_BOT_TOKEN', { infer: true });
     this.isSyncClient = config.get('SYNC_MODE', { infer: true }) === 'client';
-    this.bot = this.token ? new Bot(this.token) : null;
     this.actions.push({
       name: 'pho',
       handler: (user, payload) => this.onPhotoChoice(user, payload),
@@ -124,6 +132,16 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
 
   get isAvailable(): boolean {
     return this.bot !== null;
+  }
+
+  /** The bot's name, or why it did not start; both `null` — no token is set. */
+  get status(): { username: string | null; error: string | null } {
+    return { username: this.bot?.botInfo.username ?? null, error: this.botError };
+  }
+
+  /** The bot's name, if Telegram takes the token; throws otherwise. */
+  static async check(token: string): Promise<string> {
+    return (await new Bot(token).api.getMe()).username;
   }
 
   /** Modules add their commands in `onModuleInit` (see BotCommand). */
@@ -157,22 +175,64 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   }
 
   async onApplicationBootstrap(): Promise<void> {
-    if (!this.bot) {
-      this.logger.warn('TELEGRAM_BOT_TOKEN is not set, Telegram notifications are disabled');
+    await this.reload();
+    this.reloadTimer = setInterval(() => void this.reload(), RELOAD_MS);
+    this.reloadTimer.unref();
+  }
+
+  /**
+   * Starts the bot with the token the owner set, restarts it with a new one, stops it once the
+   * token is removed. Called on start, after the owner changes the token, and every minute: on
+   * a sync client a token set on the server arrives with the sync.
+   */
+  reload(): Promise<void> {
+    this.reloading = this.reloading.then(() => this.applyToken());
+    return this.reloading;
+  }
+
+  private async applyToken(): Promise<void> {
+    const token = await this.keys.get('telegram.bot-token').catch(() => this.token);
+    if (token === this.token) {
       return;
     }
-    if (this.isSyncClient) {
-      // Only one process may receive the bot's messages — the server. Sending still works here.
-      await this.bot.init();
-      this.logger.log('Sync client: the Telegram bot answers from the server');
+    await this.stopBot();
+    this.token = token;
+    this.botError = null;
+    if (!token) {
+      this.logger.log('No Telegram bot token is set: Telegram notifications are off');
       return;
     }
-    this.listen(this.bot);
-    await this.bot.init();
-    await this.publishCommandMenu(this.bot);
-    // start() resolves only when the bot stops, so we do not await it.
-    void this.bot.start({ drop_pending_updates: true });
-    this.logger.log(`Telegram bot @${this.bot.botInfo.username} started`);
+    const bot = new Bot(token);
+    try {
+      if (this.isSyncClient) {
+        // Only one process may receive the bot's messages — the server. Sending works here.
+        await bot.init();
+        this.bot = bot;
+        this.logger.log('Sync client: the Telegram bot answers from the server');
+        return;
+      }
+      this.listen(bot);
+      await bot.init();
+      await this.publishCommandMenu(bot);
+      // start() resolves only when the bot stops, so we do not await it.
+      bot.start({ drop_pending_updates: true }).catch((error: Error) => {
+        this.botError = error.message;
+        this.logger.warn(`The Telegram bot stopped: ${error.message}`);
+      });
+      this.bot = bot;
+      this.logger.log(`Telegram bot @${bot.botInfo.username} started`);
+    } catch (error) {
+      this.botError = (error as Error).message;
+      this.logger.warn(`The Telegram bot did not start: ${this.botError}`);
+    }
+  }
+
+  private async stopBot(): Promise<void> {
+    const bot = this.bot;
+    this.bot = null;
+    if (bot?.isRunning()) {
+      await bot.stop();
+    }
   }
 
   /** One handler per kind of update. */
@@ -493,7 +553,8 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   }
 
   async onApplicationShutdown(): Promise<void> {
-    await this.bot?.stop();
+    clearInterval(this.reloadTimer);
+    await this.stopBot();
   }
 
   createLink(userId: string): TelegramLinkResponse {

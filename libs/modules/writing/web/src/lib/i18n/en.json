@@ -1,7 +1,10 @@
 {
   "title": "Writing",
   "intro": "Spelling, grammar and punctuation in Russian, Ukrainian, English and Polish, checked on your own server (LanguageTool), and rewrites by the AI when you ask. The browser extension and the desktop app check the same way.",
-  "tabs": { "check": "Check", "settings": "Settings" },
+  "tabs": {
+    "check": "Check",
+    "settings": "Settings"
+  },
   "editor": {
     "label": "Text to check",
     "placeholder": "Type or paste a text…",
@@ -39,7 +42,7 @@
   },
   "settings": {
     "title": "How it is checked",
-    "noLanguageTool": "LanguageTool is not set up on the server (LANGUAGETOOL_URL): only the AI rewrites work.",
+    "noLanguageTool": "LanguageTool is not set up yet (Settings → Integrations): only the AI rewrites work.",
     "enabled": "Check as I type in the browser extension and the desktop app",
     "language": "Language",
     "english": "English",
@@ -69,5 +72,12 @@
     "check": "The check failed: is LanguageTool running?",
     "tooOften": "Too many checks a minute: a moment, please.",
     "rewrite": "The AI could not rewrite the text."
+  },
+  "integration": {
+    "description": "Checks spelling, grammar and punctuation in the Writing section, the browser extension and the desktop app. The text goes nowhere but your server.",
+    "working": "The writing is checked",
+    "notSet": "Not set up yet: only the AI rewrites work. The owner of the dashboard sets it here.",
+    "url": "Address of the LanguageTool server",
+    "hint": "The one in docker compose: http://languagetool:8010 (the app in Docker) or http://localhost:8010 (npm run dev)."
   }
 }

@@ -10,6 +10,7 @@ import {
   SoundcloudConnectInput,
   SoundcloudStats,
   SoundcloudTrackUpdate,
+  SpotifyAppInput,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -43,6 +44,9 @@ export function musicApi(api: ApiClient) {
     /** The Spotify sign-in page the user has to open. */
     spotifyConnectUrl: () => api.post<{ url: string }>(`${BASE}/spotify/connect`, {}),
     disconnectSpotify: () => api.delete(`${BASE}/spotify`),
+    /** The owner sets the keys of the server's Spotify app. */
+    setSpotifyApp: (input: SpotifyAppInput) => api.put<void>(`${BASE}/spotify/app`, input),
+    removeSpotifyApp: () => api.delete(`${BASE}/spotify/app`),
 
     soundcloud: () => api.read<SoundcloudStats | null>(MUSIC_READS.soundcloud()),
     /** Finds the profile and loads its tracks right away. */

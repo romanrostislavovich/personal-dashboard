@@ -41,8 +41,6 @@ services:
       SECURITY_DIR: /security
       # The desktop installers deploy.sh puts there, for Settings → Apps (GitHub without them).
       DESKTOP_INSTALLERS_PATH: /downloads/desktop
-      # Checks the writing (spelling, grammar) for the Writing section, the extension, the app.
-      LANGUAGETOOL_URL: http://languagetool:8010
     volumes:
       - ./backups:/backups:ro
       - ./security:/security:ro

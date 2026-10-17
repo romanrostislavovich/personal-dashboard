@@ -1,4 +1,5 @@
 import {
+  LanguageToolInput,
   WritingCheck,
   WritingCheckResult,
   WritingConfig,
@@ -27,6 +28,9 @@ export function writingApi(api: ApiClient) {
     ignore: (what: WritingIgnore) => api.post<WritingConfig>(`${BASE}/ignore`, what),
     check: (input: WritingCheck) => api.post<WritingCheckResult>(`${BASE}/check`, input),
     rewrite: (input: WritingRewriteInput) => api.post<WritingRewrite>(`${BASE}/rewrite`, input),
+    /** The owner sets the server's LanguageTool. */
+    setLanguageTool: (input: LanguageToolInput) => api.put<void>(`${BASE}/language-tool`, input),
+    removeLanguageTool: () => api.delete(`${BASE}/language-tool`),
   };
 }
 

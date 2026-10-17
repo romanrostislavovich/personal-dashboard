@@ -88,7 +88,9 @@ nano .env
 - `DB_PASSWORD`, `JWT_SECRET` — new random values (`openssl rand -hex 32`).
 - `ENCRYPTION_KEY` — **the same as in your computer's `.env`**.
 - `SYNC_TOKEN` — a new random value; the same goes into your computer's `.env`.
-- `TELEGRAM_BOT_TOKEN` — the bot now lives here.
+
+The Telegram bot, the Spotify app and LanguageTool are not in `.env`: they are set in
+Settings → Integrations and arrive on the server with the first sync.
 
 ## 5. Start
 
@@ -112,8 +114,8 @@ SYNC_SERVER_URL=https://<DOMAIN>
 ```
 
 The local instance must keep running to sync: `docker compose up -d --build` in the repository
-runs it in the background (on :3300; point the desktop app there). The computer may keep
-`TELEGRAM_BOT_TOKEN`: a client only sends notifications, the bot answers from the server.
+runs it in the background (on :3300; point the desktop app there). A client only sends
+Telegram notifications; the bot answers from the server.
 
 Restart it; within a minute **Settings → Sync** on the computer shows the first sync, and you
 can log in at `https://<DOMAIN>` with the same email and password. Then connect Telegram in the
