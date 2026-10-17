@@ -5,8 +5,7 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AiService, AppConfig, DB, Database, UsersService } from '@pd/api-core';
+import { AiService, DB, Database, ServerKeysService, UsersService } from '@pd/api-core';
 import {
   DEFAULT_WRITING_SETTINGS,
   WritingCheck,
@@ -20,7 +19,11 @@ import {
 } from '@pd/contracts';
 import { eq } from 'drizzle-orm';
 import { createHash } from 'node:crypto';
-import { checkWithLanguageTool, LanguageToolRequest } from './language-tool.client';
+import {
+  checkWithLanguageTool,
+  languageToolAnswers,
+  LanguageToolRequest,
+} from './language-tool.client';
 import { REWRITE_INSTRUCTIONS } from './rewrite-instructions';
 import { writingSettings } from './writing.schema';
 
@@ -37,17 +40,31 @@ const CACHE_SIZE = 1000;
 @Injectable()
 export class WritingService {
   private readonly logger = new Logger(WritingService.name);
-  private readonly languageToolUrl: string | undefined;
   /** Results by the text and the settings it was checked with; the oldest go first. */
   private readonly cache = new Map<string, WritingCheckResult>();
 
   constructor(
     @Inject(DB) private readonly db: Database,
-    @Inject(ConfigService) config: AppConfig,
     private readonly ai: AiService,
     private readonly users: UsersService,
-  ) {
-    this.languageToolUrl = config.get('LANGUAGETOOL_URL', { infer: true });
+    private readonly keys: ServerKeysService,
+  ) {}
+
+  /** The LanguageTool server the owner set (Settings → Integrations). */
+  private languageToolUrl(): Promise<string | null> {
+    return this.keys.get('writing.languagetool-url');
+  }
+
+  /** The owner sets the LanguageTool server: it must answer first. */
+  async setLanguageTool(url: string): Promise<void> {
+    if (!(await languageToolAnswers(url))) {
+      throw new BadRequestException('LanguageTool does not answer at this address');
+    }
+    await this.keys.set('writing.languagetool-url', url);
+  }
+
+  async removeLanguageTool(): Promise<void> {
+    await this.keys.set('writing.languagetool-url', null);
   }
 
   async settings(userId: string): Promise<WritingSettings> {
@@ -66,8 +83,11 @@ export class WritingService {
   async config(userId: string): Promise<WritingConfig> {
     return {
       ...(await this.settings(userId)),
-      canCheck: Boolean(this.languageToolUrl),
+      canCheck: Boolean(await this.languageToolUrl()),
       canRewrite: (await this.ai.isConfigured(userId)) && (await this.ai.canSee(userId, 'writing')),
+      languageTool: (await this.keys.isOwner(userId))
+        ? { url: await this.languageToolUrl() }
+        : null,
     };
   }
 
@@ -92,8 +112,9 @@ export class WritingService {
   }
 
   async check(userId: string, input: WritingCheck): Promise<WritingCheckResult> {
-    if (!this.languageToolUrl) {
-      throw new ServiceUnavailableException('LanguageTool is not set up (LANGUAGETOOL_URL)');
+    const url = await this.languageToolUrl();
+    if (!url) {
+      throw new ServiceUnavailableException('LanguageTool is not set up on the server');
     }
     if (!input.text.trim()) {
       return { language: input.language ?? 'auto', issues: [] };
@@ -114,7 +135,7 @@ export class WritingService {
     const checkLine = async (line: (typeof lines)[number], language: string) => ({
       offset: line.offset,
       length: line.text.length,
-      result: await this.checkParagraph({ ...request, text: line.text, language }),
+      result: await this.checkParagraph(url, { ...request, text: line.text, language }),
     });
     const long = lines.filter((line) => line.text.trim().length >= SHORT_LINE);
     const told = await Promise.all(long.map((line) => checkLine(line, request.language)));
@@ -145,18 +166,19 @@ export class WritingService {
     };
   }
 
-  private async checkParagraph(request: LanguageToolRequest): Promise<WritingCheckResult> {
+  private async checkParagraph(
+    url: string,
+    request: LanguageToolRequest,
+  ): Promise<WritingCheckResult> {
     const key = createHash('sha256').update(JSON.stringify(request)).digest('base64url');
     const known = this.cache.get(key);
     if (known) {
       return known;
     }
-    const result = await checkWithLanguageTool(this.languageToolUrl as string, request).catch(
-      (error) => {
-        this.logger.warn(`LanguageTool failed: ${error}`);
-        throw new ServiceUnavailableException('LanguageTool did not answer');
-      },
-    );
+    const result = await checkWithLanguageTool(url, request).catch((error) => {
+      this.logger.warn(`LanguageTool failed: ${error}`);
+      throw new ServiceUnavailableException('LanguageTool did not answer');
+    });
     this.remember(key, result);
     return result;
   }

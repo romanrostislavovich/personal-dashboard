@@ -71,24 +71,14 @@ export const envSchema = z
       })
       .optional(),
 
-    /** Without a token the Telegram channel is simply disabled. */
-    TELEGRAM_BOT_TOKEN: z.string().optional(),
-
-    /**
-     * A LanguageTool server that checks the writing (the Writing section, the browser extension,
-     * the desktop app): `http://languagetool:8010` in Docker. Without it only the AI rewrites.
-     */
-    LANGUAGETOOL_URL: z.url().optional(),
+    // The Telegram bot, the Spotify app and LanguageTool are set in Settings → Integrations by
+    // the owner (ServerKeysService), not here.
 
     /**
      * The address the dashboard is opened at. OAuth integrations (Spotify) need it
      * to send the user back. Spotify does not accept `localhost` — only 127.0.0.1.
      */
     PUBLIC_URL: z.url().default('http://127.0.0.1:4200'),
-
-    /** Spotify app (developer.spotify.com). Without them the Spotify connection is disabled. */
-    SPOTIFY_CLIENT_ID: z.string().optional(),
-    SPOTIFY_CLIENT_SECRET: z.string().optional(),
 
     /** Path to the built Angular app; if set, the API also serves the frontend. */
     WEB_DIST_PATH: z.string().optional(),

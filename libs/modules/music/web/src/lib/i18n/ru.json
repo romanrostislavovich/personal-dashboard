@@ -38,7 +38,7 @@
     "disconnect": "Отключить",
     "confirmDisconnect": "Отключить Last.fm? Уже загруженная история останется.",
     "spotifyDescription": "«Сейчас играет» с обложкой и прогрессом",
-    "spotifyNotConfigured": "Не настроено на сервере: создай приложение на developer.spotify.com, добавь в нём Redirect URI = PUBLIC_URL + /api/music/spotify/callback и задай SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET в .env.",
+    "spotifyNotConfigured": "Ещё не настроено: владелец дашборда задаёт здесь ключи приложения Spotify.",
     "spotifyHint": "Откроется страница входа Spotify. Нужен только доступ к текущему треку.",
     "spotifyConnected": "Spotify подключён",
     "invalid": "Сервис не принял данные — проверь логин и ключ",
@@ -46,7 +46,10 @@
     "spotify": {
       "connected": "Spotify подключён",
       "error": "Не удалось подключить Spotify"
-    }
+    },
+    "redirectUri": "Redirect URI приложения:",
+    "clientId": "Client ID",
+    "clientSecret": "Client Secret"
   },
   "history": {
     "progress": "История за всё время: загружено {{imported}} из {{total}}",
@@ -69,8 +72,8 @@
     },
     "spotify": {
       "1": "Открой developer.spotify.com/dashboard и создай приложение (название любое).",
-      "2": "В Redirect URI добавь адрес дашборда плюс /api/music/spotify/callback (localhost Spotify не принимает — локально используй 127.0.0.1).",
-      "3": "Впиши Client ID и Client Secret в .env на сервере как SPOTIFY_CLIENT_ID и SPOTIFY_CLIENT_SECRET и перезапусти дашборд.",
+      "2": "В Redirect URI добавь адрес, показанный ниже под «Ключ сервера» (localhost Spotify не принимает — локально используй 127.0.0.1).",
+      "3": "Вставь Client ID и Client Secret в «Ключ сервера» ниже и сохрани.",
       "4": "Нажми здесь «Подключить» и разреши доступ в Spotify."
     },
     "soundcloud": {

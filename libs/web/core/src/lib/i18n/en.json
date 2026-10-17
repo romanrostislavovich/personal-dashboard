@@ -113,7 +113,7 @@
     "title": "Settings",
     "telegram": {
       "description": "Notifications about birthdays, payments and projects",
-      "notConfigured": "The bot is not configured on the server: set TELEGRAM_BOT_TOKEN in .env and restart the API.",
+      "notConfigured": "The bot is not set up yet: the owner of the dashboard sets it here.",
       "notConnected": "Telegram is not connected.",
       "afterStart": "Press “Start” in the bot chat that opened, then “Check”.",
       "connected": "Telegram is connected",
@@ -124,9 +124,10 @@
       "disconnect": "Disconnect",
       "guide": {
         "1": "In Telegram, open @BotFather, send /newbot and follow it: you get the token of your own bot.",
-        "2": "Put the token into the server's .env as TELEGRAM_BOT_TOKEN and restart the dashboard.",
+        "2": "Paste the token into “Server key” below and save: the bot starts right away.",
         "3": "Press “Connect Telegram” here, then “Start” in the chat with the bot, then “Check”."
-      }
+      },
+      "token": "Bot token"
     },
     "profile": {
       "title": "Profile",
@@ -577,5 +578,16 @@
       "expiring": "The token expires soon",
       "expired": "The token has expired"
     }
+  },
+  "serverKey": {
+    "title": "Server key — only you see it",
+    "set": "Saved",
+    "change": "Change",
+    "remove": "Remove",
+    "save": "Check and save",
+    "checking": "Checking…",
+    "cancel": "Cancel",
+    "rejected": "The service did not accept it — check the key and try again.",
+    "failed": "Could not save. Please try later."
   }
 }

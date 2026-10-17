@@ -10,7 +10,12 @@ function service(): TelegramBotService {
   const config = { get: () => undefined };
   const users = { findByTelegramChatId: async () => user };
   const activity = { touched: () => undefined };
-  const telegram = new TelegramBotService(config as never, users as never, activity as never);
+  const telegram = new TelegramBotService(
+    config as never,
+    users as never,
+    activity as never,
+    {} as never,
+  );
   // A file is "downloaded" as its id, so the order of the pages can be told.
   Object.assign(telegram, { downloadFile: async (id: string) => Buffer.from(id) });
   return telegram;

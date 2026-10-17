@@ -29,6 +29,7 @@ import {
   SyncParkedKey,
   SyncStatus,
   SystemStatus,
+  TelegramBotInput,
   TelegramLinkResponse,
   TrashItem,
   DataImportReport,
@@ -67,6 +68,7 @@ export const API_PATHS = {
   notificationSettings: '/api/notifications/settings',
   telegram: '/api/notifications/telegram',
   telegramLink: '/api/notifications/telegram/link',
+  telegramBot: '/api/notifications/telegram/bot',
   testNotification: '/api/notifications/test',
   notificationLog: '/api/notifications/log',
   accessTokens: '/api/access-tokens',
@@ -244,6 +246,9 @@ export function notificationsApi(api: ApiClient) {
     /** A one-time `t.me/…?start=` link that links the chat to this account. */
     linkTelegram: () => api.post<TelegramLinkResponse>(API_PATHS.telegramLink, {}),
     unlinkTelegram: () => api.delete(API_PATHS.telegram),
+    /** The owner sets the server's bot (its token from @BotFather). */
+    setBot: (input: TelegramBotInput) => api.put<void>(API_PATHS.telegramBot, input),
+    removeBot: () => api.delete(API_PATHS.telegramBot),
     sendTest: () => api.post<void>(API_PATHS.testNotification, {}),
   };
 }

@@ -9,7 +9,14 @@ import {
   Query,
   Redirect,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, Public, ServerActions, ZodValidationPipe } from '@pd/api-core';
+import {
+  AuthUser,
+  CurrentUser,
+  Public,
+  ServerActions,
+  ServerKeysService,
+  ZodValidationPipe,
+} from '@pd/api-core';
 import {
   LastfmSettingsInput,
   lastfmSettingsInputSchema,
@@ -20,6 +27,8 @@ import {
   SongLinks,
   SongLinksQuery,
   songLinksQuerySchema,
+  SpotifyAppInput,
+  spotifyAppInputSchema,
 } from '@pd/contracts';
 import { z } from 'zod';
 import { LastfmHistoryImport } from './lastfm-history.import';
@@ -38,6 +47,7 @@ export class MusicController {
     private readonly spotify: SpotifyService,
     private readonly soundcloud: SoundcloudService,
     private readonly songLinks: SongLinksService,
+    private readonly keys: ServerKeysService,
   ) {}
 
   @Get('settings')
@@ -57,8 +67,11 @@ export class MusicController {
           : null,
       },
       spotify: {
-        available: this.spotify.isAvailable,
+        available: await this.spotify.isAvailable(),
         connected: await this.spotify.isConnected(user.id),
+        app: (await this.keys.isOwner(user.id))
+          ? { clientId: await this.spotify.clientId(), redirectUri: this.spotify.redirectUri }
+          : null,
       },
       soundcloud: await this.soundcloud.settings(user.id),
     };
@@ -125,9 +138,27 @@ export class MusicController {
 
   // --- Spotify ---
 
+  /** The owner sets the keys of the server's Spotify app (once for every user). */
+  @Put('spotify/app')
+  @HttpCode(204)
+  async setSpotifyApp(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(spotifyAppInputSchema)) input: SpotifyAppInput,
+  ): Promise<void> {
+    await this.keys.assertOwner(user.id);
+    await this.spotify.setApp(input.clientId, input.clientSecret);
+  }
+
+  @Delete('spotify/app')
+  @HttpCode(204)
+  async removeSpotifyApp(@CurrentUser() user: AuthUser): Promise<void> {
+    await this.keys.assertOwner(user.id);
+    await this.spotify.removeApp();
+  }
+
   @Post('spotify/connect')
-  connectSpotify(@CurrentUser() user: AuthUser): { url: string } {
-    return { url: this.spotify.connectUrl(user.id) };
+  async connectSpotify(@CurrentUser() user: AuthUser): Promise<{ url: string }> {
+    return { url: await this.spotify.connectUrl(user.id) };
   }
 
   /** Spotify returns the browser here after sign-in; the user is identified by `state`. */

@@ -29,7 +29,17 @@ export interface LanguageToolRequest {
   motherTongue?: string;
 }
 
-/** One request to a LanguageTool server (`LANGUAGETOOL_URL`). */
+/** Whether a LanguageTool server answers at the address (the owner is setting it). */
+export async function languageToolAnswers(baseUrl: string): Promise<boolean> {
+  const response = await fetchWithTimeout(
+    `${baseUrl.replace(/\/+$/, '')}/v2/languages`,
+    {},
+    TIMEOUT_MS,
+  ).catch(() => null);
+  return Boolean(response?.ok);
+}
+
+/** One request to a LanguageTool server (the one set in Settings → Integrations). */
 export async function checkWithLanguageTool(
   baseUrl: string,
   request: LanguageToolRequest,

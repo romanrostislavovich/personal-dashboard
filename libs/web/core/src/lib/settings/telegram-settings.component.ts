@@ -11,6 +11,7 @@ import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 
 /** Telegram: where notifications go and where the assistant answers. */
 import { IntegrationGuideComponent } from '../ui/integration-guide.component';
+import { ServerKeyComponent, ServerKeyField } from '../ui/server-key.component';
 @Component({
   selector: 'pd-telegram-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +21,7 @@ import { IntegrationGuideComponent } from '../ui/integration-guide.component';
     MatIconModule,
     TranslocoPipe,
     IntegrationGuideComponent,
+    ServerKeyComponent,
   ],
   template: `
     <mat-card appearance="outlined">
@@ -51,6 +53,17 @@ import { IntegrationGuideComponent } from '../ui/integration-guide.component';
           [steps]="3"
           link="https://t.me/BotFather"
         />
+        @if (settings.value()?.telegram?.bot; as bot) {
+          <pd-server-key
+            [fields]="botFields"
+            [set]="bot.tokenSet"
+            [summary]="bot.username ? '@' + bot.username : null"
+            [problem]="bot.error"
+            [save]="saveBot"
+            [remove]="removeBot"
+            (changed)="settings.reload()"
+          />
+        }
       </mat-card-content>
       @if (settings.value()?.telegram; as telegram) {
         <mat-card-actions>
@@ -95,6 +108,17 @@ export class TelegramSettingsComponent {
     CORE_READS.notificationSettings(),
   );
   protected readonly linkOpened = signal(false);
+  protected readonly botFields: ServerKeyField[] = [
+    {
+      name: 'token',
+      label: 'core.settings.telegram.token',
+      secret: true,
+      placeholder: '123456789:AA…',
+    },
+  ];
+  protected readonly saveBot = (values: Record<string, string>) =>
+    this.notifications.setBot({ token: values['token'] });
+  protected readonly removeBot = () => this.notifications.removeBot();
 
   async connect(): Promise<void> {
     const link = await this.notifications.linkTelegram();

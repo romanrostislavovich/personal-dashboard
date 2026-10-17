@@ -75,6 +75,7 @@ import { LifeStoriesService } from './life/life-stories.service';
 import { SearchController } from './search/search.controller';
 import { SearchService } from './search/search.service';
 import { SecretsService } from './secrets/secrets.service';
+import { ServerKeysService } from './server-keys/server-keys.service';
 import { JobRunsService } from './system/job-runs.service';
 import { SystemController } from './system/system.controller';
 import { SystemLogService } from './system/system-log.service';
@@ -177,6 +178,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     ProjectsService,
     SchedulerService,
     SecretsService,
+    ServerKeysService,
     NotificationsService,
     NotificationOutbox,
     AccessTokensService,
@@ -221,6 +223,8 @@ import { UserActivityService } from './realtime/user-activity.service';
     ProjectsService,
     SchedulerService,
     SecretsService,
+    // For the keys of the server at outside services (the Spotify app, LanguageTool).
+    ServerKeysService,
     NotificationsService,
     // For bot commands: modules register them via registerCommand().
     TelegramBotService,

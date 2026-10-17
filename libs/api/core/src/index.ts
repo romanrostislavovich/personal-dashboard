@@ -17,6 +17,7 @@ export * from './lib/life/life.service';
 export * from './lib/automations/automations.service';
 export { SystemLogger } from './lib/system/system-logger';
 export * from './lib/secrets/secrets.service';
+export * from './lib/server-keys/server-keys.service';
 export * from './lib/notifications/notification-channel';
 export * from './lib/notifications/notifications.service';
 export * from './lib/notifications/telegram/bot-command';

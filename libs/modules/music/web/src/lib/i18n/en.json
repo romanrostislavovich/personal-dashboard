@@ -38,7 +38,7 @@
     "disconnect": "Disconnect",
     "confirmDisconnect": "Disconnect Last.fm? Already loaded history will stay.",
     "spotifyDescription": "“Now playing” with cover art and progress",
-    "spotifyNotConfigured": "Not configured on the server: create an app at developer.spotify.com, add Redirect URI = PUBLIC_URL + /api/music/spotify/callback and set SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET in .env.",
+    "spotifyNotConfigured": "Not set up yet: the owner of the dashboard sets the keys of a Spotify app here.",
     "spotifyHint": "The Spotify sign-in page will open. Only access to the current track is requested.",
     "spotifyConnected": "Spotify is connected",
     "invalid": "The service rejected the data — check the username and key",
@@ -46,7 +46,10 @@
     "spotify": {
       "connected": "Spotify is connected",
       "error": "Could not connect Spotify"
-    }
+    },
+    "redirectUri": "Redirect URI of the app:",
+    "clientId": "Client ID",
+    "clientSecret": "Client Secret"
   },
   "history": {
     "progress": "All-time history: {{imported}} of {{total}} plays imported",
@@ -69,8 +72,8 @@
     },
     "spotify": {
       "1": "Open developer.spotify.com/dashboard and create an app (any name).",
-      "2": "As its Redirect URI, add the address of the dashboard plus /api/music/spotify/callback (Spotify does not accept localhost — use 127.0.0.1 locally).",
-      "3": "Put the Client ID and the Client Secret into the server's .env as SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET and restart the dashboard.",
+      "2": "As its Redirect URI, add the address shown under “Server key” below (Spotify does not accept localhost — use 127.0.0.1 locally).",
+      "3": "Paste its Client ID and Client Secret into “Server key” below and save.",
       "4": "Press “Connect” here and allow access in Spotify."
     },
     "soundcloud": {

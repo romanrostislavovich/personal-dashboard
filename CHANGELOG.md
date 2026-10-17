@@ -8,6 +8,10 @@ under **Updating**.
 
 ### Added
 
+- **Server keys in Settings → Integrations** — the Telegram bot's token, the Spotify app's
+  Client ID and Secret and the LanguageTool server's address are set by the owner in their
+  cards instead of `.env`: checked with the service before they are kept, applied at once
+  (the bot restarts by itself), stored encrypted and synced to a local copy.
 - **Health** — one medical history of your own across countries and clinics: visits with
   their complaints, examination and recommendations, diagnoses by ICD code gathered into
   conditions with their history, medications (by the active substance too) and the documents
@@ -221,9 +225,11 @@ under **Updating**.
   the questionnaire reminders, 0080 the emergency contacts, 0081 the notification outbox, 0082
   the AI's tokens and the prices of its connections, 0083 the time by site and the focus
   session of a device, 0084 the settings of Writing, 0085 the screenshots, 0086 the access tokens of MCP clients.
-- `deploy/compose.yml` gets a `languagetool` service, and `LANGUAGETOOL_URL` points the app at
-  it; for `npm run dev` start it with `docker compose up -d languagetool` and set
-  `LANGUAGETOOL_URL=http://localhost:8010`.
+- `deploy/compose.yml` gets a `languagetool` service; for `npm run dev` start it with
+  `docker compose up -d languagetool`.
+- `TELEGRAM_BOT_TOKEN`, `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` and `LANGUAGETOOL_URL`
+  are no longer read: after updating, the owner enters them once in Settings → Integrations
+  (LanguageTool from docker compose: `http://languagetool:8010`), then removes them from `.env`.
 - The browser extension and the desktop app need their new versions for the time by site and
   the focus mode; both update by themselves.
 - Encrypted columns use `ENCRYPTION_KEY`: a local copy that syncs with the server needs the same

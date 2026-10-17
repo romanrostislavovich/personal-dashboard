@@ -90,11 +90,20 @@ export type WritingSettingsUpdate = z.infer<typeof writingSettingsUpdateSchema>;
 
 /** `GET /api/writing/settings`: the settings and what the server can do. */
 export interface WritingConfig extends WritingSettings {
-  /** LanguageTool is set up (`LANGUAGETOOL_URL`). */
+  /** The owner set the LanguageTool server (Settings → Integrations). */
   canCheck: boolean;
   /** An AI connection is set up and Writing is not switched off for it. */
   canRewrite: boolean;
+  /** For the owner, who sets the LanguageTool server; `null` for the others. */
+  languageTool: { url: string | null } | null;
 }
+
+/**
+ * `PUT /api/writing/language-tool`: the address of a LanguageTool server —
+ * `http://languagetool:8010` for the one in docker compose.
+ */
+export const languageToolInputSchema = z.object({ url: z.url({ protocol: /^https?$/ }) });
+export type LanguageToolInput = z.infer<typeof languageToolInputSchema>;
 
 export const DEFAULT_WRITING_SETTINGS: WritingSettings = {
   enabled: true,

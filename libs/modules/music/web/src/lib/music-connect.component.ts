@@ -11,7 +11,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MusicSettings } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
-import { IntegrationGuideComponent, errorStatus } from '@pd/web-core';
+import {
+  IntegrationGuideComponent,
+  ServerKeyComponent,
+  ServerKeyField,
+  errorStatus,
+} from '@pd/web-core';
 import { MusicApi } from './music.api';
 
 /** Connecting sources: Last.fm (username + API key) and Spotify (OAuth). */
@@ -25,6 +30,7 @@ import { MusicApi } from './music.api';
     ReactiveFormsModule,
     MatCardModule,
     IntegrationGuideComponent,
+    ServerKeyComponent,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -144,6 +150,20 @@ import { MusicApi } from './music.api';
             [steps]="4"
             link="https://developer.spotify.com/dashboard"
           />
+          @if (s.spotify.app; as app) {
+            <pd-server-key
+              [fields]="spotifyFields"
+              [set]="s.spotify.available"
+              [summary]="app.clientId"
+              [initial]="{ clientId: app.clientId }"
+              [save]="saveSpotifyApp"
+              [remove]="removeSpotifyApp"
+              (changed)="changed.emit()"
+            />
+            <p class="hint">
+              {{ 'music.connect.redirectUri' | transloco }} <code>{{ app.redirectUri }}</code>
+            </p>
+          }
         </mat-card-content>
         @if (s.spotify.available) {
           <mat-card-actions align="end">
@@ -210,6 +230,18 @@ export class MusicConnectComponent {
   private readonly transloco = inject(TranslocoService);
 
   protected readonly busy = signal(false);
+  protected readonly spotifyFields: ServerKeyField[] = [
+    { name: 'clientId', label: 'music.connect.clientId' },
+    { name: 'clientSecret', label: 'music.connect.clientSecret', secret: true },
+  ];
+  protected readonly saveSpotifyApp = (values: Record<string, string>) =>
+    firstValueFrom(
+      this.api.setSpotifyApp({
+        clientId: values['clientId'],
+        clientSecret: values['clientSecret'],
+      }),
+    );
+  protected readonly removeSpotifyApp = () => firstValueFrom(this.api.removeSpotifyApp());
   protected readonly form = inject(NonNullableFormBuilder).group({
     username: ['', Validators.required],
     apiKey: ['', [Validators.required, Validators.pattern(/^[a-fA-F0-9]{32}$/)]],
