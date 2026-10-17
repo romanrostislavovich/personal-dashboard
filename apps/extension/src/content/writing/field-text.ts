@@ -46,7 +46,11 @@ export function checkableField(target: EventTarget | null): TextField | null {
   }
   if (target instanceof HTMLInputElement) {
     const type = target.type.toLowerCase();
-    const plain = type === 'text' && !/one-time-code|cc-|email|tel|url/.test(target.autocomplete);
+    const plain =
+      type === 'text' &&
+      !/one-time-code|cc-|email|tel|url|username|name|address|postal/.test(target.autocomplete) &&
+      !SEARCH.test(`${target.name} ${target.id} ${target.getAttribute('role') ?? ''}`) &&
+      !inLoginForm(target);
     return plain && !target.readOnly && !target.disabled ? target : null;
   }
   if (target instanceof HTMLElement && target.isContentEditable) {
@@ -54,6 +58,14 @@ export function checkableField(target: EventTarget | null): TextField | null {
     return host.closest(CODE_EDITORS) || host.getAttribute('spellcheck') === 'false' ? null : host;
   }
   return null;
+}
+
+/** A search box or a login is not prose: left alone, as Grammarly does. */
+const SEARCH = /search|query|combobox|login|user|email/i;
+
+/** A line of a form with a password in it: the login of a sign-in, never checked. */
+function inLoginForm(input: HTMLInputElement): boolean {
+  return !!input.form?.querySelector('input[type="password"]');
 }
 
 /** The outermost element of the editor a node is in. */

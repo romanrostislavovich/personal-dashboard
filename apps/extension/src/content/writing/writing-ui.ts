@@ -30,6 +30,26 @@ const STYLE = `
     color: #fff; background: #3f51b5; box-shadow: 0 1px 4px rgba(0,0,0,.3);
   }
   .badge.clean { background: #2e7d32; }
+  .badge.idle { background: #7986cb; }
+  .badge.checking { background: #7986cb; animation: pd-pulse 1s ease-in-out infinite alternate; }
+  @keyframes pd-pulse { from { opacity: .55; } to { opacity: 1; } }
+  .badge.issues { background: #e53935; }
+  .head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; }
+  .issues { display: flex; flex-direction: column; gap: 2px; margin: 0 -6px 8px; }
+  button.issue {
+    display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px; border: 0;
+    border-radius: 8px; background: none; color: inherit; cursor: pointer; text-align: left;
+    font: 13px/1.35 system-ui, sans-serif;
+  }
+  button.issue:hover { background: rgba(63,81,181,.1); }
+  .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+  .from { text-decoration: line-through; opacity: .7; }
+  .to { font-weight: 600; }
+  .links { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 10px; padding-top: 8px;
+    border-top: 1px solid rgba(127,127,127,.25); }
+  button.link { border: 0; padding: 0; background: none; color: #3f51b5; cursor: pointer;
+    font: 500 12px system-ui, sans-serif; }
+  @media (prefers-color-scheme: dark) { button.link { color: #bac3ff; } }
   .card {
     position: fixed; width: 320px; max-height: 360px; overflow: auto; box-sizing: border-box;
     padding: 12px; border-radius: 12px; background: #fbf8ff; color: #1b1b1f;
@@ -100,23 +120,41 @@ export function drawMarks(marks: { issue: WritingIssue; rects: DOMRect[] }[], bo
   layer?.replaceChildren(...nodes);
 }
 
-/** The badge in the corner of the field: the number of mistakes; a click opens the AI's menu. */
-export function drawBadge(box: DOMRect, count: number, onClick: () => void): void {
+/**
+ * What the badge of the field shows: `idle` — nothing to check yet (an empty field), `checking`
+ * — the text is with the server, then the number of mistakes or `clean`.
+ */
+export type BadgeStatus = 'idle' | 'checking' | 'issues' | 'clean';
+
+/**
+ * The badge in the corner of the field, from the moment it gets the focus (as Grammarly's): the
+ * number of mistakes; a click opens the panel of the field.
+ */
+export function drawBadge(
+  box: DOMRect,
+  status: BadgeStatus,
+  count: number,
+  onClick: () => void,
+): void {
   shadow();
   if (!badge) {
     badge = document.createElement('button');
-    badge.className = 'badge';
     badge.type = 'button';
     // Pressing it must not take the focus (and the caret) from the field.
     badge.addEventListener('mousedown', (event) => event.preventDefault());
     root?.append(badge);
   }
   badge.onclick = onClick;
-  badge.textContent = count ? String(count) : '✓';
-  badge.title = t('writingBadge', String(count));
-  badge.classList.toggle('clean', count === 0);
+  badge.className = `badge ${status}`;
+  badge.textContent = status === 'issues' ? String(count) : status === 'clean' ? '✓' : '✎';
+  badge.title =
+    status === 'issues'
+      ? t('writingBadge', String(count))
+      : t(status === 'clean' ? 'writingBadgeClean' : 'writingBadgeIdle');
+  // In the corner, inside the field; a field too low for it gets it beside the text.
+  const top = box.height >= 36 ? box.bottom - 28 : box.top + (box.height - 22) / 2;
   badge.style.left = `${box.right - 28}px`;
-  badge.style.top = `${box.bottom - 28}px`;
+  badge.style.top = `${top}px`;
 }
 
 export function hideAll(): void {
@@ -133,6 +171,11 @@ export function hideCard(): void {
 
 export function cardShown(): boolean {
   return !!card;
+}
+
+/** The panel of the field is open (not the card of one mistake). */
+export function panelShown(): boolean {
+  return card?.dataset['kind'] === 'panel';
 }
 
 export interface IssueActions {
@@ -163,19 +206,72 @@ export function showIssueCard(
   body.append(kind, element('p', 'muted', issue.message), fixes, actions);
 }
 
-/** The AI's menu of the field: the ways to rewrite the whole text. */
-export function showRewriteMenu(
+export interface PanelActions {
+  /** Opens the card of a mistake (and puts the caret on it). */
+  open: (issue: WritingIssue) => void;
+  /** Every mistake that has a fix, fixed with its first one. */
+  fixAll: (() => void) | null;
+  /** `null` — the server's AI is not set up. */
+  rewrite: ((mode: WritingRewriteMode) => void) | null;
+  offHere: () => void;
+  settings: () => void;
+}
+
+/**
+ * The panel of the field, from its badge: the mistakes in a list (each opens its card), "fix
+ * all", the AI's rewrites of the whole text, and "not on this site".
+ */
+export function showPanel(
   at: DOMRect,
-  count: number,
-  rewrite: (mode: WritingRewriteMode) => void,
+  status: BadgeStatus,
+  issues: { issue: WritingIssue; word: string }[],
+  act: PanelActions,
 ): void {
   const body = openCard(at);
-  body.append(element('p', 'muted', t('writingBadge', String(count))));
-  const actions = element('div', 'fixes');
-  for (const mode of MODES) {
-    actions.append(button('action', t(`writingRewrite_${mode}`), () => rewrite(mode)));
+  body.dataset['kind'] = 'panel';
+  const head = {
+    issues: () => t('writingIssues', String(issues.length)),
+    clean: () => t('writingBadgeClean'),
+    checking: () => t('writingChecking'),
+    idle: () => t('writingBadgeIdle'),
+  }[status]();
+  body.append(element('div', 'head', head));
+  if (issues.length) {
+    const list = element('div', 'issues');
+    for (const { issue, word } of issues.slice(0, 12)) {
+      const row = button('issue', '', () => act.open(issue));
+      const dot = element('div', 'dot');
+      dot.style.background = COLOURS[issue.kind];
+      const from = document.createElement('span');
+      from.className = 'from';
+      from.textContent = word;
+      const to = document.createElement('span');
+      to.className = 'to';
+      to.textContent = issue.replacements[0] ?? t(`writingKind_${issue.kind}`);
+      row.append(dot, from, document.createTextNode(' → '), to);
+      list.append(row);
+    }
+    body.append(list);
   }
-  body.append(actions);
+  const actions = element('div', 'fixes');
+  if (act.fixAll) {
+    actions.append(button('fix', t('writingFixAll'), act.fixAll));
+  }
+  if (act.rewrite) {
+    const rewrite = act.rewrite;
+    for (const mode of MODES) {
+      actions.append(button('action', t(`writingRewrite_${mode}`), () => rewrite(mode)));
+    }
+  }
+  if (actions.childElementCount) {
+    body.append(actions);
+  }
+  const links = element('div', 'links');
+  links.append(
+    button('link', t('writingOffHere'), act.offHere),
+    button('link', t('writingSettings'), act.settings),
+  );
+  body.append(links);
 }
 
 export function showBusy(at: DOMRect): void {

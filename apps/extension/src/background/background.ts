@@ -35,7 +35,15 @@ import {
   SITES_ALARM,
   sitesTick,
 } from './sites';
-import { checkWriting, ignoreInWriting, rewriteWriting, writingState } from './writing';
+import {
+  checkWriting,
+  ignoreInWriting,
+  rewriteWriting,
+  setWritingEnabled,
+  setWritingOnSite,
+  writingPopupState,
+  writingState,
+} from './writing';
 import {
   deviceActive,
   deviceOnline,
@@ -236,6 +244,10 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
       return (await blockOf(message.back))?.block ?? null;
     case 'pass-site':
       return passSite(message.site);
+    case 'writing-site':
+      return setWritingOnSite((await activeTab())?.url, !!message.on);
+    case 'writing-enabled':
+      return setWritingEnabled(!!message.on);
   }
 }
 
@@ -293,6 +305,14 @@ async function fromContent(
       );
     case 'writing-ignore':
       return ignoreInWriting(message.word, message.ruleId);
+    case 'writing-off-here':
+      return setWritingOnSite(sender.url, false);
+    case 'writing-settings': {
+      const server = await serverUrl();
+      return server
+        ? chrome.tabs.create({ url: `${server}/writing` }).then(() => undefined)
+        : undefined;
+    }
   }
 }
 
@@ -330,14 +350,28 @@ async function popupState(): Promise<PopupState> {
     }
     throw error;
   });
+  const signedIn = vault !== 'signed-out';
   return {
     server,
-    email: vault === 'signed-out' ? null : await email(),
+    email: signedIn ? await email() : null,
     vault,
     page: tab ? { url: tab.url, site: siteName(tab.url) } : null,
-    offer: tab && vault !== 'signed-out' ? await offerFor(tab.id) : null,
+    offer: tab && signedIn ? await offerFor(tab.id) : null,
+    writing: tab && signedIn ? await writingPopupState(tab.url).catch(() => null) : null,
+    unlockAsked: await takeUnlockAsked(),
     update: await updateStatus(),
   };
+}
+
+/** Set by the shortcut before it opens the popup; read once. */
+const UNLOCK_ASKED = 'unlockAsked';
+
+async function takeUnlockAsked(): Promise<boolean> {
+  const { [UNLOCK_ASKED]: asked } = await chrome.storage.session.get(UNLOCK_ASKED);
+  if (asked) {
+    await chrome.storage.session.remove(UNLOCK_ASKED);
+  }
+  return asked === true;
 }
 
 /** Every item for the list, fresh from the server: the logins of the active page first. */
@@ -382,6 +416,9 @@ async function fillFirstLogin(): Promise<void> {
   }
   const status = await vaultStatus().catch(() => 'signed-out' as const);
   if (status !== 'unlocked') {
+    if (status === 'locked') {
+      await chrome.storage.session.set({ [UNLOCK_ASKED]: true });
+    }
     await chrome.action.openPopup().catch(() => undefined);
     return;
   }

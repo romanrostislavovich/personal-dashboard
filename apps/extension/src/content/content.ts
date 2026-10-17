@@ -9,7 +9,7 @@ import {
 } from './forms';
 import { closeMenu, fieldById, setupInline } from './inline';
 import { showSaveBar } from './save-bar';
-import { setupWriting } from './writing/writing';
+import { resetWriting, setupWriting } from './writing/writing';
 
 /*
  * The content script, in every frame of every page. It tells the background about login forms
@@ -46,6 +46,10 @@ chrome.runtime.onMessage.addListener(
       }
       case 'close-menu':
         closeMenu();
+        reply({ filled: false });
+        break;
+      case 'writing-changed':
+        resetWriting();
         reply({ filled: false });
         break;
       case 'snapshot':
