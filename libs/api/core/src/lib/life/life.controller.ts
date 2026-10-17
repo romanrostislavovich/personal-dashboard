@@ -12,6 +12,9 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  BeforeAfter,
+  BeforeAfterQuery,
+  beforeAfterQuerySchema,
   Correlations,
   CorrelationsQuery,
   correlationsQuerySchema,
@@ -70,6 +73,15 @@ export class LifeController {
     @Query(new ZodValidationPipe(correlationsQuerySchema)) query: CorrelationsQuery,
   ): Promise<Correlations> {
     return this.overviews.correlations(user.id, query);
+  }
+
+  /** Every daily number before and after the start or the end of a period of Health. */
+  @Get('before-after')
+  beforeAfter(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(beforeAfterQuerySchema)) query: BeforeAfterQuery,
+  ): Promise<BeforeAfter> {
+    return this.overviews.beforeAfter(user.id, query);
   }
 
   @Get('day')

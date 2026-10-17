@@ -8,6 +8,12 @@ under **Updating**.
 
 ### Added
 
+- **Life → Links: before and after** — at the start or the end of a period Health tells (a
+  mental-health diagnosis, a medication of a psychiatrist or a psychotherapist), every daily
+  number of the weeks before against the weeks after (2, 4 or 8), with a mini chart around the
+  date. A change is marked when it lies beyond the changes at the ordinary dates of the same
+  history (a placebo test: the seasons and the trends are in it), corrected for the number of
+  numbers. The assistant gets `core_before_after`, unless Health is hidden from its AI.
 - **Life → Links** — the links engine: every daily number of every section against every other,
   of the same day and of the next one, with the seasons taken away (each day against the weeks
   around it) and the chance of an accident corrected for the days' own trends and for the

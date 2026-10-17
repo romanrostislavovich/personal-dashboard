@@ -109,6 +109,21 @@
       "lag": "Which days are compared",
       "hintSame": "Every pair of the same day; a dot marks a strong link. A click shows the pair.",
       "hintNext": "A row's day against the column's next day; a dot marks a strong link."
+    },
+    "beforeAfter": {
+      "title": "Before and after",
+      "hint": "How your days changed at a date of Health: the weeks before against the weeks after.",
+      "event": "Date",
+      "window": "Weeks on each side",
+      "weeks": "{{weeks}} wk",
+      "start": "since {{date}}",
+      "end": "ended {{date}}",
+      "wait": "{{days}} days have passed since the date; at least 7 are needed to compare — come back in {{left}} days.",
+      "none": "Nothing changed beyond what ordinary weeks do.",
+      "all": "Show the rest ({{count}})",
+      "less": "Only the changes",
+      "caution": "An observation from your own data, not a medical judgement, and not proof of a cause: a change is marked when ordinary dates of your history rarely show one as large. It may be worth showing to your doctor.",
+      "noHistory": "Too little history around this date to tell a change from the usual: try shorter windows, or come back later."
     }
   }
 }

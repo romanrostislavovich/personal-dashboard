@@ -1,14 +1,12 @@
 import {
-  addDays,
   Correlation,
   CorrelationMetric,
   CorrelationRegression,
   Correlations,
   DailyMetric,
   LocalDate,
-  parseLocalDate,
-  toLocalDate,
 } from '@pd/contracts';
+import { daysOf, round, Series, seriesOf, shift, SURROUNDINGS } from '../daily-series';
 import { MOOD_METRIC } from '../mood-insights';
 import {
   benjaminiHochberg,
@@ -46,19 +44,9 @@ const MIN_BEYOND = 0.15;
  * day differs from the weeks around it.
  */
 const SEASON_DAYS = 14;
-/**
- * Sections of what happens around the person (the weather, the calendar): compared with the
- * person's numbers, never with each other — the sun and the temperature are physics.
- */
-const SURROUNDINGS = new Set(['weather', 'life']);
-
-/** A day a number does not mean anything on is left out; a quantity's empty day is a zero. */
-const READINGS: DailyMetric['unit'][] = ['degrees', 'clock', 'score', 'percent'];
 
 /** Weekends shape most of the numbers at once: a number of their own, to see it and allow for it. */
 export const WEEKEND_METRIC = 'life.weekend';
-
-type Series = Map<LocalDate, number>;
 
 interface Prepared {
   metric: DailyMetric;
@@ -113,24 +101,7 @@ export function correlations(
 }
 
 function prepare(metric: DailyMetric, days: LocalDate[]): Prepared {
-  const given = new Map(metric.days.map((day) => [day.day, day.value]));
-  const series: Series = new Map();
-  if (READINGS.includes(metric.unit)) {
-    for (const day of days) {
-      if (given.has(day)) {
-        series.set(day, given.get(day) as number);
-      }
-    }
-  } else {
-    // A quantity counts from its first day to its last: before it the section was not used.
-    const known = days.filter((day) => given.has(day));
-    const [first, last] = [known[0], known[known.length - 1]];
-    for (const day of days) {
-      if (first && day >= first && day <= last) {
-        series.set(day, given.get(day) ?? 0);
-      }
-    }
-  }
+  const series = seriesOf(metric, days);
   const daily = withoutSeason(series, days);
   return { metric, series, daily, auto: autocorrelation(daily, days) };
 }
@@ -197,7 +168,10 @@ function pairs(prepared: Prepared[]): Pair[] {
   return result;
 }
 
-/** Two numbers of what happens around the person: their link is not about the person. */
+/**
+ * Two numbers of what happens around the person (see SURROUNDINGS): compared with the person's
+ * numbers, never with each other — the sun and the temperature are physics.
+ */
 function surroundings(a: DailyMetric, b: DailyMetric): boolean {
   return SURROUNDINGS.has(a.module) && SURROUNDINGS.has(b.module);
 }
@@ -379,33 +353,4 @@ function weekend(days: LocalDate[]): DailyMetric {
       return { day, value: weekday === 0 || weekday === 6 ? 1 : 0 };
     }),
   };
-}
-
-function daysOf({ from, to }: { from: LocalDate; to: LocalDate }): LocalDate[] {
-  const days: LocalDate[] = [];
-  for (let day = from; day <= to && days.length < 3700; day = shift(day, 1)) {
-    days.push(day);
-  }
-  return days;
-}
-
-const shifted = new Map<string, LocalDate>();
-
-/** The day `by` days later; remembered, as every pair asks for the same days. */
-function shift(day: LocalDate, by: number): LocalDate {
-  const key = `${day}${by}`;
-  let result = shifted.get(key);
-  if (!result) {
-    result = toLocalDate(addDays(parseLocalDate(day), by));
-    if (shifted.size > 20_000) {
-      shifted.clear();
-    }
-    shifted.set(key, result);
-  }
-  return result;
-}
-
-function round(value: number, digits: number): number {
-  const factor = 10 ** digits;
-  return Math.round(value * factor) / factor;
 }
