@@ -65,15 +65,15 @@ export async function offerFor(tabId: number, page = false): Promise<SaveOffer |
     return null;
   }
   const status = await vaultStatus().catch(() => 'signed-out' as const);
-  if (status === 'none' || status === 'signed-out') {
+  if (status === 'none') {
     return null;
   }
   const offer = { site: siteName(pending.url), username: pending.username };
-  if (status === 'locked') {
+  if (status === 'locked' || status === 'signed-out') {
     if (page) {
       await markShown(tabId);
     }
-    return { mode: 'locked', ...offer };
+    return { mode: status, ...offer };
   }
   if (await completeDraft(pending)) {
     await drop(tabId);
@@ -168,6 +168,20 @@ async function pendingOf(tabId: number): Promise<Pending | null> {
 
 async function pendingByTab(): Promise<PendingByTab> {
   return readJson<PendingByTab>(chrome.storage.session, PENDING_KEY, {});
+}
+
+/**
+ * The vault was unlocked: every tab's login still waiting may be offered on its page again
+ * (it was shown there locked). The tabs it is waiting in.
+ */
+export async function offerAgain(): Promise<number[]> {
+  const all = await pendingByTab();
+  const tabs = Object.keys(all)
+    .map(Number)
+    .filter((tabId) => all[tabId].password && Date.now() - all[tabId].at < PENDING_MS);
+  tabs.forEach((tabId) => (all[tabId].shown = false));
+  await writeJson(chrome.storage.session, PENDING_KEY, all);
+  return tabs;
 }
 
 async function markShown(tabId: number): Promise<void> {

@@ -47,8 +47,11 @@ export interface ItemSummary {
 
 /** A login typed into a page and not yet in the vault: offered to be saved. */
 export interface SaveOffer {
-  /** `locked` — it can be saved once the vault is unlocked in the popup. */
-  mode: 'save' | 'update' | 'locked';
+  /**
+   * `locked` — it can be saved once the vault is unlocked; `signed-out` — once the extension is
+   * signed in to the dashboard (and the vault unlocked). The bar offers the way to either.
+   */
+  mode: 'save' | 'update' | 'locked' | 'signed-out';
   site: string;
   username: string;
 }
@@ -154,6 +157,8 @@ export type ContentRequest =
   | { type: 'offer' }
   | { type: 'save-offer'; mode: 'save' | 'update' }
   | { type: 'dismiss-offer'; never: boolean }
+  /** "Enter the master password" / "Sign in" on the bar: the popup, at that step. */
+  | { type: 'offer-open' }
   /**
    * A field the vault helps with got the focus (`explicit` — its key icon was clicked): the
    * token of a menu for it, or `null` when nothing is worth showing.
@@ -180,7 +185,9 @@ export type PageCommand =
   /** What the page shows, for the assistant's `browser_current_page`. */
   | { type: 'snapshot'; withText: boolean }
   /** Writing was switched on or off: whether to check is asked again. */
-  | { type: 'writing-changed' };
+  | { type: 'writing-changed' }
+  /** The vault was unlocked: a login waiting to be saved is offered again, now with "Save". */
+  | { type: 'offer-again' };
 
 /** A page's answer to `snapshot`: the selection, and its readable text when asked. */
 export interface PageSnapshot {

@@ -15,7 +15,16 @@
     "message": "Обновить пароль для $1?"
   },
   "saveBarLocked": {
-    "message": "Сохранить пароль для $1? Разблокируйте хранилище в расширении, чтобы сохранить."
+    "message": "Сохранить пароль для $1? Хранилище заблокировано."
+  },
+  "saveBarSignedOut": {
+    "message": "Сохранить пароль для $1? Сначала войдите в дашборд."
+  },
+  "saveBarUnlockButton": {
+    "message": "Ввести мастер-пароль"
+  },
+  "saveBarSignInButton": {
+    "message": "Войти"
   },
   "saveBarNoLogin": {
     "message": "Без логина"
