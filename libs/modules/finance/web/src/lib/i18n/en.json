@@ -304,6 +304,7 @@
     "renewed": "The consent is confirmed again.",
     "syncResult": "Imported: {{added}} new, {{matched}} matched with the ones you had.",
     "confirmDelete": "Disconnect {{bank}}? The transactions already imported stay.",
+    "refused": "Not done — {{message}}",
     "unreachable": "The bank did not answer. Please try later.",
     "failed": "Something went wrong. Please try later."
   },

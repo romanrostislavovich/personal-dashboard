@@ -12,6 +12,7 @@ import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { BankConnection } from '@pd/contracts';
 import {
+  errorBody,
   errorStatus,
   IntegrationGuideComponent,
   ServerKeyComponent,
@@ -176,6 +177,9 @@ const SOON_DAYS = 7;
                   }
                 </mat-select>
               </mat-form-field>
+              @if (banks.error(); as error) {
+                <p class="hint error">{{ failure(error) }}</p>
+              }
               <button matButton="filled" [disabled]="busy() || !bank()" (click)="connect()">
                 <mat-icon>add_link</mat-icon> {{ 'finance.bank.connect' | transloco }}
               </button>
@@ -223,6 +227,9 @@ const SOON_DAYS = 7;
       margin: 0;
       font: var(--mat-sys-body-small);
       color: var(--mat-sys-on-surface-variant);
+    }
+    .hint.error {
+      color: var(--mat-sys-error);
     }
     .error {
       margin: 0;
@@ -414,14 +421,25 @@ export class BankIntegration {
     }
   }
 
+  /** A refusal (400) with the provider's own words; anything else — the plain text. */
+  protected failure(error: unknown): string {
+    const status = errorStatus(error);
+    const said = (errorBody(error) as { message?: unknown } | null)?.message;
+    if (status === 400 && typeof said === 'string') {
+      return this.transloco.translate('finance.bank.refused', { message: said });
+    }
+    return this.transloco.translate(
+      status === 503 ? 'finance.bank.unreachable' : 'finance.bank.failed',
+    );
+  }
+
   private async run(action: () => Promise<unknown>): Promise<void> {
     this.busy.set(true);
     try {
       await action();
       this.state.reload();
     } catch (error) {
-      const key = errorStatus(error) === 503 ? 'finance.bank.unreachable' : 'finance.bank.failed';
-      this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });
+      this.snackBar.open(this.failure(error), 'OK', { duration: 10000 });
     } finally {
       this.busy.set(false);
     }
