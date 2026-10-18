@@ -1,4 +1,5 @@
 {
+  "upcoming": { "today": "The visit is today", "title": "Next visit in {{days}} d." },
   "title": "Health",
   "about": "One medical history of your own across countries and clinics: visits, diagnoses, medications and the documents. Kept encrypted. It records facts and never interprets them.",
   "tabs": {

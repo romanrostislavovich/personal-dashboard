@@ -82,11 +82,17 @@ interface Profile {
             <div class="tiles">
               <div class="tile">
                 <span class="label">{{ 'games.steam.hours' | transloco }}</span>
-                <span class="value">{{ hours(s.totals.minutes) | number }}</span>
+                <span class="value"
+                  >{{ hours(s.totals.minutes) | number: '1.0-0' }}
+                  <span class="unit">{{ 'games.steam.hoursUnit' | transloco }}</span></span
+                >
               </div>
               <div class="tile">
                 <span class="label">{{ 'games.steam.hours2Weeks' | transloco }}</span>
-                <span class="value">{{ hours(s.totals.minutes2Weeks) | number: '1.0-1' }}</span>
+                <span class="value"
+                  >{{ hours(s.totals.minutes2Weeks) | number: '1.0-1' }}
+                  <span class="unit">{{ 'games.steam.hoursUnit' | transloco }}</span></span
+                >
               </div>
               <div class="tile">
                 <span class="label">{{ 'games.steam.played' | transloco }}</span>
@@ -213,6 +219,10 @@ interface Profile {
     }
     .value {
       font: 800 1.5rem / 1 var(--pd-font-heading);
+    }
+    .unit {
+      font: var(--mat-sys-title-small);
+      color: var(--mat-sys-on-surface-variant);
     }
     .table-wrap {
       overflow-x: auto;

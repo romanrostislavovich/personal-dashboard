@@ -37,6 +37,15 @@ export interface CashFlowMonth {
   expense: number;
 }
 
+/**
+ * The months from the first one with any income or expense; the selected (last) month always
+ * stays, so an empty history is still a chart of one month.
+ */
+export function trimEmptyStart(months: CashFlowMonth[]): CashFlowMonth[] {
+  const first = months.findIndex((m) => m.income > 0 || m.expense > 0);
+  return first < 0 ? months.slice(-1) : months.slice(first);
+}
+
 /** `YYYY-MM` — the month key used by the cash flow endpoint. */
 export function monthKey({ year, month }: Month): string {
   return `${year}-${String(month).padStart(2, '0')}`;

@@ -6,6 +6,7 @@
   "investigating": "The AI is looking around: a minute or two…",
   "checked": "Checked {{date}}",
   "neverChecked": "Nothing has been checked yet: press “Check now”.",
+  "aiMissing": "Connect the AI in Settings → Integrations to investigate.",
   "readOnly": "The agent only looks and tells — it changes nothing by itself.",
   "ownerOnly": "The security agent reports to the owner of this dashboard only.",
   "areas": {
@@ -62,5 +63,6 @@
   },
   "links": {
     "findings": "Open security findings"
-  }
+  },
+  "emptyTitle": "Nothing checked yet"
 }

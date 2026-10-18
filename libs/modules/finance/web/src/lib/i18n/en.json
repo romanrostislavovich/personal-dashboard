@@ -1,5 +1,6 @@
 {
   "title": "Finance",
+  "importMenu": { "title": "Import", "bank": "Connect the bank" },
   "wallet": "Wallet",
   "balance": "Balance",
   "amount": "Amount",
@@ -64,7 +65,7 @@
   },
   "widget": {
     "title": "Finance",
-    "open": "Details"
+    "open": "Open"
   },
   "costSources": {
     "add": "Connect a service",

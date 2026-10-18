@@ -32,6 +32,8 @@
   "byProject": "Projects",
   "byDevice": "Devices",
   "byTitle": "Windows",
+  "mostlyOther": "Most of the time is in “Other”: the programs have no category yet.",
+  "sortPrograms": "Sort the programs",
   "categories": {
     "development": "Development",
     "browsing": "Browser",

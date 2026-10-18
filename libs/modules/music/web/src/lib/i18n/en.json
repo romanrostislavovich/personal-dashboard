@@ -60,7 +60,7 @@
   "widget": {
     "today": "Today: {{count}}",
     "empty": "Connect Last.fm or Spotify in the Music section",
-    "open": "Details"
+    "open": "Open"
   },
   "noSource": "No music sources yet: connect Last.fm or Spotify to see your history, statistics and tops.",
   "guide": {

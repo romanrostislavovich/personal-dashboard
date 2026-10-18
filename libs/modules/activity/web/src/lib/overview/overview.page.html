@@ -81,6 +81,15 @@
     <p class="hint">{{ 'activity.empty' | transloco }}</p>
   }
 
+  @if (mostlyOther()) {
+    <!-- Most of the time is in "Other": the categories say little until the programs are sorted. -->
+    <p class="sort-hint">
+      <mat-icon inline>category</mat-icon>
+      {{ 'activity.mostlyOther' | transloco }}
+      <a routerLink="/activity/settings">{{ 'activity.sortPrograms' | transloco }}</a>
+    </p>
+  }
+
   <div class="columns">
     <ng-container
       *ngTemplateOutlet="top; context: { title: 'activity.byCategory', items: categories() }"

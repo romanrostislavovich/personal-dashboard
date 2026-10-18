@@ -76,11 +76,12 @@
       "title": "Open Source",
       "week": "7 days",
       "empty": "Your public repositories appear here once GitHub, GitLab or Bitbucket is connected",
-      "open": "Details"
+      "open": "Open"
     },
     "repoHint": "A link to GitHub, GitLab or Bitbucket; a bare owner/name means GitHub",
     "service": "Service",
     "noTokenTitle": "Connect GitHub, GitLab or Bitbucket",
+    "noTokenStale": "No GitHub, GitLab or Bitbucket token: the list no longer refreshes.",
     "visibility": "Visibility",
     "visibilities": {
       "public": "Open source",
@@ -154,7 +155,7 @@
     "week": "in 7 days",
     "coding": "Coding today",
     "empty": "Connect GitHub, GitLab, Bitbucket or WakaTime in the integrations",
-    "open": "Details"
+    "open": "Open"
   },
   "wakatime": {
     "period": "Period",

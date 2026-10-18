@@ -76,11 +76,12 @@
       "title": "Open Source",
       "week": "за 7 дн.",
       "empty": "Твои публичные репозитории появятся здесь после подключения GitHub, GitLab или Bitbucket",
-      "open": "Подробнее"
+      "open": "Открыть"
     },
     "repoHint": "Ссылка на GitHub, GitLab или Bitbucket; просто owner/name — это GitHub",
     "service": "Сервис",
     "noTokenTitle": "Подключи GitHub, GitLab или Bitbucket",
+    "noTokenStale": "Токен GitHub, GitLab или Bitbucket не подключён — список не обновляется.",
     "visibility": "Видимость",
     "visibilities": {
       "public": "Open source",
@@ -154,7 +155,7 @@
     "week": "за 7 дней",
     "coding": "Кодинг сегодня",
     "empty": "Подключи GitHub, GitLab, Bitbucket или WakaTime в интеграциях",
-    "open": "Подробнее"
+    "open": "Открыть"
   },
   "wakatime": {
     "period": "Период",

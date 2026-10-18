@@ -72,7 +72,8 @@ const PERIODS = [90, 180, 365] as const;
               <span class="label">{{ 'psychology.patterns.hardestDay' | transloco }}</span>
               <span class="value">{{ hardest() }}</span>
             </div>
-            @if (data.longestLowRun; as run) {
+            <!-- One low day is not a run: shown from two days on. -->
+            @if (lowRun(data.longestLowRun); as run) {
               <div class="stat">
                 <span class="label">{{ 'psychology.patterns.lowRun' | transloco }}</span>
                 <span class="value">
@@ -96,6 +97,7 @@ const PERIODS = [90, 180, 365] as const;
             <mat-card-content class="padded">
               <pd-bar-chart
                 [bars]="weekdays()"
+                [values]="true"
                 [label]="'psychology.patterns.byWeekday' | transloco"
               />
             </mat-card-content>
@@ -109,6 +111,9 @@ const PERIODS = [90, 180, 365] as const;
               @if (weeks().length > 1) {
                 <pd-sparkline
                   [points]="weeks()"
+                  [showAxis]="true"
+                  [min]="1"
+                  [max]="5"
                   dateFormat="d MMM y"
                   [label]="'psychology.patterns.byWeek' | transloco"
                 />
@@ -282,11 +287,16 @@ export class PatternsPage {
   private readonly weekdayName = (weekday: number) =>
     this.transloco.translate(`psychology.weekdays.${weekday}`);
 
+  private readonly oneDecimal = new Intl.NumberFormat(this.transloco.getActiveLang(), {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
   protected readonly weekdays = computed<Bar[]>(() =>
     (this.patterns.value()?.byWeekday ?? []).map(({ weekday, average, days }) => ({
       label: this.weekdayName(weekday),
       value: average ?? 0,
       title: `${this.weekdayName(weekday)}: ${average ?? '—'} (${days})`,
+      display: average === null ? '' : this.oneDecimal.format(average),
     })),
   );
   protected readonly weeks = computed<SparklinePoint[]>(() =>
@@ -303,6 +313,11 @@ export class PatternsPage {
     const [first] = this.ranked();
     return first ? this.weekdayName(first.weekday) : '—';
   });
+  /** The longest run of low days, when it is a run at all: two days or more. */
+  protected lowRun(run: { days: number; from: string } | null) {
+    return run && run.days > 1 ? run : null;
+  }
+
   protected readonly hardest = computed(() => {
     const last = this.ranked().at(-1);
     return last && this.ranked().length > 1 ? this.weekdayName(last.weekday) : '—';

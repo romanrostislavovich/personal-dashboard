@@ -17,7 +17,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { ToastService } from '@pd/web-core';
+import { todayLocalDate, ToastService } from '@pd/web-core';
 import { HealthDocument, HealthLabPanel, HealthRecord, HealthVisit } from '@pd/contracts';
 import { HealthDialogs } from '../dialogs/health-dialogs.service';
 import { HealthApi } from '../health.api';
@@ -113,6 +113,26 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
           <button matButton="filled" (click)="review(data, drafts()[0])">
             {{ 'health.drafts.checkOne' | transloco }}
           </button>
+        </div>
+      }
+      @if (upcoming(); as next) {
+        <!-- The next visit a doctor asked for: on top, not inside the card of the last one. -->
+        <div class="upcoming" role="status">
+          <mat-icon>event_upcoming</mat-icon>
+          <span>
+            <b>{{
+              next.days === 0
+                ? ('health.upcoming.today' | transloco)
+                : ('health.upcoming.title' | transloco: { days: next.days })
+            }}</b>
+            {{ next.visit.nextVisitOn | date: 'd MMMM y' }}
+            @if (next.visit.speciality) {
+              · {{ next.visit.speciality | pdSpeciality }}
+            }
+            @if (doctorName(data, next.visit); as name) {
+              · {{ name }}
+            }
+          </span>
         </div>
       }
       @for (visit of visits(); track visit.id) {
@@ -339,6 +359,15 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
     }
   `,
   styles: `
+    .upcoming {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: var(--pd-radius);
+      background: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+    }
     :host {
       display: flex;
       flex-direction: column;
@@ -473,6 +502,21 @@ export class HistoryPage {
         (!speciality || visit.speciality === speciality) &&
         (!doctorId || visit.doctorId === doctorId),
     );
+  });
+
+  /** The nearest visit still ahead that a past visit set, with the days left until it. */
+  protected readonly upcoming = computed(() => {
+    const today = todayLocalDate();
+    const next = this.allVisits()
+      .filter((visit) => visit.nextVisitOn && visit.nextVisitOn >= today)
+      .sort((a, b) => (a.nextVisitOn ?? '').localeCompare(b.nextVisitOn ?? ''))[0];
+    if (!next?.nextVisitOn) {
+      return null;
+    }
+    const days = Math.round(
+      (Date.parse(`${next.nextVisitOn}T12:00:00`) - Date.parse(`${today}T12:00:00`)) / 86_400_000,
+    );
+    return { visit: next, days };
   });
 
   /** Documents the AI has read whose drafts wait to be checked. */

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
+import { needsSetup } from '@pd/web-core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Habit, isBuilding } from '@pd/contracts';
 import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
@@ -67,6 +68,10 @@ import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
 export class HabitsWidget {
   private readonly transloco = inject(TranslocoService);
   protected readonly habits = inject(HabitsApi).list();
+
+  constructor() {
+    needsSetup(() => !this.habits.isLoading() && !this.habits.value().length);
+  }
 
   protected icon(habit: Habit): string {
     return isBuilding(habit.goal) ? BUILD_ICON : HABIT_ICONS[habit.kind];

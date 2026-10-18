@@ -28,7 +28,7 @@
   "widget": {
     "title": "Monitoring",
     "empty": "Add websites in the Monitoring section",
-    "open": "Details"
+    "open": "Open"
   },
   "automations": {
     "down": "A site went down",

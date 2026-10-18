@@ -12,7 +12,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Achievement, ACHIEVEMENT_RARITIES, AchievementRarity } from '@pd/contracts';
-import { LevelCardComponent, RealtimeClient } from '@pd/web-core';
+import { EmptyStateComponent, LevelCardComponent, RealtimeClient } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { AchievementCardComponent } from './achievement-card.component';
 import { AchievementsApi } from './achievements.api';
@@ -30,6 +30,7 @@ const RECENT_COUNT = 4;
     MatIconModule,
     TranslocoPipe,
     AchievementCardComponent,
+    EmptyStateComponent,
     LevelCardComponent,
   ],
   template: `
@@ -101,7 +102,15 @@ const RECENT_COUNT = 4;
         </div>
       </section>
     } @empty {
-      <p class="empty">{{ 'achievements.empty' | transloco }}</p>
+      <pd-empty-state
+        icon="emoji_events"
+        [title]="'achievements.emptyTitle' | transloco"
+        [text]="'achievements.empty' | transloco"
+      >
+        <button matButton="filled" [disabled]="recounting()" (click)="recount()">
+          <mat-icon>refresh</mat-icon> {{ 'achievements.recountNow' | transloco }}
+        </button>
+      </pd-empty-state>
     }
   `,
   styles: `

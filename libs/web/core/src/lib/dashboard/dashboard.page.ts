@@ -1,19 +1,39 @@
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
 import { DatePipe, NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal, Type } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  Type,
+  Injector,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ArrangedWidget, arrangeWidgets, WIDGET_SIZES, WidgetSize } from '@pd/contracts';
 import { AuthService } from '../auth/auth.service';
 import { DASHBOARD_MODULES } from '../dashboard-module';
 import { LayoutService } from '../layout/layout.service';
+import { WidgetSetup } from './widget-setup';
 import { LevelCardComponent } from './level-card.component';
 
 interface ShownWidget extends ArrangedWidget {
   component: Type<unknown>;
+  /** The widget's own injector: its WidgetSetup says whether it has anything to show. */
+  injector: Injector;
+  setup: WidgetSetup;
+}
+
+/** A widget with nothing to show yet: a link to its section in the line under the grid. */
+interface PendingSection {
+  id: string;
+  labelKey: string;
+  icon: string;
 }
 
 /**
@@ -33,6 +53,7 @@ interface ShownWidget extends ArrangedWidget {
     MatIconModule,
     MatTooltipModule,
     NgComponentOutlet,
+    RouterLink,
     TranslocoPipe,
     LevelCardComponent,
   ],
@@ -51,7 +72,11 @@ export class DashboardPage {
   protected readonly isOwn = this.layout.isOwn;
   protected readonly sizes = WIDGET_SIZES;
 
-  private readonly declared = inject(DASHBOARD_MODULES).flatMap((module) => module.widgets ?? []);
+  private readonly injector = inject(Injector);
+  private readonly modules = inject(DASHBOARD_MODULES);
+  private readonly declared = this.modules.flatMap((module) => module.widgets ?? []);
+  /** One WidgetSetup (and injector) per widget, kept while the page lives. */
+  private readonly setups = new Map<string, { setup: WidgetSetup; injector: Injector }>();
   private readonly components = signal(new Map<string, Type<unknown>>());
 
   /** Every widget in the order of the layout, hidden ones included (the editor shows them). */
@@ -62,7 +87,7 @@ export class DashboardPage {
       this.layout.layout(),
     ).flatMap((widget) => {
       const component = components.get(widget.id);
-      return component ? [{ ...widget, component }] : [];
+      return component ? [{ ...widget, component, ...this.setupOf(widget.id) }] : [];
     });
   });
 
@@ -87,6 +112,40 @@ export class DashboardPage {
     void Promise.all(
       this.declared.map(async (widget) => [widget.id, await widget.loadComponent()] as const),
     ).then((loaded) => this.components.set(new Map(loaded)));
+  }
+
+  /**
+   * The sections whose widgets have nothing to show yet ("connect Last.fm"): one line of links
+   * under the grid instead of their empty cards. While editing they are cards like the rest.
+   */
+  protected readonly pending = computed<PendingSection[]>(() => {
+    const seen = new Set<string>();
+    return this.arranged()
+      .filter((widget) => !widget.hidden && widget.setup.needed())
+      .flatMap((widget) => {
+        const module = this.modules.find((item) => item.id === widget.id.split('.')[0]);
+        if (!module || seen.has(module.id)) {
+          return [];
+        }
+        seen.add(module.id);
+        return [{ id: module.id, labelKey: module.nav.labelKey, icon: module.nav.icon }];
+      });
+  });
+
+  private setupOf(id: string): { setup: WidgetSetup; injector: Injector } {
+    let entry = this.setups.get(id);
+    if (!entry) {
+      const setup = new WidgetSetup();
+      entry = {
+        setup,
+        injector: Injector.create({
+          providers: [{ provide: WidgetSetup, useValue: setup }],
+          parent: this.injector,
+        }),
+      };
+      this.setups.set(id, entry);
+    }
+    return entry;
   }
 
   /** A widget of a hidden section is shown again by showing the section (Settings → Appearance). */

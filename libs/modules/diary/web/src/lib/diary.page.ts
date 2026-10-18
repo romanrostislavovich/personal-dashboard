@@ -12,8 +12,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
@@ -52,8 +53,9 @@ type Panel = 'month' | 'search' | 'marks';
     MatCardModule,
     MatButtonModule,
     MatChipsModule,
+    MatDividerModule,
     MatIconModule,
-    MatSlideToggleModule,
+    MatMenuModule,
     MatTooltipModule,
     TranslocoPipe,
     DiaryEditorComponent,

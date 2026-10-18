@@ -74,3 +74,12 @@
   align-items: start;
   gap: 16px;
 }
+
+.sort-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}

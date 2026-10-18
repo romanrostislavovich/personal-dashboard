@@ -1,7 +1,7 @@
 {
   "title": "Achievements",
   "summary": "{{unlocked}} of {{total}} unlocked",
-  "empty": "No achievements yet",
+  "empty": "They are counted from every section at night. Count them now to see where you are.",
   "filter": {
     "all": "All",
     "unlocked": "Unlocked",
@@ -9,7 +9,7 @@
   },
   "widget": {
     "next": "Closest to unlock",
-    "all": "All achievements"
+    "all": "Open"
   },
   "recent": "Recently unlocked",
   "rarity": {
@@ -19,5 +19,7 @@
     "legendary": "Legendary"
   },
   "recount": "Recount",
-  "recountConfirm": "Count all achievements again? The ones whose condition is not met today are taken back (they stay in the trash for 30 days)."
+  "recountConfirm": "Count all achievements again? The ones whose condition is not met today are taken back (they stay in the trash for 30 days).",
+  "emptyTitle": "No achievements counted yet",
+  "recountNow": "Count now"
 }

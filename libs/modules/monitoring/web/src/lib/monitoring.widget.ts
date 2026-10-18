@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ProjectsApi } from '@pd/web-core';
+import { needsSetup, ProjectsApi } from '@pd/web-core';
 import { MonitoringApi } from './monitoring.api';
 import { StatusBadgeComponent } from './status-badge.component';
 
@@ -78,6 +78,10 @@ import { StatusBadgeComponent } from './status-badge.component';
 })
 export class MonitoringWidget {
   private readonly monitors = inject(MonitoringApi).monitors();
+
+  constructor() {
+    needsSetup(() => !this.monitors.isLoading() && !this.monitors.value().length);
+  }
   private readonly projects = inject(ProjectsApi).list();
 
   protected readonly projectNames = computed(

@@ -185,7 +185,7 @@
   "widget": {
     "dota30": "30 дней: {{wins}}–{{losses}}",
     "empty": "Добавь аккаунты в разделе Игры",
-    "open": "Подробнее",
+    "open": "Открыть",
     "steam": "2 недели: {{hours}} ч · всего {{total}} ч"
   },
   "allAccounts": "Все аккаунты",
@@ -209,6 +209,7 @@
     "level": "Уровень {{level}}",
     "hours": "Часы",
     "hours2Weeks": "За 2 недели",
+    "hoursUnit": "ч",
     "played": "Сыграно игр",
     "ofLibrary": "из {{count}} в библиотеке",
     "achievements": "Достижения",

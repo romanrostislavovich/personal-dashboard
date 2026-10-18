@@ -48,6 +48,7 @@
     "passwordHint": "At least 8 characters"
   },
   "dashboard": {
+    "pending": "Not set up yet:",
     "title": "Home",
     "greeting": {
       "night": "Good night, {{name}}",

@@ -8,6 +8,8 @@ interface Tile {
   key: 'income' | 'expense' | 'left';
   value: number;
   change: number | null;
+  /** The difference with the month before, in money: shown when the share would be huge. */
+  diff: number;
   /** Whether the change is good news: more income is, more spending is not. */
   good: boolean;
 }
@@ -27,7 +29,11 @@ interface Tile {
         @if (tile.change !== null) {
           <span class="change" [class.good]="tile.good" [class.bad]="!tile.good">
             <mat-icon inline>{{ tile.change >= 0 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
-            {{ abs(tile.change) | percent }}
+            @if (abs(tile.change) <= MAX_SHARE) {
+              {{ abs(tile.change) | percent }}
+            } @else {
+              {{ abs(tile.diff) | currency: currency() : 'symbol' : '1.0-0' }}
+            }
             <span class="vs">{{ 'finance.kpi.vs' | transloco }}</span>
           </span>
         } @else if (tile.key === 'left') {
@@ -87,6 +93,12 @@ interface Tile {
   `,
 })
 export class FinanceKpisComponent {
+  /**
+   * Above this share (+200 %) a percentage says nothing — a month after an almost empty one
+   * gives "+3 801 %" — and the difference in money is shown instead.
+   */
+  protected readonly MAX_SHARE = 2;
+
   /** The selected month. */
   readonly current = input.required<CashFlowMonth>();
   readonly previous = input.required<CashFlowMonth>();
@@ -100,15 +112,22 @@ export class FinanceKpisComponent {
     const incomeChange = relativeChange(now.income, before.income);
     const expenseChange = relativeChange(now.expense, before.expense);
     return [
-      { key: 'income', value: now.income, change: incomeChange, good: (incomeChange ?? 0) >= 0 },
+      {
+        key: 'income',
+        value: now.income,
+        change: incomeChange,
+        diff: now.income - before.income,
+        good: (incomeChange ?? 0) >= 0,
+      },
       {
         key: 'expense',
         value: now.expense,
         change: expenseChange,
+        diff: now.expense - before.expense,
         good: (expenseChange ?? 0) <= 0,
       },
       // A change of "what is left" misleads around zero, so the savings rate is shown instead.
-      { key: 'left', value: left, change: null, good: left >= leftBefore },
+      { key: 'left', value: left, change: null, diff: 0, good: left >= leftBefore },
     ];
   });
 

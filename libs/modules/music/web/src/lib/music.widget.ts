@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
+import { needsSetup } from '@pd/web-core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { MusicApi } from './music.api';
 import { NowPlayingComponent } from './now-playing.component';
@@ -59,4 +60,15 @@ export class MusicWidget {
   private readonly api = inject(MusicApi);
   protected readonly nowPlaying = this.api.nowPlaying();
   protected readonly stats = this.api.stats();
+
+  constructor() {
+    // Nothing heard yet: Last.fm or Spotify is not connected.
+    needsSetup(
+      () =>
+        !this.stats.isLoading() &&
+        !this.nowPlaying.isLoading() &&
+        !this.nowPlaying.value() &&
+        !this.stats.value()?.recent?.length,
+    );
+  }
 }

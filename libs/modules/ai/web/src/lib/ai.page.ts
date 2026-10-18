@@ -32,6 +32,7 @@ import {
   MarkdownPipe,
   errorBody,
   errorStatus,
+  EmptyStateComponent,
 } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
@@ -63,6 +64,7 @@ const SUGGESTION_KEYS = ['birthdays', 'spending', 'sites', 'diary', 'music'];
     MatProgressBarModule,
     TranslocoPipe,
     MarkdownPipe,
+    EmptyStateComponent,
     RouterLink,
   ],
   templateUrl: './ai.page.html',
@@ -70,6 +72,8 @@ const SUGGESTION_KEYS = ['birthdays', 'spending', 'sites', 'diary', 'music'];
 })
 export class AiPage {
   private readonly api = inject(AiApi);
+  /** Questions shown before the AI is connected (keys of `ai.examples`). */
+  protected readonly examples = ['spent', 'mood', 'coding', 'health'];
   private readonly transloco = inject(TranslocoService);
   private readonly messagesEnd = viewChild<ElementRef<HTMLElement>>('messagesEnd');
 

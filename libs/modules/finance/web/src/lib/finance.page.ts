@@ -41,6 +41,7 @@ import { BankBalancesComponent } from './overview/bank-balances.component';
 import { FinanceKpisComponent } from './overview/finance-kpis.component';
 import {
   cashFlowMonths,
+  trimEmptyStart,
   CategoryFilter,
   categoryShares,
   topCurrency,
@@ -225,6 +226,8 @@ export class FinancePage {
       : this.cashFlow.value();
     return cashFlowMonths(flows, this.currency(), this.month(), CHART_MONTHS);
   });
+  /** The chart from the first month with money in it: empty months before it are left out. */
+  protected readonly chartShown = computed(() => trimEmptyStart(this.chartMonths()));
   protected readonly currentFlow = computed(() => this.chartMonths()[CHART_MONTHS - 1]);
   protected readonly previousFlow = computed(() => this.chartMonths()[CHART_MONTHS - 2]);
   protected readonly categoryShares = computed(() =>
