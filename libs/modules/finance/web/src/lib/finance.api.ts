@@ -242,6 +242,10 @@ export class FinanceApi {
     return fromCore(() => this.finance.removeBank(id));
   }
 
+  resortBank() {
+    return fromCore(() => this.finance.resortBank());
+  }
+
   importStatement(file: File) {
     return fromCore(() => this.finance.importStatement(file, file.name));
   }

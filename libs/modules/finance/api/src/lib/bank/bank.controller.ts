@@ -25,6 +25,7 @@ import {
   BankConnectInput,
   bankConnectInputSchema,
   BankOption,
+  BankResortResult,
   BankState,
   BankSyncResult,
 } from '@pd/contracts';
@@ -112,6 +113,12 @@ export class BankController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<BankSyncResult> {
     return this.bank.sync(user.id, id);
+  }
+
+  /** The bank's transactions still uncategorized: sorted again by history and the AI. */
+  @Post('resort')
+  resort(@CurrentUser() user: AuthUser): Promise<BankResortResult> {
+    return this.importer.resort(user.id);
   }
 
   @Delete('connections/:id')

@@ -4,6 +4,7 @@ import {
   counterpartyKey,
   isOwnTransfer,
   matchOf,
+  merchantOf,
   operationOf,
   operationsOf,
 } from './bank-operations';
@@ -73,6 +74,21 @@ describe('bank operations', () => {
     expect(transfer && isOwnTransfer(transfer, new Set([IBAN]))).toBe(true);
     const shop = operationOf(card());
     expect(shop && isOwnTransfer(shop, new Set([IBAN]))).toBe(false);
+  });
+
+  it('takes the shop of a card payment without a name from its title', () => {
+    const payment = card({
+      entry_reference: 'E9',
+      creditor: null,
+      remittance_information: ['WARSZAWAZABKA Z7500 K.1PL', 'CARD-PAYMENT'],
+    });
+    expect(operationOf(payment)).toMatchObject({
+      counterparty: 'WARSZAWAZABKA Z7500 K.1PL',
+      note: 'WARSZAWAZABKA Z7500 K.1PL CARD-PAYMENT',
+    });
+    expect(merchantOf('WarszawaSam PlusPL CARD-PAYMENT')).toBe('WarszawaSam PlusPL');
+    expect(merchantOf('1500 TRANSFER-IN')).toBeNull();
+    expect(merchantOf(null)).toBeNull();
   });
 
   it('knows one shop under its many names', () => {

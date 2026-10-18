@@ -3,6 +3,7 @@ import {
   BankConnectInput,
   BankOption,
   BankState,
+  BankResortResult,
   BankSyncResult,
   Budget,
   BudgetInput,
@@ -75,6 +76,8 @@ export function financeApi(api: ApiClient) {
       api.put<void>(`${BASE}/bank/accounts/${id}`, { enabled }),
     syncBank: (id: string) => api.post<BankSyncResult>(`${BASE}/bank/connections/${id}/sync`, {}),
     removeBank: (id: string) => api.delete(`${BASE}/bank/connections/${id}`),
+    /** The bank's transactions still uncategorized, sorted again. */
+    resortBank: () => api.post<BankResortResult>(`${BASE}/bank/resort`, {}),
     /** A history exported from iPKO (CSV or XML): its operations as transactions, once. */
     importStatement: (file: Blob, name: string) => {
       const form = new FormData();

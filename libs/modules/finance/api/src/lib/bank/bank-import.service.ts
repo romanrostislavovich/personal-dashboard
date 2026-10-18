@@ -2,6 +2,7 @@ import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common'
 import { AiService, DB, Database, UsersService } from '@pd/api-core';
 import {
   addDays,
+  BankResortResult,
   BankSyncResult,
   parseLocalDate,
   toLocalDate,
@@ -18,6 +19,7 @@ import {
   isOwnTransfer,
   MatchCandidate,
   matchOf,
+  merchantOf,
   normalizeIban,
   operationsOf,
 } from './bank-operations';
@@ -35,6 +37,10 @@ const OVERLAP_DAYS = 5;
 const RECENT_DAYS = 2;
 /** The new counterparties the AI is asked about at once. */
 const AI_BATCH = 60;
+/** A first import of two years may bring hundreds of them; more wait for the next time. */
+const AI_MAX_BATCHES = 10;
+/** The uncategorized bank transactions sorted again at once. */
+const RESORT_MAX = 5000;
 
 const AI_INSTRUCTION =
   'You sort bank operations into the categories of a personal budget. You get a JSON object: ' +
@@ -213,7 +219,7 @@ export class BankImportService {
         amount: op.amount,
         currency: op.currency,
         category: categories.get(op) as string,
-        note: [op.counterparty, op.note].filter(Boolean).join(' — ').slice(0, 500) || null,
+        note: noteOf(op),
         occurredOn: op.bookedOn,
         projectId: null,
         bankAccountId,
@@ -223,6 +229,62 @@ export class BankImportService {
       shift(today, -RECENT_DAYS),
     );
     return { added, matched };
+  }
+
+  /**
+   * The bank's transactions still "Uncategorized" sorted again — by the counterparty's history
+   * (one corrected by hand sorts the rest of its shop) and the AI. A card payment imported
+   * without a name gets its shop from the title first.
+   */
+  async resort(userId: string): Promise<BankResortResult> {
+    const user = await this.users.findById(userId);
+    const fallback = financeMessages(user?.locale ?? 'en').uncategorized;
+    const rows = await this.db
+      .select({
+        id: transactions.id,
+        kind: transactions.kind,
+        note: transactions.note,
+        counterparty: transactions.counterparty,
+        occurredOn: transactions.occurredOn,
+      })
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          isNotNull(transactions.bankEntryId),
+          inArray(transactions.category, [
+            financeMessages('en').uncategorized,
+            financeMessages('ru').uncategorized,
+          ]),
+        ),
+      )
+      .limit(RESORT_MAX);
+    const operations = rows.map((row) => {
+      const op: BankOperation = {
+        entryId: row.id,
+        kind: row.kind,
+        amount: 0,
+        currency: '',
+        bookedOn: row.occurredOn,
+        counterparty: row.counterparty ?? merchantOf(row.note),
+        counterpartyIban: null,
+        note: row.note,
+      };
+      return { id: row.id, op };
+    });
+    const categories = await this.categories(
+      userId,
+      operations.map(({ op }) => op),
+    );
+    const sorted = operations
+      .map(({ id, op }) => ({
+        id,
+        category: categories.get(op) ?? fallback,
+        counterparty: op.counterparty,
+      }))
+      .filter((update) => update.category !== fallback);
+    await this.transactions.sortFromBank(userId, sorted);
+    return { sorted: sorted.length, left: rows.length - sorted.length };
   }
 
   /** The category of every operation: by its counterparty's history, the AI, or none. */
@@ -297,30 +359,34 @@ export class BankImportService {
     for (const op of named) {
       distinct.set(`${op.kind}|${counterpartyKey(op.counterparty)}`, op);
     }
-    const batch = [...distinct.entries()].slice(0, AI_BATCH);
-    try {
-      const reply = await this.ai.complete(
-        userId,
-        AI_INSTRUCTION,
-        JSON.stringify({
-          categories,
-          operations: batch.map(([, op]) => ({
-            counterparty: op.counterparty,
-            kind: op.kind,
-            title: op.note,
-          })),
-        }),
-        'finance',
-      );
-      const answer = parseJsonObject(reply);
-      for (const [key, op] of batch) {
-        const category = answer[op.counterparty as string];
-        if (typeof category === 'string' && categories[op.kind].includes(category)) {
-          guessed.set(key, category);
+    const all = [...distinct.entries()].slice(0, AI_BATCH * AI_MAX_BATCHES);
+    for (let from = 0; from < all.length; from += AI_BATCH) {
+      const batch = all.slice(from, from + AI_BATCH);
+      try {
+        const reply = await this.ai.complete(
+          userId,
+          AI_INSTRUCTION,
+          JSON.stringify({
+            categories,
+            operations: batch.map(([, op]) => ({
+              counterparty: op.counterparty,
+              kind: op.kind,
+              title: op.note,
+            })),
+          }),
+          'finance',
+        );
+        const answer = parseJsonObject(reply);
+        for (const [key, op] of batch) {
+          const category = answer[op.counterparty as string];
+          if (typeof category === 'string' && categories[op.kind].includes(category)) {
+            guessed.set(key, category);
+          }
         }
+      } catch (error) {
+        this.logger.warn(`The AI did not sort the bank's operations: ${String(error)}`);
+        break;
       }
-    } catch (error) {
-      this.logger.warn(`The AI did not sort the bank's operations: ${String(error)}`);
     }
     return guessed;
   }
@@ -344,6 +410,15 @@ function parseJsonObject(reply: string): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+/** The counterparty and the title, the counterparty left out when it was taken from it. */
+function noteOf(op: BankOperation): string | null {
+  const parts =
+    op.counterparty && op.note?.startsWith(op.counterparty)
+      ? [op.note]
+      : [op.counterparty, op.note];
+  return parts.filter(Boolean).join(' — ').slice(0, 500) || null;
 }
 
 function shift(day: string, by: number): string {

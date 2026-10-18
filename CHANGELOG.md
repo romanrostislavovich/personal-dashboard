@@ -232,6 +232,10 @@ under **Updating**.
 
 ### Fixed
 
+- **Bank categories** — a card payment, which the bank sends without a name, takes its shop from
+  the title, so its category follows the shop's other payments and the AI sorts it; the AI is
+  asked about every new shop of an import (not only the first 60); "Sort the uncategorized" on
+  the Bank card sorts the ones already imported.
 - **Background jobs send nothing twice.** A failed run was retried at once, twice, and a run
   over 15 minutes was taken as hung and started again — reminders and payments repeated. Jobs
   are no longer retried (a sync that sends nothing may be, with a backoff), may run an hour (the

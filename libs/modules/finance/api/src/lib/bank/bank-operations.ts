@@ -57,12 +57,26 @@ export function operationOf(transaction: ProviderTransaction): BankOperation | n
     clean((transaction.remittance_information ?? []).join(' ')).slice(0, NOTE_MAX) || null;
   const operation = { kind, amount: Math.round(amount * 100) / 100, currency, bookedOn };
   return {
+    // The name as the bank gave it: the fingerprint stays the one of the earlier imports.
     entryId: entryIdOf(transaction, { ...operation, counterparty, note }),
     ...operation,
-    counterparty,
+    counterparty: counterparty ?? merchantOf(note),
     counterpartyIban,
     note,
   };
+}
+
+/** The kind of an operation a bank adds to its title: "CARD-PAYMENT", "TRANSFER-IN". */
+const OPERATION_CODES = /(\s+[A-Z]+(?:-[A-Z]+)+)+$/;
+
+/**
+ * The shop of a card payment, which comes without a name: its title without the kind of the
+ * operation — "WARSZAWAZABKA Z7500 K.1PL CARD-PAYMENT" → "WARSZAWAZABKA Z7500 K.1PL". The
+ * counterparty key of the categories then tells one shop from another.
+ */
+export function merchantOf(title: string | null): string | null {
+  const merchant = clean(title?.replace(OPERATION_CODES, ''));
+  return counterpartyKey(merchant) ? merchant : null;
 }
 
 /** The other side: who was paid for an expense, who paid for an income. */
