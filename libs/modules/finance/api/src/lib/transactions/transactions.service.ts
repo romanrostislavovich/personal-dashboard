@@ -199,6 +199,25 @@ export class TransactionsService {
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
   }
 
+  /** Bank transactions sorted again: their categories and the counterparty found for them. */
+  async sortFromBank(
+    userId: string,
+    updates: { id: string; category: string; counterparty: string | null }[],
+  ): Promise<void> {
+    if (!updates.length) {
+      return;
+    }
+    await this.db.transaction(async (tx) => {
+      for (const { id, ...fields } of updates) {
+        await tx
+          .update(transactions)
+          .set(fields)
+          .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
+      }
+    });
+    this.changed(userId);
+  }
+
   /** Several transactions at once (an imported bank statement): all are saved or none. */
   async createMany(userId: string, inputs: TransactionInput[]): Promise<Transaction[]> {
     const projectIds = new Set(inputs.map((input) => input.projectId).filter((id) => id != null));

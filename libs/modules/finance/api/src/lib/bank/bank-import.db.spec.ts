@@ -174,6 +174,56 @@ describe.skipIf(!ADMIN_URL)('BankImportService', () => {
     expect(await service.importStatement(userId, file)).toEqual({ added: 0, matched: 0 });
   });
 
+  it('sorts the uncategorized card payments by the shop another one of it is in', async () => {
+    const [account] = await db.select().from(bankAccounts);
+    await db.insert(transactions).values([
+      {
+        userId,
+        kind: 'expense',
+        amount: 12,
+        currency: 'PLN',
+        category: 'Groceries',
+        occurredOn: '2026-03-01',
+        note: 'WARSZAWAZABKA Z3766 K.1PL CARD-PAYMENT',
+        counterparty: 'WARSZAWAZABKA Z3766 K.1PL',
+        bankAccountId: account.id,
+        bankEntryId: 'Z1',
+      },
+      {
+        userId,
+        kind: 'expense',
+        amount: 20,
+        currency: 'PLN',
+        category: 'Uncategorized',
+        occurredOn: '2026-03-02',
+        note: 'WARSZAWAZABKA Z7500 K.1PL CARD-PAYMENT',
+        bankAccountId: account.id,
+        bankEntryId: 'Z2',
+      },
+      {
+        userId,
+        kind: 'expense',
+        amount: 5,
+        currency: 'PLN',
+        category: 'Uncategorized',
+        occurredOn: '2026-03-02',
+        note: 'SOMEWHERE ELSE CARD-PAYMENT',
+        bankAccountId: account.id,
+        bankEntryId: 'Z3',
+      },
+    ]);
+    // Only the Żabka: the other shop (and the earlier tests' new ones) are unknown, no AI here.
+    expect((await service.resort(userId)).sorted).toBe(1);
+    const [sorted] = await db
+      .select()
+      .from(transactions)
+      .where(sql`${transactions.bankEntryId} = 'Z2'`);
+    expect(sorted).toMatchObject({
+      category: 'Groceries',
+      counterparty: 'WARSZAWAZABKA Z7500 K.1PL',
+    });
+  });
+
   it('refuses a file that is not a history of iPKO', async () => {
     await expect(service.importStatement(userId, Buffer.from('a,b\n1,2'))).rejects.toThrow(/iPKO/);
   });

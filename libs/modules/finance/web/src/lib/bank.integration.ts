@@ -192,6 +192,15 @@ const SOON_DAYS = 7;
             <span class="hint">{{ 'finance.statement.free' | transloco }}</span>
           </div>
 
+          @if (s.connections.length) {
+            <div class="statement">
+              <button matButton="tonal" [disabled]="busy()" (click)="resort()">
+                <mat-icon>category</mat-icon> {{ 'finance.bank.resort' | transloco }}
+              </button>
+              <span class="hint">{{ 'finance.bank.resortHint' | transloco }}</span>
+            </div>
+          }
+
           @if (s.app; as app) {
             <pd-server-key
               [fields]="fields"
@@ -409,6 +418,16 @@ export class BankIntegration {
       const result = await firstValueFrom(this.api.syncBank(connection.id));
       this.snackBar.open(this.transloco.translate('finance.bank.syncResult', result), 'OK', {
         duration: 6000,
+      });
+    });
+  }
+
+  /** The bank's transactions still uncategorized, sorted again (a first import has many). */
+  protected async resort(): Promise<void> {
+    await this.run(async () => {
+      const result = await firstValueFrom(this.api.resortBank());
+      this.snackBar.open(this.transloco.translate('finance.bank.resortResult', result), 'OK', {
+        duration: 8000,
       });
     });
   }

@@ -88,3 +88,9 @@ export interface BankSyncResult {
   added: number;
   matched: number;
 }
+
+export interface BankResortResult {
+  /** Bank transactions that got a category now, and the ones still without one. */
+  sorted: number;
+  left: number;
+}
