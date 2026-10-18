@@ -17,9 +17,13 @@ export class DurationPipe implements PipeTransform {
 
   transform(seconds: number | null | undefined): string {
     const { hours, minutes } = durationParts(seconds ?? 0);
-    return this.transloco.translate(
-      hours > 0 ? 'core.duration.hoursMinutes' : 'core.duration.minutes',
-      { hours, minutes },
-    );
+    // Whole hours read "10 h", not "10 h 0 min" (the marks of a chart's scale are such).
+    const key =
+      hours === 0
+        ? 'core.duration.minutes'
+        : minutes
+          ? 'core.duration.hoursMinutes'
+          : 'core.duration.hours';
+    return this.transloco.translate(key, { hours, minutes });
   }
 }

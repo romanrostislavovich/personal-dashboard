@@ -34,7 +34,11 @@ const PADDING = 5;
         </svg>
         @if (hoveredPoint(); as p) {
           <span class="marker" [style.left.%]="p.xPercent" [style.top.%]="p.yPercent"></span>
-          <span class="tooltip" [class.right]="p.xPercent > 60" [style.left.%]="p.xPercent">
+          <span
+            class="pd-chart-tooltip tooltip"
+            [class.right]="p.xPercent > 60"
+            [style.left.%]="p.xPercent"
+          >
             {{ p.at | date: dateFormat() }}: <b>{{ p.value | number }}</b
             >{{ unit() }}
           </span>
@@ -68,13 +72,13 @@ const PADDING = 5;
     }
     .line {
       fill: none;
-      stroke: var(--mat-sys-primary);
+      stroke: var(--pd-chart-primary);
       stroke-width: 2px;
       stroke-linejoin: round;
       stroke-linecap: round;
     }
     .area {
-      fill: var(--mat-sys-primary);
+      fill: var(--pd-chart-primary);
       opacity: 0.08;
     }
     .marker {
@@ -88,19 +92,8 @@ const PADDING = 5;
       pointer-events: none;
     }
     .tooltip {
-      position: absolute;
       bottom: calc(100% + 4px);
-      transform: translateX(-50%);
-      padding: 2px 8px;
-      border-radius: 6px;
-      font: var(--mat-sys-label-small);
-      white-space: nowrap;
-      background: var(--mat-sys-inverse-surface);
-      color: var(--mat-sys-inverse-on-surface);
-      pointer-events: none;
-    }
-    .tooltip.right {
-      transform: translateX(-90%);
+      display: block;
     }
     .axis {
       display: flex;

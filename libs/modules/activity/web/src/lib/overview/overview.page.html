@@ -72,7 +72,12 @@
         <mat-card-title>{{ 'activity.chart' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content class="padded">
-        <pd-bar-chart [bars]="bars()" [label]="'activity.chart' | transloco" />
+        <pd-bar-chart
+          [bars]="bars()"
+          [format]="hours"
+          [unit]="3600"
+          [label]="'activity.chart' | transloco"
+        />
       </mat-card-content>
     </mat-card>
   }

@@ -99,7 +99,12 @@ const DAILY_BARS_LIMIT = 31;
             <mat-card-title>{{ 'activity.focus.chart' | transloco }}</mat-card-title>
           </mat-card-header>
           <mat-card-content class="padded">
-            <pd-bar-chart [bars]="bars()" [label]="'activity.focus.chart' | transloco" />
+            <pd-bar-chart
+              [bars]="bars()"
+              [format]="hours"
+              [unit]="3600"
+              [label]="'activity.focus.chart' | transloco"
+            />
           </mat-card-content>
         </mat-card>
 
@@ -304,6 +309,9 @@ export class FocusPage {
     const s = this.stats.value();
     return s?.focusSeconds ? Math.round((s.distractedSeconds / s.focusSeconds) * 100) : 0;
   });
+
+  /** The scale of the chart: seconds as a duration ("2 h 30 min"). */
+  protected readonly hours = (seconds: number) => this.duration.transform(seconds);
 
   protected readonly bars = computed<Bar[]>(() => {
     const days = this.stats.value()?.days ?? [];

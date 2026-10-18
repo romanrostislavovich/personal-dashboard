@@ -34,6 +34,15 @@ html {
   --pd-success: light-dark(#1b8a4b, #6fdc9a);
   --pd-danger: var(--mat-sys-error);
 
+  // Charts: one look for every chart of every section (see "Charts" below).
+  --pd-chart-primary: var(--mat-sys-primary);
+  --pd-chart-income: light-dark(#1baf7a, #199e70);
+  --pd-chart-expense: light-dark(#eb6834, #d95926);
+  --pd-chart-empty: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
+  --pd-chart-grid: color-mix(in srgb, var(--mat-sys-outline-variant) 60%, transparent);
+  --pd-chart-hover: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+  --pd-chart-bar-radius: 4px 4px 0 0;
+
   // Achievement rarities: the same colors in both themes, tuned for contrast on cards.
   --pd-rarity-common: light-dark(#667085, #a4adbb);
   --pd-rarity-rare: light-dark(#1d6fe0, #5aa9ff);
@@ -150,6 +159,56 @@ h3 {
 
 .expense {
   color: var(--pd-danger);
+}
+
+// --- Charts ---
+// The parts every chart shares: the hover tooltip, the labels of the scale and the legend. A
+// chart component keeps only its own geometry; these classes give them all the same look.
+.pd-chart-tooltip {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: var(--pd-radius-small);
+  font: var(--mat-sys-body-small);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: var(--mat-sys-inverse-surface);
+  color: var(--mat-sys-inverse-on-surface);
+  box-shadow: 0 6px 18px -8px rgb(0 0 0 / 40%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+// Near the right edge the tooltip opens to the left, so it is never cut.
+.pd-chart-tooltip.right {
+  transform: translateX(-90%);
+}
+
+.pd-chart-tick {
+  font: var(--mat-sys-label-small);
+  color: var(--mat-sys-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pd-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.pd-chart-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 3px;
+  vertical-align: -1px;
 }
 
 // Rounded Material Symbols instead of the classic icon font (see provideDashboard).

@@ -512,6 +512,7 @@
     "reload": "Обновить"
   },
   "duration": {
+    "hours": "{{hours}} ч",
     "hoursMinutes": "{{hours}} ч {{minutes}} мин",
     "minutes": "{{minutes}} мин"
   },

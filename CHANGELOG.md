@@ -8,6 +8,10 @@ under **Updating**.
 
 ### Added
 
+- **One look for every chart** — shared chart tokens and classes (tooltip, scale marks, legend):
+  the bar charts of Activity, WakaTime and Development get gridlines with a round scale and a
+  tooltip on hover, the sparklines and the lab charts the same tooltip as the cash flow, the
+  diary's mood bars the same corners; whole hours read "5 h", not "5 h 0 min".
 - **A round of the UI** — home widgets of sections not set up yet (no Last.fm, no game
   accounts, no sites, no habits) gather into one "Not set up yet" line instead of empty cards,
   and every widget's link reads "Open"; empty sections (Habits, Achievements, Security, AI) get

@@ -46,7 +46,8 @@
     "periodKinds": {
       "medication": "medication",
       "diagnosis": "diagnosis"
-    }
+    },
+    "days": "{{days}} d."
   },
   "checkups": {
     "notDiagnosis": "These short questionnaires are a way to watch yourself over time, not a diagnosis. Only a specialist who talks to you can tell what a score means.",

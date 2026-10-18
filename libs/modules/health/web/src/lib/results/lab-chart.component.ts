@@ -73,7 +73,7 @@ interface PlacedPoint extends LabPoint {
             ></span>
           }
           @if (hoveredPoint(); as p) {
-            <span class="tooltip" [class.right]="p.x > 60" [style.left.%]="p.x">
+            <span class="pd-chart-tooltip tooltip" [class.right]="p.x > 60" [style.left.%]="p.x">
               <span>{{ p.day | date: 'd MMM y' }}</span>
               <b>{{ p.value | number: '1.0-3' }} {{ series().unit }}</b>
               @if (p.flag) {
@@ -135,7 +135,7 @@ interface PlacedPoint extends LabPoint {
       stroke-width: 1px;
     }
     .band {
-      fill: var(--mat-sys-primary);
+      fill: var(--pd-chart-primary);
       opacity: 0.1;
     }
     .bound {
@@ -146,7 +146,7 @@ interface PlacedPoint extends LabPoint {
     }
     .line {
       fill: none;
-      stroke: var(--mat-sys-primary);
+      stroke: var(--pd-chart-primary);
       stroke-width: 2px;
       stroke-linejoin: round;
       stroke-linecap: round;
@@ -173,22 +173,7 @@ interface PlacedPoint extends LabPoint {
         0 0 0 4px var(--mat-sys-on-surface);
     }
     .tooltip {
-      position: absolute;
       bottom: calc(100% + 8px);
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font: var(--mat-sys-label-small);
-      white-space: nowrap;
-      background: var(--mat-sys-inverse-surface);
-      color: var(--mat-sys-inverse-on-surface);
-      pointer-events: none;
-      z-index: 1;
-    }
-    .tooltip.right {
-      transform: translateX(-90%);
     }
     .x-axis {
       grid-column: 2;

@@ -63,6 +63,9 @@ export class WakatimePage {
   /** The WakaTime key lives in Settings → Integrations (wakatime.integration.ts). */
   protected readonly integrations = INTEGRATIONS_LINK;
 
+  /** The scale of the chart: seconds as a duration ("2 h 30 min"). */
+  protected readonly hours = (seconds: number) => this.duration.transform(seconds);
+
   protected readonly bars = computed<Bar[]>(() => {
     const days = this.stats.value()?.days ?? [];
     if (days.length <= DAILY_BARS_LIMIT) {

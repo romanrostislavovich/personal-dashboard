@@ -149,7 +149,11 @@
       }
 
       <h3 class="subtitle">{{ 'development.account.byMonth' | transloco }}</h3>
-      <pd-bar-chart [bars]="months()" [label]="'development.account.byMonth' | transloco" />
+      <pd-bar-chart
+        [bars]="months()"
+        [format]="count"
+        [label]="'development.account.byMonth' | transloco"
+      />
     </mat-card-content>
   </mat-card>
 
