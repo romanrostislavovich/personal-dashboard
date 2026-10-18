@@ -32,7 +32,7 @@ export class TelegramChannel implements NotificationChannel {
 }
 
 /** What Telegram's answer means for trying again (see DeliveryError). */
-export function deliveryError(error: unknown): DeliveryError {
+function deliveryError(error: unknown): DeliveryError {
   if (error instanceof GrammyError) {
     const retryAfter = error.parameters.retry_after;
     return new DeliveryError(`Telegram ${error.error_code}: ${error.description}`, {

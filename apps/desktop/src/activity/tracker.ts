@@ -411,7 +411,7 @@ interface Batch {
 }
 
 /** What the server's answer to a batch means for the queue. */
-export function outcomeOf(
+function outcomeOf(
   status: number,
   spans: number,
 ): 'sent' | 'removed' | 'too-large' | 'refused' | 'down' | 'failed' {
@@ -434,10 +434,7 @@ export function outcomeOf(
  * The settings the server sent, over the ones known: a field an older server does not send
  * keeps its value. `null` — the answer is not settings at all.
  */
-export function mergedConfig(
-  known: TrackerConfig,
-  sent: Partial<TrackerConfig>,
-): TrackerConfig | null {
+function mergedConfig(known: TrackerConfig, sent: Partial<TrackerConfig>): TrackerConfig | null {
   if (typeof sent.idleMinutes !== 'number' || !Array.isArray(sent.excludedApps)) {
     return null;
   }

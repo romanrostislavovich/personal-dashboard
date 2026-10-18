@@ -11,7 +11,7 @@ import { decryptItem, encryptItem, VaultKey } from '../vault/vault-crypto';
 
 const BASE = '/api/vault';
 
-export const VAULT_READS = {
+const VAULT_READS = {
   /** `{ keys: null }` — not set up yet. */
   keys: () => apiRequest(`${BASE}/keys`),
   items: () => apiRequest(`${BASE}/items`),
@@ -57,5 +57,3 @@ export function vaultApi(api: ApiClient) {
     remove: (id: string) => api.delete(`${BASE}/items/${id}`),
   };
 }
-
-export type VaultClient = ReturnType<typeof vaultApi>;

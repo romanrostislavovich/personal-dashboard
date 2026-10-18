@@ -73,7 +73,7 @@ export type SyncStep =
  * last sync (`index`). Nothing is lost: a file changed on both sides is kept twice, and a file
  * whose name the server gives to another one moves aside.
  */
-export function planSync(
+function planSync(
   local: LocalScreenshot[],
   server: Screenshot[],
   index: ScreenshotIndex,

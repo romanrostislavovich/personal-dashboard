@@ -27,7 +27,7 @@ const MARK_SOURCE = /^==(?!=)((?:(?!\n\s*\n)[^=]|=(?!=))+?)==/;
  * (see `@pd/contracts` diary-marks), shown as a highlight with the emoji in front.
  * The emoji is drawn by CSS from `data-emoji`, so it is not part of the editable text.
  */
-export const DiaryMark = Mark.create({
+const DiaryMark = Mark.create({
   name: 'diaryMark',
   // Typing right after a mark does not extend it.
   inclusive: false,

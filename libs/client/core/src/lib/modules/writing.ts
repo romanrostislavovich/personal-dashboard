@@ -33,5 +33,3 @@ export function writingApi(api: ApiClient) {
     removeLanguageTool: () => api.delete(`${BASE}/language-tool`),
   };
 }
-
-export type WritingClient = ReturnType<typeof writingApi>;

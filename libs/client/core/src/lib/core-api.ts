@@ -339,4 +339,3 @@ export function syncApi(api: ApiClient) {
 }
 
 export type AuthClient = ReturnType<typeof authApi>;
-export type ProjectsClient = ReturnType<typeof projectsApi>;

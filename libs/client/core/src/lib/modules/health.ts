@@ -167,5 +167,3 @@ export function healthApi(api: ApiClient) {
       api.read<IcdEntry[]>(apiRequest(`${BASE}/icd/search`, { q, limit })),
   };
 }
-
-export type HealthClient = ReturnType<typeof healthApi>;

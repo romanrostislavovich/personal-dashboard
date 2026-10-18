@@ -20,7 +20,7 @@ const IDLE_SECONDS = 120;
 /** Visits kept while the server cannot be reached (about a day and a half of browsing). */
 const MAX_QUEUE = 3000;
 /** "Open anyway" lets a closed site in for this long. */
-export const PASS_MS = 5 * 60_000;
+const PASS_MS = 5 * 60_000;
 
 const QUEUE_KEY = 'siteQueue';
 const CONFIG_KEY = 'browserConfig';
@@ -114,7 +114,7 @@ export async function guardNavigation(tabId: number, url: string): Promise<void>
 }
 
 /** The page shown instead of a closed site; `back` — the address to open when let in. */
-export function blockedPage(site: string, back: string): string {
+function blockedPage(site: string, back: string): string {
   const query = new URLSearchParams({ site, back });
   return chrome.runtime.getURL(`blocked.html?${query}`);
 }

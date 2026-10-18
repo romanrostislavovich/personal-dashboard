@@ -60,7 +60,7 @@ export interface ArrangedWidget extends DeclaredWidget {
 }
 
 /** `music.now-playing` → `music` */
-export function widgetSection(id: string): string {
+function widgetSection(id: string): string {
   return id.split('.')[0];
 }
 

@@ -23,7 +23,7 @@ import {
 } from './statistics';
 
 /** Fewer days together than this, and a correlation is a coincidence. */
-export const MIN_DAYS = 14;
+const MIN_DAYS = 14;
 /** A pair is shown as a link when its corrected p-value is under this… */
 const MAX_Q = 0.1;
 /** …and the correlation is at least this strong. */

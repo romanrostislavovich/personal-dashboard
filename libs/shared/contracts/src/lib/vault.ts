@@ -9,7 +9,7 @@ import { z } from 'zod';
 /** PBKDF2-SHA256 rounds: what OWASP recommends for it (2023). */
 export const VAULT_KDF_ITERATIONS = 600_000;
 /** An item is a few fields; a long secure note fits too. Base64 of the ciphertext. */
-export const VAULT_ITEM_MAX_LENGTH = 256 * 1024;
+const VAULT_ITEM_MAX_LENGTH = 256 * 1024;
 
 const base64 = (max: number) =>
   z

@@ -28,7 +28,7 @@ export function kda({
 }
 
 /** Wins among the matches with a known result; `null` — there are none yet. */
-export function winrate({ wins, decided }: Pick<DotaHeroStats, 'wins' | 'decided'>): number | null {
+function winrate({ wins, decided }: Pick<DotaHeroStats, 'wins' | 'decided'>): number | null {
   return decided ? wins / decided : null;
 }
 

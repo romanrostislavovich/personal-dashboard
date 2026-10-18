@@ -18,10 +18,6 @@ export function setPrivateAddressesAllowed(allowed: boolean): void {
   privateAllowed = allowed;
 }
 
-export function privateAddressesAllowed(): boolean {
-  return privateAllowed;
-}
-
 /** Thrown for an address that is not allowed; the message is safe to show to the user. */
 export class OutboundBlockedError extends Error {
   /** As network errors carry a code: the checks show it as the reason. */
@@ -111,7 +107,7 @@ function withoutCredentials(headers: RequestInit['headers']): Headers {
 }
 
 /** How long a call to an outside service may take unless it says otherwise. */
-export const OUTSIDE_TIMEOUT_MS = 30_000;
+const OUTSIDE_TIMEOUT_MS = 30_000;
 
 /**
  * `fetch` to an outside service (GitHub, Steam, Last.fm…) that gives up after

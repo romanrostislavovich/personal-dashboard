@@ -145,5 +145,3 @@ export function financeApi(api: ApiClient) {
       api.post<{ report: FinanceReport | null }>(`${BASE}/reports`, { month }),
   };
 }
-
-export type FinanceClient = ReturnType<typeof financeApi>;

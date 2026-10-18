@@ -3,7 +3,7 @@ import { Database } from '../database/database.module';
 import { APPLYING_SETTING } from '../sync/sync-triggers';
 
 /** Set for work that deletes rows without the user asking (restoring the trash itself). */
-export const TRASH_OFF_SETTING = 'pd.trash_off';
+const TRASH_OFF_SETTING = 'pd.trash_off';
 
 const TRIGGER_NAME = 'trash_keep';
 

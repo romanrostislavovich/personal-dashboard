@@ -18,7 +18,7 @@ export interface LoginFields {
 }
 
 /** Whether a person can see and type into the field. */
-export function isUsable(input: HTMLInputElement): boolean {
+function isUsable(input: HTMLInputElement): boolean {
   if (input.disabled || input.readOnly || input.type === 'hidden' || input.hidden) {
     return false;
   }
@@ -75,7 +75,7 @@ export function classifyField(input: HTMLInputElement, root: Document): FieldKin
  * A form to make an account or a new password: a field for a new password, two password fields
  * (the password and its repeat), or a button that says so.
  */
-export function isSignupForm(scope: ParentNode): boolean {
+function isSignupForm(scope: ParentNode): boolean {
   const passwords = passwordFields(scope);
   if (passwords.some((input) => input.autocomplete === 'new-password')) {
     return true;
@@ -166,7 +166,7 @@ export function readSubmitted(
  * Sets a value as typing would: through the element's own setter (React watches it) and with
  * the events frameworks listen to.
  */
-export function setValue(input: HTMLInputElement, value: string): void {
+function setValue(input: HTMLInputElement, value: string): void {
   input.focus();
   const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value')?.set;
   if (setter) {

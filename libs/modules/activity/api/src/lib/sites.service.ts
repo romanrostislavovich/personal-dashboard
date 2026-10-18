@@ -141,7 +141,7 @@ export class SitesService {
 }
 
 /** A site whose domain has one of the private words (a bank, a clinic) is never kept. */
-export function isPrivate(site: string, privateWords: string[]): boolean {
+function isPrivate(site: string, privateWords: string[]): boolean {
   return privateWords.some((word) => site.includes(word.toLowerCase()));
 }
 

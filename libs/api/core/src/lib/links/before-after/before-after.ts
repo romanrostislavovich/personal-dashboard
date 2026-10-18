@@ -11,7 +11,7 @@ import { daysOf, READINGS, round, seriesOf, SURROUNDINGS } from '../daily-series
 import { benjaminiHochberg, mean, tTwoSidedP } from '../correlations/statistics';
 
 /** Fewer days with a value on either side, and the two averages say nothing. */
-export const MIN_WINDOW_DAYS = 7;
+const MIN_WINDOW_DAYS = 7;
 /** Fewer ordinary dates to compare with, and there is no telling a change from the usual. */
 const MIN_PLACEBOS = 20;
 /** The least degrees of freedom of the comparison: a short history is judged strictly. */

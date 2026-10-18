@@ -67,7 +67,3 @@ export function weatherApi(api: ApiClient) {
       api.put<void>('/api/weather/preferences', preferences),
   };
 }
-
-export type BirthdaysClient = ReturnType<typeof birthdaysApi>;
-export type MonitoringClient = ReturnType<typeof monitoringApi>;
-export type WeatherClient = ReturnType<typeof weatherApi>;

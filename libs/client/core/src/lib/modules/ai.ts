@@ -57,5 +57,3 @@ export function aiApi(api: ApiClient) {
     },
   };
 }
-
-export type AiClient = ReturnType<typeof aiApi>;

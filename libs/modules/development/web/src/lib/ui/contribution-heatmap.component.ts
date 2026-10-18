@@ -169,7 +169,7 @@ export class ContributionHeatmapComponent {
 }
 
 /** 0 for nothing, then 1–4 by the share of the best day (any activity is at least 1). */
-export function heatLevel(value: number, max: number): number {
+function heatLevel(value: number, max: number): number {
   if (value <= 0 || max <= 0) {
     return 0;
   }

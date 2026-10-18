@@ -24,7 +24,7 @@ export function tableOfPath(path: string): string | null {
   return /^data\/([a-z0-9_]+)\.jsonl$/.exec(path)?.[1] ?? null;
 }
 
-export const isBinaryPath = (path: string) => path.startsWith(FILES_DIR);
+const isBinaryPath = (path: string) => path.startsWith(FILES_DIR);
 
 /** The value a row holds instead of a binary column. */
 export interface FileReference {

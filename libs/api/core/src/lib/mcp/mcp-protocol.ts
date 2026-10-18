@@ -6,7 +6,7 @@
  */
 
 /** The versions this server speaks, newest first; a client asking for another gets the newest. */
-export const MCP_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
+const MCP_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 
 export interface McpTool {
   name: string;

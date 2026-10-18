@@ -59,5 +59,3 @@ export function musicApi(api: ApiClient) {
       api.patch<void>(`${BASE}/soundcloud/tracks/${id}`, update),
   };
 }
-
-export type MusicClient = ReturnType<typeof musicApi>;

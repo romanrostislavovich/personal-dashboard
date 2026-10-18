@@ -25,7 +25,7 @@ export interface BackupStatus {
   copies: BackupCopy[];
 }
 
-export function isCopyName(name: string): boolean {
+function isCopyName(name: string): boolean {
   return COPY_NAME.test(name);
 }
 

@@ -49,5 +49,3 @@ export function tasksApi(api: ApiClient) {
     removeReminder: (id: string) => api.delete(`${BASE}/reminders/${id}`),
   };
 }
-
-export type TasksClient = ReturnType<typeof tasksApi>;

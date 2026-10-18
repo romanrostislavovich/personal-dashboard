@@ -21,5 +21,3 @@ export function habitsApi(api: ApiClient) {
     unmark: (id: string, day: string) => api.delete<Habit>(`${BASE}/${id}/days/${day}`),
   };
 }
-
-export type HabitsClient = ReturnType<typeof habitsApi>;

@@ -15,7 +15,7 @@ export interface BudgetAlert {
 }
 
 /** A budget is "almost spent" from this share of its limit. */
-export const BUDGET_WARN_SHARE = 0.8;
+const BUDGET_WARN_SHARE = 0.8;
 
 /** What a category of a budget has spent: its own expenses, or all of them for the total. */
 export function spentOf(budget: { category: string }, spent: ReadonlyMap<string, number>): number {

@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 /** Light, dark, or whatever the device is set to. */
 export const THEME_MODES = ['system', 'light', 'dark'] as const;
-export type ThemeMode = (typeof THEME_MODES)[number];
 
 /** Ready-made themes: an accent colour each; `violet` is the look the dashboard ships with. */
 export const THEME_PRESETS = ['violet', 'blue', 'green', 'orange', 'pink', 'gray'] as const;
@@ -23,7 +22,6 @@ export const THEME_FONTS = ['default', 'system', 'serif', 'mono'] as const;
 export type ThemeFont = (typeof THEME_FONTS)[number];
 
 export const THEME_DENSITIES = ['normal', 'compact'] as const;
-export type ThemeDensity = (typeof THEME_DENSITIES)[number];
 
 /** Corners of cards, in pixels. */
 export const THEME_RADIUS = { min: 0, max: 28, default: 20 } as const;

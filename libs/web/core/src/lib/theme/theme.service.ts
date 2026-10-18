@@ -151,7 +151,7 @@ export class ThemeService {
  * What the palette of a theme is grown from: `<colour>|<neutral or true>`; `null` — the
  * built-in violet, whose colours the stylesheet already has.
  */
-export function paletteKey(theme: Theme): string | null {
+function paletteKey(theme: Theme): string | null {
   if (theme.accent) {
     return `${theme.accent.toLowerCase()}|true`;
   }

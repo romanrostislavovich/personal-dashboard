@@ -36,7 +36,7 @@ export interface ScheduledJob {
 const DEFAULT_EXPIRE_MINUTES = 60;
 
 /** How pg-boss keeps the runs of a job (by default: retried twice at once, hung after 15 min). */
-export function queueOptions(job: ScheduledJob) {
+function queueOptions(job: ScheduledJob) {
   return {
     expireInSeconds: (job.expireMinutes ?? DEFAULT_EXPIRE_MINUTES) * 60,
     ...(job.retry ? { retryLimit: 2, retryDelay: 60, retryBackoff: true } : { retryLimit: 0 }),
