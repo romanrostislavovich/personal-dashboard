@@ -34,6 +34,7 @@ import {
   todayLocalDate,
 } from '@pd/web-core';
 import { FinanceApi } from './finance.api';
+import { StatementImportButton } from './statement-import.button';
 import { CashFlowChartComponent } from './overview/cash-flow-chart.component';
 import { CategoryBreakdownComponent } from './overview/category-breakdown.component';
 import { FinanceKpisComponent } from './overview/finance-kpis.component';
@@ -94,6 +95,7 @@ function inMain(transactions: Transaction[], main: string): Transaction[] {
   selector: 'pd-finance-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    StatementImportButton,
     DatePipe,
     DecimalPipe,
     DurationPipe,
@@ -368,5 +370,16 @@ export class FinancePage {
   protected reloadTransactions(): void {
     this.transactions.reload();
     this.cashFlow.reload();
+  }
+
+  /**
+   * A statement was imported: the months of its history, and the main currency — chosen by
+   * the currency used most, which a first import may change.
+   */
+  protected reloadImported(): void {
+    this.reloadTransactions();
+    this.mainFlow.reload();
+    this.settings.reload();
+    this.subscriptions.reload();
   }
 }

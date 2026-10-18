@@ -75,6 +75,12 @@ export function financeApi(api: ApiClient) {
       api.put<void>(`${BASE}/bank/accounts/${id}`, { enabled }),
     syncBank: (id: string) => api.post<BankSyncResult>(`${BASE}/bank/connections/${id}/sync`, {}),
     removeBank: (id: string) => api.delete(`${BASE}/bank/connections/${id}`),
+    /** A history exported from iPKO (CSV or XML): its operations as transactions, once. */
+    importStatement: (file: Blob, name: string) => {
+      const form = new FormData();
+      form.append('file', file, name);
+      return api.post<BankSyncResult>(`${BASE}/bank/statement`, form);
+    },
     transactions: (query: TransactionQuery) =>
       api.read<Transaction[]>(FINANCE_READS.transactions(query)),
     summary: (query: TransactionQuery) => api.read<FinanceSummary>(FINANCE_READS.summary(query)),

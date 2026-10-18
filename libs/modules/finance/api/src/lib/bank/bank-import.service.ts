@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { AiService, DB, Database, UsersService } from '@pd/api-core';
 import {
   addDays,
@@ -22,6 +22,7 @@ import {
   operationsOf,
 } from './bank-operations';
 import { BankAccountRow, bankAccounts, BankConnectionRow } from './bank.schema';
+import { OWN_ACCOUNT, parsePkoStatement, Statement } from './pko-statement';
 import { EnableBankingClient } from './enable-banking.client';
 
 /** A first import asks for this much history; the bank gives what it keeps (often 90 days). */
@@ -102,7 +103,7 @@ export class BankImportService {
           : client.transactions(account.uid, shift(today, -SHORT_HISTORY_DAYS)),
       );
     const operations = operationsOf(fetched).filter((op) => !isOwnTransfer(op, ownIbans));
-    const result = await this.save(account, operations, today);
+    const result = await this.save(account.userId, account.id, operations, today);
     const lastBooked = operations.reduce<string | null>(
       (latest, op) => (!latest || op.bookedOn > latest ? op.bookedOn : latest),
       account.lastBookedOn,
@@ -114,12 +115,37 @@ export class BankImportService {
     return result;
   }
 
+  /**
+   * A history of an account exported from the bank (iPKO's CSV or XML): the same import, its
+   * operations tied to no connected account. Its own transfers are told by the type, the
+   * accounts of the connected banks, and the account the file is of.
+   */
+  async importStatement(userId: string, file: Buffer): Promise<BankSyncResult> {
+    let statement: Statement;
+    try {
+      statement = parsePkoStatement(file);
+    } catch (error) {
+      throw new BadRequestException(String(error instanceof Error ? error.message : error));
+    }
+    const own = await this.db
+      .select({ iban: bankAccounts.iban })
+      .from(bankAccounts)
+      .where(eq(bankAccounts.userId, userId));
+    const ownIbans = new Set([
+      OWN_ACCOUNT,
+      ...own.flatMap((row) => normalizeIban(row.iban) ?? []),
+      ...(statement.account ? [statement.account] : []),
+    ]);
+    const operations = statement.operations.filter((op) => !isOwnTransfer(op, ownIbans));
+    return this.save(userId, null, operations, await this.today(userId));
+  }
+
   private async save(
-    account: BankAccountRow,
+    userId: string,
+    bankAccountId: string | null,
     operations: BankOperation[],
     today: string,
   ): Promise<BankSyncResult> {
-    const userId = account.userId;
     if (!operations.length) {
       return { added: 0, matched: 0 };
     }
@@ -170,7 +196,7 @@ export class BankImportService {
       if (match) {
         candidates.splice(candidates.indexOf(match), 1);
         await this.transactions.linkToBank(userId, match.id, {
-          bankAccountId: account.id,
+          bankAccountId,
           bankEntryId: op.entryId,
           counterparty: op.counterparty,
         });
@@ -190,7 +216,7 @@ export class BankImportService {
         note: [op.counterparty, op.note].filter(Boolean).join(' — ').slice(0, 500) || null,
         occurredOn: op.bookedOn,
         projectId: null,
-        bankAccountId: account.id,
+        bankAccountId,
         bankEntryId: op.entryId,
         counterparty: op.counterparty,
       })),

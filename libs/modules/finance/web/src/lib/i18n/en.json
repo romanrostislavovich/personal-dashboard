@@ -306,5 +306,12 @@
     "confirmDelete": "Disconnect {{bank}}? The transactions already imported stay.",
     "unreachable": "The bank did not answer. Please try later.",
     "failed": "Something went wrong. Please try later."
+  },
+  "statement": {
+    "import": "Import a PKO statement",
+    "importing": "Importing…",
+    "hint": "iPKO → History → Download (CSV or XML): the operations become transactions; a file imported again adds nothing.",
+    "notPko": "This is not a history exported from iPKO (CSV or XML).",
+    "free": "Free, without Enable Banking: export the history in iPKO (History → Download, CSV or XML) and import it here — as often as you like, nothing is doubled."
   }
 }

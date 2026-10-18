@@ -162,7 +162,7 @@ export class TransactionsService {
   async importFromBank(
     userId: string,
     rows: (TransactionInput & {
-      bankAccountId: string;
+      bankAccountId: string | null;
       bankEntryId: string;
       counterparty: string | null;
     })[],
@@ -191,7 +191,7 @@ export class TransactionsService {
   async linkToBank(
     userId: string,
     id: string,
-    link: { bankAccountId: string; bankEntryId: string; counterparty: string | null },
+    link: { bankAccountId: string | null; bankEntryId: string; counterparty: string | null },
   ): Promise<void> {
     await this.db
       .update(transactions)

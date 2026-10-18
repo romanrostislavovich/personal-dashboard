@@ -8,6 +8,12 @@ under **Updating**.
 
 ### Added
 
+- **A statement of PKO BP** — Finance → "Import a PKO statement" (also on the Bank card): the
+  history exported from iPKO (History → Download, CSV in Windows-1250 or XML) becomes
+  transactions the same way as the bank's own import — matched with the ones typed by hand,
+  transfers between one's own accounts left out, the category by the counterparty or the AI,
+  and nothing doubled when a file (or a longer one over the same days) is imported again.
+  Free, without any open-banking provider.
 - **The bank directly (open banking)** — Settings → Integrations → Bank: PKO BP and other
   European banks through Enable Banking. The owner adds an application of their own (its id and
   .pem key, checked with Enable Banking); each user signs in on the bank's own page, chooses the
