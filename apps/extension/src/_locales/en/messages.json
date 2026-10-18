@@ -15,7 +15,16 @@
     "message": "Update the password for $1?"
   },
   "saveBarLocked": {
-    "message": "Save the password for $1? Unlock the vault in the extension to save it."
+    "message": "Save the password for $1? The vault is locked."
+  },
+  "saveBarSignedOut": {
+    "message": "Save the password for $1? Sign in to the dashboard first."
+  },
+  "saveBarUnlockButton": {
+    "message": "Enter the master password"
+  },
+  "saveBarSignInButton": {
+    "message": "Sign in"
   },
   "saveBarNoLogin": {
     "message": "Without a login"

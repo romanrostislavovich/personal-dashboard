@@ -8,6 +8,9 @@ under **Updating**.
 
 ### Added
 
+- **Save a login from the bar, locked or signed out** — the extension's bar that offers to save a
+  password typed into a page now has "Enter the master password" (or "Sign in"): the popup opens
+  at that step, and once the vault is unlocked the bar comes back with "Save".
 - **Bank balances** — every import also asks the bank what is on each imported account (what can
   be spent now, else what is booked): shown on the Bank card, above the month on the Finance page
   and to the AI (`finance_bank_balances`).

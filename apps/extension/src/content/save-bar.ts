@@ -8,6 +8,8 @@ import { SaveOffer } from '../shared/messages';
 export interface SaveBarActions {
   save(mode: 'save' | 'update'): void;
   dismiss(never: boolean): void;
+  /** Locked or signed out: the popup, to enter the master password or to sign in. */
+  open(): void;
 }
 
 const t = (key: string, ...substitutions: string[]) => chrome.i18n.getMessage(key, substitutions);
@@ -42,12 +44,12 @@ export function showSaveBar(offer: SaveOffer, actions: SaveBarActions): void {
   style.textContent = STYLE;
   const bar = element('div', 'bar');
   bar.setAttribute('role', 'dialog');
-  const titleKey =
-    offer.mode === 'update'
-      ? 'saveBarUpdate'
-      : offer.mode === 'locked'
-        ? 'saveBarLocked'
-        : 'saveBarSave';
+  const titleKey = {
+    save: 'saveBarSave',
+    update: 'saveBarUpdate',
+    locked: 'saveBarLocked',
+    'signed-out': 'saveBarSignedOut',
+  }[offer.mode];
   bar.append(
     element('div', 'title', t(titleKey, offer.site)),
     element('div', 'who', offer.username || t('saveBarNoLogin')),
@@ -58,8 +60,15 @@ export function showSaveBar(offer: SaveOffer, actions: SaveBarActions): void {
     button(t('saveBarNever'), '', () => close(() => actions.dismiss(true))),
     button(t('saveBarNotNow'), '', () => close(() => actions.dismiss(false))),
   );
-  if (offer.mode !== 'locked') {
-    const mode = offer.mode;
+  const mode = offer.mode;
+  if (mode === 'locked' || mode === 'signed-out') {
+    // Shown again with "Save" once the vault is unlocked in the popup.
+    buttons.append(
+      button(t(mode === 'locked' ? 'saveBarUnlockButton' : 'saveBarSignInButton'), 'primary', () =>
+        close(() => actions.open()),
+      ),
+    );
+  } else {
     buttons.append(
       button(t(mode === 'update' ? 'saveBarUpdateButton' : 'saveBarSaveButton'), 'primary', () =>
         close(() => actions.save(mode)),

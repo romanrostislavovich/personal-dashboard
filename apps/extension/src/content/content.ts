@@ -52,6 +52,12 @@ chrome.runtime.onMessage.addListener(
         resetWriting();
         reply({ filled: false });
         break;
+      case 'offer-again':
+        reply({ filled: false });
+        if (window === window.top) {
+          void offerToSave();
+        }
+        break;
       case 'snapshot':
         // Only the page itself answers, not a frame inside it.
         if (window === window.top) {
@@ -172,6 +178,7 @@ async function offerToSave(): Promise<void> {
     showSaveBar(offer, {
       save: (mode) => void ask({ type: 'save-offer', mode }).catch(() => undefined),
       dismiss: (never) => void ask({ type: 'dismiss-offer', never }).catch(() => undefined),
+      open: () => void ask({ type: 'offer-open' }).catch(() => undefined),
     });
   }
 }

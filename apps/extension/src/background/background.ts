@@ -20,6 +20,7 @@ import {
   forgetTab,
   neverSites,
   noteSubmitted,
+  offerAgain,
   offerFor,
   saveOffer,
 } from './capture';
@@ -184,7 +185,7 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
       return signOut();
     case 'unlock':
       await unlock(message.masterPassword);
-      return refreshBadge();
+      return unlocked();
     case 'lock':
       return lockEverywhere();
     case 'items':
@@ -263,7 +264,7 @@ function fromMenu(message: PopupRequest): Promise<unknown> | null {
     case 'menu-generate':
       return menuGenerate(message.token);
     case 'menu-unlock':
-      return menuUnlock(message.token, message.masterPassword).then(refreshBadge);
+      return menuUnlock(message.token, message.masterPassword).then(unlocked);
     case 'menu-open-popup':
       return openPopupWindow();
     default:
@@ -290,6 +291,8 @@ async function fromContent(
       return saveOffer(tabId, message.mode);
     case 'dismiss-offer':
       return dismissOffer(tabId, message.never);
+    case 'offer-open':
+      return openForOffer();
     case 'menu-open':
       return openMenu(sender, message.kind, message.fieldId, message.explicit);
     // The frame's own address decides, never what the page says it is.
@@ -333,6 +336,24 @@ async function openPopupWindow(): Promise<void> {
   }
 }
 
+/**
+ * The bar's way on: the popup with the master password asked at once (or the sign-in, when
+ * the extension is signed out). The password is never typed into the page itself.
+ */
+async function openForOffer(): Promise<void> {
+  // Signed out, it waits through the sign-in: the vault is asked for once that is done.
+  await chrome.storage.session.set({ [UNLOCK_ASKED]: true });
+  await openPopupWindow();
+}
+
+/** Unlocked: the badge counts the logins again, and a login waiting to be saved is offered. */
+async function unlocked(): Promise<void> {
+  await refreshBadge();
+  for (const tabId of await offerAgain()) {
+    await chrome.tabs.sendMessage(tabId, { type: 'offer-again' }).catch(() => undefined);
+  }
+}
+
 /** The assistant beside the page of the window in front (a shortcut, the popup's button). */
 async function openAssistant(): Promise<void> {
   const window = await chrome.windows.getLastFocused({ windowTypes: ['normal'] }).catch(() => null);
@@ -358,7 +379,7 @@ async function popupState(): Promise<PopupState> {
     page: tab ? { url: tab.url, site: siteName(tab.url) } : null,
     offer: tab && signedIn ? await offerFor(tab.id) : null,
     writing: tab && signedIn ? await writingPopupState(tab.url).catch(() => null) : null,
-    unlockAsked: await takeUnlockAsked(),
+    unlockAsked: vault === 'locked' ? await takeUnlockAsked() : false,
     update: await updateStatus(),
   };
 }
