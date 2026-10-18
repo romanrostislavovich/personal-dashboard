@@ -210,3 +210,10 @@ td.link {
   text-align: center;
   color: var(--mat-sys-on-surface-variant);
 }
+
+.stale {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px;
+}

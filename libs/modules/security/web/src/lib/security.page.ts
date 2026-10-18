@@ -18,6 +18,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { SecurityFinding, SecuritySettings, SecuritySeverity } from '@pd/contracts';
@@ -57,6 +58,7 @@ const ICONS: Record<SecuritySeverity, string> = {
     MatProgressBarModule,
     MatSelectModule,
     MatSlideToggleModule,
+    MatTooltipModule,
     TranslocoPipe,
     MarkdownPipe,
   ],
@@ -67,13 +69,20 @@ const ICONS: Record<SecuritySeverity, string> = {
         <button matButton="outlined" (click)="scan()" [disabled]="busy() !== null || forbidden()">
           <mat-icon>refresh</mat-icon> {{ 'security.scan' | transloco }}
         </button>
-        <button
-          matButton="filled"
-          (click)="investigate()"
-          [disabled]="busy() !== null || !status.value()?.aiAvailable"
+        <!-- A disabled button shows no tooltip: the span around it does, and says why. -->
+        <span
+          [matTooltip]="
+            status.value()?.aiAvailable === false ? ('security.aiMissing' | transloco) : ''
+          "
         >
-          <mat-icon>psychology</mat-icon> {{ 'security.investigate' | transloco }}
-        </button>
+          <button
+            matButton="filled"
+            (click)="investigate()"
+            [disabled]="busy() !== null || !status.value()?.aiAvailable"
+          >
+            <mat-icon>psychology</mat-icon> {{ 'security.investigate' | transloco }}
+          </button>
+        </span>
       </div>
     </header>
 
@@ -88,18 +97,17 @@ const ICONS: Record<SecuritySeverity, string> = {
 
     @if (status.value(); as s) {
       <p class="hint">
+        <!-- Never checked: said once, where the findings would be. -->
         @if (s.scannedAt) {
-          {{ 'security.checked' | transloco: { date: (s.scannedAt | date: 'd MMM, HH:mm') } }}
-        } @else {
-          {{ 'security.neverChecked' | transloco }}
+          {{ 'security.checked' | transloco: { date: (s.scannedAt | date: 'd MMM, HH:mm') } }} ·
         }
-        · {{ 'security.readOnly' | transloco }}
+        {{ 'security.readOnly' | transloco }}
       </p>
 
       <div class="areas">
         @for (area of s.areas; track area.area) {
           <div class="area" [class.off]="!area.available">
-            <mat-icon>{{ area.available ? 'check_circle' : 'do_not_disturb_on' }}</mat-icon>
+            <mat-icon>{{ area.available ? 'check_circle' : 'link_off' }}</mat-icon>
             <span>
               <b>{{ 'security.areas.' + area.area | transloco }}</b>
               <span class="hint">

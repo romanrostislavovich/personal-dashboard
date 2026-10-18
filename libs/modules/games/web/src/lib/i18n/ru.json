@@ -209,6 +209,7 @@
     "level": "Уровень {{level}}",
     "hours": "Часы",
     "hours2Weeks": "За 2 недели",
+    "hoursUnit": "ч",
     "played": "Сыграно игр",
     "ofLibrary": "из {{count}} в библиотеке",
     "achievements": "Достижения",

@@ -2,6 +2,7 @@
   "title": "Diary",
   "today": "Today",
   "eveningReminder": "Remind at 21:00",
+  "settingsMenu": "Diary settings",
   "emptyMonth": "No entries this month",
   "stats": {
     "streak": "Days in a row",

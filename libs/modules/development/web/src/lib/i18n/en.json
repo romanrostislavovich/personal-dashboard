@@ -81,6 +81,7 @@
     "repoHint": "A link to GitHub, GitLab or Bitbucket; a bare owner/name means GitHub",
     "service": "Service",
     "noTokenTitle": "Connect GitHub, GitLab or Bitbucket",
+    "noTokenStale": "No GitHub, GitLab or Bitbucket token: the list no longer refreshes.",
     "visibility": "Visibility",
     "visibilities": {
       "public": "Open source",

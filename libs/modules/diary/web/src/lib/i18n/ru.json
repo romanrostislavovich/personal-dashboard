@@ -2,6 +2,7 @@
   "title": "Дневник",
   "today": "Сегодня",
   "eveningReminder": "Напоминать в 21:00",
+  "settingsMenu": "Настройки дневника",
   "emptyMonth": "В этом месяце записей нет",
   "stats": {
     "streak": "Дней подряд",

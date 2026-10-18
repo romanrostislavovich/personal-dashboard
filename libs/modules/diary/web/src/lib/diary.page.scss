@@ -310,6 +310,13 @@
   }
 }
 
-.delete-all {
+.delete-all,
+.delete-all mat-icon {
   color: var(--mat-sys-error);
+}
+.wrap {
+  max-width: 320px;
+  white-space: normal;
+  height: auto;
+  min-height: 48px;
 }

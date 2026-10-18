@@ -81,6 +81,7 @@
     "repoHint": "Ссылка на GitHub, GitLab или Bitbucket; просто owner/name — это GitHub",
     "service": "Сервис",
     "noTokenTitle": "Подключи GitHub, GitLab или Bitbucket",
+    "noTokenStale": "Токен GitHub, GitLab или Bitbucket не подключён — список не обновляется.",
     "visibility": "Видимость",
     "visibilities": {
       "public": "Open source",

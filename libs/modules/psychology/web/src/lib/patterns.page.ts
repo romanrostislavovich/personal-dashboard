@@ -72,7 +72,8 @@ const PERIODS = [90, 180, 365] as const;
               <span class="label">{{ 'psychology.patterns.hardestDay' | transloco }}</span>
               <span class="value">{{ hardest() }}</span>
             </div>
-            @if (data.longestLowRun; as run) {
+            <!-- One low day is not a run: shown from two days on. -->
+            @if (lowRun(data.longestLowRun); as run) {
               <div class="stat">
                 <span class="label">{{ 'psychology.patterns.lowRun' | transloco }}</span>
                 <span class="value">
@@ -303,6 +304,11 @@ export class PatternsPage {
     const [first] = this.ranked();
     return first ? this.weekdayName(first.weekday) : '—';
   });
+  /** The longest run of low days, when it is a run at all: two days or more. */
+  protected lowRun(run: { days: number; from: string } | null) {
+    return run && run.days > 1 ? run : null;
+  }
+
   protected readonly hardest = computed(() => {
     const last = this.ranked().at(-1);
     return last && this.ranked().length > 1 ? this.weekdayName(last.weekday) : '—';

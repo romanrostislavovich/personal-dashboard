@@ -209,6 +209,7 @@
     "level": "Level {{level}}",
     "hours": "Hours",
     "hours2Weeks": "In 2 weeks",
+    "hoursUnit": "h",
     "played": "Games played",
     "ofLibrary": "of {{count}} in the library",
     "achievements": "Achievements",
