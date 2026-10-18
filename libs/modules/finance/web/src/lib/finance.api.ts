@@ -241,4 +241,8 @@ export class FinanceApi {
   removeBank(id: string) {
     return fromCore(() => this.finance.removeBank(id));
   }
+
+  importStatement(file: File) {
+    return fromCore(() => this.finance.importStatement(file, file.name));
+  }
 }

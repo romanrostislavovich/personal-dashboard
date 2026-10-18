@@ -28,6 +28,7 @@
     >
       <mat-icon>cloud_sync</mat-icon>
     </a>
+    <pd-statement-import appearance="text" (imported)="reloadImported()" />
     <button matButton="filled" (click)="openTransactionForm()">
       <mat-icon>add</mat-icon> {{ 'finance.transaction.add' | transloco }}
     </button>

@@ -19,6 +19,7 @@ import {
 } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { FinanceApi } from './finance.api';
+import { StatementImportButton } from './statement-import.button';
 
 /** The countries Enable Banking reaches, the user's own first. */
 const COUNTRIES = [
@@ -64,6 +65,7 @@ const SOON_DAYS = 7;
     MatSlideToggleModule,
     MatTooltipModule,
     ServerKeyComponent,
+    StatementImportButton,
     TranslocoPipe,
   ],
   template: `
@@ -181,6 +183,11 @@ const SOON_DAYS = 7;
             <p class="hint">{{ 'finance.bank.consent' | transloco }}</p>
           }
 
+          <div class="statement">
+            <pd-statement-import (imported)="state.reload()" />
+            <span class="hint">{{ 'finance.statement.free' | transloco }}</span>
+          </div>
+
           @if (s.app; as app) {
             <pd-server-key
               [fields]="fields"
@@ -281,6 +288,12 @@ const SOON_DAYS = 7;
     }
     code {
       word-break: break-all;
+    }
+    .statement {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
     }
   `,
 })

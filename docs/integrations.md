@@ -21,6 +21,7 @@ client receives them with the sync. They are not read from `.env` any more.
 | Last.fm               | Username + API key from [last.fm/api/account/create](https://www.last.fm/api/account/create)                                                                           |
 | Spotify               | Create an app at developer.spotify.com with the Redirect URI the card shows, paste its Client ID and Secret into “Server key”                                          |
 | LanguageTool          | The address of the LanguageTool server: `http://languagetool:8010` for the one in docker compose (`http://localhost:8010` with `npm run dev`)                          |
+| PKO BP statement      | Nothing to set up: iPKO → History → Download (CSV or XML), then “Import a PKO statement” in Finance; importing it again adds nothing                                   |
 | Bank (Enable Banking) | An application of your own at enablebanking.com (Production, own accounts), the redirect URL the card shows; its Application ID and .pem key into “Server key”         |
 | SoundCloud            | The address of your profile (`https://soundcloud.com/your-name`) is enough for public tracks; plays, likes, reposts and comments are saved day by day                  |
 | Steam                 | A Web API key from steamcommunity.com/dev/apikey (one for all accounts), then add your profiles on the Games page                                                      |

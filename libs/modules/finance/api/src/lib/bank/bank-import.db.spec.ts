@@ -150,4 +150,31 @@ describe.skipIf(!ADMIN_URL)('BankImportService', () => {
     // The next import of the same days adds nothing.
     expect(await service.importConnection(connection, bank)).toEqual({ added: 0, matched: 0 });
   });
+
+  it('imports a history exported from iPKO once, its own transfers left out', async () => {
+    const csv = [
+      '"Data operacji","Data waluty","Typ transakcji","Kwota","Waluta","Saldo po transakcji","Opis transakcji","",""',
+      '"2026-02-03","2026-02-03","Płatność kartą","-40,00","PLN","+960,00","Tytuł: 1","Lokalizacja: Adres: BIEDRONKA 9 WARSZAWA Miasto: WARSZAWA",""',
+      '"2026-02-04","2026-02-04","Przelew własny","-100,00","PLN","+860,00","Tytuł: savings","",""',
+      '"2026-02-05","2026-02-05","Przelew na rachunek","+50,00","PLN","+910,00","Nazwa nadawcy: FRIEND","Tytuł: pizza",""',
+    ].join('\n');
+    const file = Buffer.from(csv, 'utf8');
+    expect(await service.importStatement(userId, file)).toEqual({ added: 2, matched: 0 });
+    const rows = await db
+      .select()
+      .from(transactions)
+      .where(sql`${transactions.bankEntryId} LIKE 'pko:%'`);
+    expect(
+      rows.map((row) => [row.kind, row.amount, row.category, row.bankAccountId]).sort(),
+    ).toEqual([
+      ['expense', 40, 'Groceries', null],
+      ['income', 50, 'Uncategorized', null],
+    ]);
+    // The same file again (or a longer one over the same days) adds nothing.
+    expect(await service.importStatement(userId, file)).toEqual({ added: 0, matched: 0 });
+  });
+
+  it('refuses a file that is not a history of iPKO', async () => {
+    await expect(service.importStatement(userId, Buffer.from('a,b\n1,2'))).rejects.toThrow(/iPKO/);
+  });
 });
