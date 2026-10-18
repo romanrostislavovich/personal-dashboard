@@ -2,6 +2,10 @@ import { httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { FINANCE_READS, financeApi } from '@pd/client-core';
 import {
+  BankAppInput,
+  BankConnectInput,
+  BankOption,
+  BankState,
   Budget,
   BudgetInput,
   CostSource,
@@ -198,5 +202,43 @@ export class FinanceApi {
   async openReceipt(id: string): Promise<void> {
     const blob = await this.finance.receipt(id);
     window.open(URL.createObjectURL(blob), '_blank');
+  }
+
+  bank() {
+    return httpResource<BankState>(() => FINANCE_READS.bank());
+  }
+
+  bankBanks(country: () => string | null) {
+    return httpResource<BankOption[]>(
+      () => {
+        const code = country();
+        return code ? FINANCE_READS.bankBanks(code) : undefined;
+      },
+      { defaultValue: [] },
+    );
+  }
+
+  setBankApp(input: BankAppInput) {
+    return fromCore(() => this.finance.setBankApp(input));
+  }
+
+  removeBankApp() {
+    return fromCore(() => this.finance.removeBankApp());
+  }
+
+  connectBank(input: BankConnectInput) {
+    return fromCore(() => this.finance.connectBank(input));
+  }
+
+  setBankAccount(id: string, enabled: boolean) {
+    return fromCore(() => this.finance.setBankAccount(id, enabled));
+  }
+
+  syncBank(id: string) {
+    return fromCore(() => this.finance.syncBank(id));
+  }
+
+  removeBank(id: string) {
+    return fromCore(() => this.finance.removeBank(id));
   }
 }

@@ -154,6 +154,51 @@ export class TransactionsService {
     return transaction;
   }
 
+  /**
+   * Operations of a bank account (see BankService): one transaction per operation — an import
+   * repeated adds nothing. The automations hear only of the operations booked from `recentFrom`:
+   * the history of a first import is not news.
+   */
+  async importFromBank(
+    userId: string,
+    rows: (TransactionInput & {
+      bankAccountId: string;
+      bankEntryId: string;
+      counterparty: string | null;
+    })[],
+    recentFrom: string,
+  ): Promise<number> {
+    if (!rows.length) {
+      return 0;
+    }
+    const inserted = await this.db
+      .insert(transactions)
+      .values(rows.map((row) => ({ ...row, userId })))
+      .onConflictDoNothing({ target: [transactions.userId, transactions.bankEntryId] })
+      .returning();
+    if (inserted.length) {
+      this.changed(userId);
+      const recent = inserted.filter((row) => row.occurredOn >= recentFrom);
+      if (recent.length) {
+        const created = await this.withMainAmounts(userId, recent);
+        this.createdListeners.forEach((listener) => listener(userId, created));
+      }
+    }
+    return inserted.length;
+  }
+
+  /** A transaction typed by hand turns out to be an operation of the bank: tied to it. */
+  async linkToBank(
+    userId: string,
+    id: string,
+    link: { bankAccountId: string; bankEntryId: string; counterparty: string | null },
+  ): Promise<void> {
+    await this.db
+      .update(transactions)
+      .set(link)
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
+  }
+
   /** Several transactions at once (an imported bank statement): all are saved or none. */
   async createMany(userId: string, inputs: TransactionInput[]): Promise<Transaction[]> {
     const projectIds = new Set(inputs.map((input) => input.projectId).filter((id) => id != null));

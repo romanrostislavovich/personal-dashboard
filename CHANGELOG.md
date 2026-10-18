@@ -8,6 +8,15 @@ under **Updating**.
 
 ### Added
 
+- **The bank directly (open banking)** — Settings → Integrations → Bank: PKO BP and other
+  European banks through Enable Banking. The owner adds an application of their own (its id and
+  .pem key, checked with Enable Banking); each user signs in on the bank's own page, chooses the
+  accounts, and the booked operations come in every six hours as transactions: a transaction
+  already typed by hand (the same amount a day apart at most) is tied to the operation instead
+  of doubled, transfers between one's own accounts are left out, the category follows the
+  counterparty (a corrected one is the rule next time) or the AI picks one of your own. The
+  consent lasts up to 180 days; a reminder comes a week before it ends. The automations hear
+  only of the recent operations, not of the history of a first import.
 - **Life → Links: every section** — Health joins with every medication and condition as a date
   for "before and after" and with daily numbers (medications taken, visits, every lab analyte);
   the dated events of Psychology are dates too; new daily numbers: the time in the browser and

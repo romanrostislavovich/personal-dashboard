@@ -273,5 +273,38 @@
     "expense": "Expenses",
     "spent": "Money spent",
     "spentOn": "Spent on a category"
+  },
+  "bank": {
+    "title": "Bank (open banking)",
+    "hint": "Transactions come from your bank by themselves every few hours: PKO BP and other European banks, through Enable Banking. The dashboard never sees your bank login.",
+    "notSet": "Not set up yet: the owner of the dashboard adds the application of Enable Banking below.",
+    "expired": "The consent has ended — confirm it again",
+    "validUntil": "consent until {{date}}",
+    "synced": "imported",
+    "renew": "Confirm again",
+    "syncNow": "Import now",
+    "choose": "Choose the accounts to import: transfers between them are not counted as spending.",
+    "account": "Account",
+    "noAccounts": "The bank gave no accounts.",
+    "country": "Country",
+    "bank": "Bank",
+    "connect": "Connect",
+    "consent": "You sign in on the bank’s own page and allow reading the accounts (PSD2: up to 180 days, then you confirm it again — a reminder comes a week before).",
+    "appId": "Application ID",
+    "privateKey": "Private key (.pem)",
+    "redirect": "Allowed redirect URL of the application:",
+    "guide": {
+      "1": "Sign up at enablebanking.com and open Control panel → Applications → Add a new application.",
+      "2": "Environment “Production”, the redirect URL shown here; generate the key in the browser and save the .pem file.",
+      "3": "Activate the application by linking your own accounts (restricted mode for your own accounts).",
+      "4": "Paste the Application ID and the contents of the .pem file below and save: the server checks them with Enable Banking."
+    },
+    "callbackError": "The bank was not connected. Please try again.",
+    "connected": "The bank is connected: choose the accounts to import.",
+    "renewed": "The consent is confirmed again.",
+    "syncResult": "Imported: {{added}} new, {{matched}} matched with the ones you had.",
+    "confirmDelete": "Disconnect {{bank}}? The transactions already imported stay.",
+    "unreachable": "The bank did not answer. Please try later.",
+    "failed": "Something went wrong. Please try later."
   }
 }

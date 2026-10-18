@@ -1,13 +1,14 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DB, Database, IntegrationsService } from '@pd/api-core';
 import { eq } from 'drizzle-orm';
+import { bankConnections } from './bank/bank.schema';
 import { costSources } from './finance.schema';
 
 /** The costs are imported once a day: three days without an import is too long. */
 const STALE_HOURS = 72;
 const NAMES = { hetzner: 'Hetzner Cloud', deepseek: 'DeepSeek' } as const;
 
-/** The connections of Finance in the list of integrations: the sources of costs. */
+/** The connections of Finance in the list of integrations: the sources of costs, the banks. */
 @Injectable()
 export class FinanceIntegrations implements OnModuleInit {
   constructor(
@@ -31,6 +32,28 @@ export class FinanceIntegrations implements OnModuleInit {
           detail: source.name,
           lastSyncedAt: source.lastSyncedAt,
           error: source.lastError,
+        }));
+      },
+    });
+    this.integrations.register({
+      id: 'finance.bank',
+      module: 'finance',
+      // Imported every six hours: a day without an import is a problem.
+      staleHours: 24,
+      reports: async (userId) => {
+        const banks = await this.db
+          .select()
+          .from(bankConnections)
+          .where(eq(bankConnections.userId, userId));
+        return banks.map((bank) => ({
+          key: bank.id,
+          name: bank.bank,
+          detail: bank.country,
+          lastSyncedAt: bank.lastSyncedAt,
+          error:
+            bank.validUntil && bank.validUntil.getTime() < Date.now()
+              ? 'The consent of the bank has ended: confirm it again'
+              : bank.lastError,
         }));
       },
     });

@@ -25,6 +25,10 @@ export const financeModule: WebDashboardModule = {
   ],
   integrations: [
     {
+      id: 'finance.bank',
+      loadComponent: () => import('./bank.integration').then((m) => m.BankIntegration),
+    },
+    {
       id: 'finance.cost-sources',
       loadComponent: () =>
         import('./cost-sources.integration').then((m) => m.CostSourcesIntegration),
