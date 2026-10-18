@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
+import { needsSetup } from '@pd/web-core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { MusicApi } from '../music.api';
 
@@ -72,4 +73,8 @@ import { MusicApi } from '../music.api';
 })
 export class SoundcloudWidget {
   protected readonly stats = inject(MusicApi).soundcloud();
+
+  constructor() {
+    needsSetup(() => !this.stats.isLoading() && !this.stats.value());
+  }
 }

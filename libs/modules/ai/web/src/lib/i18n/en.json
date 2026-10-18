@@ -125,5 +125,12 @@
   },
   "links": {
     "messages": "Messages to the assistant"
+  },
+  "emptyTitle": "Ask about your own data",
+  "examples": {
+    "spent": "How much did I spend on cafés this month?",
+    "mood": "What goes with my good days?",
+    "coding": "How much did I code this week?",
+    "health": "When is my next doctor visit?"
   }
 }

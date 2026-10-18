@@ -76,7 +76,7 @@
       "title": "Open Source",
       "week": "7 days",
       "empty": "Your public repositories appear here once GitHub, GitLab or Bitbucket is connected",
-      "open": "Details"
+      "open": "Open"
     },
     "repoHint": "A link to GitHub, GitLab or Bitbucket; a bare owner/name means GitHub",
     "service": "Service",
@@ -155,7 +155,7 @@
     "week": "in 7 days",
     "coding": "Coding today",
     "empty": "Connect GitHub, GitLab, Bitbucket or WakaTime in the integrations",
-    "open": "Details"
+    "open": "Open"
   },
   "wakatime": {
     "period": "Period",

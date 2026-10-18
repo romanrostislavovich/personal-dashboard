@@ -88,7 +88,7 @@
     "title": "Tasks for today",
     "more": "and {{count}} more",
     "empty": "Nothing for today. 🎉",
-    "open": "All tasks"
+    "open": "Open"
   },
   "commands": {
     "add": "Add a task",

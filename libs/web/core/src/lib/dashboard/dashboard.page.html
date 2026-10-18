@@ -43,6 +43,7 @@
       class="widget"
       [class]="widget.size"
       [class.hidden]="widget.hidden"
+      [class.pending]="!editing() && widget.setup.needed()"
       cdkDrag
       [cdkDragDisabled]="!editing()"
     >
@@ -94,8 +95,19 @@
         </div>
       }
       <div class="body">
-        <ng-container *ngComponentOutlet="widget.component" />
+        <ng-container *ngComponentOutlet="widget.component; injector: widget.injector" />
       </div>
     </section>
   }
 </div>
+
+@if (!editing() && pending().length) {
+  <p class="pending-line">
+    <span class="hint">{{ 'core.dashboard.pending' | transloco }}</span>
+    @for (section of pending(); track section.id) {
+      <a matButton [routerLink]="'/' + section.id">
+        <mat-icon>{{ section.icon }}</mat-icon> {{ section.labelKey | transloco }}
+      </a>
+    }
+  </p>
+}

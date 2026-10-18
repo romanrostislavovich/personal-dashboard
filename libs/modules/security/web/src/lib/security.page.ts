@@ -22,7 +22,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { SecurityFinding, SecuritySettings, SecuritySeverity } from '@pd/contracts';
-import { errorStatus, MarkdownPipe } from '@pd/web-core';
+import { EmptyStateComponent, errorStatus, MarkdownPipe } from '@pd/web-core';
 import { firstValueFrom, Observable } from 'rxjs';
 import { SecurityApi } from './security.api';
 
@@ -59,6 +59,7 @@ const ICONS: Record<SecuritySeverity, string> = {
     MatSelectModule,
     MatSlideToggleModule,
     MatTooltipModule,
+    EmptyStateComponent,
     TranslocoPipe,
     MarkdownPipe,
   ],
@@ -207,10 +208,22 @@ const ICONS: Record<SecuritySeverity, string> = {
           </mat-card-actions>
         </mat-card>
       } @empty {
-        <p class="calm">
-          <mat-icon>verified_user</mat-icon>
-          {{ (s.scannedAt ? 'security.nothing' : 'security.neverChecked') | transloco }}
-        </p>
+        @if (s.scannedAt) {
+          <p class="calm">
+            <mat-icon>verified_user</mat-icon>
+            {{ 'security.nothing' | transloco }}
+          </p>
+        } @else {
+          <pd-empty-state
+            icon="shield"
+            [title]="'security.emptyTitle' | transloco"
+            [text]="'security.readOnly' | transloco"
+          >
+            <button matButton="filled" (click)="scan()" [disabled]="busy() !== null || forbidden()">
+              <mat-icon>refresh</mat-icon> {{ 'security.scan' | transloco }}
+            </button>
+          </pd-empty-state>
+        }
       }
 
       <mat-accordion multi>

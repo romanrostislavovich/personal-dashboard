@@ -201,3 +201,23 @@
   margin: 8px 16px;
   color: var(--mat-sys-on-surface-variant);
 }
+
+.examples {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.examples li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--pd-radius);
+  background: var(--pd-card);
+  border: 1px solid var(--pd-border);
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -59,7 +59,7 @@
   "widget": {
     "title": "Upcoming dates",
     "empty": "Nobody in the next month",
-    "all": "All",
+    "all": "Open",
     "memorial": "day of memory",
     "birthdayInMemory": "birthday, in memory"
   },

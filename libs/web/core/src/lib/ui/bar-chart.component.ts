@@ -6,6 +6,8 @@ export interface Bar {
   value: number;
   /** Shown on hover: "12 March — 3 h 20 min". */
   title: string;
+  /** Written over the bar ("4,2") when the chart shows its values (`values`). */
+  display?: string;
 }
 
 /** A small column chart of one series: bars are scaled to the largest value. */
@@ -16,6 +18,9 @@ export interface Bar {
     <div class="chart" role="img" [attr.aria-label]="label()">
       @for (bar of scaled(); track $index) {
         <div class="column" [title]="bar.title">
+          @if (values() && bar.display) {
+            <span class="value">{{ bar.display }}</span>
+          }
           <span class="bar" [class.empty]="bar.value === 0" [style.height.%]="bar.percent"></span>
         </div>
       }
@@ -43,8 +48,14 @@ export interface Bar {
     }
     .column {
       display: flex;
-      align-items: flex-end;
+      flex-direction: column;
+      justify-content: flex-end;
       height: 100%;
+    }
+    .value {
+      font: var(--mat-sys-label-small);
+      color: var(--mat-sys-on-surface-variant);
+      text-align: center;
     }
     .column:hover .bar {
       opacity: 0.75;
@@ -75,6 +86,8 @@ export class BarChartComponent {
   readonly bars = input.required<Bar[]>();
   /** Description for screen readers, for example "Coding time per day". */
   readonly label = input('');
+  /** The bars' `display` over them: for a few bars whose numbers matter (mood by weekday). */
+  readonly values = input(false);
 
   protected readonly scaled = computed(() => {
     const bars = this.bars();

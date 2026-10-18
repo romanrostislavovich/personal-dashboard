@@ -1,4 +1,4 @@
-import { DurationPipe } from '@pd/web-core';
+import { DurationPipe, needsSetup } from '@pd/web-core';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -99,6 +99,10 @@ import { WakatimeApi } from './wakatime/wakatime.api';
 export class DevelopmentWidget {
   protected readonly profile = inject(AccountsApi).summary();
   protected readonly coding = inject(WakatimeApi).stats(signal<WakatimePeriod>(7));
+
+  constructor() {
+    needsSetup(() => this.isEmpty());
+  }
 
   /** Neither the code hosting services nor WakaTime gave anything yet. */
   protected isEmpty(): boolean {

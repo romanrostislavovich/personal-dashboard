@@ -40,6 +40,14 @@ const PADDING = 5;
           </span>
         }
       </div>
+      @if (axis(); as a) {
+        <!-- The ends of the period and the range of the values: a line one can read alone. -->
+        <div class="axis">
+          <span>{{ a.from | date: dateFormat() }}</span>
+          <span>{{ a.low | number: '1.0-1' }} – {{ a.high | number: '1.0-1' }}{{ unit() }}</span>
+          <span>{{ a.to | date: dateFormat() }}</span>
+        </div>
+      }
     } @else {
       <div class="empty">—</div>
     }
@@ -94,6 +102,14 @@ const PADDING = 5;
     .tooltip.right {
       transform: translateX(-90%);
     }
+    .axis {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 4px;
+      font: var(--mat-sys-label-small);
+      color: var(--mat-sys-on-surface-variant);
+    }
     .empty {
       height: 48px;
       color: var(--mat-sys-on-surface-variant);
@@ -114,6 +130,8 @@ export class SparklineComponent {
    */
   readonly min = input<number>();
   readonly max = input<number>();
+  /** Dates of the ends and the lowest–highest value under the line (a chart on its own). */
+  readonly showAxis = input(false);
 
   protected readonly width = WIDTH;
   protected readonly height = HEIGHT;
@@ -136,6 +154,20 @@ export class SparklineComponent {
     }));
     const line = coords.map((c, i) => `${i ? 'L' : 'M'}${c.x},${c.y}`).join(' ');
     return { coords, line, area: `${line} L${WIDTH},${HEIGHT} L0,${HEIGHT} Z` };
+  });
+
+  protected readonly axis = computed(() => {
+    const points = this.points();
+    if (!this.showAxis() || points.length < 2) {
+      return null;
+    }
+    const values = points.map((p) => p.value);
+    return {
+      from: points[0].at,
+      to: points[points.length - 1].at,
+      low: Math.min(...values),
+      high: Math.max(...values),
+    };
   });
 
   protected readonly hoveredPoint = computed(() => {

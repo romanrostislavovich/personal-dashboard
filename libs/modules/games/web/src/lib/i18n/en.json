@@ -185,7 +185,7 @@
   "widget": {
     "dota30": "30 days: {{wins}}–{{losses}}",
     "empty": "Add accounts in the Games section",
-    "open": "Details",
+    "open": "Open",
     "steam": "2 weeks: {{hours}} h · total {{total}} h"
   },
   "allAccounts": "All accounts",

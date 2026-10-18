@@ -1,8 +1,10 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { EmptyStateComponent } from '@pd/web-core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Habit, HabitInput, HabitKind, isBuilding } from '@pd/contracts';
 import { firstValueFrom, Observable } from 'rxjs';
@@ -23,12 +25,14 @@ import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
+    NgTemplateOutlet,
+    EmptyStateComponent,
     TranslocoPipe,
   ],
   template: `
     <h1 class="page-title">{{ 'habits.title' | transloco }}</h1>
     <p class="intro">{{ 'habits.intro' | transloco }}</p>
-    <div class="start">
+    <ng-template #starts>
       @for (kind of kinds; track kind) {
         <button matButton="tonal" (click)="start(kind)">
           <span class="emoji">{{ icons[kind] }}</span> {{ 'habits.start.' + kind | transloco }}
@@ -37,7 +41,11 @@ import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
       <button matButton="tonal" (click)="start('custom', true)">
         <span class="emoji">{{ buildIcon }}</span> {{ 'habits.start.build' | transloco }}
       </button>
-    </div>
+    </ng-template>
+    <!-- With habits the starts are a row on top; without, they are the empty page's action. -->
+    @if (habits.value().length) {
+      <div class="start"><ng-container *ngTemplateOutlet="starts" /></div>
+    }
     @if (habits.isLoading()) {
       <mat-progress-bar mode="indeterminate" />
     }
@@ -47,12 +55,17 @@ import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
     <div class="grid">
       @for (habit of habits.value(); track habit.id) {
         <pd-habit-card [habit]="habit" (action)="act(habit, $event)" />
-      } @empty {
-        @if (!habits.isLoading()) {
-          <p class="empty">{{ 'habits.empty' | transloco }}</p>
-        }
       }
     </div>
+    @if (!habits.isLoading() && !habits.error() && !habits.value().length) {
+      <pd-empty-state
+        icon="spa"
+        [title]="'habits.emptyTitle' | transloco"
+        [text]="'habits.empty' | transloco"
+      >
+        <ng-container *ngTemplateOutlet="starts" />
+      </pd-empty-state>
+    }
   `,
   styles: `
     :host {

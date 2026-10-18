@@ -19,17 +19,23 @@
       </mat-select>
     </mat-form-field>
 
-    <a
-      matIconButton
-      [routerLink]="integrations.path"
-      [queryParams]="integrations.queryParams"
-      [matTooltip]="'finance.costSources.inSettings' | transloco"
-      [attr.aria-label]="'finance.costSources.inSettings' | transloco"
-    >
-      <mat-icon>cloud_sync</mat-icon>
-    </a>
-    <pd-statement-import appearance="text" (imported)="reloadImported()" />
-    <button matButton="filled" (click)="openTransactionForm()">
+    <!-- Every way money comes in from outside: a statement, the bank, the cost sources. -->
+    <button matButton [matMenuTriggerFor]="importMenu">
+      <mat-icon>download</mat-icon> {{ 'finance.importMenu.title' | transloco }}
+    </button>
+    <mat-menu #importMenu="matMenu">
+      <button mat-menu-item (click)="importer.open()">
+        <mat-icon>upload_file</mat-icon> {{ 'finance.statement.import' | transloco }}
+      </button>
+      <a mat-menu-item [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+        <mat-icon>account_balance</mat-icon> {{ 'finance.importMenu.bank' | transloco }}
+      </a>
+      <a mat-menu-item [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+        <mat-icon>cloud_sync</mat-icon> {{ 'finance.costSources.inSettings' | transloco }}
+      </a>
+    </mat-menu>
+    <pd-statement-import #importer [bare]="true" (imported)="reloadImported()" />
+    <button matButton="filled" class="add" (click)="openTransactionForm()">
       <mat-icon>add</mat-icon> {{ 'finance.transaction.add' | transloco }}
     </button>
   </div>
@@ -109,7 +115,7 @@
           </mat-card-header>
           <mat-card-content>
             <pd-cash-flow-chart
-              [months]="chartMonths()"
+              [months]="chartShown()"
               [currency]="currency()"
               [selected]="month()"
               (selectMonth)="selectMonth($event)"
@@ -346,3 +352,13 @@
     <pd-wishlist-tab [currency]="currency()" />
   </mat-tab>
 </mat-tab-group>
+
+<!-- On a phone the header wraps into many lines: adding stays one tap away, bottom right. -->
+<button
+  matFab
+  class="fab"
+  [attr.aria-label]="'finance.transaction.add' | transloco"
+  (click)="openTransactionForm()"
+>
+  <mat-icon>add</mat-icon>
+</button>

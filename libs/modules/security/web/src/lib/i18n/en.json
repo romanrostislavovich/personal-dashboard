@@ -63,5 +63,6 @@
   },
   "links": {
     "findings": "Open security findings"
-  }
+  },
+  "emptyTitle": "Nothing checked yet"
 }

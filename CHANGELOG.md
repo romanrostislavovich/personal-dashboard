@@ -8,6 +8,15 @@ under **Updating**.
 
 ### Added
 
+- **A round of the UI** — home widgets of sections not set up yet (no Last.fm, no game
+  accounts, no sites, no habits) gather into one "Not set up yet" line instead of empty cards,
+  and every widget's link reads "Open"; empty sections (Habits, Achievements, Security, AI) get
+  a page of what they are for and the first thing to do, the AI with example questions;
+  Life → Day shows the day's cards and a timeline of its hours; Finance gathers its imports into
+  one "Import" menu, adds with a button over the page on a phone and starts the cash-flow chart
+  at the first month with money; Health shows the next visit on top; Psychology writes the values
+  on its charts; Activity opens the latest day with windows and suggests sorting the programs when
+  most of the time is "Other".
 - **Save a login from the bar, locked or signed out** — the extension's bar that offers to save a
   password typed into a page now has "Enter the master password" (or "Sign in"): the popup opens
   at that step, and once the vault is unlocked the bar comes back with "Save".

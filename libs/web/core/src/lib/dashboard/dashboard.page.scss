@@ -155,3 +155,16 @@
 .cdk-drag-animating {
   transition: transform 180ms ease;
 }
+
+// Nothing to show yet: alive (so it notices when it has), but not taking a cell.
+.widget.pending {
+  display: none;
+}
+
+.pending-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 18px 0 0;
+}

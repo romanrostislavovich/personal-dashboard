@@ -112,6 +112,13 @@ export class OverviewPage {
       })),
     ),
   );
+  /** More than half of the time without a category of its own. */
+  protected readonly mostlyOther = computed(() => {
+    const categories = this.stats.value()?.categories ?? [];
+    const total = categories.reduce((sum, item) => sum + item.seconds, 0);
+    const other = categories.find((item) => item.category === 'other')?.seconds ?? 0;
+    return total > 0 && other / total > 0.5;
+  });
   protected readonly apps = computed(() =>
     this.shares((this.stats.value()?.apps ?? []).slice(0, TOP_APPS)),
   );

@@ -62,8 +62,11 @@
 @if (settings.value(); as s) {
   <!-- Until the AI is configured, the page only says where to do it. -->
   @if (!s.configured) {
-    <div class="settings">
-      <p class="intro">{{ 'ai.intro' | transloco }}</p>
+    <pd-empty-state
+      icon="auto_awesome"
+      [title]="'ai.emptyTitle' | transloco"
+      [text]="'ai.intro' | transloco"
+    >
       <a
         matButton="filled"
         [routerLink]="integrations.path"
@@ -71,7 +74,13 @@
       >
         {{ 'core.settings.openIntegrations' | transloco }}
       </a>
-    </div>
+    </pd-empty-state>
+    <!-- What one could ask: a reason to connect it, from one's own sections. -->
+    <ul class="examples">
+      @for (example of examples; track example) {
+        <li><mat-icon inline>chat_bubble</mat-icon> {{ 'ai.examples.' + example | transloco }}</li>
+      }
+    </ul>
   }
 
   @if (s.configured) {

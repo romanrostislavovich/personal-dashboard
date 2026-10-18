@@ -38,36 +38,57 @@ import { todayLocalDate } from '@pd/web-core';
       <span class="date">{{ day() | date: 'EEEE, d MMMM y' }}</span>
     </header>
 
-    <ul class="events">
-      @for (event of events(); track $index) {
-        <li>
-          <mat-icon class="icon">{{ event.icon }}</mat-icon>
-          <span class="text">
-            <span class="module">{{ event.module + '.title' | transloco }}</span>
-            {{ event.key | transloco: event.params ?? {} }}
-          </span>
-          @if (event.at) {
-            <span class="time">{{ event.at | date: 'HH:mm' }}</span>
-          }
-          @if (event.link) {
-            <a matIconButton [routerLink]="event.link" [attr.aria-label]="'life.open' | transloco">
-              <mat-icon>arrow_forward</mat-icon>
-            </a>
-          }
-        </li>
-      } @empty {
-        @if (!timeline.isLoading()) {
-          <li class="hint">{{ 'life.empty' | transloco }}</li>
+    @if (allDay().length) {
+      <!-- What belongs to the whole day: the money, the diary, the weather. -->
+      <div class="cards">
+        @for (event of allDay(); track $index) {
+          <a class="card" [routerLink]="event.link ?? null" [class.static]="!event.link">
+            <span class="module">
+              <mat-icon>{{ event.icon }}</mat-icon>
+              {{ event.module + '.title' | transloco }}
+            </span>
+            <span class="text">{{ event.key | transloco: event.params ?? {} }}</span>
+          </a>
         }
-      }
-    </ul>
+      </div>
+    }
+
+    @if (timed().length) {
+      <!-- What happened at an hour: a line down the day. -->
+      <ol class="timeline">
+        @for (event of timed(); track $index) {
+          <li>
+            <span class="time">{{ event.at | date: 'HH:mm' }}</span>
+            <span class="dot"
+              ><mat-icon>{{ event.icon }}</mat-icon></span
+            >
+            <span class="text">
+              <span class="module">{{ event.module + '.title' | transloco }}</span>
+              {{ event.key | transloco: event.params ?? {} }}
+            </span>
+            @if (event.link) {
+              <a
+                matIconButton
+                [routerLink]="event.link"
+                [attr.aria-label]="'life.open' | transloco"
+              >
+                <mat-icon>arrow_forward</mat-icon>
+              </a>
+            }
+          </li>
+        }
+      </ol>
+    }
+
+    @if (!events().length && !timeline.isLoading()) {
+      <p class="hint">{{ 'life.empty' | transloco }}</p>
+    }
   `,
   styles: `
     :host {
       display: flex;
       flex-direction: column;
       gap: 16px;
-      max-width: 860px;
     }
     .toolbar {
       display: flex;
@@ -89,28 +110,82 @@ import { todayLocalDate } from '@pd/web-core';
       font: var(--mat-sys-title-medium);
       text-transform: capitalize;
     }
-    .events {
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+      gap: 12px;
+    }
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 16px;
+      border: 1px solid var(--pd-border);
+      border-radius: var(--pd-radius);
+      background: var(--pd-card);
+      color: inherit;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+    }
+    a.card:not(.static):hover {
+      border-color: var(--mat-sys-primary);
+    }
+    .card .module {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--mat-sys-primary);
+    }
+    .card .text {
+      font: var(--mat-sys-body-large);
+    }
+    .timeline {
       margin: 0;
       padding: 0;
       list-style: none;
     }
-    .events li {
-      display: flex;
+    .timeline li {
+      display: grid;
+      grid-template-columns: 52px 32px 1fr auto;
       align-items: center;
-      gap: 14px;
-      padding: 10px 0;
-      border-top: 1px solid var(--mat-sys-outline-variant);
+      gap: 12px;
+      min-height: 52px;
     }
-    .events li:first-child {
-      border-top: 0;
+    .dot {
+      position: relative;
+      display: flex;
+      align-self: stretch;
+      align-items: center;
+      justify-content: center;
     }
-    .icon {
-      color: var(--mat-sys-primary);
+    /* The line through the dots, from the first to the last. */
+    .dot::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--mat-sys-outline-variant);
+    }
+    li:first-child .dot::before {
+      top: 50%;
+    }
+    li:last-child .dot::before {
+      bottom: 50%;
+    }
+    .dot mat-icon {
+      position: relative;
+      padding: 4px;
+      border-radius: 50%;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--mat-sys-on-primary-container);
+      background: var(--mat-sys-primary-container);
     }
     .text {
       display: flex;
       flex-direction: column;
-      flex: 1;
       min-width: 0;
       overflow-wrap: anywhere;
     }
@@ -133,6 +208,8 @@ export class DayPage {
   );
   protected readonly timeline = httpResource<LifeDay>(() => CORE_READS.lifeDay(this.day()));
   protected readonly events = computed(() => this.timeline.value()?.events ?? []);
+  protected readonly allDay = computed(() => this.events().filter((event) => !event.at));
+  protected readonly timed = computed(() => this.events().filter((event) => event.at));
 
   protected pick(day: string): void {
     if (/^\d{4}-\d{2}-\d{2}$/.test(day) && day <= this.today) {

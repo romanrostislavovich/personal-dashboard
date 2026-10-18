@@ -1,7 +1,7 @@
 {
   "title": "Habits",
   "intro": "What you quit or cut down. Every day since the start counts as clean unless you mark it — here, by the evening question in Telegram, or by telling the assistant. A slip starts the run again, but nothing you reached is taken away.",
-  "empty": "No habits yet. Start with one of the buttons above.",
+  "empty": "Every day counts as clean until you mark it otherwise. Start with one:",
   "confirmDelete": "Delete «{{name}}» with all its days?",
   "kinds": {
     "alcohol": "Alcohol",
@@ -68,9 +68,10 @@
   "widget": {
     "days": "{{days}} d",
     "empty": "Nothing tracked yet.",
-    "all": "All habits"
+    "all": "Open"
   },
   "errors": {
     "load": "The habits could not be loaded."
-  }
+  },
+  "emptyTitle": "Track what you give up or build"
 }

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
+import { needsSetup } from '@pd/web-core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { DotaSummary, GameAccount, SteamSummary, WowSummary } from '@pd/contracts';
 import { DotaRankComponent } from './dota/dota-rank.component';
@@ -98,6 +99,10 @@ import { GamesApi } from './games.api';
 })
 export class GamesWidget {
   protected readonly accounts = inject(GamesApi).accounts();
+
+  constructor() {
+    needsSetup(() => !this.accounts.isLoading() && !this.accounts.value().length);
+  }
 
   protected dota(account: GameAccount): DotaSummary | null {
     return account.summary?.game === 'dota2' ? account.summary : null;

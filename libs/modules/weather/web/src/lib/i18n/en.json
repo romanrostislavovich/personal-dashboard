@@ -19,7 +19,7 @@
   "kmh": "km/h",
   "widget": {
     "noLocation": "Choose your city to see the weather and what to wear.",
-    "open": "Forecast"
+    "open": "Open"
   },
   "condition": {
     "clear": "Clear",

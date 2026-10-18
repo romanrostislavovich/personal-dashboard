@@ -1,5 +1,14 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +20,8 @@ import { ActivityApi } from '../activity.api';
 
 /** A day can hold hundreds of windows: the first ones are shown, the rest on request. */
 const SHOWN_AT_FIRST = 50;
+/** How far back an empty today looks for the latest day with windows. */
+const LOOK_BACK_DAYS = 7;
 
 /** What was in front on one day, window by window, newest first. */
 @Component({
@@ -158,7 +169,29 @@ export class DayTimelineComponent {
     this.all() ? this.entries() : this.entries().slice(0, SHOWN_AT_FIRST),
   );
 
+  /** Days stepped back on opening, past empty ones; stops once the person picks a day. */
+  private lookedBack = 0;
+  private picked = false;
+
+  constructor() {
+    // Opened on an empty today (the morning, a day off): the latest day of the week with windows.
+    effect(() => {
+      if (this.picked || this.timeline.status() !== 'resolved' || this.entries().length) {
+        return;
+      }
+      if (this.lookedBack < LOOK_BACK_DAYS) {
+        this.lookedBack++;
+        untracked(() => this.moveTo(this.lookedBack));
+      }
+    });
+  }
+
   protected pick(day: string): void {
+    this.picked = true;
+    this.moveTo(0, day);
+  }
+
+  private moveTo(back: number, day = localDay(new Date(Date.now() - back * 86_400_000))): void {
     if (/^\d{4}-\d{2}-\d{2}$/.test(day) && day <= this.today) {
       this.day.set(day);
       this.all.set(false);

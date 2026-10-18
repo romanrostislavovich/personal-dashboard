@@ -76,7 +76,7 @@
       "title": "Open Source",
       "week": "за 7 дн.",
       "empty": "Твои публичные репозитории появятся здесь после подключения GitHub, GitLab или Bitbucket",
-      "open": "Подробнее"
+      "open": "Открыть"
     },
     "repoHint": "Ссылка на GitHub, GitLab или Bitbucket; просто owner/name — это GitHub",
     "service": "Сервис",
@@ -155,7 +155,7 @@
     "week": "за 7 дней",
     "coding": "Кодинг сегодня",
     "empty": "Подключи GitHub, GitLab, Bitbucket или WakaTime в интеграциях",
-    "open": "Подробнее"
+    "open": "Открыть"
   },
   "wakatime": {
     "period": "Период",

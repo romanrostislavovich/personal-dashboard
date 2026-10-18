@@ -32,6 +32,8 @@
   "byProject": "Проекты",
   "byDevice": "Устройства",
   "byTitle": "Окна",
+  "mostlyOther": "Большая часть времени — в «Прочем»: у программ ещё нет категорий.",
+  "sortPrograms": "Разметить программы",
   "categories": {
     "development": "Разработка",
     "browsing": "Браузер",
