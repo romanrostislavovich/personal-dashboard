@@ -387,6 +387,14 @@ export class BankService {
           currency: account.currency,
           enabled: account.enabled,
           lastSyncedAt: account.lastSyncedAt?.toISOString() ?? null,
+          balance:
+            account.balance !== null && account.balanceCurrency
+              ? {
+                  amount: account.balance,
+                  currency: account.balanceCurrency,
+                  at: account.balanceAt?.toISOString() ?? null,
+                }
+              : null,
         })),
     }));
   }

@@ -43,6 +43,12 @@ export interface ProviderBank {
   maximum_consent_validity?: number | null;
 }
 
+export interface ProviderBalance {
+  balance_amount: { amount: string; currency: string };
+  balance_type?: string | null;
+  reference_date?: string | null;
+}
+
 export interface ProviderAccount {
   uid: string;
   account_id?: { iban?: string | null } | null;
@@ -103,6 +109,15 @@ export class EnableBankingClient {
 
   async deleteSession(sessionId: string): Promise<void> {
     await this.request('DELETE', `/sessions/${encodeURIComponent(sessionId)}`);
+  }
+
+  /** The balances of an account, by type (ISO 20022: `ITAV` — available now, `CLBD` — booked…). */
+  async balances(accountUid: string): Promise<ProviderBalance[]> {
+    const answer = await this.request<{ balances?: ProviderBalance[] }>(
+      'GET',
+      `/accounts/${encodeURIComponent(accountUid)}/balances`,
+    );
+    return answer.balances ?? [];
   }
 
   /** Every page of the booked transactions of an account since a day. */

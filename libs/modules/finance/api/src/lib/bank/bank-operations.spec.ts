@@ -1,6 +1,7 @@
 import { generateKeyPairSync, createVerify } from 'node:crypto';
 import { ProviderTransaction, signToken } from './enable-banking.client';
 import {
+  balanceOf,
   counterpartyKey,
   isOwnTransfer,
   matchOf,
@@ -89,6 +90,20 @@ describe('bank operations', () => {
     expect(merchantOf('WarszawaSam PlusPL CARD-PAYMENT')).toBe('WarszawaSam PlusPL');
     expect(merchantOf('1500 TRANSFER-IN')).toBeNull();
     expect(merchantOf(null)).toBeNull();
+  });
+
+  it('shows an account with what can be spent, else what is booked', () => {
+    const balance = (type: string, amount: string) => ({
+      balance_type: type,
+      balance_amount: { amount, currency: 'pln' },
+    });
+    expect(balanceOf([balance('CLBD', '100.00'), balance('ITAV', '95.505')])).toEqual({
+      amount: 95.51,
+      currency: 'PLN',
+    });
+    expect(balanceOf([balance('XXXX', '7'), balance('CLBD', '100')])?.amount).toBe(100);
+    expect(balanceOf([balance('ITAV', 'n/a')])).toBeNull();
+    expect(balanceOf([])).toBeNull();
   });
 
   it('knows one shop under its many names', () => {

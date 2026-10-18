@@ -38,6 +38,15 @@ export interface BankAccount {
   currency: string | null;
   enabled: boolean;
   lastSyncedAt: string | null;
+  /** What the bank said is on the account at its latest import. */
+  balance: BankBalance | null;
+}
+
+export interface BankBalance {
+  amount: number;
+  currency: string;
+  /** When the bank said it. */
+  at: string | null;
 }
 
 export interface BankConnection {

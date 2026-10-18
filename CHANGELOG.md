@@ -8,6 +8,9 @@ under **Updating**.
 
 ### Added
 
+- **Bank balances** — every import also asks the bank what is on each imported account (what can
+  be spent now, else what is booked): shown on the Bank card, above the month on the Finance page
+  and to the AI (`finance_bank_balances`).
 - **A statement of PKO BP** — Finance → "Import a PKO statement" (also on the Bank card): the
   history exported from iPKO (History → Download, CSV in Windows-1250 or XML) becomes
   transactions the same way as the bank's own import — matched with the ones typed by hand,

@@ -37,6 +37,7 @@ import { FinanceApi } from './finance.api';
 import { StatementImportButton } from './statement-import.button';
 import { CashFlowChartComponent } from './overview/cash-flow-chart.component';
 import { CategoryBreakdownComponent } from './overview/category-breakdown.component';
+import { BankBalancesComponent } from './overview/bank-balances.component';
 import { FinanceKpisComponent } from './overview/finance-kpis.component';
 import {
   cashFlowMonths,
@@ -112,6 +113,7 @@ function inMain(transactions: Transaction[], main: string): Transaction[] {
     MatTooltipModule,
     RouterLink,
     TranslocoPipe,
+    BankBalancesComponent,
     FinanceKpisComponent,
     CashFlowChartComponent,
     CategoryBreakdownComponent,

@@ -304,6 +304,7 @@
     "renewed": "The consent is confirmed again.",
     "syncResult": "Imported: {{added}} new, {{matched}} matched with the ones you had.",
     "confirmDelete": "Disconnect {{bank}}? The transactions already imported stay.",
+    "balanceAt": "On the account as the bank said {{date}}",
     "resort": "Sort the uncategorized",
     "resortHint": "The bank’s transactions without a category: by the shop’s other ones and the AI. Correct one by hand — the rest of its shop follows.",
     "resortResult": "Sorted: {{sorted}}, still without a category: {{left}}.",

@@ -43,6 +43,10 @@ describe.skipIf(!ADMIN_URL)('BankImportService', () => {
   let accountId: string;
 
   const bank = {
+    balances: async () => [
+      { balance_type: 'CLBD', balance_amount: { amount: '1200.00', currency: 'PLN' } },
+      { balance_type: 'ITAV', balance_amount: { amount: '1176.51', currency: 'PLN' } },
+    ],
     transactions: async () => [
       // The coffee typed by hand a day earlier: the same operation.
       operation('E1', '2026-01-11', '23.49', 'KAWIARNIA 7'),
@@ -146,6 +150,9 @@ describe.skipIf(!ADMIN_URL)('BankImportService', () => {
       .from(bankAccounts)
       .where(sql`${bankAccounts.id} = ${accountId}`);
     expect(account.lastBookedOn).toBe('2026-01-13');
+    // What can be spent now, as the bank said it with the import.
+    expect(account).toMatchObject({ balance: 1176.51, balanceCurrency: 'PLN' });
+    expect(account.balanceAt).toBeInstanceOf(Date);
 
     // The next import of the same days adds nothing.
     expect(await service.importConnection(connection, bank)).toEqual({ added: 0, matched: 0 });
