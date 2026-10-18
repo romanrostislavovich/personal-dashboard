@@ -52,6 +52,11 @@ const messages = {
       `${priceChange(was, now, currency)}\n` +
       (isLowest ? 'The lowest price since you added it.\n' : '') +
       url,
+    uncategorized: 'Uncategorized',
+    bankExpiringTitle: (bank: string) => `🏦 ${bank}: confirm the access again`,
+    bankExpiringBody: (date: string, url: string) =>
+      `The bank's consent ends on ${date}: after it the transactions stop coming. ` +
+      `Settings → Integrations → Bank → Confirm again.\n${url}`,
   },
   ru: {
     chargedTitle: '💸 Регулярные платежи',
@@ -88,6 +93,11 @@ const messages = {
       `${priceChange(was, now, currency)}\n` +
       (isLowest ? 'Самая низкая цена с момента добавления.\n' : '') +
       url,
+    uncategorized: 'Без категории',
+    bankExpiringTitle: (bank: string) => `🏦 ${bank}: подтвердите доступ заново`,
+    bankExpiringBody: (date: string, url: string) =>
+      `Согласие банка заканчивается ${date}: после этого транзакции перестанут приходить. ` +
+      `Настройки → Интеграции → Банк → Подтвердить заново.\n${url}`,
   },
 };
 

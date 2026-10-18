@@ -215,9 +215,11 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 #### Everyday use
 
-- **Finance: the bank directly (open banking)** — transactions come from the bank every day
-  (GoCardless Bank Account Data: free in the EU, mBank, PKO, Revolut), no statements needed;
-  budgets, subscriptions and rules pick them up
+- ✅ **Finance: the bank directly (open banking)** — Enable Banking (GoCardless Bank Account
+  Data takes no new customers since July 2025): the owner's application, each user's bank with
+  the bank's own sign-in, the accounts chosen, the operations every six hours as transactions —
+  matched with the ones typed by hand, transfers between one's own accounts left out, the
+  category by the counterparty or the AI; a reminder a week before the consent ends
 - **Finance: net worth and runway calculation** — total net worth tracking, monthly burn rate,
   and emergency fund runway in months of autonomy based on current spending velocity
 - **Finance: subscription and leak audit** — automated detection of creeping price increases,

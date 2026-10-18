@@ -610,6 +610,13 @@
       "when": 1792190988793,
       "tag": "0086_mcp",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1792332481330,
+      "tag": "0087_black_bishop",
+      "breakpoints": true
     }
   ]
 }

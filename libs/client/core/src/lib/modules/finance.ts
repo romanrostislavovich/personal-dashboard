@@ -1,4 +1,9 @@
 import {
+  BankAppInput,
+  BankConnectInput,
+  BankOption,
+  BankState,
+  BankSyncResult,
   Budget,
   BudgetInput,
   CostSource,
@@ -51,10 +56,25 @@ export const FINANCE_READS = {
   wishPrices: (id: string) => apiRequest(`${BASE}/wishlist/${id}/prices`),
   /** The AI's kept review of a month (`YYYY-MM`): `{ report: null }` — not written yet. */
   report: (month: string) => apiRequest(`${BASE}/reports`, { month }),
+  /** The bank directly (open banking): the owner's application, the user's connections. */
+  bank: () => apiRequest(`${BASE}/bank`),
+  bankBanks: (country: string) => apiRequest(`${BASE}/bank/banks`, { country }),
 };
 
 export function financeApi(api: ApiClient) {
   return {
+    bank: () => api.read<BankState>(FINANCE_READS.bank()),
+    bankBanks: (country: string) => api.read<BankOption[]>(FINANCE_READS.bankBanks(country)),
+    /** The owner's application at Enable Banking: checked with it before it is kept. */
+    setBankApp: (input: BankAppInput) => api.put<void>(`${BASE}/bank/app`, input),
+    removeBankApp: () => api.delete(`${BASE}/bank/app`),
+    /** The bank's sign-in page: the browser goes there and comes back to the callback. */
+    connectBank: (input: BankConnectInput) =>
+      api.post<{ url: string }>(`${BASE}/bank/connect`, input),
+    setBankAccount: (id: string, enabled: boolean) =>
+      api.put<void>(`${BASE}/bank/accounts/${id}`, { enabled }),
+    syncBank: (id: string) => api.post<BankSyncResult>(`${BASE}/bank/connections/${id}/sync`, {}),
+    removeBank: (id: string) => api.delete(`${BASE}/bank/connections/${id}`),
     transactions: (query: TransactionQuery) =>
       api.read<Transaction[]>(FINANCE_READS.transactions(query)),
     summary: (query: TransactionQuery) => api.read<FinanceSummary>(FINANCE_READS.summary(query)),

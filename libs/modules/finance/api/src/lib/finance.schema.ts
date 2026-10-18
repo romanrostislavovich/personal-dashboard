@@ -15,6 +15,7 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { bankAccounts } from './bank/bank.schema';
 
 export const transactionKind = pgEnum('finance_transaction_kind', TRANSACTION_KINDS);
 export const recurringPeriod = pgEnum('finance_recurring_period', RECURRING_PERIODS);
@@ -128,11 +129,18 @@ export const transactions = pgTable(
     category: text().notNull(),
     note: text(),
     occurredOn: date({ mode: 'string' }).notNull(),
+    /** Imported from a bank account (or matched with one): the operation's id in the bank. */
+    bankAccountId: uuid().references(() => bankAccounts.id, { onDelete: 'set null' }),
+    bankEntryId: text(),
+    /** Who was paid or who paid, as the bank wrote it: the category follows it next time. */
+    counterparty: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   // One transaction per source and month — the sync updates it instead of creating new ones.
   (table) => [
     unique().on(table.costSourceId, table.costPeriod),
+    // One transaction per operation of the bank, however often it is imported.
+    unique().on(table.userId, table.bankEntryId),
     index().on(table.userId, table.occurredOn),
     index().on(table.projectId),
     index().on(table.recurringPaymentId),

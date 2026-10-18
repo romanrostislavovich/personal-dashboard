@@ -1,6 +1,10 @@
 import { FinanceIntegrations } from './finance.integrations';
 import { FinanceDemo } from './finance.demo';
 import { Module } from '@nestjs/common';
+import { BankController } from './bank/bank.controller';
+import { BankImportService } from './bank/bank-import.service';
+import { BankJob } from './bank/bank.job';
+import { BankService } from './bank/bank.service';
 import { FinanceAutomations } from './finance.automations';
 import { FinanceLife } from './finance.life';
 import { FinanceLinks } from './finance.links';
@@ -33,11 +37,11 @@ import { WishlistService } from './wishlist/wishlist.service';
 
 /**
  * Finance: personal and project income/expenses, recurring payments and subscriptions, budgets,
- * savings goals, a wishlist with price watch, the AI's monthly review and automatic cost import
- * from services (Hetzner, DeepSeek). API: `/api/finance/*`.
+ * savings goals, a wishlist with price watch, the AI's monthly review, automatic cost import
+ * from services (Hetzner, DeepSeek) and the bank directly (open banking). API: `/api/finance/*`.
  */
 @Module({
-  controllers: [FinanceController, CostSourcesController, WishlistController],
+  controllers: [FinanceController, CostSourcesController, WishlistController, BankController],
   providers: [
     SpentTelegram,
     FinanceAutomations,
@@ -61,6 +65,9 @@ import { WishlistService } from './wishlist/wishlist.service';
     FinanceReportsService,
     CostSourcesService,
     CostSourcesJob,
+    BankService,
+    BankImportService,
+    BankJob,
     // Cost providers: a new service = a new class here + an id in COST_PROVIDERS.
     HetznerCostProvider,
     DeepseekCostProvider,

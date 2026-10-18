@@ -4,14 +4,16 @@ import { UsersService } from '../users/users.service';
 
 /**
  * The server's own keys at outside services — the Telegram bot, the Spotify app, the
- * LanguageTool server — that its owner sets in Settings → Integrations (they used to be in
+ * LanguageTool server, the open-banking application — that its owner sets in Settings → Integrations (they used to be in
  * .env). The same names a module uses: `telegram.bot-token`, `music.spotify-client-id`.
  */
 export type ServerKey =
   | 'telegram.bot-token'
   | 'music.spotify-client-id'
   | 'music.spotify-client-secret'
-  | 'writing.languagetool-url';
+  | 'writing.languagetool-url'
+  | 'finance.enablebanking-app-id'
+  | 'finance.enablebanking-key';
 
 /** Kept among the owner's secrets: encrypted, and synced to a sync client with the rest. */
 const PREFIX = 'server.';

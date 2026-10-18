@@ -9,23 +9,24 @@ are set once for every user by the owner (the first user) in the same cards, und
 “Server key”; the server checks each one with the service before it keeps it, and a sync
 client receives them with the sync. They are not read from `.env` any more.
 
-| Integration       | How to connect                                                                                                                                                         |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Telegram          | Create a bot with [@BotFather](https://t.me/BotFather), paste its token into “Server key”, then “Connect Telegram”                                                     |
-| AI                | Add a connection: provider (DeepSeek by default), model, API key. Add several and switch in one click. For full privacy use Ollama                                     |
-| GitHub            | A classic token with `read:user`, `repo` and `read:org`: your repositories (private ones too), organizations and account statistics                                    |
-| GitLab, Bitbucket | GitLab: an access token with `read_api` and `read_user`; Bitbucket: your Atlassian e-mail and an API token — repositories and the activity calendar                    |
-| WakaTime          | The secret API key from wakatime.com → Settings → Account; days are copied to the dashboard, so history outlives the free plan                                         |
-| Hetzner Cloud     | Cost import → a project API token with Read access                                                                                                                     |
-| DeepSeek costs    | Cost import → an API key; spending is derived from balance changes                                                                                                     |
-| Last.fm           | Username + API key from [last.fm/api/account/create](https://www.last.fm/api/account/create)                                                                           |
-| Spotify           | Create an app at developer.spotify.com with the Redirect URI the card shows, paste its Client ID and Secret into “Server key”                                          |
-| LanguageTool      | The address of the LanguageTool server: `http://languagetool:8010` for the one in docker compose (`http://localhost:8010` with `npm run dev`)                          |
-| SoundCloud        | The address of your profile (`https://soundcloud.com/your-name`) is enough for public tracks; plays, likes, reposts and comments are saved day by day                  |
-| Steam             | A Web API key from steamcommunity.com/dev/apikey (one for all accounts), then add your profiles on the Games page                                                      |
-| Dota 2            | Games → Steam ID or profile link; enable “Expose Public Match Data” in Dota. Matches come from Steam (with the key above); an OpenDota API key per account is optional |
-| World of Warcraft | Battle.net client ID and secret from develop.battle.net, then Games → region / realm / character                                                                       |
-| Weather           | Nothing to connect: Open-Meteo needs no key                                                                                                                            |
+| Integration           | How to connect                                                                                                                                                         |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Telegram              | Create a bot with [@BotFather](https://t.me/BotFather), paste its token into “Server key”, then “Connect Telegram”                                                     |
+| AI                    | Add a connection: provider (DeepSeek by default), model, API key. Add several and switch in one click. For full privacy use Ollama                                     |
+| GitHub                | A classic token with `read:user`, `repo` and `read:org`: your repositories (private ones too), organizations and account statistics                                    |
+| GitLab, Bitbucket     | GitLab: an access token with `read_api` and `read_user`; Bitbucket: your Atlassian e-mail and an API token — repositories and the activity calendar                    |
+| WakaTime              | The secret API key from wakatime.com → Settings → Account; days are copied to the dashboard, so history outlives the free plan                                         |
+| Hetzner Cloud         | Cost import → a project API token with Read access                                                                                                                     |
+| DeepSeek costs        | Cost import → an API key; spending is derived from balance changes                                                                                                     |
+| Last.fm               | Username + API key from [last.fm/api/account/create](https://www.last.fm/api/account/create)                                                                           |
+| Spotify               | Create an app at developer.spotify.com with the Redirect URI the card shows, paste its Client ID and Secret into “Server key”                                          |
+| LanguageTool          | The address of the LanguageTool server: `http://languagetool:8010` for the one in docker compose (`http://localhost:8010` with `npm run dev`)                          |
+| Bank (Enable Banking) | An application of your own at enablebanking.com (Production, own accounts), the redirect URL the card shows; its Application ID and .pem key into “Server key”         |
+| SoundCloud            | The address of your profile (`https://soundcloud.com/your-name`) is enough for public tracks; plays, likes, reposts and comments are saved day by day                  |
+| Steam                 | A Web API key from steamcommunity.com/dev/apikey (one for all accounts), then add your profiles on the Games page                                                      |
+| Dota 2                | Games → Steam ID or profile link; enable “Expose Public Match Data” in Dota. Matches come from Steam (with the key above); an OpenDota API key per account is optional |
+| World of Warcraft     | Battle.net client ID and secret from develop.battle.net, then Games → region / realm / character                                                                       |
+| Weather               | Nothing to connect: Open-Meteo needs no key                                                                                                                            |
 
 ## Telegram bot
 

@@ -13,6 +13,8 @@ export interface ServerKeyField {
   label: string;
   /** Typed as a password, and never shown again once saved. */
   secret?: boolean;
+  /** Several lines: a private key (PEM). Never shown again once saved either. */
+  multiline?: boolean;
   placeholder?: string;
 }
 
@@ -52,15 +54,28 @@ export interface ServerKeyField {
           @for (field of fields(); track field.name) {
             <mat-form-field subscriptSizing="dynamic">
               <mat-label>{{ field.label | transloco }}</mat-label>
-              <input
-                matInput
-                [type]="field.secret ? 'password' : 'text'"
-                autocomplete="off"
-                spellcheck="false"
-                [placeholder]="field.placeholder ?? ''"
-                [value]="values()[field.name] ?? ''"
-                (input)="type(field.name, $event)"
-              />
+              @if (field.multiline) {
+                <textarea
+                  matInput
+                  rows="4"
+                  class="multiline"
+                  autocomplete="off"
+                  spellcheck="false"
+                  [placeholder]="field.placeholder ?? ''"
+                  [value]="values()[field.name] ?? ''"
+                  (input)="type(field.name, $event)"
+                ></textarea>
+              } @else {
+                <input
+                  matInput
+                  [type]="field.secret ? 'password' : 'text'"
+                  autocomplete="off"
+                  spellcheck="false"
+                  [placeholder]="field.placeholder ?? ''"
+                  [value]="values()[field.name] ?? ''"
+                  (input)="type(field.name, $event)"
+                />
+              }
             </mat-form-field>
           }
           @if (failure(); as failure) {
@@ -108,6 +123,10 @@ export interface ServerKeyField {
     code {
       word-break: break-all;
     }
+    .multiline {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 12px;
+    }
   `,
 })
 export class ServerKeyComponent {
@@ -144,7 +163,7 @@ export class ServerKeyComponent {
   }
 
   protected type(name: string, event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+    const value = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
     this.typed.update((typed) => ({ ...typed, [name]: value }));
   }
 
