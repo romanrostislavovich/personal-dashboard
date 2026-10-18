@@ -14,6 +14,7 @@ import { financeMessages } from '../finance.messages';
 import { transactions } from '../finance.schema';
 import { TransactionsService } from '../transactions/transactions.service';
 import {
+  balanceOf,
   BankOperation,
   counterpartyKey,
   isOwnTransfer,
@@ -88,8 +89,28 @@ export class BankImportService {
       const result = await this.importAccount(account, client, ownIbans, today);
       total.added += result.added;
       total.matched += result.matched;
+      await this.refreshBalance(account, client);
     }
     return total;
+  }
+
+  /** The account's balance as the bank says it now; a bank that does not answer keeps the old. */
+  private async refreshBalance(account: BankAccountRow, client: EnableBankingClient) {
+    try {
+      const balance = balanceOf(await client.balances(account.uid));
+      if (balance) {
+        await this.db
+          .update(bankAccounts)
+          .set({
+            balance: balance.amount,
+            balanceCurrency: balance.currency,
+            balanceAt: new Date(),
+          })
+          .where(eq(bankAccounts.id, account.id));
+      }
+    } catch (error) {
+      this.logger.warn(`The bank gave no balance of an account: ${String(error)}`);
+    }
   }
 
   private async importAccount(

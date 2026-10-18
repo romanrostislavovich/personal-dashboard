@@ -1,5 +1,5 @@
 import { encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
-import { boolean, date, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, date, index, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 const owner = () =>
   uuid()
@@ -48,6 +48,10 @@ export const bankAccounts = pgTable(
     /** The latest booking day imported: the next import starts a few days before it. */
     lastBookedOn: date({ mode: 'string' }),
     lastSyncedAt: timestamp({ withTimezone: true }),
+    /** What the bank said is on the account at its latest import (available, else booked). */
+    balance: numeric({ precision: 14, scale: 2, mode: 'number' }),
+    balanceCurrency: text(),
+    balanceAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index().on(table.userId), index().on(table.connectionId)],

@@ -617,6 +617,13 @@
       "when": 1792332481330,
       "tag": "0087_black_bishop",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1792357069695,
+      "tag": "0088_known_shriek",
+      "breakpoints": true
     }
   ]
 }

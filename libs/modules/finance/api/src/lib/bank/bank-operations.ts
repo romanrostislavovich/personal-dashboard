@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { TransactionKind } from '@pd/contracts';
-import { ProviderTransaction } from './enable-banking.client';
+import { ProviderBalance, ProviderTransaction } from './enable-banking.client';
 
 /** A booked operation of a bank account as Finance takes it. */
 export interface BankOperation {
@@ -103,6 +103,28 @@ function entryIdOf(
     .update([bookedOn, kind, amount.toFixed(2), currency, counterparty, note].join('|'))
     .digest('hex');
   return `h:${hash.slice(0, 32)}`;
+}
+
+/** What one can spend first, then what is booked: the bank's types, the most telling first. */
+const BALANCE_TYPES = ['ITAV', 'CLAV', 'XPCD', 'ITBD', 'CLBD', 'OPAV', 'OPBD'];
+
+/** The balance an account is shown with; `null` — the bank gave none that is a number. */
+export function balanceOf(
+  balances: ProviderBalance[],
+): { amount: number; currency: string } | null {
+  const rank = (type?: string | null) => {
+    const at = BALANCE_TYPES.indexOf((type ?? '').toUpperCase());
+    return at < 0 ? BALANCE_TYPES.length : at;
+  };
+  const best = balances
+    .filter((item) => Number.isFinite(Number(item.balance_amount?.amount)))
+    .sort((a, b) => rank(a.balance_type) - rank(b.balance_type))[0];
+  return best
+    ? {
+        amount: Math.round(Number(best.balance_amount.amount) * 100) / 100,
+        currency: best.balance_amount.currency.toUpperCase(),
+      }
+    : null;
 }
 
 /** A transfer between the user's own accounts: neither spent nor earned. */

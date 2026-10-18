@@ -17,6 +17,7 @@ import {
   TransactionQuery,
 } from '@pd/contracts';
 import { z } from 'zod';
+import { BankService } from './bank/bank.service';
 import { CostSourcesService } from './cost-sources/cost-sources.service';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
 import { SubscriptionsService } from './recurring/subscriptions.service';
@@ -110,6 +111,7 @@ export class FinanceAiTools implements OnModuleInit {
     private readonly goals: GoalsService,
     private readonly wishlist: WishlistService,
     private readonly actions: ServerActions,
+    private readonly bank: BankService,
   ) {}
 
   onModuleInit(): void {
@@ -523,6 +525,29 @@ export class FinanceAiTools implements OnModuleInit {
 
   /** Cost sources hold API tokens, so they are connected only in the dashboard. */
   private registerCostSourceTools(): void {
+    this.ai.registerTool({
+      name: 'finance_bank_balances',
+      module: 'finance',
+      description:
+        'What is on the connected bank accounts now: per imported account the bank, the last ' +
+        'four characters of the IBAN, the balance and its currency, and when the bank said it ' +
+        '(refreshed with every import, about every 6 hours). For "how much money do I have".',
+      parameters: NO_PARAMETERS,
+      handler: async (userId) =>
+        (await this.bank.state(userId)).connections.flatMap((connection) =>
+          connection.accounts
+            .filter((account) => account.enabled)
+            .map((account) => ({
+              bank: connection.bank,
+              account: account.name,
+              ibanEnd: account.ibanEnd,
+              balance: account.balance?.amount ?? null,
+              currency: account.balance?.currency ?? account.currency,
+              at: account.balance?.at ?? null,
+            })),
+        ),
+    });
+
     const find = async (userId: string, args: Record<string, unknown>) =>
       findById(await this.costSources.list(userId), args['id'], 'Cost source');
 
