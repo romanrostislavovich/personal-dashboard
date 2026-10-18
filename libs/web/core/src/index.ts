@@ -5,6 +5,7 @@ export * from './lib/auth/auth.service';
 export * from './lib/projects/projects.api';
 export * from './lib/ui/sparkline.component';
 export * from './lib/ui/bar-chart.component';
+export * from './lib/ui/chart-scale';
 export * from './lib/ui/empty-state.component';
 export * from './lib/ui/share-list.component';
 export * from './lib/ui/duration.pipe';

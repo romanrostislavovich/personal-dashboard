@@ -295,7 +295,7 @@ export class PatternsPage {
     (this.patterns.value()?.byWeekday ?? []).map(({ weekday, average, days }) => ({
       label: this.weekdayName(weekday),
       value: average ?? 0,
-      title: `${this.weekdayName(weekday)}: ${average ?? '—'} (${days})`,
+      title: `${this.weekdayName(weekday)}: ${average === null ? '—' : this.oneDecimal.format(average)} · ${this.transloco.translate('psychology.patterns.days', { days })}`,
       display: average === null ? '' : this.oneDecimal.format(average),
     })),
   );

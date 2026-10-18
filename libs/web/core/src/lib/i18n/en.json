@@ -512,6 +512,7 @@
     "reload": "Reload"
   },
   "duration": {
+    "hours": "{{hours}} h",
     "hoursMinutes": "{{hours}} h {{minutes}} min",
     "minutes": "{{minutes}} min"
   },

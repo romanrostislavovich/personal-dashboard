@@ -90,6 +90,9 @@ export class AccountPage {
   );
 
   /** Contributions per month of the chosen year. */
+  /** The scale of the chart: a count of contributions. */
+  protected readonly count = (value: number) => String(Math.round(value));
+
   protected readonly months = computed<Bar[]>(() => {
     const totals = Array.from({ length: 12 }, () => 0);
     for (const { day, count } of this.contributions.value()) {

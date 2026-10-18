@@ -100,23 +100,24 @@ const TAGS_SHOWN = 5;
     }
     .bar-value,
     .bar-label {
-      font: 600 0.72rem / 1 var(--pd-font);
+      font: var(--mat-sys-label-small);
       color: var(--mat-sys-on-surface-variant);
+      font-variant-numeric: tabular-nums;
     }
     .bar-track {
       position: relative;
       flex: 1;
       width: 100%;
       max-width: 28px;
-      border-radius: 6px;
-      background: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+      border-radius: var(--pd-chart-bar-radius);
+      background: var(--pd-chart-empty);
     }
     .bar {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      border-radius: 6px 6px 4px 4px;
+      border-radius: var(--pd-chart-bar-radius);
     }
     .tags {
       list-style: none;
@@ -144,7 +145,7 @@ const TAGS_SHOWN = 5;
     .meter {
       height: 8px;
       border-radius: 4px;
-      background: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+      background: var(--pd-chart-empty);
       overflow: hidden;
     }
     .meter span {

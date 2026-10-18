@@ -1,11 +1,8 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Month, monthAsDate } from '@pd/web-core';
+import { CHART_TICKS, Month, monthAsDate, niceCeil } from '@pd/web-core';
 import { CashFlowMonth } from './finance-stats';
-
-/** Gridlines: 0, half and the top of the scale. */
-const TICKS = [0, 0.5, 1];
 
 /**
  * Income next to expenses for the last months. Bars are HTML, not SVG: they stretch with the
@@ -16,16 +13,16 @@ const TICKS = [0, 0.5, 1];
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CurrencyPipe, DatePipe, TranslocoPipe],
   template: `
-    <div class="legend">
-      <span class="key"><i class="swatch income"></i>{{ 'finance.kpi.income' | transloco }}</span>
-      <span class="key"><i class="swatch expense"></i>{{ 'finance.kpi.expense' | transloco }}</span>
+    <div class="pd-chart-legend legend">
+      <span><i class="pd-chart-swatch income"></i>{{ 'finance.kpi.income' | transloco }}</span>
+      <span><i class="pd-chart-swatch expense"></i>{{ 'finance.kpi.expense' | transloco }}</span>
     </div>
 
     <div class="plot" (pointerleave)="hovered.set(null)">
       <div class="grid">
         @for (tick of ticks; track tick) {
           <div class="gridline" [style.bottom.%]="tick * 100">
-            <span class="tick">{{
+            <span class="pd-chart-tick tick">{{
               scaleMax() * tick | currency: currency() : 'symbol' : '1.0-0'
             }}</span>
           </div>
@@ -54,10 +51,14 @@ const TICKS = [0, 0.5, 1];
       </div>
 
       @if (hoveredBar(); as m) {
-        <div class="tooltip" [style.left.%]="m.center" [class.right]="m.center > 60">
+        <div
+          class="pd-chart-tooltip tooltip"
+          [style.left.%]="m.center"
+          [class.right]="m.center > 60"
+        >
           <b>{{ m.date | date: 'LLLL yyyy' }}</b>
-          <span><i class="swatch income"></i>{{ m.income | currency: currency() }}</span>
-          <span><i class="swatch expense"></i>{{ m.expense | currency: currency() }}</span>
+          <span><i class="pd-chart-swatch income"></i>{{ m.income | currency: currency() }}</span>
+          <span><i class="pd-chart-swatch expense"></i>{{ m.expense | currency: currency() }}</span>
           <span class="net"
             >{{ 'finance.kpi.left' | transloco }}:
             {{ m.income - m.expense | currency: currency() }}</span
@@ -85,35 +86,17 @@ const TICKS = [0, 0.5, 1];
   styles: `
     :host {
       display: block;
-      --income: light-dark(#1baf7a, #199e70);
-      --expense: light-dark(#eb6834, #d95926);
     }
     .legend {
-      display: flex;
-      gap: 16px;
       margin: 8px 0 20px;
-      font: var(--mat-sys-label-medium);
-      color: var(--mat-sys-on-surface-variant);
     }
-    .key {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .swatch {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-      margin-right: 6px;
-    }
-    .swatch.income,
+    .pd-chart-swatch.income,
     .bar.income {
-      background: var(--income);
+      background: var(--pd-chart-income);
     }
-    .swatch.expense,
+    .pd-chart-swatch.expense,
     .bar.expense {
-      background: var(--expense);
+      background: var(--pd-chart-expense);
     }
     .plot {
       position: relative;
@@ -129,20 +112,15 @@ const TICKS = [0, 0.5, 1];
       position: absolute;
       left: 0;
       right: 0;
-      border-top: 1px solid var(--mat-sys-outline-variant);
-      opacity: 0.6;
+      border-top: 1px solid var(--pd-chart-grid);
     }
     .gridline:first-child {
-      opacity: 1;
+      border-top-color: var(--mat-sys-outline-variant);
     }
     .tick {
       position: absolute;
       right: calc(100% + 8px);
       transform: translateY(-50%);
-      font: var(--mat-sys-label-small);
-      color: var(--mat-sys-on-surface-variant);
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
     }
     .columns {
       position: absolute;
@@ -164,7 +142,7 @@ const TICKS = [0, 0.5, 1];
     }
     .column:hover,
     .column:focus-visible {
-      background: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+      background: var(--pd-chart-hover);
       outline: none;
     }
     .bars {
@@ -180,7 +158,7 @@ const TICKS = [0, 0.5, 1];
     .bar {
       flex: 1;
       min-height: 0;
-      border-radius: 4px 4px 0 0;
+      border-radius: var(--pd-chart-bar-radius);
       transition: opacity 120ms;
     }
     .dimmed .bar {
@@ -198,24 +176,8 @@ const TICKS = [0, 0.5, 1];
       font-weight: 700;
     }
     .tooltip {
-      position: absolute;
       top: 0;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding: 8px 12px;
-      border-radius: var(--pd-radius-small);
-      font: var(--mat-sys-body-small);
-      white-space: nowrap;
-      background: var(--mat-sys-inverse-surface);
-      color: var(--mat-sys-inverse-on-surface);
-      pointer-events: none;
-      z-index: 1;
       text-transform: capitalize;
-    }
-    .tooltip.right {
-      transform: translateX(-90%);
     }
     .tooltip span {
       display: flex;
@@ -240,7 +202,7 @@ export class CashFlowChartComponent {
   readonly selected = input.required<Month>();
   readonly selectMonth = output<Month>();
 
-  protected readonly ticks = TICKS;
+  protected readonly ticks = CHART_TICKS;
   protected readonly hovered = signal<number | null>(null);
 
   /** A round number above the largest bar, so the top gridline has a readable label. */
@@ -268,14 +230,4 @@ export class CashFlowChartComponent {
     const index = this.hovered();
     return index === null ? null : this.bars()[index];
   });
-}
-
-/** 1 / 2 / 2.5 / 5 × 10ⁿ just above the value: 1830 → 2000, 420 → 500. */
-function niceCeil(value: number): number {
-  if (value <= 0) {
-    return 0;
-  }
-  const power = 10 ** Math.floor(Math.log10(value));
-  const step = [1, 2, 2.5, 5, 10].find((s) => s * power >= value) ?? 10;
-  return step * power;
 }
