@@ -29,11 +29,40 @@ import { randomBytes } from 'node:crypto';
 import { financeMessages } from '../finance.messages';
 import { BankImportService } from './bank-import.service';
 import { BankConnectionRow, bankAccounts, bankConnections } from './bank.schema';
-import { EnableBankingClient, ProviderAccount } from './enable-banking.client';
+import { EnableBankingClient, EnableBankingError, ProviderAccount } from './enable-banking.client';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** What PSD2 lets a consent last: the bank may give less. */
 const CONSENT_DAYS = 180;
+/** Off the bank's longest consent: the clocks of the provider and the bank may differ. */
+const CONSENT_MARGIN_MS = 60 * 60 * 1000;
+
+/** PSD2's 180 days, or less when the bank gives less (asking for more is refused). */
+export function consentUntil(maxSeconds?: number | null, now = Date.now()): Date {
+  const wanted = CONSENT_DAYS * DAY_MS;
+  const allowed = maxSeconds ? maxSeconds * 1000 - CONSENT_MARGIN_MS : wanted;
+  return new Date(now + Math.max(DAY_MS, Math.min(wanted, allowed)));
+}
+
+/** What the provider said, without the class name. */
+function reason(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * A refusal of the provider (an application not active yet, a key it no longer takes) as a
+ * 400 with its words, so the card shows them instead of a failure of the server.
+ */
+async function refused<T>(request: () => Promise<T>): Promise<T> {
+  try {
+    return await request();
+  } catch (error) {
+    if (error instanceof EnableBankingError && error.status < 500) {
+      throw new BadRequestException(`Enable Banking refused: ${error.message}`);
+    }
+    throw error;
+  }
+}
 /** The user has this long to sign in to the bank and come back. */
 const STATE_TTL_MS = 15 * 60 * 1000;
 /** The reminder to confirm the access again comes this many days before it ends. */
@@ -110,7 +139,7 @@ export class BankService {
 
   async banks(country: string): Promise<BankOption[]> {
     const client = await this.requireClient();
-    return (await client.banks(country))
+    return (await refused(() => client.banks(country)))
       .map((bank) => ({ name: bank.name, country: bank.country, logo: bank.logo ?? null }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -130,16 +159,17 @@ export class BankService {
       expiresAt: Date.now() + STATE_TTL_MS,
     });
     try {
+      const bank = (await client.banks(input.country)).find((one) => one.name === input.bank);
       return await client.startAuthorization({
         bank: input.bank,
         country: input.country,
         redirectUrl: this.redirectUrl,
         state,
-        validUntil: new Date(Date.now() + CONSENT_DAYS * DAY_MS),
+        validUntil: consentUntil(bank?.maximum_consent_validity),
       });
     } catch (error) {
       this.pending.delete(state);
-      throw new BadRequestException(`The bank cannot be connected: ${String(error)}`);
+      throw new BadRequestException(`The bank cannot be connected: ${reason(error)}`);
     }
   }
 

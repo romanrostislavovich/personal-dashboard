@@ -35,6 +35,14 @@ export interface ProviderTransaction {
   remittance_information?: string[] | null;
 }
 
+export interface ProviderBank {
+  name: string;
+  country: string;
+  logo?: string;
+  /** The longest consent the bank gives, in seconds: a longer one is refused. */
+  maximum_consent_validity?: number | null;
+}
+
 export interface ProviderAccount {
   uid: string;
   account_id?: { iban?: string | null } | null;
@@ -59,10 +67,11 @@ export class EnableBankingClient {
     return this.request('GET', '/application');
   }
 
-  async banks(country: string): Promise<{ name: string; country: string; logo?: string }[]> {
-    const answer = await this.request<{
-      aspsps: { name: string; country: string; logo?: string }[];
-    }>('GET', `/aspsps?country=${encodeURIComponent(country)}&psu_type=personal`);
+  async banks(country: string): Promise<ProviderBank[]> {
+    const answer = await this.request<{ aspsps: ProviderBank[] }>(
+      'GET',
+      `/aspsps?country=${encodeURIComponent(country)}&psu_type=personal`,
+    );
     return answer.aspsps ?? [];
   }
 
