@@ -71,7 +71,7 @@ export function showSaveBar(offer: SaveOffer, actions: SaveBarActions): void {
   document.documentElement.append(host);
 }
 
-export function hideSaveBar(): void {
+function hideSaveBar(): void {
   host?.remove();
   host = null;
 }

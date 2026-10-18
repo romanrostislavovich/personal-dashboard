@@ -188,7 +188,7 @@ const OWN_AFTER_MS = DAY_MS;
  * from it worked, at least a day before. The day matters — whoever has just guessed the
  * password must not become "the owner" by that very sign-in.
  */
-export function wasOwnAddress(
+function wasOwnAddress(
   ip: string | null,
   at: Date,
   attempts: SignInAttempt[],

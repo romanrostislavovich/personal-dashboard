@@ -5,7 +5,7 @@ const ACCOUNTS = 'https://accounts.spotify.com';
 const API = 'https://api.spotify.com/v1';
 
 /** Read-only: what is playing now. */
-export const SPOTIFY_SCOPES = 'user-read-currently-playing';
+const SPOTIFY_SCOPES = 'user-read-currently-playing';
 
 export interface SpotifyTokens {
   accessToken: string;

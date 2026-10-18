@@ -10,7 +10,7 @@ import {
 } from '@pd/contracts';
 
 /** How far back a regular sync reaches: a week is what any WakaTime plan gives. */
-export const SYNC_WINDOW_DAYS = 7;
+const SYNC_WINDOW_DAYS = 7;
 
 /** Every day from `from` to `to`, oldest first; days without coding are zeros. */
 export function fillDays(days: WakatimeDay[], from: DateParts, to: DateParts): WakatimeDay[] {

@@ -25,7 +25,7 @@ interface CookieOptions {
  * The web keeps its refresh token here: httpOnly — scripts on the page (an XSS) cannot read it;
  * SameSite=Strict — other sites cannot send it; only `/api/auth` gets it.
  */
-export const REFRESH_COOKIE = 'pd_refresh';
+const REFRESH_COOKIE = 'pd_refresh';
 const COOKIE_MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000;
 
 export function setRefreshCookie(request: AuthRequest, response: AuthResponse, token: string) {

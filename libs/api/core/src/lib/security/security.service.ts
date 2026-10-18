@@ -296,7 +296,7 @@ function toSettings(
 }
 
 /** The findings as the page shows them: the rules' ones folded under the AI's where it covers them. */
-export function toFindings(rows: SecurityFindingRow[]): SecurityFinding[] {
+function toFindings(rows: SecurityFindingRow[]): SecurityFinding[] {
   const folded = coverage(rows);
   return rows.map((row) => ({ ...toFinding(row), ...(folded.get(row.id) as Coverage) }));
 }

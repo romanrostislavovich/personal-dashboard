@@ -48,5 +48,3 @@ export function psychologyApi(api: ApiClient) {
       api.put<void>(`${BASE}/settings`, settings),
   };
 }
-
-export type PsychologyClient = ReturnType<typeof psychologyApi>;

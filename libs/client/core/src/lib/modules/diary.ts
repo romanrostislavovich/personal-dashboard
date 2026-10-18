@@ -69,5 +69,3 @@ export function diaryApi(api: ApiClient) {
     removePhoto: (id: string) => api.delete(diaryPhotoPath(id)),
   };
 }
-
-export type DiaryClient = ReturnType<typeof diaryApi>;

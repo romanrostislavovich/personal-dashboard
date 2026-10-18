@@ -279,7 +279,7 @@ export interface HealthDocument {
 const labNumber = z.number().finite();
 
 /** One line of a lab report: an analyte, its value and the laboratory's own range. */
-export const healthLabValueInputSchema = z
+const healthLabValueInputSchema = z
   .object({
     /** As the report names it: `Глюкоза`, `GLU`, `Glukoza`. */
     name: z.string().trim().min(1).max(200),
@@ -298,7 +298,6 @@ export const healthLabValueInputSchema = z
     message: 'A value or a text result is needed',
     path: ['value'],
   });
-export type HealthLabValueInput = z.input<typeof healthLabValueInputSchema>;
 
 export const healthLabPanelInputSchema = z.object({
   takenOn: day,

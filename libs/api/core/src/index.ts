@@ -30,27 +30,14 @@ export { decodeText } from './lib/ai/attachment-text';
 export * from './lib/ai/digest-section';
 export { MorningDigestService } from './lib/ai/morning-digest.service';
 export { ServerActions, type ServerActionHandler } from './lib/sync/server-actions';
-export {
-  pickMessages,
-  toLocale,
-  localize,
-  FALLBACK_LOCALE,
-  type LocalizedText,
-} from './lib/i18n/locale';
+export { pickMessages, type LocalizedText } from './lib/i18n/locale';
 export { DataExportService } from './lib/data-export/data-export.service';
 export type { ReadableExport, ReadableFile } from './lib/data-export/data-export.service';
 export { csvLine } from './lib/data-export/data-archive';
 export { SecurityService } from './lib/security/security.service';
 export type { FoundProblem, Inspection, SecuritySource } from './lib/security/security-source';
 export { OtherComputersService } from './lib/computer-time/other-computers.service';
-export {
-  assertPublicHost,
-  OutboundBlockedError,
-  privateAddressesAllowed,
-  safeFetch,
-  fetchWithTimeout,
-  OUTSIDE_TIMEOUT_MS,
-} from './lib/net/outbound';
+export { assertPublicHost, safeFetch, fetchWithTimeout } from './lib/net/outbound';
 export { IntegrationsService } from './lib/integrations/integrations.service';
 export type { IntegrationSource } from './lib/integrations/integrations.service';
 export type { IntegrationReport } from './lib/integrations/integration-state';

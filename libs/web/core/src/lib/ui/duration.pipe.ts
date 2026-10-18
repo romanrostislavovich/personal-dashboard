@@ -2,7 +2,7 @@ import { inject, Pipe, PipeTransform } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 
 /** Seconds as whole hours and minutes. */
-export function durationParts(seconds: number): { hours: number; minutes: number } {
+function durationParts(seconds: number): { hours: number; minutes: number } {
   const totalMinutes = Math.round(seconds / 60);
   return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 };
 }

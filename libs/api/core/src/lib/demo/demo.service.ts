@@ -11,7 +11,7 @@ import { UserRow, users } from '../users/users.schema';
 import { UsersService } from '../users/users.service';
 
 /** The visitor of a demo instance: everybody signs in as this one user. */
-export const DEMO_EMAIL = 'demo@example.com';
+const DEMO_EMAIL = 'demo@example.com';
 const DEMO_NAME = 'Alex';
 
 /** What a seed is given: whose data to make, and the day the data is "today" for. */

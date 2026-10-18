@@ -48,7 +48,7 @@ import {
 } from './wellbeing-rules';
 
 /** Health snapshots older than this are deleted (activity.jobs.ts). */
-export const HEALTH_KEEP_DAYS = 30;
+const HEALTH_KEEP_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**

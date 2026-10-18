@@ -3,7 +3,7 @@ import { IntegrationState, IntegrationStatus } from '@pd/contracts';
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 /** A token that expires within this long is told about: time enough to renew it. */
-export const EXPIRING_DAYS = 14;
+const EXPIRING_DAYS = 14;
 /** Without a threshold of its own, a connection is stale after two days without a refresh. */
 export const DEFAULT_STALE_HOURS = 48;
 

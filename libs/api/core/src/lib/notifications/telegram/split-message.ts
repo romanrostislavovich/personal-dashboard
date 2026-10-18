@@ -1,5 +1,5 @@
 /** Telegram takes at most 4096 characters in one message. */
-export const TELEGRAM_MESSAGE_LIMIT = 4096;
+const TELEGRAM_MESSAGE_LIMIT = 4096;
 
 /** Where a part may end, best first: a paragraph, a line, a sentence, a word. */
 const BREAKS = ['\n\n', '\n', '. ', ' '];

@@ -11,7 +11,7 @@ export interface DaySummary {
 }
 
 /** Less than this at the computer is not a day worth summing up. */
-export const SUMMARY_MIN_SECONDS = 10 * 60;
+const SUMMARY_MIN_SECONDS = 10 * 60;
 
 export function summaryOf(
   stats: ActivityStats,

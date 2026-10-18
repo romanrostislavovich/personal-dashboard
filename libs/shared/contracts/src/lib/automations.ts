@@ -4,7 +4,7 @@ import { z } from 'zod';
 // (a trigger) and what it can do (an action); the user joins them into rules.
 // Labels are translation keys of the modules: the server knows no language for them.
 
-export const AUTOMATION_PARAM_TYPES = ['text', 'number', 'time', 'select'] as const;
+const AUTOMATION_PARAM_TYPES = ['text', 'number', 'time', 'select'] as const;
 export type AutomationParamType = (typeof AUTOMATION_PARAM_TYPES)[number];
 
 /** A field of a trigger or an action. */

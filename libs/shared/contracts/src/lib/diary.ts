@@ -71,7 +71,6 @@ export interface DiaryMarkHit {
 export const diaryMarksQuerySchema = z.object({ emoji: z.string().min(1).max(32) });
 
 export const diarySearchQuerySchema = z.object({ q: z.string().trim().min(2).max(200) });
-export type DiarySearchQuery = z.infer<typeof diarySearchQuerySchema>;
 
 export interface DiarySearchHit {
   day: LocalDate;

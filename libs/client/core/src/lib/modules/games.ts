@@ -54,5 +54,3 @@ export function gamesApi(api: ApiClient) {
       api.delete(`${BASE}/accounts/${accountId}/opendota-key`),
   };
 }
-
-export type GamesClient = ReturnType<typeof gamesApi>;

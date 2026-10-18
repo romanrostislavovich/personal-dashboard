@@ -27,7 +27,6 @@
     "empty": "No data for this period"
   },
   "connect": {
-    "title": "Sources",
     "lastfmDescription": "Listening history, stats and tops",
     "lastfmHint": "Enter your Last.fm username and an API key: create one at last.fm/api/account/create (any app name, callback can be empty). The key is stored encrypted on the server.",
     "username": "Last.fm username",

@@ -64,7 +64,7 @@ function open(sealed: Buffer): Buffer {
 
 export const isEncryptedText = (value: string) => value.startsWith(TEXT_PREFIX);
 
-export const isEncryptedBytes = (value: Buffer) =>
+const isEncryptedBytes = (value: Buffer) =>
   value.subarray(0, BYTES_MAGIC.length).equals(BYTES_MAGIC);
 
 export function encryptText(plain: string): string {

@@ -433,7 +433,7 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
 
 const BY_KEY = new Map(LAB_ANALYTES.map((analyte) => [analyte.key, analyte]));
 
-export function labAnalyte(key: string | null | undefined): LabAnalyte | undefined {
+function labAnalyte(key: string | null | undefined): LabAnalyte | undefined {
   return key ? BY_KEY.get(key) : undefined;
 }
 

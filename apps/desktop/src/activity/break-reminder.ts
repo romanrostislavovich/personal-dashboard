@@ -1,5 +1,5 @@
 /** No input this long, a locked screen or a sleeping computer is a break. */
-export const BREAK_MS = 5 * 60_000;
+const BREAK_MS = 5 * 60_000;
 /** Not taken: reminded again after this long. */
 const REMIND_AGAIN_MS = 15 * 60_000;
 

@@ -131,7 +131,7 @@ export class BitbucketAccountSource implements AccountSource {
  * Bitbucket knows one language per repository (the one set in its settings): repositories are
  * weighed by their size.
  */
-export function languageShares(
+function languageShares(
   repos: Pick<RawBitbucketRepo, 'language' | 'size'>[],
 ): GithubLanguageShare[] {
   const shares = new Map<string, number>();

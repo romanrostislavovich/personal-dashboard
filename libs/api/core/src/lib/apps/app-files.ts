@@ -16,13 +16,12 @@ export const EXTENSION_UPDATES_PATH = '/extension-updates';
 export const DESKTOP_DOWNLOADS_PATH = '/downloads/desktop';
 
 /** The zip of the extension, next to its files. */
-export const EXTENSION_ZIP = 'personal-dashboard-extension.zip';
+const EXTENSION_ZIP = 'personal-dashboard-extension.zip';
 /** What deploy.sh writes next to the installers. */
 const INSTALLERS_MANIFEST = 'installers.json';
 
 /** Where the installers are when this server has none: the releases of the project. */
-export const RELEASES_URL =
-  'https://github.com/romanrostislavovich/personal-dashboard/releases/latest';
+const RELEASES_URL = 'https://github.com/romanrostislavovich/personal-dashboard/releases/latest';
 
 /** `bundle.json` of a bundle folder: its version; `null` — no folder, or not a bundle. */
 export function bundleVersion(dir: string | undefined): string | null {

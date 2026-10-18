@@ -250,7 +250,7 @@ export class HabitsService {
 }
 
 /** The time of the question has come, not long ago. */
-export function isDue(askAt: string, now: string): boolean {
+function isDue(askAt: string, now: string): boolean {
   const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
   const late = minutes(now) - minutes(askAt);
   return late >= 0 && late < CATCH_UP_MINUTES;

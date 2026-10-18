@@ -20,7 +20,7 @@ const secret = (name: string) =>
       message: `${name} is still the placeholder of .env.example: generate a random one`,
     });
 
-export const envSchema = z
+const envSchema = z
   .object({
     API_PORT: z.coerce.number().default(3300),
     DATABASE_URL: z.url(),

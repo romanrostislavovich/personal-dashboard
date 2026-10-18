@@ -8,7 +8,6 @@
   "date": "Date",
   "note": "Comment",
   "noData": "No transactions in this period",
-  "topCategories": "Top expense categories",
   "kind": {
     "income": "Income",
     "expense": "Expense"
@@ -221,7 +220,6 @@
     "history": "Price history",
     "noHistory": "The chart appears after the second day.",
     "check": "Check now",
-    "open": "Open in the shop",
     "bought": "Bought",
     "markBought": "Bought it",
     "unmarkBought": "Want it again",

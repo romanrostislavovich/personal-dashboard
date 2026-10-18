@@ -12,7 +12,7 @@ const PAUSE_MS = 300;
 /** Last.fm often fails a single request ("Operation failed") — retry it before giving up. */
 const RETRIES = 4;
 /** A background run (every 15 minutes) imports up to this many pages: 150 × 200 = 30 000 plays. */
-export const PAGES_PER_BACKGROUND_RUN = 150;
+const PAGES_PER_BACKGROUND_RUN = 150;
 
 export interface HistoryImportStatus {
   imported: number;

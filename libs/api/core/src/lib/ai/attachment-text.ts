@@ -41,7 +41,7 @@ export async function attachmentText(file: AttachmentFile): Promise<AiAttachment
   };
 }
 
-export function isSupportedAttachment(name: string): boolean {
+function isSupportedAttachment(name: string): boolean {
   return AI_ATTACHMENT_EXTENSIONS.includes(extensionOf(name) as never);
 }
 

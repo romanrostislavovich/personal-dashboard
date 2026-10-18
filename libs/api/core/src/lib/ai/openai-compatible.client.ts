@@ -113,7 +113,7 @@ export async function chatCompletionWithUsage(
   return { message: data.choices[0].message, usage: tokenUsage(data.usage) };
 }
 
-export function tokenUsage(raw: RawUsage | undefined): TokenUsage | null {
+function tokenUsage(raw: RawUsage | undefined): TokenUsage | null {
   if (!raw || raw.prompt_tokens === undefined) {
     return null;
   }

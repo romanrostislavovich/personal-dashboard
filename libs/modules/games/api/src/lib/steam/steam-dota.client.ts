@@ -4,7 +4,7 @@ import { SteamClient } from './steam.client';
 export class SteamDotaPrivateError extends Error {}
 
 /** Steam's own limit of matches a request. */
-export const STEAM_HISTORY_PAGE = 100;
+const STEAM_HISTORY_PAGE = 100;
 /** Steam never gives more than this many matches to one query, however it is paged. */
 export const STEAM_HISTORY_LIMIT = 500;
 

@@ -224,7 +224,7 @@ export class CodeAccountsService {
 }
 
 /** The moment an hourly sync reads the activity from: a few whole days back. */
-export function refreshFrom(lastSyncedAt: Date): Date {
+function refreshFrom(lastSyncedAt: Date): Date {
   const start = new Date(lastSyncedAt.getTime() - REFRESH_DAYS * DAY_MS);
   start.setUTCHours(0, 0, 0, 0);
   return start;

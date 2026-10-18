@@ -20,7 +20,7 @@ const SOURCE_SECTIONS: Record<string, string> = {
 };
 
 /** The section a notification is about, as the menu names it. */
-export function sectionOfSource(source: string): string {
+function sectionOfSource(source: string): string {
   return SOURCE_SECTIONS[source] ?? source;
 }
 

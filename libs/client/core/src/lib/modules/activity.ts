@@ -91,5 +91,3 @@ export function activityApi(api: ApiClient) {
       api.post<ActivityBrowserConfig & { saved: number }>(`${BASE}/sites`, { visits }),
   };
 }
-
-export type ActivityClient = ReturnType<typeof activityApi>;

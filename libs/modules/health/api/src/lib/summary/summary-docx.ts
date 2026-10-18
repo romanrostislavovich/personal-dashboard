@@ -94,7 +94,7 @@ function table(head: string[], rows: string[][], marked: boolean[]): string {
 }
 
 /** Text as XML takes it; characters XML does not allow at all are dropped. */
-export function xmlText(value: string): string {
+function xmlText(value: string): string {
   return (
     value
       // eslint-disable-next-line no-control-regex

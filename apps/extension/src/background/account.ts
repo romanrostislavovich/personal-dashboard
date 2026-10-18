@@ -96,7 +96,7 @@ async function signedOutClient(): Promise<DashboardClient> {
  * `https://…` without a trailing slash. Plain http only for this computer and the local network:
  * the account password and the vault's ciphertext should not cross the internet unencrypted.
  */
-export function normalizeServer(address: string): string {
+function normalizeServer(address: string): string {
   const text = address.trim().replace(/\/+$/, '');
   let url: URL;
   try {

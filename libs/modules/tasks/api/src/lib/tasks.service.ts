@@ -272,7 +272,7 @@ export class TasksService {
   }
 }
 
-export function toTask(row: TaskRow, reminderAt: string | null): Task {
+function toTask(row: TaskRow, reminderAt: string | null): Task {
   return {
     id: row.id,
     title: row.title,

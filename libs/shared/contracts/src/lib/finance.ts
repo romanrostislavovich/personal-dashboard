@@ -148,7 +148,7 @@ export interface MainCashFlow extends FinanceConversion {
 }
 
 /** An ISO 4217 code: `EUR`, `PLN`. */
-export const currencyCodeSchema = z
+const currencyCodeSchema = z
   .string()
   .trim()
   .toUpperCase()

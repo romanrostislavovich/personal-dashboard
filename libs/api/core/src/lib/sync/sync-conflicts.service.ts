@@ -199,7 +199,7 @@ function columns(alias: string | null, names: string[]): SQL {
 }
 
 /** Long values cut, a photo's bytes replaced by their size. */
-export function forDisplay(row: Record<string, unknown>): Record<string, unknown> {
+function forDisplay(row: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(row).map(([key, value]) => {
       if (typeof value !== 'string' || value.length <= SHOWN_LENGTH) {

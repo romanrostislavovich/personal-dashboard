@@ -1,7 +1,6 @@
 {
   "title": "Ачивки",
   "summary": "Открыто {{unlocked}} из {{total}}",
-  "unlockedAt": "Открыта",
   "empty": "Ачивок пока нет",
   "filter": {
     "all": "Все",

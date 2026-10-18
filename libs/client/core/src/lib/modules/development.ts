@@ -94,5 +94,3 @@ export function developmentApi(api: ApiClient) {
     syncWakatime: () => api.post<void>(`${BASE}/wakatime/sync`, {}),
   };
 }
-
-export type DevelopmentClient = ReturnType<typeof developmentApi>;

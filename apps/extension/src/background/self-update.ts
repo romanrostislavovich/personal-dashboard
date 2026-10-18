@@ -39,7 +39,7 @@ export interface UpdateStatus {
 }
 
 /** The fingerprint of the running code (see apps/extension/build.mjs). */
-export function runningVersion(): string {
+function runningVersion(): string {
   const manifest = chrome.runtime.getManifest();
   return manifest.version_name ?? manifest.version;
 }
