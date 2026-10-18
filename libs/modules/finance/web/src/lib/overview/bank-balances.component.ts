@@ -5,50 +5,70 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { FinanceApi } from '../finance.api';
 
 /**
- * What is on the bank accounts now, as the bank said at its latest import: one line per
- * imported account. Nothing when no bank is connected.
+ * What is on the bank accounts now, as the bank said at its latest import: a tile per imported
+ * account, in the look of the month's tiles below it. Nothing when no bank is connected.
  */
 @Component({
   selector: 'pd-bank-balances',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.none]': '!accounts().length' },
   imports: [CurrencyPipe, DatePipe, MatIconModule, TranslocoPipe],
   template: `
-    @if (accounts().length) {
-      <div class="balances">
-        <mat-icon>account_balance</mat-icon>
-        @for (account of accounts(); track account.id) {
-          <span
-            class="account"
-            [title]="'finance.bank.balanceAt' | transloco: { date: (account.at | date: 'short') }"
-          >
-            <span class="name">{{ account.label }}</span>
-            <span class="value">{{
-              account.amount | currency: account.currency : 'symbol' : '1.2-2'
-            }}</span>
-          </span>
-        }
+    @for (account of accounts(); track account.id) {
+      <div class="tile">
+        <span class="label">
+          <mat-icon inline>account_balance</mat-icon>
+          {{ 'finance.bank.onAccount' | transloco }}
+        </span>
+        <span class="value" [class.negative]="account.amount < 0">
+          {{ account.amount | currency: account.currency : 'symbol' : '1.2-2' }}
+        </span>
+        <span class="source">
+          {{ account.label }}
+          @if (account.at) {
+            ·
+            {{
+              'finance.bank.balanceAt' | transloco: { date: (account.at | date: 'd MMM, HH:mm') }
+            }}
+          }
+        </span>
       </div>
     }
   `,
   styles: `
-    .balances {
+    :host {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+      gap: 16px;
+    }
+    :host(.none) {
+      display: none;
+    }
+    .tile {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 6px;
+      padding: 20px;
+      border-radius: var(--pd-radius);
+      background: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+    }
+    .label {
+      display: flex;
       align-items: center;
-      gap: 8px 20px;
-      color: var(--mat-sys-on-surface-variant);
-    }
-    .account {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 8px;
-    }
-    .name {
-      font: var(--mat-sys-body-small);
+      gap: 6px;
+      font: var(--mat-sys-label-large);
     }
     .value {
-      font: var(--mat-sys-title-medium);
-      color: var(--mat-sys-on-surface);
+      font: 700 2.5rem / 1.1 var(--pd-font-heading);
+      letter-spacing: -0.02em;
+    }
+    .value.negative {
+      color: var(--pd-danger);
+    }
+    .source {
+      font: var(--mat-sys-label-medium);
+      opacity: 0.8;
     }
   `,
 })

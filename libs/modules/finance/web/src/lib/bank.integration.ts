@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -56,7 +56,6 @@ const SOON_DAYS = 7;
   selector: 'pd-bank-integration',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CurrencyPipe,
     DatePipe,
     IntegrationGuideComponent,
     MatButtonModule,
@@ -152,11 +151,6 @@ const SOON_DAYS = 7;
                         · {{ account.currency }}
                       }
                     </mat-slide-toggle>
-                    @if (account.balance; as balance) {
-                      <span class="balance">
-                        {{ balance.amount | currency: balance.currency : 'symbol' : '1.2-2' }}
-                      </span>
-                    }
                   </li>
                 } @empty {
                   <li class="hint">{{ 'finance.bank.noAccounts' | transloco }}</li>
@@ -243,10 +237,6 @@ const SOON_DAYS = 7;
       font: var(--mat-sys-body-small);
       color: var(--mat-sys-on-surface-variant);
     }
-    .balance {
-      margin-left: auto;
-      font: var(--mat-sys-title-small);
-    }
     .hint.error {
       color: var(--mat-sys-error);
     }
@@ -299,11 +289,6 @@ const SOON_DAYS = 7;
       display: flex;
       flex-direction: column;
       gap: 8px;
-    }
-    .accounts li {
-      display: flex;
-      align-items: center;
-      gap: 12px;
     }
     .connect {
       display: flex;
