@@ -32,7 +32,32 @@ const TEXT = /\.(html|json|css|js)$/;
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 
+/**
+ * The contracts are declarations only, but esbuild takes their module-level `z.object(...)` for
+ * side effects and would bundle all of them (and zod) into a page that uses one constant. Told
+ * they have none, it keeps only the modules a bundle uses.
+ */
+const pureContracts = {
+  name: 'pure-contracts',
+  setup(builder) {
+    builder.onResolve({ filter: /^@pd\/contracts$|^\.\.?\// }, async (args) => {
+      if (args.pluginData === 'pure-contracts') {
+        return undefined;
+      }
+      const resolved = await builder.resolve(args.path, {
+        kind: args.kind,
+        importer: args.importer,
+        resolveDir: args.resolveDir,
+        pluginData: 'pure-contracts',
+      });
+      const inContracts = resolved.path.replace(/\\/g, '/').includes('/libs/shared/contracts/');
+      return inContracts ? { ...resolved, sideEffects: false } : undefined;
+    });
+  },
+};
+
 const shared = {
+  plugins: [pureContracts],
   bundle: true,
   platform: 'browser',
   target: 'chrome120',

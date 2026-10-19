@@ -420,7 +420,7 @@
     "message": "Открыть ассистента сбоку страницы"
   },
   "sidepanelPlaceholder": {
-    "message": "Спросите ассистента…"
+    "message": "Спросите ассистента… (Ctrl+V — вставить картинку)"
   },
   "sidepanelSend": {
     "message": "Отправить"
@@ -547,5 +547,32 @@
   },
   "wishOpen": {
     "message": "Открыть вишлист"
+  },
+  "sidepanelAttach": {
+    "message": "Прикрепить файл или картинку (скриншот можно вставить через Ctrl+V)"
+  },
+  "sidepanelAttachRemove": {
+    "message": "Убрать файл"
+  },
+  "sidepanelAttachReading": {
+    "message": "Читаю файл…"
+  },
+  "sidepanelAttachTruncated": {
+    "message": "$1 длинный: отправится только его начало"
+  },
+  "sidepanelAttachUnsupported": {
+    "message": "$1: читаются только PDF, Excel (.xlsx), CSV, текстовые файлы и картинки"
+  },
+  "sidepanelAttachEmpty": {
+    "message": "В $1 нет текста — похоже, это скан"
+  },
+  "sidepanelAttachNoVision": {
+    "message": "$1: ни одно ИИ-подключение не читает картинки — выберите его в дашборде: Настройки → ИИ"
+  },
+  "sidepanelAttachTooLarge": {
+    "message": "$1 больше 20 МБ"
+  },
+  "sidepanelAttachFailed": {
+    "message": "Не получилось прочитать $1"
   }
 }

@@ -1,4 +1,5 @@
 import {
+  AI_IMAGE_TYPES,
   AiAction,
   AiAttachmentUpload,
   AiChatRequest,
@@ -56,4 +57,25 @@ export function aiApi(api: ApiClient) {
       return api.post<AiAttachmentUpload>(`${BASE}/attachments`, form);
     },
   };
+}
+
+/**
+ * The files of a paste (Ctrl+V) to attach to a chat message: a screenshot, a copied picture or
+ * files copied in the file manager. A paste that carries text (a copy from Word or Excel also
+ * brings a picture of it) stays a text paste: then nothing is returned. A picture from the
+ * clipboard is named "image.png" by every browser, so it gets the time it was pasted.
+ */
+export function pastedFiles(clipboard: DataTransfer | null, now = new Date()): File[] {
+  if (!clipboard || clipboard.getData('text/plain')) {
+    return [];
+  }
+  return [...clipboard.files].map((file, index) => {
+    const extension = AI_IMAGE_TYPES[file.type];
+    if (!extension || !/^image\.\w+$/i.test(file.name)) {
+      return file;
+    }
+    const time = now.toTimeString().slice(0, 8).replace(/:/g, '-');
+    const name = `image-${time}${index ? `-${index + 1}` : ''}${extension}`;
+    return new File([file], name, { type: file.type });
+  });
 }

@@ -1,6 +1,8 @@
 import {
   AI_ATTACHMENT_EXTENSIONS,
   AI_ATTACHMENT_MAX_CHARS,
+  AI_IMAGE_EXTENSIONS,
+  AiAttachmentFailure,
   AiAttachmentUpload,
 } from '@pd/contracts';
 import readXlsxFile from 'read-excel-file/node';
@@ -15,17 +17,50 @@ export interface AttachmentFile {
 
 /** Why a file cannot be given to the model; the caller turns it into a user-facing text. */
 export class AttachmentError extends Error {
-  constructor(readonly reason: 'unsupported' | 'empty') {
-    super(`Attachment is ${reason}`);
+  constructor(readonly reason: AiAttachmentFailure) {
+    super(`Attachment: ${reason}`);
   }
 }
 
 /**
- * The text of a file for the model: PDF text layer, Excel sheets as tab-separated rows,
- * text formats as is (UTF-8 or, for older bank exports, Windows-1251).
+ * Reads a picture with the instruction (AiService.completeWithImage); `null` — no connection
+ * reads pictures.
  */
-export async function attachmentText(file: AttachmentFile): Promise<AiAttachmentUpload> {
-  const text = (await extract(file)).trim();
+export type ImageReader = (
+  instruction: string,
+  image: { data: Buffer; mimeType: string },
+) => Promise<string | null>;
+
+/**
+ * What the model that reads pictures is asked: everything the chat model may need, since it
+ * gets this text instead of the picture. The text is kept as written, not translated.
+ */
+export const IMAGE_INSTRUCTION =
+  'You read a picture for an assistant that cannot see it; the user attached it to a question ' +
+  'you do not know. First write out all the text in the picture exactly as it is, in its own ' +
+  'language: keep numbers, amounts, dates, names and links; write tables row by row with tabs ' +
+  'between cells. Then, after a line "---", describe briefly what the picture shows (a ' +
+  'screenshot of what, a photo of what, charts and their values, what stands out). Write ' +
+  'nothing else.';
+
+const IMAGE_TYPES: Record<string, string> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+};
+
+/**
+ * The text of a file for the model: PDF text layer, Excel sheets as tab-separated rows,
+ * text formats as is (UTF-8 or, for older bank exports, Windows-1251), pictures as the model
+ * that reads them writes them down.
+ */
+export async function attachmentText(
+  file: AttachmentFile,
+  readImage?: ImageReader,
+): Promise<AiAttachmentUpload> {
+  const text = (await extract(file, readImage)).trim();
   if (!text) {
     // A scanned PDF has no text layer: without OCR there is nothing to read.
     throw new AttachmentError('empty');
@@ -41,11 +76,25 @@ export async function attachmentText(file: AttachmentFile): Promise<AiAttachment
   };
 }
 
+export function isImageAttachment(name: string): boolean {
+  return AI_IMAGE_EXTENSIONS.includes(extensionOf(name) as never);
+}
+
 function isSupportedAttachment(name: string): boolean {
   return AI_ATTACHMENT_EXTENSIONS.includes(extensionOf(name) as never);
 }
 
-async function extract({ name, data }: AttachmentFile): Promise<string> {
+async function extract({ name, data }: AttachmentFile, readImage?: ImageReader): Promise<string> {
+  if (isImageAttachment(name) && readImage) {
+    const text = await readImage(IMAGE_INSTRUCTION, {
+      data,
+      mimeType: IMAGE_TYPES[extensionOf(name)],
+    });
+    if (text === null) {
+      throw new AttachmentError('no-vision');
+    }
+    return text;
+  }
   if (!isSupportedAttachment(name)) {
     throw new AttachmentError('unsupported');
   }

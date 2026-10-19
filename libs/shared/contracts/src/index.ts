@@ -34,6 +34,7 @@ export * from './lib/games';
 export * from './lib/wow-details';
 export * from './lib/achievements';
 export * from './lib/ai';
+export * from './lib/ai-attachments';
 export * from './lib/diary-marks';
 export * from './lib/diary-text';
 export * from './lib/realtime';

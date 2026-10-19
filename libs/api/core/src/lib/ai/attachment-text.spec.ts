@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { AI_ATTACHMENT_MAX_CHARS } from '@pd/contracts';
 import { AttachmentError, attachmentText, decodeText, withAttachments } from './attachment-text';
 
@@ -19,6 +20,20 @@ describe('attachmentText', () => {
     await expect(
       attachmentText({ name: 'empty.txt', data: Buffer.from(' \n ') }),
     ).rejects.toMatchObject({ reason: 'empty' });
+  });
+
+  it('has a picture written down by the model that reads pictures', async () => {
+    const data = Buffer.from('png');
+    const readImage = vi.fn().mockResolvedValue('Total: 42.00 PLN\n---\nA receipt');
+    await expect(attachmentText({ name: 'image.PNG', data }, readImage)).resolves.toEqual({
+      name: 'image.PNG',
+      text: 'Total: 42.00 PLN\n---\nA receipt',
+      truncated: false,
+    });
+    expect(readImage).toHaveBeenCalledWith(expect.any(String), { data, mimeType: 'image/png' });
+    await expect(
+      attachmentText({ name: 'shot.jpg', data }, async () => null),
+    ).rejects.toMatchObject({ reason: 'no-vision' });
   });
 
   it('cuts long files and marks the cut', async () => {

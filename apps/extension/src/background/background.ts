@@ -57,6 +57,7 @@ import { accessTokensApi, aiApi } from '@pd/client-core';
 import { signedInClient } from './account';
 import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
 import { addWish, wishPopupState } from './wishlist';
+import { chatAttach } from './chat';
 
 /*
  * The service worker: the only part that holds the session and the open vault. The popup and
@@ -239,7 +240,10 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
       return aiApi((await signedInClient()).api).chat({
         content: String(message.content).slice(0, 20_000),
         ...(message.conversationId ? { conversationId: String(message.conversationId) } : {}),
+        ...(message.attachments?.length ? { attachments: message.attachments } : {}),
       });
+    case 'chat-attach':
+      return chatAttach(message);
     case 'mcp-revoke':
       return accessTokensApi((await signedInClient()).api).revoke(String(message.id));
     case 'blocked-info':
