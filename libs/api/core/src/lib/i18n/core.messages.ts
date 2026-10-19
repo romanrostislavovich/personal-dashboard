@@ -58,10 +58,12 @@ const messages = {
     voiceEmpty: '🎤 Could not hear any words — try again?',
     voiceFailed: '🎤 Speech recognition failed. Check the connection in Settings → Integrations.',
     attachmentUnsupported:
-      'I can read PDF, Excel (.xlsx), CSV and text files. Photos go to the diary.',
+      'I can read PDF, Excel (.xlsx), CSV, text files and pictures sent as a file. Photos go to the diary.',
     attachmentEmpty:
       'There is no text in this file — probably a scan. Export the statement as PDF with text or CSV.',
     attachmentFailed: 'Could not read the file. Is it damaged or password-protected?',
+    attachmentNoVision:
+      'None of the AI connections reads pictures: pick one in Settings → AI (OpenAI, or a vision model of Ollama).',
     systemErrorTitle: '⚠️ Dashboard error',
     systemErrorSeeSettings: 'Details: Settings → System.',
     backupTitle: '🗄️ Backups need attention',
@@ -133,10 +135,12 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
     voiceEmpty: '🎤 Не расслышал ни слова — попробуешь ещё раз?',
     voiceFailed: '🎤 Не получилось распознать речь. Проверь подключение в Настройки → Интеграции.',
     attachmentUnsupported:
-      'Я читаю PDF, Excel (.xlsx), CSV и текстовые файлы. Фото уходят в дневник.',
+      'Я читаю PDF, Excel (.xlsx), CSV, текстовые файлы и картинки, отправленные файлом. Фото уходят в дневник.',
     attachmentEmpty:
       'В файле нет текста — похоже, это скан. Выгрузи выписку в PDF с текстом или в CSV.',
     attachmentFailed: 'Не получилось прочитать файл. Он не повреждён и не защищён паролем?',
+    attachmentNoVision:
+      'Ни одно ИИ-подключение не читает картинки: выбери его в Настройки → ИИ (OpenAI или vision-модель Ollama).',
     systemErrorTitle: '⚠️ Ошибка в дашборде',
     systemErrorSeeSettings: 'Подробности: Настройки → Система.',
     backupTitle: '🗄️ С бэкапами что-то не так',

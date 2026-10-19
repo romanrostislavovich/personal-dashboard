@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AI_ATTACHMENT_MAX_CHARS, AI_MAX_ATTACHMENTS } from './ai-attachments';
 
 /**
  * Any OpenAI-compatible API. Presets fill in the default address and model,
@@ -138,29 +139,6 @@ export interface AiSettings {
   activeConnectionId: string | null;
   connections: AiConnection[];
 }
-
-/**
- * Files the assistant can read: the server extracts their text (bank statements, receipts,
- * price lists…) and the model gets it as part of the message. Images are not supported —
- * not every provider has a vision model.
- */
-export const AI_ATTACHMENT_EXTENSIONS = [
-  '.pdf',
-  '.xlsx',
-  '.csv',
-  '.tsv',
-  '.txt',
-  '.md',
-  '.json',
-  '.xml',
-  '.ofx',
-  '.qif',
-] as const;
-/** Telegram bots can download files up to 20 MB; the web upload uses the same limit. */
-export const AI_ATTACHMENT_MAX_BYTES = 20 * 1024 * 1024;
-/** Extracted text is cut to this length so a file fits into the model context. */
-export const AI_ATTACHMENT_MAX_CHARS = 60_000;
-export const AI_MAX_ATTACHMENTS = 3;
 
 export const aiAttachmentSchema = z.object({
   name: z.string().trim().min(1).max(200),

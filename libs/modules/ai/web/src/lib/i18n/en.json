@@ -8,15 +8,16 @@
     "remove": "Delete the conversation",
     "empty": "No conversations yet"
   },
-  "placeholder": "Ask anything about your data… (Enter to send, Shift+Enter for a new line)",
+  "placeholder": "Ask anything about your data… (Enter to send, Shift+Enter for a new line, Ctrl+V pastes a picture)",
   "thinking": "Thinking and checking your data…",
   "sources": "Looked at:",
   "attach": {
-    "hint": "Attach a file: a bank statement, a receipt… (PDF, Excel, CSV, text)",
+    "hint": "Attach a file: a bank statement, a receipt, a picture… (PDF, Excel, CSV, text, images). A screenshot can be pasted with Ctrl+V",
     "remove": "Remove file",
     "tooLarge": "{{name}} is larger than 20 MB",
-    "unsupported": "{{name}}: only PDF, Excel (.xlsx), CSV and text files can be read",
+    "unsupported": "{{name}}: only PDF, Excel (.xlsx), CSV, text files and pictures can be read",
     "empty": "{{name}} has no text — probably a scan. Export it as a PDF with text or CSV",
+    "no-vision": "{{name}}: none of the AI connections reads pictures — pick one in the settings below (OpenAI, or a vision model of Ollama)",
     "failed": "Could not read {{name}}",
     "truncated": "{{name}} is long: only its beginning will be sent"
   },

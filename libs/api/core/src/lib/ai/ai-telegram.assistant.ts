@@ -137,24 +137,30 @@ export class AiTelegramAssistant implements OnModuleInit {
     }
   }
 
-  /** A document from the chat: its text goes to the assistant together with the caption. */
+  /**
+   * A document from the chat (a picture sent as a file too): its text goes to the assistant
+   * together with the caption.
+   */
   private async assistWithDocument(user: UserRow, document: BotDocument): Promise<string> {
     const messages = coreMessages(user.locale);
     if (!(await this.ai.isConfigured(user.id))) {
       return messages.askNotConfigured;
     }
     try {
-      const attachment = await attachmentText({
-        name: document.fileName,
-        data: await document.download(),
-      });
+      const attachment = await attachmentText(
+        { name: document.fileName, data: await document.download() },
+        (instruction, image) =>
+          this.ai.completeWithImage(user.id, instruction, image, undefined, { keepLanguage: true }),
+      );
       const reply = await this.assist(user, document.caption, [attachment]);
       return typeof reply === 'string' ? reply : reply.text;
     } catch (error) {
       if (error instanceof AttachmentError) {
-        return error.reason === 'unsupported'
-          ? messages.attachmentUnsupported
-          : messages.attachmentEmpty;
+        return {
+          unsupported: messages.attachmentUnsupported,
+          empty: messages.attachmentEmpty,
+          'no-vision': messages.attachmentNoVision,
+        }[error.reason];
       }
       this.logger.warn(`Could not read a Telegram document for ${user.id}: ${error}`);
       return messages.attachmentFailed;

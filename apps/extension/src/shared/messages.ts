@@ -7,7 +7,7 @@
  * a page only when the background decides to fill them (see background/fill.ts).
  */
 
-import type { WritingRewriteMode } from '@pd/contracts';
+import type { AiAttachment, AiAttachmentUpload, WritingRewriteMode } from '@pd/contracts';
 
 /** The vault on the server: not created yet, locked here, or open here. */
 export type VaultStatus = 'none' | 'locked' | 'unlocked';
@@ -134,7 +134,10 @@ export type PopupRequest =
   // The assistant beside the page (sidepanel): the conversation shared with the dashboard.
   | { type: 'chat-current' }
   | { type: 'chat-new' }
-  | { type: 'chat-send'; content: string; conversationId?: string }
+  | { type: 'chat-send'; content: string; conversationId?: string; attachments?: AiAttachment[] }
+  // A file for the next message (a screenshot pasted with Ctrl+V): its bytes in base64, since a
+  // message between the parts of the extension carries only JSON.
+  | { type: 'chat-attach'; name: string; mimeType: string; base64: string }
   | { type: 'open-assistant' }
   | { type: 'pass-site'; site: string }
   // Writing on the active page: on or off on its site, on or off everywhere.
@@ -243,6 +246,11 @@ export interface FillAnswer {
 }
 
 /** Every answer of the background: a value, or a code of what went wrong (see ERROR_CODES). */
+/** What the server made of a file for the chat, or why it could not read it. */
+export type ChatAttachResult =
+  | { attachment: AiAttachmentUpload }
+  | { failure: 'unsupported' | 'empty' | 'no-vision' | 'too-large' | 'failed' };
+
 export type Reply<T> = { ok: true; value: T } | { ok: false; error: ErrorCode };
 
 export const ERROR_CODES = [

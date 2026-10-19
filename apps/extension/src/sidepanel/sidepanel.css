@@ -139,3 +139,48 @@ textarea {
   color: var(--text);
   font: inherit;
 }
+
+/* The files for the next message, above the field. */
+.attached {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+}
+.attached:not(:empty) {
+  padding-bottom: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding: 2px 4px 2px 10px;
+  border-radius: 8px;
+  background: var(--tonal);
+  color: var(--on-tonal);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.chip button {
+  padding: 0 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+}
+.attached .note {
+  font-size: 12px;
+  color: var(--muted);
+}
+.message .files {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+button.clip {
+  align-self: flex-end;
+  padding: 8px 10px;
+  background: transparent;
+  font-size: 16px;
+}

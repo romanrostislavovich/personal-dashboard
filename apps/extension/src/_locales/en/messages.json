@@ -420,7 +420,7 @@
     "message": "Open the assistant beside the page"
   },
   "sidepanelPlaceholder": {
-    "message": "Ask the assistant…"
+    "message": "Ask the assistant… (Ctrl+V pastes a picture)"
   },
   "sidepanelSend": {
     "message": "Send"
@@ -547,5 +547,32 @@
   },
   "wishOpen": {
     "message": "Open the wishlist"
+  },
+  "sidepanelAttach": {
+    "message": "Attach a file or a picture (a screenshot can be pasted with Ctrl+V)"
+  },
+  "sidepanelAttachRemove": {
+    "message": "Remove the file"
+  },
+  "sidepanelAttachReading": {
+    "message": "Reading the file…"
+  },
+  "sidepanelAttachTruncated": {
+    "message": "$1 is long: only its beginning will be sent"
+  },
+  "sidepanelAttachUnsupported": {
+    "message": "$1: only PDF, Excel (.xlsx), CSV, text files and pictures can be read"
+  },
+  "sidepanelAttachEmpty": {
+    "message": "$1 has no text — probably a scan"
+  },
+  "sidepanelAttachNoVision": {
+    "message": "$1: none of the AI connections reads pictures — pick one in the dashboard: Settings → AI"
+  },
+  "sidepanelAttachTooLarge": {
+    "message": "$1 is larger than 20 MB"
+  },
+  "sidepanelAttachFailed": {
+    "message": "Could not read $1"
   }
 }

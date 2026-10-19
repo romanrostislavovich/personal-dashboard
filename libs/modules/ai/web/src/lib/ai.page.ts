@@ -20,6 +20,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
   AI_ATTACHMENT_EXTENSIONS,
   AI_ATTACHMENT_MAX_BYTES,
+  AI_IMAGE_EXTENSIONS,
   AI_MAX_ATTACHMENTS,
   AiAttachment,
   AiConnection,
@@ -34,6 +35,7 @@ import {
   errorStatus,
   EmptyStateComponent,
 } from '@pd/web-core';
+import { pastedFiles } from '@pd/client-core';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
 
@@ -97,7 +99,7 @@ export class AiPage {
   protected readonly attachments = signal<AiAttachment[]>([]);
   protected readonly uploading = signal(false);
   protected readonly attachError = signal<string | null>(null);
-  protected readonly accept = AI_ATTACHMENT_EXTENSIONS.join(',');
+  protected readonly accept = [...AI_ATTACHMENT_EXTENSIONS, ...AI_IMAGE_EXTENSIONS].join(',');
   protected readonly maxAttachments = AI_MAX_ATTACHMENTS;
 
   constructor() {
@@ -187,6 +189,22 @@ export class AiPage {
     const input = event.target as HTMLInputElement;
     const files = [...(input.files ?? [])];
     input.value = '';
+    await this.addFiles(files);
+  }
+
+  /** Ctrl+V of a screenshot, a picture or copied files attaches them; text pastes as usual. */
+  async onPaste(event: ClipboardEvent): Promise<void> {
+    const files = pastedFiles(event.clipboardData);
+    if (!files.length) {
+      return;
+    }
+    event.preventDefault();
+    if (!this.uploading() && this.attachments().length < AI_MAX_ATTACHMENTS) {
+      await this.addFiles(files);
+    }
+  }
+
+  private async addFiles(files: File[]): Promise<void> {
     this.attachError.set(null);
     this.uploading.set(true);
     try {
@@ -309,7 +327,7 @@ function attachErrorKey(error: unknown): string {
     return 'ai.attach.tooLarge';
   }
   const reason = (errorBody(error) as { reason?: string } | null)?.reason;
-  if (reason === 'unsupported' || reason === 'empty') {
+  if (reason === 'unsupported' || reason === 'empty' || reason === 'no-vision') {
     return `ai.attach.${reason}`;
   }
   return 'ai.attach.failed';

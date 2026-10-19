@@ -172,6 +172,7 @@
         [ngModel]="draft()"
         (ngModelChange)="draft.set($event)"
         (keydown)="onKeydown($event)"
+        (paste)="onPaste($event)"
         [placeholder]="'ai.placeholder' | transloco"
         rows="2"
       ></textarea>

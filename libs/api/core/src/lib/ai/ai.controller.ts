@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  HttpException,
   Param,
   ParseUUIDPipe,
   Post,
@@ -170,7 +171,10 @@ export class AiController {
     return this.conversations.remove(user.id, id);
   }
 
-  /** The text of a file for the chat: the client sends it back with the next message. */
+  /**
+   * The text of a file for the chat: the client sends it back with the next message. A picture
+   * is written down by the connection that reads pictures.
+   */
   @RateLimit(30, 3600)
   @Post('attachments')
   @UseInterceptors(
@@ -181,16 +185,25 @@ export class AiController {
     }),
   )
   async attachment(
+    @CurrentUser() user: AuthUser,
     @UploadedFile() file: UploadedDocument | undefined,
   ): Promise<AiAttachmentUpload> {
     if (!file) {
       throw new BadRequestException('Expected a file in the "file" field');
     }
     try {
-      return await attachmentText({ name: file.originalname, data: file.buffer });
+      return await attachmentText(
+        { name: file.originalname, data: file.buffer },
+        (instruction, image) =>
+          this.ai.completeWithImage(user.id, instruction, image, undefined, { keepLanguage: true }),
+      );
     } catch (error) {
       if (error instanceof AttachmentError) {
         throw new BadRequestException({ message: error.message, reason: error.reason });
+      }
+      // The model that reads pictures failed or hit its limit: the user sees why.
+      if (error instanceof HttpException) {
+        throw error;
       }
       throw new BadRequestException('Could not read the file');
     }

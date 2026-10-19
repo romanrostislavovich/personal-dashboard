@@ -8,6 +8,12 @@ under **Updating**.
 
 ### Added
 
+- **Pictures in the assistant** — a screenshot or a copied picture is pasted with Ctrl+V into
+  the AI chat and into the extension's side panel (which can now attach files too, also with a
+  clip button); a picture can be chosen as a file as well and sent to the Telegram bot as a file.
+  The connection that reads pictures (Settings → AI) writes down its text and what it shows, and
+  the chat model gets that with the question — so any chat model works with pictures. A paste
+  that carries text (a copy from Excel or Word) stays text.
 - **Net worth and runway** — Finance → Overview: the bank accounts count by themselves, cash,
   other accounts, deposits, investments, property and debts are typed in ("Assets and debts");
   the total with its change over 30 days and a point a day, the average spending of the last
