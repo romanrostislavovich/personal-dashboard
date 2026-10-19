@@ -26,6 +26,7 @@ export class RecurringPaymentsJob implements OnModuleInit {
   async run(): Promise<void> {
     await forEachUser('finance.recurring-payments', await this.users.findAll(), async (user) => {
       await this.subscriptions.remindTrials(user.id);
+      await this.subscriptions.remindDates(user.id);
       const charged = await this.payments.chargeDue(user.id);
       if (charged.length === 0) {
         return;

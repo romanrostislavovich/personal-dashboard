@@ -2,7 +2,9 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DB, Database, DemoContext, DemoService } from '@pd/api-core';
 import { BUDGET_TOTAL } from '@pd/contracts';
 import {
+  financeAssets,
   financeBudgets,
+  netWorthDays,
   goalContributions,
   recurringPayments,
   savingsGoals,
@@ -99,6 +101,26 @@ export class FinanceDemo implements OnModuleInit {
       { ...subscription, name: 'Gym', amount: 35, category: 'Sport', dayOfMonth: 3 },
       {
         ...subscription,
+        name: 'Home internet',
+        amount: 29.99,
+        category: 'Utilities',
+        dayOfMonth: 15,
+        contractStartedOn: daysAgo(610),
+        contractMonths: 24,
+        noticeDays: 30,
+        priceLockedUntil: daysAgo(-40),
+      },
+      {
+        ...subscription,
+        name: 'Domain example.com',
+        amount: 14,
+        category: 'Hosting',
+        dayOfMonth: 2,
+        period: 'year' as const,
+        monthOfYear: Number(daysAgo(-20).slice(5, 7)),
+      },
+      {
+        ...subscription,
         name: 'Hetzner server',
         amount: 38,
         category: 'Hosting',
@@ -106,6 +128,20 @@ export class FinanceDemo implements OnModuleInit {
         projectId: projects.shop,
       },
     ]);
+
+    await this.db.insert(financeAssets).values([
+      { ...money, name: 'Cash', kind: 'cash' as const, amount: 320, liquid: true },
+      { ...money, name: 'Savings deposit', kind: 'deposit' as const, amount: 6500, liquid: true },
+      { ...money, name: 'ETF portfolio', kind: 'investment' as const, amount: 4800, liquid: false },
+      { ...money, name: 'Car loan', kind: 'debt' as const, amount: 3200, liquid: false },
+    ]);
+    // Half a year of the worth, a point a week, growing a little.
+    await this.db.insert(netWorthDays).values(
+      Array.from({ length: 26 }, (_, week) => {
+        const total = 6900 + week * 55 + (week % 4 === 0 ? -120 : 0);
+        return { userId, day: daysAgo((26 - week) * 7), total, liquid: total, currency: EUR };
+      }),
+    );
 
     const [goal] = await this.db
       .insert(savingsGoals)

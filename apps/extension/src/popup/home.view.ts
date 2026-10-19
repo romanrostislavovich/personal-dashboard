@@ -1,4 +1,4 @@
-import { ask, WritingPopupState } from '../shared/messages';
+import { ask, WishPopupState, WritingPopupState } from '../shared/messages';
 import { h, icon, t } from './dom';
 import { offerBanner } from './items.view';
 import type { Popup } from './popup';
@@ -16,6 +16,7 @@ export function homeView(popup: Popup): HTMLElement {
     { class: 'view home' },
     accountBar(popup),
     state.vault === 'unlocked' && state.offer ? offerBanner(popup, state.offer) : null,
+    state.wish ? wishCard(popup, state.wish) : null,
     state.writing && state.page ? writingCard(popup, state.writing, state.page.site) : null,
     vaultCard(popup),
     h(
@@ -35,6 +36,75 @@ export function homeView(popup: Popup): HTMLElement {
       }),
     ),
   );
+}
+
+/**
+ * The product of the page in front: "To the wishlist" in one click, or "In the wishlist" with
+ * a link to it. Finance then watches the price.
+ */
+function wishCard(popup: Popup, wish: WishPopupState): HTMLElement {
+  const price =
+    wish.price === null
+      ? ''
+      : new Intl.NumberFormat(chrome.i18n.getUILanguage(), {
+          style: wish.currency ? 'currency' : 'decimal',
+          currency: wish.currency ?? undefined,
+        }).format(wish.price);
+  const card = h(
+    'div',
+    { class: 'card' },
+    h('div', { class: 'card-title' }, icon('favorite'), h('span', { text: t('wishTitle') })),
+    h(
+      'div',
+      { class: 'wish' },
+      wish.image ? picture(wish.image) : null,
+      h(
+        'div',
+        { class: 'wish-text' },
+        h('span', { class: 'wish-name', text: wish.name ?? wish.url }),
+        price ? h('span', { class: 'wish-price', text: price }) : null,
+      ),
+    ),
+  );
+  const open = h('button', {
+    class: 'button text small',
+    type: 'button',
+    text: t('wishOpen'),
+    onClick: () => popup.openDashboard('/finance?tab=wishlist'),
+  });
+  if (wish.wishId) {
+    card.append(h('p', { class: 'hint', text: t('wishAlready') }), open);
+    return card;
+  }
+  const add = h('button', {
+    class: 'button filled small',
+    type: 'button',
+    text: t('wishAdd'),
+    onClick: () => {
+      add.disabled = true;
+      void ask({ type: 'wish-add' })
+        .then(() => {
+          popup.toast(t('wishAdded'));
+          return popup.reload();
+        })
+        .catch((error: unknown) => {
+          add.disabled = false;
+          popup.toast(popup.errorText(error));
+        });
+    },
+  });
+  card.append(
+    h('p', { class: 'hint', text: t('wishHint') }),
+    h('div', { class: 'actions start' }, add, open),
+  );
+  return card;
+}
+
+/** The product's picture; one the shop does not give out is left out, not shown broken. */
+function picture(src: string): HTMLImageElement {
+  const img = h('img', { attrs: { src, alt: '' } });
+  img.addEventListener('error', () => img.remove());
+  return img;
 }
 
 function writingCard(popup: Popup, writing: WritingPopupState, site: string): HTMLElement {

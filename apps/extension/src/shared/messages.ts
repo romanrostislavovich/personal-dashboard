@@ -65,6 +65,8 @@ export interface PopupState {
   offer: SaveOffer | null;
   /** The check of the writing on the active page; `null` — signed out, or not a web page. */
   writing: WritingPopupState | null;
+  /** The product of the active page, for "To the wishlist"; `null` — not a product's page. */
+  wish: WishPopupState | null;
   /**
    * The popup was opened to unlock the vault (the shortcut that fills a login): the master
    * password is asked at once, and nowhere else unless a login is wanted.
@@ -146,7 +148,9 @@ export type PopupRequest =
   /** A strong password into the fields for a new one, and into the vault at once. */
   | { type: 'menu-generate'; token: string }
   | { type: 'menu-unlock'; token: string; masterPassword: string }
-  | { type: 'menu-open-popup' };
+  | { type: 'menu-open-popup' }
+  /** "To the wishlist": the product of the active page goes to Finance → Wishlist. */
+  | { type: 'wish-add' };
 
 /** From a content script, about its own tab. */
 export type ContentRequest =
@@ -187,12 +191,33 @@ export type PageCommand =
   /** Writing was switched on or off: whether to check is asked again. */
   | { type: 'writing-changed' }
   /** The vault was unlocked: a login waiting to be saved is offered again, now with "Save". */
-  | { type: 'offer-again' };
+  | { type: 'offer-again' }
+  /** The page's markup, for the product it describes (the wishlist). */
+  | { type: 'product' };
 
 /** A page's answer to `snapshot`: the selection, and its readable text when asked. */
 export interface PageSnapshot {
   selection: string;
   text: string | null;
+}
+
+/** A page's answer to `product`: its markup, cut at `PAGE_HTML_MAX`. */
+export interface PageHtml {
+  html: string;
+}
+
+/** A product page's markup is read up to this length (the description is near its start). */
+export const PAGE_HTML_MAX = 3_000_000;
+
+/** The product of the active page as the popup shows it. */
+export interface WishPopupState {
+  url: string;
+  name: string | null;
+  price: number | null;
+  currency: string | null;
+  image: string | null;
+  /** In the wishlist already: its id. */
+  wishId: string | null;
 }
 
 /** Writing as the popup shows it for the active page. */

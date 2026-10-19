@@ -22,7 +22,7 @@ const RISE = 1.005;
 const TRIAL_NOTICE_DAYS = 3;
 
 /** What a charge is recognised by: its note, without case and extra spaces. */
-function chargeKey(note: string | null): string {
+export function chargeKey(note: string | null): string {
   return (note ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
 }
 

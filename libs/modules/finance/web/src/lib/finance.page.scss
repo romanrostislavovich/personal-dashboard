@@ -111,8 +111,19 @@
   }
 }
 
-.suggestions {
+.suggestions,
+pd-leaks-card,
+pd-key-dates-card {
+  display: block;
   margin-bottom: 16px;
+}
+
+.contract-line {
+  color: var(--mat-sys-on-surface-variant);
+
+  &.late {
+    color: var(--mat-sys-error);
+  }
 }
 
 .warn {

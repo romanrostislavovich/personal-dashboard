@@ -23,7 +23,15 @@
   subscriptions; savings goals counted from a wallet and money added by hand; the AI's review of a
   month (where the money went, what changed, where to save); a wishlist — a link to a product in
   a shop, its price read from the page every morning and kept day by day, a message when it
-  changes (the price is typed in by hand for a shop that does not tell it)
+  changes (the price is typed in by hand for a shop that does not tell it), added in one click
+  from the browser extension; the check of the subscriptions (a price that crept up over the
+  year, a double charge, a subscription not used or never recorded, a renewal near) with what
+  each leak costs a year; contracts behind the payments (rent, the internet, insurance) — the
+  term, the notice, a fixed price — with the last day to give notice counted (the start taken
+  from the first charge when not given), a calendar of key dates with reminders and the AI's
+  letters to cancel or to ask for a better price in English or Polish; net worth (the bank
+  accounts by themselves, cash, deposits, investments, property and debts typed in) with its
+  history, the burn rate and the runway in months
 - **Life:** one feed of a day across every module (the diary entry, spending, tasks done, time at
   the computer, music, contributions, matches, birthdays) and the summaries of a month or a year
   (the best month by mood, the top artists, what was left over, achievements); the AI's story of
@@ -220,13 +228,15 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   the bank's own sign-in, the accounts chosen, the operations every six hours as transactions —
   matched with the ones typed by hand, transfers between one's own accounts left out, the
   category by the counterparty or the AI; a reminder a week before the consent ends
-- **Finance: net worth and runway calculation** — total net worth tracking, monthly burn rate,
-  and emergency fund runway in months of autonomy based on current spending velocity
-- **Finance: subscription and leak audit** — automated detection of creeping price increases,
-  hidden or forgotten recurring charges, and warnings before renewal dates
-- **Finance: subscription action hub** — critical date calendar for contract renewals, price lock
-  expirations, and service terms (rent, internet, B2B tools, insurance) with AI-generated
-  cancellation and renegotiation draft letters in English and Polish
+- ✅ **Finance: net worth and runway** — the bank accounts and what is typed in by hand, a point
+  a day, the average spending of the last full months and how many months the money at hand lasts
+- ✅ **Finance: subscription and leak audit** — prices that crept up, double charges, unused and
+  unrecorded subscriptions, renewals near, with what each costs a year
+- ✅ **Finance: subscription action hub** — the terms of a contract with the last day to give
+  notice counted, a calendar of key dates with reminders, the AI's letters (EN / PL) to cancel or
+  to ask for a better price
+- **Finance: net worth, more** — investments valued by themselves (a broker's API, the price of
+  an ETF), a property's value once a year, a loan paid off by its schedule
 - **Health: prescriptions into interactive tasks** — medical recommendations and prescriptions
   converted directly into tasks and interactive Telegram reminders with dosage confirmation buttons
 - **Quick capture (2-second rule)** — minimal global entry (desktop hotkey and mobile PWA
@@ -266,6 +276,42 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Parcel tracking** — InPost, DHL, Poczta Polska, Nova Poshta and others: send a tracking
   number to Telegram (or it is picked up from Gmail), status changes arrive by themselves, the
   parcels on the way in the digest
+
+#### Study (a master's in machine learning and AI)
+
+The section for studying while the rest of life goes on: the courses, the deadlines and the
+grades in one place, the time of study counted by the trackers that are already there, and the
+assistant as a tutor that knows the materials of the courses.
+
+- **Semesters and courses** — the courses of a semester with their ECTS, the teacher, the form
+  of the exam and the rooms; the timetable from the university (USOS API of Polish universities,
+  an ICS link, or typed in), today's classes in the morning digest and in Life
+- **Deadlines** — assignments, projects, exams and their parts; each one a task with a reminder
+  in Telegram, a countdown to the exam session, the week's load ("3 deadlines and an exam this
+  week"); from Moodle (its web services token) or USOS where the university has them
+- **Grades and progress** — the grades of each course (the Polish 2–5 scale and points), the
+  average of a semester and of the whole study, ECTS gathered against the ones needed to graduate
+- **Study time** — counted by what is there already: the Activity tracker (Jupyter, PyCharm,
+  VS Code, Overleaf, the course's pages) and WakaTime by the repository of a course, focus
+  sessions with the course they were for; hours per course and per week against the plan
+- **Materials and the AI tutor** — the PDFs of lectures and the notes of a course kept with it;
+  the assistant answers from them ("explain backpropagation as in lecture 5"), writes a summary
+  of a lecture, makes flashcards with spaced repetition and a practice quiz before an exam (the
+  local semantic search of the AI section is the base)
+- **Papers** — a reading list from arXiv / Semantic Scholar / Papers with Code (added from the
+  browser extension in one click), notes and the main idea of each, what is read for which
+  course or for the thesis, BibTeX out for Overleaf or Zotero
+- **The master's thesis** — the milestones to the defence, meetings with the supervisor and
+  what was agreed, the progress of the text (words or pages from the Overleaf / Git repository),
+  a writing streak; LanguageTool of Writing for the academic English
+- **Experiments** — the runs of Weights & Biases or MLflow of the course projects (the metric of
+  the best run, how long it trained), Kaggle competitions (the rank, the submissions), GPU hours
+  of Colab or a cloud with their cost in Finance
+- **Links with the other sections** — the tuition as a recurring payment with its contract dates
+  and a project wallet "Study" for the books, the courses and the GPUs (scholarships as income);
+  study hours against the mood, the sleep and the games in Life → Links; achievements for an
+  exam passed, a semester closed, 100 hours of study, a paper a week; the weekly review and the
+  month's story tell about the study too
 
 #### Development and monitoring
 
@@ -312,8 +358,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Browser companion positioning** — the extension becomes the Personal Dashboard browser
   companion, not only a password manager: Vault, Capture, Focus / Activity and AI Context in one
   small tool
-- **Wishlist in one click** — "To the wishlist" on a product page: the name and the price read
-  from the page, then Finance watches the price as it does today
+- ✅ **Wishlist in one click** — "To the wishlist" in the popup on a product page: the name, the
+  price and the picture read in the browser (so a shop that turns a server away is read too),
+  then Finance watches the price; a page already in the list gets the price seen there
 - **Select price manually** — when the extension cannot find the product price, the user can click
   the price on the page and save the selector or value for that wishlist item
 - **Wishlist improvements** — detect product name, price, image, currency, stock state, variants
@@ -508,7 +555,8 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   full-text search
 - **Travel** — a map of countries and cities, trips with their costs from Finance; pairs with the
   location tracker of the mobile app
-- **Learning** — courses, languages (Duolingo), flashcards with spaced repetition
+- **Learning** — courses outside the university, languages (Duolingo), flashcards with spaced
+  repetition (the master's degree has its own section above: Study)
 - **Science** — a section for science
 - **Car** — mileage, refuelling and fuel use, service by intervals; the costs go to Finance by
   themselves

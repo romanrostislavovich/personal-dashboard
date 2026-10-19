@@ -1,4 +1,6 @@
 import {
+  Asset,
+  AssetInput,
   BankAppInput,
   BankConnectInput,
   BankOption,
@@ -9,10 +11,14 @@ import {
   BudgetInput,
   CostSource,
   CostSourceInput,
+  ContractLetter,
+  ContractLetterInput,
   FinanceReport,
   FinanceSettings,
   FinanceSettingsInput,
   GoalContribution,
+  KeyDate,
+  NetWorth,
   SavingsGoal,
   SavingsGoalInput,
   Subscriptions,
@@ -45,6 +51,11 @@ export const FINANCE_READS = {
     apiRequest(`${BASE}/cash-flow/main`, { from, to, scope: scope || undefined }),
   settings: () => apiRequest(`${BASE}/settings`),
   recurringPayments: () => apiRequest(`${BASE}/recurring-payments`),
+  /** Notice deadlines, ends of terms and price locks, renewals: a year ahead. */
+  keyDates: () => apiRequest(`${BASE}/recurring-payments/dates`),
+  /** Net worth, the burn rate and the runway. */
+  worth: () => apiRequest(`${BASE}/worth`),
+  assets: () => apiRequest(`${BASE}/assets`),
   costSources: () => apiRequest(`${BASE}/cost-sources`),
   /** The budgets with what was spent in a month (`YYYY-MM`). */
   budgets: (month: string) => apiRequest(`${BASE}/budgets`, { month }),
@@ -119,6 +130,16 @@ export function financeApi(api: ApiClient) {
 
     /** "Not a subscription": the charge is not suggested again. */
     dismissSubscription: (key: string) => api.post<void>(`${BASE}/subscriptions/dismiss`, { key }),
+    keyDates: () => api.read<KeyDate[]>(FINANCE_READS.keyDates()),
+    /** A letter to end a contract or to ask for a better price, drafted by the AI. */
+    contractLetter: (id: string, input: ContractLetterInput) =>
+      api.post<ContractLetter>(`${BASE}/recurring-payments/${id}/letter`, input),
+    wishlist: () => api.read<Wish[]>(FINANCE_READS.wishlist()),
+    worth: () => api.read<NetWorth>(FINANCE_READS.worth()),
+    assets: () => api.read<Asset[]>(FINANCE_READS.assets()),
+    saveAsset: (input: AssetInput, id?: string) =>
+      id ? api.put<Asset>(`${BASE}/assets/${id}`, input) : api.post<Asset>(`${BASE}/assets`, input),
+    removeAsset: (id: string) => api.delete(`${BASE}/assets/${id}`),
     saveGoal: (input: SavingsGoalInput, id?: string) =>
       id
         ? api.put<SavingsGoal>(`${BASE}/goals/${id}`, input)

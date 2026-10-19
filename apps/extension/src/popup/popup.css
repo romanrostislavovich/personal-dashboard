@@ -355,6 +355,39 @@ footer .who {
   border-radius: 12px;
   background: var(--surface-high);
 }
+.wish {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.wish img {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.wish-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wish-name {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.wish-price {
+  font-weight: 600;
+}
+
 .card-title {
   display: flex;
   align-items: center;

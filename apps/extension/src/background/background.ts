@@ -56,6 +56,7 @@ import {
 import { accessTokensApi, aiApi } from '@pd/client-core';
 import { signedInClient } from './account';
 import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
+import { addWish, wishPopupState } from './wishlist';
 
 /*
  * The service worker: the only part that holds the session and the open vault. The popup and
@@ -265,6 +266,8 @@ function fromMenu(message: PopupRequest): Promise<unknown> | null {
       return menuGenerate(message.token);
     case 'menu-unlock':
       return menuUnlock(message.token, message.masterPassword).then(unlocked);
+    case 'wish-add':
+      return addWish();
     case 'menu-open-popup':
       return openPopupWindow();
     default:
@@ -379,6 +382,7 @@ async function popupState(): Promise<PopupState> {
     page: tab ? { url: tab.url, site: siteName(tab.url) } : null,
     offer: tab && signedIn ? await offerFor(tab.id) : null,
     writing: tab && signedIn ? await writingPopupState(tab.url).catch(() => null) : null,
+    wish: tab && signedIn ? await wishPopupState().catch(() => null) : null,
     unlockAsked: vault === 'locked' ? await takeUnlockAsked() : false,
     update: await updateStatus(),
   };

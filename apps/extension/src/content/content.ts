@@ -1,4 +1,12 @@
-import { ask, FillAnswer, PageCommand, PageSnapshot, SaveOffer } from '../shared/messages';
+import {
+  ask,
+  FillAnswer,
+  PageCommand,
+  PAGE_HTML_MAX,
+  PageHtml,
+  PageSnapshot,
+  SaveOffer,
+} from '../shared/messages';
 import {
   fillField,
   fillLogin,
@@ -26,7 +34,11 @@ const SEND_HINT = /sign|log ?in|continue|next|submit|войти|вход|дал�
 let lastSent = '';
 
 chrome.runtime.onMessage.addListener(
-  (command: PageCommand, _sender, reply: (answer: FillAnswer | PageSnapshot) => void) => {
+  (
+    command: PageCommand,
+    _sender,
+    reply: (answer: FillAnswer | PageSnapshot | PageHtml) => void,
+  ) => {
     switch (command.type) {
       case 'fill':
         reply({ filled: fillLogin(document, command.username, command.password) });
@@ -62,6 +74,12 @@ chrome.runtime.onMessage.addListener(
         // Only the page itself answers, not a frame inside it.
         if (window === window.top) {
           reply(snapshot(command.withText));
+        }
+        break;
+      case 'product':
+        if (window === window.top) {
+          // Read in the background: the parser stays out of the script of every page.
+          reply({ html: document.documentElement.outerHTML.slice(0, PAGE_HTML_MAX) });
         }
         break;
     }

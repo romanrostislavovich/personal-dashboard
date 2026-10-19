@@ -62,6 +62,23 @@ export type TransactionQuery = z.infer<typeof transactionQuerySchema>;
 export const RECURRING_PERIODS = ['month', 'year'] as const;
 export type RecurringPeriod = (typeof RECURRING_PERIODS)[number];
 
+/**
+ * The terms of a contract behind a payment (rent, the internet, insurance), all optional: from
+ * them the end of the term and the last day to give notice are counted.
+ */
+const contractTerms = {
+  /** The day the contract began; empty — the first charge seen in the transactions. */
+  contractStartedOn: z.iso.date().nullish(),
+  /** How long one term lasts, in months (12, 24); empty — no fixed term. */
+  contractMonths: z.number().int().min(1).max(120).nullish(),
+  /** How many days before the end of a term the notice must be given. */
+  noticeDays: z.number().int().min(0).max(365).nullish(),
+  /** The term starts again by itself unless notice is given. */
+  autoRenews: z.boolean().default(true),
+  /** The price is fixed until this day (a promotion, a price lock). */
+  priceLockedUntil: z.iso.date().nullish(),
+};
+
 export const recurringPaymentInputSchema = z
   .object({
     name: z.string().trim().min(1).max(100),
@@ -77,6 +94,7 @@ export const recurringPaymentInputSchema = z
     trialEndsOn: z.iso.date().nullish(),
     projectId: z.uuid().nullish(),
     isActive: z.boolean().default(true),
+    ...contractTerms,
   })
   .refine((input) => input.period !== 'year' || input.monthOfYear, {
     message: 'A yearly payment needs its month',
@@ -99,6 +117,57 @@ export interface RecurringPayment {
   lastChargedOn: LocalDate | null;
   /** The earlier prices, the newest first. */
   priceHistory: { amount: number; changedOn: LocalDate }[];
+  contractStartedOn: LocalDate | null;
+  contractMonths: number | null;
+  noticeDays: number | null;
+  autoRenews: boolean;
+  priceLockedUntil: LocalDate | null;
+  /** The dates counted from the terms; `null` — no term given. */
+  contract: ContractDates | null;
+}
+
+/** What the terms of a contract come to today. */
+export interface ContractDates {
+  startedOn: LocalDate;
+  /** The start was not given: it is the first charge seen in the transactions. */
+  startGuessed: boolean;
+  /** The end of the current term (the one running today). */
+  termEndsOn: LocalDate;
+  /** The last day to give notice so the contract ends with this term. */
+  cancelBy: LocalDate;
+  /** The day to give notice has passed: the next chance is the end of the next term. */
+  tooLate: boolean;
+}
+
+/** A date of the payments worth knowing in advance, for the calendar of key dates. */
+export const KEY_DATE_KINDS = ['cancel-by', 'term-end', 'price-lock', 'trial', 'renewal'] as const;
+export type KeyDateKind = (typeof KEY_DATE_KINDS)[number];
+
+export interface KeyDate {
+  paymentId: string;
+  name: string;
+  kind: KeyDateKind;
+  date: LocalDate;
+  amount: number;
+  currency: string;
+}
+
+/** A letter about a contract the AI drafts: to end it or to ask for a better price. */
+export const CONTRACT_LETTER_KINDS = ['cancel', 'renegotiate'] as const;
+export const CONTRACT_LETTER_LANGUAGES = ['en', 'pl'] as const;
+export const contractLetterInputSchema = z.object({
+  kind: z.enum(CONTRACT_LETTER_KINDS),
+  language: z.enum(CONTRACT_LETTER_LANGUAGES),
+  /** The sender's name, the customer number — whatever the letter should carry. */
+  details: z.string().trim().max(500).nullish(),
+});
+export type ContractLetterInput = z.infer<typeof contractLetterInputSchema>;
+
+export interface ContractLetter {
+  subject: string;
+  body: string;
+  /** Written by the AI; `false` — a plain template (no AI connected). */
+  byAi: boolean;
 }
 
 export interface CurrencyTotals {
@@ -264,6 +333,35 @@ export interface Subscriptions {
    */
   usage: SubscriptionUse[];
   usageDays: number;
+  /** Where money leaks: rising prices, double charges, unused or unrecorded subscriptions. */
+  leaks: SubscriptionLeak[];
+  /** What the leaks cost a year together, in the main currency. */
+  leaksPerYear: number;
+}
+
+export const LEAK_KINDS = ['rising', 'double', 'unused', 'hidden', 'renewal'] as const;
+export type LeakKind = (typeof LEAK_KINDS)[number];
+
+/**
+ * One leak: `rising` — the price crept up over the year; `double` — charged twice in a month;
+ * `unused` — paid for and not used; `hidden` — a repeating charge never recorded; `renewal` — a
+ * yearly charge or the end of a term is near.
+ */
+export interface SubscriptionLeak {
+  kind: LeakKind;
+  name: string;
+  /** The recorded payment it is about; `null` — a charge seen in the bank only. */
+  paymentId: string | null;
+  /** The charge's key for `hidden` (to add it or say it is not a subscription). */
+  key: string | null;
+  amount: number;
+  currency: string;
+  /** `rising`: the price a year ago (or at the first charge seen). */
+  previous: number | null;
+  /** `rising`: since when; `double`: the month; `renewal`: the day. */
+  date: LocalDate | null;
+  /** What it costs a year, in the main currency; `null` — no rate. */
+  perYear: number | null;
 }
 
 /** A payment against how much what it pays for was used. */
@@ -358,6 +456,11 @@ export const wishInputSchema = z.object({
   currency: z.string().trim().length(3).toUpperCase().nullish(),
   /** The savings goal the wish is saved for: the list tells how much it still lacks. */
   goalId: z.uuid().nullish(),
+  /** The product's picture, when the browser extension read it from the page. */
+  imageUrl: z
+    .url({ protocol: /^https?$/ })
+    .max(2000)
+    .nullish(),
   /** Whom it is a gift for: a name as in Birthdays, where it shows as a gift idea. */
   recipient: z.string().trim().max(100).nullish(),
 });
