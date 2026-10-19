@@ -101,6 +101,8 @@
 
       <pd-bank-balances />
 
+      <pd-net-worth-card />
+
       <pd-finance-kpis
         [current]="currentFlow()"
         [previous]="previousFlow()"
@@ -250,44 +252,13 @@
           </mat-list>
         </mat-card>
       }
-      @if (subs.suggestions.length) {
-        <mat-card appearance="outlined" class="suggestions">
-          <mat-card-header>
-            <mat-card-title>{{ 'finance.recurring.suggestions' | transloco }}</mat-card-title>
-            <mat-card-subtitle>{{
-              'finance.recurring.suggestionsHint' | transloco
-            }}</mat-card-subtitle>
-          </mat-card-header>
-          <mat-list>
-            @for (s of subs.suggestions; track s.key) {
-              <mat-list-item>
-                <mat-icon matListItemIcon>lightbulb</mat-icon>
-                <span matListItemTitle>{{ s.name }}</span>
-                <span matListItemLine>
-                  {{ 'finance.recurring.everyMonth' | transloco: { day: s.dayOfMonth } }} ·
-                  {{ 'finance.recurring.seen' | transloco: { count: s.months.length } }} ·
-                  {{ s.category }}
-                </span>
-                <div matListItemMeta class="meta">
-                  <span class="amount">{{ s.amount | currency: s.currency }}</span>
-                  <button matButton (click)="addSuggestion(s)">
-                    {{ 'core.actions.add' | transloco }}
-                  </button>
-                  <button
-                    matIconButton
-                    [matTooltip]="'finance.recurring.notSubscription' | transloco"
-                    [attr.aria-label]="'finance.recurring.notSubscription' | transloco"
-                    (click)="dismissSuggestion(s)"
-                  >
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </div>
-              </mat-list-item>
-            }
-          </mat-list>
-        </mat-card>
-      }
+      <pd-leaks-card
+        [subscriptions]="subs"
+        (add)="addHidden($event)"
+        (dismiss)="dismissHidden($event)"
+      />
     }
+    <pd-key-dates-card [dates]="keyDates.value()" />
     <mat-card appearance="outlined">
       <mat-list>
         @for (p of recurringPayments.value(); track p.id) {
@@ -311,6 +282,28 @@
               }}
               · {{ p.category }}
             </span>
+            @if (p.contract; as c) {
+              <span matListItemLine class="contract-line" [class.late]="c.tooLate">
+                {{
+                  'finance.contract.line'
+                    | transloco
+                      : {
+                          end: (c.termEndsOn | date: 'd MMM y'),
+                          cancel: (c.cancelBy | date: 'd MMM y'),
+                        }
+                }}
+                @if (c.tooLate) {
+                  · {{ 'finance.contract.tooLate' | transloco }}
+                }
+                @if (c.startGuessed) {
+                  ·
+                  {{
+                    'finance.contract.guessed'
+                      | transloco: { date: (c.startedOn | date: 'd MMM y') }
+                  }}
+                }
+              </span>
+            }
             <div matListItemMeta class="meta">
               @if (p.priceHistory[0]; as was) {
                 <mat-icon
@@ -327,6 +320,14 @@
                 >
               }
               <span class="amount">{{ p.amount | currency: p.currency }}</span>
+              <button
+                matIconButton
+                [matTooltip]="'finance.letter.open' | transloco"
+                [attr.aria-label]="'finance.letter.open' | transloco"
+                (click)="openLetter(p)"
+              >
+                <mat-icon>edit_note</mat-icon>
+              </button>
               <button matIconButton (click)="openRecurringForm(p)">
                 <mat-icon>edit</mat-icon>
               </button>

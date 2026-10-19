@@ -8,7 +8,7 @@ import {
   todayIn,
   toLocalDate,
 } from '@pd/contracts';
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, min, or } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   RecurringPaymentRow,
@@ -16,6 +16,7 @@ import {
   recurringPrices,
   transactions,
 } from '../finance.schema';
+import { contractDates } from './contract-dates';
 import { dueChargeDate } from './due-charge-date';
 
 export type ValidRecurringPaymentInput = z.output<typeof recurringPaymentInputSchema>;
@@ -29,6 +30,7 @@ export class RecurringPaymentsService {
   ) {}
 
   async list(userId: string): Promise<RecurringPayment[]> {
+    const today = toLocalDate(this.today());
     const [rows, prices] = await Promise.all([
       this.rows(userId),
       this.db
@@ -37,12 +39,45 @@ export class RecurringPaymentsService {
         .where(eq(recurringPrices.userId, userId))
         .orderBy(desc(recurringPrices.changedOn)),
     ]);
+    const firstCharges = await this.firstCharges(userId, rows);
     return rows.map((row) =>
       toRecurringPayment(
         row,
         prices.filter((price) => price.recurringPaymentId === row.id),
+        today,
+        firstCharges.get(row.id) ?? null,
       ),
     );
+  }
+
+  /**
+   * The first charge seen of each contract given without its start: the earliest expense the
+   * payment made, or one whose note carries the payment's name (a bank import).
+   */
+  private async firstCharges(
+    userId: string,
+    rows: RecurringPaymentRow[],
+  ): Promise<Map<string, string>> {
+    const found = new Map<string, string>();
+    for (const row of rows.filter((one) => one.contractMonths && !one.contractStartedOn)) {
+      const [first] = await this.db
+        .select({ day: min(transactions.occurredOn) })
+        .from(transactions)
+        .where(
+          and(
+            eq(transactions.userId, userId),
+            eq(transactions.kind, 'expense'),
+            or(
+              eq(transactions.recurringPaymentId, row.id),
+              ilike(transactions.note, `%${likeEscaped(row.name.trim())}%`),
+            ),
+          ),
+        );
+      if (first?.day) {
+        found.set(row.id, first.day);
+      }
+    }
+    return found;
   }
 
   /** The rows as they are, with the fields the jobs need (trial reminder, noticed price). */
@@ -65,7 +100,7 @@ export class RecurringPaymentsService {
       .insert(recurringPayments)
       .values({ userId, ...normalized(input), lastChargedOn })
       .returning();
-    return toRecurringPayment(row, []);
+    return toRecurringPayment(row, [], toLocalDate(this.today()));
   }
 
   async update(
@@ -110,7 +145,7 @@ export class RecurringPaymentsService {
   /** Remembers what was reported, so each fact is told once. */
   async markNoticed(
     id: string,
-    fields: { trialNotifiedFor?: string; noticedAmount?: number },
+    fields: { trialNotifiedFor?: string; noticedAmount?: number; datesNotified?: string[] },
   ): Promise<void> {
     await this.db.update(recurringPayments).set(fields).where(eq(recurringPayments.id, id));
   }
@@ -159,12 +194,23 @@ function normalized(input: ValidRecurringPaymentInput) {
     ...input,
     monthOfYear: input.period === 'year' ? (input.monthOfYear ?? null) : null,
     trialEndsOn: input.trialEndsOn ?? null,
+    contractStartedOn: input.contractStartedOn ?? null,
+    contractMonths: input.contractMonths ?? null,
+    noticeDays: input.noticeDays ?? null,
+    priceLockedUntil: input.priceLockedUntil ?? null,
   };
+}
+
+/** A name as a literal inside an ILIKE pattern. */
+function likeEscaped(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
 function toRecurringPayment(
   row: RecurringPaymentRow,
   prices: { amount: number; changedOn: string }[],
+  today: string,
+  firstCharge: string | null = null,
 ): RecurringPayment {
   return {
     id: row.id,
@@ -180,5 +226,11 @@ function toRecurringPayment(
     isActive: row.isActive,
     lastChargedOn: row.lastChargedOn,
     priceHistory: prices.map(({ amount, changedOn }) => ({ amount, changedOn })),
+    contractStartedOn: row.contractStartedOn,
+    contractMonths: row.contractMonths,
+    noticeDays: row.noticeDays,
+    autoRenews: row.autoRenews,
+    priceLockedUntil: row.priceLockedUntil,
+    contract: contractDates(row, firstCharge, today),
   };
 }

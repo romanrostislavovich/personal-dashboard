@@ -15,11 +15,15 @@ import type { Response } from 'express';
 import { z } from 'zod';
 import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
 import {
+  AssetInput,
+  assetInputSchema,
   Budget,
   BudgetQuery,
   budgetQuerySchema,
   Budgets,
   budgetsSchema,
+  ContractLetterInput,
+  contractLetterInputSchema,
   FinanceReportQuery,
   financeReportQuerySchema,
   FinanceSettingsInput,
@@ -37,6 +41,7 @@ import {
 } from '@pd/contracts';
 import { BudgetsService } from './budgets/budgets.service';
 import { GoalsService } from './goals/goals.service';
+import { NetWorthService } from './worth/net-worth.service';
 import { SubscriptionsService } from './recurring/subscriptions.service';
 import { FinanceReportsService } from './reports/finance-reports.service';
 import { ReceiptsService } from './receipts/receipts.service';
@@ -60,6 +65,7 @@ export class FinanceController {
     private readonly subscriptions: SubscriptionsService,
     private readonly goals: GoalsService,
     private readonly reports: FinanceReportsService,
+    private readonly worth: NetWorthService,
   ) {}
 
   // --- Settings: the main currency ---
@@ -195,6 +201,58 @@ export class FinanceController {
   @HttpCode(204)
   removeRecurring(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.recurring.remove(user.id, id);
+  }
+
+  /** The calendar of key dates: notice deadlines, ends of terms and price locks, renewals. */
+  @Get('recurring-payments/dates')
+  keyDates(@CurrentUser() user: AuthUser) {
+    return this.subscriptions.keyDates(user.id);
+  }
+
+  /** A letter to end the contract or to ask for a better price (EN / PL), by the AI. */
+  @Post('recurring-payments/:id/letter')
+  @HttpCode(200)
+  contractLetter(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(contractLetterInputSchema)) input: ContractLetterInput,
+  ) {
+    return this.subscriptions.letter(user.id, id, input);
+  }
+
+  // --- Net worth and runway ---
+
+  @Get('worth')
+  netWorth(@CurrentUser() user: AuthUser) {
+    return this.worth.get(user.id);
+  }
+
+  @Get('assets')
+  listAssets(@CurrentUser() user: AuthUser) {
+    return this.worth.assets(user.id);
+  }
+
+  @Post('assets')
+  createAsset(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(assetInputSchema)) input: AssetInput,
+  ) {
+    return this.worth.saveAsset(user.id, input);
+  }
+
+  @Put('assets/:id')
+  updateAsset(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(assetInputSchema)) input: AssetInput,
+  ) {
+    return this.worth.saveAsset(user.id, input, id);
+  }
+
+  @Delete('assets/:id')
+  @HttpCode(204)
+  removeAsset(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.worth.removeAsset(user.id, id);
   }
 
   // --- Subscriptions ---

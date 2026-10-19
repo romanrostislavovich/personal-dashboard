@@ -529,5 +529,23 @@
   },
   "writingOffFailed": {
     "message": "Could not turn it off for this site. It can be done in the settings of Writing on the dashboard."
+  },
+  "wishTitle": {
+    "message": "Wishlist"
+  },
+  "wishHint": {
+    "message": "The dashboard will watch its price and tell when it drops."
+  },
+  "wishAdd": {
+    "message": "To the wishlist"
+  },
+  "wishAdded": {
+    "message": "Added to the wishlist"
+  },
+  "wishAlready": {
+    "message": "In the wishlist already; the price seen here is noted."
+  },
+  "wishOpen": {
+    "message": "Open the wishlist"
   }
 }

@@ -624,6 +624,13 @@
       "when": 1792357069695,
       "tag": "0088_known_shriek",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1792369170127,
+      "tag": "0089_brief_red_hulk",
+      "breakpoints": true
     }
   ]
 }

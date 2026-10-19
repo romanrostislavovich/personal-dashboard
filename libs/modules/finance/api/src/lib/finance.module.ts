@@ -34,6 +34,7 @@ import { FinanceReportsService } from './reports/finance-reports.service';
 import { WishlistController } from './wishlist/wishlist.controller';
 import { WishlistJob } from './wishlist/wishlist.job';
 import { WishlistService } from './wishlist/wishlist.service';
+import { NetWorthService } from './worth/net-worth.service';
 
 /**
  * Finance: personal and project income/expenses, recurring payments and subscriptions, budgets,
@@ -62,6 +63,7 @@ import { WishlistService } from './wishlist/wishlist.service';
     GoalsService,
     WishlistService,
     WishlistJob,
+    NetWorthService,
     FinanceReportsService,
     CostSourcesService,
     CostSourcesJob,

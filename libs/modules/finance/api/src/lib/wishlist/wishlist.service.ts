@@ -7,7 +7,16 @@ import {
   NotificationsService,
   UsersService,
 } from '@pd/api-core';
-import { BUDGET_TOTAL, toLocalDate, Wish, wishInputSchema, WishPricePoint } from '@pd/contracts';
+import {
+  BUDGET_TOTAL,
+  pageText,
+  parseAiProduct,
+  readProductPage,
+  toLocalDate,
+  Wish,
+  wishInputSchema,
+  WishPricePoint,
+} from '@pd/contracts';
 import { and, asc, desc, eq, isNotNull, isNull, max, min } from 'drizzle-orm';
 import { z } from 'zod';
 import { BudgetsService } from '../budgets/budgets.service';
@@ -20,7 +29,6 @@ import { RecurringPaymentsService } from '../recurring/recurring-payments.servic
 import { TransactionsService } from '../transactions/transactions.service';
 import { againstBudget, againstGoal } from './affordable';
 import { fetchPage } from './fetch-page';
-import { pageText, parseAiProduct, readProductPage } from './product-page';
 
 type ValidWishInput = z.output<typeof wishInputSchema>;
 
@@ -157,7 +165,7 @@ export class WishlistService {
         note: input.note || null,
         goalId: await this.ownGoal(userId, input.goalId),
         recipient: input.recipient || null,
-        imageUrl: reading.image,
+        imageUrl: reading.image ?? input.imageUrl ?? null,
         checkedAt: new Date(),
         checkError: reading.error,
       })
@@ -177,8 +185,8 @@ export class WishlistService {
       .set({
         url: input.url,
         name: input.name || row.name,
-        note: input.note || null,
-        // Left out — as it was; `null` — cleared.
+        // Left out — as it was (the extension sends only a price seen); `null` — cleared.
+        note: input.note === undefined ? row.note : input.note || null,
         goalId: input.goalId === undefined ? row.goalId : await this.ownGoal(userId, input.goalId),
         recipient: input.recipient === undefined ? row.recipient : input.recipient || null,
       })

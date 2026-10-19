@@ -2,6 +2,8 @@ import { httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { FINANCE_READS, financeApi } from '@pd/client-core';
 import {
+  Asset,
+  AssetInput,
   BankAppInput,
   BankConnectInput,
   BankOption,
@@ -10,10 +12,13 @@ import {
   BudgetInput,
   CostSource,
   CostSourceInput,
+  ContractLetterInput,
   FinanceReport,
   FinanceSettings,
   FinanceSettingsInput,
   GoalContribution,
+  KeyDate,
+  NetWorth,
   SavingsGoal,
   SavingsGoalInput,
   Subscriptions,
@@ -126,6 +131,32 @@ export class FinanceApi {
 
   dismissSubscription(key: string) {
     return fromCore(() => this.finance.dismissSubscription(key));
+  }
+
+  keyDates() {
+    return httpResource<KeyDate[]>(() => FINANCE_READS.keyDates(), { defaultValue: [] });
+  }
+
+  contractLetter(id: string, input: ContractLetterInput) {
+    return fromCore(() => this.finance.contractLetter(id, input));
+  }
+
+  // --- Net worth and runway ---
+
+  worth() {
+    return httpResource<NetWorth>(() => FINANCE_READS.worth());
+  }
+
+  assets() {
+    return httpResource<Asset[]>(() => FINANCE_READS.assets(), { defaultValue: [] });
+  }
+
+  saveAsset(input: AssetInput, id?: string) {
+    return fromCore(() => this.finance.saveAsset(input, id));
+  }
+
+  removeAsset(id: string) {
+    return fromCore(() => this.finance.removeAsset(id));
   }
 
   goals() {

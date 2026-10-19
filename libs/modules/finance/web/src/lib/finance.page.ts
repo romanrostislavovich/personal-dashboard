@@ -58,6 +58,10 @@ import { BudgetsCardComponent } from './budgets/budgets-card.component';
 import { GoalsTabComponent } from './goals/goals-tab.component';
 import { ReportCardComponent } from './reports/report-card.component';
 import { WishlistTabComponent } from './wishlist/wishlist-tab.component';
+import { NetWorthCardComponent } from './overview/net-worth-card.component';
+import { ContractLetterDialog } from './recurring/contract-letter.dialog';
+import { KeyDatesCardComponent } from './recurring/key-dates-card.component';
+import { LeaksCardComponent } from './recurring/leaks-card.component';
 
 const DEFAULT_CURRENCY = 'EUR';
 /** How many months the cash flow chart shows, the selected one being the last. */
@@ -124,6 +128,9 @@ function inMain(transactions: Transaction[], main: string): Transaction[] {
     GoalsTabComponent,
     ReportCardComponent,
     WishlistTabComponent,
+    NetWorthCardComponent,
+    LeaksCardComponent,
+    KeyDatesCardComponent,
   ],
   templateUrl: './finance.page.html',
   styleUrl: './finance.page.scss',
@@ -176,6 +183,8 @@ export class FinancePage {
   protected readonly recurringPayments = this.api.recurringPayments();
   /** Their cost together and repeating charges that look like subscriptions. */
   protected readonly subscriptions = this.api.subscriptions();
+  /** Notice deadlines, ends of terms and price locks, renewals: a year ahead. */
+  protected readonly keyDates = this.api.keyDates();
 
   protected readonly monthDate = computed(() => monthAsDate(this.month()));
   /** `YYYY-MM` of the selected month: the budgets are monthly. */
@@ -318,20 +327,36 @@ export class FinancePage {
     );
     if (input) {
       await firstValueFrom(this.api.saveRecurringPayment(input, payment?.id));
-      this.recurringPayments.reload();
-      this.subscriptions.reload();
+      this.reloadRecurring();
     }
+  }
+
+  /** "Add" on a charge never recorded, from the check of the subscriptions. */
+  addHidden(key: string): Promise<void> {
+    const suggestion = this.subscriptions.value()?.suggestions.find((one) => one.key === key);
+    return suggestion ? this.addSuggestion(suggestion) : Promise.resolve();
+  }
+
+  async dismissHidden(key: string): Promise<void> {
+    await firstValueFrom(this.api.dismissSubscription(key));
+    this.subscriptions.reload();
+  }
+
+  /** A letter to end the contract or to ask for a better price. */
+  openLetter(payment: RecurringPayment): void {
+    this.dialog.open(ContractLetterDialog, { data: payment, autoFocus: false });
+  }
+
+  private reloadRecurring(): void {
+    this.recurringPayments.reload();
+    this.subscriptions.reload();
+    this.keyDates.reload();
   }
 
   /** A suggested subscription becomes a recurring payment, its fields filled in. */
   addSuggestion(suggestion: SubscriptionSuggestion): Promise<void> {
     const { name, amount, currency, category, dayOfMonth } = suggestion;
     return this.openRecurringForm(undefined, { name, amount, currency, category, dayOfMonth });
-  }
-
-  async dismissSuggestion(suggestion: SubscriptionSuggestion): Promise<void> {
-    await firstValueFrom(this.api.dismissSubscription(suggestion.key));
-    this.subscriptions.reload();
   }
 
   /** "every 14th" or "yearly, 10 November". */
@@ -353,8 +378,7 @@ export class FinancePage {
       confirm(this.transloco.translate('finance.recurring.confirmDelete', { name: payment.name }))
     ) {
       await firstValueFrom(this.api.removeRecurringPayment(payment.id));
-      this.recurringPayments.reload();
-      this.subscriptions.reload();
+      this.reloadRecurring();
     }
   }
 

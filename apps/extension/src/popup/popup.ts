@@ -50,6 +50,7 @@ const popup: Popup = {
     page: null,
     offer: null,
     writing: null,
+    wish: null,
     unlockAsked: false,
     update: { outdated: false, waitingReload: false },
   },

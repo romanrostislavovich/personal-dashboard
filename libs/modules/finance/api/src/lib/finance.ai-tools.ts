@@ -18,6 +18,7 @@ import {
 } from '@pd/contracts';
 import { z } from 'zod';
 import { BankService } from './bank/bank.service';
+import { NetWorthService } from './worth/net-worth.service';
 import { CostSourcesService } from './cost-sources/cost-sources.service';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
 import { SubscriptionsService } from './recurring/subscriptions.service';
@@ -112,6 +113,7 @@ export class FinanceAiTools implements OnModuleInit {
     private readonly wishlist: WishlistService,
     private readonly actions: ServerActions,
     private readonly bank: BankService,
+    private readonly worth: NetWorthService,
   ) {}
 
   onModuleInit(): void {
@@ -226,7 +228,9 @@ export class FinanceAiTools implements OnModuleInit {
       module: 'finance',
       description:
         'What the active recurring payments cost together a month and a year in the main ' +
-        'currency, and repeating charges in the transactions that look like subscriptions.',
+        'currency, repeating charges in the transactions that look like subscriptions, and the ' +
+        'leaks: prices that crept up over the year, double charges, unused or unrecorded ' +
+        'subscriptions, renewals within a month, with what each costs a year.',
       parameters: NO_PARAMETERS,
       handler: (userId) => this.subscriptions.summary(userId),
     });
@@ -546,6 +550,33 @@ export class FinanceAiTools implements OnModuleInit {
               at: account.balance?.at ?? null,
             })),
         ),
+    });
+
+    this.ai.registerTool({
+      name: 'finance_net_worth',
+      module: 'finance',
+      description:
+        'Net worth and runway: every bank account balance and every asset or debt typed in by ' +
+        'hand (cash, deposits, investments, property, loans) with its value in the main ' +
+        'currency, the total and the money at hand, the change over 30 days, the average ' +
+        'personal spending of a month over the last full months and how many months the money ' +
+        'at hand would last at it. For "how much am I worth", "how long would my savings last".',
+      parameters: NO_PARAMETERS,
+      handler: async (userId) => {
+        const { history: _, ...worth } = await this.worth.get(userId);
+        return worth;
+      },
+    });
+
+    this.ai.registerTool({
+      name: 'finance_key_dates',
+      module: 'finance',
+      description:
+        'The dates of the recurring payments and contracts worth knowing ahead, for a year: the ' +
+        'last day to give notice of a contract, the end of a term that does not renew, the end ' +
+        'of a fixed price or a free trial, a yearly charge.',
+      parameters: NO_PARAMETERS,
+      handler: (userId) => this.subscriptions.keyDates(userId),
     });
 
     const find = async (userId: string, args: Record<string, unknown>) =>

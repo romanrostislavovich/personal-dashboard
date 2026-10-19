@@ -1,5 +1,5 @@
 import { pickMessages } from '@pd/api-core';
-import { RecurringPayment } from '@pd/contracts';
+import { KeyDateKind, RecurringPayment } from '@pd/contracts';
 import { ReadReceipt } from './receipts/receipt-parse';
 
 /** Text from a receipt goes into an HTML message of the bot. */
@@ -42,6 +42,22 @@ const messages = {
     trialBody: (ends: string, amount: number, currency: string) =>
       `It ends on ${ends}; after that ${amount.toFixed(2)} ${currency} will be charged. ` +
       'Cancel it now if you do not need it.',
+    keyDateTitle: (kind: KeyDateKind, name: string) =>
+      ({
+        'cancel-by': `📅 ${name}: the last day to give notice is near`,
+        'term-end': `📅 ${name}: the contract ends soon`,
+        'price-lock': `📅 ${name}: the fixed price ends soon`,
+        trial: `⏳ The free trial of ${name} ends soon`,
+        renewal: `📅 ${name} renews soon`,
+      })[kind],
+    keyDateBody: (kind: KeyDateKind, date: string, amount: number, currency: string) =>
+      ({
+        'cancel-by': `Give notice by ${date} if you want to leave or to ask for a better price: otherwise the contract runs another term. Finance → Recurring drafts the letter.`,
+        'term-end': `The term ends on ${date}. Renew it or look for another offer.`,
+        'price-lock': `The price is fixed until ${date}; after that it may go up. A good moment to ask for a better one.`,
+        trial: `It ends on ${date}; after that ${amount.toFixed(2)} ${currency} will be charged.`,
+        renewal: `${amount.toFixed(2)} ${currency} will be charged on ${date}. Cancel it before then if you do not need it.`,
+      })[kind],
     goalReachedTitle: (name: string) => `🎉 Goal reached: ${name}`,
     goalReachedBody: (saved: number, currency: string) =>
       `${saved.toFixed(2)} ${currency} saved. Well done!`,
@@ -83,6 +99,22 @@ const messages = {
     trialBody: (ends: string, amount: number, currency: string) =>
       `Он заканчивается ${ends}, потом спишут ${amount.toFixed(2)} ${currency}. ` +
       'Если не нужно — отмените сейчас.',
+    keyDateTitle: (kind: KeyDateKind, name: string) =>
+      ({
+        'cancel-by': `📅 ${name}: скоро последний день, чтобы отказаться`,
+        'term-end': `📅 ${name}: договор скоро закончится`,
+        'price-lock': `📅 ${name}: скоро закончится фиксированная цена`,
+        trial: `⏳ Скоро кончится пробный период ${name}`,
+        renewal: `📅 ${name} скоро продлится`,
+      })[kind],
+    keyDateBody: (kind: KeyDateKind, date: string, amount: number, currency: string) =>
+      ({
+        'cancel-by': `Сообщите до ${date}, если хотите уйти или попросить цену ниже, — иначе договор продлится ещё на срок. Письмо можно составить в Финансы → Регулярные.`,
+        'term-end': `Срок заканчивается ${date}. Продлите его или поищите другое предложение.`,
+        'price-lock': `Цена зафиксирована до ${date}, потом может вырасти. Хороший момент попросить цену ниже.`,
+        trial: `Он заканчивается ${date}, потом спишут ${amount.toFixed(2)} ${currency}.`,
+        renewal: `${date} спишут ${amount.toFixed(2)} ${currency}. Если не нужно — отмените до этого.`,
+      })[kind],
     goalReachedTitle: (name: string) => `🎉 Цель достигнута: ${name}`,
     goalReachedBody: (saved: number, currency: string) =>
       `Накоплено ${saved.toFixed(2)} ${currency}. Отлично!`,

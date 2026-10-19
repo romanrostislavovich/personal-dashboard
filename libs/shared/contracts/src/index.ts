@@ -19,6 +19,8 @@ export * from './lib/notifications';
 export * from './lib/birthdays';
 export * from './lib/finance';
 export * from './lib/finance-bank';
+export * from './lib/finance-worth';
+export * from './lib/product-page';
 export * from './lib/open-source';
 export * from './lib/github-profile';
 export * from './lib/code-accounts';

@@ -1,5 +1,5 @@
 import { projects, users } from '@pd/api-core/schema';
-import { COST_PROVIDERS, RECURRING_PERIODS, TRANSACTION_KINDS } from '@pd/contracts';
+import { ASSET_KINDS, COST_PROVIDERS, RECURRING_PERIODS, TRANSACTION_KINDS } from '@pd/contracts';
 import {
   boolean,
   customType,
@@ -48,6 +48,14 @@ export const recurringPayments = pgTable(
     noticedAmount: numeric({ precision: 14, scale: 2, mode: 'number' }),
     isActive: boolean().notNull().default(true),
     lastChargedOn: date({ mode: 'string' }),
+    /** The contract behind it: the start, the term in months, the notice in days. */
+    contractStartedOn: date({ mode: 'string' }),
+    contractMonths: smallint(),
+    noticeDays: smallint(),
+    autoRenews: boolean().notNull().default(true),
+    priceLockedUntil: date({ mode: 'string' }),
+    /** The key dates already reminded of ("cancel-by:2026-11-01"): each once. */
+    datesNotified: jsonb().$type<string[]>().notNull().default([]),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index().on(table.userId), index().on(table.projectId)],
@@ -299,8 +307,48 @@ export const wishPrices = pgTable(
   (table) => [unique().on(table.wishId, table.day), index().on(table.userId)],
 );
 
+export const assetKind = pgEnum('finance_asset_kind', ASSET_KINDS);
+
+/** What one owns or owes besides the bank accounts, typed in by hand: cash, a deposit, a loan. */
+export const financeAssets = pgTable(
+  'finance_assets',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text().notNull(),
+    kind: assetKind().notNull(),
+    /** Positive; a debt counts against. */
+    amount: numeric({ precision: 16, scale: 2, mode: 'number' }).notNull(),
+    currency: text().notNull(),
+    /** Money at hand: counts for the runway. */
+    liquid: boolean().notNull(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId)],
+);
+
+/** The net worth of a day in the main currency: one point a day, the last one counted. */
+export const netWorthDays = pgTable(
+  'finance_net_worth_days',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    day: date({ mode: 'string' }).notNull(),
+    total: numeric({ precision: 16, scale: 2, mode: 'number' }).notNull(),
+    liquid: numeric({ precision: 16, scale: 2, mode: 'number' }).notNull(),
+    currency: text().notNull(),
+  },
+  (table) => [unique().on(table.userId, table.day)],
+);
+
 export type TransactionRow = typeof transactions.$inferSelect;
 export type RecurringPaymentRow = typeof recurringPayments.$inferSelect;
 export type CostSourceRow = typeof costSources.$inferSelect;
 export type SavingsGoalRow = typeof savingsGoals.$inferSelect;
 export type WishRow = typeof wishes.$inferSelect;
+export type AssetRow = typeof financeAssets.$inferSelect;

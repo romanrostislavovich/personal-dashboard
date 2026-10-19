@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -11,6 +11,9 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { DatePipe } from '@angular/common';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Project, RecurringPayment, RecurringPaymentInput } from '@pd/contracts';
+
+/** The usual lengths of a contract, in months. */
+const TERMS = [6, 12, 24, 36];
 
 /** January … December, for the month of a yearly payment. */
 const MONTHS = Array.from({ length: 12 }, (_, index) => ({
@@ -126,6 +129,46 @@ export interface RecurringPaymentFormData {
         <mat-slide-toggle formControlName="isActive">{{
           'finance.recurring.active' | transloco
         }}</mat-slide-toggle>
+
+        <!-- Rent, the internet, insurance: the terms give the last day to give notice. -->
+        <mat-slide-toggle [checked]="hasContract()" (change)="hasContract.set($event.checked)">{{
+          'finance.contract.has' | transloco
+        }}</mat-slide-toggle>
+        @if (hasContract()) {
+          <div class="contract">
+            <div class="row">
+              <mat-form-field>
+                <mat-label>{{ 'finance.contract.months' | transloco }}</mat-label>
+                <mat-select formControlName="contractMonths">
+                  @for (term of terms; track term) {
+                    <mat-option [value]="term">{{
+                      'finance.contract.monthsValue' | transloco: { count: term }
+                    }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>{{ 'finance.contract.startedOn' | transloco }}</mat-label>
+                <input matInput type="date" formControlName="contractStartedOn" />
+                <mat-hint>{{ 'finance.contract.startedHint' | transloco }}</mat-hint>
+              </mat-form-field>
+            </div>
+            <div class="row">
+              <mat-form-field>
+                <mat-label>{{ 'finance.contract.noticeDays' | transloco }}</mat-label>
+                <input matInput type="number" min="0" max="365" formControlName="noticeDays" />
+                <mat-hint>{{ 'finance.contract.noticeHint' | transloco }}</mat-hint>
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>{{ 'finance.contract.priceLockedUntil' | transloco }}</mat-label>
+                <input matInput type="date" formControlName="priceLockedUntil" />
+              </mat-form-field>
+            </div>
+            <mat-slide-toggle formControlName="autoRenews">{{
+              'finance.contract.autoRenews' | transloco
+            }}</mat-slide-toggle>
+          </div>
+        }
       </mat-dialog-content>
 
       <mat-dialog-actions align="end">
@@ -152,6 +195,11 @@ export interface RecurringPaymentFormData {
     mat-slide-toggle {
       margin-top: 8px;
     }
+    .contract {
+      display: flex;
+      flex-direction: column;
+      margin-top: 16px;
+    }
   `,
 })
 export class RecurringPaymentFormDialog {
@@ -161,6 +209,10 @@ export class RecurringPaymentFormDialog {
   );
 
   protected readonly months = MONTHS;
+  protected readonly terms = TERMS;
+  protected readonly hasContract = signal(
+    !!this.data.payment?.contractMonths || !!this.data.payment?.priceLockedUntil,
+  );
   private readonly initial = this.data.payment ?? this.data.draft ?? null;
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: [this.initial?.name ?? '', Validators.required],
@@ -184,6 +236,11 @@ export class RecurringPaymentFormDialog {
       (this.data.payment ? this.data.payment.projectId : this.data.defaults.projectId) ?? '',
     ],
     isActive: [this.initial?.isActive ?? true],
+    contractMonths: [this.initial?.contractMonths ?? (12 as number | null)],
+    contractStartedOn: [this.initial?.contractStartedOn ?? ''],
+    noticeDays: [this.initial?.noticeDays ?? (30 as number | null)],
+    autoRenews: [this.initial?.autoRenews ?? true],
+    priceLockedUntil: [this.initial?.priceLockedUntil ?? ''],
   });
   protected readonly period = toSignal(this.form.controls.period.valueChanges, {
     initialValue: this.form.controls.period.value,
@@ -199,6 +256,23 @@ export class RecurringPaymentFormDialog {
       monthOfYear: yearly ? value.monthOfYear : null,
       trialEndsOn: !yearly && value.trialEndsOn ? value.trialEndsOn : null,
       projectId: value.projectId || null,
+      ...(this.hasContract()
+        ? {
+            contractMonths: value.contractMonths || null,
+            contractStartedOn: value.contractStartedOn || null,
+            noticeDays:
+              value.noticeDays === null || String(value.noticeDays) === ''
+                ? null
+                : Number(value.noticeDays),
+            priceLockedUntil: value.priceLockedUntil || null,
+          }
+        : {
+            contractMonths: null,
+            contractStartedOn: null,
+            noticeDays: null,
+            priceLockedUntil: null,
+            autoRenews: true,
+          }),
     });
   }
 }

@@ -8,6 +8,25 @@ under **Updating**.
 
 ### Added
 
+- **Net worth and runway** — Finance → Overview: the bank accounts count by themselves, cash,
+  other accounts, deposits, investments, property and debts are typed in ("Assets and debts");
+  the total with its change over 30 days and a point a day, the average spending of the last
+  full months and for how many months the money at hand would last. The AI's
+  `finance_net_worth`.
+- **The check of the subscriptions** — Finance → Recurring: a price that crept up over the year
+  (in the bank or in a payment's history), a subscription charged twice in a month, one paid for
+  and not used, a repeating charge never recorded, a renewal or a notice deadline within a month,
+  each with what it costs a year.
+- **Contracts and key dates** — a recurring payment may have its contract: the term, the notice
+  in days, a fixed price until a day, renewing by itself or not; the end of the term and the last
+  day to give notice are counted (the start taken from the first charge when not given). A
+  calendar of key dates a year ahead, reminders two weeks before a notice deadline and a week
+  before a renewal or the end of a fixed price, and a letter to cancel or to ask for a better
+  price in English or Polish written by the AI (a plain template without one). The AI's
+  `finance_key_dates`.
+- **The wishlist in one click** — the extension's popup on a product page offers "To the
+  wishlist": the name, the price and the picture are read in the browser, so shops that turn the
+  server away are read too; a page already in the list gets the price seen there.
 - **One look for every chart** — shared chart tokens and classes (tooltip, scale marks, legend):
   the bar charts of Activity, WakaTime and Development get gridlines with a round scale and a
   tooltip on hover, the sparklines and the lab charts the same tooltip as the cash flow, the

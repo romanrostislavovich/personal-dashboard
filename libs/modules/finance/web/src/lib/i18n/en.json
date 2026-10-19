@@ -1,6 +1,9 @@
 {
   "title": "Finance",
-  "importMenu": { "title": "Import", "bank": "Connect the bank" },
+  "importMenu": {
+    "title": "Import",
+    "bank": "Connect the bank"
+  },
   "wallet": "Wallet",
   "balance": "Balance",
   "amount": "Amount",
@@ -318,5 +321,103 @@
     "hint": "iPKO → History → Download (CSV or XML): the operations become transactions; a file imported again adds nothing.",
     "notPko": "This is not a history exported from iPKO (CSV or XML).",
     "free": "Free, without Enable Banking: export the history in iPKO (History → Download, CSV or XML) and import it here — as often as you like, nothing is doubled."
+  },
+  "leaks": {
+    "title": "Subscription check",
+    "perYear": "Leaks found: about {{amount}} a year",
+    "perYearHint": "What it costs a year",
+    "onlyDates": "No leaks — only dates to act by",
+    "none": "No leaks: prices steady, no double charges, everything recorded",
+    "rising": "The price went up: {{previous}} → {{amount}} since {{date}}",
+    "double": "Charged twice in {{month}}: {{amount}} — worth asking back",
+    "unused": "Paid {{amount}} and not used this month",
+    "hidden": "{{amount}} every month, not recorded as a subscription",
+    "renewal": {
+      "renewal": "Renews on {{date}}: {{amount}} — cancel before if not needed",
+      "cancel-by": "Last day to give notice: {{date}}",
+      "price-lock": "The fixed price ends on {{date}}"
+    }
+  },
+  "keyDates": {
+    "title": "Key dates",
+    "hint": "Notice deadlines, ends of terms and fixed prices, trials and yearly charges a year ahead; a reminder comes before each",
+    "kind": {
+      "cancel-by": "last day to give notice",
+      "term-end": "the contract ends",
+      "price-lock": "the fixed price ends",
+      "trial": "the free trial ends",
+      "renewal": "yearly charge"
+    }
+  },
+  "contract": {
+    "has": "There is a contract (rent, internet, insurance…)",
+    "months": "Term",
+    "monthsValue": "{{count}} months",
+    "startedOn": "Started on",
+    "startedHint": "Empty — the first charge seen",
+    "noticeDays": "Notice, days",
+    "noticeHint": "How many days before the end",
+    "priceLockedUntil": "Price fixed until",
+    "autoRenews": "Renews by itself unless notice is given",
+    "line": "Contract until {{end}} · give notice by {{cancel}}",
+    "tooLate": "too late for this term",
+    "guessed": "start taken from the first charge, {{date}}"
+  },
+  "letter": {
+    "open": "A letter: cancel or ask for a better price",
+    "title": "A letter about {{name}}",
+    "kind": "What for",
+    "kinds": {
+      "cancel": "End the contract",
+      "renegotiate": "Ask for a better price"
+    },
+    "language": "Language",
+    "languages": {
+      "en": "English",
+      "pl": "Polish"
+    },
+    "details": "Your name, customer or contract number",
+    "detailsHint": "Whatever the letter should carry; the rest is left as [placeholders]",
+    "write": "Write",
+    "again": "Write again",
+    "copy": "Copy",
+    "close": "Close",
+    "subject": "Subject",
+    "body": "Letter",
+    "template": "A plain template: connect an AI in Settings for a letter written for the case",
+    "failed": "The letter was not written. Try again."
+  },
+  "worth": {
+    "title": "Net worth and runway",
+    "subtitle": "The bank accounts count by themselves, the rest is typed in",
+    "total": "Net worth",
+    "over30": "over 30 days",
+    "runway": "Runway",
+    "months": "{{count}} mo.",
+    "runwayHint": "{{liquid}} at hand at {{burn}} a month (the average of {{months}} mo.)",
+    "runwayHint30": "{{liquid}} at hand at {{burn}} a month (the last 30 days)",
+    "noBurn": "No expenses yet to count it from",
+    "history": "Net worth day by day",
+    "missing": "No rate for {{currencies}}: left out of the totals",
+    "empty": "Connect a bank or add what you own: cash, a deposit, investments, a loan — to see your net worth and for how many months the money would last.",
+    "edit": "Assets and debts"
+  },
+  "assets": {
+    "title": "Assets and debts",
+    "hint": "Everything besides the connected bank accounts: update the values now and then.",
+    "addTitle": "Add",
+    "editTitle": "Edit",
+    "name": "Name",
+    "namePlaceholder": "Revolut, cash, mortgage…",
+    "kind": "Kind",
+    "liquid": "Money at hand (counts for the runway)",
+    "kinds": {
+      "cash": "Cash",
+      "account": "Account",
+      "deposit": "Deposit",
+      "investment": "Investments",
+      "property": "Property",
+      "debt": "Debt"
+    }
   }
 }
