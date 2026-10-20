@@ -279,6 +279,11 @@ under **Updating**.
 - **A login from the menu under a field** — the browser extension fills the form of the field the
   menu was opened for: on a page with several forms (a sign-in in the header and in a dialog,
   beside a sign-up) the first form of the page was filled, and the field clicked stayed empty.
+- **Unlocking in the menu under a field** — the master password typed there unlocks the vault:
+  the check that the menu is in plain sight (against clickjacking) stopped the press silently
+  when the browser did not confirm it. The unlock no longer needs it (a password typed into a
+  covered menu gives the page nothing); a fill that does not count says "press again"; the menu
+  is placed again when it grows, so it does not run past the bottom of the window.
 - **Writing in Telegram Desktop** — the desktop app underlines the mistakes in its input and
   types the fixes there too: Qt programs give the focus to a viewport inside the field, which was
   taken for no field at all.

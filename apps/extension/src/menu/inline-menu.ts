@@ -7,15 +7,18 @@ import { field, h, t } from '../popup/dom';
  * of the frame's own site, a strong password for a sign-up, the user's logins for a sign-up's
  * login field — and asks the background to fill. The page around it cannot read it.
  *
- * It can still be covered or made see-through to steal a click (clickjacking): a press counts
- * only when the browser says the menu has been fully visible for a moment (IntersectionObserver
- * v2, `isVisible`).
+ * It can still be covered or made see-through to steal a click (clickjacking): a press that
+ * fills the page counts only when the browser says the menu has been fully visible for a moment
+ * (IntersectionObserver v2, `isVisible`); one that does not count says so. The unlock form has
+ * no such check: a master password typed into a covered menu gives the page nothing.
  */
 
 const token = location.hash.slice(1);
 const app = document.getElementById('app') as HTMLElement;
 /** How long the menu must have been in plain sight before a press counts. */
 const VISIBLE_BEFORE_PRESS_MS = 400;
+/** "All of it" with room for the rounding of a fractional display scale. */
+const FULLY_VISIBLE = 0.99;
 
 let visibleSince: number | null = null;
 
@@ -102,9 +105,6 @@ function unlockForm(): HTMLElement {
       class: 'unlock',
       onSubmit: (event) => {
         event.preventDefault();
-        if (!pressCounts()) {
-          return;
-        }
         submit.disabled = true;
         error.textContent = '';
         void ask({ type: 'menu-unlock', token, masterPassword: master.value })
@@ -129,11 +129,13 @@ function row(title: string, sub: string, action: () => Promise<unknown>): HTMLEl
       class: 'row',
       type: 'button',
       onClick: () => {
-        if (pressCounts()) {
-          void action().catch((error: unknown) =>
-            show(h('p', { class: 'error', text: errorText(error) })),
-          );
+        if (!pressCounts()) {
+          notCounted();
+          return;
         }
+        void action().catch((error: unknown) =>
+          show(h('p', { class: 'error', text: errorText(error) })),
+        );
       },
     },
     h('span', { class: 'title', text: title }),
@@ -157,6 +159,8 @@ function openExtension(): HTMLElement {
     onClick: () => {
       if (pressCounts()) {
         void ask({ type: 'menu-open-popup' });
+      } else {
+        notCounted();
       }
     },
   });
@@ -171,6 +175,15 @@ function errorText(error: unknown): string {
   return t(`error_${code.replace(/-/g, '_')}`);
 }
 
+/** A press too early or on a covered menu: told, so the next one is made knowingly. */
+function notCounted(): void {
+  let hint = app.querySelector<HTMLElement>('.not-counted');
+  if (!hint) {
+    hint = h('p', { class: 'error not-counted', text: t('menuPressAgain') });
+    app.append(hint);
+  }
+}
+
 /** The menu has been fully visible, uncovered and opaque, long enough. */
 function pressCounts(): boolean {
   return visibleSince !== null && Date.now() - visibleSince >= VISIBLE_BEFORE_PRESS_MS;
@@ -180,14 +193,20 @@ function watchVisibility(): void {
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        // A browser without v2 tells only that it is in the viewport.
+        // A browser without v2 tells only that it is in the viewport; all of it must be.
         const visible =
-          (entry as IntersectionObserverEntry & { isVisible?: boolean }).isVisible ??
-          entry.isIntersecting;
+          ((entry as IntersectionObserverEntry & { isVisible?: boolean }).isVisible ??
+            entry.isIntersecting) &&
+          entry.intersectionRatio >= FULLY_VISIBLE;
         visibleSince = visible ? (visibleSince ?? Date.now()) : null;
+        if (visible) {
+          app.querySelector('.not-counted')?.remove();
+        }
       }
     },
-    { threshold: [1], trackVisibility: true, delay: 100 } as IntersectionObserverInit,
+    // Several steps, not only 1: with a fractional scale the share may stay just under 1, and
+    // the browser would never report the menu again.
+    { threshold: [0, 0.5, 0.9, 1], trackVisibility: true, delay: 100 } as IntersectionObserverInit,
   );
   observer.observe(document.body);
 }
