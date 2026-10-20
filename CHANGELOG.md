@@ -276,6 +276,12 @@ under **Updating**.
 
 ### Fixed
 
+- **A login from the menu under a field** — the browser extension fills the form of the field the
+  menu was opened for: on a page with several forms (a sign-in in the header and in a dialog,
+  beside a sign-up) the first form of the page was filled, and the field clicked stayed empty.
+- **Writing in Telegram Desktop** — the desktop app underlines the mistakes in its input and
+  types the fixes there too: Qt programs give the focus to a viewport inside the field, which was
+  taken for no field at all.
 - **Bank categories** — a card payment, which the bank sends without a name, takes its shop from
   the title, so its category follows the shop's other payments and the AI sorts it; the AI is
   asked about every new shop of an import (not only the first 60); "Sort the uncategorized" on

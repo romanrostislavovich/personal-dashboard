@@ -44,6 +44,15 @@ export function findLoginFields(root: Document): LoginFields {
   return { username: usernameFor(password, password?.form ?? root), password };
 }
 
+/** The pair of a field: a password field and the login of its form, or a login and its password. */
+function loginFieldsAround(field: HTMLInputElement, root: Document): LoginFields {
+  const scope: ParentNode = field.form ?? root;
+  if (field.type === 'password') {
+    return { username: usernameFor(field, scope), password: field };
+  }
+  return { username: field, password: passwordFields(scope)[0] ?? null };
+}
+
 /** What a field is for; `null` — nothing the vault helps with (a search, a name, an address). */
 export function classifyField(input: HTMLInputElement, root: Document): FieldKind | null {
   if (!isUsable(input)) {
@@ -118,8 +127,18 @@ function usernameFor(
 }
 
 /** Fills the login form of the page; `false` — there is none. */
-export function fillLogin(root: Document, username: string, password: string): boolean {
-  const fields = findLoginFields(root);
+/**
+ * The login and the password into the page. With `field` — the one a menu was opened for — its
+ * own form is filled, starting from it: a page may have several forms (a sign-in in the header
+ * and in a dialog, beside a sign-up), and the first one found is not always the one in use.
+ */
+export function fillLogin(
+  root: Document,
+  username: string,
+  password: string,
+  field?: HTMLInputElement | null,
+): boolean {
+  const fields = field?.isConnected ? loginFieldsAround(field, root) : findLoginFields(root);
   if (fields.username && username) {
     setValue(fields.username, username);
   }

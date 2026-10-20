@@ -67,7 +67,31 @@ public static class WritingField {
   static AutomationElement Focused() {
     AutomationElement element;
     try { element = AutomationElement.FocusedElement; } catch { return null; }
-    if (element == null) return null;
+    return FieldOf(element);
+  }
+
+  /** How far up from a focused viewport its field is looked for. */
+  const int ViewportLevels = 2;
+
+  /**
+   * The field of the focused element: the element itself, or — when the focus is on a plain
+   * container inside a field, as in Qt programs (Telegram Desktop gives it to the QWidget that
+   * is the viewport of its input) — the field around it.
+   */
+  public static AutomationElement FieldOf(AutomationElement element) {
+    for (var level = 0; element != null && level <= ViewportLevels; level++) {
+      var field = AsField(element);
+      if (field != null) return field;
+      ControlType type;
+      try { type = element.Current.ControlType; } catch { return null; }
+      // Only a container is climbed out of: a button inside a document is not the document.
+      if (type != ControlType.Group && type != ControlType.Pane && type != ControlType.Custom) return null;
+      try { element = TreeWalker.RawViewWalker.GetParent(element); } catch { return null; }
+    }
+    return null;
+  }
+
+  static AutomationElement AsField(AutomationElement element) {
     try {
       var info = element.Current;
       if (info.IsPassword || !info.IsEnabled) return null;
