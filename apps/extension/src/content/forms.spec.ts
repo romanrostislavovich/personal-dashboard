@@ -48,6 +48,36 @@ describe('login forms', () => {
     expect(events).toEqual(['input']);
   });
 
+  it('fills the form of the field the menu was opened for, not the first one of the page', () => {
+    const doc = page(`
+      <form id="header"><input name="user"><input type="password"></form>
+      <form id="dialog"><input type="email" name="login"><input type="password"></form>`);
+    const value = (selector: string) => doc.querySelector<HTMLInputElement>(selector)?.value;
+    const login = doc.querySelector<HTMLInputElement>('#dialog [name=login]');
+    expect(fillLogin(doc, 'me@example.com', 'secret', login)).toBe(true);
+    expect([value('#dialog [name=login]'), value('#dialog [type=password]')]).toEqual([
+      'me@example.com',
+      'secret',
+    ]);
+    expect([value('#header [name=user]'), value('#header [type=password]')]).toEqual(['', '']);
+
+    const password = doc.querySelector<HTMLInputElement>('#header [type=password]');
+    expect(fillLogin(doc, 'you@example.com', 'other', password)).toBe(true);
+    expect([value('#header [name=user]'), value('#header [type=password]')]).toEqual([
+      'you@example.com',
+      'other',
+    ]);
+  });
+
+  it('fills the field itself on a first step the guess would miss', () => {
+    // No field is named like a login: the guess takes none, the menu's field is the one.
+    const doc = page(`<input name="q"><form><input name="who"></form>`);
+    const who = doc.querySelector<HTMLInputElement>('[name=who]');
+    expect(fillLogin(doc, 'me@example.com', 'secret', who)).toBe(true);
+    expect(who?.value).toBe('me@example.com');
+    expect(doc.querySelector<HTMLInputElement>('[name=q]')?.value).toBe('');
+  });
+
   it('fills the login alone on the first step of a two-step sign-in', () => {
     const doc = page(`<form><input type="email" name="identifier"></form>`);
     expect(fillLogin(doc, 'me@example.com', 'secret')).toBe(true);

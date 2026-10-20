@@ -476,8 +476,9 @@ assistant as a tutor that knows the materials of the courses.
 #### Desktop
 
 - **Writing: Ctrl+Alt+G where there are no marks** — in a program that gives no positions of
-  its words (Telegram Desktop and other Qt apps): the selected text is checked and rewritten in a
-  small window, and put back in its place
+  its words through UI Automation: the selected text is checked and rewritten in a small window,
+  and put back in its place (Telegram Desktop does give them: its field is found from the focused
+  viewport inside it)
 - **Desktop: quick input from anywhere** — a global shortcut opens a small window over every
   program: a task, a reminder, an expense, a diary note, without switching to the dashboard
 - **Desktop: voice notes** — a shortcut, speak, the text (speech recognition) goes to the diary or

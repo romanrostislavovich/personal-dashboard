@@ -183,7 +183,8 @@ export type ContentRequest =
 
 /** From the background to a content script. */
 export type PageCommand =
-  | { type: 'fill'; username: string; password: string }
+  /** `fieldId` — the field a menu was opened for: its form is filled. */
+  | { type: 'fill'; username: string; password: string; fieldId?: string }
   /** A new password from the generator: into the fields for a new one. */
   | { type: 'fill-new-password'; password: string }
   /** One value into the field the menu was opened for. */

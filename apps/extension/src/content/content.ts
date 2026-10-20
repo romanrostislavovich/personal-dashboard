@@ -41,7 +41,14 @@ chrome.runtime.onMessage.addListener(
   ) => {
     switch (command.type) {
       case 'fill':
-        reply({ filled: fillLogin(document, command.username, command.password) });
+        reply({
+          filled: fillLogin(
+            document,
+            command.username,
+            command.password,
+            command.fieldId ? fieldById(command.fieldId) : null,
+          ),
+        });
         break;
       case 'fill-new-password': {
         const filled = fillNewPassword(document, command.password);

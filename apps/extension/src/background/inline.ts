@@ -91,7 +91,12 @@ export async function menuFill(token: string, id: string): Promise<void> {
   if (item.kind !== 'login' || !matchesPage(item.urls, session.frameUrl)) {
     throw new ExtensionError('not-allowed');
   }
-  await send(session, { type: 'fill', username: item.username, password: item.password });
+  await send(session, {
+    type: 'fill',
+    username: item.username,
+    password: item.password,
+    fieldId: session.fieldId,
+  });
   await close(token, session);
 }
 
