@@ -574,5 +574,8 @@
   },
   "sidepanelAttachFailed": {
     "message": "Could not read $1"
+  },
+  "menuPressAgain": {
+    "message": "The menu was covered or had just opened — press again."
   }
 }

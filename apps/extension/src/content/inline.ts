@@ -68,6 +68,8 @@ export function setupInline(): void {
       const height = Number((event.data as { pdMenuHeight?: unknown } | null)?.pdMenuHeight);
       if (height > 0 && height < 600) {
         frame.style.height = `${Math.ceil(height)}px`;
+        // Taller now: placed again, so it does not run past the bottom of the window.
+        place();
       }
     }
   });
