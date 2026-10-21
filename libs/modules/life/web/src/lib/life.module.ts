@@ -16,6 +16,10 @@ export const lifeModule: WebDashboardModule = {
         { path: '', pathMatch: 'full', redirectTo: 'day' },
         { path: 'day', loadComponent: () => import('./day.page').then((m) => m.DayPage) },
         {
+          path: 'chronicle',
+          loadComponent: () => import('./lifelog-narrative.component').then((m) => m.LifelogNarrativeComponent),
+        },
+        {
           path: 'summary',
           loadComponent: () => import('./summary.page').then((m) => m.SummaryPage),
         },
@@ -34,6 +38,7 @@ export const lifeModule: WebDashboardModule = {
     ru: () => import('./i18n/ru.json'),
   },
   commands: [
+    { id: 'life.chronicle', labelKey: 'life.tabs.chronicle', icon: 'auto_stories', url: '/life/chronicle' },
     { id: 'life.summary', labelKey: 'life.tabs.summary', icon: 'redeem', url: '/life/summary' },
     { id: 'life.links', labelKey: 'life.tabs.links', icon: 'hub', url: '/life/links' },
     { id: 'life.goals', labelKey: 'life.tabs.goals', icon: 'flag', url: '/life/goals' },

@@ -62,6 +62,60 @@ arrow in `chrome://extensions` after a build.
 - **Lock.** After 10 minutes without use, when the computer is locked, with the lock button, and
   when Chrome closes.
 
+## Optional browser engagement
+
+The popup has a separate **Share browser engagement** switch, off by default. It is independent
+of site-time tracking, writing checks and assistant permissions. Signing out or starting another
+sign-in clears consent and the queue, even for the same account. A new sign-in needs new consent.
+
+- Counts active reading seconds, maximum scroll depth per interval and copy **events**, never
+  clipboard contents, selection, keystrokes or form text. Reading requires a visible, focused
+  top-level page and trusted interaction within 60 seconds; editing fields does not count.
+- Records only sanitized public HTTP(S) URLs (no query/fragment), a small OpenGraph/schema.org
+  microdata type allowlist and exact technology keywords. No titles, authors, emails, arbitrary
+  JSON-LD, page bodies or screenshots are collected by this feature.
+- Private windows, local/sensitive URLs, Activity private words, ignored vault sites and the
+  popup's engagement exclusions are denied. The background verifies the sender's tab, document,
+  URL/origin, focused window and browser idle state; page-provided URLs and timestamps are ignored.
+- Raw counters and short-lived collection leases are memory-only. At most 100 sanitized
+  aggregates, expiring after 24 hours, live in trusted `chrome.storage.session`, not on disk.
+  A five-minute Chrome alarm uploads through the signed-in shared client. Failed uploads retain
+  the same UUIDs for idempotent retry; account/server transitions are serialized with uploads.
+- Opt-out discards pending aggregates and resets collectors. It cannot recall an already sent
+  request. Browser closure loses the queue; worker suspension preserves queued aggregates but
+  discards unfinished intervals. Focus changes, navigation and long timer gaps deliberately
+  undercount rather than infer activity.
+
+Validation: `npx nx test extension`, `npx nx lint extension`, `npx nx build extension` (includes
+TypeScript checking). A real-browser smoke test should also exercise consent, tab/window focus,
+incognito, offline retry and service-worker termination; unit tests use simulated Chrome APIs.
+
+## Manual work context
+
+The assistant side panel has **Preview current context**, **Confirm and save**, **Cancel** and
+**Open saved contexts** controls. A preview shows the complete sanitized `WorkstateInput` and
+destination server; only confirmation calls the shared `workstatesApi.capture` client. Opening
+saved contexts navigates to `/activity/workstates`; history and restore remain in the dashboard.
+
+- Captures just the public URL of the active tab in the panel's focused, normal browser window.
+  No title, page content, selection, clipboard, background tabs or optional metadata is collected.
+  Query strings/fragments are removed; private/incognito, sensitive/local URLs and existing
+  engagement/vault/Activity site exclusions are denied, independently of telemetry consent.
+- The worker verifies the exact extension panel sender/document and obtains current tab state
+  from Chrome, not from a page-supplied URL. It rechecks foreground state, exclusions and account
+  identity before sending. The panel accepts only trusted clicks while visible and focused.
+- One preview lives in worker memory for at most two minutes, bound to the panel document,
+  account/server and tab. Cancellation, authentication changes, navigation, focus changes and
+  worker restart discard it. Nothing is queued or automatically retried. Authentication and
+  capture share a lock through API token refresh/retry. An already sent request cannot be recalled;
+  after a lost response, check saved contexts before making a new capture.
+
+Manual integration checks: with engagement off, preview a public URL containing query/hash,
+verify the exact outgoing JSON, cancel (no request), then preview/confirm (one request). Repeat
+with private/excluded/local pages, a background window, changed tab, sign-out/new sign-in,
+expired preview and suspended worker: saving the old preview must be refused. This flow has no
+new spec files; use the existing extension tests/build and a real Chrome smoke test.
+
 ## How it keeps the vault
 
 | What                         | Where                                                           |

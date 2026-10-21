@@ -1,0 +1,48 @@
+:host {
+  display: block;
+}
+mat-card {
+  margin: 16px 0;
+}
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+.row,
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.filters {
+  margin-top: 24px;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 16px;
+  min-width: 0;
+}
+fieldset > mat-form-field {
+  width: 100%;
+}
+.row mat-form-field,
+.filters mat-form-field {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+dt {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-large);
+}
+dd {
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+}
+li,
+dd {
+  overflow-wrap: anywhere;
+}
+ul {
+  padding-inline-start: 20px;
+}

@@ -10,6 +10,8 @@ import { CORE_READS } from '@pd/client-core';
 import { LifeSummary } from '@pd/contracts';
 import { RouterLink } from '@angular/router';
 import { LifeApi } from './life.api';
+import { LifelogJournalComponent } from './lifelog-journal.component';
+import { lifelogMonthRange } from './lifelog-dates';
 import { MoodInsightsComponent } from './mood-insights.component';
 import { MoodForecastComponent } from './mood-forecast.component';
 import { StoryCardComponent } from './story-card.component';
@@ -22,6 +24,7 @@ import { StoryCardComponent } from './story-card.component';
     CurrencyPipe,
     DatePipe,
     DecimalPipe,
+    LifelogJournalComponent,
     MatButtonToggleModule,
     MatCardModule,
     MatIconModule,
@@ -71,6 +74,10 @@ import { StoryCardComponent } from './story-card.component';
     }
 
     <pd-story-card [period]="storyPeriod()" />
+
+    @if (kind() === 'month') {
+      <pd-lifelog-journal [month]="month()" />
+    }
 
     <div class="cards">
       @for (card of cards(); track card.key) {
@@ -178,7 +185,11 @@ export class SummaryPage {
   private readonly query = inject(ActivatedRoute).snapshot.queryParamMap;
   /** `?month=2026-09` and `?year=2026` (the links of the messages on the 1st) open that period. */
   protected readonly kind = signal<'month' | 'year'>(this.query.get('year') ? 'year' : 'month');
-  protected readonly month = signal(this.query.get('month') ?? this.thisMonth);
+  protected readonly month = signal(
+    lifelogMonthRange(this.query.get('month') ?? '') && this.query.get('month')! <= this.thisMonth
+      ? this.query.get('month')!
+      : this.thisMonth,
+  );
   protected readonly year = signal(Number(this.query.get('year')) || this.thisYear);
   protected readonly storyPeriod = computed(() =>
     this.kind() === 'year' ? String(this.year()) : this.month(),
@@ -192,9 +203,7 @@ export class SummaryPage {
     if (this.kind() === 'year') {
       return { from: `${this.year()}-01-01`, to: `${this.year()}-12-31` };
     }
-    const [year, month] = this.month().split('-').map(Number);
-    const last = new Date(year, month, 0).getDate();
-    return { from: `${this.month()}-01`, to: `${this.month()}-${String(last).padStart(2, '0')}` };
+    return lifelogMonthRange(this.month())!;
   });
   protected readonly summary = httpResource<LifeSummary>(() =>
     CORE_READS.lifeSummary(this.period().from, this.period().to),
@@ -202,7 +211,7 @@ export class SummaryPage {
   protected readonly cards = computed(() => this.summary.value()?.cards ?? []);
 
   protected pickMonth(month: string): void {
-    if (/^\d{4}-\d{2}$/.test(month) && month <= this.thisMonth) {
+    if (lifelogMonthRange(month) && month <= this.thisMonth) {
       this.month.set(month);
     }
   }

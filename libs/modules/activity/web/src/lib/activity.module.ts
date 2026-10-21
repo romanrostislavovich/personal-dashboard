@@ -23,6 +23,13 @@ export const activityModule: WebDashboardModule = {
           loadComponent: () => import('./focus/focus.page').then((m) => m.FocusPage),
         },
         {
+          path: 'workstates',
+          loadComponent: () =>
+            import('./workstates/workstate-timeline.component').then(
+              (m) => m.WorkstateTimelineComponent,
+            ),
+        },
+        {
           path: 'computers',
           loadComponent: () => import('./computers/computers.page').then((m) => m.ComputersPage),
         },
@@ -38,6 +45,12 @@ export const activityModule: WebDashboardModule = {
     ru: () => import('./i18n/ru.json'),
   },
   commands: [
+    {
+      id: 'activity.workstates',
+      labelKey: 'activity.workstates.title',
+      icon: 'history',
+      url: '/activity/workstates',
+    },
     {
       id: 'activity.focus',
       labelKey: 'activity.commands.focus',

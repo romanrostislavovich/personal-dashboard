@@ -9,6 +9,9 @@ export * from './lib/locale';
 export * from './lib/dashboard-client';
 // Requests of the modules, like their types in @pd/contracts: every client gets all of them.
 export * from './lib/modules/activity';
+export * from './lib/modules/telemetry';
+export * from './lib/modules/workstates';
+export * from './lib/modules/lifelog';
 export * from './lib/modules/ai';
 export * from './lib/modules/development';
 export * from './lib/modules/diary';

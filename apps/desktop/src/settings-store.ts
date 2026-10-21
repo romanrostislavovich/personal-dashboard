@@ -21,6 +21,17 @@ export interface DesktopSettings {
   installId: string | null;
   /** Where the screenshots go (screenshots/screenshot-folder.ts); `null` — the default one. */
   screenshotsFolder: string | null;
+  /** Explicit telemetry opt-in for exactly this server/device, independent of activity tracking. */
+  telemetryConsent: { serverUrl: string; deviceId: string } | null;
+  /** Optional local break suggestions; never implied by telemetry consent. */
+  smartBreakConsent: { serverUrl: string; deviceId: string } | null;
+  /** Native picker only, scoped to the current device/server. Never supplied by a restore plan. */
+  workstateContext: {
+    serverUrl: string;
+    deviceId: string;
+    projectPath: string | null;
+    idePath: string | null;
+  } | null;
 }
 
 const DEFAULTS: DesktopSettings = {
@@ -31,7 +42,36 @@ const DEFAULTS: DesktopSettings = {
   backupKeep: 14,
   installId: null,
   screenshotsFolder: null,
+  telemetryConsent: null,
+  smartBreakConsent: null,
+  workstateContext: null,
 };
+
+export function hasSmartBreakConsent(
+  settings: DesktopSettings,
+  serverUrl: string | null,
+  deviceId: string | null,
+): boolean {
+  return (
+    !!serverUrl &&
+    !!deviceId &&
+    settings.smartBreakConsent?.serverUrl === serverUrl &&
+    settings.smartBreakConsent?.deviceId === deviceId
+  );
+}
+
+export function hasTelemetryConsent(
+  settings: DesktopSettings,
+  serverUrl: string | null,
+  deviceId: string | null,
+): boolean {
+  return (
+    !!serverUrl &&
+    !!deviceId &&
+    settings.telemetryConsent?.serverUrl === serverUrl &&
+    settings.telemetryConsent?.deviceId === deviceId
+  );
+}
 
 /** Documents\Personal Dashboard\Backups: where a person looks for their files. */
 export function backupFolder(settings: DesktopSettings): string {

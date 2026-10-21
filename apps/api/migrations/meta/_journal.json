@@ -652,6 +652,20 @@
       "when": 1792597610673,
       "tag": "0092_wooden_sunfire",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1792608173944,
+      "tag": "0093_moaning_overlord",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1792609110433,
+      "tag": "0094_mighty_lockheed",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { ScreenshotFolder } from '@pd/client-core';
-import { DiskAdvice, DiskFix, DiskReport, WritingIssue } from '@pd/contracts';
+import { DiskAdvice, DiskFix, DiskReport, WritingIssue, WorkstateRestorePlan } from '@pd/contracts';
 /**
  * What the desktop app (Electron preload) adds to the page as `window.desktop`.
  * In a regular browser it is absent.
@@ -31,6 +31,19 @@ export interface DesktopBridge {
   writing?: DesktopWriting;
   /** What the computer tells the assistant as a device (absent in an older shell). */
   device?: DesktopDevice;
+  /** Explicit capture and native-confirmed restoration; absent in older desktop builds. */
+  workstates?: {
+    capture(): Promise<boolean>;
+    resume(plan: WorkstateRestorePlan): Promise<{ opened: number; failed: number; canceled: boolean }>;
+  };
+  telemetry?: {
+    status(): Promise<{ enabled: boolean; available: boolean }>;
+    setConsent(enabled: boolean): Promise<boolean>;
+  };
+  smartBreak?: {
+    status(): Promise<{ enabled: boolean; available: boolean }>;
+    setConsent(enabled: boolean): Promise<boolean>;
+  };
 }
 
 /** The window in front of the computer, as the tracker sees it (a private one without title). */

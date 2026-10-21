@@ -57,12 +57,12 @@ export function moodInsights(
     for (const metric of metrics.filter((item) => item.key !== MOOD_METRIC)) {
       const values = new Map(metric.days.map((day) => [day.day, day.value]));
       // One task done on one good day is not "tasks go with good days".
-      if ([...good, ...bad].filter((day) => values.get(day)).length < MIN_DAYS_WITH_VALUE) {
+      if ([...good, ...bad].filter((day) => metric.missing === 'absent' ? values.has(day) : values.get(day)).length < MIN_DAYS_WITH_VALUE) {
         continue;
       }
       const reading = READINGS.includes(metric.unit);
       const of = (days: LocalDate[]) =>
-        reading
+        reading || metric.missing === 'absent'
           ? days.flatMap((day) => (values.has(day) ? [values.get(day) as number] : []))
           : days.map((day) => values.get(day) ?? 0);
       const [onGood, onBad] = [of(good), of(bad)];

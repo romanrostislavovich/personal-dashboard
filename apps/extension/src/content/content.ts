@@ -18,6 +18,9 @@ import {
 import { closeMenu, fieldById, setupInline } from './inline';
 import { showSaveBar } from './save-bar';
 import { resetWriting, setupWriting } from './writing/writing';
+import { setupEngagement } from './engagement';
+
+setupEngagement();
 
 /*
  * The content script, in every frame of every page. It tells the background about login forms

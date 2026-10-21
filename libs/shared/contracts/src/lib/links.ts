@@ -86,6 +86,8 @@ export interface ServiceUsage {
 
 /** A number a section has for every day: hours at the computer, money spent, plays. */
 export interface DailyMetric {
+  /** Opt-in collectors: no measurement means unknown, never an inferred zero. */
+  missing?: 'absent';
   /** `activity.hours`: stable, the section's id first. */
   key: string;
   module: string;

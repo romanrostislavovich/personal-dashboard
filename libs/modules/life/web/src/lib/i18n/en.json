@@ -2,6 +2,7 @@
   "title": "Life",
   "tabs": {
     "day": "Day",
+    "chronicle": "Chronicle",
     "summary": "Summary",
     "goals": "Goals",
     "links": "Links"
@@ -16,6 +17,40 @@
   "year": "Year",
   "hours": "{{value}} h",
   "nothing": "Nothing recorded in this period.",
+  "chronicle": {
+    "journal": "Life Wrapped · monthly journal",
+    "journalHint": "Choose a date to open its chronicle. Missing chronicles do not mean inactive days. Monthly totals and the existing AI story are shown here separately.",
+    "missing": "No chronicle for this day.",
+    "hasNote": "Personal note saved",
+    "loading": "Loading chronicle…",
+    "working": "Saving changes…",
+    "loadError": "Could not load the chronicle. Your local note draft has been kept.",
+    "timelineError": "Could not load the day's timeline.",
+    "retry": "Try again",
+    "highlight": "Highlight",
+    "sources": "Source provenance",
+    "origin": { "ai": "AI-generated", "facts": "From recorded facts" },
+    "accuracy": "AI summaries may be inaccurate or omit context. Check the recorded sources; this is not a health assessment or proof of cause and effect.",
+    "generationHint": "Generate uses allowed facts and the configured default AI, which may be paid. An existing chronicle is returned from cache, not rewritten. No allowed facts means no new chronicle.",
+    "generate": "Generate chronicle",
+    "generated": "Chronicle ready (an existing chronicle may have been reused).",
+    "noFacts": "No allowed facts to generate a chronicle. Your personal note is unchanged.",
+    "actionError": "The change could not be completed. Your local note draft has been kept; check your connection and AI settings, then try again.",
+    "delete": "Delete chronicle",
+    "confirmDelete": "Delete the chronicle and personal note for {{day}}? This cannot be undone. Unsaved edits for this date will also be discarded.",
+    "deleted": "Chronicle and saved note deleted.",
+    "note": "Personal note",
+    "noteHint": "Your own words, separate from the generated summary. Save explicitly. Unsaved drafts stay while switching dates here, but not when leaving this page.",
+    "saveNote": "Save note",
+    "saved": "Note saved. Any newer edits still need saving.",
+    "unsaved": "Unsaved changes",
+    "timeline": "Recorded day timeline",
+    "settings": "Nightly chronicle settings",
+    "nightly": "Generate yesterday's chronicle automatically",
+    "nightlyHint": "Off by default and separate from manual generation. When enabled, the server checks hourly after 03:00 in your configured timezone and attempts yesterday's chronicle once per day. This is not a full NightButler service.",
+    "privacy": "Generation respects module access in AI privacy settings. The configured default AI may incur charges. Personal notes remain separate from generated text.",
+    "settingsError": "Could not load or save nightly settings. No change has been confirmed."
+  },
   "story": {
     "title": "The story by the AI",
     "written": "Written {{date}}",
@@ -59,6 +94,14 @@
     "same": "Nothing differs noticeably between good and bad days."
   },
   "links": {
+    "digital": {
+      "filter": "Digital metric filter",
+      "all": "All metrics",
+      "only": "All digital telemetry",
+      "hint": "Filter links involving desktop or browser telemetry, then select a pair in the matrix or list to plot its observed days. Missing measurements are unknown, not zero. These are digital observations, not biometrics or productivity scores.",
+      "unavailable": "not enough data",
+      "empty": "No comparable pairs for this selection yet. Try another metric or a longer period."
+    },
     "weekend": "Weekend",
     "caution": "Links show what goes together and what comes before what — not what causes what. A third thing (a busy week, an illness) can be behind both. The seasons are taken away (each day is compared with the weeks around it, so “more games and warmer in summer” is not a link), and the chance of an accident is corrected for the number of pairs and for the days' own trends.",
     "failed": "Could not count the links. Please try later.",

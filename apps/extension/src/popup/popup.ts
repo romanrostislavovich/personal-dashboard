@@ -44,6 +44,7 @@ let place: 'home' | 'vault' = 'home';
 
 const popup: Popup = {
   state: {
+    telemetry: { enabled: false, excluded: false },
     server: null,
     email: null,
     vault: 'signed-out',

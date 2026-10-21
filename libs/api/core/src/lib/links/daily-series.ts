@@ -21,7 +21,7 @@ export type Series = Map<LocalDate, number>;
 export function seriesOf(metric: DailyMetric, days: LocalDate[]): Series {
   const given = new Map(metric.days.map((day) => [day.day, day.value]));
   const series: Series = new Map();
-  if (READINGS.includes(metric.unit)) {
+  if (metric.missing === 'absent' || READINGS.includes(metric.unit)) {
     for (const day of days) {
       if (given.has(day)) {
         series.set(day, given.get(day) as number);

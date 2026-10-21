@@ -9,6 +9,7 @@ import {
 } from '@pd/contracts';
 import { ask, type ChatAttachResult } from '../shared/messages';
 import { h, t } from '../popup/dom';
+import { workstateView } from './workstate.view';
 
 /*
  * The dashboard's assistant beside the page (Chrome's side panel): the same conversation as in
@@ -89,6 +90,7 @@ async function start(): Promise<void> {
       h('h1', { text: t('assistant') }),
       h('button', { type: 'button', text: t('sidepanelNew'), onClick: () => void fresh() }),
     ),
+    workstateView(),
     list,
     quick,
     attached,

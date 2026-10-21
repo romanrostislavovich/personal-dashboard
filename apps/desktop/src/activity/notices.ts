@@ -1,8 +1,18 @@
 import { TrackerNotice } from './tracker';
 
-/** The text of a notification of the tracker (the shell speaks Russian, like its tray menu). */
-export function noticeText(notice: TrackerNotice): { title: string; body: string } {
+/** Legacy tray notices are Russian; optional smart suggestions follow the system locale. */
+export function noticeText(notice: TrackerNotice, locale = 'ru'): { title: string; body: string } {
   switch (notice.kind) {
+    case 'smart-break':
+      return locale.toLowerCase().startsWith('ru')
+        ? {
+            title: 'Удобный момент для перерыва',
+            body: 'Задача завершена. После 50 минут активности можно ненадолго отвлечься, если вам удобно.',
+          }
+        : {
+            title: 'A good moment for a break',
+            body: 'Task completed. After 50 minutes of activity, consider a short break if it suits you.',
+          };
     case 'break':
       return {
         title: 'Пора размяться',

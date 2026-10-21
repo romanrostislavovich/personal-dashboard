@@ -4,6 +4,7 @@ import {
   activityDaySchema,
   activityPeriodSchema,
   activitySettingsUpdateSchema,
+  workstateQuerySchema,
 } from '@pd/contracts';
 import { z } from 'zod';
 import { ActivityLinks } from './activity.links';
@@ -12,6 +13,8 @@ import { digestTimeline } from './timeline-digest';
 import { SitesService } from './sites.service';
 import { WellbeingService } from './wellbeing.service';
 import { activitySettings } from './activity.schema';
+import { WorkstateService } from './workstate.service';
+import { TelemetrySummaryService } from './telemetry-summary.service';
 
 const TIME = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const timelineArgs = activityDaySchema.extend({
@@ -30,9 +33,60 @@ export class ActivityAiTools implements OnModuleInit {
     private readonly links: ActivityLinks,
     private readonly wellbeing: WellbeingService,
     private readonly sites: SitesService,
+    private readonly workstates: WorkstateService,
+    private readonly telemetry: TelemetrySummaryService,
   ) {}
 
   onModuleInit(): void {
+    this.ai.registerTool({
+      name: 'activity_telemetry_summary',
+      module: 'activity',
+      description:
+        'Measured digital activity only: daily totals and weighted rates, separately for desktop ' +
+        'and browser, in the user timezone. Missing measurements are absent, not zero. Partial ' +
+        'buckets are allocated proportionally; simultaneous devices may overlap. No page metadata. ' +
+        'These observations are not biometrics, productivity scores or evidence of causation. ' +
+        'terminalErrorPercent is failed commands / commands with both measurements; ' +
+        'backspacePercent is backspaces / input events, not a typing error diagnosis.',
+      parameters: PERIOD_PARAMETERS,
+      handler: (userId, args) => this.telemetry.summarize(userId, args),
+    });
+
+    this.ai.registerTool({
+      name: 'activity_workstate_recall',
+      module: 'activity',
+      description:
+        'Read-only search of the user saved work contexts. Returns IDs, capture times, sanitized ' +
+        'app and short note only; never restores, opens apps or runs commands. Search/context are ' +
+        'case-insensitive. Each page scans at most limit records (1–100, default 50); follow ' +
+        'nextCursor even when items is empty. No result does not prove no earlier context exists.',
+      parameters: {
+        type: 'object',
+        properties: {
+          search: { type: 'string', description: 'Text to find in saved context' },
+          context: { type: 'string', description: 'App, project path or branch to match' },
+          from: { type: 'string', description: 'Earliest capture, ISO datetime with offset' },
+          to: { type: 'string', description: 'Latest capture, ISO datetime with offset' },
+          limit: { type: 'integer', minimum: 1, maximum: 100 },
+          before: { type: 'string', description: 'nextCursor.before; requires beforeId' },
+          beforeId: { type: 'string', description: 'nextCursor.beforeId; requires before' },
+        },
+        additionalProperties: false,
+      },
+      handler: async (userId, args) => {
+        const page = await this.workstates.list(userId, workstateQuerySchema.parse(args));
+        return {
+          items: page.items.map(({ id, capturedAt, capture }) => ({
+            id,
+            capturedAt,
+            activeApp: capture.activeApp,
+            note: capture.note,
+          })),
+          nextCursor: page.nextCursor,
+        };
+      },
+    });
+
     this.ai.registerTool({
       name: 'activity_sites',
       module: 'activity',

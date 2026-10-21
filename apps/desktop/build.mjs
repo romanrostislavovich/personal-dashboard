@@ -18,7 +18,7 @@ const SOURCE = 'apps/desktop/src';
 const OUT = 'dist/apps/desktop';
 const BUNDLE = join(OUT, 'bundle');
 /** Text files are written with Unix line ends: git on Windows may have checked them out otherwise. */
-const TEXT = /\.(html|ps1|json|css|js)$/;
+const TEXT = /\.(html|ps1|cs|json|css|js)$/;
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(join(BUNDLE, 'assets'), { recursive: true });

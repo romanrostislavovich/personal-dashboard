@@ -41,6 +41,9 @@ const NOT_TRASHED = new Set([
   'notification_outbox',
   // A revoked token must stay revoked.
   'access_tokens',
+  // Private context retention must also apply to device-deletion cascades.
+  'telemetry_dynamics',
+  'activity_workstates',
 ]);
 
 /**

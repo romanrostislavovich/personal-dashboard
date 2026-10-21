@@ -1,6 +1,8 @@
 import { ApiError, createDashboardClient, DashboardClient } from '@pd/client-core';
 import { ExtensionError, SignInResult } from '../shared/messages';
 import { chromeStore } from './storage';
+import { clearTelemetryConsent, telemetryExclusive } from './telemetry-state';
+import { clearWorkstatePreview } from './workstate-state';
 
 /** The dashboard's address, kept after signing out so the next sign-in has it filled in. */
 const SERVER_KEY = 'server';
@@ -50,22 +52,37 @@ export async function signIn(
   email: string,
   password: string,
 ): Promise<SignInResult> {
-  const server = normalizeServer(address);
-  await checkServer(server);
-  await local.set(SERVER_KEY, server);
-  const client = await signedOutClient();
-  const result = await call(() => client.signIn({ email, password }), 'wrong-password');
-  return result.status === 'signed-in' ? { status: 'signed-in' } : result;
+  clearWorkstatePreview();
+  return telemetryExclusive(async () => {
+    clearWorkstatePreview();
+    await clearTelemetryConsent();
+    const server = normalizeServer(address);
+    await checkServer(server);
+    await local.set(SERVER_KEY, server);
+    const client = await signedOutClient();
+    const result = await call(() => client.signIn({ email, password }), 'wrong-password');
+    return result.status === 'signed-in' ? { status: 'signed-in' } : result;
+  });
 }
 
 export async function completeSignIn(challengeToken: string, code: string): Promise<void> {
-  const client = await signedOutClient();
-  await call(() => client.completeSignIn(challengeToken, code), 'wrong-code');
+  clearWorkstatePreview();
+  return telemetryExclusive(async () => {
+    clearWorkstatePreview();
+    await clearTelemetryConsent();
+    const client = await signedOutClient();
+    await call(() => client.completeSignIn(challengeToken, code), 'wrong-code');
+  });
 }
 
 export async function signOut(): Promise<void> {
-  await (await dashboard())?.signOut();
-  await session.remove(ACCESS_KEY);
+  clearWorkstatePreview();
+  return telemetryExclusive(async () => {
+    clearWorkstatePreview();
+    await clearTelemetryConsent();
+    await (await dashboard())?.signOut();
+    await session.remove(ACCESS_KEY);
+  });
 }
 
 async function connect(server: string): Promise<DashboardClient> {

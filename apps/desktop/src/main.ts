@@ -9,11 +9,14 @@ import {
 } from 'electron';
 import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { noticeText } from './activity/notices';
 import { ActivityTracker, TrackerNotice } from './activity/tracker';
 import { BackupStatus, listCopies, saveCopy } from './backup/backup-folder';
 import {
   backupFolder,
+  hasSmartBreakConsent,
+  hasTelemetryConsent,
   installId,
   loadSettings,
   saveSettings,
@@ -28,6 +31,8 @@ import { StatementWatch } from './downloads/statement-watch';
 import { createTray } from './tray';
 import { ExtensionKeeper } from './update/extension-keeper';
 import { AppUpdater } from './update/updater';
+import { DesktopWorkstates } from './workstates/desktop-workstates';
+import { workstateMessages } from './workstates/messages';
 
 /**
  * Desktop shell for the dashboard. The dashboard itself is the web app from the server;
@@ -49,8 +54,19 @@ let isQuitting = false;
 let refreshTray: () => void = () => undefined;
 
 const serverUrl = (): string | null => process.env['DASHBOARD_URL'] ?? loadSettings().serverUrl;
-const tracker = new ActivityTracker(serverUrl, () => refreshTray(), showNotice);
+const tracker: ActivityTracker = new ActivityTracker(
+  serverUrl,
+  () => refreshTray(),
+  showNotice,
+  () => hasTelemetryConsent(loadSettings(), serverUrl(), tracker.status().deviceId),
+  undefined,
+  () => hasSmartBreakConsent(loadSettings(), serverUrl(), tracker.status().deviceId),
+);
 const disk = new DiskCleaner();
+const workstates = new DesktopWorkstates(tracker, serverUrl, () => {
+  showWindow();
+  mainWindow?.webContents.send('desktop:navigate', '/activity/workstates');
+});
 /** Ctrl+Alt+C / Ctrl+Alt+S from any program: text or a screenshot to a task or the diary. */
 /** The folder of screenshots, synced with the server by the dashboard's page. */
 const screenshots = new ScreenshotFolder(
@@ -164,6 +180,30 @@ function bootstrap(): void {
       status: () => tracker.focusStatus(),
       start: () => startFocus(lastFocus),
       stop: () => tracker.focus.stop(),
+    },
+    telemetry: {
+      status: () => tracker.telemetryStatus(),
+      set: (enabled) => {
+        void setContextConsent('telemetry', enabled);
+      },
+    },
+    smartBreak: {
+      status: () => tracker.smartBreakStatus(),
+      set: (enabled) => {
+        void setContextConsent('smartBreak', enabled);
+      },
+    },
+    workstates: {
+      capture: () => {
+        void workstates.capture();
+      },
+      chooseProject: () => {
+        void workstates.choose('directory');
+      },
+      chooseIde: () => {
+        void workstates.choose('exe');
+      },
+      clear: () => workstates.clear(),
     },
   });
   setInterval(() => {
@@ -290,17 +330,84 @@ function openSetup(failedUrl?: string): void {
 
 function registerIpc(): void {
   ipcMain.handle('settings:get-server-url', () => loadSettings().serverUrl);
-  ipcMain.handle('settings:save-server-url', (_event, url: string) => {
-    saveSettings({ ...loadSettings(), serverUrl: url });
+  ipcMain.handle('settings:save-server-url', (event, url: string) => {
+    if (!trustedDashboard(event) && !trustedSetup(event)) return;
+    try {
+      const parsed = new URL(url);
+      if (!['https:', 'http:'].includes(parsed.protocol) || parsed.username || parsed.password)
+        return;
+    } catch {
+      return;
+    }
+    contextRevision++;
+    tracker.resetTelemetry();
+    saveSettings({
+      ...loadSettings(),
+      serverUrl: url,
+      telemetryConsent: null,
+      smartBreakConsent: null,
+      workstateContext: null,
+    });
     openDashboard();
   });
 
+  ipcMain.handle('telemetry:status', (event) =>
+    trustedDashboard(event) ? tracker.telemetryStatus() : { enabled: false, available: false },
+  );
+  ipcMain.handle('telemetry:set-consent', (event, enabled: unknown) =>
+    trustedDashboard(event)
+      ? setContextConsent('telemetry', enabled, () => trustedDashboard(event))
+      : false,
+  );
+  ipcMain.handle('smart-break:status', (event) =>
+    trustedDashboard(event) ? tracker.smartBreakStatus() : { enabled: false, available: false },
+  );
+  ipcMain.handle('smart-break:set-consent', (event, enabled: unknown) =>
+    trustedDashboard(event)
+      ? setContextConsent('smartBreak', enabled, () => trustedDashboard(event))
+      : false,
+  );
+  ipcMain.handle('workstates:capture', (event) =>
+    trustedDashboard(event) ? workstates.capture(() => trustedDashboard(event)) : false,
+  );
+  ipcMain.handle('workstates:resume', (event, plan: unknown) =>
+    trustedDashboard(event)
+      ? workstates.resume(plan, () => trustedDashboard(event))
+      : { opened: 0, failed: 0, canceled: true },
+  );
+
   // The Activity section of the dashboard switches the tracker of this computer on and off.
   ipcMain.handle('activity:status', () => tracker.status());
-  ipcMain.handle('activity:enable', (_event, device: { id: string; token: string }) =>
-    tracker.enable(device),
-  );
-  ipcMain.handle('activity:disable', () => tracker.disable());
+  ipcMain.handle('activity:enable', (event, device: { id: string; token: string }) => {
+    if (
+      !trustedDashboard(event) ||
+      !device ||
+      typeof device.id !== 'string' ||
+      typeof device.token !== 'string' ||
+      !device.id ||
+      !device.token
+    )
+      return;
+    contextRevision++;
+    saveSettings({
+      ...loadSettings(),
+      telemetryConsent: null,
+      smartBreakConsent: null,
+      workstateContext: null,
+    });
+    tracker.enable(device);
+  });
+  ipcMain.handle('activity:disable', (event) => {
+    if (!trustedDashboard(event)) return;
+    contextRevision++;
+    tracker.disable();
+    saveSettings({
+      ...loadSettings(),
+      telemetryConsent: null,
+      smartBreakConsent: null,
+      workstateContext: null,
+    });
+  });
   ipcMain.handle('activity:pause', (_event, minutes: number | null) => tracker.pause(minutes));
   ipcMain.handle('focus:status', () => tracker.focusStatus());
   ipcMain.handle(
@@ -430,6 +537,94 @@ function registerIpc(): void {
   );
 }
 
+function trustedDashboard(event: Electron.IpcMainInvokeEvent): boolean {
+  const server = serverUrl();
+  try {
+    return (
+      !!server &&
+      !!mainWindow &&
+      event.sender === mainWindow.webContents &&
+      event.senderFrame === mainWindow.webContents.mainFrame &&
+      ['https:', 'http:'].includes(new URL(event.senderFrame.url).protocol) &&
+      new URL(event.senderFrame.url).origin === new URL(server).origin
+    );
+  } catch {
+    return false;
+  }
+}
+
+function trustedSetup(event: Electron.IpcMainInvokeEvent): boolean {
+  try {
+    const url = new URL(event.senderFrame?.url ?? '');
+    return (
+      !!mainWindow &&
+      event.sender === mainWindow.webContents &&
+      event.senderFrame === mainWindow.webContents.mainFrame &&
+      url.protocol === 'file:' &&
+      fileURLToPath(url).toLowerCase() ===
+        join(__dirname, 'assets', 'setup.html').toLowerCase()
+    );
+  } catch {
+    return false;
+  }
+}
+
+let consentBusy = false;
+let contextRevision = 0;
+async function setContextConsent(
+  kind: 'telemetry' | 'smartBreak',
+  enabled: unknown,
+  trusted: () => boolean = () => true,
+): Promise<boolean> {
+  if (typeof enabled !== 'boolean' || !trusted()) return false;
+  if (!enabled) {
+    contextRevision++;
+    if (kind === 'telemetry') tracker.resetTelemetry();
+    else tracker.resetSmartBreak();
+    saveSettings({ ...loadSettings(), [kind === 'telemetry' ? 'telemetryConsent' : 'smartBreakConsent']: null });
+    refreshTray();
+    return true;
+  }
+  if (consentBusy) return false;
+  const revision = contextRevision;
+  const server = serverUrl();
+  const deviceId = tracker.status().deviceId;
+  const status = kind === 'telemetry' ? tracker.telemetryStatus() : tracker.smartBreakStatus();
+  if (enabled && (!server || !deviceId || !status.available)) return false;
+  consentBusy = true;
+  try {
+    if (enabled && !status.enabled) {
+      const messages = workstateMessages(app.getLocale());
+      const result = await dialog.showMessageBox({
+        type: 'question',
+        message: kind === 'telemetry' ? messages.telemetryConsent : messages.smartBreakConsent,
+        detail: `${messages.server}: ${server}`,
+        buttons: [messages.cancel, messages.allow],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+      });
+      if (result.response !== 1) return false;
+    }
+    if (!trusted() || revision !== contextRevision || server !== serverUrl() || deviceId !== tracker.status().deviceId)
+      return false;
+    contextRevision++;
+    if (kind === 'telemetry') tracker.resetTelemetry();
+    else tracker.resetSmartBreak();
+    saveSettings({
+      ...loadSettings(),
+      [kind === 'telemetry' ? 'telemetryConsent' : 'smartBreakConsent']:
+        enabled && server && deviceId ? { serverUrl: server, deviceId } : null,
+    });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    consentBusy = false;
+    refreshTray();
+  }
+}
+
 function notify(title: string, body: string, onClick: () => void): void {
   if (!Notification.isSupported()) {
     return;
@@ -445,7 +640,7 @@ function notify(title: string, body: string, onClick: () => void): void {
 
 /** What the tracker has to say: a break is due, a focus part or a break has ended. */
 function showNotice(notice: TrackerNotice): void {
-  const { title, body } = noticeText(notice);
+  const { title, body } = noticeText(notice, app.getLocale());
   notify(title, body, () => (notice.kind === 'break-ended' ? startFocus(lastFocus) : showWindow()));
   refreshTray();
 }

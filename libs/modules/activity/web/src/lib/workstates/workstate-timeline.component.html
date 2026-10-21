@@ -1,0 +1,223 @@
+<h2>{{ 'activity.workstates.title' | transloco }}</h2>
+<p class="hint">{{ 'activity.workstates.hint' | transloco }}</p>
+
+<pd-activity-digital-consent />
+
+<mat-card appearance="outlined">
+  <mat-card-content>
+    <h3>{{ 'activity.workstates.capture' | transloco }}</h3>
+    <p class="hint">{{ 'activity.workstates.captureHint' | transloco }}</p>
+    <form (ngSubmit)="capture()" class="capture-form">
+      <fieldset [disabled]="busy()">
+        <mat-form-field>
+          <mat-label>{{ 'activity.workstates.note' | transloco }}</mat-label>
+          <textarea matInput name="note" [(ngModel)]="note" maxlength="160" rows="2"></textarea>
+        </mat-form-field>
+        <div class="row">
+          <mat-form-field>
+            <mat-label>{{ 'activity.workstates.projectPath' | transloco }}</mat-label>
+            <input matInput name="projectPath" [(ngModel)]="projectPath" maxlength="160" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>{{ 'activity.workstates.gitBranch' | transloco }}</mat-label>
+            <input matInput name="gitBranch" [(ngModel)]="gitBranch" maxlength="160" />
+          </mat-form-field>
+        </div>
+        <mat-form-field>
+          <mat-label>{{ 'activity.workstates.browserUrls' | transloco }}</mat-label>
+          <textarea
+            matInput
+            name="browserUrls"
+            [(ngModel)]="browserUrls"
+            rows="3"
+            maxlength="41000"
+          ></textarea>
+          <mat-hint>{{ 'activity.workstates.urlsHint' | transloco }}</mat-hint>
+        </mat-form-field>
+      </fieldset>
+      @if (captureError()) {
+        <p role="alert">{{ 'activity.workstates.invalidCapture' | transloco }}</p>
+      }
+      <div class="row">
+        <button matButton="filled" type="submit" [disabled]="busy()">
+          {{ 'activity.workstates.save' | transloco }}
+        </button>
+        @if (desktop) {
+          <button matButton="outlined" type="button" [disabled]="busy()" (click)="quickCapture()">
+            {{ 'activity.workstates.quickCapture' | transloco }}
+          </button>
+        }
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>
+
+@if (failure()) {
+  <p role="alert">{{ failure() | transloco }}</p>
+}
+@if (message()) {
+  <p role="status">{{ message() | transloco }}</p>
+}
+@if (busy()) {
+  <p role="status">{{ 'activity.workstates.working' | transloco }}</p>
+}
+
+<form (ngSubmit)="applyFilters()" class="filters">
+  <mat-form-field>
+    <mat-label>{{ 'activity.workstates.search' | transloco }}</mat-label>
+    <input matInput name="search" [(ngModel)]="search" maxlength="160" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>{{ 'activity.workstates.from' | transloco }}</mat-label>
+    <input matInput type="datetime-local" name="from" [(ngModel)]="from" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>{{ 'activity.workstates.to' | transloco }}</mat-label>
+    <input matInput type="datetime-local" name="to" [(ngModel)]="to" />
+  </mat-form-field>
+  <button matButton="filled" type="submit">{{ 'activity.workstates.apply' | transloco }}</button>
+  <button matButton type="button" (click)="refresh()" [disabled]="timeline.isLoading()">
+    {{ 'activity.workstates.refresh' | transloco }}
+  </button>
+</form>
+<p class="hint">{{ 'activity.workstates.timezone' | transloco: { timezone: timezone } }}</p>
+@if (filterError()) {
+  <p role="alert">{{ 'activity.workstates.invalidRange' | transloco }}</p>
+}
+
+@if (timeline.isLoading()) {
+  <p role="status">{{ 'activity.workstates.loading' | transloco }}</p>
+} @else if (timeline.error()) {
+  <p role="alert">{{ errorKey(timeline.error()) | transloco }}</p>
+} @else if (page(); as current) {
+  @for (item of current.items; track item.id) {
+    <mat-card appearance="outlined">
+      <mat-card-content>
+        <h3>
+          <time [attr.datetime]="item.capturedAt">{{ item.capturedAt | date: 'medium' }}</time>
+        </h3>
+        <dl>
+          @if (item.capture.activeApp) {
+            <dt>{{ 'activity.workstates.activeApp' | transloco }}</dt>
+            <dd>{{ item.capture.activeApp }}</dd>
+          }
+          @if (item.capture.windowTitle) {
+            <dt>{{ 'activity.workstates.windowTitle' | transloco }}</dt>
+            <dd>{{ item.capture.windowTitle }}</dd>
+          }
+          @if (item.capture.note) {
+            <dt>{{ 'activity.workstates.note' | transloco }}</dt>
+            <dd>{{ item.capture.note }}</dd>
+          }
+          @if (item.capture.projectPath) {
+            <dt>{{ 'activity.workstates.projectPath' | transloco }}</dt>
+            <dd>{{ item.capture.projectPath }}</dd>
+          }
+          @if (item.capture.gitBranch) {
+            <dt>{{ 'activity.workstates.gitBranch' | transloco }}</dt>
+            <dd>{{ item.capture.gitBranch }}</dd>
+          }
+          @if (item.capture.browserUrls.length) {
+            <dt>{{ 'activity.workstates.browserUrls' | transloco }}</dt>
+            <dd>
+              <ul>
+                @for (url of item.capture.browserUrls; track $index) {
+                  <li>{{ url }}</li>
+                }
+              </ul>
+            </dd>
+          }
+        </dl>
+        <div class="row">
+          <button matButton="outlined" [disabled]="busy()" (click)="preview(item.id)">
+            {{ 'activity.workstates.preview' | transloco }}
+          </button>
+          <button matButton [disabled]="busy()" (click)="pendingDelete.set(item.id)">
+            {{ 'activity.workstates.delete' | transloco }}
+          </button>
+        </div>
+        @if (pendingDelete() === item.id) {
+          <p>{{ 'activity.workstates.confirmDelete' | transloco }}</p>
+          <button matButton="filled" [disabled]="busy()" (click)="remove(item.id)">
+            {{ 'activity.workstates.confirm' | transloco }}
+          </button>
+          <button matButton [disabled]="busy()" (click)="pendingDelete.set(null)">
+            {{ 'activity.workstates.cancel' | transloco }}
+          </button>
+        }
+      </mat-card-content>
+    </mat-card>
+  } @empty {
+    <p role="status">
+      {{
+        (current.nextCursor ? 'activity.workstates.emptyPage' : 'activity.workstates.empty')
+          | transloco
+      }}
+    </p>
+  }
+  <div class="row">
+    @if (query().before) {
+      <button matButton (click)="first()">{{ 'activity.workstates.first' | transloco }}</button>
+    }
+    @if (current.nextCursor) {
+      <button matButton="outlined" (click)="next()">
+        {{ 'activity.workstates.next' | transloco }}
+      </button>
+    }
+  </div>
+}
+
+@if (plan(); as proposal) {
+  <mat-card
+    appearance="outlined"
+    role="region"
+    [attr.aria-label]="'activity.workstates.preview' | transloco"
+  >
+    <mat-card-content aria-live="polite">
+      <h3>{{ 'activity.workstates.preview' | transloco }}</h3>
+      <p>{{ 'activity.workstates.restoreHint' | transloco }}</p>
+      @if (!desktop) {
+        <p>{{ 'activity.workstates.browserRestore' | transloco }}</p>
+      }
+      <ul>
+        @for (action of proposal.actions; track $index) {
+          <li>
+            @switch (action.kind) {
+              @case ('openUrl') {
+                @if (safeUrl(action.url); as url) {
+                  <a [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                }
+              }
+              @case ('openProject') {
+                {{ 'activity.workstates.projectPath' | transloco }}: {{ action.path }}
+              }
+              @case ('reference') {
+                {{ 'activity.workstates.' + action.field | transloco }}: {{ action.text }}
+              }
+            }
+          </li>
+        } @empty {
+          <li>{{ 'activity.workstates.emptyPlan' | transloco }}</li>
+        }
+      </ul>
+      @if (desktop && proposal.actions.length) {
+        <button matButton="filled" [disabled]="busy()" (click)="resume()">
+          {{ 'activity.workstates.resume' | transloco }}
+        </button>
+      }
+      <button matButton (click)="closePreview()">
+        {{ 'activity.workstates.close' | transloco }}
+      </button>
+      @if (resumeResult(); as result) {
+        <p role="status">
+          {{
+            (result.canceled
+              ? 'activity.workstates.resumeCanceled'
+              : 'activity.workstates.resumeResult'
+            ) | transloco: { opened: result.opened, failed: result.failed }
+          }}
+        </p>
+      }
+    </mat-card-content>
+  </mat-card>
+}

@@ -5,6 +5,18 @@
   "projectType": "application",
   "tags": ["scope:desktop", "type:app"],
   "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config apps/desktop/vitest.config.mts"
+      }
+    },
+    "test-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File apps/desktop/tests/telemetry-native.ps1"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/desktop"],

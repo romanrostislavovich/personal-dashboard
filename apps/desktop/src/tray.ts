@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { FocusStatus } from './activity/focus-timer';
 import { TrackerStatus } from './activity/tracker';
 import { UpdateState } from './update/updater';
+import { workstateMessages } from './workstates/messages';
 
 export interface TrayActions {
   show: () => void;
@@ -34,6 +35,17 @@ export interface TrayActions {
     /** `minutes` — pause for so long; `0` — until resumed; `null` — resume. */
     pause: (minutes: number | null) => void;
   };
+  telemetry: {
+    status: () => { enabled: boolean; available: boolean };
+    set: (enabled: boolean) => void;
+  };
+  smartBreak: TrayActions['telemetry'];
+  workstates: {
+    capture: () => void;
+    chooseProject: () => void;
+    chooseIde: () => void;
+    clear: () => void;
+  };
 }
 
 /**
@@ -62,6 +74,7 @@ export function createTray(actions: TrayActions): () => void {
         { type: 'separator' },
         ...activityItems(status, actions.activity.pause),
         ...focusItems(actions.focus),
+        ...contextItems(actions),
         { type: 'separator' },
         {
           label: 'Запускать вместе с системой',
@@ -81,6 +94,45 @@ export function createTray(actions: TrayActions): () => void {
   refresh();
   tray.on('double-click', actions.show);
   return refresh;
+}
+
+function contextItems(actions: TrayActions): MenuItemConstructorOptions[] {
+  const messages = workstateMessages(app.getLocale());
+  const telemetry = actions.telemetry.status();
+  const smart = actions.smartBreak.status();
+  return [
+    { type: 'separator' },
+    {
+      label: messages.telemetry,
+      type: 'checkbox',
+      checked: telemetry.enabled,
+      enabled: telemetry.available || telemetry.enabled,
+      click: (item) => actions.telemetry.set(item.checked),
+    },
+    {
+      label: messages.smartBreak,
+      type: 'checkbox',
+      checked: smart.enabled,
+      enabled: smart.available || smart.enabled,
+      click: (item) => actions.smartBreak.set(item.checked),
+    },
+    {
+      label: messages.capture,
+      enabled: telemetry.available && telemetry.enabled,
+      click: actions.workstates.capture,
+    },
+    {
+      label: messages.chooseProject,
+      enabled: telemetry.available,
+      click: actions.workstates.chooseProject,
+    },
+    {
+      label: messages.chooseIde,
+      enabled: telemetry.available,
+      click: actions.workstates.chooseIde,
+    },
+    { label: messages.clear, click: actions.workstates.clear },
+  ];
 }
 
 /** The version of the shell and what its updater is doing. */

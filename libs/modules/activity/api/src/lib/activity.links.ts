@@ -21,6 +21,8 @@ import {
 import { ActivityService } from './activity.service';
 import { focusMusic, FocusWithPlays, timeByName, timeByTitle } from './focus-music';
 import { WellbeingService } from './wellbeing.service';
+import { TelemetrySummaryService } from './telemetry-summary.service';
+import { telemetryDailyMetrics } from './telemetry-summary.views';
 
 /** The sites that get a daily number of their own, and the days one needs. */
 const SITES = 6;
@@ -47,9 +49,15 @@ export class ActivityLinks implements OnModuleInit {
     private readonly links: LinksService,
     private readonly activity: ActivityService,
     private readonly wellbeing: WellbeingService,
+    private readonly telemetry: TelemetrySummaryService,
   ) {}
 
   onModuleInit(): void {
+    this.links.registerDailyMetrics({
+      module: 'activity',
+      metrics: async (userId, period) =>
+        telemetryDailyMetrics(await this.telemetry.summarize(userId, period)),
+    });
     this.links.registerProject({
       module: 'activity',
       facts: async (userId, project, period): Promise<ProjectFact[]> => {

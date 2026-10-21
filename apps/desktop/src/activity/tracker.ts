@@ -1,4 +1,6 @@
 import { net, powerMonitor } from 'electron';
+import { TELEMETRY_INGEST_PATH, WORKSTATE_CAPTURE_PATH } from '@pd/client-core';
+import { sanitizeTelemetryText, WorkstateInput, workstateInputSchema } from '@pd/contracts';
 import { ActivityStore, TrackerConfig } from './activity-store';
 import { BreakReminder } from './break-reminder';
 import { FocusPhase, FocusSession, FocusStatus, FocusTimer } from './focus-timer';
@@ -7,6 +9,12 @@ import { Outage, OutageWatch } from './outages';
 import { Span, SpanBuilder, WindowSample } from './span-builder';
 import { isMeeting, isPrivateWindow } from './window-rules';
 import { SAMPLE_SECONDS, WindowWatcher } from './window-watcher';
+import { DesktopTelemetry } from './telemetry';
+import { InputFieldContext, SafeInputKind } from './input-dynamics';
+import { TerminalCompletion } from './terminal-friction';
+import { SuccessfulWorkEvent, TelemetrySources, TerminalReport } from './telemetry-sources';
+import { MAX_SAMPLE_GAP_MS } from './context-switch';
+import { SmartBreak } from './smart-break';
 
 /** What waits is sent this often. */
 const UPLOAD_MS = 60_000;
@@ -27,6 +35,7 @@ const MEETING_GRACE_MS = 2 * 60_000;
 /** What the tracker tells the user; the shell shows it as a system notification. */
 export type TrackerNotice =
   | { kind: 'break'; minutes: number }
+  | { kind: 'smart-break' }
   | { kind: 'focus-ended'; next: FocusPhase; held: number; minutes: number }
   | { kind: 'break-ended' }
   /** A call ended; `held` — notifications that waited for it. */
@@ -59,6 +68,48 @@ export class ActivityTracker {
   private readonly spans = new SpanBuilder();
   private readonly watcher = new WindowWatcher((sample) => this.onSample(sample));
   private locked = false;
+  private suspended = false;
+  private telemetryRunning = false;
+  private telemetryAllowed = false;
+  private telemetryTimer: NodeJS.Timeout | null = null;
+  private sourceTimer: NodeJS.Timeout | null = null;
+  private sourceSampleAt: number | null = null;
+  private sourceIdentity: string | null = null;
+  private smartWindowAllowed = false;
+  private workstateEpoch = 0;
+  private readonly smartBreak = new SmartBreak();
+  private readonly sources = new TelemetrySources(
+    (aggregate) => {
+      if (this.syncSources()) this.telemetry.mergeInput(aggregate, Date.now());
+    },
+    (report) => this.onTerminalReport(report),
+  );
+  private readonly telemetry = new DesktopTelemetry(
+    () => ({
+      identity: this.telemetryIdentity(),
+      consent: this.telemetryConsent() === true,
+      allowed:
+        this.telemetryRunning &&
+        !this.suspended &&
+        this.telemetryAllowed &&
+        !this.locked &&
+        !this.paused &&
+        powerMonitor.getSystemIdleTime() < this.store.config.idleMinutes * 60,
+    }),
+    async (buckets, identity, signal) => {
+      const server = this.serverUrl();
+      const token = this.store.token;
+      if (!server || !token || identity !== this.telemetryIdentity()) return false;
+      const response = await net.fetch(new URL(TELEMETRY_INGEST_PATH, server).href, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Device ${token}` },
+        body: JSON.stringify({ buckets }),
+        signal: AbortSignal.any([signal, AbortSignal.timeout(UPLOAD_TIMEOUT_MS)]),
+      });
+      if (response.status === 401 && identity === this.telemetryIdentity()) this.disable();
+      return response.ok;
+    },
+  );
   private uploading = false;
   /** The window in front, as last sampled (for the assistant's computer_front_window). */
   private front: (WindowSample & { at: number }) | null = null;
@@ -98,15 +149,28 @@ export class ActivityTracker {
     private readonly onChange: () => void,
     /** A reminder to take a break, the end of a focus part. */
     private readonly notice: (notice: TrackerNotice) => void,
+    /** Separate opt-in, scoped to the registered device and server, never activity's default. */
+    private readonly telemetryConsent: () => boolean = () => false,
+    /** Local explicit wrapper reports only; no command, path or repository identity. */
+    private readonly successfulWork: (event: SuccessfulWorkEvent) => void = () => undefined,
+    private readonly smartBreakConsent: () => boolean = () => false,
   ) {}
 
   start(): void {
+    this.telemetryRunning = true;
+    this.telemetryTimer ??= setInterval(() => void this.telemetry.tick(Date.now()), UPLOAD_MS);
+    this.sourceTimer ??= setInterval(() => this.syncSources(), 1000);
     powerMonitor.on('lock-screen', () => this.setLocked(true));
     powerMonitor.on('unlock-screen', () => this.setLocked(false));
     powerMonitor.on('suspend', () => {
+      this.suspended = true;
       this.close();
       this.breaks.reset();
       this.outages.forget();
+    });
+    powerMonitor.on('resume', () => {
+      this.suspended = false;
+      this.resetTelemetry();
     });
     setInterval(() => void this.upload(), UPLOAD_MS);
     setInterval(() => this.takeHealth(), HEALTH_MS);
@@ -128,6 +192,7 @@ export class ActivityTracker {
 
   /** The dashboard registered this computer as a device: tracking begins. */
   enable(device: { id: string; token: string }): void {
+    this.resetTelemetry();
     this.store.setDevice(device);
     this.watcher.start();
     this.onChange();
@@ -155,11 +220,201 @@ export class ActivityTracker {
 
   /** Before the app quits: the open span and focus part are saved and what waits is sent. */
   async stop(): Promise<void> {
+    this.telemetryRunning = false;
+    if (this.telemetryTimer) clearInterval(this.telemetryTimer);
+    this.telemetryTimer = null;
+    if (this.sourceTimer) clearInterval(this.sourceTimer);
+    this.sourceTimer = null;
     this.watcher.stop();
     this.close();
     this.focus.stop();
     await this.upload();
     this.store.flush();
+  }
+
+  /** Consent changes and account/server transitions discard rather than upload pending data. */
+  resetTelemetry(): void {
+    this.workstateEpoch++;
+    this.resetSmartBreak();
+    this.smartWindowAllowed = false;
+    this.telemetryAllowed = false;
+    this.sourceSampleAt = null;
+    this.sourceIdentity = null;
+    this.sources.stop();
+    this.telemetry.clear();
+  }
+
+  resetSmartBreak(): void {
+    this.smartBreak.clear();
+  }
+
+  smartBreakStatus(): { enabled: boolean; available: boolean } {
+    return {
+      enabled: this.smartBreakConsent() === true,
+      available:
+        WindowWatcher.supported && !!this.telemetryIdentity() && this.telemetryConsent() === true,
+    };
+  }
+
+  telemetryStatus(): { enabled: boolean; available: boolean } {
+    return {
+      enabled: this.telemetryConsent() === true,
+      available: WindowWatcher.supported && !!this.telemetryIdentity(),
+    };
+  }
+
+  /** Main-process only. Titles and browser tabs are deliberately never part of a snapshot. */
+  workstatePermit(): { key: string; activeApp?: string } | null {
+    const now = Date.now();
+    const identity = this.telemetryIdentity();
+    if (
+      !identity ||
+      identity !== this.sourceIdentity ||
+      !this.telemetryConsent() ||
+      !this.telemetryRunning ||
+      !this.telemetryAllowed ||
+      this.locked ||
+      this.suspended ||
+      this.paused ||
+      this.sourceSampleAt === null ||
+      now < this.sourceSampleAt ||
+      now - this.sourceSampleAt > MAX_SAMPLE_GAP_MS ||
+      powerMonitor.getSystemIdleTime() >= this.store.config.idleMinutes * 60
+    )
+      return null;
+    const activeApp =
+      this.front && !isPrivateWindow(this.front.app, this.store.config.privateWords)
+        ? (sanitizeTelemetryText(this.front.app) ?? undefined)
+        : undefined;
+    return { key: JSON.stringify([identity, this.workstateEpoch]), activeApp };
+  }
+
+  workstateTextAllowed(text: string): boolean {
+    return (
+      sanitizeTelemetryText(text) === text && !isPrivateWindow(text, this.store.config.privateWords)
+    );
+  }
+
+  async saveWorkstate(input: WorkstateInput, key: string, signal: AbortSignal): Promise<boolean> {
+    const server = this.serverUrl();
+    const token = this.store.token;
+    const identity = this.telemetryIdentity();
+    if (!server || !token || signal.aborted || this.workstatePermit()?.key !== key) return false;
+    try {
+      const response = await net.fetch(new URL(WORKSTATE_CAPTURE_PATH, server).href, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Device ${token}` },
+        body: JSON.stringify(workstateInputSchema.parse(input)),
+        redirect: 'error',
+        credentials: 'omit',
+        signal: AbortSignal.any([signal, AbortSignal.timeout(UPLOAD_TIMEOUT_MS)]),
+      });
+      if (response.status === 401 && this.telemetryIdentity() === identity)
+        this.disable();
+      return response.ok && !signal.aborted && this.workstatePermit()?.key === key;
+    } catch {
+      return false;
+    }
+  }
+
+  private sampleSmartBreak(now: number): void {
+    const idleMs = powerMonitor.getSystemIdleTime() * 1000;
+    const phase = this.focus.status().phase;
+    this.smartBreak.sample(now, {
+      allowed:
+        this.smartBreakConsent() === true &&
+        this.telemetryConsent() === true &&
+        !!this.telemetryIdentity() &&
+        this.telemetryRunning &&
+        this.smartWindowAllowed &&
+        !this.locked &&
+        !this.suspended &&
+        !this.paused &&
+        this.sourceSampleAt !== null &&
+        now >= this.sourceSampleAt &&
+        now - this.sourceSampleAt <= MAX_SAMPLE_GAP_MS,
+      active:
+        idleMs < Math.min(60_000, this.store.config.idleMinutes * 60_000) &&
+        (phase === 'idle' || phase === 'focus'),
+      idleMs,
+      quiet: phase !== 'idle' || this.inMeeting,
+    });
+  }
+
+  /** Trusted in-process observer only; never exposed to renderer IPC. */
+  observeInput(kind: SafeInputKind, field: InputFieldContext): boolean {
+    return this.telemetry.observeInput(kind, field, Date.now());
+  }
+
+  /** A trusted terminal integration can explicitly report status/duration, never command text. */
+  reportTerminalCompletion(report: TerminalCompletion): boolean {
+    return this.telemetry.reportTerminal(report, Date.now());
+  }
+
+  private syncSources(): boolean {
+    const identity = this.telemetryIdentity();
+    if (identity !== this.sourceIdentity) {
+      this.resetTelemetry();
+      this.sourceIdentity = identity;
+    }
+    const now = Date.now();
+    this.sampleSmartBreak(now);
+    const allowed =
+      !!identity &&
+      this.telemetryConsent() === true &&
+      this.telemetryRunning &&
+      this.telemetryAllowed &&
+      !this.locked &&
+      !this.suspended &&
+      !this.paused &&
+      this.sourceSampleAt !== null &&
+      now >= this.sourceSampleAt &&
+      now - this.sourceSampleAt <= MAX_SAMPLE_GAP_MS &&
+      powerMonitor.getSystemIdleTime() < this.store.config.idleMinutes * 60;
+    this.sources.update(
+      allowed
+        ? {
+            identity,
+            privateWords: this.store.config.privateWords,
+            excludedApps: this.store.config.excludedApps,
+            idleMs: this.store.config.idleMinutes * 60_000,
+          }
+        : null,
+    );
+    if (!allowed) this.telemetry.clear();
+    return allowed;
+  }
+
+  private onTerminalReport(report: TerminalReport): void {
+    if (
+      !this.syncSources() ||
+      !this.reportTerminalCompletion({
+        durationMs: report.durationMs,
+        exitCode: report.exitCode,
+        kind: report.category === 'build' ? 'build' : 'command',
+        context: 'public-terminal',
+      })
+    )
+      return;
+    if (report.exitCode === 0 && (report.category === 'test' || report.category === 'commit')) {
+      const event: SuccessfulWorkEvent = {
+        category: report.category,
+        durationMs: report.durationMs,
+        completedAt: Date.now(),
+      };
+      this.sampleSmartBreak(event.completedAt);
+      if (this.smartBreak.transition(event, event.completedAt))
+        this.notice({ kind: 'smart-break' });
+      this.successfulWork(event);
+    }
+  }
+
+  private telemetryIdentity(): string | null {
+    const server = this.serverUrl();
+    const token = this.store.token;
+    return server && token && this.store.deviceId
+      ? JSON.stringify([server, this.store.deviceId, token])
+      : null;
   }
 
   /**
@@ -216,12 +471,29 @@ export class ActivityTracker {
     const now = Date.now();
     const config = this.store.config;
     const idleMs = powerMonitor.getSystemIdleTime() * 1000;
+    if (this.telemetryIdentity() !== this.sourceIdentity) {
+      this.resetTelemetry();
+      this.sourceIdentity = this.telemetryIdentity();
+    }
+    this.sourceSampleAt = now;
+    // Unlike legacy spans, telemetry entirely excludes private windows and idle video players.
+    // Apply these checks to the original title, before legacy span title redaction below.
+    this.smartWindowAllowed =
+      !!sample &&
+      !this.locked &&
+      !this.paused &&
+      !isExcluded(sample, config) &&
+      !isPrivateWindow(sample.title, config.privateWords);
+    this.telemetryAllowed = this.smartWindowAllowed && idleMs < config.idleMinutes * 60_000;
+    if (!this.telemetryAllowed) this.workstateEpoch++;
+    this.followMeeting(sample, now);
+    this.telemetry.sample(this.telemetryAllowed ? (sample?.app ?? null) : null, now);
+    this.syncSources();
     this.breaks.tick(now, idleMs, {
       away: this.locked || this.paused,
       breakMinutes: config.breakMinutes,
       quiet: this.focus.working,
     });
-    this.followMeeting(sample, now);
     if (!sample || this.locked || this.paused || isExcluded(sample, config)) {
       this.front = null;
       this.keep(this.spans.feed(null, now));
@@ -286,6 +558,7 @@ export class ActivityTracker {
   }
 
   private close(): void {
+    this.resetTelemetry();
     this.keep(this.spans.flush());
   }
 
@@ -339,6 +612,7 @@ export class ActivityTracker {
         this.outages.succeeded();
         const config = mergedConfig(this.store.config, await response.json());
         if (config) {
+          if (JSON.stringify(config) !== JSON.stringify(this.store.config)) this.resetTelemetry();
           this.store.setConfig(config);
         }
         this.forget(batch);

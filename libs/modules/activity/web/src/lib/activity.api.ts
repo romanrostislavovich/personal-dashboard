@@ -1,6 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { ACTIVITY_READS, activityApi } from '@pd/client-core';
+import { ACTIVITY_READS, activityApi, WORKSTATE_READS, workstatesApi } from '@pd/client-core';
 import {
   ActivityApp,
   ActivityAppUpdate,
@@ -22,6 +22,9 @@ import {
   ActivityLimit,
   ActivityLimitInput,
   ActivityTimelineEntry,
+  WorkstateInput,
+  WorkstatePage,
+  WorkstateQuery,
 } from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
@@ -29,6 +32,23 @@ import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 @Injectable({ providedIn: 'root' })
 export class ActivityApi {
   private readonly activity = activityApi(inject(DASHBOARD_CLIENT).api);
+  private readonly workstates = workstatesApi(inject(DASHBOARD_CLIENT).api);
+
+  workstateTimeline(query: () => WorkstateQuery) {
+    return httpResource<WorkstatePage>(() => WORKSTATE_READS.list(query()));
+  }
+
+  captureWorkstate(input: WorkstateInput) {
+    return fromCore(() => this.workstates.capture(input));
+  }
+
+  restoreWorkstate(id: string) {
+    return fromCore(() => this.workstates.restore(id));
+  }
+
+  removeWorkstate(id: string) {
+    return fromCore(() => this.workstates.remove(id));
+  }
 
   /** Reloads when the period changes. */
   stats(period: () => ActivityPeriod) {

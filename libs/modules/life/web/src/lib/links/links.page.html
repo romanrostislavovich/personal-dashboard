@@ -12,7 +12,21 @@
         </mat-button-toggle>
       }
     </mat-button-toggle-group>
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>{{ 'life.links.digital.filter' | transloco }}</mat-label>
+      <mat-select [value]="digitalFilter()" (selectionChange)="filterDigital($event.value)">
+        <mat-option value="">{{ 'life.links.digital.all' | transloco }}</mat-option>
+        <mat-option value="digital">{{ 'life.links.digital.only' | transloco }}</mat-option>
+        @for (key of digitalMetrics; track key) {
+          <mat-option [value]="key" [disabled]="!metric(key)">
+            {{ key | transloco }}
+            @if (!metric(key)) { ({{ 'life.links.digital.unavailable' | transloco }}) }
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
   </div>
+  <p class="hint">{{ 'life.links.digital.hint' | transloco }}</p>
   <p class="caution">
     <mat-icon>info</mat-icon>
     <span>{{ 'life.links.caution' | transloco }}</span>
@@ -27,11 +41,14 @@
   @if (data.error()) {
     <p class="error">{{ 'life.links.failed' | transloco }}</p>
   } @else if (data.value(); as found) {
+    @if (digitalFilter() && !correlations().length) {
+      <p role="status" class="hint">{{ 'life.links.digital.empty' | transloco }}</p>
+    }
     @if (!strong().length) {
       <mat-card appearance="outlined">
         <mat-card-content>
           <p class="hint">
-            {{ 'life.links.none' | transloco: { metrics: found.metrics.length } }}
+            {{ 'life.links.none' | transloco: { metrics: visibleMetrics().length } }}
           </p>
         </mat-card-content>
       </mat-card>
@@ -43,7 +60,7 @@
           <mat-card-subtitle>
             {{
               'life.links.top.hint'
-                | transloco: { links: strong().length, metrics: found.metrics.length }
+                | transloco: { links: strong().length, metrics: visibleMetrics().length }
             }}
           </mat-card-subtitle>
         </mat-card-header>
@@ -89,6 +106,8 @@
         </mat-card-content>
       </mat-card>
 
+    }
+    @if (correlations().length) {
       <div class="grid">
         <mat-card appearance="outlined">
           <mat-card-header>
@@ -98,7 +117,7 @@
           </mat-card-header>
           <mat-card-content>
             <pd-correlation-graph
-              [metrics]="found.metrics"
+              [metrics]="visibleMetrics()"
               [links]="strong()"
               [target]="found.regression?.target ?? null"
               (choose)="explain($event)"
@@ -194,7 +213,7 @@
       </mat-card-content>
     </mat-card>
 
-    @if (strong().length) {
+    @if (correlations().length) {
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-icon mat-card-avatar>grid_on</mat-icon>
@@ -202,8 +221,8 @@
         </mat-card-header>
         <mat-card-content>
           <pd-correlation-matrix
-            [metrics]="found.metrics"
-            [correlations]="found.correlations"
+            [metrics]="visibleMetrics()"
+            [correlations]="correlations()"
             (pick)="choose($event)"
           />
         </mat-card-content>

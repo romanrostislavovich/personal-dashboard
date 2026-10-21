@@ -7,7 +7,13 @@
  * a page only when the background decides to fill them (see background/fill.ts).
  */
 
-import type { AiAttachment, AiAttachmentUpload, WritingRewriteMode } from '@pd/contracts';
+import type {
+  AiAttachment,
+  AiAttachmentUpload,
+  WorkstateInput,
+  WritingRewriteMode,
+} from '@pd/contracts';
+import type { EngagementReport } from './engagement';
 
 /** The vault on the server: not created yet, locked here, or open here. */
 export type VaultStatus = 'none' | 'locked' | 'unlocked';
@@ -57,6 +63,7 @@ export interface SaveOffer {
 }
 
 export interface PopupState {
+  telemetry: { enabled: boolean; excluded: boolean };
   server: string | null;
   email: string | null;
   vault: VaultStatus | 'signed-out';
@@ -96,6 +103,9 @@ export type FillResult =
 
 /** From the popup. */
 export type PopupRequest =
+  | WorkstateRequest
+  | { type: 'telemetry-consent'; enabled: boolean }
+  | { type: 'telemetry-exclude'; excluded: boolean }
   | { type: 'state' }
   | { type: 'sign-in'; server: string; email: string; password: string }
   | { type: 'sign-in-code'; challengeToken: string; code: string }
@@ -157,6 +167,7 @@ export type PopupRequest =
 
 /** From a content script, about its own tab. */
 export type ContentRequest =
+  | { type: 'telemetry-engagement'; report: EngagementReport }
   /** The page has a password field: the badge counts the logins for it. */
   | { type: 'login-form' }
   /** A login form was sent; an empty password — the first step of a two-step sign-in. */
@@ -274,6 +285,18 @@ export class ExtensionError extends Error {
   constructor(readonly code: ErrorCode) {
     super(code);
   }
+}
+
+export type WorkstateRequest =
+  | { type: 'workstate-preview'; windowId: number }
+  | { type: 'workstate-confirm'; id: string }
+  | { type: 'workstate-cancel' }
+  | { type: 'workstate-open' };
+
+export interface WorkstatePreview {
+  input: WorkstateInput;
+  server: string;
+  expires: number;
 }
 
 /** Asks the background; throws ExtensionError with its code when it refuses. */

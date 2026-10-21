@@ -18,6 +18,7 @@ export function homeView(popup: Popup): HTMLElement {
     state.vault === 'unlocked' && state.offer ? offerBanner(popup, state.offer) : null,
     state.wish ? wishCard(popup, state.wish) : null,
     state.writing && state.page ? writingCard(popup, state.writing, state.page.site) : null,
+    telemetryCard(popup),
     vaultCard(popup),
     h(
       'div',
@@ -204,7 +205,10 @@ function vaultCard(popup: Popup): HTMLElement {
 
 async function change(
   popup: Popup,
-  message: { type: 'writing-site' | 'writing-enabled'; on: boolean },
+  message:
+    | { type: 'writing-site' | 'writing-enabled'; on: boolean }
+    | { type: 'telemetry-consent'; enabled: boolean }
+    | { type: 'telemetry-exclude'; excluded: boolean },
 ): Promise<void> {
   try {
     await ask(message);
@@ -212,4 +216,31 @@ async function change(
     popup.toast(popup.errorText(error));
   }
   await popup.reload();
+}
+
+function telemetryCard(popup: Popup): HTMLElement {
+  const input = h('input', { type: 'checkbox', attrs: { role: 'switch' } });
+  input.checked = popup.state.telemetry.enabled;
+  input.addEventListener('change', () => {
+    input.disabled = true;
+    void change(popup, { type: 'telemetry-consent', enabled: input.checked });
+  });
+  const card = h(
+    'div',
+    { class: 'card' },
+    h('label', { class: 'toggle' }, input, h('span', { text: t('telemetryConsent') })),
+    h('p', { class: 'hint', text: t('telemetryHint') }),
+  );
+  if (popup.state.page) {
+    const exclude = h('input', { type: 'checkbox' });
+    exclude.checked = popup.state.telemetry.excluded;
+    exclude.addEventListener('change', () => {
+      exclude.disabled = true;
+      void change(popup, { type: 'telemetry-exclude', excluded: exclude.checked });
+    });
+    card.append(
+      h('label', { class: 'toggle' }, exclude, h('span', { text: t('telemetryExclude') })),
+    );
+  }
+  return card;
 }

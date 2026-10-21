@@ -12,6 +12,7 @@ import {
   Reply,
 } from '../shared/messages';
 import { matchesPage, siteName } from '../shared/site';
+import { telemetrySettingsSenderAllowed } from '../shared/telemetry-gates';
 import { completeSignIn, email, serverUrl, signIn, signOut } from './account';
 import { clearBadges, countLogins } from './badge';
 import {
@@ -58,6 +59,18 @@ import { signedInClient } from './account';
 import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
 import { addWish, wishPopupState } from './wishlist';
 import { chatAttach } from './chat';
+import { fromWorkstatePanel } from './workstates';
+import { clearWorkstatePreview } from './workstate-state';
+import {
+  excludeTelemetrySite,
+  invalidateEngagement,
+  receiveEngagement,
+  scheduleTelemetry,
+  setTelemetryConsent,
+  TELEMETRY_ALARM,
+  telemetrySettings,
+  uploadTelemetry,
+} from './telemetry';
 
 /*
  * The service worker: the only part that holds the session and the open vault. The popup and
@@ -70,6 +83,31 @@ void chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
 // The browser as a device of the dashboard: its tools for the assistant while it is online.
 // Started whenever the worker starts; the link's own pings keep the worker awake.
 void startDevice();
+void scheduleTelemetry().catch(() => undefined);
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (
+    area === 'local' &&
+    [
+      'telemetryExcluded',
+      'neverSave',
+      'browserConfig',
+      'server',
+      'pd.user',
+      'pd.refreshToken',
+    ].some((key) => key in changes)
+  ) {
+    clearWorkstatePreview();
+  }
+  if (
+    area === 'local' &&
+    ['telemetryConsent', 'telemetryExcluded', 'neverSave', 'browserConfig', 'server'].some(
+      (key) => key in changes,
+    )
+  ) {
+    invalidateEngagement();
+  }
+});
 
 chrome.runtime.onMessage.addListener((message, sender, reply: (answer: Reply<unknown>) => void) => {
   route(message, sender).then(
@@ -80,7 +118,9 @@ chrome.runtime.onMessage.addListener((message, sender, reply: (answer: Reply<unk
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === LOCK_ALARM) {
+  if (alarm.name === TELEMETRY_ALARM) {
+    void uploadTelemetry().catch(() => undefined);
+  } else if (alarm.name === LOCK_ALARM) {
     void lockEverywhere();
   } else if (alarm.name === UPDATE_ALARM) {
     void checkForUpdate();
@@ -102,6 +142,8 @@ chrome.runtime.onStartup.addListener(() => {
 
 // The computer is locked: so is the vault. Away or back: the time on a site stops or goes on.
 chrome.idle.onStateChanged.addListener((state) => {
+  clearWorkstatePreview();
+  invalidateEngagement();
   if (state === 'locked') {
     void lockEverywhere();
   }
@@ -110,14 +152,20 @@ chrome.idle.onStateChanged.addListener((state) => {
 
 // What is in front changed: the visit of a site ends or starts (see sites.ts).
 chrome.tabs.onActivated.addListener(() => {
+  clearWorkstatePreview();
+  invalidateEngagement();
   void noteFront();
   deviceActive();
 });
 chrome.windows.onFocusChanged.addListener(() => {
+  clearWorkstatePreview();
+  invalidateEngagement();
   void noteFront();
   deviceActive();
 });
 chrome.tabs.onUpdated.addListener((_tabId, change) => {
+  if (change.url !== undefined || change.status === 'loading') clearWorkstatePreview();
+  if (change.url !== undefined || change.status === 'loading') invalidateEngagement();
   if (change.url !== undefined || change.audible !== undefined) {
     void noteFront();
   }
@@ -146,6 +194,31 @@ async function route(
 ): Promise<unknown> {
   if (sender.id !== chrome.runtime.id) {
     throw new ExtensionError('not-allowed');
+  }
+  if (
+    message.type === 'workstate-preview' ||
+    message.type === 'workstate-confirm' ||
+    message.type === 'workstate-cancel' ||
+    message.type === 'workstate-open'
+  ) {
+    return fromWorkstatePanel(message, sender);
+  }
+  if (message.type === 'telemetry-engagement') {
+    return receiveEngagement(message.report, sender);
+  }
+  if (message.type === 'telemetry-consent' || message.type === 'telemetry-exclude') {
+    if (
+      !telemetrySettingsSenderAllowed(
+        sender,
+        chrome.runtime.id,
+        chrome.runtime.getURL('popup.html'),
+      )
+    ) {
+      throw new ExtensionError('not-allowed');
+    }
+    if (message.type === 'telemetry-consent') return setTelemetryConsent(message.enabled === true);
+    const tab = await activeTab();
+    return tab ? excludeTelemetrySite(tab.url, message.excluded === true) : undefined;
   }
   if (isPopup(sender)) {
     return fromPopup(message as PopupRequest);
@@ -380,6 +453,7 @@ async function popupState(): Promise<PopupState> {
   });
   const signedIn = vault !== 'signed-out';
   return {
+    telemetry: await telemetrySettings(tab?.url),
     server,
     email: signedIn ? await email() : null,
     vault,

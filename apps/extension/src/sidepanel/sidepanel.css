@@ -60,6 +60,7 @@ header h1 {
 }
 .messages {
   flex: 1;
+  min-height: 80px;
   overflow-y: auto;
   padding: 12px;
   display: flex;
@@ -183,4 +184,32 @@ button.clip {
   padding: 8px 10px;
   background: transparent;
   font-size: 16px;
+}
+
+.workstate {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--outline);
+  max-height: 50vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.workstate h2 {
+  margin: 0;
+  font-size: 14px;
+}
+.workstate p {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+.workstate pre {
+  padding: 8px;
+  background: var(--surface-high);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.workstate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }

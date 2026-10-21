@@ -3,6 +3,8 @@ import { LifeService } from '@pd/api-core';
 import { LifeCard, LifeEvent } from '@pd/contracts';
 import { ActivityService } from './activity.service';
 import { WellbeingService } from './wellbeing.service';
+import { TelemetrySummaryService } from './telemetry-summary.service';
+import { telemetryLifeCards, telemetryLifeEvents } from './telemetry-summary.views';
 
 const HOUR = 3600;
 
@@ -13,9 +15,17 @@ export class ActivityLife implements OnModuleInit {
     private readonly life: LifeService,
     private readonly activity: ActivityService,
     private readonly wellbeing: WellbeingService,
+    private readonly telemetry: TelemetrySummaryService,
   ) {}
 
   onModuleInit(): void {
+    this.life.register({
+      module: 'activity',
+      day: async (userId, day) =>
+        telemetryLifeEvents(await this.telemetry.summarize(userId, { from: day, to: day })),
+      period: async (userId, period) =>
+        telemetryLifeCards(await this.telemetry.summarize(userId, period)),
+    });
     this.life.register({
       module: 'activity',
       day: async (userId, day): Promise<LifeEvent[]> => {

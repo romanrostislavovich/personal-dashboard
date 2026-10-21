@@ -1,4 +1,27 @@
 {
+  "workstateTitle": { "message": "Work context" },
+  "workstateHint": {
+    "message": "Save only the public URL of the active tab in this focused window. No title, page text, other tabs or clipboard. Private and excluded sites are blocked. This manual action does not enable engagement tracking."
+  },
+  "workstatePreview": { "message": "Preview current context" },
+  "workstatePreviewHint": {
+    "message": "This is the complete sanitized request. Nothing is sent until you confirm. The preview expires after 2 minutes or when the page, account or privacy settings change."
+  },
+  "workstateConfirm": { "message": "Confirm and save" },
+  "workstateCancel": { "message": "Cancel" },
+  "workstateOpen": { "message": "Open saved contexts" },
+  "workstateBusy": { "message": "Working…" },
+  "workstateSaved": { "message": "Context saved." },
+  "workstateCanceled": { "message": "Canceled. Nothing sent." },
+  "workstateExpired": { "message": "Preview discarded. Preview the current context again." },
+  "workstateFailed": {
+    "message": "Could not complete this action. Use an allowed public page in the focused window and check your sign-in and connection. If saving was interrupted, check saved contexts before trying again."
+  },
+  "telemetryConsent": { "message": "Share browser engagement (optional)" },
+  "telemetryHint": {
+    "message": "Off by default. Sends active reading time, scroll depth, copy counts, sanitized public page URLs and allowlisted page types/technologies to your dashboard every 5 minutes. Never clipboard, selection or form text. Private windows and excluded sites are ignored. Turning off discards pending data; signing in again requires new consent."
+  },
+  "telemetryExclude": { "message": "Exclude this site from engagement" },
   "extName": {
     "message": "Personal Dashboard"
   },

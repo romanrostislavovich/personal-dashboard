@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { WorkstateRestorePlan } from '@pd/contracts';
 
 /**
  * `window.desktop` — what the shell adds to the pages it shows:
@@ -28,6 +29,25 @@ contextBridge.exposeInMainWorld('desktop', {
     pause: (minutes: number | null): Promise<void> => ipcRenderer.invoke('activity:pause', minutes),
     platform: process.platform,
     hostname: process.env['COMPUTERNAME'] ?? process.env['HOSTNAME'] ?? '',
+  },
+  telemetry: {
+    status: (): Promise<{ enabled: boolean; available: boolean }> =>
+      ipcRenderer.invoke('telemetry:status'),
+    setConsent: (enabled: boolean): Promise<boolean> =>
+      ipcRenderer.invoke('telemetry:set-consent', enabled),
+  },
+  smartBreak: {
+    status: (): Promise<{ enabled: boolean; available: boolean }> =>
+      ipcRenderer.invoke('smart-break:status'),
+    setConsent: (enabled: boolean): Promise<boolean> =>
+      ipcRenderer.invoke('smart-break:set-consent', enabled),
+  },
+  workstates: {
+    capture: (): Promise<boolean> => ipcRenderer.invoke('workstates:capture'),
+    resume: (
+      plan: WorkstateRestorePlan,
+    ): Promise<{ opened: number; failed: number; canceled: boolean }> =>
+      ipcRenderer.invoke('workstates:resume', plan),
   },
   focus: {
     status: (): Promise<unknown> => ipcRenderer.invoke('focus:status'),

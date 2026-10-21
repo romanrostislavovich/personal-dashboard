@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,6 +16,7 @@ import { todayLocalDate } from '@pd/web-core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe, MatButtonModule, MatCardModule, MatIconModule, RouterLink, TranslocoPipe],
   template: `
+    @if (!selectedDay()) {
     <header class="toolbar">
       <button matIconButton [attr.aria-label]="'life.previous' | transloco" (click)="shift(-1)">
         <mat-icon>chevron_left</mat-icon>
@@ -37,6 +38,12 @@ import { todayLocalDate } from '@pd/web-core';
       </button>
       <span class="date">{{ day() | date: 'EEEE, d MMMM y' }}</span>
     </header>
+    }
+
+    @if (timeline.error()) {
+      <p role="alert">{{ 'life.chronicle.timelineError' | transloco }}</p>
+      <button matButton (click)="timeline.reload()">{{ 'life.chronicle.retry' | transloco }}</button>
+    }
 
     @if (allDay().length) {
       <!-- What belongs to the whole day: the money, the diary, the weather. -->
@@ -80,7 +87,7 @@ import { todayLocalDate } from '@pd/web-core';
       </ol>
     }
 
-    @if (!events().length && !timeline.isLoading()) {
+    @if (!events().length && !timeline.isLoading() && !timeline.error()) {
       <p class="hint">{{ 'life.empty' | transloco }}</p>
     }
   `,
@@ -201,13 +208,14 @@ import { todayLocalDate } from '@pd/web-core';
   `,
 })
 export class DayPage {
+  readonly selectedDay = input<string>();
   protected readonly today = todayLocalDate();
   /** `/life/day?day=2026-10-03` (links of the AI's answers) opens that day. */
   protected readonly day = signal(
     validDay(inject(ActivatedRoute).snapshot.queryParamMap.get('day'), this.today),
   );
-  protected readonly timeline = httpResource<LifeDay>(() => CORE_READS.lifeDay(this.day()));
-  protected readonly events = computed(() => this.timeline.value()?.events ?? []);
+  protected readonly timeline = httpResource<LifeDay>(() => CORE_READS.lifeDay(this.selectedDay() ?? this.day()));
+  protected readonly events = computed(() => this.timeline.hasValue() ? this.timeline.value().events : []);
   protected readonly allDay = computed(() => this.events().filter((event) => !event.at));
   protected readonly timed = computed(() => this.events().filter((event) => event.at));
 

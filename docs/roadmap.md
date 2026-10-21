@@ -106,7 +106,20 @@
   processes; disk cleanup advice from the AI, the picked items moved to the Recycle Bin; a
   computer the app cannot be installed on (a work laptop) is counted from WakaTime — its time
   in an IDE is added to the time at the computer, a computer with the tracker is not counted
-  twice
+  twice; **Workstate Recall timeline** (`/activity/workstates`) with context search and 1-click
+  workspace restoration plans; **Desktop Telemetry Dynamics** (keystroke dynamics: typing speed,
+  pause cadence, backspace bursts; context switch velocity & window focus entropy; terminal
+  friction: command exit status & build wait time); **Smart Breaks** suggested at natural
+  workflow transitions (successful commits / passed tests)
+- **Browser Companion:** Chrome extension with password vault filling and generator, site time
+  tracking, writing checks, distraction blocker, wishlist 1-click price capture, sidepanel
+  **Workstate Snapshot** capture with preview confirmation, and optional **Browser Engagement
+  Telemetry** (active reading depth %, scroll velocity, copy event counters, allowlisted
+  OpenGraph / schema.org tech-stack metadata extraction)
+- **Life OS & Daily Chronicle (Lifelog):** `/life/chronicle` — automated day timeline across
+  all connected digital sources (boot, commits, expenses, music, focus sessions, gaming), AI-generated
+  daily narrative story with key highlights, source provenance, editable personal notes, monthly
+  journal view ("Life Wrapped"), and digital telemetry correlation analysis in Links (`/life/links`)
 - **Weather:** today's forecast and the week ahead for your city (Open-Meteo, no API key) with
   clothing advice that follows how you take the cold —
   on its page, on the home page and in the morning digest; the city comes from the browser's
@@ -265,6 +278,18 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Energy and cognitive load tracker** — a 5-point physical and mental energy rating in quick
   check-ins (Body Battery); automatic cognitive load scoring based on window context switches,
   commit frequency, and focus session lengths
+- **Personal digital twin and decision impact simulator** — combining the Causal Correlation Engine,
+  Runway model, and cognitive load metrics to simulate decision outcomes before acting: how an $800 purchase
+  impacts the financial runway date, or predicting next-day WakaTime efficiency drop and tilt risk from
+  staying up past 03:00 to code
+- **Flow state guardian and anti-distraction shield** — desktop detection of sustained deep work
+  (e.g. 20+ minutes of continuous IDE typing) automatically toggling DND mode, hard website blocks in
+  the browser companion, and focus playlists; anti-frustration detection (rapid switching between 10+ windows
+  following compile errors) gently suggesting a short recharge break
+- **Smart scrapbook and context-aware clipboard** — background tray agent analyzing copied content:
+  auto-associating terminal stack traces with active tasks, 1-click parcel tracking from detected tracking
+  numbers, article URLs sent to Read Later with instant TL;DR summaries, and automatic encrypted vault
+  saving with 60-second clipboard wipe for detected tokens and secrets
 - **Emergency offline runbook** — a password-protected compact offline PWA/PDF bundle with critical
   emergency data (ICE card, insurance policies, active prescriptions, ID document copies, emergency
   credentials) accessible on a mobile device without network or when the self-hosted server is offline
@@ -511,6 +536,10 @@ assistant as a tutor that knows the materials of the courses.
   at a time — uncategorized transactions, notes without tags, tasks written twice or without a
   project — and leaves a morning note and one-click questions; every answer becomes a rule, so
   each night is faster. What exactly it does at night is still to be decided
+- **Night Butler: actionable night autopilot** — transforms overnight findings into 1-click actionable drafts
+  in the morning review: auto-matching recurring receipts to contracts with one-click approval,
+  generating 3-minute quiz flashcards before upcoming study deadlines, and preparing branch fixes for failed
+  repository dependencies or broken imports
 - **Night Butler: a model of its own that keeps learning** — a small open model (1.5–3B, fits the
   server) taught one narrow job of the user's own — sorting their payments, pulling tasks out of
   notes, the morning note in their tone — as well as a big model does it:
@@ -649,10 +678,16 @@ assistant as a tutor that knows the materials of the courses.
 
 #### Big steps
 
-- **Mobile app** that collects data from the phone and sends it to the dashboard — finances first
-  (bank notifications / SMS → transactions), then everything else the phone knows:
-  - **location tracker** — where you have been, places and trips
-  - **sleep** — sleep time and quality, possibly from a fitness band
+- **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
+  the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health):
+  - **financial auto-capture:** push notifications / SMS → draft transactions
+  - **location & movement:** places visited, trips, active commute vs. transport
+  - **biometric telemetry:** HRV (rMSSD), resting heart rate, sleep architecture (Deep / REM / Light phases), skin temperature
+  - **bio-productivity & state analysis:**
+    - **Task Stress Cost:** correlating real-time HRV and heart rate dynamics with active desktop apps (meetings vs. deep IDE coding vs. gaming tilt)
+    - **Sleep Quality → Daily Code Capacity:** adjusting daily expectations and complex refactoring suggestions based on restorative sleep stages
+    - **Overnight Energy ROI:** objective impact measurement of working past midnight on next-day cognitive output and recovery
+    - **Context-Aware Active Breaks:** dispatching movement alerts during physical stagnation synchronized with natural digital workflow pauses (git commits / test runs)
 - **AI with full control of the platform, including its own code.** The assistant can already
   change data through tools; the next step is settings, modules and code. Guard rails before it
   touches code: changes go through a branch and a pull request, CI (lint, tests, build) must pass,

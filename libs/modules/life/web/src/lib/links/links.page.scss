@@ -5,6 +5,13 @@
   min-width: 0;
 }
 
+.controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .caution {
   display: flex;
   gap: 8px;

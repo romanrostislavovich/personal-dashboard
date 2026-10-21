@@ -1,0 +1,21 @@
+:host { display: flex; flex-direction: column; gap: 20px; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.toolbar h2 { margin: 0; }
+input, textarea {
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  color-scheme: inherit;
+}
+textarea { display: block; width: 100%; resize: vertical; }
+.text { white-space: pre-line; overflow-wrap: anywhere; }
+.highlight { border-left: 3px solid var(--mat-sys-primary); padding-left: 12px; }
+.hint { color: var(--mat-sys-on-surface-variant); }
+.error { color: var(--mat-sys-error); }
+details { overflow-wrap: anywhere; }
+summary { cursor: pointer; }
+mat-card-actions { flex-wrap: wrap; }

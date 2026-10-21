@@ -15,6 +15,12 @@ import { DevicesService } from './devices.service';
 import { SitesService } from './sites.service';
 import { DiskAdviceService } from './disk/disk-advice.service';
 import { WellbeingService } from './wellbeing.service';
+import { ActivityContextController } from './activity-context.controller';
+import { ActivityContextJobs } from './activity-context.jobs';
+import { ActivityContextStore } from './activity-context.store';
+import { TelemetryService } from './telemetry.service';
+import { WorkstateService } from './workstate.service';
+import { TelemetrySummaryService } from './telemetry-summary.service';
 
 /**
  * Activity: time at the computer per program, category and project, focus sessions, daily
@@ -23,8 +29,13 @@ import { WellbeingService } from './wellbeing.service';
  * token of their own. API: `/api/activity`.
  */
 @Module({
-  controllers: [ActivityController],
+  controllers: [ActivityController, ActivityContextController],
   providers: [
+    ActivityContextJobs,
+    ActivityContextStore,
+    TelemetryService,
+    TelemetrySummaryService,
+    WorkstateService,
     ActivityAutomations,
     ActivityDemo,
     ActivityLife,
