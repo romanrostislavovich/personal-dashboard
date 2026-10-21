@@ -214,6 +214,12 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - ✅ **Music: share a song** — open it in YouTube Music or Spotify, copy the link, send it
 - ✅ **Browser extension: time by site and focus mode** — the time on each site in Activity and
   for the assistant; distracting sites closed during a focus session; daily limits of sites
+- ✅ **AI: undo, memory, search by meaning** — any change of the assistant undone from the log or
+  by asking; facts it keeps between conversations; "when did my knee hurt?" over the diary,
+  tasks, health, life events and people, Russian and English alike (see docs/ai-stack.md)
+- ✅ **Models of one's own** — a category model trained on one's sorted payments (sorts a bank
+  import's new counterparties once it has proven itself), today's mood forecast in Life; evals of
+  the AI jobs (`npm run ai:eval`); an optional Ollama next to the server
 
 #### Quick wins
 
@@ -500,14 +506,25 @@ assistant as a tutor that knows the materials of the courses.
 
 #### AI and links between modules
 
-- **AI memory** — facts about the user the assistant keeps between conversations
-- **Local semantic search & RAG** — vector embeddings (`pgvector` or `sqlite-vec`) across personal
-  history (diary entries, medical records, notes, past tasks) for semantic recall ("when did I last have
-  these symptoms?" or "how did I resolve that issue two years ago?")
-- **Nightly AI housekeeping** — zero-cost local LLM (Ollama) background jobs during the night for
-  routine maintenance: auto-categorization of uncategorized transactions, diary tag deduplication and
-  linking, associating orphan tasks with projects, and drafting a crisp morning briefing without cloud
-  API token costs
+- **Night Butler: the night shift** — [Night Butler](https://github.com/romanrostislavovich/night-butler)
+  folded into the dashboard: a local model works through the day's leftovers at night, one piece
+  at a time — uncategorized transactions, notes without tags, tasks written twice or without a
+  project — and leaves a morning note and one-click questions; every answer becomes a rule, so
+  each night is faster. What exactly it does at night is still to be decided
+- **Night Butler: a model of its own that keeps learning** — a small open model (1.5–3B, fits the
+  server) taught one narrow job of the user's own — sorting their payments, pulling tasks out of
+  notes, the morning note in their tone — as well as a big model does it:
+  - every night, cheap: the morning corrections ("not groceries — a gift") are kept as training
+    pairs, and the closest past corrections go into the model's prompt right away (learning
+    without training, from the first day);
+  - once a week or on a button: a LoRA fine-tuning on the pairs collected; the new version
+    replaces the old one only when `npm run ai:eval` says it is better, the old one comes back
+    with one click;
+  - facts are not taught this way (they go stale and get made up) — that is search by meaning
+  - **Needs:** a bigger server (8 GB of memory to serve a 7B model, see docs/deploy.md) and a GPU
+    for the training — rented by the hour (~$0.3–1 a run; the data leaves for that time), a
+    computer of one's own with a GPU, or a provider's fine-tuning; and a few hundred corrected
+    examples first
 - **MCP: Claude.ai connectors** — OAuth sign-in for the custom connectors of claude.ai and the
   Claude phone apps (the MCP server itself is done, with access tokens)
 - **AI: fewer tools a request** — all ~97 tools go with every request and every round today; the
@@ -523,8 +540,6 @@ assistant as a tutor that knows the materials of the courses.
   a backoff on 429 / 5xx; a backup connection when the active one fails; a time limit for one
   answer; one answer at a time in a conversation (the web chat and Telegram share it); the state
   of a confirmation kept in the database
-- **AI: undo** — "undo the last change of the assistant" in the chat and `/undo` in Telegram, out
-  of the action log and the trash
 - **AI: progress while it works** — "looking at finance…", "searching the diary…" over the live
   events, before streaming the answer itself
 - **AI: what it read** — the action log also keeps which read tools of which modules were called
