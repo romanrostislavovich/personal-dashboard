@@ -561,8 +561,7 @@ function trustedSetup(event: Electron.IpcMainInvokeEvent): boolean {
       event.sender === mainWindow.webContents &&
       event.senderFrame === mainWindow.webContents.mainFrame &&
       url.protocol === 'file:' &&
-      fileURLToPath(url).toLowerCase() ===
-        join(__dirname, 'assets', 'setup.html').toLowerCase()
+      fileURLToPath(url).toLowerCase() === join(__dirname, 'assets', 'setup.html').toLowerCase()
     );
   } catch {
     return false;
@@ -581,7 +580,10 @@ async function setContextConsent(
     contextRevision++;
     if (kind === 'telemetry') tracker.resetTelemetry();
     else tracker.resetSmartBreak();
-    saveSettings({ ...loadSettings(), [kind === 'telemetry' ? 'telemetryConsent' : 'smartBreakConsent']: null });
+    saveSettings({
+      ...loadSettings(),
+      [kind === 'telemetry' ? 'telemetryConsent' : 'smartBreakConsent']: null,
+    });
     refreshTray();
     return true;
   }
@@ -595,7 +597,7 @@ async function setContextConsent(
   try {
     if (enabled && !status.enabled) {
       const messages = workstateMessages(app.getLocale());
-      const result = await dialog.showMessageBox({
+      const question: Electron.MessageBoxOptions = {
         type: 'question',
         message: kind === 'telemetry' ? messages.telemetryConsent : messages.smartBreakConsent,
         detail: `${messages.server}: ${server}`,
@@ -603,10 +605,22 @@ async function setContextConsent(
         defaultId: 0,
         cancelId: 0,
         noLink: true,
-      });
+      };
+      // Without a parent the question can open behind the dashboard's window: the switch then
+      // seems to do nothing while it waits for an answer nobody sees.
+      const parent =
+        mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() ? mainWindow : null;
+      const result = await (parent
+        ? dialog.showMessageBox(parent, question)
+        : dialog.showMessageBox(question));
       if (result.response !== 1) return false;
     }
-    if (!trusted() || revision !== contextRevision || server !== serverUrl() || deviceId !== tracker.status().deviceId)
+    if (
+      !trusted() ||
+      revision !== contextRevision ||
+      server !== serverUrl() ||
+      deviceId !== tracker.status().deviceId
+    )
       return false;
     contextRevision++;
     if (kind === 'telemetry') tracker.resetTelemetry();
