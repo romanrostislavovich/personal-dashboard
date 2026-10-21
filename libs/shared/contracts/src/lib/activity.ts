@@ -165,6 +165,10 @@ export type ActivityDeviceInput = z.infer<typeof activityDeviceInputSchema>;
 export const activityDeviceUpdateSchema = z.object({ name: z.string().trim().min(1).max(60) });
 export type ActivityDeviceUpdate = z.infer<typeof activityDeviceUpdateSchema>;
 
+/** The device whose records the merged one hands over before it is removed. */
+export const activityDeviceMergeSchema = z.object({ into: z.uuid() });
+export type ActivityDeviceMerge = z.infer<typeof activityDeviceMergeSchema>;
+
 export interface ActivityDevice {
   id: string;
   name: string;

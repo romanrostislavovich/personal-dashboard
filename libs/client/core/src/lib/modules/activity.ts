@@ -62,6 +62,9 @@ export function activityApi(api: ApiClient) {
     renameDevice: (id: string, name: string) => api.patch<void>(`${BASE}/devices/${id}`, { name }),
     /** Removes the device with everything it recorded. */
     removeDevice: (id: string) => api.delete(`${BASE}/devices/${id}`),
+    /** Hands the device's records to `into`, then removes it. */
+    mergeDevice: (id: string, into: string) =>
+      api.post<void>(`${BASE}/devices/${id}/merge`, { into }),
 
     settings: () => api.read<ActivitySettings>(ACTIVITY_READS.settings()),
     /** Only the fields sent change. */

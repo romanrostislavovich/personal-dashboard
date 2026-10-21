@@ -1,9 +1,23 @@
-import { Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { DB, Database } from '@pd/api-core';
 import { ActivityDevice, ActivityDeviceCreated, ActivityDeviceInput } from '@pd/contracts';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { createHash, randomBytes } from 'node:crypto';
-import { activityDevices, ActivityDeviceRow } from './activity.schema';
+import { activityWorkstates, telemetryDynamics } from './activity-context.schema';
+import {
+  activityDevices,
+  ActivityDeviceRow,
+  activityFocusSessions,
+  activityHealth,
+  activityOutages,
+  activitySpans,
+} from './activity.schema';
 
 /** A device says it is alive with every upload; the row is touched no more often than this. */
 const SEEN_EVERY_MS = 5 * 60 * 1000;
@@ -52,6 +66,49 @@ export class DevicesService {
   /** Removes the device with everything it recorded; its token stops working. */
   async remove(userId: string, id: string): Promise<void> {
     await this.db.delete(activityDevices).where(this.owned(userId, id));
+  }
+
+  /**
+   * Hands everything the device recorded to another one, then removes it: the same computer
+   * registered twice (removed and switched on again) keeps one history. A row the other device
+   * already has at the same moment is dropped (it goes to the trash with the removed device).
+   */
+  async merge(userId: string, id: string, into: string): Promise<void> {
+    if (id === into) {
+      throw new BadRequestException('A device cannot be merged into itself');
+    }
+    await this.db.transaction(async (tx) => {
+      const found = await tx
+        .select({ id: activityDevices.id })
+        .from(activityDevices)
+        .where(and(eq(activityDevices.userId, userId), inArray(activityDevices.id, [id, into])));
+      if (found.length !== 2) {
+        throw new NotFoundException('Device not found');
+      }
+      // Kept per device and moment: a row the other device has at the same moment would clash.
+      await tx.execute(sql`
+        DELETE FROM activity_spans a USING activity_spans b
+        WHERE a.device_id = ${id} AND b.device_id = ${into} AND a.started_at = b.started_at
+      `);
+      await tx.execute(sql`
+        DELETE FROM activity_health a USING activity_health b
+        WHERE a.device_id = ${id} AND b.device_id = ${into} AND a.at = b.at
+      `);
+      for (const table of [
+        activitySpans,
+        activityHealth,
+        activityFocusSessions,
+        activityOutages,
+        telemetryDynamics,
+        activityWorkstates,
+      ]) {
+        await tx
+          .update(table)
+          .set({ deviceId: into })
+          .where(and(eq(table.userId, userId), eq(table.deviceId, id)));
+      }
+      await tx.delete(activityDevices).where(this.owned(userId, id));
+    });
   }
 
   /** The device behind the `Authorization: Device <token>` header of a tracker's request. */
