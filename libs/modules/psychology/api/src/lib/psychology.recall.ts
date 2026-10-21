@@ -17,7 +17,7 @@ export class PsychologyRecall implements OnModuleInit {
         (await this.psychology.events(userId)).map((event) => ({
           id: event.id,
           title: event.title,
-          text: event.description ?? '',
+          text: [event.title, event.description].filter(Boolean).join('\n'),
           date: event.startedOn,
           link: '/psychology',
         })),
