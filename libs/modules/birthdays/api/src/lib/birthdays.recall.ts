@@ -20,7 +20,7 @@ export class BirthdaysRecall implements OnModuleInit {
           .map((row) => ({
             id: row.id,
             title: row.name,
-            text: row.note ?? '',
+            text: `${row.name}\n${row.note ?? ''}`,
             date: null,
             link: '/birthdays',
           })),

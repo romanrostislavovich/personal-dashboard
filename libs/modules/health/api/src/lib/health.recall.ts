@@ -24,14 +24,20 @@ export class HealthRecall implements OnModuleInit {
           ...record.visits.map((visit) => ({
             id: `visit:${visit.id}`,
             title: `Visit${visit.speciality ? ` — ${visit.speciality}` : ''}, ${visit.visitedOn}`,
-            text: join(visit.complaints, visit.findings, visit.recommendations, visit.notes),
+            text: join(
+              visit.speciality,
+              visit.complaints,
+              visit.findings,
+              visit.recommendations,
+              visit.notes,
+            ),
             date: visit.visitedOn,
             link: '/health/history',
           })),
           ...record.diagnoses.map((diagnosis) => ({
             id: `diagnosis:${diagnosis.id}`,
             title: diagnosis.code ? `${diagnosis.code} ${diagnosis.title}` : diagnosis.title,
-            text: join(diagnosis.notes),
+            text: join(diagnosis.title, diagnosis.notes),
             date: diagnosis.diagnosedOn,
             link: '/health/conditions',
           })),
@@ -39,6 +45,7 @@ export class HealthRecall implements OnModuleInit {
             id: `medication:${medication.id}`,
             title: medication.name,
             text: join(
+              medication.name,
               medication.substance,
               medication.dose,
               medication.schedule,

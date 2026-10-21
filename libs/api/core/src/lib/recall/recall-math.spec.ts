@@ -17,10 +17,16 @@ describe('search by meaning — the arithmetic', () => {
     expect(nearest([1, 0], items, 2, 0.5).map((item) => item.id)).toEqual(['nearest', 'near']);
   });
 
-  it('indexes the title, the date and the beginning of the text; the hash follows the text', () => {
-    const item = { id: '1', title: 'Knee', text: 'x'.repeat(5000), date: '2026-10-17', link: null };
-    expect(documentText(item).startsWith('Knee\n2026-10-17\nxxx')).toBe(true);
-    expect(documentText(item)).toHaveLength(2000);
+  it('indexes the meaning only — not the label, not the date; the hash follows the text', () => {
+    const item = {
+      id: '1',
+      title: 'Diary, 2026-10-17',
+      text: 'x'.repeat(5000),
+      date: '2026-10-17',
+      link: null,
+    };
+    expect(documentText(item)).toBe('x'.repeat(2000));
+    expect(documentText({ ...item, text: '' })).toBe('Diary, 2026-10-17');
     expect(hashOf('a')).toBe(hashOf('a'));
     expect(hashOf('a')).not.toBe(hashOf('b'));
   });

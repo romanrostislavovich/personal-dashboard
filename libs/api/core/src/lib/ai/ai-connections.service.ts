@@ -24,6 +24,7 @@ import {
   AiRequestError,
   ChatConnection,
   chatCompletion,
+  embed,
   SpeechConnection,
 } from './openai-compatible.client';
 import { OutboundBlockedError } from '../net/outbound';
@@ -487,10 +488,21 @@ export function acceptsReasoningEffort(provider: string, model: string): boolean
   return provider === 'openai' && !/^(chatgpt-|gpt-3|gpt-4)/i.test(model);
 }
 
-/** A short request: a wrong URL, model or key is reported now, not in the middle of a chat. */
+/**
+ * A short request: a wrong URL, model or key is reported now, not in the middle of a chat. A
+ * model that only makes vectors (search by meaning: `paraphrase-multilingual` on the server)
+ * does not chat, so it is asked for a vector instead.
+ */
 async function verify(connection: ChatConnection): Promise<void> {
   try {
-    await chatCompletion(connection, [{ role: 'user', content: 'ping' }]);
+    await chatCompletion(connection, [{ role: 'user', content: 'ping' }]).catch(async (error) => {
+      if (!(error instanceof AiRequestError)) {
+        throw error;
+      }
+      await embed(connection, ['ping']).catch(() => {
+        throw error;
+      });
+    });
   } catch (error) {
     throw new BadRequestException(
       error instanceof AiRequestError

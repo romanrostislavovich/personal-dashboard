@@ -8,20 +8,23 @@ import { createHash } from 'node:crypto';
 /** An item of the history a section offers to search (see RecallSource). */
 export interface RecallItem {
   id: string;
+  /** What a found item is shown as ("Diary, 2026-10-12"): not searched. */
   title: string;
+  /** What is searched: everything of the item that carries meaning. */
   text: string;
   date: string | null;
   link: string | null;
 }
 
-/** What is turned into a vector: the title, the date and the beginning of the text. */
+/**
+ * What is turned into a vector: the meaning only. A label and a date drown a short entry —
+ * "knee pain" is 0.75 alike to "Колено снова болит после пробежки" and 0.38 to the same
+ * with "Diary, 2026-10-12" and the date before it.
+ */
 export const DOCUMENT_CHARS = 2000;
 
 export function documentText(item: RecallItem): string {
-  return [item.title, item.date ?? '', item.text]
-    .filter(Boolean)
-    .join('\n')
-    .slice(0, DOCUMENT_CHARS);
+  return (item.text.trim() || item.title).slice(0, DOCUMENT_CHARS);
 }
 
 export function hashOf(text: string): string {

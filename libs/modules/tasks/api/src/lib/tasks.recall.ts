@@ -18,7 +18,7 @@ export class TasksRecall implements OnModuleInit {
         (await this.db.select().from(tasks).where(eq(tasks.userId, userId))).map((task) => ({
           id: task.id,
           title: task.completedAt ? `${task.title} (done)` : task.title,
-          text: [task.notes, task.tags.map((tag) => `#${tag}`).join(' ')]
+          text: [task.title, task.notes, task.tags.map((tag) => `#${tag}`).join(' ')]
             .filter(Boolean)
             .join('\n'),
           date: (task.completedAt ?? task.createdAt).toISOString().slice(0, 10),
