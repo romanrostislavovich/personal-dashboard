@@ -60,6 +60,9 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
             <button matButton="filled" (click)="enable()" [disabled]="busy()">
               <mat-icon>play_arrow</mat-icon> {{ 'activity.tracker.enable' | transloco }}
             </button>
+            @if (refused()) {
+              <p class="hint" role="alert">{{ 'activity.tracker.refused' | transloco }}</p>
+            }
           } @else {
             <p class="state" [class.paused]="s.paused">
               <mat-icon inline>{{ s.paused ? 'pause_circle' : 'radio_button_checked' }}</mat-icon>
@@ -183,6 +186,8 @@ export class TrackerCardComponent {
   protected readonly status = signal<DesktopActivityStatus | null>(null);
   protected readonly devices = this.api.devices();
   protected readonly busy = signal(false);
+  /** The desktop app did not take the device it was given (see enable()). */
+  protected readonly refused = signal(false);
   /** A device was added or removed: the statistics have another set of devices. */
   readonly changed = output<void>();
   /**
@@ -220,6 +225,13 @@ export class TrackerCardComponent {
         }),
       );
       await this.desktop.enable({ id: device.id, token: device.token });
+      // The app refuses a page it does not trust without an error: the device registered for
+      // it would only wait in the list as one that never reported.
+      const taken = (await this.desktop.status())?.deviceId === device.id;
+      this.refused.set(!taken);
+      if (!taken) {
+        await firstValueFrom(this.api.removeDevice(device.id));
+      }
     } finally {
       this.busy.set(false);
       await this.refresh();

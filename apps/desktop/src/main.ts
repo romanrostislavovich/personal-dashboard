@@ -30,7 +30,7 @@ import { DiskFix } from './disk/disk-fixes';
 import { StatementWatch } from './downloads/statement-watch';
 import { createTray } from './tray';
 import { ExtensionKeeper } from './update/extension-keeper';
-import { AppUpdater } from './update/updater';
+import { AppUpdater, secureOrigin } from './update/updater';
 import { DesktopWorkstates } from './workstates/desktop-workstates';
 import { workstateMessages } from './workstates/messages';
 
@@ -546,7 +546,9 @@ function trustedDashboard(event: Electron.IpcMainInvokeEvent): boolean {
       event.sender === mainWindow.webContents &&
       event.senderFrame === mainWindow.webContents.mainFrame &&
       ['https:', 'http:'].includes(new URL(event.senderFrame.url).protocol) &&
-      new URL(event.senderFrame.url).origin === new URL(server).origin
+      // An address saved as http:// opens on https:// after the server's redirect: the page is
+      // still the dashboard, only on the secure origin.
+      [new URL(server).origin, secureOrigin(server)].includes(new URL(event.senderFrame.url).origin)
     );
   } catch {
     return false;

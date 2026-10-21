@@ -15,6 +15,7 @@ import { TerminalCompletion } from './terminal-friction';
 import { SuccessfulWorkEvent, TelemetrySources, TerminalReport } from './telemetry-sources';
 import { MAX_SAMPLE_GAP_MS } from './context-switch';
 import { SmartBreak } from './smart-break';
+import { secureOrigin } from '../update/updater';
 
 /** What waits is sent this often. */
 const UPLOAD_MS = 60_000;
@@ -301,7 +302,9 @@ export class ActivityTracker {
     const identity = this.telemetryIdentity();
     if (!server || !token || signal.aborted || this.workstatePermit()?.key !== key) return false;
     try {
-      const response = await net.fetch(new URL(WORKSTATE_CAPTURE_PATH, server).href, {
+      // Redirects are refused here, so an http:// address goes to its https:// origin at once.
+      const origin = secureOrigin(server) ?? server;
+      const response = await net.fetch(new URL(WORKSTATE_CAPTURE_PATH, origin).href, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Device ${token}` },
         body: JSON.stringify(workstateInputSchema.parse(input)),
@@ -309,8 +312,7 @@ export class ActivityTracker {
         credentials: 'omit',
         signal: AbortSignal.any([signal, AbortSignal.timeout(UPLOAD_TIMEOUT_MS)]),
       });
-      if (response.status === 401 && this.telemetryIdentity() === identity)
-        this.disable();
+      if (response.status === 401 && this.telemetryIdentity() === identity) this.disable();
       return response.ok && !signal.aborted && this.workstatePermit()?.key === key;
     } catch {
       return false;
