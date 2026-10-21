@@ -122,6 +122,7 @@
     "browser": "Time is recorded by the desktop app of the dashboard. Open the dashboard in it to switch tracking on for this computer.",
     "unsupported": "The tracker can watch windows only on Windows for now.",
     "off": "Tracking is off on this computer. When it is on, the app records which program and window is in front and sends it to your server.",
+    "removed": "This computer was removed from the devices, so its tracking stopped. Switch it on again to register it anew.",
     "enable": "Track this computer",
     "on": "This computer is tracked",
     "paused": "Tracking is paused",

@@ -1,5 +1,13 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  output,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -43,8 +51,12 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
         } @else if (status(); as s) {
           @if (!s.supported) {
             <p class="hint">{{ 'activity.tracker.unsupported' | transloco }}</p>
-          } @else if (!s.deviceId) {
-            <p class="hint">{{ 'activity.tracker.off' | transloco }}</p>
+          } @else if (!s.deviceId || removedHere()) {
+            <p class="hint">
+              {{
+                (removedHere() ? 'activity.tracker.removed' : 'activity.tracker.off') | transloco
+              }}
+            </p>
             <button matButton="filled" (click)="enable()" [disabled]="busy()">
               <mat-icon>play_arrow</mat-icon> {{ 'activity.tracker.enable' | transloco }}
             </button>
@@ -173,9 +185,25 @@ export class TrackerCardComponent {
   protected readonly busy = signal(false);
   /** A device was added or removed: the statistics have another set of devices. */
   readonly changed = output<void>();
+  /**
+   * The tracker still holds a device the server no longer has (removed here or from another
+   * page): it stops by itself on its next upload, but the card offers to switch it on again now.
+   */
+  protected readonly removedHere = computed(() => {
+    const deviceId = this.status()?.deviceId;
+    return (
+      !!deviceId &&
+      this.devices.status() === 'resolved' &&
+      !this.devices.value().some((device) => device.id === deviceId)
+    );
+  });
 
   constructor() {
     void this.refresh();
+    // The tracker changes by itself too (tray pause, a removed device): read it again on return.
+    const onFocus = () => void this.refresh();
+    window.addEventListener('focus', onFocus);
+    inject(DestroyRef).onDestroy(() => window.removeEventListener('focus', onFocus));
   }
 
   /** Registers this computer as a device and hands its token to the tracker. */
