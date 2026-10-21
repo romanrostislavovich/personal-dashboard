@@ -121,6 +121,26 @@ Restart it; within a minute **Settings → Sync** on the computer shows the firs
 can log in at `https://<DOMAIN>` with the same email and password. Then connect Telegram in the
 server's settings.
 
+## Local models on the server (optional)
+
+[Ollama](https://ollama.com) next to the app keeps the AI's small jobs on your server. Add to
+`.env`:
+
+```
+COMPOSE_PROFILES=ollama
+OLLAMA_MODELS=paraphrase-multilingual   # the models pulled on start, separated by spaces
+OLLAMA_MEMORY=1g                   # what the container may use
+```
+
+and run `docker compose up -d` (or `deploy/deploy.sh`). Then in **Settings → AI** add a
+connection of the kind "Ollama" with the address `http://ollama:11434/v1`.
+
+What fits: `paraphrase-multilingual` (562 MB) — the model of search by meaning, Russian and
+English alike — runs on the smallest server (`nomic-embed-text` is smaller but knows only
+English). A chat model good enough for light background work is bigger: `qwen2.5:7b` passes the
+evals (`npm run ai:eval`), `qwen2.5:3b` and `1.5b` do not; the 7B model needs about 6 GB of free
+memory (`OLLAMA_MEMORY=6g`), so a server with 8 GB.
+
 ## Updating
 
 Both instances must run the same version (the same migrations); until they do, sync pauses with a

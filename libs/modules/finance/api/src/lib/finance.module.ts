@@ -35,6 +35,7 @@ import { WishlistController } from './wishlist/wishlist.controller';
 import { WishlistJob } from './wishlist/wishlist.job';
 import { WishlistService } from './wishlist/wishlist.service';
 import { NetWorthService } from './worth/net-worth.service';
+import { CategoryModelService } from './categories/category-model.service';
 
 /**
  * Finance: personal and project income/expenses, recurring payments and subscriptions, budgets,
@@ -44,6 +45,7 @@ import { NetWorthService } from './worth/net-worth.service';
 @Module({
   controllers: [FinanceController, CostSourcesController, WishlistController, BankController],
   providers: [
+    CategoryModelService,
     SpentTelegram,
     FinanceAutomations,
     FinanceDemo,

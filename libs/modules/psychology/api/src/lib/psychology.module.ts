@@ -6,6 +6,7 @@ import { PsychologyDemo } from './psychology.demo';
 import { PsychologyLinks } from './psychology.links';
 import { PsychologyReminders } from './psychology.reminders';
 import { PsychologyService } from './psychology.service';
+import { PsychologyRecall } from './psychology.recall';
 
 /**
  * Psychology: watching oneself over time. Patterns of the mood (the diary's, through the
@@ -21,6 +22,7 @@ import { PsychologyService } from './psychology.service';
     PsychologyDemo,
     PsychologyAchievements,
     PsychologyReminders,
+    PsychologyRecall,
   ],
 })
 export class PsychologyModule {}

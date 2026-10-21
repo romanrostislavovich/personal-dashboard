@@ -11,6 +11,7 @@ import { TasksController } from './tasks.controller';
 import { TasksDigest } from './tasks.digest';
 import { TasksJobs } from './tasks.jobs';
 import { TasksService } from './tasks.service';
+import { TasksRecall } from './tasks.recall';
 
 /**
  * Tasks: the TODO list (lists, tags, repeating tasks) and reminders sent at a time, with
@@ -24,6 +25,7 @@ import { TasksService } from './tasks.service';
     TasksLife,
     TasksLinks,
     TasksSearch,
+    TasksRecall,
     TasksService,
     RemindersService,
     TasksJobs,

@@ -4,6 +4,7 @@ import { monitorInputSchema } from '@pd/contracts';
 import { CheckerService } from './checker.service';
 import { MonitoringLinks } from './monitoring.links';
 import { MonitorsService } from './monitors.service';
+import { monitors } from './monitoring.schema';
 
 /** AI access to site monitoring; adding and removing monitored addresses (assistant). */
 @Injectable()
@@ -57,6 +58,7 @@ export class MonitoringAiTools implements OnModuleInit {
       name: 'monitoring_add',
       module: 'monitoring',
       writes: true,
+      undoTables: [monitors],
       description:
         'Starts monitoring a URL (uptime every 5 minutes, SSL expiry). Every monitor belongs to ' +
         'a project: take its id from core_projects; if there is no suitable project, ask the user.',
@@ -84,6 +86,7 @@ export class MonitoringAiTools implements OnModuleInit {
       name: 'monitoring_remove',
       module: 'monitoring',
       writes: true,
+      undoTables: [monitors],
       confirm: async (userId, args) => {
         const { url, status } = await find(userId, args);
         return { url, status };

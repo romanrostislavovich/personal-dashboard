@@ -20,11 +20,12 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AiAction, AiConnection, AiPreferences, AiSettings } from '@pd/contracts';
-import { IntegrationGuideComponent } from '@pd/web-core';
+import { errorStatus, IntegrationGuideComponent } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { AiApi } from './ai.api';
 import { AiConnectionFormDialog } from './ai-connection-form.dialog';
 import { AiModuleAccessComponent } from './ai-module-access.component';
+import { AiKnowledgeComponent } from './ai-knowledge.component';
 
 /**
  * Saved AI connections — one of them active, switched in one click (say, when a balance runs
@@ -35,6 +36,7 @@ import { AiModuleAccessComponent } from './ai-module-access.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     AiModuleAccessComponent,
+    AiKnowledgeComponent,
     DatePipe,
     MatCardModule,
     IntegrationGuideComponent,
@@ -217,6 +219,25 @@ import { AiModuleAccessComponent } from './ai-module-access.component';
             </mat-form-field>
           </div>
 
+          <h3 class="section">🪶 {{ 'ai.light.title' | transloco }}</h3>
+          <p class="hint">{{ 'ai.light.hint' | transloco }}</p>
+          <div class="speech">
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>{{ 'ai.speech.connection' | transloco }}</mat-label>
+              <mat-select
+                [value]="settings().lightConnectionId"
+                (selectionChange)="savePreferences({ lightConnectionId: $event.value })"
+              >
+                <mat-option [value]="null">{{ 'ai.light.active' | transloco }}</mat-option>
+                @for (c of settings().connections; track c.id) {
+                  <mat-option [value]="c.id">{{ c.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <pd-ai-knowledge [settings]="settings()" (save)="savePreferences($event)" />
+
           <h3 class="section">👁️ {{ 'ai.privacy.title' | transloco }}</h3>
           <p class="hint">{{ 'ai.privacy.hint' | transloco }}</p>
           <pd-ai-module-access
@@ -239,7 +260,20 @@ import { AiModuleAccessComponent } from './ai-module-access.component';
                   @if (action.error) {
                     <span class="action-error">{{ action.error }}</span>
                   }
+                  @if (undoError()?.id === action.id) {
+                    <span class="action-error">{{ undoError()?.text }}</span>
+                  }
                 </span>
+                @if (action.undoable) {
+                  <button
+                    matButton
+                    class="action-undo"
+                    [disabled]="undoing() === action.id"
+                    (click)="undo(action)"
+                  >
+                    <mat-icon>undo</mat-icon> {{ 'ai.log.undo' | transloco }}
+                  </button>
+                }
               </div>
             } @empty {
               <p class="hint">{{ 'ai.log.empty' | transloco }}</p>
@@ -260,6 +294,11 @@ import { AiModuleAccessComponent } from './ai-module-access.component';
       padding: 6px 0;
       border-bottom: 1px solid var(--pd-border);
       font: var(--mat-sys-body-small);
+    }
+    .action-undo {
+      flex-shrink: 0;
+      align-self: center;
+      margin-left: auto;
     }
     .action-time {
       flex-shrink: 0;
@@ -380,6 +419,9 @@ export class AiSettingsComponent {
   protected readonly digestOptions = signal<string[]>([]);
   /** The assistant's changes; `null` until asked for. */
   protected readonly actions = signal<AiAction[] | null>(null);
+  /** The change being undone now, and why the last undo did not happen. */
+  protected readonly undoing = signal<string | null>(null);
+  protected readonly undoError = signal<{ id: string; text: string } | null>(null);
 
   constructor() {
     firstValueFrom(this.api.modules()).then(
@@ -413,6 +455,21 @@ export class AiSettingsComponent {
 
   async loadActions(): Promise<void> {
     this.actions.set(await firstValueFrom(this.api.actions()));
+  }
+
+  /** Puts back what one change of the assistant did; a change made again since is kept. */
+  async undo(action: AiAction): Promise<void> {
+    this.undoing.set(action.id);
+    this.undoError.set(null);
+    try {
+      await firstValueFrom(this.api.undoAction(action.id));
+      await this.loadActions();
+    } catch (error) {
+      const key = errorStatus(error) === 409 ? 'ai.log.undoConflict' : 'ai.log.undoFailed';
+      this.undoError.set({ id: action.id, text: this.transloco.translate(key) });
+    } finally {
+      this.undoing.set(null);
+    }
   }
 
   /** 1.2k, 3.4M: the tokens of a period at a glance. */

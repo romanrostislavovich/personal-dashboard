@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Project, Transaction, TransactionInput, TransactionKind } from '@pd/contracts';
 import { todayLocalDate } from '@pd/web-core';
+import { firstValueFrom } from 'rxjs';
+import { FinanceApi } from './finance.api';
 
 export interface TransactionFormData {
   transaction: Transaction | null;
@@ -74,6 +76,11 @@ export interface TransactionFormData {
               <mat-option [value]="category">{{ category }}</mat-option>
             }
           </mat-autocomplete>
+          @if (suggested(); as percent) {
+            <mat-hint>{{
+              'finance.categoryModel.suggested' | transloco: { probability: percent }
+            }}</mat-hint>
+          }
         </mat-form-field>
 
         <div class="row">
@@ -95,7 +102,7 @@ export interface TransactionFormData {
 
         <mat-form-field>
           <mat-label>{{ 'finance.note' | transloco }}</mat-label>
-          <input matInput formControlName="note" />
+          <input matInput formControlName="note" (blur)="suggestCategory()" />
         </mat-form-field>
       </mat-dialog-content>
 
@@ -130,6 +137,10 @@ export class TransactionFormDialog {
   protected readonly data = inject<TransactionFormData>(MAT_DIALOG_DATA);
   private readonly dialogRef = inject(MatDialogRef<TransactionFormDialog, TransactionInput>);
 
+  private readonly finance = inject(FinanceApi);
+  /** The model filled the category in: how sure it was, in percent. */
+  protected readonly suggested = signal<number | null>(null);
+
   private readonly initial = this.data.transaction;
   protected readonly form = inject(NonNullableFormBuilder).group({
     kind: [this.initial?.kind ?? ('expense' as TransactionKind)],
@@ -146,6 +157,22 @@ export class TransactionFormDialog {
     projectId: [(this.initial ? this.initial.projectId : this.data.defaults.projectId) ?? ''],
     note: [this.initial?.note ?? ''],
   });
+
+  /** The category the user's own model is sure of, while the category is still empty. */
+  async suggestCategory(): Promise<void> {
+    const { kind, note, amount, category } = this.form.getRawValue();
+    if (category.trim() || !note.trim()) {
+      return;
+    }
+    const suggestion = await firstValueFrom(
+      this.finance.suggestCategory(kind, note, Number(amount) || 0),
+    ).catch(() => null);
+    // Typed meanwhile: the user's own choice wins.
+    if (suggestion && !this.form.controls.category.value.trim()) {
+      this.form.controls.category.setValue(suggestion.category);
+      this.suggested.set(Math.round(suggestion.probability * 100));
+    }
+  }
 
   save(): void {
     const value = this.form.getRawValue();

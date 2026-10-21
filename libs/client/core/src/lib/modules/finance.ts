@@ -32,6 +32,9 @@ import {
   TransactionQuery,
   Wish,
   WishInput,
+  CategoryModelState,
+  CategorySuggestion,
+  TransactionKind,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -55,6 +58,8 @@ export const FINANCE_READS = {
   keyDates: () => apiRequest(`${BASE}/recurring-payments/dates`),
   /** Net worth, the burn rate and the runway. */
   worth: () => apiRequest(`${BASE}/worth`),
+  /** How good the user's own category model is. */
+  categoryModel: () => apiRequest(`${BASE}/category-model`),
   assets: () => apiRequest(`${BASE}/assets`),
   costSources: () => apiRequest(`${BASE}/cost-sources`),
   /** The budgets with what was spent in a month (`YYYY-MM`). */
@@ -136,6 +141,12 @@ export function financeApi(api: ApiClient) {
       api.post<ContractLetter>(`${BASE}/recurring-payments/${id}/letter`, input),
     wishlist: () => api.read<Wish[]>(FINANCE_READS.wishlist()),
     worth: () => api.read<NetWorth>(FINANCE_READS.worth()),
+    categoryModel: () => api.read<CategoryModelState>(FINANCE_READS.categoryModel()),
+    /** The category the model is sure of for a transaction being typed in; null — not sure. */
+    suggestCategory: (kind: TransactionKind, text: string, amount: number) =>
+      api.get<CategorySuggestion | null>(
+        `${BASE}/category-suggest?kind=${kind}&text=${encodeURIComponent(text)}&amount=${amount}`,
+      ),
     assets: () => api.read<Asset[]>(FINANCE_READS.assets()),
     saveAsset: (input: AssetInput, id?: string) =>
       id ? api.put<Asset>(`${BASE}/assets/${id}`, input) : api.post<Asset>(`${BASE}/assets`, input),

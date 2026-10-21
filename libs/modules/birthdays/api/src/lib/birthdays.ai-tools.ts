@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, changedFields, findById, idParameters } from '@pd/api-core';
 import { birthdayInputSchema, daysUntilNearest } from '@pd/contracts';
 import { BirthdaysService } from './birthdays.service';
+import { birthdays } from './birthdays.schema';
 
 /** Fields of a birthday, shared by adding and editing. */
 const BIRTHDAY_FIELDS = {
@@ -67,6 +68,7 @@ export class BirthdaysAiTools implements OnModuleInit {
       name: 'birthdays_add',
       module: 'birthdays',
       writes: true,
+      undoTables: [birthdays],
       description:
         'Adds a person with a date to remember: the birthday (`day`, `month`), the day they ' +
         'died (`deathDay`, `deathMonth`) or both — at least one. Years are optional. ' +
@@ -84,6 +86,7 @@ export class BirthdaysAiTools implements OnModuleInit {
       name: 'birthdays_update',
       module: 'birthdays',
       writes: true,
+      undoTables: [birthdays],
       description:
         'Changes a person: pass the id (from birthdays_upcoming with days 366) and only the ' +
         'fields to change — for one who has died, add `deathDay` and `deathMonth`.',
@@ -115,6 +118,7 @@ export class BirthdaysAiTools implements OnModuleInit {
       name: 'birthdays_delete',
       module: 'birthdays',
       writes: true,
+      undoTables: [birthdays],
       confirm: (userId, args) => this.find(userId, args),
       description: 'Deletes a person with their birthday, day of memory and reminders.',
       parameters: idParameters('Birthday id from birthdays_upcoming'),

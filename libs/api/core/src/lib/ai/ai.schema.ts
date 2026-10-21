@@ -2,6 +2,7 @@ import {
   AiAttachment,
   DEFAULT_DIGEST_TIME,
   DEFAULT_SPEECH_MODEL,
+  DEFAULT_EMBEDDING_MODEL,
   DEFAULT_VISION_MODEL,
 } from '@pd/contracts';
 import {
@@ -18,6 +19,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { users } from '../users/users.schema';
+import type { UndoData } from './ai-undo';
 
 /**
  * Saved AI connections: several per user, one of them active (see `aiSettings`).
@@ -89,6 +91,11 @@ export const aiSettings = pgTable('ai_settings', {
   // null — the first OpenAI connection reads pictures (receipts).
   visionConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
   visionModel: text().notNull().default(DEFAULT_VISION_MODEL),
+  // null — the active connection does the light background work too.
+  lightConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
+  // null — the first Ollama connection, else the first OpenAI one, makes the vectors.
+  embeddingConnectionId: uuid().references(() => aiConnections.id, { onDelete: 'set null' }),
+  embeddingModel: text().notNull().default(DEFAULT_EMBEDDING_MODEL),
   /** Modules the AI does not see (see AiPreferences.disabledModules). */
   disabledModules: text().array().notNull().default([]),
   /** Opt-in digest sections the user switched on (see DigestSection.optIn). */
@@ -165,12 +172,28 @@ export const aiActions = pgTable(
     tool: text().notNull(),
     module: text().notNull(),
     args: text().notNull(),
-    /** `done`, `asked` (a confirmation), `failed`. */
+    /** `done`, `asked` (a confirmation), `failed`, `undone`. */
     outcome: text().notNull(),
     error: text(),
+    /** The way back of a `done` change (see ai-undo.ts); null — nothing to undo. */
+    undo: jsonb().$type<UndoData>(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index().on(table.userId, table.createdAt)],
+);
+
+/** Facts the assistant keeps between conversations, because the user told it to. */
+export const aiMemories = pgTable(
+  'ai_memories',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    text: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId)],
 );
 
 export type AiConnectionRow = typeof aiConnections.$inferSelect;

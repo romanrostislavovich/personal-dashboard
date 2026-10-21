@@ -10,6 +10,7 @@ import { TransactionsService } from '../transactions/transactions.service';
 import { BankImportService } from './bank-import.service';
 import { bankAccounts, bankConnections } from './bank.schema';
 import { EnableBankingClient, ProviderTransaction } from './enable-banking.client';
+import { CategoryModelService } from '../categories/category-model.service';
 
 /** Needs PostgreSQL, see `sync-store.db.spec.ts` in api-core for how to run it. */
 const ADMIN_URL = process.env['TEST_DATABASE_URL'];
@@ -115,7 +116,13 @@ describe.skipIf(!ADMIN_URL)('BankImportService', () => {
     const users = { findById: async () => ({ locale: 'en' }), timeZoneOf: () => 'UTC' };
     const ai = { isConfigured: async () => false, canSee: async () => false };
     const txs = new TransactionsService(db as never, {} as never, {} as never, {} as never);
-    service = new BankImportService(db as never, txs, ai as never, users as never);
+    service = new BankImportService(
+      db as never,
+      txs,
+      ai as never,
+      users as never,
+      new CategoryModelService(db as never),
+    );
   }, 60_000);
 
   afterAll(async () => {

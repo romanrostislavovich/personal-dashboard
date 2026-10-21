@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
+  aiMemoryInputSchema,
   lifeDayQuerySchema,
   beforeAfterQuerySchema,
   correlationsQuerySchema,
@@ -13,7 +14,12 @@ import { LinksService } from '../links/links.service';
 import { ProjectOverviewService } from '../links/project-overview.service';
 import { ProjectsService } from '../projects/projects.service';
 import { changedFields, findById, idParameters, NO_PARAMETERS, PERIOD_PARAMETERS } from './ai-tool';
+import { AiActionsService } from './ai-actions.service';
+import { AiMemoryService } from './ai-memory.service';
+import { aiMemories } from './ai.schema';
+import { RecallService } from '../recall/recall.service';
 import { AiService } from './ai.service';
+import { projects } from '../projects/projects.schema';
 
 const PROJECT_FIELDS = {
   name: { type: 'string' },
@@ -38,6 +44,9 @@ export class CoreAiTools implements OnModuleInit {
     private readonly overviews: ProjectOverviewService,
     private readonly links: LinksService,
     private readonly life: LifeService,
+    private readonly actions: AiActionsService,
+    private readonly memories: AiMemoryService,
+    private readonly recall: RecallService,
   ) {}
 
   onModuleInit(): void {
@@ -280,6 +289,7 @@ export class CoreAiTools implements OnModuleInit {
       name: 'core_add_project',
       module: 'projects',
       writes: true,
+      undoTables: [projects],
       description:
         'Creates a project — a site or service the user runs. Finance wallets and site ' +
         'monitoring are tied to projects.',
@@ -291,6 +301,7 @@ export class CoreAiTools implements OnModuleInit {
       name: 'core_update_project',
       module: 'projects',
       writes: true,
+      undoTables: [projects],
       description: 'Changes a project: pass its id and only the fields to change (null clears).',
       parameters: {
         type: 'object',
@@ -314,6 +325,7 @@ export class CoreAiTools implements OnModuleInit {
       name: 'core_delete_project',
       module: 'projects',
       writes: true,
+      undoTables: [projects],
       confirm: findProject,
       description:
         'Deletes a project. Fails while it still has transactions or monitors — ' +
@@ -321,6 +333,97 @@ export class CoreAiTools implements OnModuleInit {
       parameters: idParameters('Project id from core_projects'),
       handler: async (userId, args) => {
         await this.projects.remove(userId, (await findProject(userId, args)).id);
+      },
+    });
+
+    this.ai.registerTool({
+      name: 'core_mood_forecast',
+      module: 'life',
+      description:
+        "Today's mood forecast (1–5) from yesterday's numbers of every section, by a model " +
+        "trained on the user's own days, with what pulls the mood up and down most " +
+        '(`effect`: mood points for a typical difference of the number). Tell it only when ' +
+        '`trusted` (it beat "like the last week"); otherwise say there is not enough to tell.',
+      parameters: NO_PARAMETERS,
+      handler: async (userId) =>
+        this.overviews.moodForecast(userId, await this.ai.hiddenFromShared(userId)),
+    });
+
+    // "When did I last…": search by meaning over the user's own history.
+    this.ai.registerTool({
+      name: 'core_recall',
+      module: 'ai',
+      description:
+        "Searches the user's own history by meaning — diary entries, tasks, health, life " +
+        'events and more — when the question is about something in the past without exact ' +
+        'words or dates ("when did I last have these symptoms", "what did I write about the ' +
+        'move"). Returns the closest items with their date and a link; then answer from them, ' +
+        'or read the item with its own section tool.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'What to look for, in the user words' },
+          module: { type: 'string', description: 'Only in this section, e.g. diary' },
+        },
+        required: ['query'],
+      },
+      handler: async (userId, args) =>
+        (await this.recall.search(userId, String(args['query'] ?? ''), {
+          module: typeof args['module'] === 'string' ? args['module'] : undefined,
+        })) ?? { error: 'Search by meaning is off: no AI connection makes vectors' },
+    });
+
+    // "Remember that…": a fact kept between conversations, in every prompt from then on.
+    this.ai.registerTool({
+      name: 'core_remember',
+      module: 'ai',
+      writes: true,
+      undoTables: [aiMemories],
+      description:
+        'Remembers a fact about the user for every later conversation — only when the user ' +
+        'asks you to remember something, or states a lasting preference ("I am vegetarian", ' +
+        '"call me Roma"). One short sentence in the third person.',
+      parameters: {
+        type: 'object',
+        properties: { text: { type: 'string', description: 'The fact, one sentence' } },
+        required: ['text'],
+      },
+      handler: (userId, args) => this.memories.add(userId, aiMemoryInputSchema.parse(args).text),
+    });
+    this.ai.registerTool({
+      name: 'core_forget',
+      module: 'ai',
+      writes: true,
+      undoTables: [aiMemories],
+      description: 'Forgets one remembered fact, by its id from the list in your instructions.',
+      parameters: idParameters('The id of the fact'),
+      handler: async (userId, args) => {
+        await this.memories.remove(userId, String(args['id']));
+      },
+    });
+
+    // "Undo that", "put it back": the assistant's own last change, after the user's "yes".
+    const lastChange = async (userId: string) => {
+      const id = await this.actions.lastUndoable(userId);
+      if (!id) {
+        throw new Error('There is no change of yours that can be undone');
+      }
+      const action = await this.actions.undoable(userId, id);
+      return { id, tool: action.tool, module: action.module, at: action.createdAt.toISOString() };
+    };
+    this.ai.registerTool({
+      name: 'core_undo_last_change',
+      module: 'ai',
+      writes: true,
+      confirm: lastChange,
+      description:
+        'Undoes the last change you (the assistant) made to the data — when the user asks to ' +
+        'undo it, cancel it or put it back as it was. Refuses when the data was changed again ' +
+        'since.',
+      parameters: NO_PARAMETERS,
+      handler: async (userId) => {
+        const { id } = await lastChange(userId);
+        return this.ai.undoAction(userId, id);
       },
     });
   }

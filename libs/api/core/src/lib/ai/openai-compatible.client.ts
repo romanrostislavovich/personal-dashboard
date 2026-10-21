@@ -124,6 +124,30 @@ function tokenUsage(raw: RawUsage | undefined): TokenUsage | null {
   };
 }
 
+/**
+ * Texts as vectors for search by meaning: `POST {baseUrl}/embeddings` (OpenAI, Ollama and
+ * the like). One vector per text, in their order.
+ */
+export async function embed(connection: ChatConnection, texts: string[]): Promise<number[][]> {
+  const response = await safeFetch(`${connection.baseUrl.replace(/\/+$/, '')}/embeddings`, {
+    method: 'POST',
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+    headers: {
+      'Content-Type': 'application/json',
+      ...(connection.apiKey ? { Authorization: `Bearer ${connection.apiKey}` } : {}),
+    },
+    body: JSON.stringify({ model: connection.model, input: texts }),
+  });
+  if (!response.ok) {
+    throw new AiRequestError(
+      `Embeddings ${response.status}: ${await response.text()}`,
+      response.status,
+    );
+  }
+  const { data } = (await response.json()) as { data: { index: number; embedding: number[] }[] };
+  return [...data].sort((a, b) => a.index - b.index).map((item) => item.embedding);
+}
+
 export interface AudioFile {
   data: Buffer;
   /** With the extension: the API tells the format by it (Telegram voice messages are `.ogg`). */

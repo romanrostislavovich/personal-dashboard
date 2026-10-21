@@ -13,12 +13,15 @@ import { LinksService } from '../links/links.service';
 import { UsersService } from '../users/users.service';
 import { AiActionsService } from './ai-actions.service';
 import { AiConnectionsService } from './ai-connections.service';
-import { NO_JUDGEMENT, PromptOptions, systemPrompt } from './ai-prompt';
+import { completionSystem, PromptOptions, systemPrompt } from './ai-prompt';
 import { AiTool } from './ai-tool';
 import { withAttachments } from './attachment-text';
 import { claimsChange, FAKE_CHANGE_CORRECTION } from './claims-change';
 import { DeviceToolsService } from '../devices/device-tools.service';
 import { AiLimitError, AiUsageService } from './ai-usage.service';
+import { AiUndoService } from './ai-undo.service';
+import { AiMemoryService } from './ai-memory.service';
+import { UndoData } from './ai-undo';
 import { AiRequestError, ChatConnection, ChatMessage } from './openai-compatible.client';
 import { callKey, PendingConfirmations } from './pending-confirmations';
 import { runToolLoop } from './tool-loop';
@@ -42,6 +45,12 @@ export interface CompleteOptions {
    * the user's; by default it is in the user's language.
    */
   keepLanguage?: boolean;
+  /**
+   * Light work — sorting, extracting, short JSON: it goes to the light-task connection when
+   * the user chose one (a local model does it for free), back to the active one if that
+   * fails. A section's own connection still wins.
+   */
+  light?: boolean;
 }
 
 export interface AiAnswer {
@@ -74,6 +83,8 @@ export class AiService {
     private readonly links: LinksService,
     private readonly usage: AiUsageService,
     private readonly devices: DeviceToolsService,
+    private readonly undos: AiUndoService,
+    private readonly memories: AiMemoryService,
   ) {}
 
   /** The tools of the sections, and those of the user's devices online now. */
@@ -81,7 +92,19 @@ export class AiService {
     return [...this.tools, ...this.devices.toolsFor(userId)];
   }
 
+  /**
+   * Puts back what one change of the assistant did (the log in the AI settings, or "undo"
+   * in a conversation). Refuses when the data was changed again since.
+   */
+  async undoAction(userId: string, actionId: string): Promise<{ tool: string }> {
+    const action = await this.actions.undoable(userId, actionId);
+    await this.undos.undo(userId, action.undo);
+    await this.actions.markUndone(userId, actionId);
+    return { tool: action.tool };
+  }
+
   registerTool(tool: AiTool): void {
+    tool.undoTables?.forEach((table) => AiUndoService.check(table));
     if (tool.confirm && !tool.writes) {
       // Otherwise it would be offered where the user cannot confirm anything.
       throw new Error(`AI tool ${tool.name}: \`confirm\` requires \`writes: true\``);
@@ -166,6 +189,7 @@ export class AiService {
           ...options,
           hasAttachments,
           pages: this.links.pages(),
+          memories: await this.memories.list(userId),
         }),
       },
       ...history.map(({ role, content, attachments }) => ({
@@ -235,14 +259,26 @@ export class AiService {
     if (module && !(await this.canSee(userId, module))) {
       throw new ForbiddenException(`AI access to ${module} is off`);
     }
-    const connection =
-      (module && (await this.connections.ofModule(userId, module))) ||
-      (await this.requireConnection(userId));
-    const system = await this.withLanguage(userId, `${instruction} ${NO_JUDGEMENT}`, options);
+    const own = module ? await this.connections.ofModule(userId, module) : null;
+    const light = !own && options.light ? await this.connections.light(userId) : null;
+    const connection = own || light || (await this.requireConnection(userId));
+    const language = options.keepLanguage ? null : await this.languageOf(userId);
     const messages: ChatMessage[] = [
-      { role: 'system', content: system },
+      { role: 'system', content: completionSystem(instruction, language) },
       { role: 'user', content },
     ];
+    if (light) {
+      try {
+        return (await this.usage.complete(userId, light, messages)).content ?? '';
+      } catch (error) {
+        // The local model is off (the computer sleeps): the work is not lost, the active
+        // connection does it.
+        this.logger.warn(
+          `The light-task connection failed (${String(error)}); the active one answers`,
+        );
+        return this.complete(userId, instruction, content, module, { ...options, light: false });
+      }
+    }
     try {
       const reply = await this.usage
         .complete(userId, connection, messages)
@@ -325,6 +361,11 @@ export class AiService {
     return `${instruction} Always answer in ${language}.`;
   }
 
+  /** The language answers are written in: the user's own. */
+  private async languageOf(userId: string): Promise<string> {
+    return coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
+  }
+
   /** Runs a tool call; `changed` — a write tool actually changed data. */
   private async runTool(
     userId: string,
@@ -337,7 +378,7 @@ export class AiService {
     }
     let args: Record<string, unknown> = {};
     // Changes go to the log (AiActionsService); reads are not worth it.
-    const log = (outcome: AiActionOutcome, error?: string) =>
+    const log = (outcome: AiActionOutcome, error?: string, undo?: UndoData | null) =>
       tool.writes
         ? this.actions.record(userId, {
             tool: tool.name,
@@ -345,6 +386,7 @@ export class AiService {
             args,
             outcome,
             error,
+            undo,
           })
         : Promise.resolve();
     try {
@@ -361,8 +403,11 @@ export class AiService {
           asks: true,
         };
       }
-      const value = await tool.handler(userId, args);
-      await log('done');
+      // A change that names its tables can be undone: the rows are read around the call.
+      const { value, undo } = tool.undoTables?.length
+        ? await this.undos.capture(userId, tool.undoTables, () => tool.handler(userId, args))
+        : { value: await tool.handler(userId, args), undo: null };
+      await log('done', undefined, undo);
       const result = value === undefined ? '{"done":true}' : JSON.stringify(value);
       // A cut answer must not pass for a whole one: the model would answer from a part of the
       // data as if it were all of it ("no such track in your top").

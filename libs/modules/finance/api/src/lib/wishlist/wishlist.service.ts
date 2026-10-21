@@ -306,7 +306,10 @@ export class WishlistService {
     }
     try {
       const text = pageText(html, AI_TEXT_LIMIT);
-      return parseAiProduct(await this.ai.complete(userId, AI_INSTRUCTION, text, 'finance'));
+      // Reading a name and a price off a page: light work.
+      return parseAiProduct(
+        await this.ai.complete(userId, AI_INSTRUCTION, text, 'finance', { light: true }),
+      );
     } catch (error) {
       this.logger.warn(`The AI did not read a product page: ${String(error)}`);
       return null;

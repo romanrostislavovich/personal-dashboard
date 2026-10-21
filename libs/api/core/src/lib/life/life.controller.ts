@@ -31,6 +31,7 @@ import {
   LifeSummary,
   LifeSummaryQuery,
   lifeSummaryQuerySchema,
+  MoodForecast,
   MoodInsights,
   MoodInsightsQuery,
   moodInsightsQuerySchema,
@@ -64,6 +65,12 @@ export class LifeController {
     @Query(new ZodValidationPipe(moodInsightsQuerySchema)) query: MoodInsightsQuery,
   ): Promise<MoodInsights> {
     return this.overviews.moodInsights(user.id, query);
+  }
+
+  /** Today's mood forecast from yesterday's numbers, by the user's own model. */
+  @Get('forecast')
+  forecast(@CurrentUser() user: AuthUser): Promise<MoodForecast> {
+    return this.overviews.moodForecast(user.id);
   }
 
   /** How every daily number of the sections goes with every other, and what predicts one. */

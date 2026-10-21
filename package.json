@@ -27,6 +27,7 @@
     "db:generate": "drizzle-kit generate",
     "build": "nx run-many -t build -p api web",
     "test": "nx run-many -t test",
+    "ai:eval": "vitest run -c vitest.evals.mts",
     "lint": "nx run-many -t lint",
     "desktop:package": "nx package desktop",
     "e2e": "playwright test -c e2e/playwright.config.ts"

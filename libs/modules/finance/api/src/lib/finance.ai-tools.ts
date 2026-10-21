@@ -27,6 +27,7 @@ import { TransactionsService } from './transactions/transactions.service';
 import { FINANCE_ACTIONS } from './finance.server-actions';
 import { WishlistService } from './wishlist/wishlist.service';
 import { filterTransactions, totalsByCategory } from './transactions/transaction-report';
+import { costSources, recurringPayments, transactions, wishes } from './finance.schema';
 
 /** Period schema + an optional "wallet". */
 const QUERY_PARAMETERS = {
@@ -145,6 +146,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_add_wish',
       module: 'finance',
       writes: true,
+      undoTables: [wishes],
       description:
         'Adds a product to the wishlist by the link to its page in a shop; its price is then ' +
         'read from the page every day and a change is reported. The name is taken from the page ' +
@@ -173,6 +175,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_update_wish',
       module: 'finance',
       writes: true,
+      undoTables: [wishes],
       description:
         'Changes a product of the wishlist: pass its id and only the fields to change — the ' +
         'name, the note, the price typed in by hand, `goalId` — the savings goal it is saved ' +
@@ -204,6 +207,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_wish_bought',
       module: 'finance',
       writes: true,
+      undoTables: [wishes, transactions],
       description:
         'Marks a product of the wishlist as bought: its price is not watched any more. With ' +
         '`record: true` the purchase is also recorded as an expense of today at its price — ' +
@@ -362,6 +366,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_add_transaction',
       module: 'finance',
       writes: true,
+      undoTables: [transactions],
       description:
         "Records an income or an expense. Reuse the user's existing categories when one fits " +
         '(see finance_transactions). Only when the user names a project, put it into that ' +
@@ -380,6 +385,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_add_transactions',
       module: 'finance',
       writes: true,
+      undoTables: [transactions],
       description:
         `Records up to ${MAX_BATCH} incomes and expenses at once — for a bank statement or a ` +
         'receipt the user sent; if there are more, make several calls in the same turn. ' +
@@ -412,6 +418,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_update_transaction',
       module: 'finance',
       writes: true,
+      undoTables: [transactions],
       description:
         'Changes a transaction: pass its id (from finance_transactions) and only the fields ' +
         'to change.',
@@ -441,6 +448,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_delete_transaction',
       module: 'finance',
       writes: true,
+      undoTables: [transactions],
       confirm: (userId, args) => this.transactions.get(userId, idArgs.parse(args).id),
       description: 'Deletes a transaction.',
       parameters: idParameters('Transaction id from finance_transactions'),
@@ -466,6 +474,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_add_recurring_payment',
       module: 'finance',
       writes: true,
+      undoTables: [recurringPayments],
       description:
         'Adds a monthly or yearly payment (a server, a domain, a subscription): on its day it ' +
         'becomes an ' +
@@ -483,6 +492,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_update_recurring_payment',
       module: 'finance',
       writes: true,
+      undoTables: [recurringPayments],
       description:
         'Changes a recurring payment (price, day, pause with isActive false…): pass its id and ' +
         'only the fields to change.',
@@ -516,6 +526,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_delete_recurring_payment',
       module: 'finance',
       writes: true,
+      undoTables: [recurringPayments],
       confirm: find,
       description:
         'Deletes a recurring payment; expenses it already created stay. To stop it for a while, ' +
@@ -609,6 +620,7 @@ export class FinanceAiTools implements OnModuleInit {
       name: 'finance_delete_cost_source',
       module: 'finance',
       writes: true,
+      undoTables: [costSources],
       confirm: find,
       description: 'Stops importing costs from a source and forgets its token.',
       parameters: idParameters('Cost source id from finance_cost_sources'),

@@ -14,6 +14,7 @@ import { DiarySummaryService } from './diary-summary.service';
 import { DiaryController } from './diary.controller';
 import { DiaryJobs } from './diary.jobs';
 import { DiaryService } from './diary.service';
+import { DiaryRecall } from './diary.recall';
 
 /**
  * Personal diary: one entry per day (markdown), mood, tags from hashtags, emoji marks,
@@ -30,6 +31,7 @@ import { DiaryService } from './diary.service';
     DiaryLinks,
     DiaryExport,
     DiarySearch,
+    DiaryRecall,
     DiaryService,
     DiaryPhotosService,
     DiarySummaryService,

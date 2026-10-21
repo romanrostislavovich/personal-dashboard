@@ -43,6 +43,9 @@ import { SignInLog } from './security/sign-in-log.service';
 import { DataExportService } from './data-export/data-export.service';
 import { DataImportService } from './data-export/data-import.service';
 import { TrashService } from './trash/trash.service';
+import { AiUndoService } from './ai/ai-undo.service';
+import { AiMemoryService } from './ai/ai-memory.service';
+import { RecallService } from './recall/recall.service';
 import { SessionsService } from './auth/sessions.service';
 import { TwoFactorService } from './auth/two-factor.service';
 import { AuthService } from './auth/auth.service';
@@ -196,6 +199,9 @@ import { UserActivityService } from './realtime/user-activity.service';
     AiUsageService,
     AiConversationsService,
     AiActionsService,
+    AiUndoService,
+    AiMemoryService,
+    RecallService,
     CoreAiTools,
     AiLinks,
     AiTelegramAssistant,
@@ -236,6 +242,8 @@ import { UserActivityService } from './realtime/user-activity.service';
     AiService,
     // For the morning digest: modules add their sections via register().
     MorningDigestService,
+    // Sections add their items to search by meaning (`<module>.recall.ts`).
+    RecallService,
     // For the command palette: modules register their search via register().
     OtherComputersService,
     // For the list of integrations: a module reports its connections (see IntegrationsService).

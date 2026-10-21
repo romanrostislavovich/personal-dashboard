@@ -4,6 +4,7 @@ import { trackedRepoInputSchema, trackedRepoUpdateSchema } from '@pd/contracts';
 import { z } from 'zod';
 import { ReposService } from './repos.service';
 import { OPEN_SOURCE_ACTIONS } from './open-source.server-actions';
+import { trackedRepos } from './open-source.schema';
 
 const settingsSchema = trackedRepoUpdateSchema.pick({ hidden: true, notify: true });
 
@@ -77,6 +78,7 @@ export class OpenSourceAiTools implements OnModuleInit {
       name: 'github_track_repo',
       module: 'development',
       writes: true,
+      undoTables: [trackedRepos],
       description:
         "Adds a repository that is not the user's own (theirs appear by themselves) from " +
         'GitHub, GitLab or Bitbucket: stars, issues, releases, npm downloads. The service must ' +
@@ -108,6 +110,7 @@ export class OpenSourceAiTools implements OnModuleInit {
       name: 'github_repo_settings',
       module: 'development',
       writes: true,
+      undoTables: [trackedRepos],
       description:
         'Hides a repository from the list, the totals and the digest (or shows it again) and ' +
         'switches its notifications about new issues, PRs, releases and star milestones.',
@@ -132,6 +135,7 @@ export class OpenSourceAiTools implements OnModuleInit {
       name: 'github_untrack_repo',
       module: 'development',
       writes: true,
+      undoTables: [trackedRepos],
       confirm: async (userId, args) => {
         const { fullName, stars } = await find(userId, args);
         return { fullName, stars };

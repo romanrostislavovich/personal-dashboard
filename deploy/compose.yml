@@ -61,6 +61,33 @@ services:
     # No published port: only the app asks it.
     <<: *logging
 
+  # Local models on this server, optional: `COMPOSE_PROFILES=ollama` in .env switches it on.
+  # It pulls OLLAMA_MODELS on start (by default the model of search by meaning, 562 MB) and keeps
+  # one model in memory at a time, within OLLAMA_MEMORY. No published port: only the app asks
+  # it — in Settings → AI, a connection to http://ollama:11434/v1. A chat model good enough for
+  # light work (qwen2.5:7b, see `npm run ai:eval`) needs a server with 8 GB of memory.
+  ollama:
+    image: ollama/ollama:0.40.6
+    profiles: ['ollama']
+    restart: unless-stopped
+    environment:
+      OLLAMA_MAX_LOADED_MODELS: 1
+      OLLAMA_NUM_PARALLEL: 1
+      OLLAMA_KEEP_ALIVE: 5m
+      MODELS: ${OLLAMA_MODELS:-paraphrase-multilingual}
+    entrypoint:
+      - sh
+      - -c
+      - |
+        ollama serve &
+        until ollama list >/dev/null 2>&1; do sleep 1; done
+        for model in $$MODELS; do ollama pull "$$model"; done
+        wait
+    volumes:
+      - ollama-data:/root/.ollama
+    mem_limit: ${OLLAMA_MEMORY:-1g}
+    <<: *logging
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -104,3 +131,4 @@ volumes:
   db-data:
   caddy-data:
   caddy-config:
+  ollama-data:

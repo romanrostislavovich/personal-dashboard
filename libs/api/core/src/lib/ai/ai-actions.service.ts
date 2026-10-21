@@ -1,8 +1,9 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AiAction, AiActionOutcome } from '@pd/contracts';
-import { desc, eq, lt } from 'drizzle-orm';
+import { and, desc, eq, lt } from 'drizzle-orm';
 import { DB, Database } from '../database/database.module';
 import { aiActions } from './ai.schema';
+import { UndoData } from './ai-undo';
 
 /** The log shows this many recent actions… */
 const LIST_LIMIT = 200;
@@ -29,6 +30,7 @@ export class AiActionsService {
       args: unknown;
       outcome: AiActionOutcome;
       error?: string;
+      undo?: UndoData | null;
     },
   ): Promise<void> {
     const args = JSON.stringify(action.args ?? {});
@@ -40,6 +42,7 @@ export class AiActionsService {
         args: args.length > MAX_ARGS_CHARS ? `${args.slice(0, MAX_ARGS_CHARS)}…` : args,
         outcome: action.outcome,
         error: action.error?.slice(0, 500) ?? null,
+        undo: action.undo ?? null,
       });
     } catch (error) {
       // The log must never break the assistant itself.
@@ -65,6 +68,46 @@ export class AiActionsService {
       outcome: row.outcome as AiActionOutcome,
       error: row.error,
       createdAt: row.createdAt.toISOString(),
+      undoable: row.outcome === 'done' && row.undo !== null,
     }));
+  }
+
+  /** A change that can be undone: its tool and the way back. */
+  async undoable(
+    userId: string,
+    id: string,
+  ): Promise<{ id: string; tool: string; module: string; undo: UndoData; createdAt: Date }> {
+    const [row] = await this.db
+      .select()
+      .from(aiActions)
+      .where(and(eq(aiActions.id, id), eq(aiActions.userId, userId)));
+    if (!row || row.outcome !== 'done' || !row.undo) {
+      throw new NotFoundException('No change to undo');
+    }
+    return {
+      id: row.id,
+      tool: row.tool,
+      module: row.module,
+      undo: row.undo,
+      createdAt: row.createdAt,
+    };
+  }
+
+  /** The latest change that can still be undone, if any. */
+  async lastUndoable(userId: string): Promise<string | null> {
+    const rows = await this.db
+      .select({ id: aiActions.id, outcome: aiActions.outcome, undo: aiActions.undo })
+      .from(aiActions)
+      .where(eq(aiActions.userId, userId))
+      .orderBy(desc(aiActions.createdAt))
+      .limit(20);
+    return rows.find((row) => row.outcome === 'done' && row.undo !== null)?.id ?? null;
+  }
+
+  async markUndone(userId: string, id: string): Promise<void> {
+    await this.db
+      .update(aiActions)
+      .set({ outcome: 'undone' })
+      .where(and(eq(aiActions.id, id), eq(aiActions.userId, userId)));
   }
 }

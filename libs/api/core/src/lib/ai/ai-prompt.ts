@@ -20,6 +20,28 @@ export const NO_JUDGEMENT =
   'Write without judgement: say what the data shows and never evaluate the user or their ' +
   'choices — no praise, no criticism, no moralising.';
 
+/**
+ * The system prompt of a single request (`AiService.complete`): the job's instruction, no
+ * judgement, and the user's language — `null` keeps the language of the content. The evals
+ * build it the same way, so they test what production sends.
+ */
+export function completionSystem(instruction: string, language: string | null): string {
+  const system = `${instruction} ${NO_JUDGEMENT}`;
+  return language ? `${system} Always answer in ${language}.` : system;
+}
+
+/** The user's memories for the prompt; they change seldom, so they stay before the time. */
+function memoryLines(memories: { id: string; text: string }[]): string[] {
+  if (!memories.length) {
+    return [];
+  }
+  return [
+    'The user asked you to remember these facts (use them when they matter; core_forget',
+    'removes one by its id):',
+    ...memories.map((memory) => `[${memory.id}] ${memory.text.replace(/\s+/g, ' ')};`),
+  ];
+}
+
 /** How the model should behave when it can change data. */
 const WRITE_RULES = [
   'You can also change data with tools: add, edit and delete birthdays, diary entries,',
@@ -104,6 +126,8 @@ export interface PromptOptions {
   hasAttachments?: boolean;
   /** The pages of the app the answer may link to (see LinksService.registerPages). */
   pages?: AppPage[];
+  /** What the user asked the assistant to remember (see AiMemoryService). */
+  memories?: { id: string; text: string }[];
 }
 
 /**
@@ -113,7 +137,7 @@ export interface PromptOptions {
 export function systemPrompt(
   user: UserRow | undefined,
   timeZone: string,
-  { plainText, allowWrites, hasAttachments, pages }: PromptOptions,
+  { plainText, allowWrites, hasAttachments, pages, memories }: PromptOptions,
 ): string {
   const now = zonedDateTime(new Date(), timeZone);
   return [
@@ -132,6 +156,7 @@ export function systemPrompt(
     ...(plainText ? [] : pageLinks(pages ?? [])),
     ...(allowWrites ? WRITE_RULES : []),
     ...(hasAttachments ? ATTACHMENT_RULES : []),
+    ...memoryLines(memories ?? []),
     // Last: it changes every minute, and the providers cache a request by its start — the tools
     // and everything above stay the same and are read from the cache (cheaper and faster).
     `Now it is ${now.date} ${now.time} for the user, time zone ${timeZone}.`,

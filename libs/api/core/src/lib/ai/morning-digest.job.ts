@@ -8,9 +8,10 @@ import { SchedulerService } from '../scheduler/scheduler.service';
 import { UsersService } from '../users/users.service';
 import { AiConnectionsService } from './ai-connections.service';
 import { AiService } from './ai.service';
+import { DigestChange } from './digest-changes';
 import { MorningDigestService } from './morning-digest.service';
 
-const MORNING_DIGEST_INSTRUCTION = [
+export const MORNING_DIGEST_INSTRUCTION = [
   "You write the user's morning digest for Telegram. You get JSON: today's date and sections,",
   "each with a `description`, today's `facts` and `previous` — the facts of the previous digest",
   '(null — the section is new). Start with the weather and what to wear, a sentence or two.',
@@ -19,7 +20,27 @@ const MORNING_DIGEST_INSTRUCTION = [
   'e.g. "⭐ owner/repo: +3 (125)". Do not repeat what has not changed.',
   'Short bullet points with emoji, no greeting or heading, plain text without markdown.',
   'Use only the given facts and never make things up.',
+  // A model mixed them up: last week's artist came back as this week's news.
+  "Every name, number and event you tell comes from today's `facts`; `previous` is only to",
+  'compare with — never tell something from `previous` as news. A fact that is null means',
+  'there is nothing to tell about it.',
 ].join(' ');
+
+/** What the model gets: today's date and, for each section, its facts and the previous ones. */
+export function digestRequest(
+  today: string,
+  changes: Pick<DigestChange, 'section' | 'facts' | 'previous'>[],
+): string {
+  return JSON.stringify({
+    today,
+    sections: changes.map(({ section, facts, previous }) => ({
+      id: section.id,
+      description: section.description,
+      facts,
+      previous,
+    })),
+  });
+}
 
 /**
  * The morning digest for users who enabled it in the AI settings, at the time each of them
@@ -67,16 +88,11 @@ export class MorningDigestJob implements OnModuleInit {
     if (changes.length === 0) {
       return;
     }
-    const data = {
-      today,
-      sections: changes.map(({ section, facts, previous }) => ({
-        id: section.id,
-        description: section.description,
-        facts,
-        previous,
-      })),
-    };
-    const reply = await this.ai.complete(userId, MORNING_DIGEST_INSTRUCTION, JSON.stringify(data));
+    const reply = await this.ai.complete(
+      userId,
+      MORNING_DIGEST_INSTRUCTION,
+      digestRequest(today, changes),
+    );
     await this.notifications.send(userId, {
       title: coreMessages((await this.users.findById(userId))?.locale).morningDigestTitle,
       body: reply,

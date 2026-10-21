@@ -2,6 +2,8 @@ import {
   AI_IMAGE_TYPES,
   AiAction,
   AiAttachmentUpload,
+  AiMemory,
+  AiRecallHit,
   AiChatRequest,
   AiChatResponse,
   AiConnectionInput,
@@ -40,6 +42,22 @@ export function aiApi(api: ApiClient) {
     digestOptions: () => api.get<string[]>(`${BASE}/digest-options`),
     /** What the assistant changed or tried to change, newest first. */
     actions: () => api.get<AiAction[]>(`${BASE}/actions`),
+    /** What the assistant keeps between conversations. */
+    memories: () => api.get<AiMemory[]>(`${BASE}/memories`),
+    addMemory: (text: string) => api.post<AiMemory>(`${BASE}/memories`, { text }),
+    removeMemory: (id: string) => api.delete(`${BASE}/memories/${id}`),
+
+    /** Search by meaning over the user's history; 400 — no connection makes vectors. */
+    recall: (question: string, module?: string) =>
+      api.get<AiRecallHit[]>(
+        `${BASE}/recall?q=${encodeURIComponent(question)}${module ? `&module=${encodeURIComponent(module)}` : ''}`,
+      ),
+    recallStatus: () => api.get<{ indexed: number }>(`${BASE}/recall/status`),
+    /** Brings the index up to date now (it is also done every hour). */
+    recallIndex: () => api.post<{ indexed: number }>(`${BASE}/recall/index`, {}),
+
+    /** Puts back what one change of the assistant did; 409 — changed again since. */
+    undoAction: (id: string) => api.post<void>(`${BASE}/actions/${id}/undo`, {}),
 
     /** One message; the server keeps the conversation (shared with Telegram). */
     chat: (request: AiChatRequest) => api.post<AiChatResponse>(`${BASE}/chat`, request),

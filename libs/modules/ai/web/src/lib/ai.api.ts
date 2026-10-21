@@ -41,6 +41,30 @@ export class AiApi {
     return fromCore(() => this.ai.actions());
   }
 
+  undoAction(id: string) {
+    return fromCore(() => this.ai.undoAction(id));
+  }
+
+  memories() {
+    return fromCore(() => this.ai.memories());
+  }
+
+  addMemory(text: string) {
+    return fromCore(() => this.ai.addMemory(text));
+  }
+
+  removeMemory(id: string) {
+    return fromCore(() => this.ai.removeMemory(id));
+  }
+
+  recallStatus() {
+    return fromCore(() => this.ai.recallStatus());
+  }
+
+  recallIndex() {
+    return fromCore(() => this.ai.recallIndex());
+  }
+
   activateConnection(id: string) {
     return fromCore(() => this.ai.activateConnection(id));
   }

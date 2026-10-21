@@ -18,6 +18,7 @@ import {
 import { z } from 'zod';
 import { RemindersService } from './reminders.service';
 import { TasksService } from './tasks.service';
+import { reminders, tasks } from './tasks.schema';
 
 const REPEAT = {
   type: 'object',
@@ -112,6 +113,7 @@ export class TasksAiTools implements OnModuleInit {
       name: 'tasks_add',
       module: 'tasks',
       writes: true,
+      undoTables: [tasks],
       description:
         'Adds a task to the TODO list. A repeating task needs a due date. To be told about it ' +
         'at a time, add a reminder with its id (reminders_add).',
@@ -126,6 +128,7 @@ export class TasksAiTools implements OnModuleInit {
       name: 'tasks_update',
       module: 'tasks',
       writes: true,
+      undoTables: [tasks],
       description:
         'Changes a task: only the fields given. `done: true` marks it done (a repeating one comes ' +
         'back on its next day), `done: false` reopens it.',
@@ -157,6 +160,7 @@ export class TasksAiTools implements OnModuleInit {
       name: 'tasks_delete',
       module: 'tasks',
       writes: true,
+      undoTables: [tasks],
       confirm: async (userId, args) => {
         const { title, dueDate } = await find(userId, args);
         return { title, dueDate };
@@ -200,6 +204,7 @@ export class TasksAiTools implements OnModuleInit {
       name: 'reminders_add',
       module: 'tasks',
       writes: true,
+      undoTables: [reminders],
       description:
         'Sets a reminder: the text comes to Telegram and as a notification at the time. `at` is ' +
         'the user\'s local time; resolve "tomorrow", "in an hour" from `now` of reminders_list. ' +
@@ -230,6 +235,7 @@ export class TasksAiTools implements OnModuleInit {
       name: 'reminders_update',
       module: 'tasks',
       writes: true,
+      undoTables: [reminders],
       description:
         'Changes a reminder: another text, another time (`at` — this is also how it is ' +
         'postponed), or `done: true` when the user has dealt with it.',
@@ -264,6 +270,7 @@ export class TasksAiTools implements OnModuleInit {
       name: 'reminders_delete',
       module: 'tasks',
       writes: true,
+      undoTables: [reminders],
       confirm: async (userId, args) => {
         const { text } = await find(userId, args);
         return { text };

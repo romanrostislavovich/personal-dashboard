@@ -14,5 +14,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["vitest.config.mts", "src/**/*.spec.ts"]
+  "exclude": ["vitest.config.mts", "src/**/*.spec.ts", "src/**/*.eval.ts"]
 }

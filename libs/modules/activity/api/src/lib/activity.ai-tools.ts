@@ -11,6 +11,7 @@ import { ActivityService } from './activity.service';
 import { digestTimeline } from './timeline-digest';
 import { SitesService } from './sites.service';
 import { WellbeingService } from './wellbeing.service';
+import { activitySettings } from './activity.schema';
 
 const TIME = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const timelineArgs = activityDaySchema.extend({
@@ -65,6 +66,7 @@ export class ActivityAiTools implements OnModuleInit {
       name: 'activity_set_games_bonus',
       module: 'activity',
       writes: true,
+      undoTables: [activitySettings],
       description:
         'Sets how many minutes every task done today adds to the daily limit of games ' +
         '(0–120; 0 — the limit no longer depends on the tasks). The limit itself is set in ' +

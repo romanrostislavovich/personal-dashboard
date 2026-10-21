@@ -419,5 +419,12 @@
       "property": "Property",
       "debt": "Debt"
     }
+  },
+  "categoryModel": {
+    "title": "Your own category model",
+    "trusted": "Sorts new counterparties of an import on its own: right {{sure}}% of the time it is sure, on {{examples}} of your transactions.",
+    "learning": "Learning from your {{examples}} sorted transactions: right {{accuracy}}% on new counterparties; the AI sorts them until it is right 90% of the time it is sure.",
+    "empty": "It learns from the transactions you sort: a few dozen of each kind and it starts helping.",
+    "suggested": "Suggested by your category model ({{probability}}%)"
   }
 }

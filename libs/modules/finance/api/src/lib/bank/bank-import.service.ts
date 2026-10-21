@@ -27,6 +27,7 @@ import {
 import { BankAccountRow, bankAccounts, BankConnectionRow } from './bank.schema';
 import { OWN_ACCOUNT, parsePkoStatement, Statement } from './pko-statement';
 import { EnableBankingClient } from './enable-banking.client';
+import { CategoryModelService, textOf } from '../categories/category-model.service';
 
 /** A first import asks for this much history; the bank gives what it keeps (often 90 days). */
 const HISTORY_DAYS = 730;
@@ -43,10 +44,12 @@ const AI_MAX_BATCHES = 10;
 /** The uncategorized bank transactions sorted again at once. */
 const RESORT_MAX = 5000;
 
-const AI_INSTRUCTION =
+export const AI_INSTRUCTION =
   'You sort bank operations into the categories of a personal budget. You get a JSON object: ' +
   '`categories` — the categories the user has, by kind; `operations` — the counterparties ' +
-  'with the kind and the payment title. Answer with JSON only: an object from each ' +
+  'with the kind and the payment title. Read the title too, in whatever language the bank ' +
+  'writes it: it often says what was bought (fuel is Transport, a pharmacy is Health). ' +
+  'Answer with JSON only: an object from each ' +
   'counterparty to one category of its kind exactly as written in `categories`, or null when ' +
   'none fits. Never make up a category.';
 
@@ -67,6 +70,7 @@ export class BankImportService {
     private readonly transactions: TransactionsService,
     private readonly ai: AiService,
     private readonly users: UsersService,
+    private readonly model: CategoryModelService,
   ) {}
 
   async importConnection(
@@ -338,8 +342,15 @@ export class BankImportService {
     const unknown: BankOperation[] = [];
     for (const op of operations) {
       const category = known.get(`${op.kind}|${counterpartyKey(op.counterparty)}`);
+      // A new counterparty: the user's own model first (free, offline), the AI after it.
+      const learned =
+        category && op.counterparty
+          ? null
+          : await this.model.sure(userId, op.kind, textOf(op.counterparty, op.note), op.amount);
       if (category && op.counterparty) {
         result.set(op, category);
+      } else if (learned) {
+        result.set(op, learned);
       } else {
         unknown.push(op);
       }
@@ -396,6 +407,8 @@ export class BankImportService {
             })),
           }),
           'finance',
+          // Sorting into categories: a local model does it for free when one is chosen.
+          { light: true },
         );
         const answer = parseJsonObject(reply);
         for (const [key, op] of batch) {
@@ -419,7 +432,7 @@ export class BankImportService {
 }
 
 /** The first JSON object of an answer (a model may wrap it in a code block). */
-function parseJsonObject(reply: string): Record<string, unknown> {
+export function parseJsonObject(reply: string): Record<string, unknown> {
   const start = reply.indexOf('{');
   const end = reply.lastIndexOf('}');
   if (start < 0 || end <= start) {

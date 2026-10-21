@@ -8,6 +8,35 @@ under **Updating**.
 
 ### Added
 
+- **Undo what the assistant changed** — Settings → AI → the log: an "Undo" button on every
+  change of the assistant, or ask it "undo that" (it shows what and waits for "yes"). What it
+  added goes, what it changed gets its old values, what it deleted comes back; a row changed
+  again since is left alone. 39 tools of 12 sections.
+- **The assistant remembers** — "remember that I am vegetarian": facts kept between
+  conversations, in every one of them, listed and removed in Settings → AI.
+- **Search by meaning** — "when did my knee hurt?" finds the diary entry, in Russian and
+  English alike: the diary, tasks, health, life events and notes about people get vectors every
+  hour from a local model (`paraphrase-multilingual` in Ollama) or a provider's; the assistant
+  searches with them. Only vectors are kept, the texts stay in their sections, encrypted.
+- **Your own category model** — trained on the transactions you sorted: a new counterparty
+  of a bank import gets its category from it once it has proven itself on counterparties it
+  never saw (the AI sorts the rest); it also fills the category of a new transaction.
+- **Today's mood, forecast** — Life → Summary: from yesterday's numbers of every section, by
+  a model of your own days, with what pulls the mood up and down; shown only when it beats
+  "like the last week".
+- **Local models on the server** — an optional Ollama service in `deploy/compose.yml`
+  (`COMPOSE_PROFILES=ollama`), for search by meaning and, on a bigger server, light work.
+- **A connection for light background work** — Settings → AI: sorting bank operations into
+  categories and reading a product page can go to another connection, e.g. a local model in
+  Ollama that does it for free; writing (the digest, stories, letters) stays with the active one,
+  and it steps in when the chosen one is off.
+- **Evals of the AI jobs** — `npm run ai:eval` runs the real instructions of the morning digest
+  and of sorting bank operations on made-up inputs against any model (a local Ollama by
+  default): "last week's artist is not this week's news", "a known merchant gets the right
+  category, none is made up". The first run already improved the sorting instruction.
+- **The AI stack** — [docs/ai-stack.md](docs/ai-stack.md): the AI of the dashboard by layer
+  (application, agents, platform, model, infrastructure), the gaps, and how a model could be
+  trained on one's own data.
 - **Pictures in the assistant** — a screenshot or a copied picture is pasted with Ctrl+V into
   the AI chat and into the extension's side panel (which can now attach files too, also with a
   clip button); a picture can be chosen as a file as well and sent to the Telegram bot as a file.
@@ -276,6 +305,10 @@ under **Updating**.
 
 ### Fixed
 
+- **The artist of the week in the morning digest** — the digest named an artist the person had
+  not listened to: the model told last digest's facts (`previous`) as news, and a few songs an
+  autoplay scrobbled made an "artist of the week". The model is told that names and numbers come
+  only from today's facts, and an artist needs at least 5 plays in the week.
 - **A login from the menu under a field** — the browser extension fills the form of the field the
   menu was opened for: on a page with several forms (a sign-in in the header and in a dialog,
   beside a sign-up) the first form of the page was filled, and the field clicked stayed empty.

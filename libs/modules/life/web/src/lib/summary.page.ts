@@ -11,6 +11,7 @@ import { LifeSummary } from '@pd/contracts';
 import { RouterLink } from '@angular/router';
 import { LifeApi } from './life.api';
 import { MoodInsightsComponent } from './mood-insights.component';
+import { MoodForecastComponent } from './mood-forecast.component';
 import { StoryCardComponent } from './story-card.component';
 
 /** "Wrapped": the numbers of every module for a month or a year. */
@@ -24,6 +25,7 @@ import { StoryCardComponent } from './story-card.component';
     MatButtonToggleModule,
     MatCardModule,
     MatIconModule,
+    MoodForecastComponent,
     MoodInsightsComponent,
     RouterLink,
     StoryCardComponent,
@@ -101,6 +103,7 @@ import { StoryCardComponent } from './story-card.component';
       }
     </div>
 
+    <pd-mood-forecast />
     <pd-mood-insights />
   `,
   styles: `

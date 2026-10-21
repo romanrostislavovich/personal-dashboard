@@ -21,6 +21,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { FinanceApi } from './finance.api';
 import { StatementImportButton } from './statement-import.button';
+import { CategoryModelComponent } from './category-model.component';
 
 /** The countries Enable Banking reaches, the user's own first. */
 const COUNTRIES = [
@@ -56,6 +57,7 @@ const SOON_DAYS = 7;
   selector: 'pd-bank-integration',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CategoryModelComponent,
     DatePipe,
     IntegrationGuideComponent,
     MatButtonModule,
@@ -221,6 +223,7 @@ const SOON_DAYS = 7;
               title="Enable Banking"
             />
           }
+          <pd-category-model />
         </mat-card-content>
       </mat-card>
     }
