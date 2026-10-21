@@ -38,6 +38,8 @@ import {
   transactionInputSchema,
   TransactionQuery,
   transactionQuerySchema,
+  CategoryModelState,
+  CategorySuggestion,
 } from '@pd/contracts';
 import { BudgetsService } from './budgets/budgets.service';
 import { GoalsService } from './goals/goals.service';
@@ -51,6 +53,7 @@ import {
   ValidRecurringPaymentInput,
 } from './recurring/recurring-payments.service';
 import { TransactionsService } from './transactions/transactions.service';
+import { CategoryModelService } from './categories/category-model.service';
 
 type ValidGoalInput = z.output<typeof savingsGoalInputSchema>;
 
@@ -66,6 +69,7 @@ export class FinanceController {
     private readonly goals: GoalsService,
     private readonly reports: FinanceReportsService,
     private readonly worth: NetWorthService,
+    private readonly categoryModel_: CategoryModelService,
   ) {}
 
   // --- Settings: the main currency ---
@@ -221,6 +225,28 @@ export class FinanceController {
   }
 
   // --- Net worth and runway ---
+
+  /** The user's own category model: how good it is (Finance → the bank's card). */
+  @Get('category-model')
+  categoryModel(@CurrentUser() user: AuthUser): Promise<CategoryModelState> {
+    return this.categoryModel_.quality(user.id);
+  }
+
+  /** The category the model is sure of for a transaction being typed in; null — not sure. */
+  @Get('category-suggest')
+  suggestCategory(
+    @CurrentUser() user: AuthUser,
+    @Query('kind') kind: string | undefined,
+    @Query('text') text: string | undefined,
+    @Query('amount') amount: string | undefined,
+  ): Promise<CategorySuggestion | null> {
+    return this.categoryModel_.suggest(
+      user.id,
+      kind === 'income' ? 'income' : 'expense',
+      (text ?? '').slice(0, 300),
+      Number(amount) || 0,
+    );
+  }
 
   @Get('worth')
   netWorth(@CurrentUser() user: AuthUser) {

@@ -120,6 +120,8 @@ export const CORE_READS = {
     apiRequest(`${API_PATHS.project(id)}/months`, { months }),
   /** What goes with the days of a good mood and of a bad one, across the sections. */
   moodInsights: (from: string, to: string) => apiRequest('/api/life/mood-insights', { from, to }),
+  /** Today's mood forecast from yesterday's numbers, by the user's own model. */
+  moodForecast: () => apiRequest('/api/life/forecast'),
   /** How every daily number goes with every other; the regression explains `target`. */
   correlations: (from: string, to: string, target?: string) =>
     apiRequest('/api/life/correlations', { from, to, ...(target ? { target } : {}) }),

@@ -3,6 +3,7 @@ import { AiService } from '@pd/api-core';
 import { habitDayInputSchema } from '@pd/contracts';
 import { z } from 'zod';
 import { HabitsService } from './habits.service';
+import { habitDays } from './habits.schema';
 
 const markArgs = habitDayInputSchema.extend({
   habitId: z.uuid(),
@@ -41,6 +42,7 @@ export class HabitsAiTools implements OnModuleInit {
       name: 'habits_mark_day',
       module: 'habits',
       writes: true,
+      undoTables: [habitDays],
       description:
         'Marks a day of a habit (ids from habits_list): `used` — the day was with it ("I had ' +
         'a drink", "smoked 3"), with `amount` in its unit when told; `clean` — without; `done` ' +

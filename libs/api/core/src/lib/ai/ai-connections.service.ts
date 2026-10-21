@@ -7,6 +7,7 @@ import {
   AiSettings,
   DEFAULT_DIGEST_TIME,
   DEFAULT_SPEECH_MODEL,
+  DEFAULT_EMBEDDING_MODEL,
   DEFAULT_VISION_MODEL,
   LocalDate,
   zonedDateTime,
@@ -35,6 +36,9 @@ const apiKeySecret = (connectionId: string) => `ai.connection.${connectionId}`;
  * Every connection is checked with a short request before it is saved, so switching to it
  * later just works. Keys are stored encrypted and never returned.
  */
+/** OpenAI's own small embedding model, when an OpenAI connection makes the vectors. */
+const OPENAI_EMBEDDING_MODEL = 'text-embedding-3-small';
+
 @Injectable()
 export class AiConnectionsService {
   constructor(
@@ -62,6 +66,9 @@ export class AiConnectionsService {
       speechModel: stored.speechModel,
       visionConnectionId: stored.visionConnectionId,
       visionModel: stored.visionModel,
+      lightConnectionId: stored.lightConnectionId,
+      embeddingConnectionId: stored.embeddingConnectionId,
+      embeddingModel: stored.embeddingModel,
       disabledModules: stored.disabledModules,
       digestOptIns: stored.digestOptIns,
       moduleConnections: stored.moduleConnections,
@@ -200,6 +207,12 @@ export class AiConnectionsService {
     if (preferences.visionConnectionId) {
       await this.find(userId, preferences.visionConnectionId);
     }
+    if (preferences.lightConnectionId) {
+      await this.find(userId, preferences.lightConnectionId);
+    }
+    if (preferences.embeddingConnectionId) {
+      await this.find(userId, preferences.embeddingConnectionId);
+    }
     for (const id of Object.values(preferences.moduleConnections ?? {})) {
       await this.find(userId, id);
     }
@@ -248,6 +261,41 @@ export class AiConnectionsService {
     return toChatConnection(
       { ...row, model: settings?.visionModel ?? DEFAULT_VISION_MODEL },
       apiKey,
+    );
+  }
+
+  /**
+   * The connection for light background work (see AiPreferences.lightConnectionId); null —
+   * none chosen, the active one does it.
+   */
+  async light(userId: string): Promise<ChatConnection | null> {
+    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    return settings?.lightConnectionId ? this.connection(userId, settings.lightConnectionId) : null;
+  }
+
+  /**
+   * The connection that makes the vectors of search by meaning, with the embedding model:
+   * the chosen one, else the first Ollama one (local), else the first OpenAI one (its own
+   * small embedding model); `null` — none, search by meaning is off.
+   */
+  async embedding(userId: string): Promise<ChatConnection | null> {
+    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    const rows = await this.rows(userId);
+    const chosen = rows.find((r) => r.id === settings?.embeddingConnectionId);
+    const row =
+      chosen ??
+      rows.find((r) => r.provider === 'ollama') ??
+      rows.find((r) => r.provider === 'openai');
+    if (!row) {
+      return null;
+    }
+    const model =
+      chosen || row.provider === 'ollama'
+        ? (settings?.embeddingModel ?? DEFAULT_EMBEDDING_MODEL)
+        : OPENAI_EMBEDDING_MODEL;
+    return toChatConnection(
+      { ...row, model },
+      await this.secrets.get(userId, apiKeySecret(row.id)),
     );
   }
 
@@ -402,6 +450,9 @@ function defaultSettings(userId: string): typeof aiSettings.$inferSelect {
     speechModel: DEFAULT_SPEECH_MODEL,
     visionConnectionId: null,
     visionModel: DEFAULT_VISION_MODEL,
+    lightConnectionId: null,
+    embeddingConnectionId: null,
+    embeddingModel: DEFAULT_EMBEDDING_MODEL,
     disabledModules: [],
     digestOptIns: [],
     moduleConnections: {},

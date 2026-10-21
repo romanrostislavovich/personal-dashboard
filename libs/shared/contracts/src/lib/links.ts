@@ -128,6 +128,25 @@ export interface MoodInsight {
   reading: boolean;
 }
 
+/**
+ * Today's mood forecast from yesterday's numbers, by the user's own model (`GET /api/life/forecast`).
+ * Shown only when `trusted`: it beat the plain guess "like the last week" on the latest days.
+ */
+export interface MoodForecast {
+  /** The day forecast (today). */
+  target: LocalDate;
+  /** 1–5; null — not enough days with a mood. */
+  mood: number | null;
+  /** The days it learned from. */
+  days: number;
+  /** The mean miss of the model, and of "like the last week", on the latest days (mood points). */
+  error: number | null;
+  baselineError: number | null;
+  trusted: boolean;
+  /** What weighs most: mood points for a typical day's difference of the number. */
+  drivers: { key: string; labelKey: string; label: string | null; effect: number }[];
+}
+
 export interface MoodInsights {
   from: LocalDate;
   to: LocalDate;

@@ -33,6 +33,8 @@ import {
   Wish,
   WishInput,
   WishPricePoint,
+  CategoryModelState,
+  TransactionKind,
 } from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
@@ -145,6 +147,14 @@ export class FinanceApi {
 
   worth() {
     return httpResource<NetWorth>(() => FINANCE_READS.worth());
+  }
+
+  categoryModel() {
+    return httpResource<CategoryModelState>(() => FINANCE_READS.categoryModel());
+  }
+
+  suggestCategory(kind: TransactionKind, text: string, amount: number) {
+    return fromCore(() => this.finance.suggestCategory(kind, text, amount));
   }
 
   assets() {

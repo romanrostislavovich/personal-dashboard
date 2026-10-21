@@ -9,6 +9,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   Put,
   UploadedFile,
   UseInterceptors,
@@ -18,6 +19,10 @@ import {
   AI_ATTACHMENT_MAX_BYTES,
   AiAction,
   AiAttachmentUpload,
+  AiMemory,
+  AiRecallHit,
+  AiMemoryInput,
+  aiMemoryInputSchema,
   AiChatRequest,
   aiChatRequestSchema,
   AiChatResponse,
@@ -35,6 +40,8 @@ import { AiConnectionsService } from './ai-connections.service';
 import { AiActionsService } from './ai-actions.service';
 import { AiConversationsService } from './ai-conversations.service';
 import { AiService } from './ai.service';
+import { AiMemoryService } from './ai-memory.service';
+import { RecallService } from '../recall/recall.service';
 import { AttachmentError, attachmentText } from './attachment-text';
 import { MorningDigestService } from './morning-digest.service';
 import { RateLimit } from '../system/rate-limit';
@@ -53,6 +60,8 @@ export class AiController {
     private readonly connections: AiConnectionsService,
     private readonly conversations: AiConversationsService,
     private readonly digest: MorningDigestService,
+    private readonly memories: AiMemoryService,
+    private readonly recall_: RecallService,
   ) {}
 
   @Get('settings')
@@ -64,6 +73,73 @@ export class AiController {
   @Get('actions')
   actions(@CurrentUser() user: AuthUser): Promise<AiAction[]> {
     return this.aiActions.list(user.id);
+  }
+
+  /** Search by meaning over the user's history; 400 — no connection makes vectors. */
+  @RateLimit(120, 3600)
+  @Get('recall')
+  async recall(
+    @CurrentUser() user: AuthUser,
+    @Query('q') question: string | undefined,
+    @Query('module') module: string | undefined,
+  ): Promise<AiRecallHit[]> {
+    const text = (question ?? '').trim().slice(0, 500);
+    if (!text) {
+      throw new BadRequestException('Expected a question in `q`');
+    }
+    const hits = await this.recall_.search(user.id, text, { module });
+    if (!hits) {
+      throw new BadRequestException('No AI connection makes vectors: see Settings → AI');
+    }
+    return hits;
+  }
+
+  /** How many items the index of search by meaning holds; it is rebuilt with `POST`. */
+  @Get('recall/status')
+  async recallStatus(@CurrentUser() user: AuthUser): Promise<{ indexed: number }> {
+    return { indexed: await this.recall_.indexed(user.id) };
+  }
+
+  @RateLimit(10, 3600)
+  @Post('recall/index')
+  async recallIndex(@CurrentUser() user: AuthUser): Promise<{ indexed: number }> {
+    if ((await this.recall_.index(user.id)) === null) {
+      throw new BadRequestException('No AI connection makes vectors: see Settings → AI');
+    }
+    return { indexed: await this.recall_.indexed(user.id) };
+  }
+
+  /** What the assistant keeps between conversations. */
+  @Get('memories')
+  listMemories(@CurrentUser() user: AuthUser): Promise<AiMemory[]> {
+    return this.memories.list(user.id);
+  }
+
+  @Post('memories')
+  addMemory(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(aiMemoryInputSchema)) input: AiMemoryInput,
+  ): Promise<AiMemory> {
+    return this.memories.add(user.id, input.text);
+  }
+
+  @Delete('memories/:id')
+  @HttpCode(204)
+  removeMemory(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.memories.remove(user.id, id);
+  }
+
+  /** Puts back what one change of the assistant did. */
+  @Post('actions/:id/undo')
+  @HttpCode(204)
+  async undoAction(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    await this.ai.undoAction(user.id, id);
   }
 
   /** Modules that give the AI data — the switches of "what the AI sees". */

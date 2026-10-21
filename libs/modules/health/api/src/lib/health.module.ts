@@ -19,6 +19,7 @@ import { ProfileService } from './profile/profile.service';
 import { SharedSummaryController } from './summary/shared.controller';
 import { SummaryController } from './summary/summary.controller';
 import { SummaryService } from './summary/summary.service';
+import { HealthRecall } from './health.recall';
 
 /**
  * Health: one medical history across countries and clinics — visits, diagnoses by ICD code,
@@ -39,6 +40,7 @@ import { SummaryService } from './summary/summary.service';
     HealthLinks,
     HealthDigest,
     HealthSearch,
+    HealthRecall,
     HealthDemo,
     ProfileService,
     IntakesService,

@@ -1,3 +1,5 @@
+import type { PgTable } from 'drizzle-orm/pg-core';
+
 /**
  * A tool through which the AI gets a module's data. A module registers
  * tools in `onModuleInit` (file `<module>.ai-tools.ts`):
@@ -40,6 +42,12 @@ export interface AiTool {
    * Requires `writes: true`.
    */
   confirm?: (userId: string, args: Record<string, unknown>) => Promise<unknown>;
+  /**
+   * The tables a write tool changes (each with `userId`): the user's rows of them are read
+   * before and after the call, so the change can be undone (see ai-undo.ts). What it deletes
+   * comes back from the trash. Left out — the change cannot be undone (a sync from outside).
+   */
+  undoTables?: PgTable[];
 }
 
 /** JSON Schema for a tool without arguments. */

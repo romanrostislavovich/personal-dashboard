@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AiService, findById, idParameters, NO_PARAMETERS, PERIOD_PARAMETERS } from '@pd/api-core';
 import { psychologyEventInputSchema, psychologyPatternsQuerySchema } from '@pd/contracts';
 import { PsychologyService } from './psychology.service';
+import { psychologyEvents } from './psychology.schema';
 
 /**
  * The assistant's access to Psychology: the patterns of the mood, events and check-ups;
@@ -55,6 +56,7 @@ export class PsychologyAiTools implements OnModuleInit {
       name: 'psychology_add_event',
       module: 'psychology',
       writes: true,
+      undoTables: [psychologyEvents],
       description:
         "Records an event of the user's life with its period. `endedOn` is left out for one " +
         'day or for something still going on. For something remembered by age rather than ' +
@@ -83,6 +85,7 @@ export class PsychologyAiTools implements OnModuleInit {
       name: 'psychology_delete_event',
       module: 'psychology',
       writes: true,
+      undoTables: [psychologyEvents],
       confirm: async (userId, args) => {
         const { title, startedOn, endedOn, ageFrom, ageTo } = await findEvent(userId, args);
         return startedOn ? { title, startedOn, endedOn } : { title, ageFrom, ageTo };

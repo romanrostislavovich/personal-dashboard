@@ -22,6 +22,30 @@ export const transactionInputSchema = z.object({
 });
 export type TransactionInput = z.infer<typeof transactionInputSchema>;
 
+/** The user's own category model (trained on their transactions): how good it is, per kind. */
+export interface CategoryModelState {
+  trainedAt: string;
+  kinds: {
+    kind: TransactionKind;
+    examples: number;
+    categories: number;
+    /** Right on the first guess, for counterparties it never saw. */
+    accuracy: number;
+    /** The share it is sure of, and how often it is right on those. */
+    sureShare: number;
+    sureAccuracy: number;
+    /** It sorts a bank import's new counterparties on its own (else the AI is asked). */
+    trusted: boolean;
+  }[];
+}
+
+/** The category the model is sure of, for a transaction being typed in. */
+export interface CategorySuggestion {
+  category: string;
+  probability: number;
+  trusted: boolean;
+}
+
 export interface Transaction {
   id: string;
   kind: TransactionKind;

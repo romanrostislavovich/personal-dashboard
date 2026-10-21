@@ -3,6 +3,7 @@ import { AiService, NO_PARAMETERS, PERIOD_PARAMETERS } from '@pd/api-core';
 import { diarySearchQuerySchema, diarySettingsSchema } from '@pd/contracts';
 import { z } from 'zod';
 import { DiaryService } from './diary.service';
+import { diaryEntries, diarySettings } from './diary.schema';
 
 /** Optional day; the model gets today's date from the system prompt. */
 const DAY = { type: 'string', description: 'YYYY-MM-DD, today if omitted' };
@@ -62,6 +63,7 @@ export class DiaryAiTools implements OnModuleInit {
       name: 'diary_add_note',
       module: 'diary',
       writes: true,
+      undoTables: [diaryEntries],
       description:
         'Appends a note to the diary entry of a day (does not replace the text). ' +
         'Write it in the first person, as the user would; keep #hashtags if the user used them.',
@@ -81,6 +83,7 @@ export class DiaryAiTools implements OnModuleInit {
       name: 'diary_set_mood',
       module: 'diary',
       writes: true,
+      undoTables: [diaryEntries],
       description: 'Sets the mood of a day: 1 — awful, 2 — meh, 3 — okay, 4 — good, 5 — great.',
       parameters: {
         type: 'object',
@@ -116,6 +119,7 @@ export class DiaryAiTools implements OnModuleInit {
       name: 'diary_replace_text',
       module: 'diary',
       writes: true,
+      undoTables: [diaryEntries],
       // It overwrites what the user wrote: they see what goes and what comes first.
       confirm: async (userId, args) => {
         const { day, find, replaceWith } = replaceArgs.parse(args);
@@ -164,6 +168,7 @@ export class DiaryAiTools implements OnModuleInit {
       name: 'diary_delete_entry',
       module: 'diary',
       writes: true,
+      undoTables: [diaryEntries],
       confirm: async (userId, args) => {
         const entry = await this.diary.get(userId, dayArgs.parse(args).day);
         if (!entry) {
@@ -197,6 +202,7 @@ export class DiaryAiTools implements OnModuleInit {
       name: 'diary_update_settings',
       module: 'diary',
       writes: true,
+      undoTables: [diarySettings],
       description: 'Changes diary settings; pass only the ones to change.',
       parameters: {
         type: 'object',

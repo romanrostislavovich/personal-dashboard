@@ -87,8 +87,12 @@
     "outcome": {
       "done": "done",
       "asked": "asked to confirm",
-      "failed": "failed"
-    }
+      "failed": "failed",
+      "undone": "undone"
+    },
+    "undo": "Undo",
+    "undoConflict": "Changed again since: undoing would overwrite that change",
+    "undoFailed": "Could not undo it"
   },
   "guide": {
     "deepseek": {
@@ -111,6 +115,28 @@
   "vision": {
     "title": "Pictures (receipts)",
     "hint": "A photo of a receipt in Telegram becomes an expense: a model that sees pictures reads it — OpenAI gpt-4o-mini, for one (DeepSeek sees none). Each receipt is a paid request."
+  },
+  "light": {
+    "title": "Light background work",
+    "hint": "Sorting bank operations into categories and reading a product page are simple jobs: a local model (Ollama) does them for free. Writing — the digest, stories, letters — stays with the active connection. If the chosen one is off, the active one steps in.",
+    "active": "The active connection"
+  },
+  "memory": {
+    "title": "What the assistant remembers",
+    "hint": "Facts you asked it to keep (\"remember that I am vegetarian\"): they go into every conversation. Say \"forget…\" or remove them here.",
+    "empty": "Nothing yet — tell the assistant \"remember that…\"",
+    "add": "A fact to remember",
+    "remember": "Remember",
+    "forget": "Forget"
+  },
+  "recall": {
+    "title": "Search by meaning",
+    "hint": "The assistant finds things in your history by meaning (\"when did my knee hurt?\"): the diary, tasks, health, life events and notes about people are turned into vectors every hour. Sections switched off for the AI or kept to their own connection are left out. A local Ollama model keeps it all on your server.",
+    "auto": "Automatically: Ollama, else OpenAI",
+    "indexed": "{{count}} items in the index",
+    "reindex": "Update now",
+    "no-connection": "No connection makes vectors: add an Ollama connection (or OpenAI)",
+    "failed": "Could not update the index — is the model available?"
   },
   "send": "Send",
   "usage": {

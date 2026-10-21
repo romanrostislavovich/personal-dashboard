@@ -22,6 +22,7 @@ import { DotaOverviewService } from './dota/dota-overview.service';
 import { GameAccountsService } from './game-accounts.service';
 import { GAMES_ACTIONS } from './games.server-actions';
 import { SteamPlayService } from './steam/steam-play.service';
+import { gameAccounts } from './games.schema';
 
 /** Steam games an account shows in the list of accounts. */
 const STEAM_TOP = 15;
@@ -176,6 +177,7 @@ export class GamesAiTools implements OnModuleInit {
       name: 'games_add_account',
       module: 'games',
       writes: true,
+      undoTables: [gameAccounts],
       description:
         'Adds a game account and loads its data. Dota 2 and Steam need steamId; WoW needs ' +
         'region, realm and character name. Steam works only after the Steam Web API key is ' +
@@ -238,6 +240,7 @@ export class GamesAiTools implements OnModuleInit {
       name: 'games_remove_account',
       module: 'games',
       writes: true,
+      undoTables: [gameAccounts],
       confirm: async (userId, args) => {
         const { game, displayName } = await find(userId, args);
         return { game, displayName };

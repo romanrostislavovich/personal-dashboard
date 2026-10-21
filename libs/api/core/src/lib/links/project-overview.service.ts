@@ -5,6 +5,7 @@ import {
   BeforeAfterQuery,
   Correlations,
   CorrelationsQuery,
+  MoodForecast,
   MoodInsights,
   parseLocalDate,
   ProjectFact,
@@ -21,6 +22,7 @@ import { beforeAfter } from './before-after/before-after';
 import { correlations } from './correlations/correlations';
 import { moodInsights } from './mood-insights';
 import { lastMonths, monthOf } from './project-months';
+import { moodForecast } from './forecast';
 
 /** Changes of a project shown in its overview. */
 const CHANGES = 15;
@@ -102,6 +104,20 @@ export class ProjectOverviewService {
   /** What goes with the days of a good mood and of a bad one (see moodInsights). */
   async moodInsights(userId: string, period: Period): Promise<MoodInsights> {
     return moodInsights(await this.links.dailyMetrics(userId, period), period);
+  }
+
+  /**
+   * Today's mood from yesterday's numbers, by a model of the user's own last two years (see
+   * forecast.ts); the numbers of the `hidden` sections are left out.
+   */
+  async moodForecast(userId: string, hidden: string[] = []): Promise<MoodForecast> {
+    const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
+    const today = zonedDateTime(new Date(), timeZone).date;
+    const period = { from: toLocalDate(addDays(parseLocalDate(today), -730)), to: today };
+    const metrics = (await this.links.dailyMetrics(userId, period)).filter(
+      (metric) => !hidden.includes(metric.module),
+    );
+    return moodForecast(metrics, today);
   }
 
   /**

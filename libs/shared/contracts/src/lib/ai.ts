@@ -73,6 +73,11 @@ export const DEFAULT_SPEECH_MODEL = 'gpt-4o-mini-transcribe';
 
 /** A model of OpenAI that reads pictures (receipts); any model of the chosen connection works. */
 export const DEFAULT_VISION_MODEL = 'gpt-4o-mini';
+/**
+ * The model of search by meaning: small, local in Ollama (`ollama pull paraphrase-multilingual`),
+ * and it understands Russian as well as English (nomic-embed-text does not, see recall.eval.ts).
+ */
+export const DEFAULT_EMBEDDING_MODEL = 'paraphrase-multilingual';
 
 /** `PUT /api/ai/preferences`: only the fields sent are changed. */
 export const aiPreferencesSchema = z.object({
@@ -95,6 +100,19 @@ export const aiPreferencesSchema = z.object({
    */
   visionConnectionId: z.uuid().nullable().optional(),
   visionModel: z.string().trim().min(1).max(100).optional(),
+  /**
+   * Which saved connection does the light background work — sorting, extracting, short JSON
+   * (a local model in Ollama does it for free); `null` — the active connection does.
+   * Writing (the digest, stories, letters) always goes to the active one.
+   */
+  lightConnectionId: z.uuid().nullable().optional(),
+  /**
+   * Which saved connection turns texts into vectors for search by meaning (its
+   * `/embeddings`), with which model; `null` — the first Ollama connection, else the first
+   * OpenAI one. What is indexed goes to it: a local one keeps it on your server.
+   */
+  embeddingConnectionId: z.uuid().nullable().optional(),
+  embeddingModel: z.string().trim().min(1).max(100).optional(),
   /**
    * Modules whose data never goes to the AI provider: no assistant tools, no digest sections,
    * no diary summaries.
@@ -127,6 +145,10 @@ export interface AiSettings {
   speechModel: string;
   visionConnectionId: string | null;
   visionModel: string;
+  /** See AiPreferences.lightConnectionId. */
+  lightConnectionId: string | null;
+  embeddingConnectionId: string | null;
+  embeddingModel: string;
   disabledModules: string[];
   digestOptIns: string[];
   /** module → connection id; a section not listed uses the active connection. */
@@ -200,8 +222,32 @@ export interface AiConversation {
   updatedAt: string;
 }
 
+/** A fact the assistant keeps between conversations, because the user told it to. */
+export interface AiMemory {
+  id: string;
+  text: string;
+  createdAt: string;
+}
+
+export const aiMemoryInputSchema = z.object({ text: z.string().trim().min(1).max(500) });
+export type AiMemoryInput = z.infer<typeof aiMemoryInputSchema>;
+
+/** One thing found by meaning in the user's history (`GET /api/ai/recall?q=`). */
+export interface AiRecallHit {
+  module: string;
+  id: string;
+  title: string;
+  /** The beginning of the text. */
+  text: string;
+  date: string | null;
+  /** A page of the app it opens, if any. */
+  link: string | null;
+  /** How close in meaning, 0–1. */
+  score: number;
+}
+
 /** How a change by the assistant ended: made, a confirmation asked for, or failed. */
-export type AiActionOutcome = 'done' | 'asked' | 'failed';
+export type AiActionOutcome = 'done' | 'asked' | 'failed' | 'undone';
 
 /** A change the assistant made or tried to make (the log in the AI settings). */
 export interface AiAction {
@@ -213,6 +259,8 @@ export interface AiAction {
   outcome: AiActionOutcome;
   error: string | null;
   createdAt: string;
+  /** It changed data that can be put back as it was (`POST /api/ai/actions/:id/undo`). */
+  undoable: boolean;
 }
 
 export interface AiConversationDetail extends AiConversation {

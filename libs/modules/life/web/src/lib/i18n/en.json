@@ -125,5 +125,12 @@
       "caution": "An observation from your own data, not a medical judgement, and not proof of a cause: a change is marked when ordinary dates of your history rarely show one as large. It may be worth showing to your doctor.",
       "noHistory": "Too little history around this date to tell a change from the usual: try shorter windows, or come back later."
     }
+  },
+  "forecast": {
+    "title": "Today's mood, forecast",
+    "hint": "From yesterday's numbers of every section, by a model of your own days",
+    "quality": "Learned from {{days}} days; on the latest ones it missed by {{error}} on average, \"like the last week\" by {{baseline}}. What weighs most:",
+    "few": "Needs at least 40 days with a mood in the diary — there are {{days}} so far.",
+    "notBetter": "Your days do not tell yet more than \"like the last week\": no forecast to trust."
   }
 }

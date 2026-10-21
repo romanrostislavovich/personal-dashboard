@@ -10,6 +10,7 @@ import { BirthdaysAchievements } from './birthdays.achievements';
 import { BirthdayRemindersJob } from './birthday-reminders.job';
 import { BirthdaysController } from './birthdays.controller';
 import { BirthdaysService } from './birthdays.service';
+import { BirthdaysRecall } from './birthdays.recall';
 
 /** Birthdays: CRUD + daily reminders. API: `/api/birthdays`. */
 @Module({
@@ -20,6 +21,7 @@ import { BirthdaysService } from './birthdays.service';
     BirthdaysEncryption,
     BirthdaysLife,
     BirthdaysSearch,
+    BirthdaysRecall,
     BirthdaysService,
     BirthdayRemindersJob,
     BirthdaysAchievements,
