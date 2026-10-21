@@ -85,6 +85,10 @@ export class ActivityApi {
     return fromCore(() => this.activity.removeDevice(id));
   }
 
+  mergeDevice(id: string, into: string) {
+    return fromCore(() => this.activity.mergeDevice(id, into));
+  }
+
   settings() {
     return httpResource<ActivitySettings>(() => ACTIVITY_READS.settings());
   }

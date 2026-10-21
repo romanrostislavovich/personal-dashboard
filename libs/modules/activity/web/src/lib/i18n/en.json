@@ -136,6 +136,10 @@
     "neverSeen": "has not reported yet",
     "rename": "Rename the device",
     "computer": "Computer",
+    "merge": "Move its records to another device",
+    "mergeInto": "Move the records to",
+    "confirmMerge": "Everything “{{from}}” recorded goes to “{{into}}”, then “{{from}}” is removed. Continue?",
+    "lastSeen": "last report {{date}}",
     "confirmRemove": "Remove “{{name}}” with everything it recorded?"
   },
   "idle": {

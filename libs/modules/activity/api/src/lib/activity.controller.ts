@@ -37,6 +37,8 @@ import {
   ActivityDeviceCreated,
   ActivityDeviceInput,
   activityDeviceInputSchema,
+  ActivityDeviceMerge,
+  activityDeviceMergeSchema,
   ActivityDeviceUpdate,
   activityDeviceUpdateSchema,
   ActivityIngest,
@@ -179,6 +181,17 @@ export class ActivityController {
     @Body(new ZodValidationPipe(activityDeviceUpdateSchema)) update: ActivityDeviceUpdate,
   ): Promise<void> {
     return this.devices.rename(user.id, id, update.name);
+  }
+
+  /** Hands the device's records to another device and removes it. */
+  @Post('devices/:id/merge')
+  @HttpCode(204)
+  mergeDevice(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(activityDeviceMergeSchema)) merge: ActivityDeviceMerge,
+  ): Promise<void> {
+    return this.devices.merge(user.id, id, merge.into);
   }
 
   /** Removes the device with everything it recorded. */

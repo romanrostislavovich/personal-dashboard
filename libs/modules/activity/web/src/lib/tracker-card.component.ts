@@ -1,16 +1,18 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, formatDate } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
   inject,
+  LOCALE_ID,
   output,
   signal,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ActivityDevice, ActivityPlatform } from '@pd/contracts';
@@ -26,7 +28,8 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
 
 /**
  * The trackers: this computer (when the dashboard is opened in the desktop app, tracking is
- * switched on and paused here) and every device that reports, with a way to rename or remove it.
+ * switched on and paused here) and every device that reports, with a way to rename or remove it,
+ * or to hand its records to another device (the same computer registered twice).
  */
 @Component({
   selector: 'pd-activity-tracker-card',
@@ -36,6 +39,7 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
     MatButtonModule,
     MatCardModule,
     MatIconModule,
+    MatMenuModule,
     MatTooltipModule,
     TranslocoPipe,
   ],
@@ -123,6 +127,26 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
                 >
                   <mat-icon>edit</mat-icon>
                 </button>
+                @if (devices.value().length > 1) {
+                  <button
+                    matIconButton
+                    [matTooltip]="'activity.tracker.merge' | transloco"
+                    [attr.aria-label]="'activity.tracker.merge' | transloco"
+                    [matMenuTriggerFor]="mergeMenu"
+                  >
+                    <mat-icon>call_merge</mat-icon>
+                  </button>
+                  <mat-menu #mergeMenu="matMenu">
+                    <p class="menu-title">{{ 'activity.tracker.mergeInto' | transloco }}</p>
+                    @for (into of devices.value(); track into.id) {
+                      @if (into.id !== device.id) {
+                        <button mat-menu-item (click)="merge(device, into)">
+                          {{ label(into) }}
+                        </button>
+                      }
+                    }
+                  </mat-menu>
+                }
                 <button
                   matIconButton
                   [matTooltip]="'core.actions.delete' | transloco"
@@ -170,6 +194,11 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
       gap: 8px;
       border-top: 1px solid var(--mat-sys-outline-variant);
     }
+    .menu-title {
+      margin: 8px 16px;
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-label-medium);
+    }
     .name {
       flex: 1;
       min-width: 0;
@@ -180,6 +209,7 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
 export class TrackerCardComponent {
   private readonly api = inject(ActivityApi);
   private readonly transloco = inject(TranslocoService);
+  private readonly locale = inject(LOCALE_ID);
 
   /** The tracker of the desktop shell; `null` — the dashboard is opened in a browser. */
   protected readonly desktop = desktopBridge()?.activity ?? null;
@@ -265,6 +295,36 @@ export class TrackerCardComponent {
       return;
     }
     await firstValueFrom(this.api.removeDevice(device.id));
+    if (device.id === this.status()?.deviceId) {
+      await this.desktop?.disable();
+    }
+    await this.refresh();
+    this.changed.emit();
+  }
+
+  /** Two devices may share a name (the same computer twice): the date tells them apart. */
+  protected label(device: ActivityDevice): string {
+    const detail =
+      device.id === this.status()?.deviceId
+        ? this.transloco.translate('activity.tracker.thisDevice')
+        : device.lastSeenAt
+          ? this.transloco.translate('activity.tracker.lastSeen', {
+              date: formatDate(device.lastSeenAt, 'd MMM, HH:mm', this.locale),
+            })
+          : this.transloco.translate('activity.tracker.neverSeen');
+    return `${device.name} (${detail})`;
+  }
+
+  /** The records of `device` go to `into`, and `device` is removed: nothing is lost. */
+  protected async merge(device: ActivityDevice, into: ActivityDevice): Promise<void> {
+    const question = this.transloco.translate('activity.tracker.confirmMerge', {
+      from: this.label(device),
+      into: this.label(into),
+    });
+    if (!confirm(question)) {
+      return;
+    }
+    await firstValueFrom(this.api.mergeDevice(device.id, into.id));
     if (device.id === this.status()?.deviceId) {
       await this.desktop?.disable();
     }
