@@ -324,11 +324,15 @@
     "add": "Add"
   },
   "otherComputers": {
-    "title": "Computers without the app",
-    "hint": "A computer the app cannot be installed on (a work laptop) is known from WakaTime — only its time in an IDE, so the least you worked there. Play time comes from Steam: only what is over the games the app has seen itself on that day, so a console or another computer is counted and nothing twice. That time is added to the time at the computer. A computer that has the app is left out by itself.",
+    "title": "Time from other devices",
+    "hint": "The app sees only the computers it runs on. The time below comes from other services and is added to the Overview; switch off what should not be counted.",
     "recent": "{{time}} in {{days}} days",
-    "tracked": "has the app — counted by it",
-    "count": "Add its time",
+    "count": "Add",
+    "tracked": "Not added, the app already counts their time: {{names}}",
+    "explain": {
+      "wakatime": "Time in an IDE from WakaTime: the least you worked there",
+      "steam": "Steam games beyond those the app has seen itself"
+    },
     "included": "Including {{time}} the app has not seen: an IDE on computers without it, and games from Steam.",
     "sources": {
       "wakatime": "WakaTime",
