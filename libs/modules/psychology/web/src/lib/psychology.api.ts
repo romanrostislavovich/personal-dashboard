@@ -2,7 +2,13 @@ import { httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { PSYCHOLOGY_READS, psychologyApi } from '@pd/client-core';
 import {
+  AppointmentBrief,
+  AppointmentBriefInput,
   EventExportFormat,
+  GentleDay,
+  GentleDayInput,
+  GentleStep,
+  GentleStepInput,
   PsychologyAssessment,
   PsychologyAssessmentInput,
   PsychologyEvent,
@@ -60,6 +66,50 @@ export class PsychologyApi {
 
   saveSettings(settings: PsychologySettingsInput) {
     return fromCore(() => this.psychology.saveSettings(settings));
+  }
+
+  // --- A gentle day ---
+
+  gentleSteps() {
+    return httpResource<GentleStep[]>(() => PSYCHOLOGY_READS.gentleSteps(), { defaultValue: [] });
+  }
+
+  saveGentleStep(input: GentleStepInput, id?: string) {
+    return fromCore(() => this.psychology.saveGentleStep(input, id));
+  }
+
+  removeGentleStep(id: string) {
+    return fromCore(() => this.psychology.removeGentleStep(id));
+  }
+
+  gentleDay(date: () => string) {
+    return httpResource<GentleDay>(() => PSYCHOLOGY_READS.gentleDay(date()));
+  }
+
+  saveGentleDay(input: GentleDayInput) {
+    return fromCore(() => this.psychology.saveGentleDay(input));
+  }
+
+  leaveGentleDay(date: string) {
+    return fromCore(() => this.psychology.leaveGentleDay(date));
+  }
+
+  // --- Briefs for an appointment ---
+
+  briefs() {
+    return httpResource<AppointmentBrief[]>(() => PSYCHOLOGY_READS.briefs(), { defaultValue: [] });
+  }
+
+  saveBrief(input: AppointmentBriefInput, id?: string) {
+    return fromCore(() => this.psychology.saveBrief(input, id));
+  }
+
+  removeBrief(id: string) {
+    return fromCore(() => this.psychology.removeBrief(id));
+  }
+
+  exportBrief(id: string) {
+    return fromCore(() => this.psychology.exportBrief(id));
   }
 }
 
