@@ -63,7 +63,8 @@ export class ActivityLinks implements OnModuleInit {
       facts: async (userId, project, period): Promise<ProjectFact[]> => {
         const stats = await this.activity.stats(userId, period);
         const focus = await this.wellbeing.focusStats(userId, period);
-        const seconds = stats.projects.find((item) => item.projectId === project.id)?.seconds;
+        const tracked = stats.projects.find((item) => item.projectId === project.id);
+        const seconds = tracked?.seconds;
         const focused = focus.projects.find((item) => item.projectId === project.id)?.seconds;
         return [
           ...(seconds
@@ -74,6 +75,7 @@ export class ActivityLinks implements OnModuleInit {
                   value: seconds,
                   unit: 'seconds' as const,
                   metric: 'seconds' as const,
+                  days: tracked?.days,
                   link: '/activity/overview',
                 },
               ]

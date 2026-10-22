@@ -104,6 +104,13 @@ function localDate(date: Date): string {
               @if (fact.note) {
                 <span class="hint">{{ fact.note }}</span>
               }
+              @if (fact.fromCoding) {
+                <span class="hint">
+                  {{
+                    'core.projects.fromCoding' | transloco: { time: fact.fromCoding | pdDuration }
+                  }}
+                </span>
+              }
               @if (fact.link) {
                 <a class="more" [routerLink]="fact.link">
                   {{ fact.module + '.title' | transloco }}

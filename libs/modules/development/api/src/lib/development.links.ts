@@ -106,12 +106,14 @@ export class DevelopmentLinks implements OnModuleInit {
     const names = namesOf(project);
     const b = wakatimeDayBreakdown;
     const coded = await this.db
-      .select({ name: b.name, seconds: b.seconds })
+      .select({ day: b.day, name: b.name, seconds: b.seconds })
       .from(b)
       .where(and(eq(b.userId, userId), eq(b.kind, 'project'), gte(b.day, from), lte(b.day, to)));
-    const seconds = coded
-      .filter((row) => belongsTo(row.name, names))
-      .reduce((sum, row) => sum + row.seconds, 0);
+    const byDay = new Map<string, number>();
+    for (const row of coded.filter((item) => belongsTo(item.name, names))) {
+      byDay.set(row.day, (byDay.get(row.day) ?? 0) + row.seconds);
+    }
+    const seconds = [...byDay.values()].reduce((sum, value) => sum + value, 0);
     const repos = await this.reposOf(userId, names);
 
     return [
@@ -123,6 +125,9 @@ export class DevelopmentLinks implements OnModuleInit {
               value: seconds,
               unit: 'seconds' as const,
               metric: 'codingSeconds' as const,
+              days: [...byDay]
+                .map(([day, daySeconds]) => ({ day, seconds: daySeconds }))
+                .sort((a, b) => a.day.localeCompare(b.day)),
               link: '/development/wakatime',
             },
           ]

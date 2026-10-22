@@ -25,6 +25,13 @@ export interface ProjectFact {
   link?: string;
   /** A line under the number: what it is made of. */
   note?: string;
+  /** A time day by day (the days with any), for the core to compare two sections' times. */
+  days?: { day: LocalDate; seconds: number }[];
+  /**
+   * Of the time at the computer: the seconds of IDE time the tracker did not tie to the project
+   * (a terminal, a browser, a computer without the tracker), added by the core.
+   */
+  fromCoding?: number;
 }
 
 /** Something that changed in a project at a moment: a commit, a release. */

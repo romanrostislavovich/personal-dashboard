@@ -341,7 +341,13 @@ export interface ActivityStats {
   apps: ActivityAppUsage[];
   categories: { category: ActivityCategory; seconds: number }[];
   /** Time whose window title matched a project (its name or one of its rules). */
-  projects: { projectId: string; name: string; seconds: number }[];
+  projects: {
+    projectId: string;
+    name: string;
+    seconds: number;
+    /** The days it had time on. */
+    days: { day: LocalDate; seconds: number }[];
+  }[];
   devices: { id: string; name: string; seconds: number }[];
   /** The window titles that took the most time. */
   titles: { app: string; name: string; title: string; seconds: number }[];

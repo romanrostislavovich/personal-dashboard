@@ -119,7 +119,8 @@
       "closed": "Finished",
       "all": "All"
     },
-    "emptyFilter": "No such projects here"
+    "emptyFilter": "No such projects here",
+    "fromCoding": "Of it, {{time}} is IDE time the tracker did not tie to the project: a terminal, a browser, a computer without the tracker."
   },
   "settings": {
     "title": "Settings",

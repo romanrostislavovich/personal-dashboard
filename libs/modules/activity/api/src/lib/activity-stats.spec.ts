@@ -83,7 +83,14 @@ describe('buildStats', () => {
       { category: 'games', seconds: 1800 },
       { category: 'media', seconds: 1800 },
     ]);
-    expect(stats.projects).toEqual([{ projectId: 'p1', name: 'Dashboard', seconds: 3600 }]);
+    expect(stats.projects).toEqual([
+      {
+        projectId: 'p1',
+        name: 'Dashboard',
+        seconds: 3600,
+        days: [{ day: '2026-10-01', seconds: 3600 }],
+      },
+    ]);
     expect(stats.devices).toEqual([
       { id: 'd1', name: 'PC', seconds: 6600 },
       { id: 'd2', name: 'Laptop', seconds: 600 },
