@@ -47,6 +47,7 @@ import {
   activityPeriodSchema,
   ActivityProjectRule,
   ActivityProjectRuleInput,
+  ActivityRuleSuggestion,
   activityProjectRuleInputSchema,
   ActivitySettings,
   ActivitySettingsUpdate,
@@ -59,6 +60,7 @@ import { ActivityLinks } from './activity.links';
 import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
 import { DiskAdviceService } from './disk/disk-advice.service';
+import { RuleSuggestionsService } from './rule-suggestions.service';
 import { SitesService } from './sites.service';
 import { WellbeingService } from './wellbeing.service';
 
@@ -77,6 +79,7 @@ export class ActivityController {
     private readonly diskAdvice: DiskAdviceService,
     private readonly links: ActivityLinks,
     private readonly sites: SitesService,
+    private readonly suggestions: RuleSuggestionsService,
   ) {}
 
   // --- A tracker ---
@@ -308,6 +311,37 @@ export class ActivityController {
     @Body(new ZodValidationPipe(diskReportSchema)) report: DiskReport,
   ): Promise<DiskAdvice> {
     return this.diskAdvice.advise(user.id, report);
+  }
+
+  /** Rules offered for the projects (windows and sites around work on them). */
+  @Get('rule-suggestions')
+  ruleSuggestions(@CurrentUser() user: AuthUser): Promise<ActivityRuleSuggestion[]> {
+    return this.suggestions.list(user.id);
+  }
+
+  /** Looks at the latest days now, not at the night's run. */
+  @Post('rule-suggestions/refresh')
+  @HttpCode(204)
+  refreshRuleSuggestions(@CurrentUser() user: AuthUser): Promise<void> {
+    return this.suggestions.refresh(user.id);
+  }
+
+  @Post('rule-suggestions/:id/accept')
+  @HttpCode(204)
+  acceptRuleSuggestion(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.suggestions.accept(user.id, id);
+  }
+
+  @Delete('rule-suggestions/:id')
+  @HttpCode(204)
+  rejectRuleSuggestion(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.suggestions.reject(user.id, id);
   }
 
   @Delete('rules/:id')

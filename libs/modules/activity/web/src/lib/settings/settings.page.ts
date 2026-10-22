@@ -12,6 +12,7 @@ import { ACTIVITY_CATEGORIES, ActivityApp, ActivityCategory } from '@pd/contract
 import { pickableProjects, ProjectsApi } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { ActivityApi } from '../activity.api';
+import { RuleSuggestionsComponent } from './rule-suggestions.component';
 import { TrackerCardComponent } from '../tracker-card.component';
 import { OtherComputersSettingsComponent } from './other-computers-settings.component';
 import { PrivacySettingsComponent } from './privacy-settings.component';
@@ -28,6 +29,7 @@ const IDLE_MINUTES = [1, 2, 3, 5, 10, 15, 30, 60];
   selector: 'pd-activity-settings-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    RuleSuggestionsComponent,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,

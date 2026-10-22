@@ -150,10 +150,19 @@
   },
   "rules": {
     "title": "Projects",
-    "hint": "Time goes to a project when the window title contains its name. Add other words a project is recognized by: a folder, a repository, a site.",
+    "hint": "Time goes to a project when the window title or the site's address contains its name. Add other words a project is recognized by: a folder, a repository, a site, localhost:4200.",
     "project": "Project",
     "pattern": "The title contains",
-    "noProjects": "There are no projects yet: create one in the settings."
+    "noProjects": "There are no projects yet: create one in the settings.",
+    "suggestions": {
+      "title": "Suggestions",
+      "refresh": "Find links",
+      "hint": "Once a day the AI looks at the windows and sites that turn up in work on projects (localhost with the running app, for example) and offers them here. Only what you accept becomes a rule.",
+      "nothing": "No new links found.",
+      "near": "{{time}} next to work on the project in 2 weeks",
+      "accept": "Link to the project",
+      "reject": "Do not link"
+    }
   },
   "apps": {
     "title": "Programs",
