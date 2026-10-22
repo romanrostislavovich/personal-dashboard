@@ -335,13 +335,16 @@
     "tracked": "Not added, the app already counts their time: {{names}}",
     "explain": {
       "wakatime": "Time in an IDE from WakaTime: the least you worked there",
-      "steam": "Steam games beyond those the app has seen itself"
+      "steam": "Steam games beyond those the app has seen itself",
+      "extension": "Sites from the extension while neither the app nor WakaTime saw anything: the browser on a laptop, for example"
     },
-    "included": "Including {{time}} the app has not seen: an IDE on computers without it, and games from Steam.",
+    "included": "Including {{time}} the app has not seen: an IDE and the browser on computers without it, and games from Steam. Time that overlaps is counted once.",
     "sources": {
       "wakatime": "WakaTime",
-      "steam": "Steam — games on other devices"
-    }
+      "steam": "Steam — games on other devices",
+      "extension": "Browser outside the app"
+    },
+    "browser": "Browser (extension)"
   },
   "telemetry": {
     "observations": "Measured buckets only; gaps are unknown. Boundary totals are proportional estimates; devices can overlap. Not a health or productivity assessment.",

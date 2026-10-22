@@ -144,7 +144,11 @@ export class OverviewPage {
     this.shares([
       ...(this.stats.value()?.devices ?? []),
       ...this.otherComputers().map(({ computer, source, seconds }) => ({
-        name: `${computer} · ${this.transloco.translate(`activity.otherComputers.sources.${source}`)}`,
+        // The browser extension is not one computer: its time is the browser wherever it ran.
+        name:
+          source === 'extension'
+            ? this.transloco.translate('activity.otherComputers.sources.extension')
+            : `${computer} · ${this.transloco.translate(`activity.otherComputers.sources.${source}`)}`,
         seconds,
       })),
     ]),

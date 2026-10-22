@@ -1,4 +1,9 @@
 import { ActivityOtherComputer, ActivityStats, LocalDate } from '@pd/contracts';
+import { mergeSpans, secondsByDay, subtractSpans, TimeSpan } from './time-spans';
+
+/** The browser extension as a "computer": its time is the browser wherever it runs. */
+export const BROWSER_COMPUTER = 'browser';
+export const BROWSER_SOURCE = 'extension';
 
 /** Time at a computer on a day, as another service knows it (see OtherComputersService). */
 export interface OtherComputerTime {
@@ -6,8 +11,11 @@ export interface OtherComputerTime {
   source: string;
   day: LocalDate;
   seconds: number;
-  /** The one thing the service counts (Steam: games); otherwise it is work in an IDE. */
-  category?: 'games';
+  /**
+   * The one thing the service counts (Steam: games, the extension: the browser); otherwise it
+   * is work in an IDE.
+   */
+  category?: 'games' | 'browsing';
 }
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -94,7 +102,7 @@ export function withOtherComputers(
     return { ...stats, otherComputers: [] };
   }
   const perDay = new Map<LocalDate, number>();
-  const perCategory = new Map<'games' | 'development', number>();
+  const perCategory = new Map<'games' | 'development' | 'browsing', number>();
   const perComputer = new Map<string, { computer: string; source: string; seconds: number }>();
   for (const time of counted) {
     perDay.set(time.day, (perDay.get(time.day) ?? 0) + time.seconds);
@@ -128,4 +136,37 @@ export function withOtherComputers(
     categories: categories.sort((a, b) => b.seconds - a.seconds),
     otherComputers: [...perComputer.values()].sort((a, b) => b.seconds - a.seconds),
   };
+}
+
+/**
+ * The time of other computers and of the browser put together with the tracker's by the clock:
+ * what overlaps counts once. The tracker's own time comes first, then each computer adds what
+ * the time before did not have, then the browser — so the browser on a tracked computer adds
+ * nothing, and on a laptop with only WakaTime it adds the time away from the IDE.
+ */
+export function timeByClock(input: {
+  tracker: readonly TimeSpan[];
+  computers: readonly { computer: string; source: string; spans: readonly TimeSpan[] }[];
+  browser: readonly TimeSpan[];
+  days: readonly { day: LocalDate; start: number; end: number }[];
+}): OtherComputerTime[] {
+  let covered = mergeSpans(input.tracker);
+  const times: OtherComputerTime[] = [];
+  const add = (
+    computer: string,
+    source: string,
+    spans: readonly TimeSpan[],
+    category?: OtherComputerTime['category'],
+  ) => {
+    const added = subtractSpans(spans, covered);
+    covered = mergeSpans([...covered, ...added]);
+    for (const [day, seconds] of secondsByDay(added, input.days)) {
+      times.push({ computer, source, day, seconds, ...(category ? { category } : {}) });
+    }
+  };
+  for (const { computer, source, spans } of input.computers) {
+    add(computer, source, spans);
+  }
+  add(BROWSER_COMPUTER, BROWSER_SOURCE, input.browser, 'browsing');
+  return times;
 }

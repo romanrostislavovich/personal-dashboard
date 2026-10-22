@@ -1,5 +1,11 @@
 import { ActivityStats } from '@pd/contracts';
-import { otherComputers, OtherComputerTime, withOtherComputers } from './other-computers';
+import {
+  otherComputers,
+  OtherComputerTime,
+  timeByClock,
+  withOtherComputers,
+} from './other-computers';
+import { dayBounds } from './time-spans';
 
 const time = (computer: string, day: string, hours: number): OtherComputerTime => ({
   computer,
@@ -106,5 +112,44 @@ describe('withOtherComputers', () => {
     expect(merged.days[2]).toEqual({ day: '2026-10-07', seconds: 3 * 3600 });
     expect(merged.categories).toContainEqual({ category: 'games', seconds: 3600 });
     expect(merged.otherComputers).toEqual([{ computer: 'Steam', source: 'steam', seconds: 3600 }]);
+  });
+});
+
+describe('timeByClock', () => {
+  const days = dayBounds({ from: '2026-10-06', to: '2026-10-06' }, 'UTC');
+  const at = (time: string) => Date.parse(`2026-10-06T${time}:00Z`);
+  const span = (from: string, to: string) => ({ start: at(from), end: at(to) });
+
+  it('counts what overlaps once: the tracker, then the laptop, then the browser', () => {
+    const times = timeByClock({
+      // The desktop computer 09:00–11:00.
+      tracker: [span('09:00', '11:00')],
+      // WakaTime on the laptop 10:00–13:00: 11:00–13:00 is new.
+      computers: [{ computer: 'work-mac', source: 'wakatime', spans: [span('10:00', '13:00')] }],
+      // The browser 09:30–10:00 (on the desktop) and 12:30–14:00 (on the laptop): 13:00–14:00.
+      browser: [span('09:30', '10:00'), span('12:30', '14:00')],
+      days,
+    });
+    expect(times).toEqual([
+      { computer: 'work-mac', source: 'wakatime', day: '2026-10-06', seconds: 2 * 3600 },
+      {
+        computer: 'browser',
+        source: 'extension',
+        day: '2026-10-06',
+        seconds: 3600,
+        category: 'browsing',
+      },
+    ]);
+  });
+
+  it('adds nothing when the tracker saw all of it', () => {
+    expect(
+      timeByClock({
+        tracker: [span('09:00', '18:00')],
+        computers: [],
+        browser: [span('10:00', '11:00')],
+        days,
+      }),
+    ).toEqual([]);
   });
 });
