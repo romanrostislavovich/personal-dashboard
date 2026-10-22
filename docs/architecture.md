@@ -280,7 +280,11 @@ To add a service (e.g. DigitalOcean):
   machines in Development; the play time of Steam in Games), and Activity adds that time to
   the time at the computer, leaving out the computers its own tracker covers — and of a
   service's games time only what is over the games the tracker has seen itself that day.
-  Neither module knows the other.
+  A source that knows its time to the second also gives `spans` (WakaTime's durations by
+  computer) and `projectSpans` (by project): Activity then puts it together with the
+  tracker's spans and the browser extension's visits by the clock, what overlaps counted once
+  (`timeByClock`), and a project's time takes the windows and sites lying in work on it
+  (`project-context.ts`). Neither module knows the other.
 - **Integration status:** `IntegrationsService` — a module reports its connections to outside
   services in `<module>.integrations.ts` (`integrations.register({ id, module, staleHours,
 reports })`: the account, the last refresh, its error, the expiry of the token when the
