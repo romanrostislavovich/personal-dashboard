@@ -32,6 +32,10 @@ const PROJECT_FIELDS = {
       'Other names of the project in the sections: its repository (owner/name), its project ' +
       'in WakaTime. Replaces the whole list.',
   },
+  closedOn: {
+    type: 'string',
+    description: 'YYYY-MM-DD: the day the project was finished; null — it is still going.',
+  },
 } as const;
 
 /** AI access to the core's own data: projects (and changing them) and achievements. */
@@ -55,7 +59,8 @@ export class CoreAiTools implements OnModuleInit {
       module: 'projects',
       description:
         "The user's projects (sites and services): id, name, URL, description, aliases (its " +
-        'names in the other sections). The page of one is /projects/<id>.',
+        'names in the other sections), closedOn (the day it was finished; null — still going). ' +
+        'The page of one is /projects/<id>.',
       parameters: NO_PARAMETERS,
       handler: (userId) => this.projects.list(userId),
     });
@@ -309,12 +314,13 @@ export class CoreAiTools implements OnModuleInit {
         required: ['id'],
       },
       handler: async (userId, args) => {
-        const { id, name, url, description, aliases } = await findProject(userId, args);
+        const { id, name, url, description, aliases, closedOn } = await findProject(userId, args);
         const input = projectInputSchema.parse({
           name,
           url,
           description,
           aliases,
+          closedOn,
           ...changedFields(args),
         });
         return this.projects.update(userId, id, input);

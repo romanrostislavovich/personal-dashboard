@@ -23,7 +23,7 @@ import {
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gte, lt, SQL, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, inArray, lt, SQL, sql } from 'drizzle-orm';
 import {
   ActivityRecords,
   appsOfCategories,
@@ -40,9 +40,18 @@ import {
   activityDevices,
   activityProjectRules,
   activitySettings,
+  activitySiteVisits,
   activitySpans,
 } from './activity.schema';
-import { newTime, otherComputers, OtherComputerTime, withOtherComputers } from './other-computers';
+import {
+  newTime,
+  otherComputers,
+  OtherComputerTime,
+  timeByClock,
+  withOtherComputers,
+} from './other-computers';
+import { dayBounds, secondsByDay, spanOf, TimeSpan } from './time-spans';
+import { MAX_VISIT_SECONDS } from './visit-length';
 
 const DEFAULT_SETTINGS: ActivitySettings = {
   idleMinutes: 5,
@@ -71,7 +80,10 @@ export interface ActivityAllTime extends ActivityRecords {
   /** From five to eight in the morning. */
   earlySeconds: number;
   weekendSeconds: number;
-  /** Time whose window title matched one of the projects. */
+  /**
+   * Time whose window title matched one of the projects; the achievements take the whole time
+   * on projects instead (ProjectTimeService.allTimeSeconds).
+   */
   projectSeconds: number;
   /** Trackers registered. */
   devices: number;
@@ -306,7 +318,7 @@ export class ActivityService {
     if (period.deviceId) {
       return stats; // One computer of the tracker was asked for: the others are not its time.
     }
-    const times = await this.others.days(userId, period.from, period.to);
+    const times = await this.otherTimes(userId, period, timeZone, devices);
     if (!times.length) {
       return stats;
     }
@@ -413,8 +425,105 @@ export class ActivityService {
       .select({ name: activityDevices.name })
       .from(activityDevices)
       .where(eq(activityDevices.userId, userId));
-    const times = await this.others.days(userId, period.from, period.to);
+    const times = await this.otherTimes(userId, period, await this.timeZone(userId), devices);
     return this.computersOf(userId, times, devices);
+  }
+
+  /**
+   * The time other services know over a period. Where they know its stretches (WakaTime's
+   * durations, the browser extension's visits) it is put together with the tracker's by the
+   * clock, what overlaps counted once (see timeByClock); a computer-day without them counts by
+   * the day, as the service totals it.
+   */
+  private async otherTimes(
+    userId: string,
+    period: ActivityPeriod,
+    timeZone: string,
+    devices: { name: string }[],
+  ): Promise<OtherComputerTime[]> {
+    const byDay = await this.others.days(userId, period.from, period.to);
+    const bounds = dayBounds(period, timeZone);
+    const from = new Date(bounds[0].start);
+    const to = new Date(bounds[bounds.length - 1].end);
+    const keyOf = (item: { source: string; computer: string }) =>
+      `${item.source}:${item.computer.toLowerCase()}`;
+    // Only the computers that count: the tracker's own computers are already in its time.
+    const counted = new Set(
+      (await this.computersOf(userId, byDay, devices))
+        .filter((computer) => computer.counted)
+        .map(keyOf),
+    );
+    const computers = new Map<string, { computer: string; source: string; spans: TimeSpan[] }>();
+    for (const span of await this.others.spans(userId, from, to)) {
+      if (!counted.has(keyOf(span))) {
+        continue;
+      }
+      const known = computers.get(keyOf(span)) ?? {
+        computer: span.computer,
+        source: span.source,
+        spans: [],
+      };
+      known.spans.push(spanOf(span));
+      computers.set(keyOf(span), known);
+    }
+    const v = activitySiteVisits;
+    const visits = await this.db
+      .select({ startedAt: v.startedAt, endedAt: v.endedAt })
+      .from(v)
+      .where(
+        and(
+          eq(v.userId, userId),
+          lt(v.startedAt, to),
+          gt(v.endedAt, from),
+          // A visit is never longer than this: the index on its start is used from here.
+          gte(v.startedAt, new Date(from.getTime() - MAX_VISIT_SECONDS * 1000)),
+        ),
+      );
+    if (!computers.size && !visits.length) {
+      return byDay;
+    }
+    const others = [
+      ...[...computers.values()].flatMap((item) => item.spans),
+      ...visits.map(spanOf),
+    ];
+    const tracker = await this.trackerSpans(userId, period, timeZone, [
+      ...secondsByDay(others, bounds).keys(),
+    ]);
+    const clock = timeByClock({
+      tracker,
+      computers: [...computers.values()],
+      browser: visits.map(spanOf),
+      days: bounds,
+    });
+    // A computer-day known by the clock is not counted by its total as well.
+    const byClock = new Set(
+      [...computers.entries()].flatMap(([key, { spans }]) =>
+        [...secondsByDay(spans, bounds).keys()].map((day) => `${key}|${day}`),
+      ),
+    );
+    return [...byDay.filter((time) => !byClock.has(`${keyOf(time)}|${time.day}`)), ...clock];
+  }
+
+  /**
+   * The stretches of the tracker on these days, of every computer. Only the days other time is
+   * known on are read: a long period would otherwise bring every span of it.
+   */
+  private async trackerSpans(
+    userId: string,
+    period: ActivityPeriod,
+    timeZone: string,
+    days: LocalDate[],
+  ): Promise<TimeSpan[]> {
+    if (!days.length) {
+      return [];
+    }
+    const s = activitySpans;
+    const day = sql<LocalDate>`to_char(${s.startedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`;
+    const rows = await this.db
+      .select({ startedAt: s.startedAt, endedAt: s.endedAt })
+      .from(s)
+      .where(and(this.within(userId, period, timeZone), inArray(day, days)));
+    return rows.map(spanOf);
   }
 
   private async computersOf(
@@ -520,8 +629,8 @@ export class ActivityService {
     userId: string,
     rows: { day: LocalDate; app: string; seconds: number }[],
     chosen: ReadonlyMap<string, ActivityCategory | null>,
-  ): Promise<Map<'development' | 'games', number>> {
-    const added = new Map<'development' | 'games', number>();
+  ): Promise<Map<NonNullable<OtherComputerTime['category']> | 'development', number>> {
+    const added = new Map<NonNullable<OtherComputerTime['category']> | 'development', number>();
     const times = await this.others.days(userId, EVER_SINCE, await this.today(userId));
     if (!times.length) {
       return added;
@@ -583,7 +692,7 @@ export class ActivityService {
   }
 
   /** Each project is recognized by its own name and by the user's rules for it. */
-  private async projectPatterns(userId: string): Promise<ProjectPatterns[]> {
+  async projectPatterns(userId: string): Promise<ProjectPatterns[]> {
     const rules = await this.rules(userId);
     return (await this.projectsService.list(userId)).map((project) => ({
       projectId: project.id,

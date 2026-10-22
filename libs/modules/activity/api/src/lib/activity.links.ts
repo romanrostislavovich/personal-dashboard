@@ -19,6 +19,7 @@ import {
   activitySiteVisits,
 } from './activity.schema';
 import { ActivityService } from './activity.service';
+import { ProjectTimeService } from './project-time.service';
 import { focusMusic, FocusWithPlays, timeByName, timeByTitle } from './focus-music';
 import { WellbeingService } from './wellbeing.service';
 import { TelemetrySummaryService } from './telemetry-summary.service';
@@ -50,6 +51,7 @@ export class ActivityLinks implements OnModuleInit {
     private readonly activity: ActivityService,
     private readonly wellbeing: WellbeingService,
     private readonly telemetry: TelemetrySummaryService,
+    private readonly projectTime: ProjectTimeService,
   ) {}
 
   onModuleInit(): void {
@@ -61,9 +63,9 @@ export class ActivityLinks implements OnModuleInit {
     this.links.registerProject({
       module: 'activity',
       facts: async (userId, project, period): Promise<ProjectFact[]> => {
-        const stats = await this.activity.stats(userId, period);
+        const time = await this.projectTime.fact(userId, project, period);
         const focus = await this.wellbeing.focusStats(userId, period);
-        const seconds = stats.projects.find((item) => item.projectId === project.id)?.seconds;
+        const seconds = time.seconds;
         const focused = focus.projects.find((item) => item.projectId === project.id)?.seconds;
         return [
           ...(seconds
@@ -74,6 +76,9 @@ export class ActivityLinks implements OnModuleInit {
                   value: seconds,
                   unit: 'seconds' as const,
                   metric: 'seconds' as const,
+                  days: time.days,
+                  ...(time.fromContext ? { fromContext: time.fromContext } : {}),
+                  ...(time.fromCoding ? { fromCoding: time.fromCoding } : {}),
                   link: '/activity/overview',
                 },
               ]

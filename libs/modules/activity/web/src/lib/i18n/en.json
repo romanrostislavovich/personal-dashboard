@@ -150,10 +150,19 @@
   },
   "rules": {
     "title": "Projects",
-    "hint": "Time goes to a project when the window title contains its name. Add other words a project is recognized by: a folder, a repository, a site.",
+    "hint": "Time goes to a project when the window title or the site's address contains its name. Add other words a project is recognized by: a folder, a repository, a site, localhost:4200.",
     "project": "Project",
     "pattern": "The title contains",
-    "noProjects": "There are no projects yet: create one in the settings."
+    "noProjects": "There are no projects yet: create one in the settings.",
+    "suggestions": {
+      "title": "Suggestions",
+      "refresh": "Find links",
+      "hint": "Once a day the AI looks at the windows and sites that turn up in work on projects (localhost with the running app, for example) and offers them here. Only what you accept becomes a rule.",
+      "nothing": "No new links found.",
+      "near": "{{time}} next to work on the project in 2 weeks",
+      "accept": "Link to the project",
+      "reject": "Do not link"
+    }
   },
   "apps": {
     "title": "Programs",
@@ -335,13 +344,16 @@
     "tracked": "Not added, the app already counts their time: {{names}}",
     "explain": {
       "wakatime": "Time in an IDE from WakaTime: the least you worked there",
-      "steam": "Steam games beyond those the app has seen itself"
+      "steam": "Steam games beyond those the app has seen itself",
+      "extension": "Sites from the extension while neither the app nor WakaTime saw anything: the browser on a laptop, for example"
     },
-    "included": "Including {{time}} the app has not seen: an IDE on computers without it, and games from Steam.",
+    "included": "Including {{time}} the app has not seen: an IDE and the browser on computers without it, and games from Steam. Time that overlaps is counted once.",
     "sources": {
       "wakatime": "WakaTime",
-      "steam": "Steam — games on other devices"
-    }
+      "steam": "Steam — games on other devices",
+      "extension": "Browser outside the app"
+    },
+    "browser": "Browser (extension)"
   },
   "telemetry": {
     "observations": "Measured buckets only; gaps are unknown. Boundary totals are proportional estimates; devices can overlap. Not a health or productivity assessment.",

@@ -11,6 +11,7 @@ import {
   ActivityPeriod,
   ActivityProjectRule,
   ActivityProjectRuleInput,
+  ActivityRuleSuggestion,
   ActivitySettings,
   ActivitySettingsUpdate,
   ActivityStats,
@@ -39,6 +40,8 @@ export const ACTIVITY_READS = {
   /** Every program seen, with its category and whether it is recorded. */
   apps: () => apiRequest(`${BASE}/apps`),
   rules: () => apiRequest(`${BASE}/rules`),
+  /** Rules offered for the projects: windows and sites around work on them. */
+  ruleSuggestions: () => apiRequest(`${BASE}/rule-suggestions`),
   /** Focus with music against focus in silence (the music comes from the Music section). */
   focusMusic: (period: ActivityPeriod) => apiRequest(`${BASE}/focus/music`, period),
   /** Focus sessions of a period with their totals. */
@@ -76,6 +79,14 @@ export function activityApi(api: ApiClient) {
     rules: () => api.read<ActivityProjectRule[]>(ACTIVITY_READS.rules()),
     addRule: (input: ActivityProjectRuleInput) => api.post<void>(`${BASE}/rules`, input),
     removeRule: (id: string) => api.delete(`${BASE}/rules/${id}`),
+    ruleSuggestions: () => api.read<ActivityRuleSuggestion[]>(ACTIVITY_READS.ruleSuggestions()),
+    /** Looks at the latest days for rules to offer now. */
+    refreshRuleSuggestions: () => api.post<void>(`${BASE}/rule-suggestions/refresh`, {}),
+    /** The offer becomes a rule. */
+    acceptRuleSuggestion: (id: string) =>
+      api.post<void>(`${BASE}/rule-suggestions/${id}/accept`, {}),
+    /** Not offered again. */
+    rejectRuleSuggestion: (id: string) => api.delete(`${BASE}/rule-suggestions/${id}`),
 
     focus: (period: ActivityPeriod) => api.read<ActivityFocusStats>(ACTIVITY_READS.focus(period)),
     removeFocus: (id: string) => api.delete(`${BASE}/focus/${id}`),

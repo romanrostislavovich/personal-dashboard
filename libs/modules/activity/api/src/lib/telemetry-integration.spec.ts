@@ -41,6 +41,7 @@ describe('activity telemetry registration', () => {
       {} as never,
       {} as never,
       { summarize } as unknown as TelemetrySummaryService,
+      {} as never,
     ).onModuleInit();
     const source = registerDailyMetrics.mock.calls[0][0];
     expect(source.module).toBe('activity');
@@ -135,6 +136,7 @@ describe('activity telemetry registration', () => {
       {} as never,
       { list, restore } as never,
       { summarize } as never,
+      {} as never,
     ).onModuleInit();
     const recall = registerTool.mock.calls
       .map(([tool]) => tool)

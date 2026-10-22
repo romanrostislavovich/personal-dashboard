@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { DatePipe } from '@angular/common';
+import { pickableProjects } from '@pd/web-core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Project, RecurringPayment, RecurringPaymentInput } from '@pd/contracts';
 
@@ -120,7 +121,7 @@ export interface RecurringPaymentFormData {
           <mat-select formControlName="projectId">
             <!-- "Personal" = empty string: mat-select treats null as no selection. -->
             <mat-option value="">{{ 'finance.scope.personal' | transloco }}</mat-option>
-            @for (project of data.projects; track project.id) {
+            @for (project of projects; track project.id) {
               <mat-option [value]="project.id">{{ project.name }}</mat-option>
             }
           </mat-select>
@@ -204,6 +205,11 @@ export interface RecurringPaymentFormData {
 })
 export class RecurringPaymentFormDialog {
   protected readonly data = inject<RecurringPaymentFormData>(MAT_DIALOG_DATA);
+  /** Closed projects are not offered, but the one the record already has stays. */
+  protected readonly projects = pickableProjects(
+    this.data.projects,
+    (this.data.payment ? this.data.payment.projectId : this.data.defaults.projectId) ?? null,
+  );
   private readonly dialogRef = inject(
     MatDialogRef<RecurringPaymentFormDialog, RecurringPaymentInput>,
   );

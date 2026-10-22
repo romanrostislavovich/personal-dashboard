@@ -3,6 +3,7 @@ export * from './lib/provide-dashboard';
 export * from './lib/dashboard-module';
 export * from './lib/auth/auth.service';
 export * from './lib/projects/projects.api';
+export * from './lib/projects/pickable-projects';
 export * from './lib/ui/sparkline.component';
 export * from './lib/ui/bar-chart.component';
 export * from './lib/ui/chart-scale';

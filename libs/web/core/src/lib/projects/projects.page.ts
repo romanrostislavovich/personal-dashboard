@@ -1,21 +1,35 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Project, ProjectInput } from '@pd/contracts';
+import { isProjectClosed, Project, ProjectInput } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { ProjectFormDialog } from './project-form.dialog';
 import { ProjectsApi } from './projects.api';
 import { errorStatus } from '../client/core-requests';
+import { todayLocalDate } from '../utils/month';
+
+const FILTERS = ['current', 'closed', 'all'] as const;
+type ProjectFilter = (typeof FILTERS)[number];
 
 @Component({
   selector: 'pd-projects-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatCardModule, MatButtonModule, MatIconModule, RouterLink, TranslocoPipe],
+  imports: [
+    DatePipe,
+    MatCardModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatIconModule,
+    RouterLink,
+    TranslocoPipe,
+  ],
   template: `
     <header class="page-header">
       <h1 class="page-title">{{ 'core.projects.title' | transloco }}</h1>
@@ -25,9 +39,23 @@ import { errorStatus } from '../client/core-requests';
     </header>
     <p class="hint">{{ 'core.projects.hint' | transloco }}</p>
 
+    <mat-button-toggle-group
+      class="filter"
+      hideSingleSelectionIndicator
+      [value]="filter()"
+      [attr.aria-label]="'core.projects.filter' | transloco"
+      (change)="filter.set($event.value)"
+    >
+      @for (option of filters; track option) {
+        <mat-button-toggle [value]="option">
+          {{ 'core.projects.filters.' + option | transloco }} ({{ counts()[option] }})
+        </mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+
     <div class="cards">
-      @for (project of projects.value(); track project.id) {
-        <mat-card appearance="outlined">
+      @for (project of shown(); track project.id) {
+        <mat-card appearance="outlined" [class.closed]="isClosed(project)">
           <mat-card-header>
             <mat-card-title>
               <a class="name" [routerLink]="['/projects', project.id]">{{ project.name }}</a>
@@ -35,6 +63,14 @@ import { errorStatus } from '../client/core-requests';
             @if (project.url) {
               <mat-card-subtitle>
                 <a [href]="project.url" target="_blank" rel="noopener">{{ project.url }}</a>
+              </mat-card-subtitle>
+            }
+            @if (project.closedOn) {
+              <mat-card-subtitle class="closed-on">
+                {{
+                  (isClosed(project) ? 'core.projects.closedAt' : 'core.projects.closesAt')
+                    | transloco: { date: project.closedOn | date: 'd MMM y' }
+                }}
               </mat-card-subtitle>
             }
           </mat-card-header>
@@ -52,7 +88,12 @@ import { errorStatus } from '../client/core-requests';
           </mat-card-actions>
         </mat-card>
       } @empty {
-        <p class="empty">{{ 'core.projects.empty' | transloco }}</p>
+        <p class="empty">
+          {{
+            (projects.value().length ? 'core.projects.emptyFilter' : 'core.projects.empty')
+              | transloco
+          }}
+        </p>
       }
     </div>
   `,
@@ -70,6 +111,15 @@ import { errorStatus } from '../client/core-requests';
       color: inherit;
       text-decoration: none;
     }
+    .filter {
+      margin-bottom: 16px;
+    }
+    .closed {
+      opacity: 0.7;
+    }
+    .closed-on {
+      margin-top: 4px;
+    }
   `,
 })
 export class ProjectsPage {
@@ -79,6 +129,26 @@ export class ProjectsPage {
   private readonly transloco = inject(TranslocoService);
 
   protected readonly projects = this.api.list();
+  protected readonly filters = FILTERS;
+  /** Current ones first: the finished are kept for their history, not for every day. */
+  protected readonly filter = signal<ProjectFilter>('current');
+  // The day is taken when the page opens: a project closing today moves at the next visit.
+  private readonly today = todayLocalDate();
+  protected readonly counts = computed(() => {
+    const all = this.projects.value();
+    const closed = all.filter((project) => this.isClosed(project)).length;
+    return { current: all.length - closed, closed, all: all.length };
+  });
+  protected readonly shown = computed(() => {
+    const filter = this.filter();
+    return this.projects
+      .value()
+      .filter((project) => filter === 'all' || this.isClosed(project) === (filter === 'closed'));
+  });
+
+  protected isClosed(project: Project): boolean {
+    return isProjectClosed(project, this.today);
+  }
 
   async openForm(project?: Project): Promise<void> {
     const input = await firstValueFrom(

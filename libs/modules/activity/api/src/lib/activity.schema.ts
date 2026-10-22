@@ -175,6 +175,33 @@ export const activitySiteVisits = pgTable(
   (table) => [index().on(table.userId, table.startedAt)],
 );
 
+/**
+ * Rules offered for the user to accept (see RuleSuggestionsService). An accepted one becomes a
+ * rule and goes; a rejected one stays, so it is not offered again.
+ */
+export const activityRuleSuggestions = pgTable(
+  'activity_rule_suggestions',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    projectId: uuid()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    pattern: text().notNull(),
+    kind: text().$type<'window' | 'site'>().notNull(),
+    seconds: integer().notNull(),
+    reason: text(),
+    rejected: boolean().notNull().default(false),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique().on(table.userId, table.projectId, table.pattern),
+    index().on(table.projectId),
+  ],
+);
+
 /** "No more than this much a day": in games, at the computer at all, in one program. */
 export const activityLimits = pgTable(
   'activity_limits',

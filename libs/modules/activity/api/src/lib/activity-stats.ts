@@ -91,6 +91,7 @@ export function buildStats(
   const byApp = new Map<string, { name: string; seconds: number }>();
   const byCategory = new Map<ActivityCategory, number>();
   const byProject = new Map<string, number>();
+  const byProjectDay = new Map<string, Map<LocalDate, number>>();
   const byDevice = new Map<string, number>();
   const byTitle = new Map<string, { app: string; name: string; title: string; seconds: number }>();
 
@@ -104,6 +105,9 @@ export function buildStats(
     const projectId = matchProject(row.title, context.projects);
     if (projectId) {
       addTo(byProject, projectId, row.seconds);
+      const days = byProjectDay.get(projectId) ?? new Map<LocalDate, number>();
+      addTo(days, row.day, row.seconds);
+      byProjectDay.set(projectId, days);
     }
     const key = `${row.app}\n${row.title}`;
     const title = byTitle.get(key) ?? {
@@ -134,7 +138,10 @@ export function buildStats(
     projects: context.projects
       .flatMap((project) => {
         const seconds = byProject.get(project.projectId);
-        return seconds ? [{ projectId: project.projectId, name: project.name, seconds }] : [];
+        const days = [...(byProjectDay.get(project.projectId) ?? [])]
+          .map(([day, daySeconds]) => ({ day, seconds: daySeconds }))
+          .sort((a, b) => a.day.localeCompare(b.day));
+        return seconds ? [{ projectId: project.projectId, name: project.name, seconds, days }] : [];
       })
       .sort(descending),
     devices: context.devices

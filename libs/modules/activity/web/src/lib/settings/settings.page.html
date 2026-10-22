@@ -37,12 +37,12 @@
   </mat-card-header>
   <mat-card-content>
     <p class="hint">{{ 'activity.rules.hint' | transloco }}</p>
-    @if (projects.value().length) {
+    @if (pickable().length) {
       <form class="rule-form" (submit)="$event.preventDefault(); addRule()">
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'activity.rules.project' | transloco }}</mat-label>
           <mat-select [value]="ruleProject()" (valueChange)="ruleProject.set($event)">
-            @for (project of projects.value(); track project.id) {
+            @for (project of pickable(); track project.id) {
               <mat-option [value]="project.id">{{ project.name }}</mat-option>
             }
           </mat-select>
@@ -78,6 +78,7 @@
         </li>
       }
     </ul>
+    <pd-activity-rule-suggestions (accepted)="rules.reload()" />
   </mat-card-content>
 </mat-card>
 

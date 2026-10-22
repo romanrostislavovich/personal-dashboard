@@ -23,6 +23,7 @@ import { correlations } from './correlations/correlations';
 import { moodInsights } from './mood-insights';
 import { lastMonths, monthOf } from './project-months';
 import { moodForecast } from './forecast';
+import { withCodingAtComputer } from './project-time';
 
 /** Changes of a project shown in its overview. */
 const CHANGES = 15;
@@ -61,6 +62,19 @@ export class ProjectOverviewService {
     private readonly users: UsersService,
   ) {}
 
+  /**
+   * What the sections know about the project in a period, the time at the computer made whole
+   * (see withCodingAtComputer); the days of the times are only for that and are left out.
+   */
+  private async facts(userId: string, project: ProjectRef, period: Period): Promise<ProjectFact[]> {
+    const facts = withCodingAtComputer(await this.links.projectFacts(userId, project, period));
+    return facts.map((fact) => {
+      const shown = { ...fact };
+      delete shown.days;
+      return shown;
+    });
+  }
+
   /** A project as the sections are asked about it; throws when it is not the user's. */
   async ref(userId: string, projectId: string): Promise<ProjectRef> {
     const { id, name, url, aliases } = await this.projects.get(userId, projectId);
@@ -68,11 +82,12 @@ export class ProjectOverviewService {
   }
 
   async overview(userId: string, projectId: string, period: Period): Promise<ProjectOverview> {
-    const project = await this.ref(userId, projectId);
+    const { id, name, url, aliases, closedOn } = await this.projects.get(userId, projectId);
+    const project = { id, name, url, aliases };
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
     const [facts, changes] = await Promise.all([
-      this.links.projectFacts(userId, project, period),
+      this.facts(userId, project, period),
       this.links.projectChanges(
         userId,
         project,
@@ -81,7 +96,7 @@ export class ProjectOverviewService {
       ),
     ]);
     return {
-      project,
+      project: { ...project, closedOn },
       ...period,
       facts,
       changes: changes.slice(0, CHANGES),
@@ -96,7 +111,7 @@ export class ProjectOverviewService {
     const today = zonedDateTime(new Date(), timeZone).date;
     const months: ProjectMonth[] = [];
     for (const { month, from, to } of lastMonths(today, count)) {
-      months.push(monthOf(month, await this.links.projectFacts(userId, project, { from, to })));
+      months.push(monthOf(month, await this.facts(userId, project, { from, to })));
     }
     return months;
   }

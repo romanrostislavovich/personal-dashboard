@@ -40,6 +40,7 @@ import { WakatimeDigest } from './wakatime/wakatime.digest';
 import { WakatimeJob } from './wakatime/wakatime.job';
 import { WakatimeServerActions } from './wakatime/wakatime.server-actions';
 import { WakatimeService } from './wakatime/wakatime.service';
+import { WakatimeSpansService } from './wakatime/wakatime-spans.service';
 
 /**
  * Everything about coding, one folder per subsection:
@@ -93,6 +94,7 @@ import { WakatimeService } from './wakatime/wakatime.service';
     GithubProfileDigest,
     GithubProfileServerActions,
     WakatimeService,
+    WakatimeSpansService,
     WakatimeJob,
     WakatimeAchievements,
     WakatimeAiTools,

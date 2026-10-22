@@ -64,6 +64,11 @@ function localDate(date: Date): string {
           {{ data.project.url }}
         </a>
       }
+      @if (data.project.closedOn) {
+        <p class="hint">
+          {{ 'core.projects.closedOn' | transloco }}: {{ data.project.closedOn | date: 'd MMM y' }}
+        </p>
+      }
 
       @if (data.perHour; as rate) {
         <p class="rate">
@@ -98,6 +103,20 @@ function localDate(date: Date): string {
               </span>
               @if (fact.note) {
                 <span class="hint">{{ fact.note }}</span>
+              }
+              @if (fact.fromCoding) {
+                <span class="hint">
+                  {{
+                    'core.projects.fromCoding' | transloco: { time: fact.fromCoding | pdDuration }
+                  }}
+                </span>
+              }
+              @if (fact.fromContext) {
+                <span class="hint">
+                  {{
+                    'core.projects.fromContext' | transloco: { time: fact.fromContext | pdDuration }
+                  }}
+                </span>
               }
               @if (fact.link) {
                 <a class="more" [routerLink]="fact.link">

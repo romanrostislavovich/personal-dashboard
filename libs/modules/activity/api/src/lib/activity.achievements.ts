@@ -3,6 +3,7 @@ import { AchievementsService, achievementTiers, AchievementTierTuple } from '@pd
 import { ActivityCategory } from '@pd/contracts';
 import { ActivityLinks } from './activity.links';
 import { ActivityAllTime, ActivityService } from './activity.service';
+import { ProjectTimeService } from './project-time.service';
 import { WellbeingService } from './wellbeing.service';
 
 const HOUR = 3600;
@@ -28,6 +29,7 @@ export class ActivityAchievements implements OnModuleInit {
     private readonly activity: ActivityService,
     private readonly wellbeing: WellbeingService,
     private readonly links: ActivityLinks,
+    private readonly projectTime: ProjectTimeService,
   ) {}
 
   onModuleInit(): void {
@@ -223,19 +225,19 @@ export class ActivityAchievements implements OnModuleInit {
         10,
         '📌',
         { en: 'On the project', ru: 'По делу' },
-        { en: '10 hours in the windows of your projects', ru: '10 часов в окнах своих проектов' },
+        { en: '10 hours of work on your projects', ru: '10 часов работы над своими проектами' },
       ],
       [
         100,
         '🏗️',
         { en: 'Builder', ru: 'Строитель' },
-        { en: '100 hours in the windows of your projects', ru: '100 часов в окнах своих проектов' },
+        { en: '100 hours of work on your projects', ru: '100 часов работы над своими проектами' },
       ],
       [
         500,
         '🏰',
         { en: 'Founder', ru: 'Основатель' },
-        { en: '500 hours in the windows of your projects', ru: '500 часов в окнах своих проектов' },
+        { en: '500 hours of work on your projects', ru: '500 часов работы над своими проектами' },
       ],
     ]);
 
@@ -517,7 +519,11 @@ export class ActivityAchievements implements OnModuleInit {
     if (known && Date.now() - known.at < RECORDS_FRESH_MS) {
       return known.records;
     }
-    const records = this.activity.records(userId);
+    // The time on projects as their overview counts it: windows, sites, the IDE and the context.
+    const records = Promise.all([
+      this.activity.records(userId),
+      this.projectTime.allTimeSeconds(userId),
+    ]).then(([found, projectSeconds]) => ({ ...found, projectSeconds }));
     this.fresh.set(userId, { at: Date.now(), records });
     // A failed reading is not kept: the next metric asks again.
     records.catch(() => this.fresh.delete(userId));

@@ -10,6 +10,7 @@ import {
   ActivityPeriod,
   ActivityProjectRule,
   ActivityProjectRuleInput,
+  ActivityRuleSuggestion,
   ActivitySettings,
   ActivitySettingsUpdate,
   ActivitySiteTime,
@@ -117,6 +118,24 @@ export class ActivityApi {
 
   removeRule(id: string) {
     return fromCore(() => this.activity.removeRule(id));
+  }
+
+  ruleSuggestions() {
+    return httpResource<ActivityRuleSuggestion[]>(() => ACTIVITY_READS.ruleSuggestions(), {
+      defaultValue: [],
+    });
+  }
+
+  refreshRuleSuggestions() {
+    return fromCore(() => this.activity.refreshRuleSuggestions());
+  }
+
+  acceptRuleSuggestion(id: string) {
+    return fromCore(() => this.activity.acceptRuleSuggestion(id));
+  }
+
+  rejectRuleSuggestion(id: string) {
+    return fromCore(() => this.activity.rejectRuleSuggestion(id));
   }
 
   /** Focus with music against focus in silence. */

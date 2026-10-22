@@ -33,10 +33,15 @@ const DAYS = 30;
           <p class="hint">{{ 'activity.otherComputers.hint' | transloco }}</p>
           @for (item of others(); track item.source + item.computer) {
             <div class="computer" [class.off]="!item.counted">
-              <mat-icon>{{ item.source === 'steam' ? 'sports_esports' : 'laptop_mac' }}</mat-icon>
+              <mat-icon>{{ icons[item.source] ?? 'laptop_mac' }}</mat-icon>
               <span class="body">
                 <span>
-                  {{ item.computer }} ·
+                  {{
+                    item.source === 'extension'
+                      ? ('activity.otherComputers.browser' | transloco)
+                      : item.computer
+                  }}
+                  ·
                   {{
                     'activity.otherComputers.recent'
                       | transloco: { time: (item.seconds | pdDuration), days: days }
@@ -101,6 +106,10 @@ const DAYS = 30;
   `,
 })
 export class OtherComputersSettingsComponent {
+  protected readonly icons: Record<string, string> = {
+    steam: 'sports_esports',
+    extension: 'public',
+  };
   private readonly api = inject(ActivityApi);
   private readonly settings = this.api.settings();
   protected readonly days = DAYS;

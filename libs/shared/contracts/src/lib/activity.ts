@@ -314,6 +314,23 @@ export interface ActivityProjectRule {
   pattern: string;
 }
 
+/**
+ * A rule the dashboard offers: a window or a site that keeps turning up in work on a project.
+ * It becomes a rule only when the user accepts it.
+ */
+export interface ActivityRuleSuggestion {
+  id: string;
+  projectId: string;
+  projectName: string;
+  /** What the rule would look for in a window title or a site. */
+  pattern: string;
+  kind: 'window' | 'site';
+  /** Its time next to work on the project in the days looked at. */
+  seconds: number;
+  /** Why it belongs to the project, in the user's language; `null` — offered without the AI. */
+  reason: string | null;
+}
+
 // --- What the section shows ---
 
 const LOCAL_DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -340,8 +357,17 @@ export interface ActivityStats {
   /** The most used first. */
   apps: ActivityAppUsage[];
   categories: { category: ActivityCategory; seconds: number }[];
-  /** Time whose window title matched a project (its name or one of its rules). */
-  projects: { projectId: string; name: string; seconds: number }[];
+  /**
+   * Time of each project: its windows and sites (its name or a rule), its IDE time and what
+   * lay in work on it. The statistics of one device count only window titles.
+   */
+  projects: {
+    projectId: string;
+    name: string;
+    seconds: number;
+    /** The days it had time on. */
+    days: { day: LocalDate; seconds: number }[];
+  }[];
   devices: { id: string; name: string; seconds: number }[];
   /** The window titles that took the most time. */
   titles: { app: string; name: string; title: string; seconds: number }[];

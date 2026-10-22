@@ -666,6 +666,27 @@
       "when": 1792609110433,
       "tag": "0094_mighty_lockheed",
       "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1792672185296,
+      "tag": "0095_shallow_hellfire_club",
+      "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1792675341187,
+      "tag": "0096_common_sentry",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1792675755042,
+      "tag": "0097_foamy_triathlon",
+      "breakpoints": true
     }
   ]
 }

@@ -42,6 +42,11 @@ import { Project, ProjectInput } from '@pd/contracts';
           <input matInput formControlName="aliases" placeholder="owner/repo, my-app" />
           <mat-hint>{{ 'core.projects.aliasesHint' | transloco }}</mat-hint>
         </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ 'core.projects.closedOn' | transloco }}</mat-label>
+          <input matInput type="date" formControlName="closedOn" />
+          <mat-hint>{{ 'core.projects.closedOnHint' | transloco }}</mat-hint>
+        </mat-form-field>
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
@@ -72,10 +77,11 @@ export class ProjectFormDialog {
     description: [this.project?.description ?? ''],
     // Typed as one line: the names separated by commas.
     aliases: [(this.project?.aliases ?? []).join(', ')],
+    closedOn: [this.project?.closedOn ?? ''],
   });
 
   save(): void {
-    const { name, url, description, aliases } = this.form.getRawValue();
+    const { name, url, description, aliases, closedOn } = this.form.getRawValue();
     this.dialogRef.close({
       name,
       url: url || null,
@@ -84,6 +90,7 @@ export class ProjectFormDialog {
         .split(',')
         .map((alias) => alias.trim())
         .filter(Boolean),
+      closedOn: closedOn || null,
     });
   }
 }

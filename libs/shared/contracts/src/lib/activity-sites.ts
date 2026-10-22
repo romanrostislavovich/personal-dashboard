@@ -3,17 +3,22 @@ import { z } from 'zod';
 // The browser extension's part of Activity: the time on each site (the desktop app sees only
 // "Chrome, 3 hours"), the sites a focus session keeps closed, and the daily limits of sites.
 
+/** An address of this very computer: a project being written runs there, one per port. */
+const LOCAL_HOST = /^(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|\[::1\])$/;
+
 /**
- * The site of an address as it is counted: the host name without `www.`, lower case.
+ * The site of an address as it is counted: the host name without `www.`, lower case. A local
+ * address keeps its port — `localhost:4200` and `localhost:3000` are two projects, not one.
  * `null` — not a site (a browser page, a file).
  */
 export function siteOf(url: string): string | null {
   try {
-    const { protocol, hostname } = new URL(url);
+    const { protocol, hostname, port } = new URL(url);
     if ((protocol !== 'http:' && protocol !== 'https:') || !hostname) {
       return null;
     }
-    return hostname.toLowerCase().replace(/^www\./, '');
+    const host = hostname.toLowerCase().replace(/^www\./, '');
+    return port && LOCAL_HOST.test(host) ? `${host}:${port}` : host;
   } catch {
     return null;
   }
@@ -49,12 +54,26 @@ export const DEFAULT_DISTRACTING_SITES = [
 
 const moment = z.iso.datetime({ offset: true });
 
+/**
+ * The site of a visit as the extension takes it (see siteOf): a domain, but also a local
+ * address — `localhost`, `127.0.0.1`, `[::1]`, a name of an office network. Stricter, it would
+ * turn the whole batch away: the extension sends the same batch again and again, so not one
+ * visit after it would reach the server.
+ */
+const visitedSiteSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(1)
+  .max(253)
+  .regex(/^[a-z0-9.:[\]-]+$/, 'Expected a host name');
+
 /** A stretch of time one site was in front, the browser focused and the user there. */
 export const activitySiteVisitSchema = z
   .object({
     /** Made by the extension: a batch sent twice does not double the time. */
     id: z.uuid(),
-    site: siteDomainSchema,
+    site: visitedSiteSchema,
     startedAt: moment,
     endedAt: moment,
   })

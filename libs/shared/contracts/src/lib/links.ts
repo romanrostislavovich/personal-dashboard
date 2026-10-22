@@ -25,6 +25,18 @@ export interface ProjectFact {
   link?: string;
   /** A line under the number: what it is made of. */
   note?: string;
+  /** A time day by day (the days with any), for the core to compare two sections' times. */
+  days?: { day: LocalDate; seconds: number }[];
+  /**
+   * Of the time at the computer: the seconds of IDE time the tracker did not tie to the project
+   * (a terminal, a browser, a computer without the tracker).
+   */
+  fromCoding?: number;
+  /**
+   * Of the time at the computer: the seconds of windows and sites of no project that lie in
+   * work on it (the browser with the running app between two moments in the IDE).
+   */
+  fromContext?: number;
 }
 
 /** Something that changed in a project at a moment: a commit, a release. */
@@ -56,7 +68,13 @@ export const projectMonthsQuerySchema = z.object({
 export type ProjectMonthsQuery = z.infer<typeof projectMonthsQuerySchema>;
 
 export interface ProjectOverview {
-  project: { id: string; name: string; url: string | null; aliases: string[] };
+  project: {
+    id: string;
+    name: string;
+    url: string | null;
+    aliases: string[];
+    closedOn: LocalDate | null;
+  };
   from: LocalDate;
   to: LocalDate;
   facts: ProjectFact[];

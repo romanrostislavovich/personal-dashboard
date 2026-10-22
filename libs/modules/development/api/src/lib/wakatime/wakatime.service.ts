@@ -23,6 +23,7 @@ import {
   WakatimeSummaryDay,
 } from './wakatime.client';
 import { wakatimeDayBreakdown, wakatimeDays, wakatimeSettings } from './wakatime.schema';
+import { WakatimeSpansService } from './wakatime-spans.service';
 
 const API_KEY_SECRET = 'development.wakatime-key';
 /** Rows of a "top projects / languages / editors" list. */
@@ -37,6 +38,7 @@ export class WakatimeService {
     @Inject(DB) private readonly db: Database,
     @Inject(ConfigService) private readonly config: AppConfig,
     private readonly secrets: SecretsService,
+    private readonly spans: WakatimeSpansService,
   ) {}
 
   async settings(userId: string): Promise<WakatimeSettings> {
@@ -115,6 +117,11 @@ export class WakatimeService {
           throw error;
         });
       await this.save(userId, days);
+      await this.spans.sync(
+        userId,
+        client,
+        days.map((day) => day.day),
+      );
       await this.setSyncResult(userId, null);
     } catch (error) {
       this.logger.warn(`WakaTime sync failed for ${userId}: ${error}`);

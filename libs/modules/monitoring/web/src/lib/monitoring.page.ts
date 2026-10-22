@@ -11,7 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Monitor } from '@pd/contracts';
-import { ProjectsApi, errorStatus } from '@pd/web-core';
+import { pickableProjects, ProjectsApi, errorStatus } from '@pd/web-core';
 import { firstValueFrom, interval } from 'rxjs';
 import { MonitorCardComponent } from './monitor-card.component';
 import { MonitoringApi } from './monitoring.api';
@@ -44,7 +44,7 @@ const REFRESH_MS = 60_000;
         <mat-card-title>{{ 'monitoring.addTitle' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        @if (projects.value().length === 0) {
+        @if (pickable().length === 0) {
           <p class="hint">
             {{ 'monitoring.noProjects' | transloco }}
             <a routerLink="/projects">{{ 'core.nav.projects' | transloco }}</a>
@@ -54,7 +54,7 @@ const REFRESH_MS = 60_000;
             <mat-form-field subscriptSizing="dynamic">
               <mat-label>{{ 'monitoring.project' | transloco }}</mat-label>
               <mat-select formControlName="projectId">
-                @for (project of projects.value(); track project.id) {
+                @for (project of pickable(); track project.id) {
                   <mat-option [value]="project.id">{{ project.name }}</mat-option>
                 }
               </mat-select>
@@ -117,6 +117,7 @@ export class MonitoringPage {
 
   protected readonly monitors = this.api.monitors();
   protected readonly projects = inject(ProjectsApi).list();
+  protected readonly pickable = computed(() => pickableProjects(this.projects.value()));
   protected readonly busy = signal(false);
 
   protected readonly projectNames = computed(

@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Project, Transaction, TransactionInput, TransactionKind } from '@pd/contracts';
-import { todayLocalDate } from '@pd/web-core';
+import { pickableProjects, todayLocalDate } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { FinanceApi } from './finance.api';
 
@@ -93,7 +93,7 @@ export interface TransactionFormData {
             <mat-select formControlName="projectId">
               <!-- "Personal" = empty string: mat-select treats null as no selection. -->
               <mat-option value="">{{ 'finance.scope.personal' | transloco }}</mat-option>
-              @for (project of data.projects; track project.id) {
+              @for (project of projects; track project.id) {
                 <mat-option [value]="project.id">{{ project.name }}</mat-option>
               }
             </mat-select>
@@ -135,6 +135,12 @@ export interface TransactionFormData {
 })
 export class TransactionFormDialog {
   protected readonly data = inject<TransactionFormData>(MAT_DIALOG_DATA);
+  /** Closed projects are not offered, but the one the record already has stays. */
+  protected readonly projects = pickableProjects(
+    this.data.projects,
+    (this.data.transaction ? this.data.transaction.projectId : this.data.defaults.projectId) ??
+      null,
+  );
   private readonly dialogRef = inject(MatDialogRef<TransactionFormDialog, TransactionInput>);
 
   private readonly finance = inject(FinanceApi);

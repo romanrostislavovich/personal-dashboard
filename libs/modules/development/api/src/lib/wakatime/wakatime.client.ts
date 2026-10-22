@@ -1,5 +1,8 @@
 import { fetchWithTimeout } from '@pd/api-core';
 import { LocalDate, WakatimeBreakdown } from '@pd/contracts';
+import { parseDurations, RawDuration, WakatimeDuration, WakatimeSlice } from './wakatime-durations';
+
+export type { WakatimeDuration, WakatimeSlice } from './wakatime-durations';
 
 const API = 'https://wakatime.com/api/v1';
 
@@ -41,6 +44,29 @@ export class WakatimeClient {
       `/users/current/summaries?start=${start}&end=${end}`,
     );
     return data.map(parseSummary);
+  }
+
+  /**
+   * The stretches of coding on a day, by project or by computer. A computer comes as the id of
+   * its machine name; `machineNames` turns it into the name the summaries show.
+   */
+  async getDurations(
+    day: LocalDate,
+    slice: WakatimeSlice,
+    machineNames: ReadonlyMap<string, string> = new Map(),
+  ): Promise<WakatimeDuration[]> {
+    const { data } = await this.get<{ data: RawDuration[] }>(
+      `/users/current/durations?date=${day}&slice_by=${slice}`,
+    );
+    return parseDurations(data, slice, machineNames);
+  }
+
+  /** The account's computers: the id of each name, as a stretch by computer gives it. */
+  async getMachineNames(): Promise<Map<string, string>> {
+    const { data } = await this.get<{ data: { id: string; name: string }[] }>(
+      '/users/current/machine_names',
+    );
+    return new Map(data.map((machine) => [machine.id, machine.name]));
   }
 
   private async get<T>(path: string): Promise<T> {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -17,7 +17,7 @@ import {
   TaskPriority,
   TaskUpdate,
 } from '@pd/contracts';
-import { ProjectsApi } from '@pd/web-core';
+import { pickableProjects, ProjectsApi } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { RepeatFieldComponent } from '../repeat-field.component';
 import { TasksApi } from '../tasks.api';
@@ -97,7 +97,7 @@ export interface TaskDialogData {
           <mat-label>{{ 'tasks.todo.project' | transloco }}</mat-label>
           <mat-select [(ngModel)]="projectId">
             <mat-option [value]="null">—</mat-option>
-            @for (project of projects.value(); track project.id) {
+            @for (project of pickable(); track project.id) {
               <mat-option [value]="project.id">{{ project.name }}</mat-option>
             }
           </mat-select>
@@ -184,6 +184,9 @@ export class TaskFormDialog {
   private readonly dialogRef = inject(MatDialogRef<TaskFormDialog, boolean>);
 
   protected readonly projects = inject(ProjectsApi).list();
+  protected readonly pickable = computed(() =>
+    pickableProjects(this.projects.value(), this.task?.projectId),
+  );
   protected readonly priorities = TASK_PRIORITIES;
 
   private readonly task = this.data.task;
