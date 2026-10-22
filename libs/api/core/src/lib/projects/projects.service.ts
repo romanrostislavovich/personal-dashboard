@@ -84,6 +84,7 @@ function toProject(row: typeof projects.$inferSelect): Project {
     url: row.url,
     description: row.description,
     aliases: row.aliases,
+    closedOn: row.closedOn,
     createdAt: row.createdAt.toISOString(),
   };
 }

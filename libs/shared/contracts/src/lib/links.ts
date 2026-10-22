@@ -56,7 +56,13 @@ export const projectMonthsQuerySchema = z.object({
 export type ProjectMonthsQuery = z.infer<typeof projectMonthsQuerySchema>;
 
 export interface ProjectOverview {
-  project: { id: string; name: string; url: string | null; aliases: string[] };
+  project: {
+    id: string;
+    name: string;
+    url: string | null;
+    aliases: string[];
+    closedOn: LocalDate | null;
+  };
   from: LocalDate;
   to: LocalDate;
   facts: ProjectFact[];

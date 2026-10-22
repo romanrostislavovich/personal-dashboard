@@ -98,7 +98,18 @@
     "monthTime": "За компьютером",
     "monthCoding": "В коде",
     "monthIncome": "Доход",
-    "monthExpense": "Расходы"
+    "monthExpense": "Расходы",
+    "closedOn": "Дата закрытия",
+    "closedOnHint": "Когда проект завершён или заброшен. Пусто — он ещё идёт; дата впереди — плановое закрытие.",
+    "closedAt": "Закрыт {{date}}",
+    "closesAt": "Закроется {{date}}",
+    "filter": "Какие проекты показать",
+    "filters": {
+      "current": "Текущие",
+      "closed": "Завершённые",
+      "all": "Все"
+    },
+    "emptyFilter": "Здесь таких проектов нет"
   },
   "settings": {
     "title": "Настройки",

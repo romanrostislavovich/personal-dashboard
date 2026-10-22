@@ -68,7 +68,8 @@ export class ProjectOverviewService {
   }
 
   async overview(userId: string, projectId: string, period: Period): Promise<ProjectOverview> {
-    const project = await this.ref(userId, projectId);
+    const { id, name, url, aliases, closedOn } = await this.projects.get(userId, projectId);
+    const project = { id, name, url, aliases };
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
     const [facts, changes] = await Promise.all([
@@ -81,7 +82,7 @@ export class ProjectOverviewService {
       ),
     ]);
     return {
-      project,
+      project: { ...project, closedOn },
       ...period,
       facts,
       changes: changes.slice(0, CHANGES),

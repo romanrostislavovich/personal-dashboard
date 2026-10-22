@@ -666,6 +666,13 @@
       "when": 1792609110433,
       "tag": "0094_mighty_lockheed",
       "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1792672185296,
+      "tag": "0095_shallow_hellfire_club",
+      "breakpoints": true
     }
   ]
 }

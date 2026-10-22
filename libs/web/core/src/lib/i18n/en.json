@@ -108,7 +108,18 @@
     "monthTime": "At the computer",
     "monthCoding": "In code",
     "monthIncome": "Income",
-    "monthExpense": "Expenses"
+    "monthExpense": "Expenses",
+    "closedOn": "Closing date",
+    "closedOnHint": "When the project was finished or abandoned. Empty — it is still going; a date ahead — the planned close.",
+    "closedAt": "Closed on {{date}}",
+    "closesAt": "Closes on {{date}}",
+    "filter": "Which projects to show",
+    "filters": {
+      "current": "Current",
+      "closed": "Finished",
+      "all": "All"
+    },
+    "emptyFilter": "No such projects here"
   },
   "settings": {
     "title": "Settings",

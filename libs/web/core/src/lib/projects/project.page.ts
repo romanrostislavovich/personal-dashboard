@@ -64,6 +64,11 @@ function localDate(date: Date): string {
           {{ data.project.url }}
         </a>
       }
+      @if (data.project.closedOn) {
+        <p class="hint">
+          {{ 'core.projects.closedOn' | transloco }}: {{ data.project.closedOn | date: 'd MMM y' }}
+        </p>
+      }
 
       @if (data.perHour; as rate) {
         <p class="rate">
