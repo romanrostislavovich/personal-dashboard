@@ -1,4 +1,11 @@
-import { dayBounds, mergeSpans, secondsByDay, spanSeconds, subtractSpans } from './time-spans';
+import {
+  dayBounds,
+  mergeSpans,
+  monthsBetween,
+  secondsByDay,
+  spanSeconds,
+  subtractSpans,
+} from './time-spans';
 
 const MIN = 60_000;
 const at = (minutes: number) => minutes * MIN;
@@ -30,6 +37,17 @@ describe('time spans', () => {
     expect([...byDay]).toEqual([
       ['2026-10-01', 1800],
       ['2026-10-02', 1800],
+    ]);
+  });
+});
+
+describe('monthsBetween', () => {
+  it('goes month by month over the turn of a year, with the last day of each', () => {
+    expect(monthsBetween('2025-11-20', '2026-02-03')).toEqual([
+      { from: '2025-11-01', to: '2025-11-30' },
+      { from: '2025-12-01', to: '2025-12-31' },
+      { from: '2026-01-01', to: '2026-01-31' },
+      { from: '2026-02-01', to: '2026-02-28' },
     ]);
   });
 });

@@ -136,6 +136,7 @@ describe('activity telemetry registration', () => {
       {} as never,
       { list, restore } as never,
       { summarize } as never,
+      {} as never,
     ).onModuleInit();
     const recall = registerTool.mock.calls
       .map(([tool]) => tool)

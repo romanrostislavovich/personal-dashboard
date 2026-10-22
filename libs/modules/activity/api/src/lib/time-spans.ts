@@ -92,3 +92,22 @@ export function secondsByDay(
   }
   return byDay;
 }
+
+/** The months from the one of `first` to the one of `last`, each as its first and last day. */
+export function monthsBetween(
+  first: LocalDate,
+  last: LocalDate,
+): { from: LocalDate; to: LocalDate }[] {
+  const months: { from: LocalDate; to: LocalDate }[] = [];
+  let [year, month] = first.split('-').map(Number);
+  const [lastYear, lastMonth] = last.split('-').map(Number);
+  while (year < lastYear || (year === lastYear && month <= lastMonth)) {
+    const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    months.push({
+      from: toLocalDate({ year, month, day: 1 }),
+      to: toLocalDate({ year, month, day: days }),
+    });
+    [year, month] = month === 12 ? [year + 1, 1] : [year, month + 1];
+  }
+  return months;
+}

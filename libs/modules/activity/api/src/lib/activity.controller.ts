@@ -60,6 +60,7 @@ import { ActivityLinks } from './activity.links';
 import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
 import { DiskAdviceService } from './disk/disk-advice.service';
+import { ProjectTimeService } from './project-time.service';
 import { RuleSuggestionsService } from './rule-suggestions.service';
 import { SitesService } from './sites.service';
 import { WellbeingService } from './wellbeing.service';
@@ -80,6 +81,7 @@ export class ActivityController {
     private readonly links: ActivityLinks,
     private readonly sites: SitesService,
     private readonly suggestions: RuleSuggestionsService,
+    private readonly projectTime: ProjectTimeService,
   ) {}
 
   // --- A tracker ---
@@ -137,11 +139,15 @@ export class ActivityController {
   // --- The user ---
 
   @Get('stats')
-  stats(
+  async stats(
     @CurrentUser() user: AuthUser,
     @Query(new ZodValidationPipe(activityPeriodSchema)) period: ActivityPeriod,
   ): Promise<ActivityStats> {
-    return this.activity.stats(user.id, period);
+    return this.projectTime.withProjects(
+      user.id,
+      period,
+      await this.activity.stats(user.id, period),
+    );
   }
 
   /** Computers other services know (WakaTime), with whether their time is counted. */

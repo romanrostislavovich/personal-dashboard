@@ -15,6 +15,7 @@ import { WellbeingService } from './wellbeing.service';
 import { activitySettings } from './activity.schema';
 import { WorkstateService } from './workstate.service';
 import { TelemetrySummaryService } from './telemetry-summary.service';
+import { ProjectTimeService } from './project-time.service';
 
 const TIME = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const timelineArgs = activityDaySchema.extend({
@@ -35,6 +36,7 @@ export class ActivityAiTools implements OnModuleInit {
     private readonly sites: SitesService,
     private readonly workstates: WorkstateService,
     private readonly telemetry: TelemetrySummaryService,
+    private readonly projectTime: ProjectTimeService,
   ) {}
 
   onModuleInit(): void {
@@ -159,14 +161,21 @@ export class ActivityAiTools implements OnModuleInit {
         'Time at the computer for a period, in seconds: `totalSeconds`, per day (`days`), per ' +
         'program (`apps`, with its category), per category (development, browsing, ' +
         'communication, office, design, games, media, system, other), per project (`projects` ' +
-        '— time whose window title matched the project), per device, and the window titles ' +
+        '— its windows and sites, its IDE time in WakaTime and what lay in work on it), per device, and the window titles ' +
         'that took the most time (`titles`). `otherComputers` — computers without the tracker ' +
         '(a work laptop) whose time comes from another service (WakaTime: only the time in an ' +
         'IDE, so the least that was worked there); it is already in the total, the days and ' +
         'development. Useful for "how long did I work yesterday", ' +
         '"what did I spend the week on", "how much did I play".',
       parameters: PERIOD_PARAMETERS,
-      handler: (userId, args) => this.activity.stats(userId, activityPeriodSchema.parse(args)),
+      handler: async (userId, args) => {
+        const period = activityPeriodSchema.parse(args);
+        return this.projectTime.withProjects(
+          userId,
+          period,
+          await this.activity.stats(userId, period),
+        );
+      },
     });
 
     this.ai.registerTool({

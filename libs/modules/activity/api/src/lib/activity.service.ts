@@ -80,7 +80,10 @@ export interface ActivityAllTime extends ActivityRecords {
   /** From five to eight in the morning. */
   earlySeconds: number;
   weekendSeconds: number;
-  /** Time whose window title matched one of the projects. */
+  /**
+   * Time whose window title matched one of the projects; the achievements take the whole time
+   * on projects instead (ProjectTimeService.allTimeSeconds).
+   */
   projectSeconds: number;
   /** Trackers registered. */
   devices: number;

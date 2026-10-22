@@ -357,7 +357,10 @@ export interface ActivityStats {
   /** The most used first. */
   apps: ActivityAppUsage[];
   categories: { category: ActivityCategory; seconds: number }[];
-  /** Time whose window title matched a project (its name or one of its rules). */
+  /**
+   * Time of each project: its windows and sites (its name or a rule), its IDE time and what
+   * lay in work on it. The statistics of one device count only window titles.
+   */
   projects: {
     projectId: string;
     name: string;
