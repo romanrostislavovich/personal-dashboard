@@ -1,6 +1,6 @@
 import { users } from '@pd/api-core/schema';
 import { WritingLanguage } from '@pd/contracts';
-import { boolean, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 
 /** How the writing of a user is checked (see WritingSettings in contracts). */
 export const writingSettings = pgTable('writing_settings', {
@@ -15,4 +15,6 @@ export const writingSettings = pgTable('writing_settings', {
   disabledRules: text().array().notNull().default([]),
   ignoredSites: text().array().notNull().default([]),
   ignoredApps: text().array().notNull().default([]),
+  /** Fixes taken from the suggestions, for the achievements: never part of the settings. */
+  fixesAccepted: integer().notNull().default(0),
 });

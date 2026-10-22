@@ -9,6 +9,8 @@ import {
 import {
   LanguageToolInput,
   languageToolInputSchema,
+  WritingAccepted,
+  writingAcceptedSchema,
   WritingCheck,
   WritingCheckResult,
   writingCheckSchema,
@@ -72,6 +74,17 @@ export class WritingController {
     @Body(new ZodValidationPipe(writingIgnoreSchema)) what: WritingIgnore,
   ): Promise<WritingConfig> {
     return this.writing.ignore(user.id, what);
+  }
+
+  /** Fixes taken from the suggestions: only how many, for the achievements. */
+  @Post('accepted')
+  @HttpCode(204)
+  @RateLimit(120, 60)
+  accepted(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(writingAcceptedSchema)) body: WritingAccepted,
+  ): Promise<void> {
+    return this.writing.accepted(user.id, body.count);
   }
 
   /** Checked after every pause in typing: generous, but not endless. */

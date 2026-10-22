@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ScreenshotsController } from './screenshots.controller';
 import { ScreenshotsLinks } from './screenshots.links';
+import { ScreenshotsAchievements } from './screenshots.achievements';
 import { ScreenshotsService } from './screenshots.service';
 
 /**
@@ -9,6 +10,6 @@ import { ScreenshotsService } from './screenshots.service';
  */
 @Module({
   controllers: [ScreenshotsController],
-  providers: [ScreenshotsService, ScreenshotsLinks],
+  providers: [ScreenshotsService, ScreenshotsLinks, ScreenshotsAchievements],
 })
 export class ScreenshotsModule {}

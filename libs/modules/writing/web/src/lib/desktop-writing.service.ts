@@ -31,6 +31,9 @@ export class DesktopWritingService {
         this.apply(await this.api.ignore({ ruleId: what.ruleId }));
       }
     });
+    desktop.onAccepted?.(async (count) => {
+      await this.api.accepted(count);
+    });
     void this.refresh();
     setInterval(() => void this.refresh(), REFRESH_MS);
   }

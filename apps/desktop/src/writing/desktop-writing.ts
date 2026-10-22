@@ -16,6 +16,8 @@ export interface Issue {
 export interface WritingServer {
   check(text: string): Promise<Issue[] | null>;
   ignore(what: { word?: string; ruleId?: string }): Promise<void>;
+  /** A suggested fix was taken: counted for the achievements (not the text). */
+  accepted(count: number): Promise<void>;
 }
 
 export interface WritingConfig {
@@ -311,6 +313,7 @@ export class DesktopWriting {
     if (action === 'fix' && typeof value === 'string') {
       const word = field.text.slice(issue.offset, issue.offset + issue.length);
       await this.watch.replace(issue.offset, issue.length, value, word);
+      void this.server.accepted(1);
     } else if (action === 'word' && value) {
       await this.server.ignore({ word: value });
       void this.check();

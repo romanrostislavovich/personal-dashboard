@@ -188,6 +188,8 @@ export type ContentRequest =
   | { type: 'writing-check'; text: string }
   | { type: 'writing-rewrite'; text: string; mode: WritingRewriteMode }
   | { type: 'writing-ignore'; word?: string; ruleId?: string }
+  /** Fixes taken from the suggestions: only how many, for the achievements. */
+  | { type: 'writing-accepted'; count: number }
   /** "Not on this site" from the badge's menu: only the page's own site. */
   | { type: 'writing-off-here' }
   | { type: 'writing-settings' };

@@ -122,3 +122,7 @@ export const writingIgnoreSchema = z.union([
   z.object({ ruleId: z.string().trim().min(1).max(200) }),
 ]);
 export type WritingIgnore = z.infer<typeof writingIgnoreSchema>;
+
+/** Fixes taken from the suggestions (one, or "fix all" of a field) — for the achievements. */
+export const writingAcceptedSchema = z.object({ count: z.number().int().min(1).max(500) });
+export type WritingAccepted = z.infer<typeof writingAcceptedSchema>;

@@ -89,6 +89,16 @@ contextBridge.exposeInMainWorld('desktop', {
         },
       );
     },
+    onAccepted: (accepted: (count: number) => Promise<void>): void => {
+      ipcRenderer.on(
+        'writing:accepted',
+        (_event, { id, payload }: { id: number; payload: number }) => {
+          void accepted(Number(payload))
+            .catch(() => undefined)
+            .then(() => ipcRenderer.send('writing:answer', { id, value: true }));
+        },
+      );
+    },
     onIgnore: (ignore: (what: { word?: string; ruleId?: string }) => Promise<void>): void => {
       ipcRenderer.on(
         'writing:ignore',
