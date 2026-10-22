@@ -7,6 +7,7 @@ import { activitySiteVisits, activitySpans } from './activity.schema';
 import { ActivityService } from './activity.service';
 import { ProjectTime, projectTime, WorkPiece } from './project-context';
 import { dayBounds, secondsByDay, spanSeconds } from './time-spans';
+import { MAX_VISIT_SECONDS } from './visit-length';
 
 /** The time of a project in a period, in the numbers the overview of a project shows. */
 export interface ProjectTimeFact {
@@ -81,7 +82,15 @@ export class ProjectTimeService {
       this.db
         .select({ startedAt: v.startedAt, endedAt: v.endedAt, site: v.site })
         .from(v)
-        .where(and(eq(v.userId, userId), lt(v.startedAt, to), gt(v.endedAt, from))),
+        .where(
+          and(
+            eq(v.userId, userId),
+            lt(v.startedAt, to),
+            gt(v.endedAt, from),
+            // A visit is never longer than this: the index on its start is used from here.
+            gte(v.startedAt, new Date(from.getTime() - MAX_VISIT_SECONDS * 1000)),
+          ),
+        ),
       this.activity.projectPatterns(userId),
       this.activity.chosenCategories(userId),
       this.activity.settings(userId),

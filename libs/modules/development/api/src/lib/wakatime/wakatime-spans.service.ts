@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DB, Database } from '@pd/api-core';
 import { LocalDate } from '@pd/contracts';
-import { and, eq, gt, inArray, lt } from 'drizzle-orm';
+import { and, eq, gt, gte, inArray, lt } from 'drizzle-orm';
 import { WakatimeClient, WakatimePlanError } from './wakatime.client';
 import { WakatimeDuration, WakatimeSlice } from './wakatime-durations';
 import { wakatimeSpans } from './wakatime.schema';
@@ -9,6 +9,7 @@ import { wakatimeSpans } from './wakatime.schema';
 /** Days read again at a sync: each is two requests, and older ones do not change any more. */
 const MAX_DAYS = 7;
 const SLICES: WakatimeSlice[] = ['project', 'machine'];
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** A stretch of coding as it is saved. */
 export interface SavedSpan {
@@ -78,6 +79,8 @@ export class WakatimeSpansService {
           eq(s.kind, kind),
           lt(s.startedAt, to),
           gt(s.endedAt, from),
+          // No stretch of WakaTime outlasts its day: the index on the start is used from here.
+          gte(s.startedAt, new Date(from.getTime() - DAY_MS)),
           names ? inArray(s.name, names) : undefined,
         ),
       );

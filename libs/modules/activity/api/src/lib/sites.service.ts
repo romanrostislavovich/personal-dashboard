@@ -19,9 +19,7 @@ import {
   activitySiteVisits,
 } from './activity.schema';
 import { ActivityService } from './activity.service';
-
-/** A visit is cut at this length: a tab left open overnight is not a night on the site. */
-const MAX_VISIT_SECONDS = 30 * 60;
+import { MAX_VISIT_SECONDS } from './visit-length';
 
 /**
  * The browser extension's part of Activity: the time on each site, the focus session it keeps

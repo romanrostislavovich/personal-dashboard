@@ -51,6 +51,7 @@ import {
   withOtherComputers,
 } from './other-computers';
 import { dayBounds, secondsByDay, spanOf, TimeSpan } from './time-spans';
+import { MAX_VISIT_SECONDS } from './visit-length';
 
 const DEFAULT_SETTINGS: ActivitySettings = {
   idleMinutes: 5,
@@ -466,7 +467,15 @@ export class ActivityService {
     const visits = await this.db
       .select({ startedAt: v.startedAt, endedAt: v.endedAt })
       .from(v)
-      .where(and(eq(v.userId, userId), lt(v.startedAt, to), gt(v.endedAt, from)));
+      .where(
+        and(
+          eq(v.userId, userId),
+          lt(v.startedAt, to),
+          gt(v.endedAt, from),
+          // A visit is never longer than this: the index on its start is used from here.
+          gte(v.startedAt, new Date(from.getTime() - MAX_VISIT_SECONDS * 1000)),
+        ),
+      );
     if (!computers.size && !visits.length) {
       return byDay;
     }
