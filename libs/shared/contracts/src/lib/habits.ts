@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { addDays, LocalDate, parseLocalDate, toLocalDate } from './local-date';
 
 /*
- * Habits to quit or to cut down — alcohol, smoking, anything of one's own — and habits to build
- * (sport, reading, a walk).
+ * Habits to quit or to cut down — alcohol, smoking, anything of one's own — and habits to build:
+ * the gym, or anything of one's own (reading, a walk).
  *
  * One to quit counts from the day it is started ("I quit drinking today"); every day after it
  * is clean unless it is marked as a day with it — by the button on the page, an answer to the
@@ -12,8 +12,12 @@ import { addDays, LocalDate, parseLocalDate, toLocalDate } from './local-date';
  * One to build is the other way round: a day counts only when it is marked as done.
  */
 
-export const HABIT_KINDS = ['alcohol', 'smoking', 'custom'] as const;
+export const HABIT_KINDS = ['alcohol', 'smoking', 'gym', 'custom'] as const;
 export type HabitKind = (typeof HABIT_KINDS)[number];
+
+/** The kinds that are only quit or cut down, and the one that is only built. */
+export const QUIT_KINDS = ['alcohol', 'smoking'] as const satisfies readonly HabitKind[];
+export const BUILD_KINDS = ['gym'] as const satisfies readonly HabitKind[];
 
 /**
  * To quit: `quit` — not at all; `less` — at most `maxDaysPerWeek` days a week.
@@ -25,6 +29,14 @@ export type HabitGoal = (typeof HABIT_GOALS)[number];
 /** A habit to build (`daily`, `weekly`), not one to quit. */
 export function isBuilding(goal: HabitGoal): boolean {
   return goal === 'daily' || goal === 'weekly';
+}
+
+function isQuitKind(kind: HabitKind): boolean {
+  return (QUIT_KINDS as readonly HabitKind[]).includes(kind);
+}
+
+function isBuildKind(kind: HabitKind): boolean {
+  return (BUILD_KINDS as readonly HabitKind[]).includes(kind);
 }
 
 /** `clean` / `used` — a day of a habit to quit; `done` — a day of one to build. */
@@ -46,7 +58,7 @@ const optionalText = (max: number) =>
 export const habitInputSchema = z
   .object({
     kind: z.enum(HABIT_KINDS),
-    /** A habit of one's own needs a name; alcohol and smoking are named by the page. */
+    /** A habit of one's own needs a name; alcohol, smoking and the gym are named by the page. */
     name: optionalText(100),
     goal: z.enum(HABIT_GOALS),
     /** For `less`: at most this many days a week with it. */
@@ -66,8 +78,12 @@ export const habitInputSchema = z
     message: 'A habit of your own needs a name',
     path: ['name'],
   })
-  .refine((habit) => !isBuilding(habit.goal) || habit.kind === 'custom', {
+  .refine((habit) => !isBuilding(habit.goal) || !isQuitKind(habit.kind), {
     message: 'Alcohol and smoking are quit, not built',
+    path: ['goal'],
+  })
+  .refine((habit) => isBuilding(habit.goal) || !isBuildKind(habit.kind), {
+    message: 'The gym is built, not quit',
     path: ['goal'],
   })
   .refine((habit) => habit.goal !== 'weekly' || habit.timesPerWeek != null, {

@@ -26,6 +26,8 @@ export function writingApi(api: ApiClient) {
       api.put<WritingConfig>(`${BASE}/settings`, update),
     /** A word into the dictionary, or a rule switched off. */
     ignore: (what: WritingIgnore) => api.post<WritingConfig>(`${BASE}/ignore`, what),
+    /** Fixes taken from the suggestions, counted for the achievements. */
+    accepted: (count: number) => api.post<void>(`${BASE}/accepted`, { count }),
     check: (input: WritingCheck) => api.post<WritingCheckResult>(`${BASE}/check`, input),
     rewrite: (input: WritingRewriteInput) => api.post<WritingRewrite>(`${BASE}/rewrite`, input),
     /** The owner sets the server's LanguageTool. */

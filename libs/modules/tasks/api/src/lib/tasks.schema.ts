@@ -1,5 +1,5 @@
 import { projects, users } from '@pd/api-core/schema';
-import { ChecklistItem, ReminderStatus, Repeat, TaskPriority } from '@pd/contracts';
+import { ChecklistItem, ReminderStatus, Repeat, TaskHorizon, TaskPriority } from '@pd/contracts';
 import {
   date,
   index,
@@ -42,6 +42,8 @@ export const tasks = pgTable(
     /** The day it is due, in the user's own calendar (no time zone). */
     dueDate: date({ mode: 'string' }),
     priority: smallint().$type<TaskPriority>().notNull().default(0),
+    /** Short, normal or long-running (see TASK_HORIZONS). */
+    horizon: text().$type<TaskHorizon>().notNull().default('normal'),
     tags: text().array().notNull().default([]),
     checklist: jsonb().$type<ChecklistItem[]>().notNull().default([]),
     /** Once done, a repeating task comes back as a new one on its next day. */

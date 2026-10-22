@@ -12,7 +12,6 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { z } from 'zod';
 import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
 import {
   AssetInput,
@@ -28,9 +27,6 @@ import {
   financeReportQuerySchema,
   FinanceSettingsInput,
   financeSettingsSchema,
-  GoalContribution,
-  goalContributionSchema,
-  savingsGoalInputSchema,
   SubscriptionDismiss,
   subscriptionDismissSchema,
   recurringPaymentInputSchema,
@@ -42,7 +38,6 @@ import {
   CategorySuggestion,
 } from '@pd/contracts';
 import { BudgetsService } from './budgets/budgets.service';
-import { GoalsService } from './goals/goals.service';
 import { NetWorthService } from './worth/net-worth.service';
 import { SubscriptionsService } from './recurring/subscriptions.service';
 import { FinanceReportsService } from './reports/finance-reports.service';
@@ -55,8 +50,6 @@ import {
 import { TransactionsService } from './transactions/transactions.service';
 import { CategoryModelService } from './categories/category-model.service';
 
-type ValidGoalInput = z.output<typeof savingsGoalInputSchema>;
-
 @Controller('finance')
 export class FinanceController {
   constructor(
@@ -66,7 +59,6 @@ export class FinanceController {
     private readonly budgetsService: BudgetsService,
     private readonly receipts: ReceiptsService,
     private readonly subscriptions: SubscriptionsService,
-    private readonly goals: GoalsService,
     private readonly reports: FinanceReportsService,
     private readonly worth: NetWorthService,
     private readonly categoryModel_: CategoryModelService,
@@ -297,60 +289,6 @@ export class FinanceController {
     @Body(new ZodValidationPipe(subscriptionDismissSchema)) body: SubscriptionDismiss,
   ) {
     return this.subscriptions.dismiss(user.id, body.key);
-  }
-
-  // --- Savings goals ---
-
-  @Get('goals')
-  listGoals(@CurrentUser() user: AuthUser) {
-    return this.goals.list(user.id);
-  }
-
-  @Post('goals')
-  createGoal(
-    @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(savingsGoalInputSchema)) input: ValidGoalInput,
-  ) {
-    return this.goals.create(user.id, input);
-  }
-
-  @Put('goals/:id')
-  updateGoal(
-    @CurrentUser() user: AuthUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(savingsGoalInputSchema)) input: ValidGoalInput,
-  ) {
-    return this.goals.update(user.id, id, input);
-  }
-
-  @Delete('goals/:id')
-  @HttpCode(204)
-  removeGoal(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.goals.remove(user.id, id);
-  }
-
-  @Get('goals/:id/contributions')
-  goalContributions(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.goals.contributions(user.id, id);
-  }
-
-  @Post('goals/:id/contributions')
-  contribute(
-    @CurrentUser() user: AuthUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(goalContributionSchema)) input: GoalContribution,
-  ) {
-    return this.goals.contribute(user.id, id, input);
-  }
-
-  @Delete('goals/:id/contributions/:contributionId')
-  @HttpCode(204)
-  removeContribution(
-    @CurrentUser() user: AuthUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Param('contributionId', ParseUUIDPipe) contributionId: string,
-  ) {
-    return this.goals.removeContribution(user.id, id, contributionId);
   }
 
   // --- The AI's review of a month ---

@@ -63,6 +63,13 @@ export async function ignoreInWriting(word?: string, ruleId?: string): Promise<v
   }
 }
 
+/** Fixes taken from the suggestions are counted on the server; a failure loses only the count. */
+export async function acceptedInWriting(count: number): Promise<void> {
+  if (Number.isInteger(count) && count > 0) {
+    await writingApi((await signedInClient()).api).accepted(Math.min(count, 500));
+  }
+}
+
 /** For the popup: fresh from the server, as it may be just what the user came to change. */
 export async function writingPopupState(url: string): Promise<WritingPopupState | null> {
   const site = siteOf(url);

@@ -35,6 +35,11 @@ const TASK_FIELDS = {
   notes: { type: 'string', description: 'Details; an empty string clears' },
   dueDate: { type: 'string', description: 'YYYY-MM-DD; null — no due date' },
   priority: { type: 'number', description: '0 none, 1 low, 2 medium, 3 high' },
+  horizon: {
+    type: 'string',
+    enum: ['short', 'normal', 'long'],
+    description: 'short — quick, done the same day; long — goes on for weeks; normal by default',
+  },
   listId: { type: 'string', description: 'A list from tasks_list; null — the inbox' },
   tags: { type: 'array', items: { type: 'string' }, description: 'Tags without #' },
   repeat: REPEAT,
@@ -72,7 +77,7 @@ export class TasksAiTools implements OnModuleInit {
       module: 'tasks',
       description:
         "The user's TODO list: open tasks and the ones done in the last month (id, title, notes, " +
-        'due date, priority 0–3, tags, checklist, repeat, when done, the time of its reminder), ' +
+        'due date, priority 0–3, horizon short/normal/long, tags, checklist, repeat, when done, the time of its reminder), ' +
         'and the lists they are sorted into (`listId` null — the inbox). Overdue = due before today.',
       parameters: NO_PARAMETERS,
       handler: async (userId) => ({

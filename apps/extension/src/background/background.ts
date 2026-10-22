@@ -38,6 +38,7 @@ import {
   sitesTick,
 } from './sites';
 import {
+  acceptedInWriting,
   checkWriting,
   ignoreInWriting,
   rewriteWriting,
@@ -388,6 +389,8 @@ async function fromContent(
       );
     case 'writing-ignore':
       return ignoreInWriting(message.word, message.ruleId);
+    case 'writing-accepted':
+      return acceptedInWriting(Number(message.count));
     case 'writing-off-here':
       return setWritingOnSite(sender.url, false);
     case 'writing-settings': {

@@ -58,9 +58,6 @@ const messages = {
         trial: `It ends on ${date}; after that ${amount.toFixed(2)} ${currency} will be charged.`,
         renewal: `${amount.toFixed(2)} ${currency} will be charged on ${date}. Cancel it before then if you do not need it.`,
       })[kind],
-    goalReachedTitle: (name: string) => `🎉 Goal reached: ${name}`,
-    goalReachedBody: (saved: number, currency: string) =>
-      `${saved.toFixed(2)} ${currency} saved. Well done!`,
     reportNote: (summary: string) => `💰 Money: ${summary}`,
     wishCheaperTitle: (name: string) => `📉 Cheaper: ${name}`,
     wishPricierTitle: (name: string) => `📈 More expensive: ${name}`,
@@ -115,9 +112,6 @@ const messages = {
         trial: `Он заканчивается ${date}, потом спишут ${amount.toFixed(2)} ${currency}.`,
         renewal: `${date} спишут ${amount.toFixed(2)} ${currency}. Если не нужно — отмените до этого.`,
       })[kind],
-    goalReachedTitle: (name: string) => `🎉 Цель достигнута: ${name}`,
-    goalReachedBody: (saved: number, currency: string) =>
-      `Накоплено ${saved.toFixed(2)} ${currency}. Отлично!`,
     reportNote: (summary: string) => `💰 Деньги: ${summary}`,
     wishCheaperTitle: (name: string) => `📉 Подешевело: ${name}`,
     wishPricierTitle: (name: string) => `📈 Подорожало: ${name}`,

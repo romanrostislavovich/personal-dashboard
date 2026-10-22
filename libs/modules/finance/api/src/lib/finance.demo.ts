@@ -5,9 +5,7 @@ import {
   financeAssets,
   financeBudgets,
   netWorthDays,
-  goalContributions,
   recurringPayments,
-  savingsGoals,
   transactions,
   wishes,
   wishPrices,
@@ -29,7 +27,7 @@ const EXPENSES: [number, string, number, string][] = [
   [72.4, 'Clothes', 4, 'Jacket'],
 ];
 
-/** The demo data of Finance: a month of money, budgets, subscriptions, a goal, a wishlist. */
+/** The demo data of Finance: a month of money, budgets, subscriptions, a wishlist. */
 @Injectable()
 export class FinanceDemo implements OnModuleInit {
   constructor(
@@ -143,14 +141,6 @@ export class FinanceDemo implements OnModuleInit {
       }),
     );
 
-    const [goal] = await this.db
-      .insert(savingsGoals)
-      .values({ ...money, name: 'A new watch', target: 400, startedOn: daysAgo(120) })
-      .returning();
-    await this.db
-      .insert(goalContributions)
-      .values({ userId, goalId: goal.id, amount: 310, occurredOn: daysAgo(10) });
-
     const wish = { userId, currency: EUR, checkedAt: new Date() };
     const [watch] = await this.db
       .insert(wishes)
@@ -161,7 +151,6 @@ export class FinanceDemo implements OnModuleInit {
           name: 'Garmin Forerunner 265',
           price: 399,
           previousPrice: 449,
-          goalId: goal.id,
         },
         {
           ...wish,

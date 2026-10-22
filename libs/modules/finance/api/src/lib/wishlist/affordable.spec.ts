@@ -1,20 +1,7 @@
-import { againstBudget, againstGoal } from './affordable';
+import { againstBudget } from './affordable';
 
 describe('a wish against the money', () => {
-  const goal = { name: 'Watch', saved: 250, currency: 'EUR' };
-
-  it('tells how much the goal still lacks', () => {
-    expect(againstGoal(300, goal)).toEqual({
-      name: 'Watch',
-      saved: 250,
-      missing: 50,
-      currency: 'EUR',
-    });
-    expect(againstGoal(200, goal)?.missing).toBe(0);
-  });
-
   it('says nothing without a price', () => {
-    expect(againstGoal(null, goal)).toBeNull();
     expect(againstBudget(null, { limit: 1000, spent: 100, currency: 'EUR' })).toBeNull();
   });
 

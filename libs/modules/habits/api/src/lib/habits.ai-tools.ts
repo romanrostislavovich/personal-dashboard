@@ -26,8 +26,8 @@ export class HabitsAiTools implements OnModuleInit {
       name: 'habits_list',
       module: 'habits',
       description:
-        'Habits the user quits, cuts down or builds: id, `kind` (alcohol, smoking, custom with ' +
-        'its `name`), `goal` (quit; less — at most `maxDaysPerWeek` days a week; daily or ' +
+        'Habits the user quits, cuts down or builds: id, `kind` (alcohol, smoking, gym — the ' +
+        'visits to the gym, custom with its `name`), `goal` (quit; less — at most `maxDaysPerWeek` days a week; daily or ' +
         'weekly — `timesPerWeek` — for a habit to build, where `currentStreak` counts days done), `unit` a day ' +
         'is counted in, `startedOn`, and `stats`: `currentStreak` (clean days in a row up to ' +
         'today), `bestStreak`, `cleanDays`, `usedDays`, `usedThisWeek`, `weeksWithinLimit`. A ' +

@@ -34,7 +34,9 @@ export interface DesktopBridge {
   /** Explicit capture and native-confirmed restoration; absent in older desktop builds. */
   workstates?: {
     capture(): Promise<boolean>;
-    resume(plan: WorkstateRestorePlan): Promise<{ opened: number; failed: number; canceled: boolean }>;
+    resume(
+      plan: WorkstateRestorePlan,
+    ): Promise<{ opened: number; failed: number; canceled: boolean }>;
   };
   telemetry?: {
     status(): Promise<{ enabled: boolean; available: boolean }>;
@@ -64,6 +66,8 @@ export interface DesktopWriting {
   configure(config: { enabled: boolean; ignoredApps: string[] }): Promise<void>;
   onCheck(check: (text: string) => Promise<WritingIssue[]>): void;
   onIgnore(ignore: (what: { word?: string; ruleId?: string }) => Promise<void>): void;
+  /** A fix was taken in another program; missing in an app older than the count. */
+  onAccepted?(accepted: (count: number) => Promise<void>): void;
 }
 
 /**

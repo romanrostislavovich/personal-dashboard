@@ -1,4 +1,4 @@
-import { HabitDay, habitStats } from './habits';
+import { HabitDay, habitInputSchema, habitStats } from './habits';
 
 const used = (...days: string[]): HabitDay[] =>
   days.map((day) => ({ day, status: 'used', amount: null }));
@@ -101,5 +101,26 @@ describe('the numbers of a habit to build', () => {
       doneThisWeek: 1,
       doneDays: 6,
     });
+  });
+});
+
+describe('the kinds of a habit', () => {
+  const start = { startedOn: '2026-10-01' };
+
+  it('builds the gym, never quits it', () => {
+    expect(
+      habitInputSchema.safeParse({ ...start, kind: 'gym', goal: 'weekly', timesPerWeek: 3 })
+        .success,
+    ).toBe(true);
+    expect(habitInputSchema.safeParse({ ...start, kind: 'gym', goal: 'quit' }).success).toBe(false);
+  });
+
+  it('quits alcohol, never builds it', () => {
+    expect(habitInputSchema.safeParse({ ...start, kind: 'alcohol', goal: 'quit' }).success).toBe(
+      true,
+    );
+    expect(habitInputSchema.safeParse({ ...start, kind: 'alcohol', goal: 'daily' }).success).toBe(
+      false,
+    );
   });
 });

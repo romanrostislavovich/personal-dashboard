@@ -74,7 +74,6 @@ import { AutomationsController } from './automations/automations.controller';
 import { AutomationsService } from './automations/automations.service';
 import { CoreAutomations } from './automations/core.automations';
 import { AchievementsLife } from './life/achievements.life';
-import { LifeGoalsService } from './life/life-goals.service';
 import { LifeStoriesService } from './life/life-stories.service';
 import { LifelogService } from './life/lifelog.service';
 import { LifelogController } from './life/lifelog.controller';
@@ -152,7 +151,6 @@ import { UserActivityService } from './realtime/user-activity.service';
     AutomationsService,
     CoreAutomations,
     AchievementsLife,
-    LifeGoalsService,
     LifeStoriesService,
     LifelogService,
     LifelogGenerator,

@@ -23,29 +23,6 @@ export const lifeMonths = pgTable('life_months', {
   year: text(),
 });
 
-/** Goals of a year: counted from a summary card of the modules, or by hand. */
-export const lifeGoals = pgTable(
-  'life_goals',
-  {
-    id: uuid().primaryKey().defaultRandom(),
-    userId: uuid()
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    year: smallint().notNull(),
-    title: text().notNull(),
-    /** A card key (`diary.life.entries`); `null` — `manualValue` is the progress. */
-    metric: text(),
-    target: numeric({ precision: 16, scale: 2, mode: 'number' }).notNull(),
-    /** `atLeast` or `atMost`. */
-    direction: text().notNull().default('atLeast'),
-    manualValue: numeric({ precision: 16, scale: 2, mode: 'number' }).notNull().default(0),
-    /** When it was reported as reached: once. */
-    reachedAt: timestamp({ withTimezone: true }),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [index().on(table.userId)],
-);
-
 /** The AI's story of a month (`YYYY-MM`) or a year (`YYYY`), kept once written. */
 export const lifeStories = pgTable(
   'life_stories',

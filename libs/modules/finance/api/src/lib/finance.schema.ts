@@ -202,47 +202,6 @@ export const financeBudgets = pgTable(
   (table) => [unique().on(table.userId, table.category)],
 );
 
-/** Saving up for something: a target, maybe a date, and where the money comes from. */
-export const savingsGoals = pgTable(
-  'finance_goals',
-  {
-    id: uuid().primaryKey().defaultRandom(),
-    userId: uuid()
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    name: text().notNull(),
-    target: numeric({ precision: 14, scale: 2, mode: 'number' }).notNull(),
-    currency: text().notNull(),
-    deadline: date({ mode: 'string' }),
-    /** `personal`, a project id, or `null` — only what is added by hand. */
-    wallet: text(),
-    startedOn: date({ mode: 'string' }).notNull(),
-    /** When the target was reached and reported. */
-    reachedAt: timestamp({ withTimezone: true }),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [index().on(table.userId)],
-);
-
-/** Money added to a goal (or taken out) by hand, in the goal's currency. */
-export const goalContributions = pgTable(
-  'finance_goal_contributions',
-  {
-    id: uuid().primaryKey().defaultRandom(),
-    userId: uuid()
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    goalId: uuid()
-      .notNull()
-      .references(() => savingsGoals.id, { onDelete: 'cascade' }),
-    amount: numeric({ precision: 14, scale: 2, mode: 'number' }).notNull(),
-    note: text(),
-    occurredOn: date({ mode: 'string' }).notNull(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [index().on(table.userId), index().on(table.goalId)],
-);
-
 /** The AI's report of a month: kept, so it is written once and can be read again. */
 export const financeReports = pgTable(
   'finance_reports',
@@ -280,13 +239,11 @@ export const wishes = pgTable(
     /** Why the last check gave no price; `null` — it did. */
     checkError: text(),
     boughtAt: timestamp({ withTimezone: true }),
-    /** The savings goal the wish is saved for. */
-    goalId: uuid().references(() => savingsGoals.id, { onDelete: 'set null' }),
     /** Whom it is a gift for: a name, as the person is called in Birthdays. */
     recipient: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId), index().on(table.goalId)],
+  (table) => [index().on(table.userId)],
 );
 
 /** The price of a wish day by day: one point a day, the last one read that day. */
@@ -349,6 +306,5 @@ export const netWorthDays = pgTable(
 export type TransactionRow = typeof transactions.$inferSelect;
 export type RecurringPaymentRow = typeof recurringPayments.$inferSelect;
 export type CostSourceRow = typeof costSources.$inferSelect;
-export type SavingsGoalRow = typeof savingsGoals.$inferSelect;
 export type WishRow = typeof wishes.$inferSelect;
 export type AssetRow = typeof financeAssets.$inferSelect;

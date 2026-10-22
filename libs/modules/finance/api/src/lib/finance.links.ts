@@ -118,7 +118,6 @@ export class FinanceLinks implements OnModuleInit {
 
     this.links.registerPages([
       { module: 'finance', path: '/finance', description: 'money: overview, transactions' },
-      { module: 'finance', path: '/finance?tab=goals', description: 'savings goals' },
       { module: 'finance', path: '/finance?tab=wishlist', description: 'wishlist with prices' },
     ]);
   }

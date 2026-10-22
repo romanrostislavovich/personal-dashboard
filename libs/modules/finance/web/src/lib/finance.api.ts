@@ -16,11 +16,8 @@ import {
   FinanceReport,
   FinanceSettings,
   FinanceSettingsInput,
-  GoalContribution,
   KeyDate,
   NetWorth,
-  SavingsGoal,
-  SavingsGoalInput,
   Subscriptions,
   FinanceSummary,
   MainCashFlow,
@@ -125,7 +122,7 @@ export class FinanceApi {
     return fromCore(() => this.finance.saveBudgets(budgets));
   }
 
-  // --- Subscriptions, savings goals, the AI's review ---
+  // --- Subscriptions, the AI's review ---
 
   subscriptions() {
     return httpResource<Subscriptions>(() => FINANCE_READS.subscriptions());
@@ -167,36 +164,6 @@ export class FinanceApi {
 
   removeAsset(id: string) {
     return fromCore(() => this.finance.removeAsset(id));
-  }
-
-  goals() {
-    return httpResource<SavingsGoal[]>(() => FINANCE_READS.goals(), { defaultValue: [] });
-  }
-
-  goalContributions(id: () => string | null) {
-    return httpResource<{ id: string; amount: number; note: string | null; occurredOn: string }[]>(
-      () => {
-        const goal = id();
-        return goal ? FINANCE_READS.goalContributions(goal) : undefined;
-      },
-      { defaultValue: [] },
-    );
-  }
-
-  saveGoal(input: SavingsGoalInput, id?: string) {
-    return fromCore(() => this.finance.saveGoal(input, id));
-  }
-
-  removeGoal(id: string) {
-    return fromCore(() => this.finance.removeGoal(id));
-  }
-
-  contribute(id: string, input: GoalContribution) {
-    return fromCore(() => this.finance.contribute(id, input));
-  }
-
-  removeContribution(goalId: string, id: string) {
-    return fromCore(() => this.finance.removeContribution(goalId, id));
   }
 
   report(month: () => string) {

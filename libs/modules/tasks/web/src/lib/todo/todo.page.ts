@@ -12,7 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DurationPipe } from '@pd/web-core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Task } from '@pd/contracts';
+import { Task, TASK_HORIZONS } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { todayLocal } from '../local-time';
 import { ReminderDialogData, ReminderFormDialog } from '../reminders/reminder-form.dialog';
@@ -55,7 +55,13 @@ export class TodoPage {
   protected readonly today = todayLocal();
 
   /** The page opens on everything that is not done: the whole list, not only today's part. */
-  protected readonly filter = signal<TaskFilter>({ view: 'all', listId: null, tag: null });
+  protected readonly filter = signal<TaskFilter>({
+    view: 'all',
+    listId: null,
+    tag: null,
+    horizon: null,
+  });
+  protected readonly horizons = TASK_HORIZONS;
   protected readonly shown = computed(() =>
     filterTasks(this.tasks.value(), this.filter(), this.today),
   );

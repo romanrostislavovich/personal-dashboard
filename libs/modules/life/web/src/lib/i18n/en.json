@@ -4,7 +4,6 @@
     "day": "Day",
     "chronicle": "Chronicle",
     "summary": "Summary",
-    "goals": "Goals",
     "links": "Links"
   },
   "day": "Day",
@@ -29,7 +28,10 @@
     "retry": "Try again",
     "highlight": "Highlight",
     "sources": "Source provenance",
-    "origin": { "ai": "AI-generated", "facts": "From recorded facts" },
+    "origin": {
+      "ai": "AI-generated",
+      "facts": "From recorded facts"
+    },
     "accuracy": "AI summaries may be inaccurate or omit context. Check the recorded sources; this is not a health assessment or proof of cause and effect.",
     "generationHint": "Generate uses allowed facts and the configured default AI, which may be paid. An existing chronicle is returned from cache, not rewritten. No allowed facts means no new chronicle.",
     "generate": "Generate chronicle",
@@ -58,30 +60,6 @@
     "rewrite": "Write again",
     "nothing": "Nothing to tell about this period yet.",
     "error": "The AI could not write it: check the AI connection in Settings."
-  },
-  "goals": {
-    "add": "New goal",
-    "edit": "Edit the goal",
-    "name": "Goal",
-    "namePlaceholder": "300 days with a diary entry, read 20 books…",
-    "metric": "Counted from",
-    "metricHint": "The numbers of the summaries, from 1 January to today",
-    "manual": "By hand",
-    "direction": "Which way",
-    "atLeast": "at least",
-    "atMost": "at most",
-    "target": "Target",
-    "status": {
-      "done": "Done 🎉",
-      "onTrack": "On track",
-      "behind": "Behind",
-      "failed": "Missed"
-    },
-    "expected": "By now at an even pace: {{value}}",
-    "setProgress": "Set progress",
-    "empty": "No goals for this year yet.",
-    "confirmDelete": "Delete the goal \"{{title}}\"?",
-    "ofYear": "Goals of the year: {{done}} of {{total}} done"
   },
   "mood": {
     "title": "What goes with a good day",

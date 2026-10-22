@@ -402,57 +402,6 @@ export interface SubscriptionUse {
 export const subscriptionDismissSchema = z.object({ key: z.string().trim().min(1).max(200) });
 export type SubscriptionDismiss = z.infer<typeof subscriptionDismissSchema>;
 
-// --- Savings goals ---
-
-/** Where the money of a goal comes from besides what is added by hand. */
-export const GOAL_WALLET_PERSONAL = 'personal';
-
-export const savingsGoalInputSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  target: z.number().positive().max(1_000_000_000),
-  currency: z.string().trim().length(3).toUpperCase(),
-  /** By when; `null` — no date. */
-  deadline: z.iso.date().nullish(),
-  /**
-   * `personal` or a project id: what is left in that wallet since `startedOn` (income minus
-   * expenses) counts; `null` — only what is added by hand.
-   */
-  wallet: z.union([z.literal(GOAL_WALLET_PERSONAL), z.uuid()]).nullish(),
-  startedOn: z.iso.date(),
-});
-export type SavingsGoalInput = z.input<typeof savingsGoalInputSchema>;
-
-export interface SavingsGoal {
-  id: string;
-  name: string;
-  target: number;
-  currency: string;
-  deadline: LocalDate | null;
-  wallet: string | null;
-  startedOn: LocalDate;
-  /** Everything saved: the wallet's part and what was added by hand. */
-  saved: number;
-  fromWallet: number;
-  added: number;
-  /** How much to put aside a month to make it by the deadline; `null` — no deadline or done. */
-  neededPerMonth: number | null;
-  /** Saved a month on average since the start. */
-  pacePerMonth: number;
-  reachedAt: string | null;
-}
-
-/** Money added to a goal by hand (negative — taken out). */
-export const goalContributionSchema = z.object({
-  amount: z
-    .number()
-    .min(-1_000_000_000)
-    .max(1_000_000_000)
-    .refine((value) => value !== 0),
-  note: z.string().trim().max(200).nullish(),
-  occurredOn: z.iso.date(),
-});
-export type GoalContribution = z.infer<typeof goalContributionSchema>;
-
 // --- The AI's report of a month ---
 
 export interface FinanceReport {
@@ -478,8 +427,6 @@ export const wishInputSchema = z.object({
   /** The price typed in by hand: used while the page does not tell one. */
   price: z.number().positive().max(1_000_000_000).nullish(),
   currency: z.string().trim().length(3).toUpperCase().nullish(),
-  /** The savings goal the wish is saved for: the list tells how much it still lacks. */
-  goalId: z.uuid().nullish(),
   /** The product's picture, when the browser extension read it from the page. */
   imageUrl: z
     .url({ protocol: /^https?$/ })
@@ -509,13 +456,7 @@ export interface Wish {
   checkError: string | null;
   boughtAt: string | null;
   createdAt: string;
-  goalId: string | null;
   recipient: string | null;
-  /**
-   * The goal the wish is saved for against its price (in the goal's currency); `null` — no
-   * goal, no price, or the wish is bought.
-   */
-  goal: { name: string; saved: number; missing: number; currency: string } | null;
   /**
    * What is left of this month's budget of all expenses, and what buying the wish would leave
    * (negative — over the budget), in the main currency; `null` — no such budget or no price.

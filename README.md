@@ -24,7 +24,7 @@ in one place on your own server, with notifications and an assistant in Telegram
 - 💬 **Telegram as a remote** — voice messages, a photo of a receipt becomes an expense, a bank
   statement PDF becomes transactions, reminders with "Done / +1 hour / Tomorrow" buttons
 - 📖 **Life** — one feed of any day across every section, a "Wrapped" of the month or the year
-  written by the AI, goals of a year counted from your data, questions to your own history
+  written by the AI, questions to your own history
 - 🔗 **Sections that know each other** — a project with its hours, commits, money and uptime on
   one page; what goes with your good and bad days, and every daily number against every other
   (Life → Links: correlations of the same and the next day, a graph, what predicts your mood);
@@ -46,13 +46,13 @@ in one place on your own server, with notifications and an assistant in Telegram
 
 |                    |                                                                                                                   |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| 💰 **Finance**     | wallets, main currency, budgets, subscriptions, savings goals, wishlist price watch                               |
+| 💰 **Finance**     | wallets, main currency, budgets, subscriptions, wishlist price watch                                              |
 | 📔 **Diary**       | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                 |
 | 🧠 **Psychology**  | mood patterns, check-ups, life events with Excel / Word export                                                    |
-| 🌱 **Habits**      | quitting or cutting down alcohol, smoking or your own: the run of clean days, an evening question in Telegram     |
+| 🌱 **Habits**      | quitting alcohol, smoking or your own, building the gym or your own: runs, an evening question in Telegram        |
 | 🔑 **Passwords**   | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext |
 | 🩺 **Health**      | one medical history across countries: visits, ICD diagnoses, medications, documents                               |
-| ✅ **Tasks**       | TODO list with repeating tasks, reminders at your local time                                                      |
+| ✅ **Tasks**       | TODO list with short / normal / long-running tasks, repeating tasks, reminders at your local time                 |
 | 👨‍💻 **Development** | repositories, stars, releases, npm downloads, contribution streaks, coding time                                   |
 | 🎧 **Music**       | listening history and tops, now playing, your own tracks' stats                                                   |
 | 🎮 **Games**       | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP)                                         |

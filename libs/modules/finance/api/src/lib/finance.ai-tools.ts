@@ -22,7 +22,6 @@ import { NetWorthService } from './worth/net-worth.service';
 import { CostSourcesService } from './cost-sources/cost-sources.service';
 import { RecurringPaymentsService } from './recurring/recurring-payments.service';
 import { SubscriptionsService } from './recurring/subscriptions.service';
-import { GoalsService } from './goals/goals.service';
 import { TransactionsService } from './transactions/transactions.service';
 import { FINANCE_ACTIONS } from './finance.server-actions';
 import { WishlistService } from './wishlist/wishlist.service';
@@ -99,8 +98,8 @@ const batchArgs = z.object({
 });
 
 /**
- * AI access to finance: totals, transactions, recurring payments and subscriptions, savings
- * goals, the wishlist, cost sources; adding, editing and deleting them (assistant).
+ * AI access to finance: totals, transactions, recurring payments and subscriptions, the
+ * wishlist, cost sources; adding, editing and deleting them (assistant).
  */
 @Injectable()
 export class FinanceAiTools implements OnModuleInit {
@@ -110,7 +109,6 @@ export class FinanceAiTools implements OnModuleInit {
     private readonly recurring: RecurringPaymentsService,
     private readonly costSources: CostSourcesService,
     private readonly subscriptions: SubscriptionsService,
-    private readonly goals: GoalsService,
     private readonly wishlist: WishlistService,
     private readonly actions: ServerActions,
     private readonly bank: BankService,
@@ -134,8 +132,8 @@ export class FinanceAiTools implements OnModuleInit {
       description:
         'The wishlist — products the user wants to buy: id, name, link, the current price in the ' +
         'shop, the price before the last change, the lowest and the highest seen, whether ' +
-        'bought; `recipient` — whom it is a gift for; `goal` — the savings goal it is saved ' +
-        "for: saved and still missing; `budget` — what is left of this month's budget of all " +
+        "bought; `recipient` — whom it is a gift for; `budget` — what is left of this month's " +
+        'budget of all ' +
         'expenses and what buying it would leave (negative — over the budget). Useful for ' +
         '"can I afford X now".',
       parameters: NO_PARAMETERS,
@@ -159,7 +157,6 @@ export class FinanceAiTools implements OnModuleInit {
           note: { type: 'string' },
           price: { type: 'number' },
           currency: { type: 'string', description: 'ISO 4217: EUR, USD, PLN…' },
-          goalId: { type: 'string', description: 'A savings goal it is saved for' },
           recipient: {
             type: 'string',
             description: 'Whom it is a gift for: the name as in birthdays_upcoming',
@@ -178,8 +175,7 @@ export class FinanceAiTools implements OnModuleInit {
       undoTables: [wishes],
       description:
         'Changes a product of the wishlist: pass its id and only the fields to change — the ' +
-        'name, the note, the price typed in by hand, `goalId` — the savings goal it is saved ' +
-        'for (from finance_savings_goals; null — none), `recipient` — whom it is a gift for, ' +
+        'name, the note, the price typed in by hand, `recipient` — whom it is a gift for, ' +
         'the name as in birthdays_upcoming (null — nobody).',
       parameters: {
         type: 'object',
@@ -189,7 +185,6 @@ export class FinanceAiTools implements OnModuleInit {
           note: { type: 'string' },
           price: { type: 'number' },
           currency: { type: 'string', description: 'ISO 4217: EUR, USD, PLN…' },
-          goalId: { type: 'string' },
           recipient: { type: 'string' },
         },
         required: ['id'],
@@ -225,7 +220,7 @@ export class FinanceAiTools implements OnModuleInit {
     });
   }
 
-  /** What the subscriptions cost together and how the savings goals are going. */
+  /** What the subscriptions cost together and whether they are used. */
   private registerPlanningTools(): void {
     this.ai.registerTool({
       name: 'finance_subscriptions',
@@ -254,16 +249,6 @@ export class FinanceAiTools implements OnModuleInit {
         const { usage, usageDays } = await this.subscriptions.summary(userId);
         return { days: usageDays, payments: usage };
       },
-    });
-
-    this.ai.registerTool({
-      name: 'finance_savings_goals',
-      module: 'finance',
-      description:
-        'Savings goals: target, saved so far, deadline, how much to put aside a month and the ' +
-        'pace so far.',
-      parameters: NO_PARAMETERS,
-      handler: (userId) => this.goals.list(userId),
     });
   }
 

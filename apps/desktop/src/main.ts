@@ -100,6 +100,7 @@ function askPage<T>(channel: string, payload: unknown): Promise<T | null> {
 const writing = new DesktopWriting({
   check: (text) => askPage<Issue[]>('writing:check', text),
   ignore: async (what) => void (await askPage('writing:ignore', what)),
+  accepted: async (count) => void (await askPage('writing:accepted', count)),
 });
 
 const capture = new Capture(

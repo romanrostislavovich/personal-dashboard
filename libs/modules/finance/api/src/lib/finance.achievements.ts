@@ -6,7 +6,6 @@ import {
   costSources,
   financeReceipts,
   recurringPayments,
-  savingsGoals,
   transactions,
   wishes,
 } from './finance.schema';
@@ -18,7 +17,7 @@ const BUDGET_MONTHS_BACK = 12;
 
 /**
  * Finance achievements: keeping the records, and the habits they show — months within the
- * budgets, months with more coming in than going out, savings goals reached.
+ * budgets, months with more coming in than going out.
  */
 @Injectable()
 export class FinanceAchievements implements OnModuleInit {
@@ -106,32 +105,6 @@ export class FinanceAchievements implements OnModuleInit {
             en: '12 months in a row with more income than expenses',
             ru: '12 месяцев подряд доходы больше расходов',
           },
-        ],
-      ),
-    });
-
-    this.achievements.register({
-      id: 'finance.goals-reached',
-      module: 'finance',
-      measure: async (userId) => {
-        const [row] = await this.db
-          .select({ value: count() })
-          .from(savingsGoals)
-          .where(and(eq(savingsGoals.userId, userId), isNotNull(savingsGoals.reachedAt)));
-        return row?.value ?? 0;
-      },
-      tiers: achievementTiers(
-        [
-          1,
-          '🐷',
-          { en: 'Piggy bank full', ru: 'Копилка полна' },
-          { en: 'A savings goal reached', ru: 'Цель накоплений достигнута' },
-        ],
-        [
-          3,
-          '💰',
-          { en: 'Saver', ru: 'Накопитель' },
-          { en: 'Three savings goals reached', ru: 'Три цели накоплений достигнуты' },
         ],
       ),
     });
@@ -294,26 +267,6 @@ export class FinanceAchievements implements OnModuleInit {
 
   /** The wishlist: what was wanted and then bought. */
   private registerWishlist(): void {
-    this.achievements.register({
-      id: 'finance.wishes-saved-for',
-      module: 'finance',
-      measure: (userId) =>
-        this.count(
-          wishes,
-          and(eq(wishes.userId, userId), isNotNull(wishes.boughtAt), isNotNull(wishes.goalId)),
-        ),
-      tiers: [
-        achievementTier(
-          1,
-          '🎯',
-          { en: 'Saved up and bought', ru: 'Накопил и купил' },
-          {
-            en: 'A wish that had a savings goal is bought',
-            ru: 'Куплено желание, на которое была цель накоплений',
-          },
-        ),
-      ],
-    });
     this.achievements.register({
       id: 'finance.wishes-bought',
       module: 'finance',

@@ -203,6 +203,24 @@ export class TasksService {
     );
   }
 
+  /**
+   * Done tasks by their horizon — for the achievements: long-running ones, and short ones done on
+   * the day they were added (by the user's own calendar).
+   */
+  async horizonRecords(userId: string): Promise<{ long: number; shortSameDay: number }> {
+    const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
+    const [row] = await this.db
+      .select({
+        long: sql<number>`count(*) filter (where ${tasks.horizon} = 'long')::int`,
+        shortSameDay: sql<number>`count(*) filter (where ${tasks.horizon} = 'short'
+          and (${tasks.completedAt} AT TIME ZONE ${timeZone})::date
+            = (${tasks.createdAt} AT TIME ZONE ${timeZone})::date)::int`,
+      })
+      .from(tasks)
+      .where(and(eq(tasks.userId, userId), sql`${tasks.completedAt} IS NOT NULL`));
+    return { long: row?.long ?? 0, shortSameDay: row?.shortSameDay ?? 0 };
+  }
+
   /** Done tasks by the user's own days — for the achievements. */
   async completionRecords(
     userId: string,
@@ -279,6 +297,7 @@ function toTask(row: TaskRow, reminderAt: string | null): Task {
     notes: row.notes,
     dueDate: row.dueDate,
     priority: row.priority,
+    horizon: row.horizon,
     listId: row.listId,
     projectId: row.projectId,
     tags: row.tags,

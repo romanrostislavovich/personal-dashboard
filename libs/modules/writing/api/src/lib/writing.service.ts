@@ -17,7 +17,7 @@ import {
   WritingSettings,
   WritingSettingsUpdate,
 } from '@pd/contracts';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { createHash } from 'node:crypto';
 import {
   checkWithLanguageTool,
@@ -75,7 +75,8 @@ export class WritingService {
     if (!row) {
       return DEFAULT_WRITING_SETTINGS;
     }
-    const { userId: _owner, ...settings } = row;
+    // The count of fixes is the achievements', not a setting.
+    const { userId: _owner, fixesAccepted: _fixes, ...settings } = row;
     return settings;
   }
 
@@ -109,6 +110,25 @@ export class WritingService {
       : this.saveSettings(userId, {
           disabledRules: unique([...settings.disabledRules, what.ruleId]),
         });
+  }
+
+  /** Fixes taken from the suggestions are counted (the text itself never comes here). */
+  async accepted(userId: string, count: number): Promise<void> {
+    await this.db
+      .insert(writingSettings)
+      .values({ userId, fixesAccepted: count })
+      .onConflictDoUpdate({
+        target: writingSettings.userId,
+        set: { fixesAccepted: sql`${writingSettings.fixesAccepted} + ${count}` },
+      });
+  }
+
+  async fixesAccepted(userId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ value: writingSettings.fixesAccepted })
+      .from(writingSettings)
+      .where(eq(writingSettings.userId, userId));
+    return row?.value ?? 0;
   }
 
   async check(userId: string, input: WritingCheck): Promise<WritingCheckResult> {

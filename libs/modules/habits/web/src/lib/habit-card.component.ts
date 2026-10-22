@@ -13,7 +13,7 @@ import {
   parseLocalDate,
   toLocalDate,
 } from '@pd/contracts';
-import { BUILD_ICON, HABIT_ICONS, localToday } from './habits.api';
+import { habitIcon, localToday } from './habits.api';
 
 /** A day of the calendar: before the start (none), clean, with it, or still to come. */
 interface CalendarDay {
@@ -230,9 +230,7 @@ export class HabitCardComponent {
 
   protected readonly today = localToday();
   protected readonly building = computed(() => isBuilding(this.habit().goal));
-  protected readonly icon = computed(() =>
-    this.building() ? BUILD_ICON : HABIT_ICONS[this.habit().kind],
-  );
+  protected readonly icon = computed(() => habitIcon(this.habit().kind, this.building()));
   protected readonly title = computed(() => {
     const habit = this.habit();
     return habit.kind === 'custom'

@@ -1,7 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { HABITS_READS, habitsApi } from '@pd/client-core';
-import { Habit, HabitDayInput, HabitInput } from '@pd/contracts';
+import { Habit, HabitDayInput, HabitInput, HabitKind } from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
 /** The habit requests of the client core (`@pd/client-core`) for Angular. */
@@ -42,6 +42,11 @@ export function localToday(): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/** The emoji of a kind to quit, and of a habit to build. */
-export const HABIT_ICONS = { alcohol: '🍷', smoking: '🚬', custom: '✨' } as const;
+/** The emoji of each kind, and of a habit of one's own to build. */
+export const HABIT_ICONS = { alcohol: '🍷', smoking: '🚬', gym: '🏋️', custom: '✨' } as const;
 export const BUILD_ICON = '💪';
+
+/** The emoji of a habit: a kind's own, or the one of building for a habit of one's own. */
+export function habitIcon(kind: HabitKind, build: boolean): string {
+  return kind === 'custom' && build ? BUILD_ICON : HABIT_ICONS[kind];
+}

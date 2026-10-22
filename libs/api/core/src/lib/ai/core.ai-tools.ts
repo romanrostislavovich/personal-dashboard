@@ -281,7 +281,6 @@ export class CoreAiTools implements OnModuleInit {
         description: 'one project across the sections (id from core_projects)',
       },
       { module: 'life', path: '/life/summary', description: 'summary of a period, mood insights' },
-      { module: 'life', path: '/life/goals', description: 'goals of the year' },
       { module: 'core', path: '/settings', description: 'settings, integrations, automations' },
     ]);
   }

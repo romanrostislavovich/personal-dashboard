@@ -1,0 +1,1 @@
+ALTER TABLE "writing_settings" ADD COLUMN "fixes_accepted" integer DEFAULT 0 NOT NULL;

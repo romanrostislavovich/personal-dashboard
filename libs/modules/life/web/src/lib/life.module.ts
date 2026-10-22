@@ -17,7 +17,8 @@ export const lifeModule: WebDashboardModule = {
         { path: 'day', loadComponent: () => import('./day.page').then((m) => m.DayPage) },
         {
           path: 'chronicle',
-          loadComponent: () => import('./lifelog-narrative.component').then((m) => m.LifelogNarrativeComponent),
+          loadComponent: () =>
+            import('./lifelog-narrative.component').then((m) => m.LifelogNarrativeComponent),
         },
         {
           path: 'summary',
@@ -27,7 +28,8 @@ export const lifeModule: WebDashboardModule = {
           path: 'links',
           loadComponent: () => import('./links/links.page').then((m) => m.LinksPage),
         },
-        { path: 'goals', loadComponent: () => import('./goals.page').then((m) => m.GoalsPage) },
+        // The goals of a year are gone: an old link opens the summary.
+        { path: 'goals', redirectTo: 'summary' },
         // "Ask" was a question to the AI about one's own life: the assistant answers it now.
         { path: 'ask', redirectTo: '/ai' },
       ],
@@ -38,9 +40,13 @@ export const lifeModule: WebDashboardModule = {
     ru: () => import('./i18n/ru.json'),
   },
   commands: [
-    { id: 'life.chronicle', labelKey: 'life.tabs.chronicle', icon: 'auto_stories', url: '/life/chronicle' },
+    {
+      id: 'life.chronicle',
+      labelKey: 'life.tabs.chronicle',
+      icon: 'auto_stories',
+      url: '/life/chronicle',
+    },
     { id: 'life.summary', labelKey: 'life.tabs.summary', icon: 'redeem', url: '/life/summary' },
     { id: 'life.links', labelKey: 'life.tabs.links', icon: 'hub', url: '/life/links' },
-    { id: 'life.goals', labelKey: 'life.tabs.goals', icon: 'flag', url: '/life/goals' },
   ],
 };

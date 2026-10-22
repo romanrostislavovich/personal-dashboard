@@ -92,9 +92,9 @@ export class Capture {
   }
 
   /**
-   * The editor is done. `save` — into the folder (synced with the server) and the clipboard;
-   * `actions` — the same, then the window that makes it a task or a diary photo; `copy` — the
-   * clipboard only.
+   * The editor is done. `save` and `copy` — into the folder (synced with the server) and the
+   * clipboard: a copied screenshot is kept too, so it is never lost with the next copy;
+   * `actions` — the same, then the window that makes it a task or a diary photo.
    */
   async editorDone(png: Buffer, action: 'save' | 'actions' | 'copy'): Promise<void> {
     // The clipboard of Electron follows the browser's: a PNG goes in as an item.
@@ -102,9 +102,6 @@ export class Capture {
       new ClipboardItem({ 'image/png': new Blob([new Uint8Array(png)], { type: 'image/png' }) }),
     ]);
     this.editor?.close();
-    if (action === 'copy') {
-      return;
-    }
     try {
       await this.keep(png);
     } catch (error) {

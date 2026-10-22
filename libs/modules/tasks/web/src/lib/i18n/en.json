@@ -10,6 +10,11 @@
     "2": "Medium",
     "3": "High"
   },
+  "horizon": {
+    "short": "Short",
+    "normal": "Normal",
+    "long": "Long-running"
+  },
   "repeat": {
     "label": "Repeat",
     "never": "Does not repeat",
@@ -42,8 +47,10 @@
     "notes": "Notes",
     "dueDate": "Due date",
     "priority": "Priority",
+    "horizon": "Horizon",
     "list": "List",
     "allLists": "All lists",
+    "allHorizons": "Any horizon",
     "inbox": "Inbox",
     "newList": "New list — Enter",
     "deleteList": "Delete the list",

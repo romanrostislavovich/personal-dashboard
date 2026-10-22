@@ -20,7 +20,7 @@
   80% and when spent; a photo of a receipt in Telegram becomes an expense (read by an AI with
   vision), the photo kept with it; subscriptions — monthly or yearly, a free trial with a
   reminder, the old prices, a higher charge in the bank reported, repeating charges suggested as
-  subscriptions; savings goals counted from a wallet and money added by hand; the AI's review of a
+  subscriptions; the AI's review of a
   month (where the money went, what changed, where to save); a wishlist — a link to a product in
   a shop, its price read from the page every morning and kept day by day, a message when it
   changes (the price is typed in by hand for a shop that does not tell it), added in one click
@@ -633,7 +633,7 @@ assistant as a tutor that knows the materials of the courses.
   already has: subscribers, views, comments day by day
 - **Activity: more trackers** — the tracker of the desktop app watches windows on Windows only;
   macOS and Linux, and the same tracker on a phone (time per app), report to the same section
-- **Wishlist: more** — a wish feeds a savings goal; shops that turn a server away (Media Expert,
+- **Wishlist: more** — shops that turn a server away (Media Expert,
   Decathlon, Amazon, Allegro) through their APIs or the desktop app's browser
 - **A public /now page** — a link to share: what I listen to, play and work on, my GitHub; the
   user picks what is shown

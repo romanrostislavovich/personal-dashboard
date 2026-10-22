@@ -5,7 +5,6 @@ import { aiActions, aiConversations } from '../ai/ai.schema';
 import { TwoFactorService } from '../auth/two-factor.service';
 import { automationRules } from '../automations/automations.schema';
 import { DB, Database } from '../database/database.module';
-import { lifeGoals } from '../life/life.schema';
 import { LifeService } from '../life/life.service';
 import { securityFindings } from '../security/security.schema';
 import { UsersService } from '../users/users.service';
@@ -16,8 +15,8 @@ import { AchievementsService } from './achievements.service';
 const FULL_DAY_SECTIONS = [5, 7];
 
 /**
- * Achievements of the sections the core keeps itself: Life (goals of the year, a day that many
- * sections tell about), the assistant, the automations and the security of the account. Grouped
+ * Achievements of the sections the core keeps itself: Life (a day that many sections tell
+ * about), the assistant, the automations and the security of the account. Grouped
  * on the page under the web module of each (`life`, `ai`, `security`; the automations under
  * `dashboard`, where their other achievement is).
  */
@@ -38,38 +37,6 @@ export class SectionsAchievements implements OnModuleInit {
   }
 
   private registerLife(): void {
-    this.achievements.register({
-      id: 'life.goals-reached',
-      module: 'life',
-      measure: async (userId) => {
-        const [row] = await this.db
-          .select({ value: count() })
-          .from(lifeGoals)
-          .where(and(eq(lifeGoals.userId, userId), isNotNull(lifeGoals.reachedAt)));
-        return row?.value ?? 0;
-      },
-      tiers: achievementTiers(
-        [
-          1,
-          '🎯',
-          { en: 'Goal reached', ru: 'Цель достигнута' },
-          { en: 'A goal of the year reached', ru: 'Достигнута цель года' },
-        ],
-        [
-          3,
-          '🏹',
-          { en: 'On target', ru: 'В яблочко' },
-          { en: 'Three goals of the year reached', ru: 'Достигнуты три цели года' },
-        ],
-        [
-          5,
-          '🏆',
-          { en: 'A year of goals', ru: 'Год целей' },
-          { en: 'Five goals of the year reached', ru: 'Достигнуты пять целей года' },
-        ],
-      ),
-    });
-
     this.achievements.register({
       id: 'life.full-day',
       module: 'life',

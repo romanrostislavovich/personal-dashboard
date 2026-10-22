@@ -209,7 +209,7 @@ export class HabitsService {
     const streak = (await this.get(user.id, habit.id)).stats.currentStreak;
     if (isBuilding(habit.goal)) {
       await this.notifications.send(user.id, {
-        title: text.question.build(habit.name ?? ''),
+        title: habit.kind === 'gym' ? text.question.gym : text.question.build(habit.name ?? ''),
         body: text.buildBody(streak),
         source: 'habits',
         actions: [
@@ -221,9 +221,9 @@ export class HabitsService {
     }
     await this.notifications.send(user.id, {
       title:
-        habit.kind === 'custom'
-          ? text.question.custom(habit.name ?? '')
-          : text.question[habit.kind],
+        habit.kind === 'alcohol' || habit.kind === 'smoking'
+          ? text.question[habit.kind]
+          : text.question.custom(habit.name ?? ''),
       body: text.body(streak),
       source: 'habits',
       actions: [

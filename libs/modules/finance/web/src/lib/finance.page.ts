@@ -55,7 +55,6 @@ import {
 import { TransactionFormData, TransactionFormDialog } from './transaction-form.dialog';
 import { TransactionListComponent } from './transactions/transaction-list.component';
 import { BudgetsCardComponent } from './budgets/budgets-card.component';
-import { GoalsTabComponent } from './goals/goals-tab.component';
 import { ReportCardComponent } from './reports/report-card.component';
 import { WishlistTabComponent } from './wishlist/wishlist-tab.component';
 import { NetWorthCardComponent } from './overview/net-worth-card.component';
@@ -72,12 +71,11 @@ enum Tab {
   Overview,
   Transactions,
   Recurring,
-  Goals,
   Wishlist,
 }
 
 /** `?tab=` of a link from the home page or the search. */
-const TAB_BY_NAME: Record<string, Tab> = { goals: Tab.Goals, wishlist: Tab.Wishlist };
+const TAB_BY_NAME: Record<string, Tab> = { wishlist: Tab.Wishlist };
 
 /** The overview's "everything in the main currency" view. */
 const ALL_IN_MAIN = '*';
@@ -125,7 +123,6 @@ function inMain(transactions: Transaction[], main: string): Transaction[] {
     UpcomingPaymentsComponent,
     TransactionListComponent,
     BudgetsCardComponent,
-    GoalsTabComponent,
     ReportCardComponent,
     WishlistTabComponent,
     NetWorthCardComponent,

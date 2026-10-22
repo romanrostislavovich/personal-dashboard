@@ -248,6 +248,7 @@ function openIssue(issue: WritingIssue): void {
     fix: (replacement) => {
       hideCard();
       replace(issue.offset, issue.offset + issue.length, replacement);
+      accepted(1);
     },
     addWord: () => void ignore({ word }),
     neverShow: () => void ignore({ ruleId: issue.ruleId }),
@@ -301,6 +302,7 @@ function fixAll(fixable: WritingIssue[]): void {
   }
   let expected = readField(field).text;
   let before = Infinity;
+  let fixed = 0;
   for (const issue of [...fixable].sort((a, b) => b.offset - a.offset)) {
     const end = issue.offset + issue.length;
     // Two suggestions for one stretch: the first one taken is enough.
@@ -315,7 +317,9 @@ function fixAll(fixable: WritingIssue[]): void {
     read = readField(field);
     replace(issue.offset, end, replacement);
     before = issue.offset;
+    fixed++;
   }
+  accepted(fixed);
 }
 
 /** "Not on this site": the dashboard remembers it; the marks go at once. */
@@ -355,6 +359,13 @@ async function rewrite(mode: WritingRewriteMode): Promise<void> {
     });
   } catch {
     showError(box, t('writingRewriteFailed'));
+  }
+}
+
+/** Fixes taken are counted for the achievements; nothing waits for it. */
+function accepted(count: number): void {
+  if (count > 0) {
+    void ask({ type: 'writing-accepted', count }).catch(() => undefined);
   }
 }
 
