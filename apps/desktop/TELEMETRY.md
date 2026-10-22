@@ -175,3 +175,9 @@ Server endpoint availability and end-to-end live application behavior are not pr
   checks and typecheck/build are run; interactive native dialogs, IDE launch and live server capture
   still need end-to-end verification. Local same-user filesystem/process tampering is outside the
   trust model; revalidation narrows, but cannot eliminate, filesystem races before OS open/spawn.
+- Diagnostics: `telemetry:diagnostics` (trusted dashboard frame only) returns
+  `DesktopTelemetryDiagnostics` — the reason collection is on or off, the helper's state
+  (`{"ready":…}` lines from `telemetry-native.cs`), the pending minutes, the last attempt, the last
+  accepted upload and the server's HTTP status of this session. Reading it never starts a helper or
+  changes consent; no device token, titles, app names, commands or paths are in it. A device,
+  account or consent change erases its history; idle and privacy pauses clear buckets, not history.

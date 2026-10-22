@@ -199,11 +199,14 @@ namespace PdTelemetry {
       } catch { return null; }
     }
 
+    private static bool pipeReady;
+
     private static void PipeLoop(string name) {
       while (!ended) {
         try {
           using (var pipe = new NamedPipeServerStream(name, PipeDirection.In, 1, PipeTransmissionMode.Message,
             PipeOptions.Asynchronous, 512, 512, UserPipeSecurity())) {
+            lock (sync) { pipeReady = true; }
             pipe.WaitForConnection();
             byte[] buffer = new byte[513];
             var read = pipe.BeginRead(buffer, 0, buffer.Length, null, null);
@@ -223,7 +226,10 @@ namespace PdTelemetry {
               Console.WriteLine(result);
             }
           }
-        } catch { if (!ended) Thread.Sleep(250); }
+        } catch {
+          lock (sync) { pipeReady = false; }
+          if (!ended) Thread.Sleep(250);
+        }
       }
     }
 
@@ -252,9 +258,15 @@ namespace PdTelemetry {
       new Thread(() => PipeLoop(pipeName)) { IsBackground = true }.Start();
       hook = SetWindowsHookEx(13, callback, GetModuleHandle(null), 0);
       var timer = new System.Windows.Forms.Timer { Interval = 100 };
+      bool? reportedReady = null;
       timer.Tick += (sender, args) => {
         lock (sync) {
           if (ended) { Application.ExitThread(); return; }
+          bool ready = hook != IntPtr.Zero && pipeReady;
+          if (reportedReady != ready && (ready || hook == IntPtr.Zero || reportedReady.HasValue)) {
+            Console.WriteLine(ready ? "{\"ready\":true}" : "{\"ready\":false}");
+            reportedReady = ready;
+          }
           IntPtr window; uint pid; string process; AutomationElement field;
           if (!Allowed(out window, out pid, out process)) Clear();
           if (clock.ElapsedMilliseconds - lastDrain >= 1000) {

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { WorkstateRestorePlan } from '@pd/contracts';
+import type { DesktopTelemetryDiagnostics, WorkstateRestorePlan } from '@pd/contracts';
 
 /**
  * `window.desktop` — what the shell adds to the pages it shows:
@@ -33,6 +33,8 @@ contextBridge.exposeInMainWorld('desktop', {
   telemetry: {
     status: (): Promise<{ enabled: boolean; available: boolean }> =>
       ipcRenderer.invoke('telemetry:status'),
+    diagnostics: (): Promise<DesktopTelemetryDiagnostics | null> =>
+      ipcRenderer.invoke('telemetry:diagnostics'),
     setConsent: (enabled: boolean): Promise<boolean> =>
       ipcRenderer.invoke('telemetry:set-consent', enabled),
   },

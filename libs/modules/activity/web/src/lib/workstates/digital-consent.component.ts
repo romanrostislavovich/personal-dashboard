@@ -10,7 +10,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { DesktopTelemetryDiagnostics, desktopTelemetryDiagnosticsSchema } from '@pd/contracts';
 import { desktopBridge } from '@pd/web-core';
+import { TelemetryDiagnosticsComponent } from './telemetry-diagnostics.component';
 
 type ConsentKind = 'telemetry' | 'smartBreak';
 interface ConsentStatus {
@@ -21,7 +23,13 @@ interface ConsentStatus {
 @Component({
   selector: 'pd-activity-digital-consent',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatCardModule, MatSlideToggleModule, TranslocoPipe],
+  imports: [
+    MatButtonModule,
+    MatCardModule,
+    MatSlideToggleModule,
+    TranslocoPipe,
+    TelemetryDiagnosticsComponent,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-content>
@@ -44,10 +52,18 @@ interface ConsentStatus {
               <p>{{ 'activity.digital.desktopOnly' | transloco }}</p>
             } @else if (statuses()[kind]; as status) {
               @if (!status.available) {
-                <p>{{ 'activity.digital.unavailable' | transloco }}</p>
+                <p>{{ unavailableKey(kind) | transloco }}</p>
               }
             }
           </section>
+        }
+        <pd-telemetry-diagnostics [diagnostics]="diagnostics()" />
+        @if (!bridge) {
+          <p>{{ 'activity.diagnostics.browserOnly' | transloco }}</p>
+        } @else if (!bridge.telemetry?.diagnostics) {
+          <p>{{ 'activity.diagnostics.oldDesktop' | transloco }}</p>
+        } @else if (diagnosticsFailed()) {
+          <p role="alert">{{ 'activity.diagnostics.error' | transloco }}</p>
         }
         @if (busy()) {
           <p role="status">{{ 'activity.workstates.working' | transloco }}</p>
@@ -79,6 +95,8 @@ export class DigitalConsentComponent implements OnInit {
   protected readonly statuses = signal<Partial<Record<ConsentKind, ConsentStatus>>>({});
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
+  protected readonly diagnostics = signal<DesktopTelemetryDiagnostics | null>(null);
+  protected readonly diagnosticsFailed = signal(false);
 
   ngOnInit(): void {
     void this.refresh();
@@ -88,8 +106,19 @@ export class DigitalConsentComponent implements OnInit {
     if (this.busy()) return;
     this.busy.set(true);
     this.failed.set(false);
-    await Promise.all(this.kinds.map((kind) => this.readStatus(kind)));
+    await this.readAll();
     this.busy.set(false);
+  }
+
+  protected unavailableKey(kind: ConsentKind): string {
+    const d = this.diagnostics();
+    if (!d) return 'activity.digital.unavailable';
+    if (!d.supported) return 'activity.diagnostics.collection.unsupported';
+    if (!d.serverConfigured) return 'activity.diagnostics.collection.no-server';
+    if (!d.registered) return 'activity.diagnostics.collection.unregistered';
+    if (kind === 'smartBreak' && !d.telemetryConsent)
+      return 'activity.diagnostics.breaksNeedTelemetry';
+    return 'activity.digital.unavailable';
   }
 
   protected toggle(kind: ConsentKind, event: MatSlideToggleChange): void {
@@ -103,16 +132,15 @@ export class DigitalConsentComponent implements OnInit {
     this.busy.set(true);
     this.failed.set(false);
     try {
-      await control.setConsent(enabled);
+      await this.withTimeout(control.setConsent(enabled));
       // The return boolean is not a status snapshot; read back the actual setting.
-      const status = await control.status();
+      await this.readAll();
       if (!this.destroyRef.destroyed) {
-        this.statuses.update((statuses) => ({ ...statuses, [kind]: status }));
-        this.failed.set(status.enabled !== enabled);
+        this.failed.set(this.failed() || this.statuses()[kind]?.enabled !== enabled);
       }
     } catch {
       this.failed.set(true);
-      await this.readStatus(kind);
+      await this.readAll();
     } finally {
       this.busy.set(false);
     }
@@ -122,12 +150,47 @@ export class DigitalConsentComponent implements OnInit {
     const control = this.bridge?.[kind];
     if (!control) return;
     try {
-      const status = await control.status();
+      const status = await this.withTimeout(control.status());
       if (!this.destroyRef.destroyed)
         this.statuses.update((statuses) => ({ ...statuses, [kind]: status }));
     } catch {
       this.failed.set(true);
       this.statuses.update((statuses) => ({ ...statuses, [kind]: undefined }));
+    }
+  }
+
+  private async readAll(): Promise<void> {
+    await Promise.all([...this.kinds.map((kind) => this.readStatus(kind)), this.readDiagnostics()]);
+  }
+
+  private async readDiagnostics(): Promise<void> {
+    const control = this.bridge?.telemetry;
+    if (!control?.diagnostics) return;
+    this.diagnosticsFailed.set(false);
+    try {
+      const result = desktopTelemetryDiagnosticsSchema.parse(
+        await this.withTimeout(control.diagnostics()),
+      );
+      if (!this.destroyRef.destroyed) this.diagnostics.set(result);
+    } catch {
+      if (!this.destroyRef.destroyed) {
+        this.diagnostics.set(null);
+        this.diagnosticsFailed.set(true);
+      }
+    }
+  }
+
+  private async withTimeout<T>(request: Promise<T>): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        request,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Desktop request timed out')), 15_000);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
     }
   }
 }

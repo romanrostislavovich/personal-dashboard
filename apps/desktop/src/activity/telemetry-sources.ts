@@ -1,4 +1,5 @@
 import { app } from 'electron';
+import type { DesktopTelemetryDiagnostics } from '@pd/contracts';
 import { ChildProcess, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -43,11 +44,16 @@ export class TelemetrySources {
   private child: ChildProcess | null = null;
   private identity: string | null = null;
   private retryAt = 0;
+  private state: DesktopTelemetryDiagnostics['sources'] = 'stopped';
 
   constructor(
     private readonly input: (aggregate: NativeInputAggregate) => void,
     private readonly terminal: (report: TerminalReport) => void,
   ) {}
+
+  status(): DesktopTelemetryDiagnostics['sources'] {
+    return this.state;
+  }
 
   update(gate: SourceGate | null): void {
     if (!gate || process.platform !== 'win32') {
@@ -67,12 +73,14 @@ export class TelemetrySources {
     const child = this.child;
     this.child = null;
     this.identity = null;
+    this.state = 'stopped';
     child?.stdin?.destroy();
     child?.kill();
   }
 
   private start(identity: string): void {
     this.identity = identity;
+    this.state = 'starting';
     this.retryAt = Date.now() + 30_000;
     try {
       const directory = app.getPath('userData');
@@ -108,6 +116,10 @@ export class TelemetrySources {
         try {
           const value = JSON.parse(line);
           if (Object.keys(value).length !== 1) return;
+          if (typeof value.ready === 'boolean') {
+            this.state = value.ready ? 'running' : 'error';
+            return;
+          }
           const input = parseInputAggregate(value.input);
           const terminal = parseTerminalReport(value.terminal);
           if (input) this.input(input);
@@ -118,13 +130,19 @@ export class TelemetrySources {
       });
       const ended = () => {
         lines.close();
-        if (this.child === child) this.stop();
+        if (this.child === child) {
+          this.stop();
+          this.identity = identity;
+          this.state = 'error';
+        }
       };
       child.stdin!.on('error', ended);
       child.on('error', ended);
       child.on('exit', ended);
     } catch {
       this.stop();
+      this.identity = identity;
+      this.state = 'error';
     }
   }
 }

@@ -355,6 +355,9 @@ function registerIpc(): void {
   ipcMain.handle('telemetry:status', (event) =>
     trustedDashboard(event) ? tracker.telemetryStatus() : { enabled: false, available: false },
   );
+  ipcMain.handle('telemetry:diagnostics', (event) =>
+    trustedDashboard(event) ? tracker.telemetryDiagnostics(updater.fullVersion) : null,
+  );
   ipcMain.handle('telemetry:set-consent', (event, enabled: unknown) =>
     trustedDashboard(event)
       ? setContextConsent('telemetry', enabled, () => trustedDashboard(event))

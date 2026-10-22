@@ -1,6 +1,7 @@
 import { net, powerMonitor } from 'electron';
 import { TELEMETRY_INGEST_PATH, WORKSTATE_CAPTURE_PATH } from '@pd/client-core';
 import { sanitizeTelemetryText, WorkstateInput, workstateInputSchema } from '@pd/contracts';
+import type { DesktopTelemetryDiagnostics } from '@pd/contracts';
 import { ActivityStore, TrackerConfig } from './activity-store';
 import { BreakReminder } from './break-reminder';
 import { FocusPhase, FocusSession, FocusStatus, FocusTimer } from './focus-timer';
@@ -76,6 +77,7 @@ export class ActivityTracker {
   private sourceTimer: NodeJS.Timeout | null = null;
   private sourceSampleAt: number | null = null;
   private sourceIdentity: string | null = null;
+  private windowCollection: DesktopTelemetryDiagnostics['collection'] = 'waiting-window';
   private smartWindowAllowed = false;
   private workstateEpoch = 0;
   private readonly smartBreak = new SmartBreak();
@@ -107,7 +109,9 @@ export class ActivityTracker {
         body: JSON.stringify({ buckets }),
         signal: AbortSignal.any([signal, AbortSignal.timeout(UPLOAD_TIMEOUT_MS)]),
       });
-      if (response.status === 401 && identity === this.telemetryIdentity()) this.disable();
+      this.telemetry.recordHttpStatus(signal, response.status);
+      if (response.status === 401 && !signal.aborted && identity === this.telemetryIdentity())
+        this.disable();
       return response.ok;
     },
   );
@@ -241,8 +245,9 @@ export class ActivityTracker {
     this.telemetryAllowed = false;
     this.sourceSampleAt = null;
     this.sourceIdentity = null;
+    this.windowCollection = 'waiting-window';
     this.sources.stop();
-    this.telemetry.clear();
+    this.telemetry.resetDiagnostics();
   }
 
   resetSmartBreak(): void {
@@ -262,6 +267,46 @@ export class ActivityTracker {
       enabled: this.telemetryConsent() === true,
       available: WindowWatcher.supported && !!this.telemetryIdentity(),
     };
+  }
+
+  /** A manual snapshot: never starts helpers, enables consent or includes window metadata. */
+  telemetryDiagnostics(version: string | null): DesktopTelemetryDiagnostics {
+    if (this.telemetryIdentity() !== this.sourceIdentity) this.resetTelemetry();
+    const collection = this.telemetryCollection();
+    if (collection !== 'collecting') this.sources.stop();
+    return {
+      deviceId: this.store.deviceId,
+      version,
+      supported: WindowWatcher.supported,
+      registered: !!this.store.deviceId && !!this.store.token,
+      serverConfigured: !!this.serverUrl(),
+      telemetryConsent: this.telemetryConsent() === true,
+      smartBreakConsent: this.smartBreakConsent() === true,
+      collection,
+      sources: this.sources.status(),
+      ...this.telemetry.diagnostics(),
+    };
+  }
+
+  private telemetryCollection(): DesktopTelemetryDiagnostics['collection'] {
+    if (!WindowWatcher.supported) return 'unsupported';
+    if (!this.store.deviceId || !this.store.token) return 'unregistered';
+    if (!this.serverUrl()) return 'no-server';
+    if (this.telemetryConsent() !== true) return 'consent-required';
+    if (!this.telemetryRunning) return 'stopped';
+    if (this.suspended) return 'suspended';
+    if (this.locked) return 'locked';
+    if (this.paused) return 'paused';
+    if (powerMonitor.getSystemIdleTime() >= this.store.config.idleMinutes * 60) return 'idle';
+    const now = Date.now();
+    if (
+      this.sourceSampleAt === null ||
+      now < this.sourceSampleAt ||
+      now - this.sourceSampleAt > MAX_SAMPLE_GAP_MS
+    )
+      return 'waiting-window';
+    if (this.windowCollection !== 'collecting') return this.windowCollection;
+    return this.telemetryAllowed ? 'collecting' : 'waiting-window';
   }
 
   /** Main-process only. Titles and browser tabs are deliberately never part of a snapshot. */
@@ -478,6 +523,15 @@ export class ActivityTracker {
       this.sourceIdentity = this.telemetryIdentity();
     }
     this.sourceSampleAt = now;
+    this.windowCollection = !sample
+      ? 'waiting-window'
+      : isExcluded(sample, config)
+        ? 'excluded-app'
+        : isPrivateWindow(sample.title, config.privateWords)
+          ? 'private-window'
+          : sanitizeTelemetryText(sample.app)
+            ? 'collecting'
+            : 'waiting-window';
     // Unlike legacy spans, telemetry entirely excludes private windows and idle video players.
     // Apply these checks to the original title, before legacy span title redaction below.
     this.smartWindowAllowed =
