@@ -6,6 +6,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { pickableProjects } from '@pd/web-core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { COST_PROVIDERS, CostProvider, CostSourceInput, Project } from '@pd/contracts';
 
@@ -73,7 +74,7 @@ const PROVIDER_DEFAULTS: Record<CostProvider, { name: string; category: string }
           <mat-select formControlName="projectId">
             <!-- "Personal" = empty string: mat-select treats null as no selection. -->
             <mat-option value="">{{ 'finance.scope.personal' | transloco }}</mat-option>
-            @for (project of data.projects; track project.id) {
+            @for (project of projects; track project.id) {
               <mat-option [value]="project.id">{{ project.name }}</mat-option>
             }
           </mat-select>
@@ -111,6 +112,11 @@ const PROVIDER_DEFAULTS: Record<CostProvider, { name: string; category: string }
 })
 export class CostSourceFormDialog {
   protected readonly data = inject<CostSourceFormData>(MAT_DIALOG_DATA);
+  /** Closed projects are not offered, but the one the record already has stays. */
+  protected readonly projects = pickableProjects(
+    this.data.projects,
+    this.data.defaultProjectId ?? null,
+  );
   private readonly dialogRef = inject(MatDialogRef<CostSourceFormDialog, CostSourceInput>);
 
   protected readonly providers = COST_PROVIDERS;

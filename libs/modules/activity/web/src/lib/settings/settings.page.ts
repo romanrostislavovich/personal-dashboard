@@ -9,7 +9,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ACTIVITY_CATEGORIES, ActivityApp, ActivityCategory } from '@pd/contracts';
-import { ProjectsApi } from '@pd/web-core';
+import { pickableProjects, ProjectsApi } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { ActivityApi } from '../activity.api';
 import { TrackerCardComponent } from '../tracker-card.component';
@@ -56,6 +56,7 @@ export class SettingsPage {
   protected readonly apps = this.api.apps();
   protected readonly rules = this.api.rules();
   protected readonly projects = inject(ProjectsApi).list();
+  protected readonly pickable = computed(() => pickableProjects(this.projects.value()));
 
   /** The new rule being typed. */
   protected readonly ruleProject = signal<string | null>(null);

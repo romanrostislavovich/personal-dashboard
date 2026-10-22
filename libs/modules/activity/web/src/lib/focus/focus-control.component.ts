@@ -15,7 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { desktopBridge, DesktopFocusStatus, ProjectsApi } from '@pd/web-core';
+import { desktopBridge, DesktopFocusStatus, pickableProjects, ProjectsApi } from '@pd/web-core';
 
 /** The page asks the shell for the timer's state this often; the countdown runs between. */
 const POLL_MS = 5_000;
@@ -49,7 +49,7 @@ const POLL_MS = 5_000;
                   <mat-option [value]="null">{{
                     'activity.focus.noProject' | transloco
                   }}</mat-option>
-                  @for (project of projects.value(); track project.id) {
+                  @for (project of pickable(); track project.id) {
                     <mat-option [value]="project.id">{{ project.name }}</mat-option>
                   }
                 </mat-select>
@@ -141,6 +141,7 @@ export class FocusControlComponent {
 
   protected readonly focus = desktopBridge()?.focus ?? null;
   protected readonly projects = inject(ProjectsApi).list();
+  protected readonly pickable = computed(() => pickableProjects(this.projects.value()));
   protected readonly status = signal<DesktopFocusStatus | null>(null);
   protected readonly projectId = signal<string | null>(null);
   protected readonly note = signal('');
