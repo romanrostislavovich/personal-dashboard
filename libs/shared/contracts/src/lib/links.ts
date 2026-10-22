@@ -29,9 +29,14 @@ export interface ProjectFact {
   days?: { day: LocalDate; seconds: number }[];
   /**
    * Of the time at the computer: the seconds of IDE time the tracker did not tie to the project
-   * (a terminal, a browser, a computer without the tracker), added by the core.
+   * (a terminal, a browser, a computer without the tracker).
    */
   fromCoding?: number;
+  /**
+   * Of the time at the computer: the seconds of windows and sites of no project that lie in
+   * work on it (the browser with the running app between two moments in the IDE).
+   */
+  fromContext?: number;
 }
 
 /** Something that changed in a project at a moment: a commit, a release. */

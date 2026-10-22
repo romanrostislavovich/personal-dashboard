@@ -12,6 +12,7 @@ import { ActivityJobs } from './activity.jobs';
 import { EveningSummaryJob } from './evening-summary.job';
 import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
+import { ProjectTimeService } from './project-time.service';
 import { SitesService } from './sites.service';
 import { DiskAdviceService } from './disk/disk-advice.service';
 import { WellbeingService } from './wellbeing.service';
@@ -44,6 +45,7 @@ import { TelemetrySummaryService } from './telemetry-summary.service';
     ActivityService,
     DevicesService,
     SitesService,
+    ProjectTimeService,
     ActivityAchievements,
     ActivityAiTools,
     ActivityDigest,

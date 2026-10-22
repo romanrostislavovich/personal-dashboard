@@ -120,7 +120,8 @@
       "all": "All"
     },
     "emptyFilter": "No such projects here",
-    "fromCoding": "Of it, {{time}} is IDE time the tracker did not tie to the project: a terminal, a browser, a computer without the tracker."
+    "fromCoding": "Of it, {{time}} is IDE time from WakaTime the tracker did not tie to the project: a terminal, another computer.",
+    "fromContext": "Of it, {{time}} is windows and sites between moments of work on the project (localhost with the running app between visits to the IDE, for example)."
   },
   "settings": {
     "title": "Settings",

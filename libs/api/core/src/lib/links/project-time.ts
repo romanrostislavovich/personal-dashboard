@@ -4,8 +4,9 @@ import { ProjectFact } from '@pd/contracts';
  * The time at the computer on a project, never less than its IDE time on any day: coding is
  * done at a computer. The tracker sees the project only in windows titled after it — a
  * terminal, a browser or a computer without the tracker go unnoticed — while the IDE counts its
- * folder everywhere. So on each day the larger of the two is taken, and what the IDE adds is
- * told (`fromCoding`). Without both times day by day the facts are left as they are.
+ * folder everywhere. Activity puts the IDE's stretches into its time where WakaTime gave them;
+ * for the days it gave only totals the larger of the two is taken here, and what the IDE adds
+ * is told (`fromCoding`). Without both times day by day the facts are left as they are.
  */
 export function withCodingAtComputer(facts: ProjectFact[]): ProjectFact[] {
   const tracked = facts.find((fact) => fact.metric === 'seconds' && fact.days);
@@ -28,6 +29,8 @@ export function withCodingAtComputer(facts: ProjectFact[]): ProjectFact[] {
     return facts;
   }
   return facts.map((fact) =>
-    fact === tracked ? { ...fact, value: fact.value + added, fromCoding: added } : fact,
+    fact === tracked
+      ? { ...fact, value: fact.value + added, fromCoding: (fact.fromCoding ?? 0) + added }
+      : fact,
   );
 }

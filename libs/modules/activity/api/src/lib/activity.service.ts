@@ -680,7 +680,7 @@ export class ActivityService {
   }
 
   /** Each project is recognized by its own name and by the user's rules for it. */
-  private async projectPatterns(userId: string): Promise<ProjectPatterns[]> {
+  async projectPatterns(userId: string): Promise<ProjectPatterns[]> {
     const rules = await this.rules(userId);
     return (await this.projectsService.list(userId)).map((project) => ({
       projectId: project.id,

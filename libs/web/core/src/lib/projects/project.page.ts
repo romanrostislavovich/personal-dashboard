@@ -111,6 +111,13 @@ function localDate(date: Date): string {
                   }}
                 </span>
               }
+              @if (fact.fromContext) {
+                <span class="hint">
+                  {{
+                    'core.projects.fromContext' | transloco: { time: fact.fromContext | pdDuration }
+                  }}
+                </span>
+              }
               @if (fact.link) {
                 <a class="more" [routerLink]="fact.link">
                   {{ fact.module + '.title' | transloco }}
