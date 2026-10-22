@@ -1,16 +1,18 @@
 {
   "title": "Habits",
-  "intro": "What you quit or cut down. Every day since the start counts as clean unless you mark it — here, by the evening question in Telegram, or by telling the assistant. A slip starts the run again, but nothing you reached is taken away.",
-  "empty": "Every day counts as clean until you mark it otherwise. Start with one:",
+  "intro": "What you quit or cut down, and what you build — the gym, reading, a walk. A habit you quit counts every day since the start as clean unless you mark it; one you build counts the days you mark as done. Mark here, through the evening question in Telegram, or by telling the assistant. A slip starts the run again, but nothing you reached is taken away.",
+  "empty": "Quit something or start doing something. Begin with one:",
   "confirmDelete": "Delete «{{name}}» with all its days?",
   "kinds": {
     "alcohol": "Alcohol",
     "smoking": "Smoking",
+    "gym": "Gym",
     "custom": "My habit"
   },
   "start": {
     "alcohol": "I quit drinking",
     "smoking": "I quit smoking",
+    "gym": "I go to the gym",
     "custom": "A habit of my own",
     "build": "A new habit"
   },
@@ -25,6 +27,7 @@
   "dialog": {
     "edit": "Edit the habit",
     "name": "What you quit",
+    "buildName": "What you do",
     "nameHint": "Sugar, social media at night, energy drinks…",
     "goal": "The goal",
     "maxDays": "Days a week at most",

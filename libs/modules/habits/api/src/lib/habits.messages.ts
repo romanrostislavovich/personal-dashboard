@@ -8,6 +8,7 @@ const messages = {
       smoking: '🌙 A day without smoking?',
       custom: (name: string) => `🌙 A day without «${name}»?`,
       build: (name: string) => `🌙 «${name}» today — done?`,
+      gym: '🏋️ The gym today — done?',
     },
     buildBody: (streak: number) =>
       streak > 0 ? `${streak} in a row so far.` : 'Every day counts from the first one.',
@@ -34,6 +35,7 @@ const messages = {
       smoking: '🌙 Сегодня без сигарет?',
       custom: (name: string) => `🌙 Сегодня без «${name}»?`,
       build: (name: string) => `🌙 «${name}» сегодня — сделано?`,
+      gym: '🏋️ Спортзал сегодня — был?',
     },
     buildBody: (streak: number) =>
       streak > 0 ? `Уже ${streak} подряд.` : 'Каждый раз считается с первого.',

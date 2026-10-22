@@ -13,7 +13,8 @@ import { HabitDialog, HabitDialogData } from './habit.dialog';
 import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
 
 /**
- * Habits: "I quit drinking", "I quit smoking", or one's own, each with its run of clean days.
+ * Habits: "I quit drinking", "I quit smoking", the gym, or one's own — to quit, with a run of
+ * clean days, or to build, with the days done.
  * The counter needs nothing every day: a day is clean unless it is marked — here, by the evening
  * question in Telegram or by telling the assistant.
  */
@@ -38,6 +39,9 @@ import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
           <span class="emoji">{{ icons[kind] }}</span> {{ 'habits.start.' + kind | transloco }}
         </button>
       }
+      <button matButton="tonal" (click)="start('gym', true)">
+        <span class="emoji">{{ icons.gym }}</span> {{ 'habits.start.gym' | transloco }}
+      </button>
       <button matButton="tonal" (click)="start('custom', true)">
         <span class="emoji">{{ buildIcon }}</span> {{ 'habits.start.build' | transloco }}
       </button>
@@ -104,6 +108,7 @@ export class HabitsPage {
   private readonly dialog = inject(MatDialog);
   private readonly transloco = inject(TranslocoService);
 
+  /** The kinds to quit; the gym and one's own habit to build come after them. */
   protected readonly kinds: HabitKind[] = ['alcohol', 'smoking', 'custom'];
   protected readonly icons = HABIT_ICONS;
   protected readonly buildIcon = BUILD_ICON;

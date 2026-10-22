@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Habit, HabitGoal, HabitInput, HabitKind } from '@pd/contracts';
-import { BUILD_ICON, HABIT_ICONS, localToday } from './habits.api';
+import { habitIcon, localToday } from './habits.api';
 
 export interface HabitDialogData {
   kind: HabitKind;
@@ -21,9 +21,9 @@ export interface HabitDialogData {
 const DEFAULT_ASK_AT = '21:00';
 
 /**
- * "I quit drinking", "I quit smoking", or a habit of one's own: the goal (not at all, or at most
- * a few days a week), from which day it counts, what a day with it is counted in, and the
- * evening question in Telegram.
+ * "I quit drinking", "I quit smoking", the gym, or a habit of one's own: the goal (to quit — not
+ * at all, or at most a few days a week; to build — every day, or a few days a week), from which
+ * day it counts, what a day with it is counted in, and the evening question in Telegram.
  */
 @Component({
   selector: 'pd-habit-dialog',
@@ -44,7 +44,7 @@ const DEFAULT_ASK_AT = '21:00';
       {{
         (data.habit
           ? 'habits.dialog.edit'
-          : data.build
+          : data.build && data.kind === 'custom'
             ? 'habits.start.build'
             : 'habits.start.' + data.kind
         ) | transloco
@@ -54,7 +54,9 @@ const DEFAULT_ASK_AT = '21:00';
       <mat-dialog-content class="form">
         @if (data.kind === 'custom') {
           <mat-form-field>
-            <mat-label>{{ 'habits.dialog.name' | transloco }}</mat-label>
+            <mat-label>{{
+              (data.build ? 'habits.dialog.buildName' : 'habits.dialog.name') | transloco
+            }}</mat-label>
             <input matInput maxlength="100" formControlName="name" required cdkFocusInitial />
             <mat-hint>
               {{
@@ -163,12 +165,14 @@ const DEFAULT_ASK_AT = '21:00';
 export class HabitDialog {
   protected readonly data = inject<HabitDialogData>(MAT_DIALOG_DATA);
   private readonly ref = inject(MatDialogRef<HabitDialog, HabitInput>);
-  protected readonly icon = this.data.build ? BUILD_ICON : HABIT_ICONS[this.data.kind];
+  protected readonly icon = habitIcon(this.data.kind, !!this.data.build);
 
   private readonly habit = this.data.habit;
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: this.habit?.name ?? '',
-    goal: (this.habit?.goal ?? (this.data.build ? 'daily' : 'quit')) as HabitGoal,
+    // The gym is a few days a week, not every day.
+    goal: (this.habit?.goal ??
+      (this.data.kind === 'gym' ? 'weekly' : this.data.build ? 'daily' : 'quit')) as HabitGoal,
     maxDaysPerWeek: this.habit?.maxDaysPerWeek ?? 2,
     timesPerWeek: this.habit?.timesPerWeek ?? 3,
     unit: this.habit?.unit ?? '',

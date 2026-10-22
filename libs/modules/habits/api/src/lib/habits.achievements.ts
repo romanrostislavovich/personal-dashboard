@@ -11,8 +11,11 @@ import { HabitsService } from './habits.service';
 /** The days in a row of a streak, from a day to almost three years. */
 const STREAK_GOALS = [1, 7, 30, 90, 180, 365, 1000] as const;
 
+/** The kinds whose runs of clean days have achievements of their own. */
+type StreakKind = 'alcohol' | 'smoking' | 'custom';
+
 /** What a streak of each kind is called, and its icons. */
-const STREAKS: Record<HabitKind, { what: LocalizedText; icons: string[] }> = {
+const STREAKS: Record<StreakKind, { what: LocalizedText; icons: string[] }> = {
   alcohol: {
     what: { en: 'without alcohol', ru: 'без алкоголя' },
     icons: ['🌱', '🍃', '🌿', '🌳', '🏞️', '🏔️', '👑'],
@@ -61,6 +64,102 @@ export class HabitsAchievements implements OnModuleInit {
         ),
       });
     }
+
+    this.achievements.register({
+      id: 'habits.gym-visits',
+      module: 'habits',
+      measure: async (userId) =>
+        (await this.habits.list(userId))
+          .filter((habit) => habit.kind === 'gym')
+          .reduce((sum, habit) => sum + habit.stats.doneDays, 0),
+      tiers: achievementTiers(
+        [
+          1,
+          '🏋️',
+          { en: 'The first workout', ru: 'Первая тренировка' },
+          { en: 'Went to the gym for the first time', ru: 'Первый раз сходил в спортзал' },
+        ],
+        [
+          10,
+          '💪',
+          { en: 'Getting into it', ru: 'Втягиваюсь' },
+          { en: '10 days at the gym', ru: '10 дней в спортзале' },
+        ],
+        [
+          50,
+          '🦾',
+          { en: 'A regular', ru: 'Завсегдатай' },
+          { en: '50 days at the gym', ru: '50 дней в спортзале' },
+        ],
+        [
+          100,
+          '🏅',
+          { en: 'A hundred workouts', ru: 'Сто тренировок' },
+          { en: '100 days at the gym', ru: '100 дней в спортзале' },
+        ],
+        [
+          250,
+          '🥇',
+          { en: 'Iron habit', ru: 'Железная привычка' },
+          { en: '250 days at the gym', ru: '250 дней в спортзале' },
+        ],
+        [
+          500,
+          '🏆',
+          { en: 'Half a thousand', ru: 'Полтысячи' },
+          { en: '500 days at the gym', ru: '500 дней в спортзале' },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'habits.gym-weeks',
+      module: 'habits',
+      measure: async (userId) =>
+        best(
+          (await this.habits.list(userId)).filter((habit) => habit.goal === 'weekly'),
+          'gym',
+          (habit) => habit.stats.bestStreak,
+        ),
+      tiers: achievementTiers(
+        [
+          2,
+          '📈',
+          { en: 'Two weeks at the gym', ru: 'Две недели в зале' },
+          {
+            en: '2 weeks in a row at the gym as often as planned',
+            ru: '2 недели подряд в зале столько раз, сколько задумано',
+          },
+        ],
+        [
+          8,
+          '🔥',
+          { en: 'Two months at the gym', ru: 'Два месяца в зале' },
+          {
+            en: '8 weeks in a row at the gym as often as planned',
+            ru: '8 недель подряд в зале столько раз, сколько задумано',
+          },
+        ],
+        [
+          26,
+          '🧗',
+          { en: 'Half a year at the gym', ru: 'Полгода в зале' },
+          {
+            en: '26 weeks in a row at the gym as often as planned',
+            ru: '26 недель подряд в зале столько раз, сколько задумано',
+          },
+        ],
+        [
+          52,
+          '👑',
+          { en: 'A year at the gym', ru: 'Год в зале' },
+          {
+            en: '52 weeks in a row at the gym as often as planned',
+            ru: '52 недели подряд в зале столько раз, сколько задумано',
+          },
+        ],
+      ),
+    });
 
     this.achievements.register({
       id: 'habits.build-streak',
@@ -227,7 +326,7 @@ function best(habits: Habit[], kind: HabitKind | null, value: (habit: Habit) => 
   return Math.max(0, ...habits.filter((habit) => !kind || habit.kind === kind).map(value));
 }
 
-function streakTier(kind: HabitKind, goal: number, index: number): AchievementTierTuple {
+function streakTier(kind: StreakKind, goal: number, index: number): AchievementTierTuple {
   const { what, icons } = STREAKS[kind];
   const title = STREAK_TITLES[index];
   return [
