@@ -44,6 +44,18 @@
       <mat-icon>delete</mat-icon>
     </button>
   }
+  <mat-form-field subscriptSizing="dynamic" class="horizon-filter">
+    <mat-label>{{ 'tasks.todo.horizon' | transloco }}</mat-label>
+    <mat-select
+      [value]="f.horizon ?? null"
+      (selectionChange)="setFilter({ horizon: $event.value })"
+    >
+      <mat-option [value]="null">{{ 'tasks.todo.allHorizons' | transloco }}</mat-option>
+      @for (h of horizons; track h) {
+        <mat-option [value]="h">{{ 'tasks.horizon.' + h | transloco }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
   <mat-form-field subscriptSizing="dynamic" class="new-list">
     <mat-label>{{ 'tasks.todo.newList' | transloco }}</mat-label>
     <input matInput #listName maxlength="60" (keydown.enter)="addList(listName)" />
@@ -80,6 +92,14 @@
       <button type="button" class="body" (click)="open(task)">
         <span class="title">{{ task.title }}</span>
         <span class="meta">
+          @if (task.horizon !== 'normal') {
+            <span class="horizon" [class]="'horizon-' + task.horizon">
+              <mat-icon inline>{{
+                task.horizon === 'short' ? 'bolt' : 'hourglass_bottom'
+              }}</mat-icon>
+              {{ 'tasks.horizon.' + task.horizon | transloco }}
+            </span>
+          }
           @if (task.dueDate) {
             <span [class.overdue]="overdue(task)">
               <mat-icon inline>event</mat-icon> {{ task.dueDate | date: 'd MMM' }}

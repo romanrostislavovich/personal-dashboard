@@ -12,7 +12,9 @@ import {
   ChecklistItem,
   Repeat,
   Task,
+  TASK_HORIZONS,
   TASK_PRIORITIES,
+  TaskHorizon,
   TaskList,
   TaskPriority,
   TaskUpdate,
@@ -73,6 +75,14 @@ export interface TaskDialogData {
           <mat-select [(ngModel)]="priority">
             @for (p of priorities; track p) {
               <mat-option [value]="p">{{ 'tasks.priority.' + p | transloco }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ 'tasks.todo.horizon' | transloco }}</mat-label>
+          <mat-select [(ngModel)]="horizon">
+            @for (h of horizons; track h) {
+              <mat-option [value]="h">{{ 'tasks.horizon.' + h | transloco }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
@@ -188,6 +198,7 @@ export class TaskFormDialog {
     pickableProjects(this.projects.value(), this.task?.projectId),
   );
   protected readonly priorities = TASK_PRIORITIES;
+  protected readonly horizons = TASK_HORIZONS;
 
   private readonly task = this.data.task;
   protected readonly title = signal(this.task?.title ?? '');
@@ -195,6 +206,7 @@ export class TaskFormDialog {
   /** `''` — no due date (what an empty date input gives). */
   protected readonly dueDate = signal(this.task?.dueDate ?? this.data.defaults?.dueDate ?? '');
   protected readonly priority = signal<TaskPriority>(this.task?.priority ?? 0);
+  protected readonly horizon = signal<TaskHorizon>(this.task?.horizon ?? 'normal');
   protected readonly listId = signal(this.task?.listId ?? this.data.defaults?.listId ?? null);
   protected readonly projectId = signal(this.task?.projectId ?? null);
   /** Tags as the user types them: separated by spaces or commas. */
@@ -231,6 +243,7 @@ export class TaskFormDialog {
       notes: this.notes().trim(),
       dueDate: this.dueDate() || null,
       priority: this.priority(),
+      horizon: this.horizon(),
       listId: this.listId(),
       projectId: this.projectId(),
       tags: this.tags()

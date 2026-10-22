@@ -25,6 +25,13 @@ export interface TaskList {
 export const TASK_PRIORITIES = [0, 1, 2, 3] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
+/**
+ * How long a task takes to get done: `short` — a quick one, done the same day; `normal`; `long` —
+ * one that goes on for weeks. Every task is `normal` unless told otherwise.
+ */
+export const TASK_HORIZONS = ['short', 'normal', 'long'] as const;
+export type TaskHorizon = (typeof TASK_HORIZONS)[number];
+
 export const checklistItemSchema = z.object({
   text: z.string().trim().min(1).max(200),
   done: z.boolean().default(false),
@@ -49,6 +56,7 @@ const taskFields = {
     .min(0)
     .max(3)
     .transform((value) => value as TaskPriority),
+  horizon: z.enum(TASK_HORIZONS),
   listId: z.uuid().nullable(),
   projectId: z.uuid().nullable(),
   tags: z.array(tagSchema).max(20),
@@ -75,6 +83,7 @@ export interface Task {
   notes: string;
   dueDate: LocalDate | null;
   priority: TaskPriority;
+  horizon: TaskHorizon;
   listId: string | null;
   projectId: string | null;
   tags: string[];

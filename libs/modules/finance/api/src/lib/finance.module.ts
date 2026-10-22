@@ -29,7 +29,6 @@ import { TransactionsService } from './transactions/transactions.service';
 import { BudgetsService } from './budgets/budgets.service';
 import { ReceiptsService } from './receipts/receipts.service';
 import { SubscriptionsService } from './recurring/subscriptions.service';
-import { GoalsService } from './goals/goals.service';
 import { FinanceReportsService } from './reports/finance-reports.service';
 import { WishlistController } from './wishlist/wishlist.controller';
 import { WishlistJob } from './wishlist/wishlist.job';
@@ -39,7 +38,7 @@ import { CategoryModelService } from './categories/category-model.service';
 
 /**
  * Finance: personal and project income/expenses, recurring payments and subscriptions, budgets,
- * savings goals, a wishlist with price watch, the AI's monthly review, automatic cost import
+ * a wishlist with price watch, the AI's monthly review, automatic cost import
  * from services (Hetzner, DeepSeek) and the bank directly (open banking). API: `/api/finance/*`.
  */
 @Module({
@@ -62,7 +61,6 @@ import { CategoryModelService } from './categories/category-model.service';
     RecurringPaymentsService,
     RecurringPaymentsJob,
     SubscriptionsService,
-    GoalsService,
     WishlistService,
     WishlistJob,
     NetWorthService,

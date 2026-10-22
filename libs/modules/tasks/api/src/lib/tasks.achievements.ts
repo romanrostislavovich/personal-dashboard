@@ -3,7 +3,10 @@ import { AchievementsService, achievementTiers } from '@pd/api-core';
 import { RemindersService } from './reminders.service';
 import { TasksService } from './tasks.service';
 
-/** Achievements of the tasks section: tasks done (in total, in a day, in a row, on time) and reminders dealt with. */
+/**
+ * Achievements of the tasks section: tasks done (in total, in a day, in a row, on time, by their
+ * horizon) and reminders dealt with.
+ */
 @Injectable()
 export class TasksAchievements implements OnModuleInit {
   constructor(
@@ -47,6 +50,80 @@ export class TasksAchievements implements OnModuleInit {
           '🏆',
           { en: 'A thousand done', ru: 'Тысяча дел' },
           { en: '1,000 tasks done', ru: '1 000 выполненных задач' },
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'tasks.long-done',
+      module: 'tasks',
+      measure: async (userId) => (await this.tasks.horizonRecords(userId)).long,
+      tiers: achievementTiers(
+        [
+          1,
+          '⛰️',
+          { en: 'The long road', ru: 'Долгая дорога' },
+          { en: 'A long-running task done', ru: 'Закрыта долгоиграющая задача' },
+        ],
+        [
+          5,
+          '🧭',
+          { en: 'Seeing it through', ru: 'Довожу до конца' },
+          { en: '5 long-running tasks done', ru: '5 закрытых долгоиграющих задач' },
+        ],
+        [
+          20,
+          '🏔️',
+          { en: 'The marathoner', ru: 'Марафонец' },
+          { en: '20 long-running tasks done', ru: '20 закрытых долгоиграющих задач' },
+        ],
+        [
+          50,
+          '🗻',
+          { en: 'Big things', ru: 'Большие дела' },
+          { en: '50 long-running tasks done', ru: '50 закрытых долгоиграющих задач' },
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'tasks.short-same-day',
+      module: 'tasks',
+      measure: async (userId) => (await this.tasks.horizonRecords(userId)).shortSameDay,
+      tiers: achievementTiers(
+        [
+          1,
+          '⚡',
+          { en: 'Done at once', ru: 'Сразу сделано' },
+          {
+            en: 'A short task done on the day it was added',
+            ru: 'Короткая задача закрыта в день, когда её добавили',
+          },
+        ],
+        [
+          25,
+          '🏃',
+          { en: 'Quick hands', ru: 'Быстрые руки' },
+          {
+            en: '25 short tasks done on the day they were added',
+            ru: '25 коротких задач закрыто в день добавления',
+          },
+        ],
+        [
+          100,
+          '🚀',
+          { en: 'No backlog', ru: 'Без завалов' },
+          {
+            en: '100 short tasks done on the day they were added',
+            ru: '100 коротких задач закрыто в день добавления',
+          },
+        ],
+        [
+          500,
+          '🌪️',
+          { en: 'Whirlwind', ru: 'Вихрь' },
+          {
+            en: '500 short tasks done on the day they were added',
+            ru: '500 коротких задач закрыто в день добавления',
+          },
         ],
       ),
     });

@@ -91,7 +91,7 @@ const LINK_RULES = [
   'is used; activity_focus_music — what played during focus sessions; tasks_time — time per',
   'task; games_steam_days — play time per day; core_project_months — a project month by',
   'month; music_mood_artists — who plays on good and bad days; finance_wishlist — a wish',
-  'against its savings goal and the budget; birthdays_upcoming — gift ideas of the wishlist.',
+  'against the budget; birthdays_upcoming — gift ideas of the wishlist.',
 ];
 
 /** Where things are in the app, so an answer can lead to the page. */

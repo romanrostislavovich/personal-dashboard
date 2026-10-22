@@ -1,4 +1,4 @@
-import { LocalDate, Task } from '@pd/contracts';
+import { LocalDate, Task, TaskHorizon } from '@pd/contracts';
 
 /** What the task list shows. `today` includes everything overdue. */
 export const TASK_VIEWS = ['today', 'upcoming', 'all', 'done'] as const;
@@ -9,6 +9,8 @@ export interface TaskFilter {
   /** `null` — every list; `'inbox'` — tasks without one. */
   listId: string | 'inbox' | null;
   tag: string | null;
+  /** `null` — every horizon; otherwise only short, normal or long-running tasks. */
+  horizon?: TaskHorizon | null;
 }
 
 export function filterTasks(tasks: Task[], filter: TaskFilter, today: LocalDate): Task[] {
@@ -17,7 +19,8 @@ export function filterTasks(tasks: Task[], filter: TaskFilter, today: LocalDate)
       inView(task, filter.view, today) &&
       (filter.listId === null ||
         (filter.listId === 'inbox' ? task.listId === null : task.listId === filter.listId)) &&
-      (filter.tag === null || task.tags.includes(filter.tag)),
+      (filter.tag === null || task.tags.includes(filter.tag)) &&
+      (!filter.horizon || task.horizon === filter.horizon),
   );
 }
 

@@ -6,14 +6,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { MatSelectModule } from '@angular/material/select';
-import { SavingsGoal, Wish, WishInput } from '@pd/contracts';
+import { Wish, WishInput } from '@pd/contracts';
 
 export interface WishFormData {
   wish: Wish | null;
   /** The currency of a price typed in by hand. */
   currency: string;
-  /** The savings goals a wish can be saved for. */
-  goals: SavingsGoal[];
 }
 
 /** A new wish or changes to one. Only the link is needed: the rest comes from the page. */
@@ -58,19 +56,6 @@ export interface WishFormData {
           </mat-form-field>
         </div>
         <p class="hint">{{ 'finance.wishlist.priceHint' | transloco }}</p>
-
-        @if (data.goals.length) {
-          <mat-form-field>
-            <mat-label>{{ 'finance.wishlist.goal' | transloco }}</mat-label>
-            <mat-select formControlName="goalId">
-              <mat-option [value]="null">{{ 'finance.wishlist.noGoal' | transloco }}</mat-option>
-              @for (goal of data.goals; track goal.id) {
-                <mat-option [value]="goal.id">{{ goal.name }}</mat-option>
-              }
-            </mat-select>
-            <mat-hint>{{ 'finance.wishlist.goalHint' | transloco }}</mat-hint>
-          </mat-form-field>
-        }
 
         <mat-form-field>
           <mat-label>{{ 'finance.wishlist.recipient' | transloco }}</mat-label>
@@ -127,7 +112,6 @@ export class WishFormDialog {
       [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)],
     ],
     note: [this.wish?.note ?? ''],
-    goalId: [this.wish?.goalId ?? (null as string | null)],
     recipient: [this.wish?.recipient ?? ''],
   });
 
@@ -141,7 +125,6 @@ export class WishFormDialog {
       note: value.note || null,
       price,
       currency: price === null ? null : value.currency.toUpperCase(),
-      goalId: value.goalId,
       recipient: value.recipient.trim() || null,
     });
   }

@@ -106,24 +106,6 @@ import { priceTrend, shopName } from './wish-view';
                 }
               </p>
             }
-            @if (wish.goal; as goal) {
-              <p class="money" [class.down]="goal.missing === 0">
-                <mat-icon inline>savings</mat-icon>
-                @if (goal.missing === 0) {
-                  {{ 'finance.wishlist.goalEnough' | transloco: { goal: goal.name } }}
-                } @else {
-                  {{
-                    'finance.wishlist.goalMissing'
-                      | transloco
-                        : {
-                            goal: goal.name,
-                            saved: (goal.saved | currency: goal.currency),
-                            missing: (goal.missing | currency: goal.currency),
-                          }
-                  }}
-                }
-              </p>
-            }
             @if (wish.budget; as budget) {
               <p class="money" [class.warning]="budget.afterBuying < 0">
                 <mat-icon inline>account_balance_wallet</mat-icon>
@@ -318,7 +300,6 @@ export class WishlistTabComponent {
 
   protected readonly wishes = this.api.wishlist();
   /** For the form: a wish can be saved for one of them. */
-  private readonly goals = this.api.goals();
   protected readonly abs = Math.abs;
   /** The wish whose price history is shown. */
   protected readonly open = signal<string | null>(null);
@@ -342,7 +323,7 @@ export class WishlistTabComponent {
     const input = await firstValueFrom(
       this.dialog
         .open<WishFormDialog, WishFormData, WishInput>(WishFormDialog, {
-          data: { wish: wish ?? null, currency: this.currency(), goals: this.goals.value() },
+          data: { wish: wish ?? null, currency: this.currency() },
         })
         .afterClosed(),
     );

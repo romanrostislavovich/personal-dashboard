@@ -16,11 +16,8 @@ import {
   FinanceReport,
   FinanceSettings,
   FinanceSettingsInput,
-  GoalContribution,
   KeyDate,
   NetWorth,
-  SavingsGoal,
-  SavingsGoalInput,
   Subscriptions,
   FinanceSummary,
   MainCashFlow,
@@ -66,8 +63,6 @@ export const FINANCE_READS = {
   budgets: (month: string) => apiRequest(`${BASE}/budgets`, { month }),
   /** What the subscriptions cost together, and charges that look like ones. */
   subscriptions: () => apiRequest(`${BASE}/subscriptions`),
-  goals: () => apiRequest(`${BASE}/goals`),
-  goalContributions: (id: string) => apiRequest(`${BASE}/goals/${id}/contributions`),
   wishlist: () => apiRequest(`${BASE}/wishlist`),
   /** The price of a wish day by day. */
   wishPrices: (id: string) => apiRequest(`${BASE}/wishlist/${id}/prices`),
@@ -151,16 +146,6 @@ export function financeApi(api: ApiClient) {
     saveAsset: (input: AssetInput, id?: string) =>
       id ? api.put<Asset>(`${BASE}/assets/${id}`, input) : api.post<Asset>(`${BASE}/assets`, input),
     removeAsset: (id: string) => api.delete(`${BASE}/assets/${id}`),
-    saveGoal: (input: SavingsGoalInput, id?: string) =>
-      id
-        ? api.put<SavingsGoal>(`${BASE}/goals/${id}`, input)
-        : api.post<SavingsGoal>(`${BASE}/goals`, input),
-    removeGoal: (id: string) => api.delete(`${BASE}/goals/${id}`),
-    /** Money added to a goal by hand (negative — taken out). */
-    contribute: (id: string, input: GoalContribution) =>
-      api.post<SavingsGoal>(`${BASE}/goals/${id}/contributions`, input),
-    removeContribution: (goalId: string, id: string) =>
-      api.delete(`${BASE}/goals/${goalId}/contributions/${id}`),
     /** A new wish reads its page in the shop: the name, the picture and the first price. */
     saveWish: (input: WishInput, id?: string) =>
       id

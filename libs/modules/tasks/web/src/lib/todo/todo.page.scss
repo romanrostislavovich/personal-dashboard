@@ -24,6 +24,10 @@
   width: 240px;
 }
 
+.horizon-filter {
+  width: 180px;
+}
+
 .quick {
   width: 100%;
 }
@@ -103,6 +107,14 @@ li {
 
 .overdue {
   color: var(--mat-sys-error);
+}
+
+.horizon-short {
+  color: var(--mat-sys-tertiary);
+}
+
+.horizon-long {
+  color: var(--mat-sys-secondary);
 }
 
 .tag {

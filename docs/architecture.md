@@ -247,9 +247,8 @@ To add a service (e.g. DigitalOcean):
   (function-calling loop in `tool-loop.ts`), `complete()` is a single request without tools.
 - **Life:** `LifeService` — modules register what they can tell (`*.life.ts`): the events of a
   day, the numbers (cards) of a period and a line of their own for the message of a month
-  (`monthNote`, e.g. the finance review). The goals of a year are counted from the same cards
-  (`LifeGoalsService`), the AI's stories of a month or a year are kept (`LifeStoriesService`),
-  and `LifeMonthJob` sends the summaries on the 1st.
+  (`monthNote`, e.g. the finance review). The AI's stories of a month or a year are kept
+  (`LifeStoriesService`), and `LifeMonthJob` sends the summaries on the 1st.
 - **Automations:** `AutomationsService` — modules register triggers (an event they `emit`, or a
   `check` of time asked every 5 minutes with the user's clock) and actions (`*.automations.ts`);
   the user joins them into rules in Settings → Automations, by hand or from a sentence the AI

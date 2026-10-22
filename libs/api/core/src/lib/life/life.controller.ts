@@ -21,11 +21,6 @@ import {
   LifeDay,
   LifeDayQuery,
   lifeDayQuerySchema,
-  lifeGoalInputSchema,
-  LifeGoalProgress,
-  lifeGoalProgressSchema,
-  LifeGoalsQuery,
-  lifeGoalsQuerySchema,
   LifeStoryQuery,
   lifeStoryQuerySchema,
   LifeSummary,
@@ -41,18 +36,14 @@ import { AiService } from '../ai/ai.service';
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
 import { ProjectOverviewService } from '../links/project-overview.service';
 import { ZodValidationPipe } from '../validation/zod-validation.pipe';
-import { LifeGoalsService } from './life-goals.service';
 import { LifeStoriesService } from './life-stories.service';
 import { LifeService } from './life.service';
 
-type ValidGoalInput = z.output<typeof lifeGoalInputSchema>;
-
-/** The life timeline, the summaries, the goals of a year and the AI's stories. */
+/** The life timeline, the summaries and the AI's stories. */
 @Controller('life')
 export class LifeController {
   constructor(
     private readonly life: LifeService,
-    private readonly goals: LifeGoalsService,
     private readonly stories: LifeStoriesService,
     private readonly ai: AiService,
     private readonly overviews: ProjectOverviewService,
@@ -105,55 +96,6 @@ export class LifeController {
     @Query(new ZodValidationPipe(lifeSummaryQuerySchema)) query: LifeSummaryQuery,
   ): Promise<LifeSummary> {
     return { ...query, cards: await this.life.period(user.id, query) };
-  }
-
-  // --- Goals of a year ---
-
-  @Get('goals')
-  listGoals(
-    @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(lifeGoalsQuerySchema)) query: LifeGoalsQuery,
-  ) {
-    return this.goals.list(user.id, query.year);
-  }
-
-  /** What a goal can be counted from. */
-  @Get('metrics')
-  metrics(@CurrentUser() user: AuthUser) {
-    return this.goals.metrics(user.id);
-  }
-
-  @Post('goals')
-  createGoal(
-    @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(lifeGoalInputSchema)) input: ValidGoalInput,
-  ) {
-    return this.goals.create(user.id, input);
-  }
-
-  @Put('goals/:id')
-  updateGoal(
-    @CurrentUser() user: AuthUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(lifeGoalInputSchema)) input: ValidGoalInput,
-  ) {
-    return this.goals.update(user.id, id, input);
-  }
-
-  /** The progress of a goal counted by hand. */
-  @Put('goals/:id/progress')
-  setProgress(
-    @CurrentUser() user: AuthUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(lifeGoalProgressSchema)) body: LifeGoalProgress,
-  ) {
-    return this.goals.setProgress(user.id, id, body.value);
-  }
-
-  @Delete('goals/:id')
-  @HttpCode(204)
-  removeGoal(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.goals.remove(user.id, id);
   }
 
   // --- The AI's story of a month or a year ---

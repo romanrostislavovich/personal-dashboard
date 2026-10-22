@@ -24,10 +24,9 @@ import { ExchangeRatesService } from '../currency/exchange-rates.service';
 import { FinanceSettingsService } from '../currency/finance-settings.service';
 import { financeMessages } from '../finance.messages';
 import { WishRow, wishes, wishPrices } from '../finance.schema';
-import { GoalsService } from '../goals/goals.service';
 import { RecurringPaymentsService } from '../recurring/recurring-payments.service';
 import { TransactionsService } from '../transactions/transactions.service';
-import { againstBudget, againstGoal } from './affordable';
+import { againstBudget } from './affordable';
 import { fetchPage } from './fetch-page';
 
 type ValidWishInput = z.output<typeof wishInputSchema>;
@@ -70,7 +69,6 @@ export class WishlistService {
     private readonly automations: AutomationsService,
     private readonly users: UsersService,
     private readonly ai: AiService,
-    private readonly goals: GoalsService,
     private readonly budgets: BudgetsService,
     private readonly rates: ExchangeRatesService,
     private readonly transactions: TransactionsService,
@@ -104,19 +102,18 @@ export class WishlistService {
   }
 
   /**
-   * The wishes against the money: the goal each is saved for, and this month's budget of all
-   * expenses. A price in another currency is converted at today's rate.
+   * The wishes against the money: this month's budget of all expenses. A price in another
+   * currency is converted at today's rate.
    */
   private async money(
     userId: string,
     rows: WishRow[],
-  ): Promise<(row: WishRow) => Pick<Wish, 'goal' | 'budget'>> {
+  ): Promise<(row: WishRow) => Pick<Wish, 'budget'>> {
     const wanted = rows.filter((row) => !row.boughtAt && row.price !== null && row.currency);
     if (!wanted.length) {
-      return () => ({ goal: null, budget: null });
+      return () => ({ budget: null });
     }
     const today = toLocalDate(this.recurring.today());
-    const goals = wanted.some((row) => row.goalId) ? await this.goals.list(userId) : [];
     const [total] = (await this.budgets.list(userId, today.slice(0, 7))).filter(
       (budget) => budget.category === BUDGET_TOTAL,
     );
@@ -130,15 +127,13 @@ export class WishlistService {
             )
           ).values[0] ?? null);
 
-    const found = new Map<string, Pick<Wish, 'goal' | 'budget'>>();
+    const found = new Map<string, Pick<Wish, 'budget'>>();
     for (const row of wanted) {
-      const goal = goals.find((item) => item.id === row.goalId);
       found.set(row.id, {
-        goal: goal ? againstGoal(await priceIn(row, goal.currency), goal) : null,
         budget: total ? againstBudget(await priceIn(row, total.currency), total) : null,
       });
     }
-    return (row) => found.get(row.id) ?? { goal: null, budget: null };
+    return (row) => found.get(row.id) ?? { budget: null };
   }
 
   /** The price day by day, in the currency the wish has now. */
@@ -163,7 +158,6 @@ export class WishlistService {
         url: input.url,
         name: input.name || reading.name || new URL(input.url).hostname,
         note: input.note || null,
-        goalId: await this.ownGoal(userId, input.goalId),
         recipient: input.recipient || null,
         imageUrl: reading.image ?? input.imageUrl ?? null,
         checkedAt: new Date(),
@@ -187,7 +181,6 @@ export class WishlistService {
         name: input.name || row.name,
         // Left out — as it was (the extension sends only a price seen); `null` — cleared.
         note: input.note === undefined ? row.note : input.note || null,
-        goalId: input.goalId === undefined ? row.goalId : await this.ownGoal(userId, input.goalId),
         recipient: input.recipient === undefined ? row.recipient : input.recipient || null,
       })
       .where(and(eq(wishes.id, id), eq(wishes.userId, userId)));
@@ -238,14 +231,6 @@ export class WishlistService {
       }
     }
     return ideas;
-  }
-
-  /** A goal of somebody else is not linked. */
-  private async ownGoal(userId: string, goalId: string | null | undefined): Promise<string | null> {
-    if (!goalId) {
-      return null;
-    }
-    return (await this.goals.list(userId)).some((goal) => goal.id === goalId) ? goalId : null;
   }
 
   /** Reads the page of a wish again and tells about a changed price. */
@@ -417,9 +402,7 @@ function toWish(row: WishRow, range?: { lowest: number; highest: number }): Wish
     checkError: row.checkError,
     boughtAt: row.boughtAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
-    goalId: row.goalId,
     recipient: row.recipient,
-    goal: null,
     budget: null,
   };
 }

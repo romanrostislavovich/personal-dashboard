@@ -9,7 +9,6 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { SchedulerService } from '../scheduler/scheduler.service';
 import { users } from '../users/users.schema';
 import { UsersService } from '../users/users.service';
-import { LifeGoalsService } from './life-goals.service';
 import { LifeStoriesService, periodRange } from './life-stories.service';
 import { lifeMonths } from './life.schema';
 import { LifeService } from './life.service';
@@ -18,7 +17,7 @@ import { LifeService } from './life.service';
 const SEND_FROM = '10:00';
 
 /**
- * Every hour: the goals of the year just reached; on the 1st of a month the summary of the past
+ * Every hour it looks whether a summary is due: on the 1st of a month the summary of the past
  * one (the AI's story, the modules' own lines like the finance review, a link to every number);
  * on the 1st of January the same for the past year. Without the AI a summary only invites to
  * the page.
@@ -34,7 +33,6 @@ export class LifeMonthJob implements OnModuleInit {
     private readonly scheduler: SchedulerService,
     private readonly life: LifeService,
     private readonly stories: LifeStoriesService,
-    private readonly goals: LifeGoalsService,
     private readonly notifications: NotificationsService,
     private readonly usersService: UsersService,
   ) {
@@ -60,14 +58,6 @@ export class LifeMonthJob implements OnModuleInit {
   private async run(userId: string): Promise<void> {
     const user = await this.usersService.findById(userId);
     const text = coreMessages(user?.locale);
-    for (const goal of await this.goals.newlyDone(userId)) {
-      await this.notifications.send(userId, {
-        title: text.lifeGoalDoneTitle(goal.title),
-        body: `${text.lifeGoalDoneBody} ${this.publicUrl}/life/goals`,
-        source: 'life',
-      });
-    }
-
     const now = zonedDateTime(new Date(), this.usersService.timeZoneOf(user));
     if (!now.date.endsWith('-01') || now.time < SEND_FROM) {
       return;

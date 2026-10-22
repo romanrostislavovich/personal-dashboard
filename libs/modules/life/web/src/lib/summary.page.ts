@@ -8,8 +8,6 @@ import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CORE_READS } from '@pd/client-core';
 import { LifeSummary } from '@pd/contracts';
-import { RouterLink } from '@angular/router';
-import { LifeApi } from './life.api';
 import { LifelogJournalComponent } from './lifelog-journal.component';
 import { lifelogMonthRange } from './lifelog-dates';
 import { MoodInsightsComponent } from './mood-insights.component';
@@ -30,7 +28,6 @@ import { StoryCardComponent } from './story-card.component';
     MatIconModule,
     MoodForecastComponent,
     MoodInsightsComponent,
-    RouterLink,
     StoryCardComponent,
     TranslocoPipe,
   ],
@@ -65,13 +62,6 @@ import { StoryCardComponent } from './story-card.component';
         />
       }
     </header>
-
-    @if (kind() === 'year' && goals.value().length) {
-      <a class="goals-link" routerLink="/life/goals" [queryParams]="{ year: year() }">
-        <mat-icon>flag</mat-icon>
-        {{ 'life.goals.ofYear' | transloco: { done: goalsDone(), total: goals.value().length } }}
-      </a>
-    }
 
     <pd-story-card [period]="storyPeriod()" />
 
@@ -162,14 +152,6 @@ import { StoryCardComponent } from './story-card.component';
     .value {
       font: var(--mat-sys-headline-medium);
     }
-    .goals-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--mat-sys-primary);
-      text-decoration: none;
-      font: var(--mat-sys-label-large);
-    }
     .detail,
     .hint {
       font: var(--mat-sys-body-small);
@@ -193,10 +175,6 @@ export class SummaryPage {
   protected readonly year = signal(Number(this.query.get('year')) || this.thisYear);
   protected readonly storyPeriod = computed(() =>
     this.kind() === 'year' ? String(this.year()) : this.month(),
-  );
-  protected readonly goals = inject(LifeApi).goals(this.year);
-  protected readonly goalsDone = computed(
-    () => this.goals.value().filter((goal) => goal.status === 'done').length,
   );
 
   private readonly period = computed(() => {
