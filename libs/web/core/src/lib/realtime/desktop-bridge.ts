@@ -1,5 +1,12 @@
 import { ScreenshotFolder } from '@pd/client-core';
-import { DiskAdvice, DiskFix, DiskReport, WritingIssue, WorkstateRestorePlan } from '@pd/contracts';
+import {
+  DesktopTelemetryDiagnostics,
+  DiskAdvice,
+  DiskFix,
+  DiskReport,
+  WritingIssue,
+  WorkstateRestorePlan,
+} from '@pd/contracts';
 /**
  * What the desktop app (Electron preload) adds to the page as `window.desktop`.
  * In a regular browser it is absent.
@@ -41,6 +48,8 @@ export interface DesktopBridge {
   telemetry?: {
     status(): Promise<{ enabled: boolean; available: boolean }>;
     setConsent(enabled: boolean): Promise<boolean>;
+    /** Local session diagnostics; absent in older desktop bundles. Never includes credentials. */
+    diagnostics?(): Promise<DesktopTelemetryDiagnostics | null>;
   };
   smartBreak?: {
     status(): Promise<{ enabled: boolean; available: boolean }>;

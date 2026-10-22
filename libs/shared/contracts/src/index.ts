@@ -11,6 +11,7 @@ export * from './lib/activity-wellbeing';
 export * from './lib/activity-disk';
 export * from './lib/activity-sites';
 export * from './lib/telemetry';
+export * from './lib/telemetry-diagnostics';
 export * from './lib/workstates';
 export * from './lib/life';
 export * from './lib/lifelog';

@@ -24,6 +24,7 @@ vi.mock('./telemetry-sources', () => ({
     }
     update = env.sourceUpdate;
     stop = env.sourceStop;
+    status = () => 'running';
   },
 }));
 
@@ -132,6 +133,41 @@ describe('ActivityTracker telemetry integration', () => {
     expect(telemetryCalls()).toHaveLength(0);
     expect(tracker.observeInput('input', 'public-editable')).toBe(false);
     expect(env.sourceUpdate.mock.calls.every(([gate]) => gate === null)).toBe(true);
+  });
+
+  it('tells why the telemetry is off, without secrets', async () => {
+    let consent = false;
+    const tracker = new ActivityTracker(
+      () => 'https://dashboard.example.com',
+      vi.fn(),
+      vi.fn(),
+      () => consent,
+    );
+    tracker.start();
+    await watch(windowSample(), 10_000);
+    expect(tracker.telemetryDiagnostics('1.2.3')).toMatchObject({
+      collection: 'consent-required',
+      registered: true,
+      version: '1.2.3',
+      delivery: 'never',
+    });
+
+    consent = true;
+    await watch(windowSample());
+    const collecting = tracker.telemetryDiagnostics(null);
+    expect(collecting).toMatchObject({
+      collection: 'collecting',
+      delivery: 'accepted',
+      lastHttpStatus: 200,
+    });
+    expect(JSON.stringify(collecting)).not.toMatch(/device-token|Document|editor/);
+
+    await watch(windowSample('browser', 'confidential plan'), 10_000);
+    expect(tracker.telemetryDiagnostics(null).collection).toBe('private-window');
+    await watch(windowSample('excluded'), 10_000);
+    expect(tracker.telemetryDiagnostics(null).collection).toBe('excluded-app');
+    env.idle = 600;
+    expect(tracker.telemetryDiagnostics(null).collection).toBe('idle');
   });
 
   it('uses real tracker samples, the shared endpoint and Device authentication', async () => {

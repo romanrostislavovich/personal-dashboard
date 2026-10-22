@@ -1,5 +1,5 @@
 import { sanitizeTelemetryText, telemetryBucketSchema } from '@pd/contracts';
-import type { TelemetryBucket } from '@pd/contracts';
+import type { DesktopTelemetryDiagnostics, TelemetryBucket } from '@pd/contracts';
 import { randomUUID } from 'node:crypto';
 import { ContextSwitches, MAX_SAMPLE_GAP_MS } from './context-switch';
 import {
@@ -32,6 +32,10 @@ export class DesktopTelemetry {
   private terminal = new TerminalFriction();
   private pending: TelemetryBucket[] = [];
   private request: AbortController | null = null;
+  private lastAttemptAt: string | null = null;
+  private lastSuccessAt: string | null = null;
+  private lastHttpStatus: number | null = null;
+  private delivery: DesktopTelemetryDiagnostics['delivery'] = 'never';
 
   constructor(
     private readonly gate: () => TelemetryGate,
@@ -90,15 +94,24 @@ export class DesktopTelemetry {
     const request = new AbortController();
     this.request = request;
     const batch = this.pending.slice();
+    this.lastAttemptAt = new Date(now).toISOString();
+    this.lastHttpStatus = null;
+    this.delivery = 'sending';
     try {
-      if (await this.send(batch, this.identity, request.signal)) {
-        if (this.request === request) {
+      const accepted = await this.send(batch, this.identity, request.signal);
+      this.check(Date.now());
+      if (this.request === request) {
+        this.delivery = accepted ? 'accepted' : 'failed';
+        if (accepted) {
+          this.lastSuccessAt = new Date().toISOString();
           const ids = new Set(batch.map((bucket) => bucket.id));
           this.pending = this.pending.filter((bucket) => !ids.has(bucket.id));
         }
       }
     } catch {
       // No disk outbox: at most the latest five minutes survive a failed upload, in memory.
+      this.check(Date.now());
+      if (this.request === request) this.delivery = 'failed';
     } finally {
       if (this.request === request) this.request = null;
     }
@@ -107,12 +120,50 @@ export class DesktopTelemetry {
   clear(): void {
     this.request?.abort();
     this.request = null;
+    if (this.delivery === 'sending') this.delivery = 'failed';
+    const gate = this.gate();
+    if (gate.identity !== this.identity || !gate.identity || gate.consent !== true)
+      this.clearHistory();
     this.pending = [];
     this.startedAt = null;
     this.allowedSince = null;
     this.lastSample = null;
     this.nextUpload = 0;
     this.resetCollectors();
+  }
+
+  /** Account/consent/disable resets erase evidence. Ordinary idle clears buckets, not history. */
+  resetDiagnostics(): void {
+    this.clear();
+    this.clearHistory();
+  }
+
+  recordHttpStatus(signal: AbortSignal, status: number): void {
+    this.check(Date.now());
+    if (this.request?.signal === signal && !signal.aborted)
+      this.lastHttpStatus =
+        Number.isInteger(status) && status >= 100 && status <= 599 ? status : null;
+  }
+
+  diagnostics(): Pick<
+    DesktopTelemetryDiagnostics,
+    'pendingBuckets' | 'lastAttemptAt' | 'lastSuccessAt' | 'lastHttpStatus' | 'delivery'
+  > {
+    this.fresh(Date.now());
+    return {
+      pendingBuckets: this.pending.length,
+      lastAttemptAt: this.lastAttemptAt,
+      lastSuccessAt: this.lastSuccessAt,
+      lastHttpStatus: this.lastHttpStatus,
+      delivery: this.delivery,
+    };
+  }
+
+  private clearHistory(): void {
+    this.lastAttemptAt = null;
+    this.lastSuccessAt = null;
+    this.lastHttpStatus = null;
+    this.delivery = 'never';
   }
 
   private check(now: number): boolean {

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { telemetryBucketSchema } from '@pd/contracts';
 import { DesktopTelemetry, TelemetryGate } from './telemetry';
 
@@ -145,5 +145,48 @@ describe('desktop telemetry batching and privacy', () => {
     state.allowed = true;
     samples(70_000, 70_000);
     expect(telemetry.reportTerminal(report, 70_001)).toBe(false);
+  });
+});
+
+describe('desktop telemetry diagnostics', () => {
+  // The diagnostics read the real clock: stale minutes are dropped, as everywhere else.
+  beforeEach(() => vi.useFakeTimers({ now: 300_000, toFake: ['Date'] }));
+  afterEach(() => vi.useRealTimers());
+
+  it('tells an accepted upload, and keeps no account or app names in it', async () => {
+    const { telemetry, samples } = fixture();
+    expect(telemetry.diagnostics()).toMatchObject({ delivery: 'never', lastAttemptAt: null });
+    samples(0, 300_000);
+    await telemetry.tick(300_000);
+    const diagnostics = telemetry.diagnostics();
+    expect(diagnostics).toMatchObject({ delivery: 'accepted', pendingBuckets: 0 });
+    expect(diagnostics.lastSuccessAt).not.toBeNull();
+    expect(JSON.stringify(diagnostics)).not.toMatch(/account-one|editor/);
+  });
+
+  it('tells a failed upload and keeps the minutes for the next one', async () => {
+    const { telemetry, send, samples } = fixture();
+    send.mockResolvedValueOnce(false);
+    samples(0, 300_000);
+    await telemetry.tick(300_000);
+    expect(telemetry.diagnostics()).toMatchObject({
+      delivery: 'failed',
+      lastSuccessAt: null,
+      pendingBuckets: 5,
+    });
+  });
+
+  it('forgets what it saw when the account changes', async () => {
+    const { state, telemetry, samples } = fixture();
+    samples(0, 300_000);
+    await telemetry.tick(300_000);
+    state.identity = 'account-two';
+    telemetry.clear();
+    expect(telemetry.diagnostics()).toMatchObject({
+      delivery: 'never',
+      lastAttemptAt: null,
+      lastSuccessAt: null,
+      pendingBuckets: 0,
+    });
   });
 });

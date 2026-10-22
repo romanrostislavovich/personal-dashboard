@@ -118,8 +118,7 @@ follows the code and its limits: a file that exists is not yet a feature that wo
   minute, pauses, backspace bursts) **only in Visual Studio's editor fields**, nothing in other
   editors, terminals or browsers; app switches and focus entropy per minute; build and test
   times only through the `Invoke-PdCommand` wrapper; break suggestions after a passed test or a
-  commit. The page that tells why a switch is off (`telemetry-diagnostics`) is in progress —
-  see [Desktop](#desktop)
+  commit. The card under the switches tells why each is on or off — see [Desktop](#desktop)
 - **Browser Companion:** Chrome extension with password vault filling and generator, site time
   tracking, writing checks, distraction blocker, wishlist 1-click price capture, a work-context
   snapshot of the active tab from the side panel with a preview, and 🟡 optional page engagement
@@ -524,14 +523,14 @@ assistant as a tutor that knows the materials of the courses.
 
 #### Desktop
 
-- 🟡 **Telemetry diagnostics: finish and check** — `/activity/workstates` tells why a switch of
-  the digital telemetry is off and what to do: the device is not registered, the app is old, the
-  tracker is paused, the window is private, the upload failed. Started, not merged yet: the
-  contract (`telemetry-diagnostics.ts`), the tracker's state, the IPC and the bridge, the card.
-  Left: one run of the whole chain on a real computer; the reasons match the tray; an old bridge without
-  the method does not break the page; an error never leaves a switch stuck. Nothing secret goes
-  to the page (no tokens, window titles, commands or paths), "accepted" means the server took
-  the request, not that a row was written; a new device or account starts a clean state
+- 🟡 **Telemetry diagnostics: check on a real computer** — the switches of the digital
+  telemetry on `/activity/workstates` tell why they are on or off and what to do: the device is
+  not registered, there is no server, the tracker is paused, the window is private, the program
+  is excluded, the upload failed; with the details of the session (the helper, the last upload,
+  the server's answer) and what is measured where. Built and tested; left: one run of the whole
+  chain on a real Windows computer. Nothing secret goes to the page (no tokens, window titles,
+  commands or paths); "accepted" means the server took the request, not that a row was written;
+  a new device or account starts a clean state
 - **Writing: Ctrl+Alt+G where there are no marks** — in a program that gives no positions of
   its words through UI Automation: the selected text is checked and rewritten in a small window,
   and put back in its place (Telegram Desktop does give them: its field is found from the focused

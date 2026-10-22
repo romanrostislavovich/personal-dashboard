@@ -438,5 +438,62 @@
     "limits": "Daily limits of sites",
     "limitsHint": "Every browser with the extension together; once the time is spent, the site is closed until tomorrow.",
     "addLimit": "Add a limit"
+  },
+  "diagnostics": {
+    "title": "Why it is on or off",
+    "collection": {
+      "unsupported": "This computer cannot collect digital telemetry: it works on Windows only.",
+      "unregistered": "This computer is not tracked yet. Turn on tracking of this computer in Setup.",
+      "no-server": "The desktop app has no server address. Choose the server in the app's tray menu.",
+      "consent-required": "Telemetry is off. Turn on \"Allow digital telemetry\" above if you want it.",
+      "stopped": "The tracker of this computer is stopped. Turn tracking on in Setup or in the tray.",
+      "paused": "Tracking is paused. Resume it from the tray when you want.",
+      "locked": "The computer is locked: nothing is collected until it is unlocked.",
+      "suspended": "The computer was asleep: collection starts again by itself.",
+      "idle": "You are away from the computer: nothing is collected until you are back.",
+      "private-window": "A private window is in front: it is never collected.",
+      "excluded-app": "The program in front is in the list of programs never recorded.",
+      "waiting-window": "Waiting for the next look at the window in front — a few seconds.",
+      "collecting": "Collecting: the numbers go to the server once a minute."
+    },
+    "breaksNeedTelemetry": "Break suggestions need the digital telemetry turned on.",
+    "details": "Details",
+    "device": "Device",
+    "notRegistered": "not registered",
+    "version": "App version",
+    "sourceBuild": "a development build",
+    "registration": "Registered",
+    "server": "Server set",
+    "yes": "yes",
+    "no": "no",
+    "nativeSources": "Input and terminal helper",
+    "sources": {
+      "stopped": "stopped",
+      "starting": "starting",
+      "running": "running",
+      "error": "failed — retried in 30 seconds"
+    },
+    "deliveryTitle": "Last upload",
+    "delivery": {
+      "never": "none yet in this session",
+      "sending": "sending",
+      "accepted": "accepted by the server",
+      "failed": "failed — the next minute tries again"
+    },
+    "pending": "Minutes waiting to be sent",
+    "lastAttempt": "Last attempt",
+    "lastSuccess": "Last accepted",
+    "notObserved": "not in this session",
+    "httpStatus": "Server answer",
+    "noResponse": "no answer",
+    "sessionOnly": "This is what the app saw since it started; nothing of it is kept. \"Accepted\" means the server took the request.",
+    "capabilities": "What is measured, and where",
+    "windows": "App switches and focus: any program, once a minute, without names or titles.",
+    "input": "Typing rhythm: only in the editor of Visual Studio (devenv). Not in VS Code, Rider, terminals or browsers.",
+    "terminal": "Build and test times: only for commands run through Invoke-PdCommand.",
+    "browser": "The browser extension does not send this telemetry; its own settings are in the extension.",
+    "browserOnly": "Open this page in the desktop app to see why the telemetry is on or off.",
+    "oldDesktop": "The desktop app is older than this page: restart it to get the update and see the reasons.",
+    "error": "Could not read the state of the desktop app. Refresh to try again."
   }
 }
