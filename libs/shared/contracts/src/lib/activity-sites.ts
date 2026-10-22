@@ -49,12 +49,26 @@ export const DEFAULT_DISTRACTING_SITES = [
 
 const moment = z.iso.datetime({ offset: true });
 
+/**
+ * The site of a visit as the extension takes it (see siteOf): a domain, but also a local
+ * address — `localhost`, `127.0.0.1`, `[::1]`, a name of an office network. Stricter, it would
+ * turn the whole batch away: the extension sends the same batch again and again, so not one
+ * visit after it would reach the server.
+ */
+const visitedSiteSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(1)
+  .max(253)
+  .regex(/^[a-z0-9.:[\]-]+$/, 'Expected a host name');
+
 /** A stretch of time one site was in front, the browser focused and the user there. */
 export const activitySiteVisitSchema = z
   .object({
     /** Made by the extension: a batch sent twice does not double the time. */
     id: z.uuid(),
-    site: siteDomainSchema,
+    site: visitedSiteSchema,
     startedAt: moment,
     endedAt: moment,
   })
