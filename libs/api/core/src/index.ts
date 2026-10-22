@@ -66,6 +66,8 @@ export { MOOD_METRIC } from './lib/links/mood-insights';
 export type {
   OtherComputerDay,
   OtherComputerSource,
+  OtherComputerSpan,
+  ProjectSpan,
 } from './lib/computer-time/other-computers.service';
 export { withoutTrash } from './lib/trash/trash-triggers';
 export { RateLimit } from './lib/system/rate-limit';
