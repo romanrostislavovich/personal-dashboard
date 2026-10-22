@@ -1,5 +1,9 @@
 # Roadmap
 
+**Statuses:** ✅ done — works and is used; 🟡 partial — built, with limits written next to it, or
+not checked end to end; no mark — planned; 🔬 research — the method is not clear yet. A status
+follows the code and its limits: a file that exists is not yet a feature that works.
+
 ## ✅ Foundation
 
 - Nx monorepo: Angular + NestJS + Electron, zod contracts, module boundaries enforced by ESLint
@@ -106,20 +110,26 @@
   processes; disk cleanup advice from the AI, the picked items moved to the Recycle Bin; a
   computer the app cannot be installed on (a work laptop) is counted from WakaTime — its time
   in an IDE is added to the time at the computer, a computer with the tracker is not counted
-  twice; **Workstate Recall timeline** (`/activity/workstates`) with context search and 1-click
-  workspace restoration plans; **Desktop Telemetry Dynamics** (keystroke dynamics: typing speed,
-  pause cadence, backspace bursts; context switch velocity & window focus entropy; terminal
-  friction: command exit status & build wait time); **Smart Breaks** suggested at natural
-  workflow transitions (successful commits / passed tests)
+  twice; **work contexts** (`/activity/workstates`): snapshots of what was open, searched and
+  resumed with a preview — "resume" reopens the saved links and the project, it does not bring
+  back the cursor, the terminals or the Git branch; the browser captures only the active tab
+- 🟡 **Activity: digital telemetry** (a separate opt-in, off by default, Windows only — see
+  [apps/desktop/TELEMETRY.md](../apps/desktop/TELEMETRY.md)): typing dynamics (key presses a
+  minute, pauses, backspace bursts) **only in Visual Studio's editor fields**, nothing in other
+  editors, terminals or browsers; app switches and focus entropy per minute; build and test
+  times only through the `Invoke-PdCommand` wrapper; break suggestions after a passed test or a
+  commit. The page that tells why a switch is off (`telemetry-diagnostics`) is in progress —
+  see [Desktop](#desktop)
 - **Browser Companion:** Chrome extension with password vault filling and generator, site time
-  tracking, writing checks, distraction blocker, wishlist 1-click price capture, sidepanel
-  **Workstate Snapshot** capture with preview confirmation, and optional **Browser Engagement
-  Telemetry** (active reading depth %, scroll velocity, copy event counters, allowlisted
-  OpenGraph / schema.org tech-stack metadata extraction)
-- **Life OS & Daily Chronicle (Lifelog):** `/life/chronicle` — automated day timeline across
-  all connected digital sources (boot, commits, expenses, music, focus sessions, gaming), AI-generated
-  daily narrative story with key highlights, source provenance, editable personal notes, monthly
-  journal view ("Life Wrapped"), and digital telemetry correlation analysis in Links (`/life/links`)
+  tracking, writing checks, distraction blocker, wishlist 1-click price capture, a work-context
+  snapshot of the active tab from the side panel with a preview, and 🟡 optional page engagement
+  (scroll depth — how far a page was scrolled, not proof it was read — scroll speed, copy
+  counts, the tech stack from allowlisted OpenGraph / schema.org metadata)
+- **Life: the daily chronicle** (`/life/chronicle`): a timeline of the day from the connected
+  sources (start of the computer, commits, expenses, music, focus sessions, games), an optional
+  night job that writes the story of the day with the AI (each line keeps its source), personal
+  notes, the month as a journal; the digital numbers also go into Life → Links. It is not the
+  [Night Butler](#ai-and-links-between-modules) — that one stays a separate item
 - **Weather:** today's forecast and the week ahead for your city (Open-Meteo, no API key) with
   clothing advice that follows how you take the cold —
   on its page, on the home page and in the morning digest; the city comes from the browser's
@@ -293,6 +303,14 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Emergency offline runbook** — a password-protected compact offline PWA/PDF bundle with critical
   emergency data (ICE card, insurance policies, active prescriptions, ID document copies, emergency
   credentials) accessible on a mobile device without network or when the self-hosted server is offline
+- 🟡 **A gentle day** — on a hard day the user picks one to three small steps of their own
+  ("drink water", "write to a friend"), with "smaller", "not today" and "rest", and no streaks,
+  XP or red overdue marks; Psychology → Gentle day and a home widget, without the AI. Next: an
+  optional quiet reminder — [docs/proposals/gentle-day.md](proposals/gentle-day.md)
+- 🟡 **Ready for an appointment** — Psychology → For an appointment: the questionnaires and
+  events of a period picked by hand, what changed, the questions, a Word file made by the user
+  for a specialist; an organizer, never a diagnosis. Next: diary and Health records picked with
+  a preview — [docs/proposals/appointment-brief.md](proposals/appointment-brief.md)
 - **Tilt detector** — three Dota losses in a row or two hours of games after midnight → a gentle
   "maybe enough?"; win rate by the time of day and after N matches in a row
 - **Sleep from the computer** — the first and the last activity of a day are known already (and
@@ -506,6 +524,14 @@ assistant as a tutor that knows the materials of the courses.
 
 #### Desktop
 
+- 🟡 **Telemetry diagnostics: finish and check** — `/activity/workstates` tells why a switch of
+  the digital telemetry is off and what to do: the device is not registered, the app is old, the
+  tracker is paused, the window is private, the upload failed. Started, not merged yet: the
+  contract (`telemetry-diagnostics.ts`), the tracker's state, the IPC and the bridge, the card.
+  Left: one run of the whole chain on a real computer; the reasons match the tray; an old bridge without
+  the method does not break the page; an error never leaves a switch stuck. Nothing secret goes
+  to the page (no tokens, window titles, commands or paths), "accepted" means the server took
+  the request, not that a row was written; a new device or account starts a clean state
 - **Writing: Ctrl+Alt+G where there are no marks** — in a program that gives no positions of
   its words through UI Automation: the selected text is checked and rewritten in a small window,
   and put back in its place (Telegram Desktop does give them: its field is found from the focused
@@ -654,6 +680,10 @@ assistant as a tutor that knows the materials of the courses.
 - ✅ **Before and after** — Life → Links: every daily number around the start or the end of a
   period of Health (a diagnosis, a medication), judged against the ordinary dates of the same
   history; the assistant's `core_before_after`
+- 🔬 **A personal lab** — a safe everyday question ("is the first block of work easier without
+  notifications?") tested by rules chosen beforehand, ordinary and changed days, one number;
+  a calm summary with its coverage, never a causal or medical conclusion —
+  [docs/proposals/personal-lab.md](proposals/personal-lab.md)
 - **Correlation engine: sleep** — the hours and the time of going to bed, once a source of sleep
   (a phone, a watch) is connected
 - **Automations: more triggers and actions** — matches, a new release, a birthday today; a

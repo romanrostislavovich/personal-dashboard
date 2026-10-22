@@ -701,6 +701,13 @@
       "when": 1792688488724,
       "tag": "0099_writing_fixes_accepted",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1792698628046,
+      "tag": "0100_gentle_day_and_briefs",
+      "breakpoints": true
     }
   ]
 }

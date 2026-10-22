@@ -2,7 +2,7 @@ import { WebDashboardModule } from '@pd/web-core';
 
 /**
  * Web part of Psychology: the patterns of the mood, short questionnaires over time and the
- * events of a life.
+ * events of a life, a gentle day for hard days and briefs for an appointment.
  * Plugged in at apps/web/src/app/modules.ts.
  */
 export const psychologyModule: WebDashboardModule = {
@@ -24,6 +24,14 @@ export const psychologyModule: WebDashboardModule = {
           loadComponent: () => import('./checkups.page').then((m) => m.CheckupsPage),
         },
         { path: 'events', loadComponent: () => import('./events.page').then((m) => m.EventsPage) },
+        {
+          path: 'gentle',
+          loadComponent: () => import('./gentle/gentle.page').then((m) => m.GentlePage),
+        },
+        {
+          path: 'briefs',
+          loadComponent: () => import('./brief/briefs.page').then((m) => m.BriefsPage),
+        },
       ],
     },
   ],
@@ -31,7 +39,26 @@ export const psychologyModule: WebDashboardModule = {
     en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
+  widgets: [
+    {
+      id: 'psychology.gentle-day',
+      size: 'small',
+      loadComponent: () => import('./gentle/gentle-day.widget').then((m) => m.GentleDayWidget),
+    },
+  ],
   commands: [
+    {
+      id: 'psychology.gentle',
+      labelKey: 'psychology.tabs.gentle',
+      icon: 'spa',
+      url: '/psychology/gentle',
+    },
+    {
+      id: 'psychology.briefs',
+      labelKey: 'psychology.tabs.briefs',
+      icon: 'assignment',
+      url: '/psychology/briefs',
+    },
     {
       id: 'psychology.events',
       labelKey: 'psychology.tabs.events',

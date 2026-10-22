@@ -1,4 +1,4 @@
-import { users } from '@pd/api-core/schema';
+import { encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
 import { EventFeeling, QuestionnaireId } from '@pd/contracts';
 import {
   date,
@@ -8,6 +8,7 @@ import {
   smallint,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -65,5 +66,69 @@ export const psychologySettings = pgTable('psychology_settings', {
   remindedOn: date({ mode: 'string' }),
 });
 
+/** A small step of one's own library for a gentle day: stored encrypted, like the diary. */
+export const psychologyGentleSteps = pgTable(
+  'psychology_gentle_steps',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    text: encryptedText().notNull(),
+    /** The smaller version of the step; `null` — none. */
+    smaller: encryptedText(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId)],
+);
+
+/**
+ * A day the gentle mode was turned on, with its steps. The steps are copies, not links to the
+ * library: a step deleted from it stays in the days it was taken on. The JSON is encrypted as a
+ * whole.
+ */
+export const psychologyGentleDays = pgTable(
+  'psychology_gentle_days',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    localDate: date({ mode: 'string' }).notNull(),
+    /** `GentleDayStep[]` as JSON. */
+    steps: encryptedText().notNull(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex().on(table.userId, table.localDate)],
+);
+
+/** A brief for an appointment with a specialist: the texts are stored encrypted. */
+export const psychologyBriefs = pgTable(
+  'psychology_briefs',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: encryptedText().notNull(),
+    appointmentOn: date({ mode: 'string' }),
+    from: date({ mode: 'string' }).notNull(),
+    to: date({ mode: 'string' }).notNull(),
+    /** The records picked by hand: Psychology's events and questionnaires. */
+    eventIds: uuid().array().notNull().default([]),
+    assessmentIds: uuid().array().notNull().default([]),
+    changes: encryptedText().notNull().default(''),
+    /** The questions, one per line. */
+    questions: encryptedText().notNull().default(''),
+    notes: encryptedText().notNull().default(''),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId, table.from)],
+);
+
+registerEncryptedTables(psychologyGentleSteps, psychologyGentleDays, psychologyBriefs);
+
+export type PsychologyBriefRow = typeof psychologyBriefs.$inferSelect;
 export type PsychologyEventRow = typeof psychologyEvents.$inferSelect;
 export type PsychologyAssessmentRow = typeof psychologyAssessments.$inferSelect;

@@ -36,7 +36,7 @@ function column(index: number): string {
   return name;
 }
 
-function zip(files: Record<string, string>): Buffer {
+export function zip(files: Record<string, string>): Buffer {
   return Buffer.from(
     zipSync(Object.fromEntries(Object.entries(files).map(([name, text]) => [name, strToU8(text)]))),
   );

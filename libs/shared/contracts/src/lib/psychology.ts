@@ -293,3 +293,102 @@ export interface PsychologyPatterns {
     mood: number | null;
   }[];
 }
+
+// --- A gentle day: one to three small steps on a hard day, without any pressure ---
+
+/**
+ * What became of a step. Every state is as good as "done": "smaller" — the smaller version
+ * was taken, "notToday" — put off without a reason, "rest" — rest instead.
+ */
+export const GENTLE_STEP_STATES = ['open', 'done', 'smaller', 'notToday', 'rest'] as const;
+export type GentleStepState = (typeof GENTLE_STEP_STATES)[number];
+
+/** No more than three steps a day: a short list is the point. */
+export const GENTLE_DAY_MAX_STEPS = 3;
+
+const stepText = z.string().trim().min(1).max(200);
+
+/** A step of one's own library: "drink water", and its smaller version, "a glass by the bed". */
+export const gentleStepInputSchema = z.object({
+  text: stepText,
+  smaller: z.string().trim().max(200).nullish(),
+});
+export type GentleStepInput = z.infer<typeof gentleStepInputSchema>;
+
+export interface GentleStep {
+  id: string;
+  text: string;
+  smaller: string | null;
+}
+
+/** `PUT /api/psychology/gentle/day`: turns the mode on for the day, or changes its steps. */
+export const gentleDayInputSchema = z.object({
+  date: day,
+  steps: z
+    .array(
+      z.object({
+        text: stepText,
+        smaller: z.string().trim().max(200).nullish(),
+        state: z.enum(GENTLE_STEP_STATES).default('open'),
+      }),
+    )
+    .max(GENTLE_DAY_MAX_STEPS),
+});
+export type GentleDayInput = z.input<typeof gentleDayInputSchema>;
+
+export const gentleDayQuerySchema = z.object({ date: day });
+
+export interface GentleDayStep {
+  text: string;
+  smaller: string | null;
+  state: GentleStepState;
+}
+
+/** The plan of a day; `on` `false` — the mode is not turned on that day. */
+export interface GentleDay {
+  date: LocalDate;
+  on: boolean;
+  steps: GentleDayStep[];
+}
+
+// --- Ready for an appointment: one's own records gathered for a specialist ---
+
+const longText = z.string().trim().max(5000);
+
+/**
+ * A brief for an appointment: the period, the records picked by hand (events and
+ * questionnaires of Psychology), what changed, the questions and one's own notes. An
+ * organizer of one's notes — nothing is concluded from them and nothing is sent anywhere.
+ */
+export const appointmentBriefInputSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200),
+    appointmentOn: day.nullish(),
+    from: day,
+    to: day,
+    eventIds: z.array(z.uuid()).max(500).default([]),
+    assessmentIds: z.array(z.uuid()).max(500).default([]),
+    changes: longText.default(''),
+    questions: z.array(z.string().trim().min(1).max(500)).max(50).default([]),
+    notes: longText.default(''),
+  })
+  .refine((brief) => brief.to >= brief.from, {
+    message: 'The end is before the start',
+    path: ['to'],
+  });
+export type AppointmentBriefInput = z.input<typeof appointmentBriefInputSchema>;
+
+export interface AppointmentBrief {
+  id: string;
+  title: string;
+  appointmentOn: LocalDate | null;
+  from: LocalDate;
+  to: LocalDate;
+  eventIds: string[];
+  assessmentIds: string[];
+  changes: string;
+  questions: string[];
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}

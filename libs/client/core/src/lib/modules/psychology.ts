@@ -1,5 +1,11 @@
 import {
+  AppointmentBrief,
+  AppointmentBriefInput,
   EventExportFormat,
+  GentleDay,
+  GentleDayInput,
+  GentleStep,
+  GentleStepInput,
   PsychologyAssessment,
   PsychologyAssessmentInput,
   PsychologyEvent,
@@ -19,6 +25,11 @@ export const PSYCHOLOGY_READS = {
   /** Every filled-in questionnaire, the latest first. */
   assessments: () => apiRequest(`${BASE}/assessments`),
   settings: () => apiRequest(`${BASE}/settings`),
+  /** The library of small steps of a gentle day. */
+  gentleSteps: () => apiRequest(`${BASE}/gentle/steps`),
+  /** The plan of a gentle day; `on` `false` — the mode is off that day. */
+  gentleDay: (date: string) => apiRequest(`${BASE}/gentle/day`, { date }),
+  briefs: () => apiRequest(`${BASE}/briefs`),
 };
 
 export function psychologyApi(api: ApiClient) {
@@ -46,5 +57,25 @@ export function psychologyApi(api: ApiClient) {
     settings: () => api.read<PsychologySettings>(PSYCHOLOGY_READS.settings()),
     saveSettings: (settings: PsychologySettingsInput) =>
       api.put<void>(`${BASE}/settings`, settings),
+
+    gentleSteps: () => api.read<GentleStep[]>(PSYCHOLOGY_READS.gentleSteps()),
+    saveGentleStep: (input: GentleStepInput, id?: string) =>
+      id
+        ? api.put<GentleStep>(`${BASE}/gentle/steps/${id}`, input)
+        : api.post<GentleStep>(`${BASE}/gentle/steps`, input),
+    removeGentleStep: (id: string) => api.delete(`${BASE}/gentle/steps/${id}`),
+    gentleDay: (date: string) => api.read<GentleDay>(PSYCHOLOGY_READS.gentleDay(date)),
+    /** Turns the mode on for the day, or changes its steps. */
+    saveGentleDay: (input: GentleDayInput) => api.put<GentleDay>(`${BASE}/gentle/day`, input),
+    leaveGentleDay: (date: string) => api.delete(`${BASE}/gentle/day/${date}`),
+
+    briefs: () => api.read<AppointmentBrief[]>(PSYCHOLOGY_READS.briefs()),
+    saveBrief: (input: AppointmentBriefInput, id?: string) =>
+      id
+        ? api.put<AppointmentBrief>(`${BASE}/briefs/${id}`, input)
+        : api.post<AppointmentBrief>(`${BASE}/briefs`, input),
+    removeBrief: (id: string) => api.delete(`${BASE}/briefs/${id}`),
+    /** The brief as a Word document. */
+    exportBrief: (id: string) => api.blob(`${BASE}/briefs/${id}/export`),
   };
 }

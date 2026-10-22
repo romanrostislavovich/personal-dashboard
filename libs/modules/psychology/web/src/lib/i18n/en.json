@@ -4,7 +4,9 @@
   "tabs": {
     "patterns": "Patterns",
     "checkups": "Check-ups",
-    "events": "Events"
+    "events": "Events",
+    "gentle": "Gentle day",
+    "briefs": "For an appointment"
   },
   "period": "Period",
   "days": "{{days}} days",
@@ -177,5 +179,67 @@
     "who5": "Well-being (WHO-5)",
     "gad7": "Anxiety (GAD-7)",
     "phq9": "Depression (PHQ-9)"
+  },
+  "gentle": {
+    "title": "Gentle day",
+    "today": "Today",
+    "about": "For a hard day: one to three small steps instead of the whole list. Nothing is counted and nothing is missed.",
+    "offAbout": "If today is hard, turn on the gentle day and pick one to three small steps. The rest of the tasks stay where they are, nothing is moved.",
+    "turnOn": "Today is a hard day",
+    "pick": "Pick up to {{max}} small steps — or none at all",
+    "ownStep": "A step for today only",
+    "begin": "Start",
+    "change": "Change the steps",
+    "leave": "Leave the gentle day",
+    "done": "Done",
+    "smaller": "Smaller",
+    "notToday": "Not today",
+    "rest": "Rest",
+    "states": {
+      "open": "",
+      "done": "done",
+      "smaller": "the smaller one",
+      "notToday": "not today — that is fine",
+      "rest": "rest instead — that is fine"
+    },
+    "noSteps": "No steps today. Resting is enough.",
+    "nothingIsFine": "Doing nothing from this list is fine too.",
+    "enough": "That is enough for today.",
+    "library": "My small steps",
+    "libraryAbout": "Steps for a hard day, written on a better one. A smaller version helps when even the step is too much.",
+    "stepText": "A small step",
+    "stepSmaller": "An even smaller version",
+    "stepSmallerHint": "For example: \"tidy the room\" → \"take one cup to the kitchen\"",
+    "ideas": {
+      "water": "Drink a glass of water",
+      "eat": "Eat something",
+      "outside": "Go outside for five minutes",
+      "shower": "Take a shower",
+      "message": "Write to someone close",
+      "window": "Open the window"
+    }
+  },
+  "brief": {
+    "about": "Gather your own records of a period into one page for a doctor or a psychologist: what changed, the questionnaires, the events and your questions. You pick every record; the file is made only when you ask, and is sent nowhere.",
+    "add": "A new brief",
+    "edit": "Change the brief",
+    "title": "Title",
+    "titleHint": "For example: psychiatrist",
+    "appointmentOn": "Appointment",
+    "from": "Period from",
+    "to": "to",
+    "checkups": "Questionnaires of the period",
+    "noCheckups": "No questionnaires in this period.",
+    "events": "Events of the period",
+    "noEvents": "No events in this period.",
+    "changes": "What changed",
+    "changesHint": "Sleep, appetite, energy, medication, what got easier or harder",
+    "questions": "Questions to ask",
+    "questionsHint": "What do I want to ask?",
+    "onePerLine": "One question a line",
+    "notes": "My notes",
+    "counts": "Questionnaires: {{checkups}} · events: {{events}} · questions: {{questions}}",
+    "export": "Word file",
+    "confirmDelete": "Delete the brief «{{title}}»?"
   }
 }

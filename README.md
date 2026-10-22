@@ -23,8 +23,8 @@ in one place on your own server, with notifications and an assistant in Telegram
   DeepSeek, OpenAI, Ollama (fully local) or any OpenAI-compatible API
 - 💬 **Telegram as a remote** — voice messages, a photo of a receipt becomes an expense, a bank
   statement PDF becomes transactions, reminders with "Done / +1 hour / Tomorrow" buttons
-- 📖 **Life** — one feed of any day across every section, a "Wrapped" of the month or the year
-  written by the AI, questions to your own history
+- 📖 **Life** — one feed of any day across every section, a daily chronicle with an optional
+  story of the day by the AI, a "Wrapped" of the month or the year, questions to your own history
 - 🔗 **Sections that know each other** — a project with its hours, commits, money and uptime on
   one page; what goes with your good and bad days, and every daily number against every other
   (Life → Links: correlations of the same and the next day, a graph, what predicts your mood);
@@ -33,7 +33,9 @@ in one place on your own server, with notifications and an assistant in Telegram
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by
   22:00 → a reminder; describe the rule in a sentence and the AI builds it
 - ⏱️ **Desktop tracker** (Windows) — which programs and windows ate your day, focus sessions, break
-  reminders, daily limits on games, disk cleanup advice from the AI
+  reminders, daily limits on games, disk cleanup advice from the AI, work contexts you can come
+  back to; an optional, off-by-default telemetry with its limits written down
+  ([apps/desktop/TELEMETRY.md](apps/desktop/TELEMETRY.md))
 - 🛡️ **Security agent** — watches sign-ins, the server (SSH, firewall, open ports), your computers
   and repositories every hour; an AI investigates every morning and tells what to fix
 - 🏆 **400+ achievements** across all sections, with XP and a player level
@@ -46,9 +48,9 @@ in one place on your own server, with notifications and an assistant in Telegram
 
 |                    |                                                                                                                   |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| 💰 **Finance**     | wallets, main currency, budgets, subscriptions, wishlist price watch                                              |
+| 💰 **Finance**     | wallets, main currency, budgets, subscriptions, net worth, your bank directly, wishlist price watch               |
 | 📔 **Diary**       | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                 |
-| 🧠 **Psychology**  | mood patterns, check-ups, life events with Excel / Word export                                                    |
+| 🧠 **Psychology**  | mood patterns, check-ups, life events, a gentle day for hard days, a brief for an appointment                     |
 | 🌱 **Habits**      | quitting alcohol, smoking or your own, building the gym or your own: runs, an evening question in Telegram        |
 | 🔑 **Passwords**   | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext |
 | 🩺 **Health**      | one medical history across countries: visits, ICD diagnoses, medications, documents                               |
@@ -56,7 +58,7 @@ in one place on your own server, with notifications and an assistant in Telegram
 | 👨‍💻 **Development** | repositories, stars, releases, npm downloads, contribution streaks, coding time                                   |
 | 🎧 **Music**       | listening history and tops, now playing, your own tracks' stats                                                   |
 | 🎮 **Games**       | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP)                                         |
-| ⏱️ **Activity**    | time at the computer per program, project and day, Pomodoro                                                       |
+| ⏱️ **Activity**    | time at the computer per program, project and day, Pomodoro, work contexts                                        |
 | 📡 **Monitoring**  | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                               |
 | 🌤️ **Weather**     | today and the week ahead, what to wear — tuned to how you take the cold                                           |
 | 🎂 **Birthdays**   | countdowns and reminders                                                                                          |
@@ -71,7 +73,8 @@ Every section is a module: hide what you do not use, or [write your own](docs/ar
 - **Code:** GitHub · GitLab · Bitbucket · npm · WakaTime
 - **Music:** Last.fm · Spotify · SoundCloud
 - **Games:** Steam · Dota 2 (OpenDota) · World of Warcraft (Battle.net, incl. Classic)
-- **Money:** ECB exchange rates · Hetzner Cloud and DeepSeek costs · bank statements (PDF / Excel / CSV)
+- **Money:** Enable Banking (open banking) · ECB exchange rates · Hetzner Cloud and DeepSeek costs · bank
+  statements (PDF / Excel / CSV)
 - **Other:** Open-Meteo weather (no key)
 
 Everything is connected in Settings → Integrations, each with a step-by-step guide —
@@ -112,7 +115,7 @@ npm run dev                   # API on :3300 + web on http://localhost:4200
 ```
 
 Nx · Angular · NestJS · PostgreSQL + Drizzle · pg-boss · grammY · Electron. How it fits together:
-[docs/architecture.md](docs/architecture.md) · what is next: [docs/roadmap.md](docs/roadmap.md) ·
+[docs/architecture.md](docs/architecture.md) · what is done, partial and next: [docs/roadmap.md](docs/roadmap.md) ·
 how to help: [CONTRIBUTING.md](CONTRIBUTING.md) · security reports: [SECURITY.md](SECURITY.md).
 
 ## License
