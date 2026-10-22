@@ -3,17 +3,22 @@ import { z } from 'zod';
 // The browser extension's part of Activity: the time on each site (the desktop app sees only
 // "Chrome, 3 hours"), the sites a focus session keeps closed, and the daily limits of sites.
 
+/** An address of this very computer: a project being written runs there, one per port. */
+const LOCAL_HOST = /^(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|\[::1\])$/;
+
 /**
- * The site of an address as it is counted: the host name without `www.`, lower case.
+ * The site of an address as it is counted: the host name without `www.`, lower case. A local
+ * address keeps its port — `localhost:4200` and `localhost:3000` are two projects, not one.
  * `null` — not a site (a browser page, a file).
  */
 export function siteOf(url: string): string | null {
   try {
-    const { protocol, hostname } = new URL(url);
+    const { protocol, hostname, port } = new URL(url);
     if ((protocol !== 'http:' && protocol !== 'https:') || !hostname) {
       return null;
     }
-    return hostname.toLowerCase().replace(/^www\./, '');
+    const host = hostname.toLowerCase().replace(/^www\./, '');
+    return port && LOCAL_HOST.test(host) ? `${host}:${port}` : host;
   } catch {
     return null;
   }

@@ -3,7 +3,11 @@ import { activitySiteVisitSchema, isSiteOf, siteDomainSchema, siteOf } from './a
 describe('sites', () => {
   it('counts a page by its host, without www, and nothing else by a site', () => {
     expect(siteOf('https://www.YouTube.com/watch?v=1')).toBe('youtube.com');
-    expect(siteOf('http://localhost:4200/finance')).toBe('localhost');
+    expect(siteOf('http://localhost:4200/finance')).toBe('localhost:4200');
+    expect(siteOf('http://127.0.0.1:3000/')).toBe('127.0.0.1:3000');
+    expect(siteOf('http://localhost/')).toBe('localhost');
+    // A port of a real site is not another site.
+    expect(siteOf('https://example.com:8443/a')).toBe('example.com');
     expect(siteOf('chrome://extensions')).toBeNull();
     expect(siteOf('file:///C:/a.pdf')).toBeNull();
     expect(siteOf('not a url')).toBeNull();
