@@ -11,7 +11,7 @@ Finance, a diary, tasks, music, games, coding stats, time at the computer, uptim
 in one place on your own server, with notifications and an assistant in Telegram. Web, desktop
 (Windows / macOS / Linux) and an installable PWA. English and Russian.
 
-![Dashboard](docs/images/dashboard.png)
+![A 40-second tour: links between every daily number, achievements, the home page, search across every section, finance, activity, development, monitoring and music](docs/images/demo.gif)
 
 > **Status:** a personal project, used every day by its author. It works and is tested, but
 > before 1.0 an update may need attention — read the [changelog](CHANGELOG.md) first.

@@ -65,8 +65,8 @@ the issues or in the Actions logs is copied and cached the moment it is visible)
 - [ ] **Actions logs and artifacts** become public too — delete old workflow runs (Actions → a
       workflow → "..." → Delete) unless you are sure no log printed anything private
 - [ ] **Releases** (`v0.2.0`, `v0.2.1`) and their notes — the installers are fine, check the text
-- [x] **Screenshot** `docs/images/dashboard.png` — replaced on 2026-10-09 with the home page of
-      a demo user ("Alex", made-up data on a throwaway instance); nothing of yours is on it
+- [x] **The README video** `docs/images/demo.gif` — made on 2026-10-24 on a demo user ("Alex",
+      made-up data on a throwaway instance); nothing of yours is in it
 - [ ] Mentions of your own projects in code comments and tests (`ai-text-guard.com`,
       `ngx-translate-lint`) are harmless; replace them with `example.com` only if you prefer
 - [ ] `docs/roadmap.md` speaks in the first person in places ("my own mixes", "my GitHub") —
@@ -95,7 +95,7 @@ Once public, anyone can read the code looking for a way in to every self-hosted 
 
 - [x] Licenses of the dependencies are compatible with MIT — no GPL / AGPL in what ships
 - [ ] Icons and images in the repository are yours or under a free license: the app icon
-      (`apps/desktop/icon.png`, `apps/web/public/icon*.png`) and `docs/images/dashboard.png` are
+      (`apps/desktop/icon.png`, `apps/web/public/icon*.png`) and `docs/images/demo.gif` are
       the only ones; there are no fonts or sounds. Only you know where the icon came from
 - [x] A note in the README: not affiliated with the services it connects to
 - [x] The wishlist reads shops' pages — the same note says the user follows the shop's terms
