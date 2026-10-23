@@ -92,7 +92,7 @@ const RECENT_COUNT = 4;
       <section class="group">
         <!-- A section is named like the module in the menu: translation key '<module>.title'. -->
         <h2 class="group-title">
-          {{ group.module + '.title' | transloco }}
+          {{ group.titleKey | transloco }}
           <span class="group-count">{{ group.unlocked }} / {{ group.total }}</span>
         </h2>
         <div class="grid">
@@ -245,6 +245,9 @@ export class AchievementsPage {
       .filter(([, group]) => group.visible.length > 0)
       .map(([module, group]) => ({
         module,
+        // The core's own achievements ('dashboard') are named like the home page: the core's
+        // translations live under 'core.', not under the module id.
+        titleKey: module === 'dashboard' ? 'core.dashboard.title' : `${module}.title`,
         items: group.visible,
         total: group.all.length,
         unlocked: group.all.filter((a) => a.unlockedAt).length,
