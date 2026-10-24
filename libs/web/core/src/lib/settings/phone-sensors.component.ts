@@ -11,6 +11,25 @@ import { checkPhoneSensors, phoneSensors, PhoneSensorsStatus } from '../mobile/p
 
 type Step = 'usageAccess' | 'notificationAccess' | 'unrestricted';
 
+/** How long a step of switching on may take. */
+const STEP_MS = 10_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`no answer in ${ms / 1000} s`)), ms),
+    ),
+  ]);
+}
+
+function describe(failure: unknown): string {
+  if (failure && typeof failure === 'object' && 'status' in failure) {
+    return `HTTP ${(failure as { status: unknown }).status}`;
+  }
+  return failure instanceof Error ? failure.message : String(failure);
+}
+
 /**
  * Settings → Apps inside the Android app: the phone as a sensor. Switching it on makes the phone
  * a device of the Activity section (its time in apps there, its notifications in Activity →
@@ -82,8 +101,10 @@ type Step = 'usageAccess' | 'notificationAccess' | 'unrestricted';
                 {{ 'core.settings.phone.disable' | transloco }}
               </button>
             }
-            @if (error()) {
-              <p class="error" role="alert">{{ 'core.settings.phone.error' | transloco }}</p>
+            @if (error(); as reason) {
+              <p class="error" role="alert">
+                {{ 'core.settings.phone.error' | transloco }} <code>{{ reason }}</code>
+              </p>
             }
           }
         </mat-card-content>
@@ -130,7 +151,8 @@ export class PhoneSensorsComponent {
   protected readonly checkError = signal<string | null>(null);
   protected readonly status = signal<PhoneSensorsStatus | null>(null);
   protected readonly busy = signal(false);
-  protected readonly error = signal(false);
+  /** Why switching on failed, as the step that failed told it; `null` — it did not. */
+  protected readonly error = signal<string | null>(null);
 
   constructor() {
     void this.refresh();
@@ -148,23 +170,32 @@ export class PhoneSensorsComponent {
     inject(DestroyRef).onDestroy(() => void resumed.then((handle) => handle?.remove()));
   }
 
+  /** Each step says where it stopped: a phone's problem can only be told from its words. */
   protected async enable(): Promise<void> {
-    const plugin = await phoneSensors();
-    const server = mobileServer();
-    if (!plugin || !server) {
-      return;
-    }
     this.busy.set(true);
-    this.error.set(false);
+    this.error.set(null);
     try {
-      const device = await this.activity.registerDevice({
-        name: phoneModel(navigator.userAgent),
-        platform: 'android',
-      });
-      await plugin.configure({ server, token: device.token });
+      const { plugin, error } = await checkPhoneSensors();
+      const server = mobileServer();
+      if (!plugin) {
+        throw new Error(`app: ${error ?? 'no collection in this version'}`);
+      }
+      if (!server) {
+        throw new Error('no server address');
+      }
+      const device = await this.activity
+        .registerDevice({ name: phoneModel(navigator.userAgent), platform: 'android' })
+        .catch((failure: unknown) => {
+          throw new Error(`server: ${describe(failure)}`);
+        });
+      await withTimeout(plugin.configure({ server, token: device.token }), STEP_MS).catch(
+        (failure: unknown) => {
+          throw new Error(`app: ${describe(failure)}`);
+        },
+      );
       await this.refresh();
-    } catch {
-      this.error.set(true);
+    } catch (failure) {
+      this.error.set(describe(failure));
     } finally {
       this.busy.set(false);
     }
