@@ -20,6 +20,15 @@ RUN npm ci --ignore-scripts
 COPY . .
 # The API build writes package.json and package-lock.json with only its own dependencies next to it.
 RUN npx nx run-many -t build -p api,web,desktop,extension
+# Nx leaves the root `overrides` out of that package.json, while its lock file already follows
+# them (a patched multer under NestJS, see CONTRIBUTING.md): without them `npm ci` below refuses
+# the lock. Entries that point at a root dependency (`$name`) mean nothing there and are skipped.
+RUN node -e "const fs = require('fs'); const file = 'dist/apps/api/package.json'; \
+  const api = JSON.parse(fs.readFileSync(file, 'utf8')); \
+  const own = Object.entries(require('./package.json').overrides ?? {}) \
+    .filter(([, value]) => !JSON.stringify(value).includes('\"\$')); \
+  api.overrides = Object.fromEntries(own); \
+  fs.writeFileSync(file, JSON.stringify(api, null, 2));"
 # What npm knows about vulnerabilities in the packages that ship, as of this build: the
 # security agent reads it (it exits non-zero when it finds any — that is not a failed build).
 RUN npm audit --omit=dev --json > dist/apps/api/npm-audit.json || true
