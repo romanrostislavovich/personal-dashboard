@@ -7,9 +7,10 @@ import { App } from '@capacitor/app';
 import { activityApi, appsApi } from '@pd/client-core';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { apiBaseUrl, isMobileApp, mobileServer, phoneModel } from '../mobile/mobile-app';
-import { checkPhoneSensors, phoneSensors, PhoneSensorsStatus } from '../mobile/phone-sensors';
+import { checkPhoneSensors, PhoneSensorsCheck, PhoneSensorsStatus } from '../mobile/phone-sensors';
 
 type Step = 'usageAccess' | 'notificationAccess' | 'unrestricted';
+type Plugin = NonNullable<PhoneSensorsCheck['plugin']>;
 
 /** How long a step of switching on may take. */
 const STEP_MS = 10_000;
@@ -202,8 +203,13 @@ export class PhoneSensorsComponent {
   }
 
   protected async disable(): Promise<void> {
-    await (await phoneSensors())?.disable();
-    await this.refresh();
+    this.error.set(null);
+    try {
+      await this.withPlugin((plugin) => plugin.disable());
+      await this.refresh();
+    } catch (failure) {
+      this.error.set(describe(failure));
+    }
   }
 
   protected open(step: Step): Promise<void> {
@@ -223,19 +229,22 @@ export class PhoneSensorsComponent {
   }
 
   /** A settings screen of Android; when it does not open, the reason shows under the steps. */
-  private async openScreen(
-    run: (plugin: NonNullable<Awaited<ReturnType<typeof phoneSensors>>>) => Promise<void>,
-  ): Promise<void> {
+  private async openScreen(run: (plugin: Plugin) => Promise<void>): Promise<void> {
     this.error.set(null);
     try {
-      const plugin = await phoneSensors();
-      if (!plugin) {
-        throw new Error('app: no collection in this version');
-      }
-      await withTimeout(run(plugin), STEP_MS);
+      await this.withPlugin(run);
     } catch (failure) {
       this.error.set(`settings: ${describe(failure)}`);
     }
+  }
+
+  /** One call of the app, or an error saying why it did not answer. */
+  private async withPlugin(run: (plugin: Plugin) => Promise<void>): Promise<void> {
+    const { plugin, error } = await checkPhoneSensors();
+    if (!plugin) {
+      throw new Error(`app: ${error ?? 'no collection in this version'}`);
+    }
+    await withTimeout(run(plugin), STEP_MS);
   }
 
   protected async refresh(): Promise<void> {

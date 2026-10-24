@@ -26,7 +26,14 @@ interface PhoneSensorsPlugin {
 /** How long the app may take to answer whether it can collect. */
 const ANSWER_MS = 5_000;
 
-/** The plugin, or why there is none: the card shows the reason, so a problem can be told. */
+/** Registered once: Capacitor warns on each registration after the first. */
+let registered: PhoneSensorsPlugin | undefined;
+
+/**
+ * The plugin, or why there is none: the card shows the reason, so a problem can be told.
+ * Always inside an object: the plugin is a Proxy that turns any property into a native call,
+ * `then` too, so an async function returning it bare waits for good on a `then` nobody answers.
+ */
 export type PhoneSensorsCheck =
   { plugin: PhoneSensorsPlugin; error: null } | { plugin: null; error: string | null };
 
@@ -40,7 +47,8 @@ export async function checkPhoneSensors(): Promise<PhoneSensorsCheck> {
   if (!isMobileApp()) {
     return { plugin: null, error: null };
   }
-  const plugin = registerPlugin<PhoneSensorsPlugin>('PhoneSensors');
+  registered ??= registerPlugin<PhoneSensorsPlugin>('PhoneSensors');
+  const plugin = registered;
   try {
     await Promise.race([
       plugin.status(),
@@ -52,8 +60,4 @@ export async function checkPhoneSensors(): Promise<PhoneSensorsCheck> {
   } catch (error) {
     return { plugin: null, error: error instanceof Error ? error.message : String(error) };
   }
-}
-
-export async function phoneSensors(): Promise<PhoneSensorsPlugin | null> {
-  return (await checkPhoneSensors()).plugin;
 }
