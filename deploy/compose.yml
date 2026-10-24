@@ -41,6 +41,8 @@ services:
       SECURITY_DIR: /security
       # The desktop installers deploy.sh puts there, for Settings → Apps (GitHub without them).
       DESKTOP_INSTALLERS_PATH: /downloads/desktop
+      # The Android app deploy.sh puts there (deploy/mobile-apk.Dockerfile).
+      MOBILE_APK_PATH: /downloads/mobile
     volumes:
       - ./backups:/backups:ro
       - ./security:/security:ro

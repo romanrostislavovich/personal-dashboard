@@ -36,16 +36,30 @@ the desktop shell, and adds only what a web page cannot do — like the desktop 
 Electron.
 
 - **Capacitor** wraps the web app; `apps/mobile` holds the shell and its native plugins.
-- The interface comes from the user's server, so a deploy updates it; a new APK is needed only
-  when the native part changes. The APK is built in CI and served by the server, like the browser
-  extension, and the app updates itself from there.
+- **The interface is packed into the APK**, not loaded from the server like in the desktop app:
+  Capacitor's bridge to the native part works only for addresses known when the APK is built,
+  and the server's address is typed at the first start. The page lives at `https://localhost`
+  and calls the API at the server's address (`client-core`'s `baseUrl`; the server allows that
+  origin in CORS, tokens in a header, the refresh token kept by the app). A bonus: it starts and
+  reads without a network.
+- **A deploy still reaches the phone at once:** the server hands out its build of the interface
+  (`/mobile-updates`: `web.zip` + `bundle.json`, made by the Docker build); the app unpacks it and
+  switches to it when it goes to the background (`WebView.setServerBasePath`). A new APK starts
+  from its own interface again, which also mends a broken one.
+- **The APK** is built in Docker by `deploy/deploy.sh` only when the native part changes
+  (`deploy/mobile-apk.Dockerfile`, like the desktop installers), signed with
+  `deploy/mobile-release.keystore` (never committed; its password in `deploy.local.env`), and put
+  into `downloads/mobile` on the server: Settings → Apps offers it.
 - The phone is a device of its own (like a computer of the desktop tracker), with its own token.
 - Rejected: a native interface (React Native / Expo on `@pd/client-core`) — every section drawn
   twice, months of work for a look slightly more "native".
 
 ## Stage 1 — the base
 
-- The shell for Android: sign-in, the phone in the list of devices, the self-update of the APK.
+- **1a (built, 2026-10-24):** the shell for Android — the connect page (which server), sign-in,
+  the phone in Settings → Apps, the system Back button, the interface updating itself from the
+  server, the APK built and offered by the server, the icons. Moved to stage 2: the MIUI setup
+  screen (nothing runs in the background before stage 2).
 - **Offline, as far as it goes:** the sections the user picks are kept on the phone to read
   without a network (the diary, tasks, the gentle day, health…); writes made offline wait in the
   outbox of `client-core` and go out when the network is back. A record changed both on the phone

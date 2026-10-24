@@ -4,7 +4,7 @@ import { AppInfo, AppInstall, AppInstallReport, AppKind, AppsOverview } from '@p
 import { and, desc, eq } from 'drizzle-orm';
 import { AppConfig } from '../config/env';
 import { DB, Database } from '../database/database.module';
-import { bundleVersion, desktopDownloads, extensionDownloads } from './app-files';
+import { bundleVersion, desktopDownloads, extensionDownloads, mobileApk } from './app-files';
 import { AppInstallRow, appInstalls } from './apps.schema';
 
 /** Settings → Apps: what can be installed, and which devices run which version. */
@@ -57,6 +57,7 @@ export class AppsService {
     const desktopBundle = this.config.get('DESKTOP_BUNDLE_PATH', { infer: true });
     const extensionBundle = this.config.get('EXTENSION_BUNDLE_PATH', { infer: true });
     const installers = this.config.get('DESKTOP_INSTALLERS_PATH', { infer: true });
+    const apk = mobileApk(this.config.get('MOBILE_APK_PATH', { infer: true }));
     return [
       {
         kind: 'desktop',
@@ -70,7 +71,8 @@ export class AppsService {
         version: bundleVersion(extensionBundle),
         downloads: extensionDownloads(extensionBundle),
       },
-      { kind: 'mobile', soon: true, version: null, downloads: [] },
+      // The version of the APK: the interface inside updates itself and has none of its own.
+      { kind: 'mobile', soon: false, version: apk.version, downloads: apk.downloads },
     ];
   }
 }

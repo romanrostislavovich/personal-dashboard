@@ -8,6 +8,8 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { appsApi, CORE_READS } from '@pd/client-core';
 import { AppInfo, AppInstall, AppKind, AppsOverview } from '@pd/contracts';
 import { DesktopInstallService } from '../apps/desktop-install.service';
+import { apiBaseUrl, isMobileApp } from '../mobile/mobile-app';
+import { MobileAppService } from '../mobile/mobile-app.service';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { DesktopAppsInfo, desktopBridge } from '../realtime/desktop-bridge';
 
@@ -18,7 +20,7 @@ const ICONS: Record<AppKind, string> = {
 };
 
 /**
- * Settings → Apps: the desktop app, the browser extension and (later) the mobile one — where to
+ * Settings → Apps: the desktop app, the browser extension and the Android app — where to
  * get them, how they update, and the devices that run them with their versions.
  */
 @Component({
@@ -52,7 +54,7 @@ const ICONS: Record<AppKind, string> = {
                 @for (download of app.downloads; track download.platform) {
                   <a
                     matButton="tonal"
-                    [href]="download.url"
+                    [href]="href(download.url)"
                     [attr.target]="download.external ? '_blank' : null"
                     rel="noopener"
                   >
@@ -87,7 +89,7 @@ const ICONS: Record<AppKind, string> = {
               } @else {
                 <div class="downloads">
                   @for (download of app.downloads; track download.platform) {
-                    <a matButton="tonal" [href]="download.url" download>
+                    <a matButton="tonal" [href]="href(download.url)" download>
                       <mat-icon>download</mat-icon>
                       {{ 'core.settings.apps.extension.zip' | transloco }}
                       @if (download.size) {
@@ -105,6 +107,29 @@ const ICONS: Record<AppKind, string> = {
                 </ol>
                 <p class="hint">{{ 'core.settings.apps.extension.withoutDesktop' | transloco }}</p>
               }
+            }
+
+            @if (app.kind === 'mobile') {
+              <div class="downloads">
+                @for (download of app.downloads; track download.platform) {
+                  <!-- A new tab: inside the app the phone's browser downloads and installs it -->
+                  <a matButton="tonal" [href]="href(download.url)" target="_blank" rel="noopener">
+                    <mat-icon>download</mat-icon>
+                    {{ 'core.settings.apps.mobile.apk' | transloco }}
+                    @if (download.size) {
+                      <span class="size">{{ megabytes(download.size) }}</span>
+                    }
+                  </a>
+                } @empty {
+                  <p class="hint">{{ 'core.settings.apps.mobile.notOnServer' | transloco }}</p>
+                }
+              </div>
+              <ol class="steps">
+                <li>{{ 'core.settings.apps.mobile.openOnPhone' | transloco }}</li>
+                <li>{{ 'core.settings.apps.mobile.allowInstall' | transloco }}</li>
+                <li>{{ 'core.settings.apps.mobile.connect' | transloco }}</li>
+              </ol>
+              <p class="hint">{{ 'core.settings.apps.mobile.updates' | transloco }}</p>
             }
           </mat-card-content>
         </mat-card>
@@ -256,6 +281,7 @@ export class AppsSettingsComponent {
   private readonly apps$ = appsApi(inject(DASHBOARD_CLIENT).api);
   private readonly bridge = desktopBridge()?.apps ?? null;
   private readonly desktopInstall = inject(DesktopInstallService);
+  private readonly mobile = inject(MobileAppService);
 
   protected readonly icons = ICONS;
   protected readonly overview = httpResource<AppsOverview>(() => CORE_READS.apps());
@@ -271,6 +297,14 @@ export class AppsSettingsComponent {
       // The list shows this computer as it is now.
       void this.desktopInstall.report().then(() => this.overview.reload());
     }
+    if (isMobileApp()) {
+      void this.mobile.report().then(() => this.overview.reload());
+    }
+  }
+
+  /** A file of the server: inside the Android app the page's own address is not the server. */
+  protected href(url: string): string {
+    return url.startsWith('/') ? `${apiBaseUrl()}${url}` : url;
   }
 
   protected serverVersion(kind: AppKind): string | null {

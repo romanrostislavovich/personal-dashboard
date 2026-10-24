@@ -16,6 +16,9 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { buildAppRoutes } from './app-routes';
 import { authInterceptor } from './auth/auth.interceptor';
+import { isMobileApp } from './mobile/mobile-app';
+import { MobileAppService } from './mobile/mobile-app.service';
+import { serverUrlInterceptor } from './mobile/server-url.interceptor';
 import { AuthService } from './auth/auth.service';
 import { DeviceBackupService } from './backup/device-backup.service';
 import { DesktopDeviceService } from './realtime/desktop-device.service';
@@ -36,7 +39,7 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
   return makeEnvironmentProviders([
     provideBrowserGlobalErrorListeners(),
     provideRouter(buildAppRoutes(modules), withComponentInputBinding()),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([serverUrlInterceptor, authInterceptor])),
     provideDashboardModules(modules),
     provideI18n(),
     // Date, number and currency formats follow the UI language (changes with a reload).
@@ -46,9 +49,10 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
       inject(ThemeService);
     }),
     // The installed app: pages and the data seen before are kept for offline use, a new version
-    // is fetched in the background (apps/web/ngsw-config.json). Off in development.
+    // is fetched in the background (apps/web/ngsw-config.json). Off in development, and in the
+    // Android app: its interface is inside it, and a newer one comes from MobileAppService.
     provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
+      enabled: !isDevMode() && !isMobileApp(),
       registrationStrategy: 'registerWhenStable:30000',
     }),
     provideAppInitializer(async () => {
@@ -56,12 +60,14 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
       const backup = inject(DeviceBackupService);
       const desktopInstall = inject(DesktopInstallService);
       const desktopDevice = inject(DesktopDeviceService);
+      const mobile = inject(MobileAppService);
       const injector = inject(Injector);
       await inject(AuthService).restoreSession();
       offline.start();
       backup.start();
       desktopInstall.start();
       desktopDevice.start();
+      mobile.start();
       // The modules' own background work; one that fails to load leaves the others.
       for (const module of modules) {
         void module
