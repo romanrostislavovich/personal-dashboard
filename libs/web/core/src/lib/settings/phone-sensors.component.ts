@@ -206,19 +206,36 @@ export class PhoneSensorsComponent {
     await this.refresh();
   }
 
-  protected async open(step: Step): Promise<void> {
-    const plugin = await phoneSensors();
-    if (step === 'usageAccess') {
-      await plugin?.openUsageAccess();
-    } else if (step === 'notificationAccess') {
-      await plugin?.openNotificationAccess();
-    } else {
-      await plugin?.openBattery();
-    }
+  protected open(step: Step): Promise<void> {
+    return this.openScreen(async (plugin) => {
+      if (step === 'usageAccess') {
+        await plugin.openUsageAccess();
+      } else if (step === 'notificationAccess') {
+        await plugin.openNotificationAccess();
+      } else {
+        await plugin.openBattery();
+      }
+    });
   }
 
-  protected async openAutostart(): Promise<void> {
-    await (await phoneSensors())?.openAutostart();
+  protected openAutostart(): Promise<void> {
+    return this.openScreen((plugin) => plugin.openAutostart());
+  }
+
+  /** A settings screen of Android; when it does not open, the reason shows under the steps. */
+  private async openScreen(
+    run: (plugin: NonNullable<Awaited<ReturnType<typeof phoneSensors>>>) => Promise<void>,
+  ): Promise<void> {
+    this.error.set(null);
+    try {
+      const plugin = await phoneSensors();
+      if (!plugin) {
+        throw new Error('app: no collection in this version');
+      }
+      await withTimeout(run(plugin), STEP_MS);
+    } catch (failure) {
+      this.error.set(`settings: ${describe(failure)}`);
+    }
   }
 
   protected async refresh(): Promise<void> {
