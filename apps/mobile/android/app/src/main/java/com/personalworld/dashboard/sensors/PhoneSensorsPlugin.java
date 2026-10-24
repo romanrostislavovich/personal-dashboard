@@ -1,5 +1,6 @@
 package com.personalworld.dashboard.sensors;
 
+import android.app.Activity;
 import android.app.AppOpsManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -113,31 +114,40 @@ public class PhoneSensorsPlugin extends Plugin {
     /** MIUI keeps an app from starting by itself until it is allowed here; elsewhere — the app's page. */
     @PluginMethod
     public void openAutostart(PluginCall call) {
-        Intent miui = new Intent().setComponent(new ComponentName(
+        open(call, new Intent().setComponent(new ComponentName(
             "com.miui.securitycenter",
             "com.miui.permcenter.autostart.AutoStartManagementActivity"
-        ));
-        try {
-            miui.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getContext().startActivity(miui);
-            call.resolve();
-        } catch (ActivityNotFoundException | SecurityException e) {
-            Intent details = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            details.setData(Uri.parse("package:" + getContext().getPackageName()));
-            open(call, details);
-        }
+        )));
     }
 
+    /**
+     * Opens a settings screen from the app's own screen (MIUI is strict about starting one from
+     * elsewhere); a phone without that screen gets the app's page in Android's settings, where
+     * every permission is too.
+     */
     private void open(PluginCall call, Intent intent) {
-        try {
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getContext().startActivity(intent);
-            call.resolve();
-        } catch (ActivityNotFoundException e) {
-            call.reject("This phone has no such settings screen");
-        } catch (RuntimeException e) {
-            call.reject(e.getClass().getSimpleName() + ": " + e.getMessage());
+        Activity activity = getActivity();
+        if (activity == null) {
+            call.reject("The app is not on the screen");
+            return;
         }
+        activity.runOnUiThread(() -> {
+            try {
+                activity.startActivity(intent);
+                call.resolve();
+            } catch (ActivityNotFoundException | SecurityException e) {
+                try {
+                    Intent details = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    details.setData(Uri.parse("package:" + activity.getPackageName()));
+                    activity.startActivity(details);
+                    call.resolve();
+                } catch (RuntimeException again) {
+                    call.reject(again.getClass().getSimpleName() + ": " + again.getMessage());
+                }
+            } catch (RuntimeException e) {
+                call.reject(e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
+        });
     }
 
     static boolean hasUsageAccess(Context context) {
