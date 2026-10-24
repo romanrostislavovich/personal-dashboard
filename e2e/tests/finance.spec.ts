@@ -15,9 +15,11 @@ test('an expense is added and shows among the transactions', async ({ page, requ
   await expect(dialog).toBeHidden();
 
   await page.getByRole('tab', { name: 'Transactions' }).click();
-  // The row of the transaction: its category and its amount. The category alone is also on the
-  // overview (the top categories), which stays on the page behind its tab.
+  // The row of the transaction, in the tab of transactions: the overview stays on the page
+  // behind its tab, and may show the same transaction among the latest ones.
   await expect(
-    page.getByRole('button', { name: new RegExp(`${category}.*12[.,]50`) }),
+    page
+      .getByRole('tabpanel', { name: 'Transactions' })
+      .getByRole('button', { name: new RegExp(`${category}.*12[.,]50`) }),
   ).toBeVisible();
 });
