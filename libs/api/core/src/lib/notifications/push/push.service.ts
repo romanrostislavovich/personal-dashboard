@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PushDevice, PushDeviceInput, PushStatus } from '@pd/contracts';
 import { and, asc, eq } from 'drizzle-orm';
@@ -18,7 +24,7 @@ const KEY = 'push.fcm-service-account';
  * hands it the notifications like Telegram gets them.
  */
 @Injectable()
-export class PushService implements OnModuleInit {
+export class PushService implements OnApplicationBootstrap {
   private readonly logger = new Logger(PushService.name);
   /** Users with a phone: the channel asks on every notification, without the database. */
   private readonly withDevices = new Set<string>();
@@ -37,7 +43,11 @@ export class PushService implements OnModuleInit {
     this.isSyncClient = config.get('SYNC_MODE', { infer: true }) === 'client';
   }
 
-  async onModuleInit(): Promise<void> {
+  /**
+   * After every module's start, not in `onModuleInit`: the migrations run in DatabaseModule's
+   * own, and on the first start after an update the table may not be there before them.
+   */
+  async onApplicationBootstrap(): Promise<void> {
     const rows = await this.db.selectDistinct({ userId: pushDevices.userId }).from(pushDevices);
     rows.forEach((row) => this.withDevices.add(row.userId));
     await this.fcm().catch(() => null);
