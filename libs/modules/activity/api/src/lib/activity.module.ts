@@ -12,6 +12,8 @@ import { ActivityJobs } from './activity.jobs';
 import { EveningSummaryJob } from './evening-summary.job';
 import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
+import { PhoneNotificationsController } from './phone-notifications.controller';
+import { PhoneNotificationsService } from './phone-notifications.service';
 import { ProjectTimeService } from './project-time.service';
 import { RuleSuggestionsService } from './rule-suggestions.service';
 import { SitesService } from './sites.service';
@@ -31,7 +33,7 @@ import { TelemetrySummaryService } from './telemetry-summary.service';
  * token of their own. API: `/api/activity`.
  */
 @Module({
-  controllers: [ActivityController, ActivityContextController],
+  controllers: [ActivityController, ActivityContextController, PhoneNotificationsController],
   providers: [
     ActivityContextJobs,
     ActivityContextStore,
@@ -45,6 +47,7 @@ import { TelemetrySummaryService } from './telemetry-summary.service';
     ActivitySecurity,
     ActivityService,
     DevicesService,
+    PhoneNotificationsService,
     SitesService,
     ProjectTimeService,
     RuleSuggestionsService,

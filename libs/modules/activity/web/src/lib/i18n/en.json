@@ -62,7 +62,8 @@
     "overview": "Overview",
     "settings": "Setup",
     "focus": "Focus",
-    "computers": "Computers"
+    "computers": "Computers",
+    "notifications": "Notifications"
   },
   "commands": {
     "settings": "Activity: trackers and programs",
@@ -495,5 +496,14 @@
     "browserOnly": "Open this page in the desktop app to see why the telemetry is on or off.",
     "oldDesktop": "The desktop app is older than this page: restart it to get the update and see the reasons.",
     "error": "Could not read the state of the desktop app. Refresh to try again."
+  },
+  "notifications": {
+    "period": "Period",
+    "days": "{{count}} days",
+    "none": "No notifications from the phone yet. Switch the collection on in the Android app: Settings → Apps.",
+    "total": "Notifications: {{count}}",
+    "byHour": "In which hours they came",
+    "apps": "Which apps",
+    "latest": "The latest"
   }
 }

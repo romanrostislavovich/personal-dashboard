@@ -101,6 +101,17 @@ Electron.
 
 ## Stage 2 — the phone as a sensor
 
+**2a and 2b built (2026-10-24):** Settings → Apps inside the app → "The phone as a sensor":
+switching it on registers the phone as a device of Activity (platform `android`) and hands its
+token to the native collection (`sensors/` in apps/mobile, Java): `SensorsWorker` (WorkManager,
+every 15 minutes) reads Android's usage events (`UsageSpans`, tested with JUnit on every APK
+build) and posts them as spans to `/api/activity/device/spans`, and the notifications
+`PhoneNotificationListener` wrote down to `/api/activity/device/notifications`
+(`activity_phone_notifications`, title and text encrypted; Activity → Notifications). The card
+leads through Usage access, Notification access, no battery limits and MIUI's autostart. Common
+Android apps have categories (Instagram → media, Telegram → communication…). Not yet: unlocks
+and night use as their own numbers, the location (2c).
+
 To Activity (a "phone" device) and Life, and from there to Links:
 
 - time per app (Instagram, LinkedIn, …), unlocks, use of the phone at night;

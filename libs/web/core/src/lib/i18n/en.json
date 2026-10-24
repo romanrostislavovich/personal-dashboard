@@ -527,6 +527,22 @@
       "to": "Till",
       "softOverdue": "Soft overdue",
       "softOverdueHint": "A task past its date is not shown in red and is not named in the morning digest. It stays in the list as it is."
+    },
+    "phone": {
+      "title": "The phone as a sensor",
+      "hint": "Time in apps and their notifications, to Activity — for the dashboard to see what takes the day",
+      "enable": "Switch on",
+      "allow": "Allow",
+      "open": "Open",
+      "steps": {
+        "usageAccess": "Time in apps (Usage access)",
+        "notificationAccess": "Notifications of other apps (Notification access)",
+        "unrestricted": "No battery limits in the background",
+        "autostart": "Autostart (MIUI: switch it on for Personal Dashboard)"
+      },
+      "where": "The time in apps comes to Activity as this phone, the notifications to Activity → Notifications, every 15 minutes.",
+      "disable": "Switch off",
+      "error": "Could not switch it on: check the connection and try again."
     }
   },
   "toast": {

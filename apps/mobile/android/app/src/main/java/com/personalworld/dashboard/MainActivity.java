@@ -2,6 +2,7 @@ package com.personalworld.dashboard;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
+import com.personalworld.dashboard.sensors.PhoneSensorsPlugin;
 
 public class MainActivity extends BridgeActivity {
 
@@ -9,6 +10,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // The app's own plugins, before Capacitor starts.
         registerPlugin(GentleWidgetPlugin.class);
+        registerPlugin(PhoneSensorsPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

@@ -9,6 +9,7 @@ import { DB, Database } from '@pd/api-core';
 import { ActivityDevice, ActivityDeviceCreated, ActivityDeviceInput } from '@pd/contracts';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { createHash, randomBytes } from 'node:crypto';
+import { activityPhoneNotifications } from './phone-notifications.schema';
 import { activityWorkstates, telemetryDynamics } from './activity-context.schema';
 import {
   activityDevices,
@@ -94,6 +95,11 @@ export class DevicesService {
         DELETE FROM activity_health a USING activity_health b
         WHERE a.device_id = ${id} AND b.device_id = ${into} AND a.at = b.at
       `);
+      await tx.execute(sql`
+        DELETE FROM activity_phone_notifications a USING activity_phone_notifications b
+        WHERE a.device_id = ${id} AND b.device_id = ${into}
+          AND a.app = b.app AND a.posted_at = b.posted_at
+      `);
       for (const table of [
         activitySpans,
         activityHealth,
@@ -101,6 +107,7 @@ export class DevicesService {
         activityOutages,
         telemetryDynamics,
         activityWorkstates,
+        activityPhoneNotifications,
       ]) {
         await tx
           .update(table)
