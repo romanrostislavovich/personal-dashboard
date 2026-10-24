@@ -321,8 +321,9 @@ export class AppsSettingsComponent {
     this.overview.reload();
   }
 
+  /** A commit of the desktop app or the extension is cut to 7 signs; `0.3.0.450` stays whole. */
   protected short(version: string): string {
-    return version.slice(0, 7);
+    return /^\d+(\.\d+)+$/.test(version) ? version : version.slice(0, 7);
   }
 
   protected megabytes(bytes: number): string {

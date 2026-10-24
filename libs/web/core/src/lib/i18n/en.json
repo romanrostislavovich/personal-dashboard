@@ -542,7 +542,8 @@
       },
       "where": "The time in apps comes to Activity as this phone, the notifications to Activity → Notifications, every 15 minutes.",
       "disable": "Switch off",
-      "error": "Could not switch it on: check the connection and try again."
+      "error": "Could not switch it on: check the connection and try again.",
+      "update": "This version of the app cannot collect yet: install the new one over it, then come back here."
     }
   },
   "toast": {

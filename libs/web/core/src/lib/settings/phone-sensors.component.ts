@@ -4,9 +4,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { App } from '@capacitor/app';
-import { activityApi } from '@pd/client-core';
+import { activityApi, appsApi } from '@pd/client-core';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { mobileServer, phoneModel } from '../mobile/mobile-app';
+import { apiBaseUrl, isMobileApp, mobileServer, phoneModel } from '../mobile/mobile-app';
 import { phoneSensors, PhoneSensorsStatus } from '../mobile/phone-sensors';
 
 type Step = 'usageAccess' | 'notificationAccess' | 'unrestricted';
@@ -22,7 +22,7 @@ type Step = 'usageAccess' | 'notificationAccess' | 'unrestricted';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MatButtonModule, MatCardModule, MatIconModule, TranslocoPipe],
   template: `
-    @if (available()) {
+    @if (inApp) {
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-icon mat-card-avatar>sensors</mat-icon>
@@ -30,6 +30,16 @@ type Step = 'usageAccess' | 'notificationAccess' | 'unrestricted';
           <mat-card-subtitle>{{ 'core.settings.phone.hint' | transloco }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content class="content">
+          @if (available() === false) {
+            <!-- An APK built before the collection: its native part is not there yet. -->
+            <p>{{ 'core.settings.phone.update' | transloco }}</p>
+            @if (apkUrl(); as url) {
+              <a matButton="filled" [href]="url" target="_blank" rel="noopener">
+                <mat-icon>download</mat-icon>
+                {{ 'core.settings.apps.mobile.apk' | transloco }}
+              </a>
+            }
+          }
           @if (status(); as s) {
             @if (!s.configured) {
               <button matButton="filled" [disabled]="busy()" (click)="enable()">
@@ -96,15 +106,30 @@ type Step = 'usageAccess' | 'notificationAccess' | 'unrestricted';
 })
 export class PhoneSensorsComponent {
   private readonly activity = activityApi(inject(DASHBOARD_CLIENT).api);
+  private readonly apps = appsApi(inject(DASHBOARD_CLIENT).api);
 
   protected readonly steps: Step[] = ['usageAccess', 'notificationAccess', 'unrestricted'];
-  protected readonly available = signal(false);
+  /** Only the Android app collects; a browser shows nothing here. */
+  protected readonly inApp = isMobileApp();
+  /** The APK this server hands out, for an app too old to collect. */
+  protected readonly apkUrl = signal<string | null>(null);
+  /** Whether this APK can collect; `null` — not known yet (asked of the app). */
+  protected readonly available = signal<boolean | null>(null);
   protected readonly status = signal<PhoneSensorsStatus | null>(null);
   protected readonly busy = signal(false);
   protected readonly error = signal(false);
 
   constructor() {
     void this.refresh();
+    if (this.inApp) {
+      void this.apps.overview().then(
+        (overview) => {
+          const apk = overview.apps.find((app) => app.kind === 'mobile')?.downloads[0];
+          this.apkUrl.set(apk ? `${apiBaseUrl()}${apk.url}` : null);
+        },
+        () => undefined,
+      );
+    }
     // Back from Android's settings: what was allowed shows at once.
     const resumed = App.addListener('resume', () => void this.refresh()).catch(() => null);
     inject(DestroyRef).onDestroy(() => void resumed.then((handle) => handle?.remove()));
