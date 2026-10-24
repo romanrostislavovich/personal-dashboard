@@ -35,14 +35,14 @@
   "private": true,
   "dependencies": {
     "@angular/cdk": "^22.2.0",
-    "@angular/common": "22.2.0",
-    "@angular/compiler": "22.2.0",
-    "@angular/core": "22.2.0",
-    "@angular/forms": "22.2.0",
+    "@angular/common": "22.2.3",
+    "@angular/compiler": "22.2.3",
+    "@angular/core": "22.2.3",
+    "@angular/forms": "22.2.3",
     "@angular/material": "^22.2.0",
-    "@angular/platform-browser": "22.2.0",
-    "@angular/router": "22.2.0",
-    "@angular/service-worker": "^22.2.0",
+    "@angular/platform-browser": "22.2.3",
+    "@angular/router": "22.2.3",
+    "@angular/service-worker": "22.2.3",
     "@jsverse/transloco": "^8.4.0",
     "@material/material-color-utilities": "^0.4.0",
     "@nestjs/common": "^12.1.1",
@@ -74,18 +74,18 @@
     "sharp": "^0.35.5",
     "unpdf": "^1.8.1",
     "ws": "^8.22.0",
-    "zod": "^4.6.5",
+    "zod": "^4.6.7",
     "zone.js": "0.16.2"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "2.7.5",
     "@analogjs/vitest-angular": "2.7.5",
-    "@angular-devkit/core": "22.2.0",
-    "@angular-devkit/schematics": "22.2.0",
-    "@angular/build": "22.2.0",
-    "@angular/cli": "22.2.0",
-    "@angular/compiler-cli": "22.2.0",
-    "@angular/language-service": "22.2.0",
+    "@angular-devkit/core": "22.2.3",
+    "@angular-devkit/schematics": "22.2.3",
+    "@angular/build": "22.2.3",
+    "@angular/cli": "22.2.3",
+    "@angular/compiler-cli": "22.2.3",
+    "@angular/language-service": "22.2.3",
     "@eslint/js": "^9.8.0",
     "@nx/angular": "23.2.1",
     "@nx/devkit": "23.2.1",
@@ -154,6 +154,9 @@
     "@nx/nest": {
       "@nestjs/common": "$@nestjs/common",
       "@nestjs/core": "$@nestjs/core"
+    },
+    "@nestjs/platform-express": {
+      "multer": "2.5.0"
     }
   }
 }

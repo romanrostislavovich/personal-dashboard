@@ -43,8 +43,10 @@ export default [
               onlyDependOnLibsWithTags: ['scope:client', 'scope:shared'],
             },
             {
+              // The desktop shell is a client too: it checks and cleans the telemetry it sends
+              // with the same schemas as the server, and posts to paths of the client core.
               sourceTag: 'scope:desktop',
-              onlyDependOnLibsWithTags: [],
+              onlyDependOnLibsWithTags: ['scope:client', 'scope:shared'],
             },
             {
               sourceTag: 'type:core',
