@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { App } from '@capacitor/app';
 import { appsApi } from '@pd/client-core';
 import { AuthService } from '../auth/auth.service';
@@ -28,6 +29,7 @@ export class MobileAppService {
   private readonly auth = inject(AuthService);
   private readonly apps = appsApi(inject(DASHBOARD_CLIENT).api);
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   private readonly push = inject(MobilePushService);
   private started = false;
   private prefetchedAt = 0;
@@ -49,6 +51,13 @@ export class MobileAppService {
       void App.addListener('resume', () => {
         if (Date.now() - this.prefetchedAt > PREFETCH_ON_RESUME_MS) {
           void this.prefetch();
+        }
+      }).catch(() => undefined);
+      // personaldashboard://psychology/gentle — the widget opens a page of the app.
+      void App.addListener('appUrlOpen', ({ url }) => {
+        const route = url.replace(/^personaldashboard:\/\//, '/');
+        if (route !== url) {
+          void this.router.navigateByUrl(route);
         }
       }).catch(() => undefined);
       void removeOldBundles().catch(() => undefined);

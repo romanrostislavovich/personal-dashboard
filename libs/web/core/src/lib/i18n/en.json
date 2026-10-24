@@ -462,7 +462,8 @@
         "pending": "Will retry",
         "sent": "Sent",
         "failed": "Failed",
-        "deduplicated": "Repeat, skipped"
+        "deduplicated": "Repeat, skipped",
+        "held": "Waits for the end of quiet hours"
       }
     },
     "mcp": {
@@ -516,6 +517,16 @@
         "4": "Open that file, copy all of it into “Server key” below and save: the server checks it with Firebase.",
         "5": "Deploy, install the new version of the app on the phone (Settings → Apps) and allow notifications when it asks."
       }
+    },
+    "calm": {
+      "title": "A gentle mode",
+      "hint": "For hard evenings and nights: fewer things that push",
+      "quiet": "Quiet hours",
+      "quietHint": "Telegram and the phone keep quiet in them; what came meanwhile arrives at their end as one message. A test you send yourself still comes.",
+      "from": "From",
+      "to": "Till",
+      "softOverdue": "Soft overdue",
+      "softOverdueHint": "A task past its date is not shown in red and is not named in the morning digest. It stays in the list as it is."
     }
   },
   "toast": {

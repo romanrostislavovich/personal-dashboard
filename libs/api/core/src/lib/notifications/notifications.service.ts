@@ -1,4 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { NO_CALM, quietMinutesLeft, zonedDateTime } from '@pd/contracts';
+import { coreMessages } from '../i18n/core.messages';
 import { SchedulerService } from '../scheduler/scheduler.service';
 import { UserRow } from '../users/users.schema';
 import { UsersService } from '../users/users.service';
@@ -18,6 +20,11 @@ const SOURCE_SECTIONS: Record<string, string> = {
   spotify: 'music',
   lastfm: 'music',
 };
+
+/** The night's message lists this many; the rest are counted. */
+const QUIET_LIST_MAX = 15;
+/** A line of the night's message is cut to this. */
+const QUIET_LINE_MAX = 160;
 
 /** The section a notification is about, as the menu names it. */
 function sectionOfSource(source: string): string {
@@ -50,6 +57,12 @@ export class NotificationsService implements OnModuleInit {
       handler: () => this.retryDue(),
     });
     this.scheduler.register({
+      name: 'notifications.quiet-end',
+      cron: '* * * * *',
+      quiet: true,
+      handler: () => this.releaseHeld(),
+    });
+    this.scheduler.register({
       name: 'notifications.prune',
       cron: '40 4 * * *',
       handler: () => this.outbox.prune(),
@@ -68,6 +81,14 @@ export class NotificationsService implements OnModuleInit {
 
     const channels = this.channels.filter((channel) => channel.isEnabledFor(user));
     const durable = channels.filter((channel) => channel.durable).map((channel) => channel.name);
+    // The user's quiet hours: Telegram and the phone wait for their end; a toast in a tab the
+    // user has open now still shows — they are looking anyway.
+    const quietUntil = notification.now ? null : this.quietUntil(user);
+    if (quietUntil && durable.length) {
+      await this.outbox.add(userId, notification, durable, 'held', null, quietUntil);
+      await this.sendNow(user, notification, channels);
+      return;
+    }
     const row = await this.outbox.add(
       userId,
       notification,
@@ -82,7 +103,18 @@ export class NotificationsService implements OnModuleInit {
       this.logger.warn(`No notification channels for user ${user.email}: "${notification.title}"`);
       return;
     }
-    // A toast is shown now or never: it is not tried again.
+    await this.sendNow(user, notification, channels);
+    if (durable.length) {
+      await this.deliver(user, row);
+    }
+  }
+
+  /** A toast is shown now or never: it is not tried again. */
+  private async sendNow(
+    user: UserRow,
+    notification: Notification,
+    channels: NotificationChannel[],
+  ): Promise<void> {
     await Promise.all(
       channels
         .filter((channel) => !channel.durable)
@@ -92,8 +124,79 @@ export class NotificationsService implements OnModuleInit {
             .catch((error) => this.logger.error(`Channel ${channel.name} failed: ${error}`)),
         ),
     );
-    if (durable.length) {
-      await this.deliver(user, row);
+  }
+
+  /** When the user's quiet hours end, if they are in them now; `null` — not quiet now. */
+  private quietUntil(user: UserRow, now = new Date()): Date | null {
+    const { time } = zonedDateTime(now, this.users.timeZoneOf(user));
+    const [hours, minutes] = time.split(':').map(Number);
+    const left = quietMinutesLeft((user.calm ?? NO_CALM).quietHours, hours * 60 + minutes);
+    if (!left) {
+      return null;
+    }
+    const end = new Date(now.getTime() + left * 60_000);
+    end.setSeconds(0, 0);
+    return end;
+  }
+
+  /**
+   * The quiet hours are over (every minute): what each user got during them goes out as one
+   * message to the channels they had, and one alone goes out as it was.
+   */
+  async releaseHeld(): Promise<void> {
+    const byUser = new Map<string, NotificationOutboxRow[]>();
+    for (const row of await this.outbox.claimHeld()) {
+      byUser.set(row.userId, [...(byUser.get(row.userId) ?? []), row]);
+    }
+    for (const [userId, rows] of byUser) {
+      const user = await this.users.findById(userId);
+      if (!user) {
+        continue;
+      }
+      if (rows.length === 1) {
+        await this.deliver(user, rows[0]);
+        continue;
+      }
+      await this.deliverNight(user, rows);
+    }
+  }
+
+  /** The night in one message; if it fails, each goes back to be tried on its own. */
+  private async deliverNight(user: UserRow, rows: NotificationOutboxRow[]): Promise<void> {
+    const cut = (text: string) =>
+      text.length > QUIET_LINE_MAX ? `${text.slice(0, QUIET_LINE_MAX)}…` : text;
+    const lines = rows
+      .slice(0, QUIET_LIST_MAX)
+      .map((row) => `• ${cut(`${row.title}: ${row.body}`.replace(/\s+/g, ' '))}`);
+    if (rows.length > QUIET_LIST_MAX) {
+      lines.push(`… +${rows.length - QUIET_LIST_MAX}`);
+    }
+    const night: Notification = {
+      title: coreMessages(user.locale).quietTitle(rows.length),
+      body: lines.join('\n'),
+      source: 'core',
+    };
+    const names = [...new Set(rows.flatMap((row) => row.channels))];
+    let failure: unknown = null;
+    for (const name of names) {
+      const channel = this.channels.find((one) => one.name === name);
+      if (!channel?.isEnabledFor(user)) {
+        continue;
+      }
+      try {
+        await channel.send(user, night);
+      } catch (error) {
+        failure = error;
+      }
+    }
+    for (const row of rows) {
+      if (failure) {
+        const error =
+          failure instanceof DeliveryError ? failure : new DeliveryError(String(failure));
+        await this.outbox.failed(row, row.channels, error.message, error.options);
+      } else {
+        await this.outbox.delivered(row.id);
+      }
     }
   }
 

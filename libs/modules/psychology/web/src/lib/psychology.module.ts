@@ -32,6 +32,7 @@ export const psychologyModule: WebDashboardModule = {
           path: 'briefs',
           loadComponent: () => import('./brief/briefs.page').then((m) => m.BriefsPage),
         },
+        { path: 'help', loadComponent: () => import('./help/help.page').then((m) => m.HelpPage) },
       ],
     },
   ],
@@ -47,6 +48,12 @@ export const psychologyModule: WebDashboardModule = {
     },
   ],
   commands: [
+    {
+      id: 'psychology.help',
+      labelKey: 'psychology.tabs.help',
+      icon: 'support',
+      url: '/psychology/help',
+    },
     {
       id: 'psychology.gentle',
       labelKey: 'psychology.tabs.gentle',

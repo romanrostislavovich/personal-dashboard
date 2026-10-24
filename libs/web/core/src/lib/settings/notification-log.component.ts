@@ -13,6 +13,7 @@ import {
 } from '@pd/contracts';
 
 const STATUS_ICONS: Record<NotificationDeliveryStatus, string> = {
+  held: 'bedtime',
   sending: 'schedule_send',
   pending: 'schedule',
   sent: 'check_circle',

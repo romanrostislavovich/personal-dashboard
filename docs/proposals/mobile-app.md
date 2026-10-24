@@ -81,10 +81,21 @@ Electron.
   gone is forgotten; a sync client sends none. The APK is built with
   `deploy/google-services.json` (not in git) when it is there. Switched off per phone in the same
   card; **per kind of notification — with the quiet hours of 1d.**
-- **Gentle on the phone:** a home-screen widget of the gentle day; quiet hours in the evening and
-  at night (nothing about overdue tasks); a help button — the crisis lines of the user's country
-  (a list kept in the repository with the source of every number) and "call or write a close
-  person" (a contact the user adds by hand).
+- **1d, gentle (built, 2026-10-24)** — the owner's choices: quiet hours 21:00–09:00, nothing
+  comes in them; soft overdue always; the close person through Telegram.
+  - **A gentle mode** (Settings → Appearance, `calm` of the account, every device): in the quiet
+    hours Telegram and push wait (`held` in the outbox) and come at their end as **one** message,
+    "while it was quiet: N"; a toast in an open tab still shows, a test the user sends comes at
+    once. **Soft overdue:** no red in the task list and the home widget, nothing overdue in the
+    morning digest.
+  - **Help** (Psychology → Help, a link on the gentle day and its widget, the palette): a close
+    person's Telegram in one tap (stored encrypted), the crisis lines of the user's country
+    first (`crisis-lines.ts` in contracts: every country with its sources and the date checked;
+    any other through Find A Helpline), the emergency number. Works offline: the numbers are in
+    the app.
+  - **The home-screen widget** (`GentleWidget` in apps/mobile, Java): the page hands it the
+    day's text (`showOnGentleWidget`), a tap opens the app on the gentle day
+    (`personaldashboard://psychology/gentle`); a day that has passed asks to open the app.
 - MIUI and similar systems kill apps in the background: a setup screen walks through autostart
   and battery settings.
 

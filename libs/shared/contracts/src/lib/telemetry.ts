@@ -35,7 +35,9 @@ export function sanitizeTelemetryUrl(value: string): string | null {
       url.port ||
       privatePath.test(path) ||
       !sanitizeTelemetryText(path) ||
-      [...path].some((char) => char === '\\' || char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)
+      [...path].some(
+        (char) => char === '\\' || char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127,
+      )
     ) {
       return null;
     }

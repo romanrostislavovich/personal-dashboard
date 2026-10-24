@@ -6,7 +6,8 @@
     "checkups": "Check-ups",
     "events": "Events",
     "gentle": "Gentle day",
-    "briefs": "For an appointment"
+    "briefs": "For an appointment",
+    "help": "Help"
   },
   "period": "Period",
   "days": "{{days}} days",
@@ -20,11 +21,11 @@
     "6": "Sun"
   },
   "feelings": {
-    "-2": "Very hard",
-    "-1": "Hard",
     "0": "Neutral",
     "1": "Good",
-    "2": "Very good"
+    "2": "Very good",
+    "-2": "Very hard",
+    "-1": "Hard"
   },
   "patterns": {
     "empty": "No mood in this period yet. Mark the mood of a day in the diary — or tap it in the evening message of the bot — and the patterns appear here.",
@@ -217,7 +218,9 @@
       "shower": "Take a shower",
       "message": "Write to someone close",
       "window": "Open the window"
-    }
+    },
+    "widgetOff": "An ordinary day. If it gets hard, tap here.",
+    "widgetStale": "A new day: tap to open it."
   },
   "brief": {
     "about": "Gather your own records of a period into one page for a doctor or a psychologist: what changed, the questionnaires, the events and your questions. You pick every record; the file is made only when you ask, and is sent nowhere.",
@@ -241,5 +244,34 @@
     "counts": "Questionnaires: {{checkups}} · events: {{events}} · questions: {{questions}}",
     "export": "Word file",
     "confirmDelete": "Delete the brief «{{title}}»?"
+  },
+  "help": {
+    "title": "When it is too hard",
+    "about": "You do not have to carry it alone. One of these is enough.",
+    "open": "Help, if it is too hard",
+    "write": "Write to {{name}} in Telegram",
+    "change": "Another person",
+    "noPerson": "Add someone close: one tap here opens a chat with them.",
+    "addPerson": "Add a close person",
+    "name": "Name",
+    "telegram": "Their Telegram",
+    "invalid": "A name and a Telegram username (5 letters or more) or a phone number with + are needed.",
+    "save": "Save",
+    "remove": "Remove",
+    "cancel": "Cancel",
+    "lines": "Crisis lines",
+    "otherCountries": "Other countries",
+    "anyCountry": "Lines of every other country (Find A Helpline)",
+    "allDay": "day and night",
+    "hours": "check the hours on its site",
+    "emergency": "Immediate danger: {{number}}",
+    "checked": "The numbers were checked on {{date}}.",
+    "countries": {
+      "PL": "Poland",
+      "UA": "Ukraine",
+      "DE": "Germany",
+      "GB": "United Kingdom",
+      "US": "United States"
+    }
   }
 }

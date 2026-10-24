@@ -22,7 +22,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- personaldashboard://<route>: the widget opens the app on a page of its own. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="personaldashboard" />
+            </intent-filter>
+
         </activity>
+
+        <!-- The gentle day on the home screen (GentleWidget). -->
+        <receiver
+            android:name=".GentleWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/gentle_widget_info" />
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"

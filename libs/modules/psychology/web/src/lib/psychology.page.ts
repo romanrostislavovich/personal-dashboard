@@ -10,6 +10,7 @@ const TABS = [
   { path: 'events', labelKey: 'psychology.tabs.events' },
   { path: 'gentle', labelKey: 'psychology.tabs.gentle' },
   { path: 'briefs', labelKey: 'psychology.tabs.briefs' },
+  { path: 'help', labelKey: 'psychology.tabs.help' },
 ] as const;
 
 /** The Psychology section: a title, what it is not, the tabs and the subsection under them. */

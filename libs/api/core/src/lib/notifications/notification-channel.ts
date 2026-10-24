@@ -23,6 +23,11 @@ export interface Notification {
    * again within a few minutes (a job run twice).
    */
   dedupe?: { key: string; minutes: number };
+  /**
+   * Asked for by the user right now (a test): it goes out in their quiet hours too, which hold
+   * every other one until morning (see CalmSettings).
+   */
+  now?: boolean;
 }
 
 /**

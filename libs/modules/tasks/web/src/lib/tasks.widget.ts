@@ -8,6 +8,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { Task } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
 import { todayLocal } from './local-time';
+import { AuthService } from '@pd/web-core';
 import { TasksApi } from './tasks.api';
 import { filterTasks, isOverdue } from './todo/task-filter';
 
@@ -67,6 +68,7 @@ const WIDGET_MAX_TASKS = 6;
 })
 export class TasksWidget {
   private readonly api = inject(TasksApi);
+  private readonly auth = inject(AuthService);
   private readonly tasks = this.api.tasks();
   private readonly reminders = this.api.reminders();
   private readonly day = todayLocal();
@@ -80,8 +82,9 @@ export class TasksWidget {
     () => this.reminders.value().find((reminder) => reminder.status === 'scheduled') ?? null,
   );
 
+  /** Past its date, shown in red — unless the user asked for soft overdue (CalmSettings). */
   protected overdue(task: Task): boolean {
-    return isOverdue(task, this.day);
+    return !this.auth.user()?.calm.softOverdue && isOverdue(task, this.day);
   }
 
   protected async complete(task: Task): Promise<void> {

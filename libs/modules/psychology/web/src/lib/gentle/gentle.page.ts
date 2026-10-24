@@ -1,5 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { GentleDayComponent } from './gentle-day.component';
 import { GentleStepsComponent } from './gentle-steps.component';
@@ -8,7 +11,15 @@ import { GentleStepsComponent } from './gentle-steps.component';
 @Component({
   selector: 'pd-gentle-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatCardModule, TranslocoPipe, GentleDayComponent, GentleStepsComponent],
+  imports: [
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    RouterLink,
+    TranslocoPipe,
+    GentleDayComponent,
+    GentleStepsComponent,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
@@ -18,6 +29,12 @@ import { GentleStepsComponent } from './gentle-steps.component';
       <mat-card-content class="padded">
         <pd-gentle-day />
       </mat-card-content>
+      <mat-card-actions>
+        <a matButton routerLink="../help">
+          <mat-icon>support</mat-icon>
+          {{ 'psychology.help.open' | transloco }}
+        </a>
+      </mat-card-actions>
     </mat-card>
     <mat-card appearance="outlined">
       <mat-card-header>

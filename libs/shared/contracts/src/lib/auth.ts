@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { calmSchema, CalmSettings } from './calm';
 import { AccountLayout, layoutSchema } from './layout';
 import { AccountTheme, themeSchema } from './theme';
 import { isValidTimeZone } from './time-zone';
@@ -105,6 +106,8 @@ export interface CurrentUser {
   theme: AccountTheme | null;
   /** Hidden sections and the home page as arranged on every device; `null` — never set. */
   layout: AccountLayout | null;
+  /** Quiet hours and soft overdue (see CalmSettings). */
+  calm: CalmSettings;
 }
 
 /** Languages of the UI, notifications and AI answers. A new language = translations in every module. */
@@ -132,6 +135,8 @@ export const profileUpdateSchema = z.object({
   theme: themeSchema.optional(),
   /** The same for the layout: hidden sections and the widgets of the home page. */
   layout: layoutSchema.optional(),
+  /** Quiet hours and soft overdue, for every device. */
+  calm: calmSchema.optional(),
 });
 export type ProfileUpdate = z.infer<typeof profileUpdateSchema>;
 

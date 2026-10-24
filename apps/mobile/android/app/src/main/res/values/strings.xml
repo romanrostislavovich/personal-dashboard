@@ -4,4 +4,8 @@
     <string name="title_activity_main">Personal Dashboard</string>
     <string name="package_name">com.personalworld.dashboard</string>
     <string name="custom_url_scheme">com.personalworld.dashboard</string>
+    <!-- The home-screen widget of the gentle day (GentleWidget) -->
+    <string name="gentle_widget_title">Gentle day</string>
+    <string name="gentle_widget_open">Tap to open the gentle day</string>
+    <string name="gentle_widget_description">Today\'s one to three small steps</string>
 </resources>

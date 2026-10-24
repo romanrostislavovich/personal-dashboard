@@ -36,9 +36,11 @@ export interface TelegramLinkResponse {
 
 /**
  * What became of a notification: `sending` — on its way now; `pending` — a channel failed and it
- * is tried again later; `deduplicated` — the same one went out a moment ago, so not again.
+ * is tried again later; `deduplicated` — the same one went out a moment ago, so not again;
+ * `held` — made in the user's quiet hours, it waits for their end (see CalmSettings).
  */
 export const NOTIFICATION_DELIVERY_STATUSES = [
+  'held',
   'sending',
   'pending',
   'sent',

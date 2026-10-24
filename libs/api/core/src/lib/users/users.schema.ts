@@ -1,4 +1,4 @@
-import { AccountLayout, AccountTheme } from '@pd/contracts';
+import { AccountLayout, AccountTheme, CalmSettings } from '@pd/contracts';
 import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
@@ -18,6 +18,8 @@ export const users = pgTable('users', {
   /** Hidden sections and the home page as arranged on every device (see `resolveLayout`). */
   layout: jsonb().$type<AccountLayout>(),
   telegramChatId: text(),
+  /** Quiet hours and soft overdue (see CalmSettings); `null` — never set, as before. */
+  calm: jsonb().$type<CalmSettings>(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 

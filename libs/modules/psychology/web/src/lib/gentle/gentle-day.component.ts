@@ -1,16 +1,34 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { GENTLE_DAY_MAX_STEPS, GentleDayStep, GentleStepState } from '@pd/contracts';
+import { GENTLE_DAY_MAX_STEPS, GentleDay, GentleDayStep, GentleStepState } from '@pd/contracts';
+import { GentleWidgetText, showOnGentleWidget } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { PsychologyApi, today } from '../psychology.api';
 
 /** Ready steps to start from when one's own library is empty: keys of `psychology.gentle.ideas`. */
 const IDEAS = ['water', 'eat', 'outside', 'shower', 'message', 'window'] as const;
+
+/** A step's state as a mark before it on the home-screen widget. */
+const WIDGET_MARKS: Record<GentleStepState, string> = {
+  open: '○',
+  done: '✓',
+  smaller: '↓',
+  notToday: '–',
+  rest: '☾',
+};
 
 /** A step offered for the day: from the library, an idea, or typed for this day only. */
 interface Choice {
@@ -229,6 +247,16 @@ export class GentleDayComponent {
     return [...own, ...ideas, ...extra];
   });
 
+  constructor() {
+    // The Android app's home-screen widget shows the same day (gentle-widget.ts in web-core).
+    effect(() => {
+      const day = this.day.value();
+      if (day) {
+        void showOnGentleWidget(this.widgetText(day));
+      }
+    });
+  }
+
   protected readonly allSettled = computed(() => {
     const steps = this.day.value()?.steps ?? [];
     return steps.length > 0 && steps.every((step) => step.state !== 'open');
@@ -287,11 +315,26 @@ export class GentleDayComponent {
     this.day.reload();
   }
 
+  /** The day for the widget: a mark before each step, as the card shows its state. */
+  private widgetText(day: GentleDay): GentleWidgetText {
+    const t = (key: string) => this.transloco.translate(`psychology.gentle.${key}`);
+    const lines = day.on
+      ? day.steps
+          .map((step) => {
+            const text = step.state === 'smaller' && step.smaller ? step.smaller : step.text;
+            return `${WIDGET_MARKS[step.state]} ${text}`;
+          })
+          .join('\n')
+      : t('widgetOff');
+    return { date: day.date, title: t('title'), lines, stale: t('widgetStale') };
+  }
+
   private async save(steps: GentleDayStep[]): Promise<void> {
     this.busy.set(true);
     try {
       const plan = await firstValueFrom(this.api.saveGentleDay({ date: this.date(), steps }));
-      this.day.set(plan);
+      // `undefined`: no connection — the plan waits to be sent; meanwhile it shows as marked.
+      this.day.set(plan ?? { date: this.date(), on: steps.length > 0, steps });
     } finally {
       this.busy.set(false);
     }

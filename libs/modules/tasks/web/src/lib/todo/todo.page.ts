@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { DurationPipe } from '@pd/web-core';
+import { AuthService, DurationPipe } from '@pd/web-core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Task, TASK_HORIZONS } from '@pd/contracts';
 import { firstValueFrom } from 'rxjs';
@@ -46,6 +46,7 @@ import { allTags, filterTasks, isOverdue, TASK_VIEWS, TaskFilter, TaskView } fro
 })
 export class TodoPage {
   private readonly api = inject(TasksApi);
+  private readonly auth = inject(AuthService);
   private readonly dialog = inject(MatDialog);
   private readonly transloco = inject(TranslocoService);
 
@@ -81,8 +82,9 @@ export class TodoPage {
     this.filter.update((filter) => ({ ...filter, ...change }));
   }
 
+  /** Past its date, shown in red — unless the user asked for soft overdue (CalmSettings). */
   protected overdue(task: Task): boolean {
-    return isOverdue(task, this.today);
+    return !this.auth.user()?.calm.softOverdue && isOverdue(task, this.today);
   }
 
   protected checklistDone(task: Task): number {
