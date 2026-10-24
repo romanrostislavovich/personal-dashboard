@@ -12,8 +12,10 @@ import { prefetchForOffline } from './offline-prefetch';
 
 /** Not in the middle of the start. */
 const FIRST_CHECK_MS = 20_000;
-/** A deploy reaches the phone within this, or at the next start. */
+/** A deploy reaches the phone within this, at the next start, or on coming back to the app. */
 const CHECK_EVERY_MS = 2 * 60 * 60_000;
+/** Coming back to the app asks for a newer interface, but not on every switch of apps. */
+const UPDATE_ON_RESUME_MS = 5 * 60_000;
 /** Coming back to the app reads ahead again, but not on every switch of apps. */
 const PREFETCH_ON_RESUME_MS = 60 * 60_000;
 
@@ -33,6 +35,7 @@ export class MobileAppService {
   private readonly push = inject(MobilePushService);
   private started = false;
   private prefetchedAt = 0;
+  private updateCheckedAt = 0;
 
   start(): void {
     if (!isMobileApp() || this.started) {
@@ -51,6 +54,10 @@ export class MobileAppService {
       void App.addListener('resume', () => {
         if (Date.now() - this.prefetchedAt > PREFETCH_ON_RESUME_MS) {
           void this.prefetch();
+        }
+        // Unpacked now, shown when the app goes to the background next time.
+        if (Date.now() - this.updateCheckedAt > UPDATE_ON_RESUME_MS) {
+          void this.checkUpdate();
         }
       }).catch(() => undefined);
       // personaldashboard://psychology/gentle — the widget opens a page of the app.
@@ -89,8 +96,13 @@ export class MobileAppService {
     await this.report().catch(() => undefined);
     await this.push.sync().catch(() => undefined);
     await this.prefetch();
+    await this.checkUpdate();
+  }
+
+  private async checkUpdate(): Promise<void> {
     const server = mobileServer();
     if (server) {
+      this.updateCheckedAt = Date.now();
       await fetchNewerBundle(server).catch(() => undefined);
     }
   }
