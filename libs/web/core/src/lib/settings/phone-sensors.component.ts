@@ -7,7 +7,7 @@ import { App } from '@capacitor/app';
 import { activityApi, appsApi } from '@pd/client-core';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { apiBaseUrl, isMobileApp, mobileServer, phoneModel } from '../mobile/mobile-app';
-import { phoneSensors, PhoneSensorsStatus } from '../mobile/phone-sensors';
+import { checkPhoneSensors, phoneSensors, PhoneSensorsStatus } from '../mobile/phone-sensors';
 
 type Step = 'usageAccess' | 'notificationAccess' | 'unrestricted';
 
@@ -30,9 +30,20 @@ type Step = 'usageAccess' | 'notificationAccess' | 'unrestricted';
           <mat-card-subtitle>{{ 'core.settings.phone.hint' | transloco }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content class="content">
+          @if (available() === null) {
+            <p class="hint">{{ 'core.settings.phone.checking' | transloco }}</p>
+          }
           @if (available() === false) {
-            <!-- An APK built before the collection: its native part is not there yet. -->
+            <!-- An APK built before the collection, or one whose native part does not answer. -->
             <p>{{ 'core.settings.phone.update' | transloco }}</p>
+            @if (checkError(); as reason) {
+              <p class="hint">
+                {{ 'core.settings.phone.reason' | transloco }}: <code>{{ reason }}</code>
+              </p>
+            }
+            <button matButton (click)="refresh()">
+              {{ 'core.settings.phone.again' | transloco }}
+            </button>
             @if (apkUrl(); as url) {
               <a matButton="filled" [href]="url" target="_blank" rel="noopener">
                 <mat-icon>download</mat-icon>
@@ -115,6 +126,8 @@ export class PhoneSensorsComponent {
   protected readonly apkUrl = signal<string | null>(null);
   /** Whether this APK can collect; `null` — not known yet (asked of the app). */
   protected readonly available = signal<boolean | null>(null);
+  /** What the app answered when it could not collect, to be told on. */
+  protected readonly checkError = signal<string | null>(null);
   protected readonly status = signal<PhoneSensorsStatus | null>(null);
   protected readonly busy = signal(false);
   protected readonly error = signal(false);
@@ -177,9 +190,11 @@ export class PhoneSensorsComponent {
     await (await phoneSensors())?.openAutostart();
   }
 
-  private async refresh(): Promise<void> {
-    const plugin = await phoneSensors();
+  protected async refresh(): Promise<void> {
+    this.available.set(null);
+    const { plugin, error } = await checkPhoneSensors();
     this.available.set(plugin !== null);
+    this.checkError.set(error);
     this.status.set(plugin ? await plugin.status() : null);
     // Allowed just now: the first collection goes at once, not in 15 minutes.
     if (this.status()?.configured) {
