@@ -7,15 +7,9 @@ export function toSupportedLocale(value: string | null | undefined): Locale | nu
 }
 
 /**
- * The UI language at start: the saved choice, then the device languages in order of
- * preference, then English. After sign-in the profile language takes over.
+ * The UI language at start: the saved choice, else English — not the device's language, so
+ * everyone starts the same and picks theirs in Settings. After sign-in the profile one takes over.
  */
-export function resolveLocale(saved: string | null, deviceLanguages: readonly string[]): Locale {
-  for (const candidate of [saved, ...deviceLanguages]) {
-    const locale = toSupportedLocale(candidate);
-    if (locale) {
-      return locale;
-    }
-  }
-  return 'en';
+export function resolveLocale(saved: string | null): Locale {
+  return toSupportedLocale(saved) ?? 'en';
 }

@@ -77,10 +77,10 @@ describe('createDashboardClient', () => {
 });
 
 describe('resolveLocale', () => {
-  it('saved choice, then device languages, then English', () => {
-    expect(resolveLocale('ru', ['en-US'])).toBe('ru');
-    expect(resolveLocale(null, ['de-DE', 'ru-RU'])).toBe('ru');
-    expect(resolveLocale('fr', ['de'])).toBe('en');
+  it('the saved choice, else English', () => {
+    expect(resolveLocale('ru')).toBe('ru');
+    expect(resolveLocale(null)).toBe('en');
+    expect(resolveLocale('fr')).toBe('en');
   });
 
   it('keeps a change made offline and sends it when the server answers again', async () => {

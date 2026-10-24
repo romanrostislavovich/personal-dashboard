@@ -4,13 +4,11 @@ import { Locale } from '@pd/contracts';
 const STORAGE_KEY = 'pd.lang';
 
 /**
- * UI language at startup: saved choice → browser languages → English (see `resolveLocale`).
+ * UI language at startup: the saved choice, else English (see `resolveLocale`).
  * The profile language is applied after sign-in (see AuthService) via `applyLanguage`.
  */
 export function initialLanguage(): Locale {
-  const browser =
-    typeof navigator === 'undefined' ? [] : (navigator.languages ?? [navigator.language]);
-  return resolveLocale(readStored(), browser);
+  return resolveLocale(readStored());
 }
 
 /**
