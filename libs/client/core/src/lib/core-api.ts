@@ -5,6 +5,9 @@ import {
   Achievement,
   AppInstallReport,
   AppsOverview,
+  PushDeviceInput,
+  PushKey,
+  PushStatus,
   AuthClient as AuthClientKind,
   AuthConfig,
   AutomationRule,
@@ -131,6 +134,8 @@ export const CORE_READS = {
   integrations: () => apiRequest('/api/integrations'),
   /** Settings → Apps: what can be installed, and the devices that run it. */
   apps: () => apiRequest('/api/apps'),
+  /** Push notifications on phones: the server's Firebase key and the user's phones. */
+  push: () => apiRequest('/api/push'),
   automations: () => apiRequest('/api/automations'),
   /** The triggers and actions the modules registered. */
   automationsCatalog: () => apiRequest('/api/automations/catalog'),
@@ -212,6 +217,22 @@ export function achievementsApi(api: ApiClient) {
     list: () => api.read<Achievement[]>(CORE_READS.achievements()),
     /** Counts all achievements again; what is not earned today is taken back. */
     recount: () => api.post<void>(`${API_PATHS.achievements}/recount`, {}),
+  };
+}
+
+/** Push notifications on the phones of the Android app (Firebase Cloud Messaging). */
+export function pushApi(api: ApiClient) {
+  return {
+    status: () => api.read<PushStatus>(CORE_READS.push()),
+    /** The app on this phone takes notifications with this token (its install id). */
+    register: (id: string, input: PushDeviceInput) =>
+      api.put<void>(`/api/push/devices/${id}`, input),
+    remove: (id: string) => api.delete(`/api/push/devices/${id}`),
+    /** To every phone now: whether the chain works. */
+    test: () => api.post<{ sent: number }>('/api/push/test'),
+    /** The owner: the server's Firebase key (the service account's JSON). */
+    setKey: (key: PushKey) => api.put<void>('/api/push/key', key),
+    removeKey: () => api.delete('/api/push/key'),
   };
 }
 

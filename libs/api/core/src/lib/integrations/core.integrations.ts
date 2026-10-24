@@ -5,6 +5,7 @@ import { AiService } from '../ai/ai.service';
 import { NO_PARAMETERS } from '../ai/ai-tool';
 import { DB, Database } from '../database/database.module';
 import { LinksService } from '../links/links.service';
+import { pushDevices } from '../notifications/push/push.schema';
 import { users } from '../users/users.schema';
 import { IntegrationsService } from './integrations.service';
 
@@ -33,6 +34,19 @@ export class CoreIntegrations implements OnModuleInit {
         // A bot does not refresh: it is connected or it is not.
         return user?.chatId ? [{ name: 'Telegram' }] : [];
       },
+    });
+
+    this.integrations.register({
+      id: 'core.push',
+      module: 'core',
+      // A phone of the Android app that takes notifications, one line each.
+      reports: async (userId) =>
+        (
+          await this.db
+            .select({ name: pushDevices.name })
+            .from(pushDevices)
+            .where(eq(pushDevices.userId, userId))
+        ).map((device) => ({ name: 'Push', detail: device.name })),
     });
 
     this.integrations.register({

@@ -5,7 +5,8 @@ import { appsApi } from '@pd/client-core';
 import { AuthService } from '../auth/auth.service';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { applyPendingBundle, fetchNewerBundle, removeOldBundles } from './interface-update';
-import { isMobileApp, mobileServer } from './mobile-app';
+import { installId, isMobileApp, mobileServer, phoneModel } from './mobile-app';
+import { MobilePushService } from './mobile-push.service';
 import { prefetchForOffline } from './offline-prefetch';
 
 /** Not in the middle of the start. */
@@ -14,20 +15,20 @@ const FIRST_CHECK_MS = 20_000;
 const CHECK_EVERY_MS = 2 * 60 * 60_000;
 /** Coming back to the app reads ahead again, but not on every switch of apps. */
 const PREFETCH_ON_RESUME_MS = 60 * 60_000;
-/** Where the phone keeps its own id for the list of devices. */
-const INSTALL_ID_KEY = 'pd.mobile.installId';
 
 /**
  * What the Android app does besides showing the interface: the system Back button goes back in
  * the app, the phone appears in Settings → Apps, and a newer interface from the server replaces
- * the one inside (interface-update.ts), and what is needed on the way is read ahead while there
- * is a connection (offline-prefetch.ts). In a browser and the desktop app it does nothing.
+ * the one inside (interface-update.ts), what is needed on the way is read ahead while there
+ * is a connection (offline-prefetch.ts), and the phone takes push notifications
+ * (mobile-push.service.ts). In a browser and the desktop app it does nothing.
  */
 @Injectable({ providedIn: 'root' })
 export class MobileAppService {
   private readonly auth = inject(AuthService);
   private readonly apps = appsApi(inject(DASHBOARD_CLIENT).api);
   private readonly http = inject(HttpClient);
+  private readonly push = inject(MobilePushService);
   private started = false;
   private prefetchedAt = 0;
 
@@ -77,6 +78,7 @@ export class MobileAppService {
 
   private async tick(): Promise<void> {
     await this.report().catch(() => undefined);
+    await this.push.sync().catch(() => undefined);
     await this.prefetch();
     const server = mobileServer();
     if (server) {
@@ -91,19 +93,4 @@ export class MobileAppService {
     this.prefetchedAt = Date.now();
     await prefetchForOffline(this.http).catch(() => undefined);
   }
-}
-
-function installId(): string {
-  let id = localStorage.getItem(INSTALL_ID_KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(INSTALL_ID_KEY, id);
-  }
-  return id;
-}
-
-/** `…(Linux; Android 12; Redmi Note 9 Pro Build/…; wv)…` → `Redmi Note 9 Pro`. */
-export function phoneModel(userAgent: string): string {
-  const model = userAgent.match(/Android [^;)]*; ([^;)]+?)(?: Build\/[^;)]*)?[;)]/)?.[1]?.trim();
-  return model && model !== 'K' ? model : 'Android';
 }

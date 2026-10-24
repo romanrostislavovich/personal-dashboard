@@ -66,6 +66,9 @@ deploy/backups/
 deploy/deploy.local.env
 # the key the Android app is signed with (its password is in deploy.local.env)
 deploy/*.keystore
+# the Firebase settings the Android app is built with (push notifications)
+deploy/google-services.json
+apps/mobile/android/app/google-services.json
 
 # Playwright (e2e/)
 e2e/test-results

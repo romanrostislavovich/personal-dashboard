@@ -6,6 +6,8 @@
 
 /** Where the address of the server is kept on the phone. */
 const SERVER_KEY = 'pd.mobile.server';
+/** Where the phone keeps its own id: the list of devices, push notifications. */
+const INSTALL_ID_KEY = 'pd.mobile.installId';
 
 interface CapacitorGlobal {
   isNativePlatform?(): boolean;
@@ -53,4 +55,20 @@ export function normalizeServer(input: string): string | null {
   } catch {
     return null;
   }
+}
+
+/** The app's own id on this phone, made once. */
+export function installId(): string {
+  let id = localStorage.getItem(INSTALL_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(INSTALL_ID_KEY, id);
+  }
+  return id;
+}
+
+/** `…(Linux; Android 12; Redmi Note 9 Pro Build/…; wv)…` → `Redmi Note 9 Pro`. */
+export function phoneModel(userAgent: string): string {
+  const model = userAgent.match(/Android [^;)]*; ([^;)]+?)(?: Build\/[^;)]*)?[;)]/)?.[1]?.trim();
+  return model && model !== 'K' ? model : 'Android';
 }

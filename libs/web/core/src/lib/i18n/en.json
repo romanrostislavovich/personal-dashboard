@@ -490,6 +490,32 @@
       "revoke": "Revoke",
       "noTokens": "No tokens yet.",
       "confirmRevoke": "Revoke the token? The client using it loses access at once."
+    },
+    "push": {
+      "title": "Push on the phone",
+      "description": "Notifications in the Android app, next to Telegram",
+      "notConfigured": "Not set up yet: the owner of the dashboard sets the Firebase key here.",
+      "noPhones": "No phone takes them yet: open this page in the Android app and switch them on.",
+      "lastSent": "last one",
+      "phone": {
+        "on": "This phone gets notifications.",
+        "off": "Switched off on this phone.",
+        "denied": "Android does not allow notifications for the app: allow them in the phone settings → Apps → Personal Dashboard → Notifications.",
+        "unavailable": "This phone cannot take them yet: the app needs the version built with Firebase (Settings → Apps)."
+      },
+      "enable": "Switch on here",
+      "disable": "Switch off on this phone",
+      "test": "Send a test",
+      "testSent": "Test notification sent to the phone",
+      "testFailed": "Could not send: see the Firebase key and the phone",
+      "key": "Service account key (JSON)",
+      "guide": {
+        "1": "Open the Firebase console and add a project (Google Analytics is not needed).",
+        "2": "Project settings → General → “Add app” → Android, package name com.personalworld.dashboard. Download google-services.json and put it into the deploy folder of the project on your computer: deploy.sh builds the app with it.",
+        "3": "Project settings → Service accounts → “Generate new private key”: a JSON file is downloaded.",
+        "4": "Open that file, copy all of it into “Server key” below and save: the server checks it with Firebase.",
+        "5": "Deploy, install the new version of the app on the phone (Settings → Apps) and allow notifications when it asks."
+      }
     }
   },
   "toast": {
