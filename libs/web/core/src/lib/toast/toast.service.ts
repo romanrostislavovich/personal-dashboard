@@ -3,6 +3,7 @@ import { AchievementRarity } from '@pd/contracts';
 
 export interface Toast {
   id: number;
+  /** An emoji: shown as text, so a Material icon's name would show as its name. */
   icon: string;
   /** Small caption above the title, e.g. "New achievement!". */
   label?: string;

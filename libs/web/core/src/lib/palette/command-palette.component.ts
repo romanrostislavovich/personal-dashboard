@@ -222,7 +222,7 @@ export class CommandPaletteComponent {
       await item.run();
     } catch {
       this.toast.show({
-        icon: 'error',
+        icon: '⚠️',
         title: this.transloco.translate('core.palette.failed'),
         text: item.label,
       });

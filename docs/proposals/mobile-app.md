@@ -60,10 +60,20 @@ Electron.
   the phone in Settings → Apps, the system Back button, the interface updating itself from the
   server, the APK built and offered by the server, the icons. Moved to stage 2: the MIUI setup
   screen (nothing runs in the background before stage 2).
-- **Offline, as far as it goes:** the sections the user picks are kept on the phone to read
-  without a network (the diary, tasks, the gentle day, health…); writes made offline wait in the
-  outbox of `client-core` and go out when the network is back. A record changed both on the phone
-  and on a computer needs a rule (the later one wins, the other kept as a copy).
+- **1b, offline (built, 2026-10-24):**
+  - every answer of the API is kept on the phone (`ReadCache` in client-core, IndexedDB in the
+    app, `offline-read.interceptor.ts` for `httpResource`) — what the browser's service worker
+    does for the web app; no answer or a slow one (8 s, a train) shows the kept one;
+  - read ahead while there is a connection (`offline-prefetch.ts`): the diary of the last 12
+    months and the last 31 days, tasks and reminders, habits, the gentle day;
+  - writes wait in the outbox of `client-core` as before; the gentle day joined them;
+  - **a diary entry changed on two devices loses nothing:** the editor sends the version it
+    wrote over (`basedOn`); when the day changed since, the server keeps its text and adds the
+    other below a line, and the phone's editor reads the day again after the sync;
+  - the fonts and icons are served by the dashboard itself (`apps/web/fonts.mjs`), not Google:
+    without a network the icons would show as words;
+  - the app starts without a network, signed in as before, and the bar says it is offline.
+  - Not yet: photos of the diary offline (they are files, not answers).
 - **Push notifications** through Google (FCM), next to Telegram, switched off per kind.
 - **Gentle on the phone:** a home-screen widget of the gentle day; quiet hours in the evening and
   at night (nothing about overdue tasks); a help button — the crisis lines of the user's country

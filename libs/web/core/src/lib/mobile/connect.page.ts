@@ -4,6 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { mobileReadCache } from './idb-read-cache';
 import { mobileServer, normalizeServer, setMobileServer } from './mobile-app';
 
 /** How long to wait for a server that does not answer. */
@@ -97,6 +98,10 @@ export class ConnectPage {
       });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
+      }
+      if (server !== mobileServer()) {
+        // What was read came from the other server's account.
+        await mobileReadCache().clear();
       }
       setMobileServer(server);
       // The client core and its session are made once, for one server: start over with it.

@@ -31,6 +31,7 @@ import {
   TextEdit,
   unmarkAt,
 } from '@pd/contracts';
+import { OfflineService } from '@pd/web-core';
 import { Editor } from '@tiptap/core';
 import { firstValueFrom } from 'rxjs';
 import { DiaryApi } from './diary.api';
@@ -48,6 +49,8 @@ interface Snapshot {
   day: LocalDate;
   content: string;
   mood: number | null;
+  /** The stored version the text was written over (see DiaryEntryInput.basedOn). */
+  basedOn: string | null;
 }
 
 /** What the editor shows for a day without an entry. */
@@ -545,6 +548,11 @@ export class DiaryEditorComponent {
   });
 
   private pending: Snapshot | null = null;
+  /**
+   * `updatedAt` of the stored entry this editor writes over; `null` — none was stored. Kept
+   * while saves wait offline, so the server can tell when another device changed the day.
+   */
+  private basedOn: string | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private editor: Editor | null = null;
   /** Object URLs of photos shown in the text, by address; revoked when the editor goes away. */
@@ -564,9 +572,24 @@ export class DiaryEditorComponent {
         this.content.set(content);
         this.mood.set(mood);
         this.savedAt.set(updatedAt);
+        this.basedOn = updatedAt;
         this.status.set('idle');
         this.questionShift.set(0);
         this.setEditorContent(content);
+      });
+    });
+
+    // Changes made offline reached the server, which may have joined them with another
+    // device's text: read the day again, unless something new is being typed.
+    const synced = inject(OfflineService).synced;
+    let seen = synced();
+    effect(() => {
+      const count = synced();
+      untracked(() => {
+        if (count !== seen && !this.pending) {
+          this.entry.reload();
+        }
+        seen = count;
       });
     });
 
@@ -589,7 +612,12 @@ export class DiaryEditorComponent {
 
   /** Remembers what to save and waits for a pause in typing. */
   protected scheduleSave(): void {
-    this.pending = { day: this.day(), content: this.content(), mood: this.mood() };
+    this.pending = {
+      day: this.day(),
+      content: this.content(),
+      mood: this.mood(),
+      basedOn: this.basedOn,
+    };
     this.status.set('saving');
     if (this.timer) {
       clearTimeout(this.timer);
@@ -610,11 +638,25 @@ export class DiaryEditorComponent {
     this.pending = null;
     this.status.set('saving');
     try {
-      await firstValueFrom(
-        this.api.save(snapshot.day, { content: snapshot.content, mood: snapshot.mood }),
+      const saved = await firstValueFrom(
+        this.api.save(snapshot.day, {
+          content: snapshot.content,
+          mood: snapshot.mood,
+          basedOn: snapshot.basedOn,
+        }),
       );
       if (snapshot.day === this.day()) {
         this.savedAt.set(new Date().toISOString());
+        // `undefined`: queued offline — the version written over stays the same.
+        if (saved !== undefined) {
+          this.basedOn = saved?.updatedAt ?? null;
+          // Another device changed the day meanwhile: the server kept both texts.
+          if (saved && saved.content !== snapshot.content && !this.pending) {
+            this.content.set(saved.content);
+            this.mood.set(saved.mood);
+            this.setEditorContent(saved.content);
+          }
+        }
       }
       this.status.set('idle');
       this.saved.emit();

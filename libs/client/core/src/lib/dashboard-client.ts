@@ -86,6 +86,7 @@ export function createDashboardClient(platform: ClientPlatform) {
         } else {
           // The server ended the session: nothing to go on with offline either.
           await platform.storage.remove(USER_KEY);
+          await platform.readCache?.clear().catch(() => undefined);
         }
         return result?.user ?? null;
       } catch {
@@ -112,6 +113,8 @@ export function createDashboardClient(platform: ClientPlatform) {
       const refreshToken = await session.refreshToken();
       await api.post(API_PATHS.logout, refreshToken ? { refreshToken } : {}).catch(() => undefined);
       await platform.storage.remove(USER_KEY);
+      // What was read belongs to this account: the next one starts with nothing kept.
+      await platform.readCache?.clear().catch(() => undefined);
       await session.end();
     },
   };

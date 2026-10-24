@@ -90,7 +90,7 @@ export class ShellComponent {
       if (this.demo() && errorStatus(event.reason) === 403) {
         event.preventDefault();
         this.toasts.show({
-          icon: 'science',
+          icon: '🧪',
           title: this.transloco.translate('core.demo.notAvailable'),
         });
       }

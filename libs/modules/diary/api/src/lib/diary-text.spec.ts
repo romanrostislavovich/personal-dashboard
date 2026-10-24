@@ -1,4 +1,11 @@
-import { appendNote, countWords, extractTags, hasText, searchSnippet } from './diary-text';
+import {
+  appendNote,
+  countWords,
+  extractTags,
+  hasText,
+  mergeOverChanged,
+  searchSnippet,
+} from './diary-text';
 
 describe('extractTags', () => {
   it('finds hashtags in Cyrillic and Latin, lowercased and unique', () => {
@@ -57,5 +64,47 @@ describe('words and search of an encrypted diary (done here, not in the database
     expect(hasText('A walk by the River', 'river')).toBe(true);
     expect(hasText('Прогулка у РЕКИ', 'реки')).toBe(true);
     expect(hasText('A walk', 'sea')).toBe(false);
+  });
+});
+
+describe('an entry written over a version that changed since', () => {
+  const stored = {
+    content: 'Written on the computer.',
+    mood: 4,
+    updatedAt: new Date('2026-10-24T10:00:00.000Z'),
+  };
+
+  it('keeps the stored text and adds the new one below a line', () => {
+    const merged = mergeOverChanged(stored, {
+      content: 'Written on the train.',
+      mood: 2,
+      basedOn: '2026-10-24T08:00:00.000Z',
+    });
+    expect(merged).toEqual({
+      content: 'Written on the computer.\n\n---\n\nWritten on the train.',
+      mood: 4,
+    });
+  });
+
+  it('counts an entry that did not exist when writing began as changed', () => {
+    expect(mergeOverChanged(stored, { content: 'New', mood: null, basedOn: null })?.content).toBe(
+      'Written on the computer.\n\n---\n\nNew',
+    );
+  });
+
+  it('replaces as usual when nothing changed, nothing is stored or no check is asked', () => {
+    const input = { content: 'Edited', mood: 3, basedOn: '2026-10-24T10:00:00.000Z' };
+    expect(mergeOverChanged(stored, input)).toBeNull();
+    expect(mergeOverChanged(null, input)).toBeNull();
+    expect(mergeOverChanged(stored, { content: 'Edited', mood: 3 })).toBeNull();
+    expect(
+      mergeOverChanged(stored, { ...input, content: stored.content, basedOn: null }),
+    ).toBeNull();
+  });
+
+  it('never deletes the stored text with an empty one', () => {
+    expect(
+      mergeOverChanged(stored, { content: ' ', mood: null, basedOn: '2026-10-24T08:00:00.000Z' }),
+    ).toEqual({ content: stored.content, mood: 4 });
   });
 });

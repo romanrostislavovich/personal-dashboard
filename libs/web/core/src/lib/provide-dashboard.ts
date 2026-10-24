@@ -18,6 +18,7 @@ import { buildAppRoutes } from './app-routes';
 import { authInterceptor } from './auth/auth.interceptor';
 import { isMobileApp } from './mobile/mobile-app';
 import { MobileAppService } from './mobile/mobile-app.service';
+import { offlineReadInterceptor } from './mobile/offline-read.interceptor';
 import { serverUrlInterceptor } from './mobile/server-url.interceptor';
 import { AuthService } from './auth/auth.service';
 import { DeviceBackupService } from './backup/device-backup.service';
@@ -39,7 +40,9 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
   return makeEnvironmentProviders([
     provideBrowserGlobalErrorListeners(),
     provideRouter(buildAppRoutes(modules), withComponentInputBinding()),
-    provideHttpClient(withInterceptors([serverUrlInterceptor, authInterceptor])),
+    provideHttpClient(
+      withInterceptors([serverUrlInterceptor, offlineReadInterceptor, authInterceptor]),
+    ),
     provideDashboardModules(modules),
     provideI18n(),
     // Date, number and currency formats follow the UI language (changes with a reload).
