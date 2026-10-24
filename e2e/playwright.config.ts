@@ -26,6 +26,9 @@ export default defineConfig({
     baseURL: process.env['E2E_URL'] ?? 'http://localhost:3300',
     locale: 'en-US',
     trace: 'retain-on-failure',
+    // The installed app's service worker answers from its cache after 6 s (ngsw-config.json):
+    // on a slow runner a list read right after a change came back as it was before it.
+    serviceWorkers: 'block',
     screenshot: 'only-on-failure',
   },
   projects: [
