@@ -6,9 +6,11 @@
 #     --build-arg VERSION_NAME=… --build-arg VERSION_CODE=… \
 #     --secret id=keystore,src=deploy/mobile-release.keystore \
 #     --secret id=keystore_password,env=MOBILE_KEYSTORE_PASSWORD \
+#     [--secret id=google_services,src=deploy/google-services.json] \
 #     --output type=local,dest=<folder> .
 #
-# The signing key comes as a build secret: it is in no layer of the image.
+# The signing key comes as a build secret: it is in no layer of the image. So does the Firebase
+# file of push notifications; without it the app is built without push.
 
 # --- 1. The interface packed into the app ---
 FROM node:24-bookworm AS web
@@ -44,6 +46,8 @@ ARG VERSION_NAME=dev
 ARG VERSION_CODE=1
 RUN --mount=type=secret,id=keystore,required=true \
     --mount=type=secret,id=keystore_password,required=true \
+    --mount=type=secret,id=google_services,required=false \
+    { [ ! -f /run/secrets/google_services ] || cp /run/secrets/google_services app/google-services.json; } && \
     MOBILE_KEYSTORE_FILE=/run/secrets/keystore \
     MOBILE_KEYSTORE_PASSWORD="$(cat /run/secrets/keystore_password)" \
     MOBILE_VERSION_NAME="$VERSION_NAME" MOBILE_VERSION_CODE="$VERSION_CODE" \

@@ -74,7 +74,13 @@ Electron.
     without a network the icons would show as words;
   - the app starts without a network, signed in as before, and the bar says it is offline.
   - Not yet: photos of the diary offline (they are files, not answers).
-- **Push notifications** through Google (FCM), next to Telegram, switched off per kind.
+- **1c, push notifications (built, 2026-10-24):** through Google (FCM HTTP v1), a channel
+  next to Telegram (`notifications/push` in api-core): the owner pastes the Firebase service
+  account's JSON in Settings → Integrations → Push on the phone (kept as a server key); the app
+  asks Android for the permission, takes its token and tells the server; a phone whose token is
+  gone is forgotten; a sync client sends none. The APK is built with
+  `deploy/google-services.json` (not in git) when it is there. Switched off per phone in the same
+  card; **per kind of notification — with the quiet hours of 1d.**
 - **Gentle on the phone:** a home-screen widget of the gentle day; quiet hours in the evening and
   at night (nothing about overdue tasks); a help button — the crisis lines of the user's country
   (a list kept in the repository with the source of every number) and "call or write a close

@@ -60,6 +60,9 @@ import { AccessTokensController, McpController } from './mcp/mcp.controller';
 import { NotificationOutbox } from './notifications/notification-outbox';
 import { NotificationsService } from './notifications/notifications.service';
 import { TelegramBotService } from './notifications/telegram/telegram-bot.service';
+import { PushChannel } from './notifications/push/push.channel';
+import { PushController } from './notifications/push/push.controller';
+import { PushService } from './notifications/push/push.service';
 import { TelegramChannel } from './notifications/telegram/telegram.channel';
 import { ProjectsController } from './projects/projects.controller';
 import { ProjectsService } from './projects/projects.service';
@@ -142,6 +145,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     AutomationsController,
     IntegrationsController,
     AppsController,
+    PushController,
   ],
   providers: [
     AppsService,
@@ -196,6 +200,8 @@ import { UserActivityService } from './realtime/user-activity.service';
     DeviceSocket,
     TelegramBotService,
     TelegramChannel,
+    PushService,
+    PushChannel,
     RealtimeService,
     UserActivityService,
     InAppChannel,
@@ -226,7 +232,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     // New channels (Discord, e-mail…) are added to this list.
     {
       provide: NOTIFICATION_CHANNELS,
-      inject: [TelegramChannel, InAppChannel],
+      inject: [TelegramChannel, PushChannel, InAppChannel],
       useFactory: (...channels: NotificationChannel[]) => channels,
     },
   ],

@@ -14,6 +14,7 @@ import { SyncSettingsComponent } from './sync-settings.component';
 import { McpSettingsComponent } from './mcp-settings.component';
 import { NotificationLogComponent } from './notification-log.component';
 import { SystemSettingsComponent } from './system-settings.component';
+import { PushSettingsComponent } from './push-settings.component';
 import { TelegramSettingsComponent } from './telegram-settings.component';
 import { ThemeSettingsComponent } from './theme-settings.component';
 import { TrashSettingsComponent } from './trash-settings.component';
@@ -62,6 +63,7 @@ const TABS = [
     McpSettingsComponent,
     SystemSettingsComponent,
     TelegramSettingsComponent,
+    PushSettingsComponent,
     ThemeSettingsComponent,
   ],
   template: `
@@ -93,6 +95,7 @@ const TABS = [
         <pd-integration-status />
         <div class="grid">
           <pd-telegram-settings />
+          <pd-push-settings />
           <pd-notification-log />
           <pd-mcp-settings />
           @for (integration of integrations(); track integration.id) {

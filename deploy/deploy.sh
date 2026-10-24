@@ -128,6 +128,8 @@ apk_key() {
         .map((k) => k + '@' + l[k].version).join(' ')"
     git ls-files -z apps/mobile/android apps/mobile/capacitor.config.ts deploy/mobile-apk.Dockerfile |
       xargs -0 cat
+    # Push notifications come with the Firebase file: adding it builds the app again.
+    [ ! -f deploy/google-services.json ] || cat deploy/google-services.json
   } | sha256sum | cut -c1-16
 }
 
@@ -148,6 +150,10 @@ upload_mobile_apk() {
   step "Building the Android app (its native part changed; ~10 min the first time)"
   # Android installs an update only with a larger versionCode: the number of commits grows.
   count=$(git rev-list --count HEAD)
+  # Push notifications (Settings → Integrations): the Firebase file, if the owner made one.
+  local firebase=()
+  [ ! -f deploy/google-services.json ] ||
+    firebase=(--secret id=google_services,src=deploy/google-services.json)
   rm -rf dist/server-apk || return 1
   MOBILE_KEYSTORE_PASSWORD="$MOBILE_KEYSTORE_PASSWORD" docker buildx build \
     -f deploy/mobile-apk.Dockerfile --build-arg "BUILD_ID=$key" \
@@ -155,6 +161,7 @@ upload_mobile_apk() {
     --build-arg "VERSION_CODE=$count" \
     --secret id=keystore,src=deploy/mobile-release.keystore \
     --secret id=keystore_password,env=MOBILE_KEYSTORE_PASSWORD \
+    "${firebase[@]}" \
     --output type=local,dest=dist/server-apk --quiet . >/dev/null || return 1
   ls dist/server-apk/personal-dashboard.apk dist/server-apk/apk.json >/dev/null || return 1
   step "Uploading the Android app"

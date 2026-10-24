@@ -13,7 +13,8 @@ export type ServerKey =
   | 'music.spotify-client-secret'
   | 'writing.languagetool-url'
   | 'finance.enablebanking-app-id'
-  | 'finance.enablebanking-key';
+  | 'finance.enablebanking-key'
+  | 'push.fcm-service-account';
 
 /** Kept among the owner's secrets: encrypted, and synced to a sync client with the rest. */
 const PREFIX = 'server.';
