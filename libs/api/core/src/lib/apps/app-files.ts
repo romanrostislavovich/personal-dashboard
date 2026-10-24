@@ -8,17 +8,25 @@ import { join } from 'node:path';
  * - the browser extension (EXTENSION_BUNDLE_PATH, `/extension-updates`) — the desktop app keeps
  *   its folder up to date, and a zip of it is downloaded from there too;
  * - the desktop installers (DESKTOP_INSTALLERS_PATH, `/downloads/desktop`) — put there by
- *   deploy/deploy.sh, rarely: the code inside updates itself anyway.
+ *   deploy/deploy.sh, rarely: the code inside updates itself anyway;
+ * - the interface of the Android app (MOBILE_BUNDLE_PATH, `/mobile-updates`) — the app takes a
+ *   newer one from there;
+ * - the Android app itself (MOBILE_APK_PATH, `/downloads/mobile`) — put there by deploy.sh when
+ *   its native part changes.
  */
 
 export const DESKTOP_UPDATES_PATH = '/desktop-updates';
 export const EXTENSION_UPDATES_PATH = '/extension-updates';
 export const DESKTOP_DOWNLOADS_PATH = '/downloads/desktop';
+export const MOBILE_UPDATES_PATH = '/mobile-updates';
+export const MOBILE_DOWNLOADS_PATH = '/downloads/mobile';
 
 /** The zip of the extension, next to its files. */
 const EXTENSION_ZIP = 'personal-dashboard-extension.zip';
 /** What deploy.sh writes next to the installers. */
 const INSTALLERS_MANIFEST = 'installers.json';
+/** What deploy.sh writes next to the APK (deploy/mobile-apk.Dockerfile). */
+const APK_MANIFEST = 'apk.json';
 
 /** Where the installers are when this server has none: the releases of the project. */
 const RELEASES_URL = 'https://github.com/romanrostislavovich/personal-dashboard/releases/latest';
@@ -74,6 +82,38 @@ export function extensionDownloads(dir: string | undefined): AppDownload[] {
         },
       ]
     : [];
+}
+
+/** The Android app this server keeps: its version and where to download it; none — `null`. */
+export function mobileApk(dir: string | undefined): {
+  version: string | null;
+  downloads: AppDownload[];
+} {
+  if (!dir) {
+    return { version: null, downloads: [] };
+  }
+  try {
+    const manifest = JSON.parse(readFileSync(join(dir, APK_MANIFEST), 'utf8')) as {
+      version?: unknown;
+      file?: unknown;
+    };
+    if (typeof manifest.file !== 'string' || !existsSync(join(dir, manifest.file))) {
+      return { version: null, downloads: [] };
+    }
+    return {
+      version: typeof manifest.version === 'string' ? manifest.version : null,
+      downloads: [
+        {
+          platform: 'android',
+          url: `${MOBILE_DOWNLOADS_PATH}/${encodeURIComponent(manifest.file)}`,
+          size: statSync(join(dir, manifest.file)).size,
+          external: false,
+        },
+      ],
+    };
+  } catch {
+    return { version: null, downloads: [] };
+  }
 }
 
 function readInstallers(dir: string | undefined): InstallersManifest['files'] {

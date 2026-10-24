@@ -16,6 +16,10 @@ async function bootstrap() {
   // Behind Caddy (a private address): the client's address comes from X-Forwarded-For, and
   // `request.secure` from X-Forwarded-Proto — the sign-in throttle and the cookie need both.
   app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+  // The Android app serves its interface itself, at https://localhost (apps/mobile), and calls
+  // the API from there. Only with the access token in a header: no cookies cross over, so
+  // another page at that address gets nothing without the token.
+  app.enableCors({ origin: ['https://localhost'], credentials: false, maxAge: 86_400 });
   app.enableShutdownHooks();
 
   const port = app.get<AppConfig>(ConfigService).get('API_PORT', { infer: true });

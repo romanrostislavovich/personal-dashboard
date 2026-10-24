@@ -1,16 +1,27 @@
 import { InjectionToken } from '@angular/core';
 import { browserStorage, createDashboardClient, DashboardClient } from '@pd/client-core';
+import { apiBaseUrl, isMobileApp } from '../mobile/mobile-app';
 
 /**
  * The client core (`@pd/client-core`) for the web app: the API on the same origin, the session in
  * `localStorage`. Every request is defined in the core. Angular services wrap it: writes go
  * through the core (`fromCore`), reads through `httpResource` with the core's `{ url, params }`
  * — `HttpClient`'s interceptor takes the token from the same session.
+ *
+ * In the Android app the API is the server the user named, and the refresh token is kept by the
+ * app (no cookie reaches the server from https://localhost); there is no service worker either.
  */
 export const DASHBOARD_CLIENT = new InjectionToken<DashboardClient>('DashboardClient', {
   providedIn: 'root',
   factory: () => {
     forgetLegacyToken();
+    if (isMobileApp()) {
+      return createDashboardClient({
+        baseUrl: apiBaseUrl(),
+        storage: browserStorage(),
+        refreshTokenIn: 'storage',
+      });
+    }
     return createDashboardClient({
       baseUrl: '',
       storage: browserStorage(),

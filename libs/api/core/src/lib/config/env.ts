@@ -97,6 +97,16 @@ const envSchema = z
      * the files); served at `/downloads/desktop`. Without it Settings → Apps links to GitHub.
      */
     DESKTOP_INSTALLERS_PATH: z.string().optional(),
+    /**
+     * Path to the interface of the Android app (`web.zip` and `bundle.json`, made by the Docker
+     * build); if set, installed apps take a newer interface from `/mobile-updates`.
+     */
+    MOBILE_BUNDLE_PATH: z.string().optional(),
+    /**
+     * Path to the Android app deploy/deploy.sh puts on the server (`apk.json` and the APK);
+     * served at `/downloads/mobile`.
+     */
+    MOBILE_APK_PATH: z.string().optional(),
 
     /** Two-way sync between a local instance and a server, see docs/sync.md. */
     SYNC_MODE: z.enum(SYNC_MODES).default('off'),

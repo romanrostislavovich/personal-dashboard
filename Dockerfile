@@ -29,6 +29,8 @@ RUN node -e "const fs = require('fs'); const file = 'dist/apps/api/package.json'
     .filter(([, value]) => !JSON.stringify(value).includes('\"\$')); \
   api.overrides = Object.fromEntries(own); \
   fs.writeFileSync(file, JSON.stringify(api, null, 2));"
+# The interface the Android app takes from this server (`/mobile-updates`).
+RUN node apps/mobile/pack-web.mjs dist/apps/web/browser dist/apps/mobile-bundle
 # What npm knows about vulnerabilities in the packages that ship, as of this build: the
 # security agent reads it (it exits non-zero when it finds any — that is not a failed build).
 RUN npm audit --omit=dev --json > dist/apps/api/npm-audit.json || true
@@ -46,13 +48,15 @@ WORKDIR /app
 ENV NODE_ENV=production \
     WEB_DIST_PATH=/app/web \
     DESKTOP_BUNDLE_PATH=/app/desktop-bundle \
-    EXTENSION_BUNDLE_PATH=/app/extension-bundle
+    EXTENSION_BUNDLE_PATH=/app/extension-bundle \
+    MOBILE_BUNDLE_PATH=/app/mobile-bundle
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /repo/dist/apps/api ./
 COPY --from=build /repo/dist/apps/web/browser ./web
 COPY --from=build /repo/dist/apps/desktop/bundle ./desktop-bundle
 COPY --from=build /repo/dist/apps/extension ./extension-bundle
+COPY --from=build /repo/dist/apps/mobile-bundle ./mobile-bundle
 
 EXPOSE 3300
 USER node

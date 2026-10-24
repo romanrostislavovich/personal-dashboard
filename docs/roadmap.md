@@ -708,7 +708,15 @@ assistant as a tutor that knows the materials of the courses.
 #### Big steps
 
 - **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
-  the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health):
+  the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health).
+  The plan in stages: [proposals/mobile-app.md](proposals/mobile-app.md):
+  - **the base:** Capacitor around the same Angular app, offline reading and writing, push
+    through Google, a gentle-day widget, quiet hours, a help button (crisis lines by country and
+    a close person's contact)
+  - **time per app** on the phone (Instagram, LinkedIn, …) and the notifications that interrupt
+  - **stress:** our own index from HRV and resting heart rate (Health Connect has no stress type)
+  - **a voice assistant** called by name, like a smart speaker
+  - **a seizure alert for close people** (behind a feature flag)
   - **financial auto-capture:** push notifications / SMS → draft transactions
   - **location & movement:** places visited, trips, active commute vs. transport
   - **biometric telemetry:** HRV (rMSSD), resting heart rate, sleep architecture (Deep / REM / Light phases), skin temperature

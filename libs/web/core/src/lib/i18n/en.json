@@ -431,7 +431,13 @@
       },
       "mobile": {
         "title": "Mobile app",
-        "about": "Android and iOS — not made yet. It will be here, and it will update itself from this server too."
+        "about": "Android: the dashboard on the phone, which works without a network too. Later it collects what the phone and a band know — sleep, stress, time in apps.",
+        "apk": "Download for Android",
+        "notOnServer": "This server has no Android app to hand out yet: it comes with the next deploy.",
+        "openOnPhone": "Open this page on the phone and download the app.",
+        "allowInstall": "Open the downloaded file; Android asks to allow installing apps from the browser — allow it once.",
+        "connect": "Start the app and enter this dashboard's address.",
+        "updates": "The interface updates itself from this server after every deploy; a new download is needed only when the app itself changes (this card says so)."
       },
       "devices": {
         "title": "My devices",
@@ -543,14 +549,14 @@
     "time": "Time",
     "weekday": "Day",
     "weekdays": {
-      "any": "Every day",
       "1": "Monday",
       "2": "Tuesday",
       "3": "Wednesday",
       "4": "Thursday",
       "5": "Friday",
       "6": "Saturday",
-      "7": "Sunday"
+      "7": "Sunday",
+      "any": "Every day"
     },
     "notify": "Send me a message",
     "text": "Text",
@@ -603,5 +609,17 @@
     "cancel": "Cancel",
     "rejected": "The service did not accept it — check the key and try again.",
     "failed": "Could not save. Please try later."
+  },
+  "mobile": {
+    "connect": {
+      "title": "Connect to your dashboard",
+      "hint": "The address of the server the dashboard runs on, as you open it in a browser.",
+      "address": "Server address",
+      "submit": "Connect",
+      "checking": "Checking…",
+      "invalid": "This does not look like an address.",
+      "unreachable": "No dashboard answered at this address. Check it and the network.",
+      "change": "another server"
+    }
   }
 }

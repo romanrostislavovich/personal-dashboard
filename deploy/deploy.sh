@@ -119,6 +119,51 @@ upload_desktop_installers() {
       { [ ! -d desktop ] || mv desktop desktop.old; } && mv desktop.new desktop && rm -rf desktop.old"
 }
 
+# What the Android app is made of, besides its interface (which updates itself from the server):
+# Capacitor and its plugins, the Android project, the build.
+apk_key() {
+  {
+    node -p "const l = require('./package-lock.json').packages;
+      Object.keys(l).filter((k) => k.startsWith('node_modules/@capacitor/'))
+        .map((k) => k + '@' + l[k].version).join(' ')"
+    git ls-files -z apps/mobile/android apps/mobile/capacitor.config.ts deploy/mobile-apk.Dockerfile |
+      xargs -0 cat
+  } | sha256sum | cut -c1-16
+}
+
+# The Android app of Settings → Apps, in downloads/mobile on the server: built in Docker and
+# uploaded only when apk_key changes. It is signed with deploy/mobile-release.keystore (its
+# password: MOBILE_KEYSTORE_PASSWORD in deploy.local.env) — the same key every time, or Android
+# does not install the update over the app on the phone.
+upload_mobile_apk() {
+  local key on_server count
+  if [ ! -f deploy/mobile-release.keystore ] || [ -z "${MOBILE_KEYSTORE_PASSWORD:-}" ]; then
+    echo "No deploy/mobile-release.keystore or MOBILE_KEYSTORE_PASSWORD: the Android app is not built." >&2
+    return 0
+  fi
+  key=$(apk_key)
+  on_server=$(remote "cat $REMOTE_DIR/downloads/mobile/apk.json 2>/dev/null" |
+    grep -o '"key": *"[^"]*"' | cut -d'"' -f4 || true)
+  [ "$key" = "$on_server" ] && return 0
+  step "Building the Android app (its native part changed; ~10 min the first time)"
+  # Android installs an update only with a larger versionCode: the number of commits grows.
+  count=$(git rev-list --count HEAD)
+  rm -rf dist/server-apk || return 1
+  MOBILE_KEYSTORE_PASSWORD="$MOBILE_KEYSTORE_PASSWORD" docker buildx build \
+    -f deploy/mobile-apk.Dockerfile --build-arg "BUILD_ID=$key" \
+    --build-arg "VERSION_NAME=$(node -p "require('./package.json').version").$count" \
+    --build-arg "VERSION_CODE=$count" \
+    --secret id=keystore,src=deploy/mobile-release.keystore \
+    --secret id=keystore_password,env=MOBILE_KEYSTORE_PASSWORD \
+    --output type=local,dest=dist/server-apk --quiet . >/dev/null || return 1
+  ls dist/server-apk/personal-dashboard.apk dist/server-apk/apk.json >/dev/null || return 1
+  step "Uploading the Android app"
+  remote "rm -rf $REMOTE_DIR/downloads/mobile.new && mkdir -p $REMOTE_DIR/downloads/mobile.new" &&
+    scp -q -i "$DEPLOY_SSH_KEY" dist/server-apk/* "$DEPLOY_HOST:$REMOTE_DIR/downloads/mobile.new/" &&
+    remote "cd $REMOTE_DIR/downloads && rm -rf mobile.old &&
+      { [ ! -d mobile ] || mv mobile mobile.old; } && mv mobile.new mobile && rm -rf mobile.old"
+}
+
 # --rollback: the previous image; the database from before the update if its schema changed.
 rollback() {
   step "Rolling back"
@@ -262,6 +307,8 @@ remote "docker image prune -f >/dev/null
 # the update from the server.
 upload_desktop_installers ||
   echo "The desktop installers were not updated: Settings → Apps keeps the previous ones." >&2
+upload_mobile_apk ||
+  echo "The Android app was not updated: Settings → Apps keeps the previous one." >&2
 
 step "Done"
 ip="${DEPLOY_HOST#*@}"

@@ -7,6 +7,8 @@ import {
   DESKTOP_DOWNLOADS_PATH,
   DESKTOP_UPDATES_PATH,
   EXTENSION_UPDATES_PATH,
+  MOBILE_DOWNLOADS_PATH,
+  MOBILE_UPDATES_PATH,
 } from '@pd/api-core';
 import { ServerResponse } from 'node:http';
 import { resolve } from 'node:path';
@@ -50,6 +52,8 @@ function appFiles(dir: string | undefined, serveRoot: string): ServeStaticModule
             config.get('DESKTOP_INSTALLERS_PATH', { infer: true }),
             DESKTOP_DOWNLOADS_PATH,
           ),
+          ...appFiles(config.get('MOBILE_BUNDLE_PATH', { infer: true }), MOBILE_UPDATES_PATH),
+          ...appFiles(config.get('MOBILE_APK_PATH', { infer: true }), MOBILE_DOWNLOADS_PATH),
           // Absolute: the SPA fallback sends index.html with res.sendFile, which rejects relative paths.
           ...(webDist
             ? [
@@ -60,6 +64,8 @@ function appFiles(dir: string | undefined, serveRoot: string): ServeStaticModule
                     `${DESKTOP_UPDATES_PATH}/{*path}`,
                     `${EXTENSION_UPDATES_PATH}/{*path}`,
                     `${DESKTOP_DOWNLOADS_PATH}/{*path}`,
+                    `${MOBILE_UPDATES_PATH}/{*path}`,
+                    `${MOBILE_DOWNLOADS_PATH}/{*path}`,
                   ],
                 },
               ]

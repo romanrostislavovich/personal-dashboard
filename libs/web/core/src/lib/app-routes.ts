@@ -2,16 +2,24 @@ import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { WebDashboardModule } from './dashboard-module';
 import { ShellComponent } from './layout/shell.component';
+import { serverGuard } from './mobile/server.guard';
 
 /** App routes: core pages + one section per enabled module. */
 export function buildAppRoutes(modules: WebDashboardModule[]): Routes {
   return [
     {
+      // The Android app: which server to talk to (mobile/mobile-app.ts).
+      path: 'connect',
+      loadComponent: () => import('./mobile/connect.page').then((m) => m.ConnectPage),
+    },
+    {
       path: 'login',
+      canActivate: [serverGuard],
       loadComponent: () => import('./auth/login.page').then((m) => m.LoginPage),
     },
     {
       path: 'register',
+      canActivate: [serverGuard],
       loadComponent: () => import('./auth/register.page').then((m) => m.RegisterPage),
     },
     {
@@ -23,7 +31,7 @@ export function buildAppRoutes(modules: WebDashboardModule[]): Routes {
     {
       path: '',
       component: ShellComponent,
-      canActivate: [authGuard],
+      canActivate: [serverGuard, authGuard],
       children: [
         {
           path: '',

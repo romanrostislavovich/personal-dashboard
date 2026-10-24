@@ -5,7 +5,13 @@ export default [
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
   {
-    ignores: ['**/dist', '**/vite.config.*.timestamp*', '**/vitest.config.*.timestamp*'],
+    // apps/mobile/android: the Android project and the copy of the built web app inside it.
+    ignores: [
+      '**/dist',
+      '**/vite.config.*.timestamp*',
+      '**/vitest.config.*.timestamp*',
+      'apps/mobile/android',
+    ],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -47,6 +53,11 @@ export default [
               // with the same schemas as the server, and posts to paths of the client core.
               sourceTag: 'scope:desktop',
               onlyDependOnLibsWithTags: ['scope:client', 'scope:shared'],
+            },
+            {
+              // The Android shell has no code of its own: its interface is the web app.
+              sourceTag: 'scope:mobile',
+              onlyDependOnLibsWithTags: [],
             },
             {
               sourceTag: 'type:core',

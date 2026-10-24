@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { errorStatus } from '../client/core-requests';
+import { isMobileApp, mobileServer } from '../mobile/mobile-app';
 import { AuthService } from './auth.service';
 
 @Component({
@@ -93,6 +94,13 @@ import { AuthService } from './auth.service';
             <a routerLink="/register">{{ 'core.login.register' | transloco }}</a>
           </p>
         }
+        @if (server) {
+          <!-- The Android app: which server it signs in to, and a way to another one -->
+          <p class="switch">
+            {{ server }} ·
+            <a routerLink="/connect">{{ 'core.mobile.connect.change' | transloco }}</a>
+          </p>
+        }
       </mat-card-content>
     </mat-card>
   `,
@@ -152,6 +160,8 @@ export class LoginPage {
   /** Set after the password step when a 2FA code is needed. */
   readonly challengeToken = signal<string | null>(null);
   readonly code = signal('');
+  /** The server of the Android app; `null` in a browser. */
+  readonly server = isMobileApp() ? mobileServer() : null;
   readonly form = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],

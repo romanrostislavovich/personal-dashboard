@@ -64,6 +64,8 @@ deploy/backups/
 /backups/
 # your server's address for deploy.sh
 deploy/deploy.local.env
+# the key the Android app is signed with (its password is in deploy.local.env)
+deploy/*.keystore
 
 # Playwright (e2e/)
 e2e/test-results
