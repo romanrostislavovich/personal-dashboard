@@ -79,7 +79,7 @@
   },
   "device": "Device",
   "allDevices": "All devices",
-  "total": "At the computer",
+  "total": "Screen time",
   "activeDays": "days with activity: {{count}}",
   "dailyAverage": "Daily average",
   "dailyAverageHint": "over the days with activity",
@@ -174,7 +174,7 @@
     "confirmExclude": "Stop recording “{{name}}” and delete what was recorded for it?"
   },
   "widget": {
-    "title": "At the computer today",
+    "title": "Screen time today",
     "empty": "Nothing recorded today",
     "open": "Open"
   },
@@ -254,7 +254,7 @@
     "off": "Never",
     "limits": "Daily limits",
     "games": "Games",
-    "total": "At the computer",
+    "total": "Screen time",
     "noLimit": "No limit",
     "perDay": "A day",
     "addApp": "Limit a program",
@@ -404,9 +404,9 @@
     }
   },
   "life": {
-    "day": "{{hours}} h at the computer, mostly {{app}}",
-    "dayFocus": "{{hours}} h at the computer, mostly {{app}} · {{focus}} focus sessions",
-    "total": "At the computer",
+    "day": "{{hours}} h of screen time, mostly {{app}}",
+    "dayFocus": "{{hours}} h of screen time, mostly {{app}} · {{focus}} focus sessions",
+    "total": "Screen time",
     "topApp": "mostly {{app}}",
     "focus": "In focus",
     "focusSessions": "{{count}} sessions"
@@ -415,18 +415,18 @@
     "limit": "A daily limit is reached"
   },
   "links": {
-    "time": "Time at the computer",
+    "time": "Screen time",
     "focus": "Focus sessions",
-    "hours": "At the computer",
+    "hours": "Screen time",
     "games": "In games",
-    "firstUse": "First at the computer",
-    "lastUse": "Last at the computer",
+    "firstUse": "First at a screen",
+    "lastUse": "Last at a screen",
     "lateGames": "In games late at night (23–4)",
     "browser": "In the browser",
     "site": "On a site"
   },
   "usage": {
-    "seconds": "at the computer"
+    "seconds": "at a screen"
   },
   "bySite": "By site",
   "browser": {

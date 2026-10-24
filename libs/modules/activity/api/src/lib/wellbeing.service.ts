@@ -18,6 +18,7 @@ import {
   ActivityLimitInput,
   ActivityOutage,
   ActivityPeriod,
+  ActivityPlatform,
   addDays,
   LocalDate,
   parseLocalDate,
@@ -25,7 +26,7 @@ import {
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lt, notInArray, sql } from 'drizzle-orm';
 import { categoryOf, longestRun } from './activity-stats';
 import { activityMessages } from './activity.messages';
 import {
@@ -50,6 +51,8 @@ import {
 /** Health snapshots older than this are deleted (activity.jobs.ts). */
 const HEALTH_KEEP_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** Phones send the time in apps, not a computer's load: they are no computers. */
+const PHONES: ActivityPlatform[] = ['android', 'ios'];
 
 /**
  * What looks after the user rather than counts time: focus sessions (Pomodoro), daily limits
@@ -451,7 +454,7 @@ export class WellbeingService {
     const devices = await this.db
       .select()
       .from(activityDevices)
-      .where(eq(activityDevices.userId, userId))
+      .where(and(eq(activityDevices.userId, userId), notInArray(activityDevices.platform, PHONES)))
       .orderBy(asc(activityDevices.name));
     const h = activityHealth;
     const rows = await this.db

@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { Pool } from 'pg';
 import { DevicesService } from './devices.service';
+import { WellbeingService } from './wellbeing.service';
 
 /** Runs against the generated migrations, like sites.db.spec.ts. */
 const ADMIN_URL = process.env['TEST_DATABASE_URL'];
@@ -93,5 +94,20 @@ describe.skipIf(!ADMIN_URL)('merging devices', { timeout: 60_000 }, () => {
       BadRequestException,
     );
     expect(await count('activity_spans', mine.id)).toBe(1);
+  });
+
+  it('lists the computers without the phones: a phone sends no load to show', async () => {
+    const id = randomUUID();
+    await db.execute(sql`INSERT INTO users (id, email, password_hash, display_name, locale)
+      VALUES (${id}, 'computers@test', 'hash', 'Test', 'en')`);
+    const computer = await devices.register(id, { name: 'Desk', platform: 'windows' });
+    await devices.register(id, { name: 'Phone', platform: 'android' });
+    // Listing the computers reads only the database.
+    const none = null as never;
+    const wellbeing = new WellbeingService(db as never, none, none, none, none, none, none);
+
+    const listed = await wellbeing.computers(id);
+
+    expect(listed.map((row) => row.deviceId)).toEqual([computer.id]);
   });
 });
