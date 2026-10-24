@@ -12,6 +12,9 @@ const config: CapacitorConfig = {
   webDir: '../../dist/apps/web/browser',
   // The page's origin is https://localhost: the server allows it in CORS (apps/api main.ts).
   server: { androidScheme: 'https', hostname: 'localhost' },
+  // chrome://inspect sees the page of the release build too: a problem on the phone is looked
+  // at, not guessed. Only a computer the phone allowed over USB debugging can connect.
+  android: { webContentsDebuggingEnabled: true },
 };
 
 export default config;
