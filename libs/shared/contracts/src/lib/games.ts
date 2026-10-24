@@ -305,7 +305,8 @@ export interface SteamSummary {
 
 /** The small square icon of a Steam game. */
 export function steamIconUrl(appId: number, iconHash: string): string {
-  return `https://media.steampowered.com/steamcommunity/public/images/apps/${appId}/${iconHash}.jpg`;
+  // Steam moved the icons here: the old media.steampowered.com path answers 404.
+  return `https://shared.fastly.steamstatic.com/community_assets/images/apps/${appId}/${iconHash}.jpg`;
 }
 
 // --- World of Warcraft ---
