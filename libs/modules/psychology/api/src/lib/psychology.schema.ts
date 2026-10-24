@@ -64,6 +64,9 @@ export const psychologySettings = pgTable('psychology_settings', {
   reminderAt: text(),
   /** The day the last reminder went out: not again before the period passes. */
   remindedOn: date({ mode: 'string' }),
+  /** A close person for the help button, and their Telegram: encrypted, like the diary. */
+  closeName: encryptedText(),
+  closeTelegram: encryptedText(),
 });
 
 /** A small step of one's own library for a gentle day: stored encrypted, like the diary. */
@@ -127,7 +130,12 @@ export const psychologyBriefs = pgTable(
   (table) => [index().on(table.userId, table.from)],
 );
 
-registerEncryptedTables(psychologyGentleSteps, psychologyGentleDays, psychologyBriefs);
+registerEncryptedTables(
+  psychologySettings,
+  psychologyGentleSteps,
+  psychologyGentleDays,
+  psychologyBriefs,
+);
 
 export type PsychologyBriefRow = typeof psychologyBriefs.$inferSelect;
 export type PsychologyEventRow = typeof psychologyEvents.$inferSelect;

@@ -38,8 +38,10 @@ export class NotificationOutbox {
     userId: string,
     notification: Notification,
     channels: string[],
-    status: 'sending' | 'sent' | 'failed',
+    status: 'sending' | 'sent' | 'failed' | 'held',
     lastError: string | null = null,
+    /** For `held`: the end of the quiet hours, when it goes out. */
+    heldUntil: Date | null = null,
   ): Promise<NotificationOutboxRow | null> {
     const { title, body, source, actions = [], dedupe } = notification;
     const dedupeKey = keyedHash(dedupe?.key ?? `${source}\n${title}\n${body}`);
@@ -70,7 +72,12 @@ export class NotificationOutbox {
           status: seen ? 'deduplicated' : status,
           channels: seen ? [] : channels,
           lastError,
-          nextAttemptAt: status === 'sending' ? new Date(Date.now() + SENDING_LEASE_MS) : null,
+          nextAttemptAt:
+            status === 'sending'
+              ? new Date(Date.now() + SENDING_LEASE_MS)
+              : status === 'held'
+                ? heldUntil
+                : null,
           sentAt: status === 'sent' && !seen ? new Date() : null,
         })
         .returning();
@@ -107,6 +114,36 @@ export class NotificationOutbox {
           sql`, `,
         )})`,
       );
+  }
+
+  /**
+   * The ones held through the quiet hours that have ended: taken as `sending`, like `claimDue`,
+   * and handed back together so a user's night goes out as one message.
+   */
+  async claimHeld(now = new Date()): Promise<NotificationOutboxRow[]> {
+    const lease = new Date(now.getTime() + SENDING_LEASE_MS);
+    const { rows } = await this.db.execute<{ id: string }>(sql`
+      UPDATE ${notificationOutbox} SET status = 'sending', next_attempt_at = ${lease}
+      WHERE id IN (
+        SELECT id FROM ${notificationOutbox}
+        WHERE status = 'held' AND next_attempt_at <= ${now}
+        ORDER BY created_at
+        FOR UPDATE SKIP LOCKED
+      )
+      RETURNING id`);
+    if (!rows.length) {
+      return [];
+    }
+    return this.db
+      .select()
+      .from(notificationOutbox)
+      .where(
+        sql`${notificationOutbox.id} IN (${sql.join(
+          rows.map((row) => sql`${row.id}`),
+          sql`, `,
+        )})`,
+      )
+      .orderBy(notificationOutbox.createdAt);
   }
 
   /** Every channel took it. */

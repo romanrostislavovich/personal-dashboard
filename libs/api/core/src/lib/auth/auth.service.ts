@@ -16,6 +16,7 @@ import {
   CurrentUser,
   loginSchema,
   LoginResponse,
+  NO_CALM,
   LoginResult,
   PasswordChange,
   ProfileUpdate,
@@ -285,5 +286,6 @@ function toCurrentUser(user: UserRow): CurrentUser {
     timeZone: user.timeZone,
     theme: user.theme,
     layout: user.layout,
+    calm: user.calm ?? NO_CALM,
   };
 }

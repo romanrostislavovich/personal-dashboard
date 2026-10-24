@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="gentle_widget_title">Бережный день</string>
+    <string name="gentle_widget_open">Нажмите, чтобы открыть бережный день</string>
+    <string name="gentle_widget_description">Сегодняшние 1–3 маленьких шага</string>
+</resources>

@@ -55,6 +55,8 @@ export * from './lib/health-summary';
 export * from './lib/vault';
 export * from './lib/apps';
 export * from './lib/push';
+export * from './lib/calm';
+export * from './lib/crisis-lines';
 export * from './lib/habits';
 export * from './lib/writing';
 export * from './lib/writing-text';

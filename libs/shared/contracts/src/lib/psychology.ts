@@ -248,8 +248,35 @@ export const psychologySettingsSchema = z.object({
     .string()
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:mm')
     .optional(),
+  /** A close person to write to from the help button; `null` — none. */
+  closeName: z.string().trim().min(1).max(60).nullable().optional(),
+  /** Their Telegram (see telegramContact). */
+  closeTelegram: z
+    .string()
+    .trim()
+    .max(80)
+    .refine((value) => telegramContact(value) !== null, 'A Telegram username or phone number')
+    .transform((value) => telegramContact(value) as string)
+    .nullable()
+    .optional(),
 });
 export type PsychologySettingsInput = z.infer<typeof psychologySettingsSchema>;
+
+/**
+ * A close person's Telegram for the help button: a username (`@name`, `t.me/name`) or a phone
+ * number in the international form → the part after `t.me/`; `null` — not a Telegram address.
+ */
+export function telegramContact(input: string): string | null {
+  const text = input
+    .trim()
+    .replace(/^(https?:\/\/)?(t\.me|telegram\.me)\//i, '')
+    .replace(/^@/, '');
+  if (/^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(text)) {
+    return text;
+  }
+  const phone = text.replace(/[\s()-]/g, '');
+  return /^\+\d{7,15}$/.test(phone) ? phone : null;
+}
 
 export interface PsychologySettings {
   /** Puts the events told by age among the dated ones; `null` — not given. */
@@ -258,6 +285,10 @@ export interface PsychologySettings {
   reminderTest: 'who5' | 'gad7' | 'phq9' | null;
   reminderEveryDays: number;
   reminderAt: string;
+  /** A close person to write to from the help button (stored encrypted); `null` — none. */
+  closeName: string | null;
+  /** Their Telegram: a username or `+phone`, the part after `t.me/`. */
+  closeTelegram: string | null;
 }
 
 // --- Patterns: the mood over time ---

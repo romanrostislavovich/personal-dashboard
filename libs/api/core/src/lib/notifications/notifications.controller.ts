@@ -102,6 +102,7 @@ export class NotificationsController {
       title: 'Personal Dashboard',
       body: coreMessages((await this.users.findById(user.id))?.locale).testNotification,
       source: 'core',
+      now: true,
     });
   }
 }

@@ -715,6 +715,20 @@
       "when": 1792856079761,
       "tag": "0101_push_devices",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1792859599228,
+      "tag": "0102_users_calm",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1792859912887,
+      "tag": "0103_psychology_close_person",
+      "breakpoints": true
     }
   ]
 }

@@ -14,6 +14,7 @@ import { SyncSettingsComponent } from './sync-settings.component';
 import { McpSettingsComponent } from './mcp-settings.component';
 import { NotificationLogComponent } from './notification-log.component';
 import { SystemSettingsComponent } from './system-settings.component';
+import { CalmSettingsComponent } from './calm-settings.component';
 import { PushSettingsComponent } from './push-settings.component';
 import { TelegramSettingsComponent } from './telegram-settings.component';
 import { ThemeSettingsComponent } from './theme-settings.component';
@@ -64,6 +65,7 @@ const TABS = [
     SystemSettingsComponent,
     TelegramSettingsComponent,
     PushSettingsComponent,
+    CalmSettingsComponent,
     ThemeSettingsComponent,
   ],
   template: `
@@ -85,6 +87,7 @@ const TABS = [
 
       <mat-tab [label]="'core.settings.tabs.appearance' | transloco">
         <div class="grid">
+          <pd-calm-settings />
           <pd-theme-settings />
           <pd-sections-settings />
         </div>

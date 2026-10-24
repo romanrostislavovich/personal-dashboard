@@ -83,6 +83,8 @@ export class PsychologyService {
       reminderTest: (row?.reminderTest as PsychologySettings['reminderTest']) ?? null,
       reminderEveryDays: row?.reminderEveryDays ?? 30,
       reminderAt: row?.reminderAt ?? '20:00',
+      closeName: row?.closeName ?? null,
+      closeTelegram: row?.closeTelegram ?? null,
     };
   }
 
