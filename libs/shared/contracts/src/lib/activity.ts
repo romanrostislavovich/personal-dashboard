@@ -53,6 +53,12 @@ const KNOWN_APPS: Record<ActivityCategory, string[]> = {
     'notepad++',
   ],
   browsing: [
+    // Android apps go by their package names.
+    'com.android.chrome',
+    'org.mozilla.firefox',
+    'com.opera.browser',
+    'com.brave.browser',
+    'com.microsoft.emmx',
     'chrome',
     'msedge',
     'firefox',
@@ -64,6 +70,13 @@ const KNOWN_APPS: Record<ActivityCategory, string[]> = {
     'safari',
   ],
   communication: [
+    'org.telegram.messenger',
+    'com.whatsapp',
+    'com.facebook.orca',
+    'com.viber.voip',
+    'com.discord',
+    'com.google.android.gm',
+    'com.linkedin.android',
     'telegram',
     'discord',
     'slack',
@@ -103,7 +116,25 @@ const KNOWN_APPS: Record<ActivityCategory, string[]> = {
     'leagueclient',
     'valorant',
   ],
-  media: ['vlc', 'mpv', 'potplayermini64', 'spotify', 'aimp', 'foobar2000', 'wmplayer', 'mpc-hc64'],
+  media: [
+    'vlc',
+    'mpv',
+    'potplayermini64',
+    'spotify',
+    'aimp',
+    'foobar2000',
+    'wmplayer',
+    'mpc-hc64',
+    // On the phone: players and the feeds that are watched rather than written in.
+    'com.google.android.youtube',
+    'com.spotify.music',
+    'com.netflix.mediaclient',
+    'com.instagram.android',
+    'com.zhiliaoapp.musically',
+    'com.facebook.katana',
+    'com.twitter.android',
+    'com.reddit.frontpage',
+  ],
   system: [
     'explorer',
     'taskmgr',
@@ -115,7 +146,14 @@ const KNOWN_APPS: Record<ActivityCategory, string[]> = {
     'mmc',
     'regedit',
   ],
-  meetings: ['zoom', 'webex', 'ciscocollabhost', 'skypeforbusiness'],
+  meetings: [
+    'zoom',
+    'webex',
+    'ciscocollabhost',
+    'skypeforbusiness',
+    'us.zoom.videomeetings',
+    'com.microsoft.teams',
+  ],
   other: [],
 };
 
@@ -415,3 +453,36 @@ export const activityDaySchema = z.object({
   deviceId: z.uuid().optional(),
 });
 export type ActivityDayQuery = z.infer<typeof activityDaySchema>;
+
+// --- The phone's notifications (the Android app) ---
+
+/** A notification another app showed on the phone, as the app wrote it down. */
+export const phoneNotificationSchema = z.object({
+  /** The package: `com.instagram.android`. */
+  app: z.string().trim().min(1).pipe(cut(200)),
+  appName: z.string().trim().pipe(cut(200)),
+  title: cut(500),
+  text: cut(4000),
+  postedAt: moment,
+});
+export type PhoneNotificationInput = z.infer<typeof phoneNotificationSchema>;
+
+export const phoneNotificationIngestSchema = z.object({
+  notifications: z.array(phoneNotificationSchema).max(500),
+});
+export type PhoneNotificationIngest = z.infer<typeof phoneNotificationIngestSchema>;
+
+export const phoneNotificationsQuerySchema = z.object({ from: LOCAL_DATE, to: LOCAL_DATE });
+export type PhoneNotificationsQuery = z.infer<typeof phoneNotificationsQuerySchema>;
+
+/** Activity → Notifications: what interrupts, how often and when (the user's own hours). */
+export interface PhoneNotificationsSummary {
+  total: number;
+  /** Most first. */
+  byApp: { app: string; appName: string; count: number }[];
+  /** 24 numbers: how many came in each hour of the day. */
+  byHour: number[];
+  byDay: { day: LocalDate; count: number }[];
+  /** The latest ones with their text, newest first. */
+  latest: { app: string; appName: string; title: string; text: string; postedAt: string }[];
+}

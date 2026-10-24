@@ -51,7 +51,7 @@ RUN --mount=type=secret,id=keystore,required=true \
     MOBILE_KEYSTORE_FILE=/run/secrets/keystore \
     MOBILE_KEYSTORE_PASSWORD="$(cat /run/secrets/keystore_password)" \
     MOBILE_VERSION_NAME="$VERSION_NAME" MOBILE_VERSION_CODE="$VERSION_CODE" \
-    ./gradlew --no-daemon -q assembleRelease
+    ./gradlew --no-daemon -q testReleaseUnitTest assembleRelease
 
 # What the server reads (apps/api core apps/app-files.ts): the file and its version.
 ARG BUILD_ID

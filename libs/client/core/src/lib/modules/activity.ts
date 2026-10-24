@@ -22,6 +22,7 @@ import {
   ActivityLimit,
   ActivityLimitInput,
   ActivityTimelineEntry,
+  PhoneNotificationsQuery,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -36,6 +37,9 @@ export const ACTIVITY_READS = {
   /** What was in front on one day, newest first. */
   timeline: (query: ActivityDayQuery) => apiRequest(`${BASE}/timeline`, query),
   devices: () => apiRequest(`${BASE}/devices`),
+  /** The phone's notifications: which apps, how many, in which hours (the Android app). */
+  phoneNotifications: (query: PhoneNotificationsQuery) =>
+    apiRequest(`${BASE}/notifications`, query),
   settings: () => apiRequest(`${BASE}/settings`),
   /** Every program seen, with its category and whether it is recorded. */
   apps: () => apiRequest(`${BASE}/apps`),

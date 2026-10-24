@@ -8,6 +8,7 @@ const TABS = [
   { path: 'overview', labelKey: 'activity.tabs.overview' },
   { path: 'focus', labelKey: 'activity.tabs.focus' },
   { path: 'workstates', labelKey: 'activity.workstates.title' },
+  { path: 'notifications', labelKey: 'activity.tabs.notifications' },
   { path: 'computers', labelKey: 'activity.tabs.computers' },
   { path: 'settings', labelKey: 'activity.tabs.settings' },
 ] as const;

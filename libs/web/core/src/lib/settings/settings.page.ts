@@ -24,6 +24,7 @@ import { DeviceBackupSettingsComponent } from './device-backup-settings.componen
 import { IntegrationStatusComponent } from './integration-status.component';
 import { AutomationsSettingsComponent } from '../automations/automations-settings.component';
 import { AppsSettingsComponent } from './apps-settings.component';
+import { PhoneSensorsComponent } from './phone-sensors.component';
 
 /** Tabs of the page, as `?tab=` names them: module pages link to `integrations`. */
 const TABS = [
@@ -59,6 +60,7 @@ const TABS = [
     DeviceBackupSettingsComponent,
     AutomationsSettingsComponent,
     AppsSettingsComponent,
+    PhoneSensorsComponent,
     SyncSettingsComponent,
     NotificationLogComponent,
     McpSettingsComponent,
@@ -124,6 +126,8 @@ const TABS = [
 
       <mat-tab [label]="'core.settings.tabs.apps' | transloco">
         <ng-template matTabContent>
+          <!-- Only inside the Android app: the phone as a sensor. -->
+          <pd-phone-sensors />
           <pd-apps-settings />
         </ng-template>
       </mat-tab>

@@ -30,6 +30,11 @@ export const activityModule: WebDashboardModule = {
             ),
         },
         {
+          path: 'notifications',
+          loadComponent: () =>
+            import('./notifications/notifications.page').then((m) => m.NotificationsPage),
+        },
+        {
           path: 'computers',
           loadComponent: () => import('./computers/computers.page').then((m) => m.ComputersPage),
         },
