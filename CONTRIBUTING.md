@@ -71,6 +71,9 @@ entry once its parent ships the fix (check with `npm ls <package>` and `npm audi
   peer. It only provides generators (see docs/architecture.md), so it runs fine with NestJS 12.
 - `@esbuild-kit/core-utils` → `esbuild`: drizzle-kit still depends on esbuild-kit, which asks for
   esbuild 0.18; it uses the same esbuild as the rest of the repo instead.
+- `@nestjs/platform-express` → `multer`: NestJS 12.1.1 pins multer 2.4.0 (DoS through a pending
+  file filter after the request is gone, GHSA-q7qp-rjg7-q26m); 2.5.0 has the fix. It reaches the
+  server: uploads go through multer.
 
 ## Commits and pull requests
 

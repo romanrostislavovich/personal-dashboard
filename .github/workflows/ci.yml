@@ -45,7 +45,7 @@ jobs:
       # --ignore-scripts: the Electron binary is not needed for checks.
       - run: npm ci --ignore-scripts
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       - run: npx nx affected -t lint test build
 

@@ -42,8 +42,8 @@ vi.mock('./window-watcher', () => ({
     constructor(sample: typeof env.sample) {
       env.sample = sample;
     }
-    start() {}
-    stop() {}
+    start = vi.fn();
+    stop = vi.fn();
   },
 }));
 vi.mock('./health', () => ({
@@ -55,9 +55,9 @@ vi.mock('./health', () => ({
 }));
 vi.mock('./outages', () => ({
   OutageWatch: class {
-    forget() {}
-    succeeded() {}
-    async failed() {}
+    forget = vi.fn();
+    succeeded = vi.fn();
+    failed = vi.fn();
   },
 }));
 vi.mock('./activity-store', () => ({
@@ -85,11 +85,11 @@ vi.mock('./activity-store', () => ({
     setPausedUntil(until: number | null) {
       this.pausedUntil = until;
     }
-    enqueue() {}
-    dequeue() {}
-    dequeueFocus() {}
-    dequeueOutages() {}
-    flush() {}
+    enqueue = vi.fn();
+    dequeue = vi.fn();
+    dequeueFocus = vi.fn();
+    dequeueOutages = vi.fn();
+    flush = vi.fn();
   },
 }));
 
