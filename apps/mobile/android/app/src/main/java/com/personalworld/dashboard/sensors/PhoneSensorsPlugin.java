@@ -24,8 +24,28 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 @CapacitorPlugin(name = "PhoneSensors")
 public class PhoneSensorsPlugin extends Plugin {
 
+    /**
+     * A plugin method that throws leaves the page's call waiting for good (Capacitor only logs
+     * it): every method runs through here, so the page gets the error and can show it.
+     */
+    private interface Body {
+        void run() throws Exception;
+    }
+
+    private static void guarded(PluginCall call, Body body) {
+        try {
+            body.run();
+        } catch (Exception e) {
+            call.reject(e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
+    }
+
     @PluginMethod
     public void status(PluginCall call) {
+        guarded(call, () -> statusNow(call));
+    }
+
+    private void statusNow(PluginCall call) {
         Context context = getContext();
         JSObject result = new JSObject();
         result.put("configured", new SensorsStore(context).configured());
@@ -39,6 +59,10 @@ public class PhoneSensorsPlugin extends Plugin {
     /** Switched on: the server and this phone's device token of the Activity section. */
     @PluginMethod
     public void configure(PluginCall call) {
+        guarded(call, () -> configureNow(call));
+    }
+
+    private void configureNow(PluginCall call) {
         String server = call.getString("server", "");
         String token = call.getString("token", "");
         if (server.isEmpty() || token.isEmpty()) {
@@ -53,15 +77,19 @@ public class PhoneSensorsPlugin extends Plugin {
 
     @PluginMethod
     public void disable(PluginCall call) {
-        SensorsWorker.cancel(getContext());
-        new SensorsStore(getContext()).clear();
-        call.resolve();
+        guarded(call, () -> {
+            SensorsWorker.cancel(getContext());
+            new SensorsStore(getContext()).clear();
+            call.resolve();
+        });
     }
 
     @PluginMethod
     public void syncNow(PluginCall call) {
-        SensorsWorker.runNow(getContext());
-        call.resolve();
+        guarded(call, () -> {
+            SensorsWorker.runNow(getContext());
+            call.resolve();
+        });
     }
 
     @PluginMethod
@@ -107,6 +135,8 @@ public class PhoneSensorsPlugin extends Plugin {
             call.resolve();
         } catch (ActivityNotFoundException e) {
             call.reject("This phone has no such settings screen");
+        } catch (RuntimeException e) {
+            call.reject(e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
