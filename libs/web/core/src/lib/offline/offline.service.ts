@@ -38,6 +38,9 @@ export class OfflineService {
   readonly online = signal(this.window?.navigator.onLine ?? true);
   /** Changes made offline that wait to be sent. */
   readonly pending = signal(0);
+  /** Grows each time changes made offline reach the server: a page may read its data again. */
+  readonly synced = signal(0);
+  private sending: Promise<void> | null = null;
 
   constructor() {
     // What waited since the last launch goes out as soon as the session is back.
@@ -54,7 +57,7 @@ export class OfflineService {
     this.client.outbox.onChange((count) => {
       if (count > this.pending()) {
         this.toast.show({
-          icon: 'cloud_off',
+          icon: '📴',
           title: this.transloco.translate('core.offline.savedTitle'),
           text: this.transloco.translate('core.offline.savedText'),
         });
@@ -83,21 +86,31 @@ export class OfflineService {
     }
   }
 
-  private async send(): Promise<void> {
+  /** Started from two places at once (the session is back, the connection is back): one goes. */
+  private send(): Promise<void> {
+    this.sending ??= this.sendNow().finally(() => (this.sending = null));
+    return this.sending;
+  }
+
+  private async sendNow(): Promise<void> {
     const result = await this.client.api.flushOutbox().catch(() => null);
     if (!result) {
       return;
     }
     if (result.sent > 0) {
+      // What the server made of them may differ (a diary entry changed elsewhere meanwhile).
+      this.synced.update((count) => count + 1);
+    }
+    if (result.sent > 0) {
       this.toast.show({
-        icon: 'cloud_done',
+        icon: '✅',
         title: this.transloco.translate('core.offline.sentTitle'),
         text: this.transloco.translate('core.offline.sentText', { count: result.sent }),
       });
     }
     if (result.refused.length > 0) {
       this.toast.show({
-        icon: 'error',
+        icon: '⚠️',
         title: this.transloco.translate('core.offline.refusedTitle'),
         text: this.transloco.translate('core.offline.refusedText', {
           count: result.refused.length,

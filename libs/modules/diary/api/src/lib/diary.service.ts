@@ -24,7 +24,15 @@ import {
   toLocalDate,
 } from '@pd/contracts';
 import { and, arrayContains, asc, desc, eq, gte, isNotNull, lte, sql } from 'drizzle-orm';
-import { appendNote, countWords, extractTags, hasText, searchSnippet, shorten } from './diary-text';
+import {
+  appendNote,
+  countWords,
+  extractTags,
+  hasText,
+  mergeOverChanged,
+  searchSnippet,
+  shorten,
+} from './diary-text';
 import { DiaryEntryRow, diaryEntries, diaryPhotos, diarySettings } from './diary.schema';
 
 const MOOD_HISTORY_DAYS = 30;
@@ -63,10 +71,21 @@ export class DiaryService {
     return row ? toEntry(row) : null;
   }
 
-  /** Saves the day's entry. An empty entry without a mood is deleted. */
+  /**
+   * Saves the day's entry. An empty entry without a mood is deleted. Written over a version
+   * that changed since (`basedOn`), it is added to the stored text instead (mergeOverChanged).
+   */
   async save(userId: string, day: LocalDate, input: DiaryEntryInput): Promise<DiaryEntry | null> {
-    const content = input.content;
-    const mood = input.mood ?? null;
+    const stored = input.basedOn === undefined ? undefined : await this.findRow(userId, day);
+    const merged = stored
+      ? mergeOverChanged(stored, {
+          content: input.content,
+          mood: input.mood ?? null,
+          basedOn: input.basedOn,
+        })
+      : null;
+    const content = merged?.content ?? input.content;
+    const mood = merged ? merged.mood : (input.mood ?? null);
     if (!content.trim() && mood === null) {
       await this.remove(userId, day);
       return null;

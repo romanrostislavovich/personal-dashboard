@@ -38,6 +38,8 @@ const QUEUEABLE = [
   /^\/api\/projects(\/|$)/,
   // A day of a habit marked: the same mark sent again changes nothing.
   /^\/api\/habits\/[^/]+\/days\/[^/]+$/,
+  // The plan of a gentle day: the whole day is sent each time, the last one wins.
+  /^\/api\/psychology\/gentle\/day$/,
 ];
 
 export function isQueueable(method: string, path: string, body: unknown): boolean {

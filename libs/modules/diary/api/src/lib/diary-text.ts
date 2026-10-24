@@ -18,6 +18,29 @@ export function appendNote(content: string, note: string, time: string | null): 
   return content.trim() ? `${content.trimEnd()}\n\n${line}` : line;
 }
 
+/**
+ * An entry written over an older version of the day (`basedOn`) while another device changed
+ * it: the stored text stays and the new one goes below a line, so neither is lost; the stored
+ * mood stays too. `null` — no conflict, the new text replaces the stored one as usual.
+ */
+export function mergeOverChanged(
+  stored: { content: string; mood: number | null; updatedAt: Date } | null,
+  input: { content: string; mood: number | null; basedOn?: string | null },
+): { content: string; mood: number | null } | null {
+  if (!stored || input.basedOn === undefined || stored.content === input.content) {
+    return null;
+  }
+  const changed = input.basedOn === null || stored.updatedAt.getTime() > Date.parse(input.basedOn);
+  if (!changed) {
+    return null;
+  }
+  const added = input.content.trim();
+  return {
+    content: added ? `${stored.content.trimEnd()}\n\n---\n\n${added}` : stored.content,
+    mood: stored.mood ?? input.mood,
+  };
+}
+
 /** Words of an entry as written (its Markdown too); an empty entry has none. */
 export function countWords(content: string): number {
   const trimmed = content.trim();

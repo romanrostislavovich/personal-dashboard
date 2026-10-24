@@ -96,7 +96,8 @@ Once public, anyone can read the code looking for a way in to every self-hosted 
 - [x] Licenses of the dependencies are compatible with MIT — no GPL / AGPL in what ships
 - [ ] Icons and images in the repository are yours or under a free license: the app icon
       (`apps/desktop/icon.png`, `apps/web/public/icon*.png`) and `docs/images/demo.gif` are
-      the only ones; there are no fonts or sounds. Only you know where the icon came from
+      the only ones; the fonts in `apps/web/public/fonts` are Inter and Manrope (SIL OFL) and
+      Material Symbols (Apache 2.0); there are no sounds. Only you know where the icon came from
 - [x] A note in the README: not affiliated with the services it connects to
 - [x] The wishlist reads shops' pages — the same note says the user follows the shop's terms
 

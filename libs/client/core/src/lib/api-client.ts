@@ -1,5 +1,6 @@
 import { LoginResponse } from '@pd/contracts';
 import { isQueueable, Outbox, OutboxResult } from './outbox';
+import { isCacheable } from './read-cache';
 import { ClientPlatform } from './platform';
 import { Session } from './session';
 
@@ -148,14 +149,22 @@ export class ApiClient {
   }
 
   async request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
+    const cache = method === 'GET' && isCacheable(path) ? this.platform.readCache : undefined;
     try {
-      return await this.requestNow<T>(method, path, options);
+      const body = await this.requestNow<T>(method, path, options);
+      void cache?.put(this.url(path, options.query), body).catch(() => undefined);
+      return body;
     } catch (error) {
       // An error status is an answer; anything else means the server was not reached.
       const unreachable = !(error instanceof ApiError) && !options.signal?.aborted;
       if (this.outbox && unreachable && isQueueable(method, path, options.body)) {
         await this.outbox.add(method, path, options.body);
         return undefined as T;
+      }
+      // Read before: the last answer instead of an error (see ReadCache).
+      const kept = unreachable ? await cache?.get(this.url(path, options.query)) : null;
+      if (kept) {
+        return kept.body as T;
       }
       throw error;
     }

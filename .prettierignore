@@ -6,3 +6,5 @@
 .angular
 
 .nx/self-healing
+# Written by apps/web/fonts.mjs
+apps/web/public/fonts

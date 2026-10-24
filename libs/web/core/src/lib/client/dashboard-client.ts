@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { browserStorage, createDashboardClient, DashboardClient } from '@pd/client-core';
+import { mobileReadCache } from '../mobile/idb-read-cache';
 import { apiBaseUrl, isMobileApp } from '../mobile/mobile-app';
 
 /**
@@ -20,6 +21,8 @@ export const DASHBOARD_CLIENT = new InjectionToken<DashboardClient>('DashboardCl
         baseUrl: apiBaseUrl(),
         storage: browserStorage(),
         refreshTokenIn: 'storage',
+        // Reading without a connection: no service worker here (offline-read.interceptor.ts).
+        readCache: mobileReadCache(),
       });
     }
     return createDashboardClient({

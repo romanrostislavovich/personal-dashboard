@@ -1,3 +1,5 @@
+import type { ReadCache } from './read-cache';
+
 /**
  * What a client platform provides to the core: a browser, the desktop shell (a browser inside),
  * a mobile app. Everything else in the core is plain TypeScript.
@@ -18,6 +20,11 @@ export interface ClientPlatform {
   refreshTokenIn?: 'cookie' | 'storage';
   /** The platform's `fetch`; the global one by default. */
   fetch?: typeof fetch;
+  /**
+   * Where answers are kept for reading without a connection (see ReadCache); none — a read
+   * without a connection fails (a browser has its service worker instead).
+   */
+  readCache?: ReadCache;
 }
 
 /** A small key-value store; asynchronous, as secure stores on phones are. */
