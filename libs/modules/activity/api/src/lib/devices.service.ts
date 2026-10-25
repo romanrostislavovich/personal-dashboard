@@ -10,6 +10,7 @@ import { ActivityDevice, ActivityDeviceCreated, ActivityDeviceInput } from '@pd/
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { createHash, randomBytes } from 'node:crypto';
 import { activityPhoneNotifications } from './phone-notifications.schema';
+import { activityPhoneDaily, activityPhoneSignals } from './phone/phone-signals.schema';
 import { activityPhoneUnlocks } from './phone/phone-unlocks.schema';
 import { activityPhoneLocations } from './places/places.schema';
 import { activityWorkstates, telemetryDynamics } from './activity-context.schema';
@@ -110,6 +111,15 @@ export class DevicesService {
         DELETE FROM activity_phone_unlocks a USING activity_phone_unlocks b
         WHERE a.device_id = ${id} AND b.device_id = ${into} AND a.at = b.at
       `);
+      await tx.execute(sql`
+        DELETE FROM activity_phone_signals a USING activity_phone_signals b
+        WHERE a.device_id = ${id} AND b.device_id = ${into} AND a.kind = b.kind AND a.at = b.at
+      `);
+      await tx.execute(sql`
+        DELETE FROM activity_phone_daily a USING activity_phone_daily b
+        WHERE a.device_id = ${id} AND b.device_id = ${into}
+          AND a.day = b.day AND a.kind = b.kind AND a.key = b.key
+      `);
       for (const table of [
         activitySpans,
         activityHealth,
@@ -120,6 +130,8 @@ export class DevicesService {
         activityPhoneNotifications,
         activityPhoneLocations,
         activityPhoneUnlocks,
+        activityPhoneSignals,
+        activityPhoneDaily,
       ]) {
         await tx
           .update(table)

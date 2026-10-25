@@ -584,7 +584,15 @@
       "again": "Check again",
       "lastSeen": "last data",
       "neverSeen": "sent nothing yet",
-      "noPhones": "No phone collects yet. Install the Android app (Settings → Apps) and switch it on in it: Settings → Devices."
+      "noPhones": "No phone collects yet. Install the Android app (Settings → Apps) and switch it on in it: Settings → Devices.",
+      "extrasTitle": "More from the phone — each optional:",
+      "extras": {
+        "steps": "Steps from the phone (physical activity)",
+        "calls": "Calls: how many, minutes, how many people (numbers stay on the phone)",
+        "photos": "Photos taken: how many and when (the pictures stay on the phone)",
+        "microphone": "The noise level around every 15 minutes (a number, no sound kept)",
+        "bluetooth": "Bluetooth devices: headphones, the car"
+      }
     }
   },
   "toast": {

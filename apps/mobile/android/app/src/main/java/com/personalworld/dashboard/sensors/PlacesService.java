@@ -49,7 +49,11 @@ public class PlacesService extends Service {
     /** The fixes go to the server this often: a background job waits for hours in deep sleep. */
     private static final long SEND_EVERY_MIN = 5;
 
+    /** The light, the pressure and the noise are read this often. */
+    private static final long SAMPLE_EVERY_MIN = 15;
+
     private final MotionMode mode = new MotionMode();
+    private LiveSignals live;
     private ScheduledExecutorService sender;
     private SensorManager sensors;
     private TriggerEventListener motion;
@@ -78,7 +82,10 @@ public class PlacesService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = notification();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+            // The microphone too once allowed: the noise level is heard from here (LiveSignals).
+            int types = ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                | (LiveSignals.hasMicrophone(this) ? ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE : 0);
+            startForeground(NOTIFICATION_ID, notification, types);
         } else {
             startForeground(NOTIFICATION_ID, notification);
         }
@@ -88,6 +95,10 @@ public class PlacesService extends Service {
         }
         subscribe();
         armMotion();
+        if (live == null) {
+            live = new LiveSignals(this);
+            live.start();
+        }
         startSending();
         // Killed for memory: Android starts it again.
         return START_STICKY;
@@ -183,11 +194,17 @@ public class PlacesService extends Service {
             }
             try {
                 SensorsWorker.sendLocations(store);
+                SensorsWorker.sendSignals(store);
             } catch (Exception e) {
                 // No network now: they wait in the store for the next time.
                 Log.w(TAG, "Fixes were not sent", e);
             }
         }, SEND_EVERY_MIN, SEND_EVERY_MIN, TimeUnit.MINUTES);
+        sender.scheduleWithFixedDelay(() -> {
+            if (live != null) {
+                live.sample();
+            }
+        }, 1, SAMPLE_EVERY_MIN, TimeUnit.MINUTES);
     }
 
     /** On the move: GPS every few seconds as well; still: the network fixes alone. */
@@ -276,6 +293,10 @@ public class PlacesService extends Service {
         if (sender != null) {
             sender.shutdownNow();
             sender = null;
+        }
+        if (live != null) {
+            live.stop();
+            live = null;
         }
         super.onDestroy();
     }

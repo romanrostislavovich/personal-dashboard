@@ -84,6 +84,8 @@ public class SensorsWorker extends Worker {
             sendUsage(store);
             sendNotifications(store);
             sendLocations(store);
+            collectSignals(store);
+            sendSignals(store);
             return Result.success();
         } catch (IOException | JSONException e) {
             return Result.retry();
@@ -104,6 +106,7 @@ public class SensorsWorker extends Worker {
         while (read.hasNextEvent()) {
             read.getNextEvent(event);
             events.add(new UsageSpans.Event(event.getPackageName(), event.getEventType(), event.getTimeStamp()));
+            PhoneSignals.screen(store, event.getEventType(), event.getTimeStamp());
         }
         Set<String> ignored = AppLabels.homeScreens(context);
         UsageSpans.Result result = UsageSpans.build(events, store.open(), until, ignored);
@@ -182,6 +185,53 @@ public class SensorsWorker extends Worker {
             store.dropLocations(count);
             queue = store.locations();
         }
+    }
+
+    /** Steps, calls, photos, mobile data: each only when Android allows it (PhoneSignals). */
+    private void collectSignals(SensorsStore store) {
+        Context context = getApplicationContext();
+        PhoneSignals.steps(context, store);
+        PhoneSignals.calls(context, store);
+        PhoneSignals.photos(context, store);
+        PhoneSignals.dataUsage(context, store);
+    }
+
+    /** The signals waiting and the numbers of the days; the past days are dropped once taken. */
+    static synchronized void sendSignals(SensorsStore store) throws IOException, JSONException {
+        JSONArray queue = store.signals();
+        do {
+            int count = Math.min(BATCH, queue.length());
+            JSONArray batch = new JSONArray();
+            for (int i = 0; i < count; i++) {
+                JSONObject item = queue.getJSONObject(i);
+                JSONObject signal = new JSONObject()
+                    .put("kind", item.getString("kind"))
+                    .put("at", iso(item.getLong("at")));
+                if (item.has("data")) {
+                    signal.put("data", item.getJSONObject("data"));
+                }
+                batch.put(signal);
+            }
+            JSONArray daily = new JSONArray();
+            JSONObject dailies = store.dailies();
+            java.util.Iterator<String> keys = dailies.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                String[] parts = key.split("\\|", 3);
+                daily.put(new JSONObject()
+                    .put("day", parts[0])
+                    .put("kind", parts[1])
+                    .put("key", parts.length > 2 ? parts[2] : "")
+                    .put("value", dailies.getDouble(key)));
+            }
+            if (batch.length() == 0 && daily.length() == 0) {
+                return;
+            }
+            post(store, "/api/activity/device/signals", new JSONObject().put("signals", batch).put("daily", daily));
+            store.dropSignals(count);
+            store.keepDailiesOf(PhoneSignals.today());
+            queue = store.signals();
+        } while (queue.length() > 0);
     }
 
     /** Throws on no answer or an error of the server, so the run is tried again. */

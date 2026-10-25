@@ -14,12 +14,16 @@ import android.os.Process;
 import android.provider.Settings;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
+import android.content.pm.PackageManager;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -32,6 +36,59 @@ import java.util.List;
 public class PhoneSensorsPlugin extends Plugin {
 
     private static final int LOCATION_REQUEST = 4207;
+    private static final int EXTRA_REQUEST = 4209;
+
+    /** The optional signals and the permissions each needs (docs/telemetry.md). */
+    private static final Map<String, String[]> EXTRAS = new LinkedHashMap<>();
+
+    static {
+        EXTRAS.put("steps", Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+            ? new String[] {Manifest.permission.ACTIVITY_RECOGNITION} : new String[0]);
+        EXTRAS.put("calls", new String[] {Manifest.permission.READ_CALL_LOG});
+        EXTRAS.put("photos", new String[] {Build.VERSION.SDK_INT >= 33
+            ? "android.permission.READ_MEDIA_IMAGES" : Manifest.permission.READ_EXTERNAL_STORAGE});
+        EXTRAS.put("microphone", new String[] {Manifest.permission.RECORD_AUDIO});
+        if (Build.VERSION.SDK_INT >= 31) {
+            EXTRAS.put("bluetooth", new String[] {"android.permission.BLUETOOTH_CONNECT"});
+        }
+    }
+
+    private static boolean allGranted(Context context, String[] permissions) {
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * An optional signal (`kind`: steps, calls, photos, microphone, bluetooth): Android's own
+     * question the first time; asked once already, the app's page in the settings, where every
+     * permission is. The card reads the status again when the user comes back.
+     */
+    @PluginMethod
+    public void allow(PluginCall call) {
+        guarded(call, () -> {
+            String kind = call.getString("kind", "");
+            String[] permissions = EXTRAS.get(kind);
+            Activity activity = getActivity();
+            if (permissions == null || activity == null) {
+                call.reject("Unknown signal: " + kind);
+                return;
+            }
+            SensorsStore store = new SensorsStore(getContext());
+            if (store.number("asked:" + kind) == 1) {
+                Intent details = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                details.setData(Uri.parse("package:" + activity.getPackageName()));
+                open(call, details);
+                return;
+            }
+            store.setNumber("asked:" + kind, 1);
+            ActivityCompat.requestPermissions(activity, permissions, EXTRA_REQUEST);
+            call.resolve();
+        });
+    }
 
     /**
      * A plugin method that throws leaves the page's call waiting for good (Capacitor only logs
@@ -63,6 +120,10 @@ public class PhoneSensorsPlugin extends Plugin {
         PowerManager power = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         result.put("unrestricted", power != null && power.isIgnoringBatteryOptimizations(context.getPackageName()));
         result.put("location", PhoneLocation.allowed(context));
+        // The optional signals: each a permission of its own (see `allow`).
+        for (Map.Entry<String, String[]> extra : EXTRAS.entrySet()) {
+            result.put(extra.getKey(), allGranted(context, extra.getValue()));
+        }
         call.resolve(result);
     }
 

@@ -16,6 +16,7 @@ import { PhoneNotificationsController } from './phone-notifications.controller';
 import { PhoneNotificationsService } from './phone-notifications.service';
 import { PhoneUsageController } from './phone/phone-usage.controller';
 import { PhoneUsageLinks } from './phone/phone-usage.links';
+import { PhoneSignalsService } from './phone/phone-signals.service';
 import { PhoneUsageService } from './phone/phone-usage.service';
 import { PlacesController } from './places/places.controller';
 import { PlaceNamesService } from './places/place-names.service';
@@ -69,6 +70,7 @@ import { TelemetrySummaryService } from './telemetry-summary.service';
     PlacesAutomations,
     PhoneUsageLinks,
     PhoneUsageService,
+    PhoneSignalsService,
     PlacesService,
     SitesService,
     ProjectTimeService,

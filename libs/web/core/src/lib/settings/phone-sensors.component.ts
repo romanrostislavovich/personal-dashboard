@@ -10,7 +10,12 @@ import { ActivityDevice } from '@pd/contracts';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { apiBaseUrl, isMobileApp, mobileServer, phoneModel } from '../mobile/mobile-app';
 import { DeviceOnlyComponent } from './device-only.component';
-import { checkPhoneSensors, PhoneSensorsCheck, PhoneSensorsStatus } from '../mobile/phone-sensors';
+import {
+  checkPhoneSensors,
+  PhoneExtra,
+  PhoneSensorsCheck,
+  PhoneSensorsStatus,
+} from '../mobile/phone-sensors';
 
 type Step = 'usageAccess' | 'notificationAccess' | 'location' | 'unrestricted';
 type Plugin = NonNullable<PhoneSensorsCheck['plugin']>;
@@ -123,6 +128,24 @@ function describe(failure: unknown): string {
                 </div>
               }
             }
+            @if (hasExtras(s)) {
+              <p class="extras">{{ 'core.settings.phone.extrasTitle' | transloco }}</p>
+              @for (extra of extras; track extra) {
+                @if (s[extra] !== undefined) {
+                  <div class="step">
+                    <mat-icon [class.ok]="s[extra]">
+                      {{ s[extra] ? 'check_circle' : 'radio_button_unchecked' }}
+                    </mat-icon>
+                    <span>{{ 'core.settings.phone.extras.' + extra | transloco }}</span>
+                    @if (!s[extra]) {
+                      <button matButton="tonal" (click)="allow(extra)">
+                        {{ 'core.settings.phone.allow' | transloco }}
+                      </button>
+                    }
+                  </div>
+                }
+              }
+            }
             <div class="step">
               <mat-icon>rocket_launch</mat-icon>
               <span>{{ 'core.settings.phone.steps.autostart' | transloco }}</span>
@@ -176,11 +199,26 @@ function describe(failure: unknown): string {
     .error {
       color: var(--mat-sys-error);
     }
+    .extras {
+      margin: 8px 0 0;
+      font: var(--mat-sys-title-small);
+    }
   `,
 })
 export class PhoneSensorsComponent {
   private readonly activity = activityApi(inject(DASHBOARD_CLIENT).api);
   private readonly apps = appsApi(inject(DASHBOARD_CLIENT).api);
+
+  /** The optional signals: each is asked for only when the user wants it. */
+  protected readonly extras: PhoneExtra[] = ['steps', 'calls', 'photos', 'microphone', 'bluetooth'];
+
+  protected hasExtras(status: PhoneSensorsStatus): boolean {
+    return this.extras.some((extra) => status[extra] !== undefined);
+  }
+
+  protected allow(kind: PhoneExtra): Promise<void> {
+    return this.openScreen((plugin) => plugin.allow({ kind }));
+  }
 
   protected readonly steps: Step[] = [
     'usageAccess',

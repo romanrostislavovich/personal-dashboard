@@ -14,6 +14,7 @@ import {
 } from '@pd/contracts';
 import { Bar, BarChartComponent, DurationPipe, todayLocalDate } from '@pd/web-core';
 
+import { PhoneSignalsComponent } from './phone-signals.component';
 /** The periods offered, in days. */
 const PERIODS = [7, 30] as const;
 
@@ -31,6 +32,7 @@ const PERIODS = [7, 30] as const;
     DurationPipe,
     MatButtonToggleModule,
     MatCardModule,
+    PhoneSignalsComponent,
     TranslocoPipe,
   ],
   template: `
@@ -65,6 +67,8 @@ const PERIODS = [7, 30] as const;
         </mat-card>
       }
     }
+
+    <pd-phone-signals [period]="period()" />
 
     @if (summary.value(); as s) {
       @if (s.total === 0) {
@@ -158,7 +162,7 @@ export class NotificationsPage {
   protected readonly periods = PERIODS;
   protected readonly days = signal<number>(7);
 
-  private readonly period = computed(() => {
+  protected readonly period = computed(() => {
     const to = todayLocalDate();
     return { from: toLocalDate(addDays(parseLocalDate(to), 1 - this.days())), to };
   });
