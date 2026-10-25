@@ -50,6 +50,8 @@ export const ACTIVITY_READS = {
     apiRequest(`${BASE}/notifications`, query),
   /** The phone's unlocks and its nights (the Android app). */
   phoneUsage: (query: PhoneUsageQuery) => apiRequest(`${BASE}/phone`, query),
+  /** The numbers of each day from the phone's other signals (docs/telemetry.md). */
+  phoneSignals: (query: PhoneUsageQuery) => apiRequest(`${BASE}/phone/signals`, query),
   /** A day in places and trips, with the places of the last 30 days (the phone's location). */
   places: (query: PlacesQuery) => apiRequest(`${BASE}/places`, query),
   /** Whether Google is connected for the places, and the map's key. */

@@ -12,7 +12,17 @@ export interface PhoneSensorsStatus {
   unrestricted: boolean;
   /** The location all the time (places and trips); missing — an APK built before it. */
   location?: boolean;
+  /** The optional signals (docs/telemetry.md); missing — an APK built before them. */
+  steps?: boolean;
+  calls?: boolean;
+  photos?: boolean;
+  microphone?: boolean;
+  /** Android 12 and later only. */
+  bluetooth?: boolean;
 }
+
+/** The optional signals of the phone, each a permission of its own. */
+export type PhoneExtra = 'steps' | 'calls' | 'photos' | 'microphone' | 'bluetooth';
 
 interface PhoneSensorsPlugin {
   status(): Promise<PhoneSensorsStatus>;
@@ -24,6 +34,8 @@ interface PhoneSensorsPlugin {
   openBattery(): Promise<void>;
   /** Android's question about the location, or the app's settings once it was asked. */
   openLocation(): Promise<void>;
+  /** Android's question about one optional signal, or the app's settings once it was asked. */
+  allow(options: { kind: PhoneExtra }): Promise<void>;
   openAutostart(): Promise<void>;
 }
 

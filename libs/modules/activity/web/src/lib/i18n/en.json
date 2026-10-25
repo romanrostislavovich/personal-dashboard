@@ -436,7 +436,24 @@
     "phoneNight": "On the phone late at night (23–4)",
     "km": "Km on the move",
     "places": "Places visited",
-    "site": "On a site"
+    "site": "On a site",
+    "phone": {
+      "firstUse": "First at the phone",
+      "lastUse": "Last at the phone",
+      "rest": "Rest from the phone at night",
+      "steps": "Steps (phone)",
+      "headphones": "With headphones",
+      "car": "In the car",
+      "media": "Music and video on the phone",
+      "dnd": "Do Not Disturb",
+      "calls": "Calls",
+      "callMinutes": "Call minutes",
+      "people": "People called",
+      "photos": "Photos taken",
+      "mobileData": "Mobile data, MB",
+      "noise": "Noise around, dB",
+      "daylight": "In daylight"
+    }
   },
   "usage": {
     "seconds": "at a screen"
@@ -557,7 +574,28 @@
     "perDay": "{{count}} a day",
     "night": "at night",
     "byDay": "Unlocks by day",
-    "nightHint": "At night — in apps of the phone from 23:00 to 4:00; the night counts to the evening it began on."
+    "nightHint": "At night — in apps of the phone from 23:00 to 4:00; the night counts to the evening it began on.",
+    "signals": {
+      "title": "The phone, an average day",
+      "hint": "Over the days the phone told each; settings of what it collects — Settings → Devices",
+      "firstUse": "First use",
+      "lastUse": "Last use",
+      "restHours": "Rest of the night",
+      "steps": "Steps",
+      "mediaHours": "Playing",
+      "headphonesHours": "Headphones",
+      "carHours": "In the car",
+      "dndHours": "Do Not Disturb",
+      "calls": "Calls",
+      "callMinutes": "Call minutes",
+      "people": "People",
+      "photos": "Photos",
+      "mobileMegabytes": "Mobile data, MB",
+      "noiseDb": "Noise, dB",
+      "daylightHours": "Daylight",
+      "h": "h",
+      "days": "{{count}} days"
+    }
   },
   "google": {
     "subtitle": "Optional: without them OpenStreetMap names the places and draws the map",

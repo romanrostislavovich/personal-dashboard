@@ -188,6 +188,8 @@ file are not checked yet.
 
 ## Stage 3 — health and stress
 
+**The band:** the owner chose the **Fitbit Air**; it arrives on 2026-10-27 (Tuesday).
+
 - From Health Connect: steps, calories, heart rate, sleep and its stages, heart rate variability
   (HRV) — whatever the band writes there.
 - **Stress:** Health Connect has no stress type, and the bands keep their own stress score inside

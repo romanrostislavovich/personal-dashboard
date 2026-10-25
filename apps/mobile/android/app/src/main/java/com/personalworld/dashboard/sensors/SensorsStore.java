@@ -19,6 +19,8 @@ public final class SensorsStore {
     private static final int MAX_QUEUED = 1000;
     /** Fixes kept while the server cannot be reached: three days of one a minute. */
     private static final int MAX_LOCATIONS = 5000;
+    /** Signals kept while the server cannot be reached. */
+    private static final int MAX_SIGNALS = 5000;
 
     private final SharedPreferences prefs;
 
@@ -96,6 +98,91 @@ public final class SensorsStore {
 
     public void dropLocations(int count) {
         drop("locations", count);
+    }
+
+    /** A signal of the phone (the screen, charging, a call…) to be sent; see PhoneSignals. */
+    public void queueSignal(String kind, long at, JSONObject data) {
+        try {
+            JSONObject signal = new JSONObject().put("kind", kind).put("at", at);
+            if (data != null) {
+                signal.put("data", data);
+            }
+            queue("signals", signal, MAX_SIGNALS);
+        } catch (JSONException e) {
+            // A signal that cannot be written down is skipped.
+        }
+    }
+
+    public JSONArray signals() {
+        return queued("signals");
+    }
+
+    public void dropSignals(int count) {
+        drop("signals", count);
+    }
+
+    /**
+     * A number of a day (steps, the mobile data of an app): the latest value replaces the one
+     * kept; all days are sent each run, and the past ones are dropped once the server took them.
+     */
+    public synchronized void putDaily(String day, String kind, String key, double value) {
+        try {
+            JSONObject daily = new JSONObject(prefs.getString("daily", "{}"));
+            daily.put(day + "|" + kind + "|" + key, value);
+            prefs.edit().putString("daily", daily.toString()).apply();
+        } catch (JSONException e) {
+            // Kept as it was.
+        }
+    }
+
+    public synchronized double daily(String day, String kind, String key) {
+        try {
+            return new JSONObject(prefs.getString("daily", "{}")).optDouble(day + "|" + kind + "|" + key, 0);
+        } catch (JSONException e) {
+            return 0;
+        }
+    }
+
+    public synchronized JSONObject dailies() {
+        try {
+            return new JSONObject(prefs.getString("daily", "{}"));
+        } catch (JSONException e) {
+            return new JSONObject();
+        }
+    }
+
+    /** The days before `today` were taken by the server: only today's numbers go on growing. */
+    public synchronized void keepDailiesOf(String today) {
+        JSONObject kept = new JSONObject();
+        JSONObject daily = dailies();
+        java.util.Iterator<String> keys = daily.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            if (key.startsWith(today + "|")) {
+                try {
+                    kept.put(key, daily.get(key));
+                } catch (JSONException e) {
+                    // Skipped.
+                }
+            }
+        }
+        prefs.edit().putString("daily", kept.toString()).apply();
+    }
+
+    public long number(String key) {
+        return prefs.getLong(key, 0);
+    }
+
+    public void setNumber(String key, long value) {
+        prefs.edit().putLong(key, value).apply();
+    }
+
+    public String text(String key) {
+        return prefs.getString(key, "");
+    }
+
+    public void setText(String key, String value) {
+        prefs.edit().putString(key, value).apply();
     }
 
     /** Asked Android about the location once: asked again, it may not show its question. */
