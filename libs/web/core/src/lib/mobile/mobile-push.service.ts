@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { pushApi } from '@pd/client-core';
+import { PUSH_CHANNEL } from '@pd/contracts';
 import { AuthService } from '../auth/auth.service';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { installId, isMobileApp, phoneModel } from './mobile-app';
@@ -50,6 +51,14 @@ export class MobilePushService {
       return;
     }
     await this.listen();
+    // Made once, then kept by Android: the server sends into it (Firebase's fallback channel
+    // is silent on MIUI). The user can change its sound in Android's settings.
+    await PushNotifications.createChannel({
+      id: PUSH_CHANNEL,
+      name: 'Personal Dashboard',
+      importance: 4,
+      visibility: 0,
+    }).catch(() => undefined);
     // The token comes to the `registration` listener.
     await PushNotifications.register();
   }

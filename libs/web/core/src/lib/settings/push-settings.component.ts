@@ -127,6 +127,13 @@ export class PushSettingsComponent {
   /** Opened in the Android app: this phone can switch them on and off. */
   protected readonly inApp = isMobileApp();
   protected readonly status = httpResource<PushStatus>(() => CORE_READS.push());
+
+  constructor() {
+    // The check at the app's start may have run before the sign-in was known: read it again.
+    if (this.inApp) {
+      void this.phone.sync().catch(() => undefined);
+    }
+  }
   protected readonly keyFields: ServerKeyField[] = [
     {
       name: 'serviceAccount',

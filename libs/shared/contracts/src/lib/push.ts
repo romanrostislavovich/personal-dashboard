@@ -5,6 +5,9 @@ import { z } from 'zod';
  * Telegram: what the app tells the server, and what Settings → Notifications shows.
  */
 
+/** The Android app's channel of the dashboard's notifications: the server names it in each push. */
+export const PUSH_CHANNEL = 'dashboard';
+
 /** The app on a phone says where it gets notifications: the token Firebase gave it. */
 export const pushDeviceInputSchema = z.object({
   token: z.string().trim().min(10).max(4096),
