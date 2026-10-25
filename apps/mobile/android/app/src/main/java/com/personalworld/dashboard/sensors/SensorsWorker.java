@@ -67,6 +67,7 @@ public class SensorsWorker extends Worker {
 
     public static void cancel(Context context) {
         WorkManager.getInstance(context).cancelUniqueWork(PERIODIC);
+        LocationUpdatesReceiver.unsubscribe(context);
     }
 
     @NonNull
@@ -141,15 +142,14 @@ public class SensorsWorker extends Worker {
     }
 
     private void takeLocation(SensorsStore store) throws JSONException {
+        // The updates Android delivers by itself (kept asked for: an app update drops them)…
+        LocationUpdatesReceiver.subscribe(getApplicationContext());
+        // …and a fix of its own, which works while the app is on the screen.
         Location fix = PhoneLocation.take(getApplicationContext());
         if (fix == null) {
             return;
         }
-        store.queueLocation(new JSONObject()
-            .put("at", fix.getTime())
-            .put("latitude", fix.getLatitude())
-            .put("longitude", fix.getLongitude())
-            .put("accuracy", fix.hasAccuracy() ? fix.getAccuracy() : 1000));
+        store.queueLocation(PhoneLocation.toJson(fix));
     }
 
     private void sendLocations(SensorsStore store) throws IOException, JSONException {

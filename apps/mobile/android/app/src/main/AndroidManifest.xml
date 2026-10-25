@@ -55,6 +55,11 @@
             </intent-filter>
         </service>
 
+        <!-- The location Android delivers in the background (sensors/LocationUpdatesReceiver). -->
+        <receiver
+            android:name=".sensors.LocationUpdatesReceiver"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
