@@ -220,7 +220,7 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   buttons under a question to confirm in Telegram and `/spent 12 coffee`; the weather in the Life
   feed; the achievements measured six at a time; the side menu in groups
 - ✅ **Notifications through an outbox** — sent once within a window, retried with a backoff
-  (Telegram's `retry_after` too), the delivery log in Settings → Integrations
+  (Telegram's `retry_after` too), the delivery log in Settings → Notifications
 - ✅ **Telegram: long messages are split** instead of cut at 4096 characters
 - ✅ **AI: the prompt cache works** — the time goes last in the system prompt
 - ✅ **AI: what it costs** — tokens per connection, model and day; the spend with the prices; a

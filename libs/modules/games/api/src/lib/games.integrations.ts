@@ -2,23 +2,31 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DB, Database, IntegrationsService } from '@pd/api-core';
 import { eq } from 'drizzle-orm';
 import { gameAccounts } from './games.schema';
+import { SteamKeyService } from './steam/steam-key.service';
+import { WowService } from './wow/wow.service';
 
 /** The accounts are asked every half an hour. */
 const STALE_HOURS = 12;
 const NAMES = { steam: 'Steam', dota2: 'Dota 2', wow: 'World of Warcraft' } as const;
 
-/** The connections of Games in the list of integrations: every game account. */
+/**
+ * The connections of Games in the list of integrations: every game account, and the keys the
+ * accounts are read with (Steam Web API, Battle.net).
+ */
 @Injectable()
 export class GamesIntegrations implements OnModuleInit {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly integrations: IntegrationsService,
+    private readonly steamKeys: SteamKeyService,
+    private readonly wow: WowService,
   ) {}
 
   onModuleInit(): void {
     this.integrations.register({
       id: 'games.account',
       module: 'games',
+      name: 'Steam / Dota 2 / World of Warcraft',
       staleHours: STALE_HOURS,
       reports: async (userId) => {
         const accounts = await this.db
@@ -33,6 +41,20 @@ export class GamesIntegrations implements OnModuleInit {
           error: account.lastError,
         }));
       },
+    });
+    this.integrations.register({
+      id: 'games.steam-key',
+      module: 'games',
+      name: 'Steam Web API',
+      reports: async (userId) =>
+        (await this.steamKeys.has(userId)) ? [{ name: 'Steam Web API' }] : [],
+    });
+    this.integrations.register({
+      id: 'games.battle-net',
+      module: 'games',
+      name: 'Battle.net',
+      reports: async (userId) =>
+        (await this.wow.hasCredentials(userId)) ? [{ name: 'Battle.net' }] : [],
     });
   }
 }

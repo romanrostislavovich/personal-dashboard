@@ -1,0 +1,136 @@
+/** A fix of the phone's location; `at` in milliseconds. */
+export interface Fix {
+  at: number;
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+}
+
+export interface Point {
+  latitude: number;
+  longitude: number;
+}
+
+/** A time spent in one place: from its first fix to its last. */
+export interface Stay extends Point {
+  start: number;
+  end: number;
+}
+
+/** From one stay to the next, along the fixes taken on the way. */
+export interface Trip {
+  start: number;
+  end: number;
+  meters: number;
+}
+
+export type Entry = ({ kind: 'stay' } & Stay) | ({ kind: 'trip' } & Trip);
+
+/** Fixes farther than this from a place's middle are elsewhere. */
+export const PLACE_RADIUS_M = 200;
+/** A fix less sure than this (a cell tower far away) tells nothing about the place. */
+const MAX_ACCURACY_M = 500;
+/**
+ * Shorter is passing by. The phone tells where it is every 15 minutes, so a stay is at least
+ * two fixes in a row at one place.
+ */
+const MIN_STAY_MS = 10 * 60_000;
+
+const EARTH_M = 6_371_000;
+
+/** The distance on the Earth's surface (haversine). */
+export function distanceM(a: Point, b: Point): number {
+  const rad = Math.PI / 180;
+  const dLat = (b.latitude - a.latitude) * rad;
+  const dLon = (b.longitude - a.longitude) * rad;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(a.latitude * rad) * Math.cos(b.latitude * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * EARTH_M * Math.asin(Math.sqrt(h));
+}
+
+function middle(fixes: Fix[]): Point {
+  const sum = fixes.reduce(
+    (acc, fix) => ({
+      latitude: acc.latitude + fix.latitude,
+      longitude: acc.longitude + fix.longitude,
+    }),
+    { latitude: 0, longitude: 0 },
+  );
+  return { latitude: sum.latitude / fixes.length, longitude: sum.longitude / fixes.length };
+}
+
+/**
+ * The day as stays and trips. Fixes in a row near one middle are a place; one that was there
+ * long enough is a stay, the rest are fixes on the way. Two stays in a row at one place (a fix
+ * gone astray between them) are one. A trip is everything between two stays.
+ */
+export function entriesOf(input: Fix[]): Entry[] {
+  const fixes = input.filter((fix) => fix.accuracy <= MAX_ACCURACY_M).sort((a, b) => a.at - b.at);
+
+  // Groups of fixes in a row near one middle; a group long enough is a stay.
+  const groups: { fixes: Fix[]; middle: Point }[] = [];
+  for (const fix of fixes) {
+    const last = groups[groups.length - 1];
+    if (last && distanceM(last.middle, fix) <= PLACE_RADIUS_M) {
+      last.fixes.push(fix);
+      last.middle = middle(last.fixes);
+    } else {
+      groups.push({ fixes: [fix], middle: fix });
+    }
+  }
+
+  const stays: (Stay & { fixes: Fix[] })[] = [];
+  const onTheWay: Fix[][] = [[]];
+  for (const group of groups) {
+    const start = group.fixes[0].at;
+    const end = group.fixes[group.fixes.length - 1].at;
+    if (end - start < MIN_STAY_MS) {
+      onTheWay[onTheWay.length - 1].push(...group.fixes);
+      continue;
+    }
+    const previous = stays[stays.length - 1];
+    if (previous && distanceM(previous, group.middle) <= PLACE_RADIUS_M) {
+      // Back at the same place: whatever was between was noise, not a trip.
+      previous.fixes.push(...group.fixes);
+      Object.assign(previous, middle(previous.fixes), { end });
+      onTheWay[onTheWay.length - 1] = [];
+      continue;
+    }
+    stays.push({ ...group.middle, start, end, fixes: [...group.fixes] });
+    onTheWay.push([]);
+  }
+
+  const entries: Entry[] = [];
+  stays.forEach((stay, i) => {
+    if (i > 0) {
+      const from = stays[i - 1];
+      const path: Point[] = [from, ...onTheWay[i], stay];
+      let meters = 0;
+      for (let j = 1; j < path.length; j++) {
+        meters += distanceM(path[j - 1], path[j]);
+      }
+      entries.push({ kind: 'trip', start: from.end, end: stay.start, meters: Math.round(meters) });
+    }
+    entries.push({
+      kind: 'stay',
+      latitude: stay.latitude,
+      longitude: stay.longitude,
+      start: stay.start,
+      end: stay.end,
+    });
+  });
+  return entries;
+}
+
+/** The entries inside `[from, to)`: a stay over midnight counts on each day by its part. */
+export function clip(entries: Entry[], from: number, to: number): Entry[] {
+  return entries
+    .filter((entry) => entry.end > from && entry.start < to)
+    .map((entry) => ({
+      ...entry,
+      start: Math.max(entry.start, from),
+      end: Math.min(entry.end, to),
+    }))
+    .filter((entry) => entry.kind === 'trip' || entry.end > entry.start);
+}

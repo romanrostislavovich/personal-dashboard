@@ -20,6 +20,7 @@ export class MusicIntegrations implements OnModuleInit {
   onModuleInit(): void {
     this.integrations.register({
       id: 'music.lastfm',
+      name: 'Last.fm',
       module: 'music',
       staleHours: STALE_HOURS,
       reports: async (userId) => {
@@ -42,6 +43,7 @@ export class MusicIntegrations implements OnModuleInit {
 
     this.integrations.register({
       id: 'music.spotify',
+      name: 'Spotify',
       module: 'music',
       // "Now playing" is asked when the page is open: there is no refresh to be late.
       reports: async (userId) =>
@@ -50,6 +52,7 @@ export class MusicIntegrations implements OnModuleInit {
 
     this.integrations.register({
       id: 'music.soundcloud',
+      name: 'SoundCloud',
       module: 'music',
       staleHours: STALE_HOURS,
       reports: async (userId) => {

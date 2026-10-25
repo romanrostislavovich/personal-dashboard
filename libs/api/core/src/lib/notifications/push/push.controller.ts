@@ -26,7 +26,7 @@ import { PushService } from './push.service';
 
 /**
  * Push notifications on phones: the Android app registers its token (`devices`), the owner sets
- * the server's Firebase key (`key`), Settings → Integrations shows both and sends a test.
+ * the server's Firebase key (`key`), Settings → Notifications shows both and sends a test.
  */
 @Controller('push')
 export class PushController {

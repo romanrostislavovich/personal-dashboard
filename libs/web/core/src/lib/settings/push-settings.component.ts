@@ -11,6 +11,7 @@ import { PushStatus } from '@pd/contracts';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { isMobileApp } from '../mobile/mobile-app';
 import { MobilePushService } from '../mobile/mobile-push.service';
+import { DeviceOnlyComponent } from './device-only.component';
 import { IntegrationGuideComponent } from '../ui/integration-guide.component';
 import { ServerKeyComponent, ServerKeyField } from '../ui/server-key.component';
 
@@ -23,6 +24,7 @@ import { ServerKeyComponent, ServerKeyField } from '../ui/server-key.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
+    DeviceOnlyComponent,
     IntegrationGuideComponent,
     MatButtonModule,
     MatCardModule,
@@ -57,6 +59,8 @@ import { ServerKeyComponent, ServerKeyField } from '../ui/server-key.component';
             } @empty {
               <p>{{ 'core.settings.push.noPhones' | transloco }}</p>
             }
+            <!-- Switched on per phone: the rest of the card is the server's. -->
+            <pd-device-only kind="phone" />
             @if (inApp) {
               <p class="hint">{{ 'core.settings.push.phone.' + phone.state() | transloco }}</p>
             }

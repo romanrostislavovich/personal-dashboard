@@ -47,6 +47,7 @@ const messages = {
           stale: 'has not refreshed for too long',
           expiring: `its token expires on ${(status.expiresAt ?? '').slice(0, 10)}`,
           expired: 'its token has expired',
+          off: 'not connected',
         }[status.state]
       }`,
     integrationsSee: 'Settings → Integrations shows them all.',
@@ -123,6 +124,7 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
           stale: 'слишком давно не обновлялось',
           expiring: `токен истекает ${(status.expiresAt ?? '').slice(0, 10)}`,
           expired: 'токен истёк',
+          off: 'не подключено',
         }[status.state]
       }`,
     integrationsSee: 'Все подключения — в Настройки → Интеграции.',

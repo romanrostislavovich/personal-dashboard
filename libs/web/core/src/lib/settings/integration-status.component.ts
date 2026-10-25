@@ -15,11 +15,12 @@ const ICONS: Record<IntegrationState, string> = {
   stale: 'schedule',
   expiring: 'key',
   expired: 'key_off',
+  off: 'link_off',
 };
 
 /**
  * Every connection to an outside service in one list: when it last refreshed, what went wrong,
- * which token expires soon. The cards below it are where a connection is set up or renewed.
+ * which token expires soon — and, greyed, the ones the dashboard can connect but are not. The cards below it are where a connection is set up or renewed.
  */
 @Component({
   selector: 'pd-integration-status',
@@ -111,6 +112,12 @@ const ICONS: Record<IntegrationState, string> = {
     .row.expired mat-icon {
       color: var(--mat-sys-error);
     }
+    .row.off {
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .row.off mat-icon {
+      color: var(--mat-sys-outline);
+    }
     .row.stale mat-icon,
     .row.expiring mat-icon {
       color: var(--mat-sys-tertiary);
@@ -142,6 +149,8 @@ export class IntegrationStatusComponent {
     defaultValue: [],
   });
   protected readonly troubled = computed(
-    () => this.statuses.value().filter((status) => status.state !== 'ok').length,
+    () =>
+      this.statuses.value().filter((status) => status.state !== 'ok' && status.state !== 'off')
+        .length,
   );
 }

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * Push notifications on a phone (the Android app, through Firebase Cloud Messaging), next to
- * Telegram: what the app tells the server, and what Settings → Integrations shows.
+ * Telegram: what the app tells the server, and what Settings → Notifications shows.
  */
 
 /** The app on a phone says where it gets notifications: the token Firebase gave it. */

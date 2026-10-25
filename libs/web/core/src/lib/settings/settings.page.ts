@@ -5,7 +5,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { map } from 'rxjs';
-import { DASHBOARD_MODULES } from '../dashboard-module';
+import { DASHBOARD_MODULES, DashboardIntegration } from '../dashboard-module';
 import { PasswordSettingsComponent } from './password-settings.component';
 import { ProfileSettingsComponent } from './profile-settings.component';
 import { SectionsSettingsComponent } from './sections-settings.component';
@@ -26,11 +26,24 @@ import { AutomationsSettingsComponent } from '../automations/automations-setting
 import { AppsSettingsComponent } from './apps-settings.component';
 import { PhoneSensorsComponent } from './phone-sensors.component';
 
+interface LoadedCard {
+  id: string;
+  component: Type<unknown>;
+}
+
+function load(cards: DashboardIntegration[]): Promise<LoadedCard[]> {
+  return Promise.all(
+    cards.map(async (card) => ({ id: card.id, component: await card.loadComponent() })),
+  );
+}
+
 /** Tabs of the page, as `?tab=` names them: module pages link to `integrations`. */
 const TABS = [
   'account',
   'appearance',
+  'notifications',
   'integrations',
+  'devices',
   'automations',
   'data',
   'apps',
@@ -38,10 +51,11 @@ const TABS = [
 ] as const;
 
 /**
- * Settings: the account, the look (theme), every connection to an outside service (Telegram and what the modules
- * register as `integrations`), the data (sync, backups, export and import, trash), the apps (desktop, the browser
- * extension) and how the instance itself is
- * doing (background jobs, the log of errors).
+ * Settings: the account, the look (theme), the notifications (Telegram, push, the gentle mode), every connection
+ * to an outside service (what the modules register as `integrations`), the devices (the phone as a sensor, the
+ * desktop tracker, the copies on a computer — the same cards everywhere, a device's own marked), the data (sync,
+ * export and import, trash), the apps to install and how the instance itself is doing (background jobs, the log
+ * of errors).
  */
 @Component({
   selector: 'pd-settings-page',
@@ -89,9 +103,18 @@ const TABS = [
 
       <mat-tab [label]="'core.settings.tabs.appearance' | transloco">
         <div class="grid">
-          <pd-calm-settings />
           <pd-theme-settings />
           <pd-sections-settings />
+        </div>
+      </mat-tab>
+
+      <mat-tab [label]="'core.settings.tabs.notifications' | transloco">
+        <p class="intro">{{ 'core.settings.notificationsIntro' | transloco }}</p>
+        <div class="grid">
+          <pd-telegram-settings />
+          <pd-push-settings />
+          <pd-calm-settings />
+          <pd-notification-log />
         </div>
       </mat-tab>
 
@@ -99,14 +122,24 @@ const TABS = [
         <p class="intro">{{ 'core.settings.integrationsIntro' | transloco }}</p>
         <pd-integration-status />
         <div class="grid">
-          <pd-telegram-settings />
-          <pd-push-settings />
-          <pd-notification-log />
           <pd-mcp-settings />
           @for (integration of integrations(); track integration.id) {
             <ng-container *ngComponentOutlet="integration.component" />
           }
         </div>
+      </mat-tab>
+
+      <mat-tab [label]="'core.settings.tabs.devices' | transloco">
+        <ng-template matTabContent>
+          <p class="intro">{{ 'core.settings.devicesIntro' | transloco }}</p>
+          <div class="grid">
+            <pd-phone-sensors />
+            @for (card of deviceCards(); track card.id) {
+              <ng-container *ngComponentOutlet="card.component" />
+            }
+            <pd-device-backup-settings />
+          </div>
+        </ng-template>
       </mat-tab>
 
       <mat-tab [label]="'core.settings.tabs.automations' | transloco">
@@ -118,7 +151,6 @@ const TABS = [
       <mat-tab [label]="'core.settings.tabs.data' | transloco">
         <div class="grid">
           <pd-sync-settings />
-          <pd-device-backup-settings />
           <pd-data-settings />
           <pd-trash-settings />
         </div>
@@ -126,8 +158,6 @@ const TABS = [
 
       <mat-tab [label]="'core.settings.tabs.apps' | transloco">
         <ng-template matTabContent>
-          <!-- Only inside the Android app: the phone as a sensor. -->
-          <pd-phone-sensors />
           <pd-apps-settings />
         </ng-template>
       </mat-tab>
@@ -171,13 +201,17 @@ export class SettingsPage {
     Math.max(0, TABS.indexOf(this.tab() as (typeof TABS)[number])),
   );
 
-  protected readonly integrations = signal<{ id: string; component: Type<unknown> }[]>([]);
+  protected readonly integrations = signal<LoadedCard[]>([]);
+  protected readonly deviceCards = signal<LoadedCard[]>([]);
 
   constructor() {
-    const integrations = inject(DASHBOARD_MODULES).flatMap((module) => module.integrations ?? []);
-    void Promise.all(
-      integrations.map(async (item) => ({ id: item.id, component: await item.loadComponent() })),
-    ).then((loaded) => this.integrations.set(loaded));
+    const modules = inject(DASHBOARD_MODULES);
+    void load(modules.flatMap((module) => module.integrations ?? [])).then((loaded) =>
+      this.integrations.set(loaded),
+    );
+    void load(modules.flatMap((module) => module.devices ?? [])).then((loaded) =>
+      this.deviceCards.set(loaded),
+    );
   }
 
   /** The tab goes to the address: a reload or a link opens the same one. */

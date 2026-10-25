@@ -14,6 +14,9 @@ import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
 import { PhoneNotificationsController } from './phone-notifications.controller';
 import { PhoneNotificationsService } from './phone-notifications.service';
+import { PlacesController } from './places/places.controller';
+import { PlacesLinks } from './places/places.links';
+import { PlacesService } from './places/places.service';
 import { ProjectTimeService } from './project-time.service';
 import { RuleSuggestionsService } from './rule-suggestions.service';
 import { SitesService } from './sites.service';
@@ -33,7 +36,12 @@ import { TelemetrySummaryService } from './telemetry-summary.service';
  * token of their own. API: `/api/activity`.
  */
 @Module({
-  controllers: [ActivityController, ActivityContextController, PhoneNotificationsController],
+  controllers: [
+    ActivityController,
+    ActivityContextController,
+    PhoneNotificationsController,
+    PlacesController,
+  ],
   providers: [
     ActivityContextJobs,
     ActivityContextStore,
@@ -48,6 +56,8 @@ import { TelemetrySummaryService } from './telemetry-summary.service';
     ActivityService,
     DevicesService,
     PhoneNotificationsService,
+    PlacesLinks,
+    PlacesService,
     SitesService,
     ProjectTimeService,
     RuleSuggestionsService,

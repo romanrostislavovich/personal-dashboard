@@ -45,16 +45,21 @@ export function stateOf(
   return 'ok';
 }
 
+/** Not connected is no trouble: the user did not ask for it. */
+export function isTrouble(state: IntegrationState): boolean {
+  return state !== 'ok' && state !== 'off';
+}
+
 /** What to tell the user about: the connections whose trouble is new since the last time. */
 export function newTroubles(
   statuses: Pick<IntegrationStatus, 'id' | 'state'>[],
   told: ReadonlyMap<string, IntegrationState>,
 ): { tell: string[]; forget: string[] } {
   const tell = statuses
-    .filter((status) => status.state !== 'ok' && told.get(status.id) !== status.state)
+    .filter((status) => isTrouble(status.state) && told.get(status.id) !== status.state)
     .map((status) => status.id);
   // Back in order, or disconnected: the next trouble is told again.
-  const troubled = new Set(statuses.filter((s) => s.state !== 'ok').map((s) => s.id));
+  const troubled = new Set(statuses.filter((s) => isTrouble(s.state)).map((s) => s.id));
   const forget = [...told.keys()].filter((id) => !troubled.has(id));
   return { tell, forget };
 }

@@ -1,5 +1,6 @@
 package com.personalworld.dashboard.sensors;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AppOpsManager;
 import android.content.ActivityNotFoundException;
@@ -7,23 +8,30 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.PowerManager;
 import android.os.Process;
 import android.provider.Settings;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationManagerCompat;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The phone as a sensor, switched on and looked after from the page (`phone-sensors.ts` in
  * web-core): where to send and with which device token, what Android has allowed (the usage of
- * apps, the notifications, running in the background), and the settings screens to allow them.
+ * apps, the notifications, the location, running in the background), and the settings screens to
+ * allow them.
  */
 @CapacitorPlugin(name = "PhoneSensors")
 public class PhoneSensorsPlugin extends Plugin {
+
+    private static final int LOCATION_REQUEST = 4207;
 
     /**
      * A plugin method that throws leaves the page's call waiting for good (Capacitor only logs
@@ -54,6 +62,7 @@ public class PhoneSensorsPlugin extends Plugin {
         result.put("notificationAccess", NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.getPackageName()));
         PowerManager power = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         result.put("unrestricted", power != null && power.isIgnoringBatteryOptimizations(context.getPackageName()));
+        result.put("location", PhoneLocation.allowed(context));
         call.resolve(result);
     }
 
@@ -109,6 +118,44 @@ public class PhoneSensorsPlugin extends Plugin {
         Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
         intent.setData(Uri.parse("package:" + getContext().getPackageName()));
         open(call, intent);
+    }
+
+    /**
+     * The location "all the time": Android asks its own question the first time (Android 10
+     * offers "Allow all the time" in it; 11 and later only "while using", so the rest is in the
+     * settings). Asked once already, Android may stay silent: then the app's page in the
+     * settings, where Permissions → Location has every choice. The card reads it again when the
+     * user comes back.
+     */
+    @PluginMethod
+    public void openLocation(PluginCall call) {
+        guarded(call, () -> {
+            Activity activity = getActivity();
+            SensorsStore store = new SensorsStore(getContext());
+            if (activity == null) {
+                call.reject("The app is not on the screen");
+                return;
+            }
+            boolean foreground = PhoneLocation.foregroundAllowed(activity);
+            boolean asksBackground = Build.VERSION.SDK_INT == Build.VERSION_CODES.Q;
+            if (store.askedLocation() || (foreground && !asksBackground)) {
+                Intent details = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                details.setData(Uri.parse("package:" + activity.getPackageName()));
+                open(call, details);
+                return;
+            }
+            List<String> wanted = new ArrayList<>();
+            if (!foreground) {
+                wanted.add(Manifest.permission.ACCESS_FINE_LOCATION);
+                wanted.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
+            if (asksBackground) {
+                wanted.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+            }
+            store.markAskedLocation();
+            ActivityCompat.requestPermissions(activity, wanted.toArray(new String[0]), LOCATION_REQUEST);
+            call.resolve();
+        });
     }
 
     /** MIUI keeps an app from starting by itself until it is allowed here; elsewhere — the app's page. */

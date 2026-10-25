@@ -41,7 +41,7 @@ const LINK_CODE_TTL_MS = 10 * 60 * 1000;
 const EXPECTED_TEXT_TTL_MS = 10 * 60 * 1000;
 /** Buttons in a row under a message. */
 const BUTTONS_PER_ROW = 3;
-/** How often the token set in Settings → Integrations is looked at again. */
+/** How often the token set in Settings → Notifications is looked at again. */
 const RELOAD_MS = 60_000;
 /** The Bot API does not let bots download larger files. */
 const DOWNLOAD_LIMIT_BYTES = 20 * 1024 * 1024;
@@ -92,7 +92,7 @@ type PhotoEntry = { choice: BotPhotoChoice; handler: BotPhotoHandler };
 @Injectable()
 export class TelegramBotService implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly logger = new Logger(TelegramBotService.name);
-  /** Running while the owner has set a token that works (Settings → Integrations). */
+  /** Running while the owner has set a token that works (Settings → Notifications). */
   private bot: Bot | null = null;
   // Codes live in memory for 10 minutes — enough for a single API instance.
   private readonly pendingLinks = new Map<string, PendingLink>();

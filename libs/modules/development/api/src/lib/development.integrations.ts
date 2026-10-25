@@ -35,6 +35,7 @@ export class DevelopmentIntegrations implements OnModuleInit {
   onModuleInit(): void {
     this.integrations.register({
       id: 'development.github',
+      name: 'GitHub',
       module: 'development',
       staleHours: STALE_HOURS,
       reports: async (userId) => {
@@ -62,6 +63,7 @@ export class DevelopmentIntegrations implements OnModuleInit {
 
     this.integrations.register({
       id: 'development.code',
+      name: 'GitLab / Bitbucket',
       module: 'development',
       staleHours: STALE_HOURS,
       reports: async (userId) => {
@@ -130,6 +132,7 @@ export class DevelopmentIntegrations implements OnModuleInit {
 
     this.integrations.register({
       id: 'development.wakatime',
+      name: 'WakaTime',
       module: 'development',
       staleHours: STALE_HOURS,
       reports: async (userId) => {

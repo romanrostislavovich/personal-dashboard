@@ -10,6 +10,7 @@ export * from './lib/activity';
 export * from './lib/activity-wellbeing';
 export * from './lib/activity-disk';
 export * from './lib/activity-sites';
+export * from './lib/activity-places';
 export * from './lib/telemetry';
 export * from './lib/telemetry-diagnostics';
 export * from './lib/workstates';

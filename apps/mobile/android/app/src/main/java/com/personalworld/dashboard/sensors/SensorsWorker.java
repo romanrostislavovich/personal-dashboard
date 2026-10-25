@@ -3,6 +3,7 @@ package com.personalworld.dashboard.sensors;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
+import android.location.Location;
 import androidx.annotation.NonNull;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.ExistingWorkPolicy;
@@ -31,7 +32,7 @@ import org.json.JSONObject;
 /**
  * Every 15 minutes (the least Android allows), in the background: the time in apps since the
  * last run goes to the Activity section as this phone's spans, and the notifications written
- * down meanwhile go with it. Without a connection nothing is lost: the read position moves on
+ * down meanwhile go with it, and where the phone is now (once the location is allowed). Without a connection nothing is lost: the read position moves on
  * only after the server took the spans, and the notifications wait in SensorsStore.
  */
 public class SensorsWorker extends Worker {
@@ -76,8 +77,11 @@ public class SensorsWorker extends Worker {
             return Result.success();
         }
         try {
+            // Taken first: a fix needs no network, and waits in the store for one.
+            takeLocation(store);
             sendUsage(store);
             sendNotifications(store);
+            sendLocations(store);
             return Result.success();
         } catch (IOException | JSONException e) {
             return Result.retry();
@@ -133,6 +137,37 @@ public class SensorsWorker extends Worker {
             post(store, "/api/activity/device/notifications", new JSONObject().put("notifications", batch));
             store.dropNotifications(count);
             queue = store.notifications();
+        }
+    }
+
+    private void takeLocation(SensorsStore store) throws JSONException {
+        Location fix = PhoneLocation.take(getApplicationContext());
+        if (fix == null) {
+            return;
+        }
+        store.queueLocation(new JSONObject()
+            .put("at", fix.getTime())
+            .put("latitude", fix.getLatitude())
+            .put("longitude", fix.getLongitude())
+            .put("accuracy", fix.hasAccuracy() ? fix.getAccuracy() : 1000));
+    }
+
+    private void sendLocations(SensorsStore store) throws IOException, JSONException {
+        JSONArray queue = store.locations();
+        while (queue.length() > 0) {
+            int count = Math.min(BATCH, queue.length());
+            JSONArray batch = new JSONArray();
+            for (int i = 0; i < count; i++) {
+                JSONObject item = queue.getJSONObject(i);
+                batch.put(new JSONObject()
+                    .put("at", iso(item.getLong("at")))
+                    .put("latitude", item.getDouble("latitude"))
+                    .put("longitude", item.getDouble("longitude"))
+                    .put("accuracy", item.getDouble("accuracy")));
+            }
+            post(store, "/api/activity/device/locations", new JSONObject().put("locations", batch));
+            store.dropLocations(count);
+            queue = store.locations();
         }
     }
 

@@ -6,6 +6,8 @@ import { NO_PARAMETERS } from '../ai/ai-tool';
 import { DB, Database } from '../database/database.module';
 import { LinksService } from '../links/links.service';
 import { pushDevices } from '../notifications/push/push.schema';
+import { PUSH_KEY } from '../notifications/push/push.service';
+import { ServerKeysService } from '../server-keys/server-keys.service';
 import { users } from '../users/users.schema';
 import { IntegrationsService } from './integrations.service';
 
@@ -20,12 +22,14 @@ export class CoreIntegrations implements OnModuleInit {
     private readonly integrations: IntegrationsService,
     private readonly ai: AiService,
     private readonly links: LinksService,
+    private readonly keys: ServerKeysService,
   ) {}
 
   onModuleInit(): void {
     this.integrations.register({
       id: 'core.telegram',
       module: 'core',
+      name: 'Telegram',
       reports: async (userId) => {
         const [user] = await this.db
           .select({ chatId: users.telegramChatId })
@@ -39,19 +43,27 @@ export class CoreIntegrations implements OnModuleInit {
     this.integrations.register({
       id: 'core.push',
       module: 'core',
-      // A phone of the Android app that takes notifications, one line each.
-      reports: async (userId) =>
-        (
-          await this.db
-            .select({ name: pushDevices.name })
-            .from(pushDevices)
-            .where(eq(pushDevices.userId, userId))
-        ).map((device) => ({ name: 'Push', detail: device.name })),
+      name: 'Firebase',
+      // The server's Firebase key, then each phone of the Android app that takes notifications.
+      reports: async (userId) => {
+        if ((await this.keys.get(PUSH_KEY)) === null) {
+          return [];
+        }
+        const phones = await this.db
+          .select({ name: pushDevices.name })
+          .from(pushDevices)
+          .where(eq(pushDevices.userId, userId));
+        return [
+          { name: 'Firebase', detail: phones.length ? null : 'no phone takes push yet' },
+          ...phones.map((phone, i) => ({ key: String(i), name: 'Push', detail: phone.name })),
+        ];
+      },
     });
 
     this.integrations.register({
       id: 'core.ai',
       module: 'ai',
+      name: 'AI',
       reports: async (userId) => {
         const connections = await this.db
           .select()
@@ -74,7 +86,8 @@ export class CoreIntegrations implements OnModuleInit {
         'The connections to outside services (GitHub, GitLab, Bitbucket, WakaTime, Last.fm, ' +
         'Spotify, SoundCloud, Steam, Dota, WoW, cost sources, Telegram, the AI itself) with ' +
         'their state: ok; error — the last refresh failed, with the text; stale — no refresh ' +
-        'for too long; expiring / expired — its token, with the date. `lastSyncedAt` — the ' +
+        'for too long; expiring / expired — its token, with the date; off — the dashboard can ' +
+        'connect it, but it is not connected. `lastSyncedAt` — the ' +
         'last successful refresh. Useful for "why is my music not updating", "is everything ' +
         'connected", "which tokens expire soon". Tokens are renewed in Settings → Integrations.',
       parameters: NO_PARAMETERS,

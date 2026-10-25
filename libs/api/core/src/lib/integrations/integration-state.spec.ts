@@ -43,4 +43,12 @@ describe('newTroubles', () => {
     ]);
     expect(newTroubles(statuses, told)).toEqual({ tell: ['b'], forget: ['c', 'gone'] });
   });
+
+  it('not connected is no trouble', () => {
+    const told = new Map([['a', 'error' as const]]);
+    expect(newTroubles([{ id: 'a', state: 'off' as const }], told)).toEqual({
+      tell: [],
+      forget: ['a'],
+    });
+  });
 });

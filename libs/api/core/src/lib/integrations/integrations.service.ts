@@ -22,11 +22,14 @@ import { integrationAlerts } from './integrations.schema';
  * });
  * ```
  *
- * `reports` returns nothing for a service that is not connected.
+ * `reports` returns nothing for a service that is not connected: with a `name`, the list still
+ * shows it, as one the dashboard can connect.
  */
 export interface IntegrationSource {
   id: string;
   module: string;
+  /** The service's own name, for the list when it is not connected; none — then not listed. */
+  name?: string;
   /** How long without a refresh is too long for it (DEFAULT_STALE_HOURS when left out). */
   staleHours?: number;
   reports(userId: string): Promise<IntegrationReport[]>;
@@ -62,7 +65,10 @@ export class IntegrationsService implements OnModuleInit {
     });
   }
 
-  /** Every connection of the user, the troubled first. A source that fails is left out. */
+  /**
+   * Every connection of the user, the troubled first, then the ones that can be connected. A
+   * source that fails is left out.
+   */
   async statuses(userId: string): Promise<IntegrationStatus[]> {
     const now = new Date();
     // The connections of a demo are made up: nothing refreshes them, so none is ever late.
@@ -70,7 +76,20 @@ export class IntegrationsService implements OnModuleInit {
     const statuses: IntegrationStatus[] = [];
     for (const source of this.sources) {
       try {
-        for (const report of await source.reports(userId)) {
+        const reports = await source.reports(userId);
+        if (!reports.length && source.name) {
+          statuses.push({
+            id: source.id,
+            module: source.module,
+            name: source.name,
+            detail: null,
+            state: 'off',
+            lastSyncedAt: null,
+            error: null,
+            expiresAt: null,
+          });
+        }
+        for (const report of reports) {
           statuses.push({
             id: report.key ? `${source.id}.${report.key}` : source.id,
             module: source.module,
@@ -90,9 +109,9 @@ export class IntegrationsService implements OnModuleInit {
         this.logger.warn(`Status of ${source.id} was not read: ${String(error).slice(0, 200)}`);
       }
     }
-    return statuses.sort(
-      (a, b) => Number(a.state === 'ok') - Number(b.state === 'ok') || a.name.localeCompare(b.name),
-    );
+    // The troubled first, the ones not connected last.
+    const rank = (state: IntegrationState) => (state === 'off' ? 2 : state === 'ok' ? 1 : 0);
+    return statuses.sort((a, b) => rank(a.state) - rank(b.state) || a.name.localeCompare(b.name));
   }
 
   /** Daily: tells every user about the connections whose trouble is new. */

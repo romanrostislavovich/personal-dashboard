@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -5,11 +6,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { App } from '@capacitor/app';
 import { activityApi, appsApi } from '@pd/client-core';
+import { ActivityDevice } from '@pd/contracts';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { apiBaseUrl, isMobileApp, mobileServer, phoneModel } from '../mobile/mobile-app';
+import { DeviceOnlyComponent } from './device-only.component';
 import { checkPhoneSensors, PhoneSensorsCheck, PhoneSensorsStatus } from '../mobile/phone-sensors';
 
-type Step = 'usageAccess' | 'notificationAccess' | 'unrestricted';
+type Step = 'usageAccess' | 'notificationAccess' | 'location' | 'unrestricted';
 type Plugin = NonNullable<PhoneSensorsCheck['plugin']>;
 
 /** How long a step of switching on may take. */
@@ -32,7 +35,8 @@ function describe(failure: unknown): string {
 }
 
 /**
- * Settings → Apps inside the Android app: the phone as a sensor. Switching it on makes the phone
+ * Settings → Devices: the phone as a sensor. Inside the Android app it is set here; elsewhere
+ * the card shows which phones collect and when each last sent something. Switching it on makes the phone
  * a device of the Activity section (its time in apps there, its notifications in Activity →
  * Notifications); then each permission Android asks for has a button to its settings screen,
  * and MIUI's autostart one too. The checks are read again when the user comes back.
@@ -40,44 +44,72 @@ function describe(failure: unknown): string {
 @Component({
   selector: 'pd-phone-sensors',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatCardModule, MatIconModule, TranslocoPipe],
+  imports: [
+    DatePipe,
+    DeviceOnlyComponent,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    TranslocoPipe,
+  ],
   template: `
-    @if (inApp) {
-      <mat-card appearance="outlined">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>sensors</mat-icon>
-          <mat-card-title>{{ 'core.settings.phone.title' | transloco }}</mat-card-title>
-          <mat-card-subtitle>{{ 'core.settings.phone.hint' | transloco }}</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content class="content">
-          @if (available() === null) {
-            <p class="hint">{{ 'core.settings.phone.checking' | transloco }}</p>
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>sensors</mat-icon>
+        <mat-card-title>{{ 'core.settings.phone.title' | transloco }}</mat-card-title>
+        <mat-card-subtitle>{{ 'core.settings.phone.hint' | transloco }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="content">
+        <pd-device-only kind="phone" />
+        @if (!inApp) {
+          <!-- Elsewhere: the phones that collect, and when each last told something. -->
+          @for (phone of phones(); track phone.id) {
+            <div class="step">
+              <mat-icon>smartphone</mat-icon>
+              <span>{{ phone.name }}</span>
+              <span class="hint">
+                @if (phone.lastSeenAt) {
+                  {{ 'core.settings.phone.lastSeen' | transloco }}
+                  {{ phone.lastSeenAt | date: 'd MMM, HH:mm' }}
+                } @else {
+                  {{ 'core.settings.phone.neverSeen' | transloco }}
+                }
+              </span>
+            </div>
+          } @empty {
+            <p class="hint">{{ 'core.settings.phone.noPhones' | transloco }}</p>
           }
-          @if (available() === false) {
-            <!-- An APK built before the collection, or one whose native part does not answer. -->
-            <p>{{ 'core.settings.phone.update' | transloco }}</p>
-            @if (checkError(); as reason) {
-              <p class="hint">
-                {{ 'core.settings.phone.reason' | transloco }}: <code>{{ reason }}</code>
-              </p>
-            }
-            <button matButton (click)="refresh()">
-              {{ 'core.settings.phone.again' | transloco }}
+        }
+        @if (inApp && available() === null) {
+          <p class="hint">{{ 'core.settings.phone.checking' | transloco }}</p>
+        }
+        @if (inApp && available() === false) {
+          <!-- An APK built before the collection, or one whose native part does not answer. -->
+          <p>{{ 'core.settings.phone.update' | transloco }}</p>
+          @if (checkError(); as reason) {
+            <p class="hint">
+              {{ 'core.settings.phone.reason' | transloco }}: <code>{{ reason }}</code>
+            </p>
+          }
+          <button matButton (click)="refresh()">
+            {{ 'core.settings.phone.again' | transloco }}
+          </button>
+          @if (apkUrl(); as url) {
+            <a matButton="filled" [href]="url" target="_blank" rel="noopener">
+              <mat-icon>download</mat-icon>
+              {{ 'core.settings.apps.mobile.apk' | transloco }}
+            </a>
+          }
+        }
+        @if (status(); as s) {
+          @if (!s.configured) {
+            <button matButton="filled" [disabled]="busy()" (click)="enable()">
+              {{ 'core.settings.phone.enable' | transloco }}
             </button>
-            @if (apkUrl(); as url) {
-              <a matButton="filled" [href]="url" target="_blank" rel="noopener">
-                <mat-icon>download</mat-icon>
-                {{ 'core.settings.apps.mobile.apk' | transloco }}
-              </a>
-            }
-          }
-          @if (status(); as s) {
-            @if (!s.configured) {
-              <button matButton="filled" [disabled]="busy()" (click)="enable()">
-                {{ 'core.settings.phone.enable' | transloco }}
-              </button>
-            } @else {
-              @for (step of steps; track step) {
+          } @else {
+            @for (step of steps; track step) {
+              <!-- An APK built before a step does not tell it: no button that cannot work. -->
+              @if (s[step] !== undefined) {
                 <div class="step">
                   <mat-icon [class.ok]="s[step]">
                     {{ s[step] ? 'check_circle' : 'radio_button_unchecked' }}
@@ -90,27 +122,27 @@ function describe(failure: unknown): string {
                   }
                 </div>
               }
-              <div class="step">
-                <mat-icon>rocket_launch</mat-icon>
-                <span>{{ 'core.settings.phone.steps.autostart' | transloco }}</span>
-                <button matButton="tonal" (click)="openAutostart()">
-                  {{ 'core.settings.phone.open' | transloco }}
-                </button>
-              </div>
-              <p class="hint">{{ 'core.settings.phone.where' | transloco }}</p>
-              <button matButton (click)="disable()">
-                {{ 'core.settings.phone.disable' | transloco }}
+            }
+            <div class="step">
+              <mat-icon>rocket_launch</mat-icon>
+              <span>{{ 'core.settings.phone.steps.autostart' | transloco }}</span>
+              <button matButton="tonal" (click)="openAutostart()">
+                {{ 'core.settings.phone.open' | transloco }}
               </button>
-            }
-            @if (error(); as reason) {
-              <p class="error" role="alert">
-                {{ 'core.settings.phone.error' | transloco }} <code>{{ reason }}</code>
-              </p>
-            }
+            </div>
+            <p class="hint">{{ 'core.settings.phone.where' | transloco }}</p>
+            <button matButton (click)="disable()">
+              {{ 'core.settings.phone.disable' | transloco }}
+            </button>
           }
-        </mat-card-content>
-      </mat-card>
-    }
+          @if (error(); as reason) {
+            <p class="error" role="alert">
+              {{ 'core.settings.phone.error' | transloco }} <code>{{ reason }}</code>
+            </p>
+          }
+        }
+      </mat-card-content>
+    </mat-card>
   `,
   styles: `
     .content {
@@ -141,7 +173,12 @@ export class PhoneSensorsComponent {
   private readonly activity = activityApi(inject(DASHBOARD_CLIENT).api);
   private readonly apps = appsApi(inject(DASHBOARD_CLIENT).api);
 
-  protected readonly steps: Step[] = ['usageAccess', 'notificationAccess', 'unrestricted'];
+  protected readonly steps: Step[] = [
+    'usageAccess',
+    'notificationAccess',
+    'location',
+    'unrestricted',
+  ];
   /** Only the Android app collects; a browser shows nothing here. */
   protected readonly inApp = isMobileApp();
   /** The APK this server hands out, for an app too old to collect. */
@@ -154,8 +191,17 @@ export class PhoneSensorsComponent {
   protected readonly busy = signal(false);
   /** Why switching on failed, as the step that failed told it; `null` — it did not. */
   protected readonly error = signal<string | null>(null);
+  /** Outside the app: the phones that collect (devices of Activity on Android). */
+  protected readonly phones = signal<ActivityDevice[]>([]);
 
   constructor() {
+    if (!this.inApp) {
+      void this.activity.devices().then(
+        (devices) => this.phones.set(devices.filter((device) => device.platform === 'android')),
+        () => undefined,
+      );
+      return;
+    }
     void this.refresh();
     if (this.inApp) {
       void this.apps.overview().then(
@@ -218,6 +264,8 @@ export class PhoneSensorsComponent {
         await plugin.openUsageAccess();
       } else if (step === 'notificationAccess') {
         await plugin.openNotificationAccess();
+      } else if (step === 'location') {
+        await plugin.openLocation();
       } else {
         await plugin.openBattery();
       }

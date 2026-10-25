@@ -19,6 +19,7 @@ export class FinanceIntegrations implements OnModuleInit {
   onModuleInit(): void {
     this.integrations.register({
       id: 'finance.cost-source',
+      name: 'Hetzner Cloud / DeepSeek',
       module: 'finance',
       staleHours: STALE_HOURS,
       reports: async (userId) => {
@@ -37,6 +38,7 @@ export class FinanceIntegrations implements OnModuleInit {
     });
     this.integrations.register({
       id: 'finance.bank',
+      name: 'Open Banking',
       module: 'finance',
       // Imported every six hours: a day without an import is a problem.
       staleHours: 24,

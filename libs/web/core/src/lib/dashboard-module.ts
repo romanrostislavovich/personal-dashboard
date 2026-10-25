@@ -34,6 +34,11 @@ export interface WebDashboardModule {
    */
   integrations?: DashboardIntegration[];
   /**
+   * Cards of Settings → Devices: what a device of the module does (the tracker of the desktop
+   * app); a card of one kind of device marks itself with `pd-device-only`.
+   */
+  devices?: DashboardIntegration[];
+  /**
    * Work of the module in the background once the app has started and the session is known
    * (the sync of a folder of the desktop app): loaded then, run with the app's injector.
    */

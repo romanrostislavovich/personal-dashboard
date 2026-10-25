@@ -23,6 +23,8 @@ import {
   ActivityLimit,
   ActivityLimitInput,
   ActivityTimelineEntry,
+  PlaceInput,
+  PlacesOverview,
   WorkstateInput,
   WorkstatePage,
   WorkstateQuery,
@@ -88,6 +90,23 @@ export class ActivityApi {
 
   mergeDevice(id: string, into: string) {
     return fromCore(() => this.activity.mergeDevice(id, into));
+  }
+
+  /** A day in places and trips; reloads when the day changes. */
+  places(day: () => string) {
+    return httpResource<PlacesOverview>(() => ACTIVITY_READS.places({ day: day() }));
+  }
+
+  addPlace(input: PlaceInput) {
+    return fromCore(() => this.activity.addPlace(input));
+  }
+
+  renamePlace(id: string, name: string) {
+    return fromCore(() => this.activity.renamePlace(id, name));
+  }
+
+  removePlace(id: string) {
+    return fromCore(() => this.activity.removePlace(id));
   }
 
   settings() {

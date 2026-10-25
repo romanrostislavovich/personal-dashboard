@@ -10,6 +10,8 @@ export interface PhoneSensorsStatus {
   notificationAccess: boolean;
   /** No battery limits in the background. */
   unrestricted: boolean;
+  /** The location all the time (places and trips); missing — an APK built before it. */
+  location?: boolean;
 }
 
 interface PhoneSensorsPlugin {
@@ -20,6 +22,8 @@ interface PhoneSensorsPlugin {
   openUsageAccess(): Promise<void>;
   openNotificationAccess(): Promise<void>;
   openBattery(): Promise<void>;
+  /** Android's question about the location, or the app's settings once it was asked. */
+  openLocation(): Promise<void>;
   openAutostart(): Promise<void>;
 }
 

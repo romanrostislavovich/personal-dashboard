@@ -1,6 +1,7 @@
 // Public API of the web core for the app and modules.
 export * from './lib/provide-dashboard';
 export * from './lib/dashboard-module';
+export * from './lib/settings/device-only.component';
 export * from './lib/auth/auth.service';
 export * from './lib/projects/projects.api';
 export * from './lib/projects/pickable-projects';

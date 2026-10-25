@@ -8,12 +8,13 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { DeviceBackupService } from '../backup/device-backup.service';
+import { DeviceOnlyComponent } from './device-only.component';
 
 const KEEP_OPTIONS = [7, 14, 30, 90];
 
 /**
  * The copies of one's data kept on this device (see DeviceBackupService): when the last one
- * was made, where they are, how many are kept. Shown only where the device keeps them.
+ * was made, where they are, how many are kept. Set in the desktop app; elsewhere the card says so.
  */
 @Component({
   selector: 'pd-device-backup-settings',
@@ -27,17 +28,21 @@ const KEEP_OPTIONS = [7, 14, 30, 90];
     MatProgressBarModule,
     MatSelectModule,
     TranslocoPipe,
+    DeviceOnlyComponent,
   ],
   template: `
-    @if (backup.device) {
-      <mat-card appearance="outlined">
-        <mat-card-header>
-          <mat-card-title>💾 {{ 'core.settings.deviceBackup.title' | transloco }}</mat-card-title>
-          <mat-card-subtitle>
-            {{ 'core.settings.deviceBackup.subtitle' | transloco }}
-          </mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content class="content">
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>💾 {{ 'core.settings.deviceBackup.title' | transloco }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ 'core.settings.deviceBackup.subtitle' | transloco }}
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="content">
+        <pd-device-only kind="desktop" />
+        @if (!backup.device) {
+          <p class="hint">{{ 'core.settings.deviceBackup.elsewhere' | transloco }}</p>
+        } @else {
           @if (backup.status(); as status) {
             @if (status.copies[0]; as newest) {
               <p>
@@ -85,9 +90,9 @@ const KEEP_OPTIONS = [7, 14, 30, 90];
               {{ 'core.settings.deviceBackup.change' | transloco }}
             </button>
           </div>
-        </mat-card-content>
-      </mat-card>
-    }
+        }
+      </mat-card-content>
+    </mat-card>
   `,
   styles: `
     .content {

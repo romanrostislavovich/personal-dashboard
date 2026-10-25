@@ -1,0 +1,217 @@
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { DB, Database, UsersService } from '@pd/api-core';
+import {
+  ActivityPeriod,
+  addDays,
+  LocalDate,
+  NamedPlace,
+  parseLocalDate,
+  PhoneLocationInput,
+  PlaceInput,
+  PlacesEntry,
+  PlacesOverview,
+  toLocalDate,
+  zonedToUtc,
+} from '@pd/contracts';
+import { and, asc, eq, gte, lt } from 'drizzle-orm';
+import { ActivityDeviceRow } from '../activity.schema';
+import { frequentPlaces, Named, namedAt } from './frequent';
+import { activityPhoneLocations, activityPlaces } from './places.schema';
+import { clip, Entry, entriesOf, Fix } from './stays';
+
+const INSERT_CHUNK = 200;
+/** The frequent places are the ones of this many days up to the day shown. */
+const FREQUENT_DAYS = 30;
+const FREQUENT_LIMIT = 10;
+/** Fixes read around a period: a stay that began before it still shows from its start. */
+const MARGIN_MS = 6 * 3600_000;
+
+/** One day in places: the entries, the meters of its trips, the fixes it had. */
+export interface PlacesDay {
+  day: LocalDate;
+  entries: Entry[];
+  meters: number;
+  points: number;
+}
+
+function pointOf(text: string): { latitude: number; longitude: number } {
+  const [latitude, longitude] = text.split(',').map(Number);
+  return { latitude, longitude };
+}
+
+function textOf(latitude: number, longitude: number): string {
+  // Six digits: ten centimetres, more than any phone knows.
+  return `${latitude.toFixed(6)},${longitude.toFixed(6)}`;
+}
+
+/**
+ * The phone's location: the fixes the Android app sends, and what they tell — the places a day
+ * was spent at and the trips between them (Activity → Places), the places named by the user.
+ */
+@Injectable()
+export class PlacesService {
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    private readonly users: UsersService,
+  ) {}
+
+  async ingest(device: ActivityDeviceRow, items: PhoneLocationInput[]): Promise<number> {
+    const rows = items.map((item) => ({
+      userId: device.userId,
+      deviceId: device.id,
+      at: new Date(item.at),
+      point: textOf(item.latitude, item.longitude),
+      accuracy: item.accuracy,
+    }));
+    let saved = 0;
+    for (let i = 0; i < rows.length; i += INSERT_CHUNK) {
+      const inserted = await this.db
+        .insert(activityPhoneLocations)
+        .values(rows.slice(i, i + INSERT_CHUNK))
+        .onConflictDoNothing()
+        .returning({ id: activityPhoneLocations.id });
+      saved += inserted.length;
+    }
+    return saved;
+  }
+
+  async overview(userId: string, day: LocalDate): Promise<PlacesOverview> {
+    const zone = await this.zone(userId);
+    const from = toLocalDate(addDays(parseLocalDate(day), 1 - FREQUENT_DAYS));
+    const [days, named] = await Promise.all([
+      this.days(userId, { from, to: day }, zone),
+      this.named(userId),
+    ]);
+    const today = days[days.length - 1];
+    const stays = days.flatMap((item) => item.entries).filter((entry) => entry.kind === 'stay');
+    return {
+      day,
+      entries: today.entries.map((entry) => this.entry(entry, named)),
+      meters: today.meters,
+      points: today.points,
+      frequent: frequentPlaces(stays, named, FREQUENT_LIMIT).map((place) => ({
+        ...place,
+        lastAt: new Date(place.lastAt).toISOString(),
+      })),
+      named,
+    };
+  }
+
+  /** Each day of the period in places, in the user's own days. */
+  async days(userId: string, period: ActivityPeriod, zone?: string): Promise<PlacesDay[]> {
+    const timeZone = zone ?? (await this.zone(userId));
+    const dayStarts: { day: LocalDate; start: number }[] = [];
+    for (
+      let day = period.from;
+      day <= period.to;
+      day = toLocalDate(addDays(parseLocalDate(day), 1))
+    ) {
+      dayStarts.push({ day, start: zonedToUtc({ date: day, time: '00:00' }, timeZone).getTime() });
+    }
+    const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
+    const end = zonedToUtc({ date: after, time: '00:00' }, timeZone).getTime();
+    const fixes = await this.fixes(userId, dayStarts[0].start - MARGIN_MS, end + MARGIN_MS);
+    const entries = entriesOf(fixes);
+    return dayStarts.map(({ day, start }, i) => {
+      const dayEnd = dayStarts[i + 1]?.start ?? end;
+      const ofDay = clip(entries, start, dayEnd);
+      return {
+        day,
+        entries: ofDay,
+        meters: ofDay.reduce((sum, entry) => sum + (entry.kind === 'trip' ? entry.meters : 0), 0),
+        points: fixes.filter((fix) => fix.at >= start && fix.at < dayEnd).length,
+      };
+    });
+  }
+
+  async named(userId: string): Promise<NamedPlace[]> {
+    const rows = await this.db
+      .select()
+      .from(activityPlaces)
+      .where(eq(activityPlaces.userId, userId))
+      .orderBy(asc(activityPlaces.createdAt));
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      ...pointOf(row.point),
+      radiusM: row.radiusM,
+    }));
+  }
+
+  async addPlace(userId: string, input: PlaceInput): Promise<NamedPlace> {
+    const [row] = await this.db
+      .insert(activityPlaces)
+      .values({
+        userId,
+        name: input.name,
+        point: textOf(input.latitude, input.longitude),
+        radiusM: input.radiusM,
+      })
+      .returning();
+    return { id: row.id, name: row.name, ...pointOf(row.point), radiusM: row.radiusM };
+  }
+
+  async renamePlace(userId: string, id: string, name: string): Promise<void> {
+    const updated = await this.db
+      .update(activityPlaces)
+      .set({ name })
+      .where(and(eq(activityPlaces.userId, userId), eq(activityPlaces.id, id)))
+      .returning({ id: activityPlaces.id });
+    if (!updated.length) {
+      throw new NotFoundException('Place not found');
+    }
+  }
+
+  /** The name is forgotten; the fixes stay. */
+  async removePlace(userId: string, id: string): Promise<void> {
+    await this.db
+      .delete(activityPlaces)
+      .where(and(eq(activityPlaces.userId, userId), eq(activityPlaces.id, id)));
+  }
+
+  private entry(entry: Entry, named: Named[]): PlacesEntry {
+    const startedAt = new Date(entry.start).toISOString();
+    const endedAt = new Date(entry.end).toISOString();
+    if (entry.kind === 'trip') {
+      return { kind: 'trip', startedAt, endedAt, meters: entry.meters };
+    }
+    const place = namedAt(entry, named);
+    return {
+      kind: 'stay',
+      placeId: place?.id ?? null,
+      name: place?.name ?? null,
+      latitude: entry.latitude,
+      longitude: entry.longitude,
+      startedAt,
+      endedAt,
+    };
+  }
+
+  private async fixes(userId: string, from: number, to: number): Promise<Fix[]> {
+    // Read through Drizzle's columns: the point is decrypted on the way.
+    const rows = await this.db
+      .select({
+        at: activityPhoneLocations.at,
+        point: activityPhoneLocations.point,
+        accuracy: activityPhoneLocations.accuracy,
+      })
+      .from(activityPhoneLocations)
+      .where(
+        and(
+          eq(activityPhoneLocations.userId, userId),
+          gte(activityPhoneLocations.at, new Date(from)),
+          lt(activityPhoneLocations.at, new Date(to)),
+        ),
+      )
+      .orderBy(asc(activityPhoneLocations.at));
+    return rows.map((row) => ({
+      at: row.at.getTime(),
+      ...pointOf(row.point),
+      accuracy: row.accuracy,
+    }));
+  }
+
+  private async zone(userId: string): Promise<string> {
+    return this.users.timeZoneOf(await this.users.findById(userId));
+  }
+}

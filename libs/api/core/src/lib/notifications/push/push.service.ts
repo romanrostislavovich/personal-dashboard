@@ -16,7 +16,8 @@ import { DeliveryError, Notification } from '../notification-channel';
 import { FcmClient, parseServiceAccount } from './fcm';
 import { PushDeviceRow, pushDevices } from './push.schema';
 
-const KEY = 'push.fcm-service-account';
+/** The Firebase service account's JSON, a server key (Settings → Notifications → Push). */
+export const PUSH_KEY = 'push.fcm-service-account';
 
 /**
  * Push notifications on the user's phones (the Android app): the phones that asked for them,
@@ -101,14 +102,14 @@ export class PushService implements OnApplicationBootstrap {
     } catch (error) {
       throw new BadRequestException(error instanceof Error ? error.message : String(error));
     }
-    await this.keys.set(KEY, json);
+    await this.keys.set(PUSH_KEY, json);
     this.client = { json, fcm, projectId };
     this.keySet = true;
     this.keyError = null;
   }
 
   async removeKey(): Promise<void> {
-    await this.keys.set(KEY, null);
+    await this.keys.set(PUSH_KEY, null);
     this.client = null;
     this.keySet = false;
     this.keyError = null;
@@ -177,7 +178,7 @@ export class PushService implements OnApplicationBootstrap {
    * of a sync, say); `null` — no key.
    */
   private async fcm(): Promise<{ fcm: FcmClient; projectId: string } | null> {
-    const json = await this.keys.get(KEY);
+    const json = await this.keys.get(PUSH_KEY);
     this.keySet = json !== null;
     if (!json) {
       this.client = null;
