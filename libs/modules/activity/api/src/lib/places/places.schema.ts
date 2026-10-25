@@ -42,4 +42,27 @@ export const activityPlaces = pgTable('activity_places', {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-registerEncryptedTables(activityPhoneLocations, activityPlaces);
+/**
+ * What a map service called the place of a stay (the café, the gym, else the address): looked up
+ * once and kept, so a place met again is named without asking. The point and the name are
+ * encrypted — an address is as private as the fixes.
+ */
+export const activityPlaceNames = pgTable(
+  'activity_place_names',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    point: encryptedText().notNull(),
+    name: encryptedText().notNull(),
+    /** `cafe`, `supermarket`, `gym`…; `null` — an address. */
+    kind: text(),
+    /** `osm` or `google`. */
+    source: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId)],
+);
+
+registerEncryptedTables(activityPhoneLocations, activityPlaces, activityPlaceNames);

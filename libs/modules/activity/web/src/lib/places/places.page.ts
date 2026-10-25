@@ -1,17 +1,35 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { addDays, FrequentPlace, parseLocalDate, PlacesEntry, toLocalDate } from '@pd/contracts';
+import {
+  addDays,
+  FoundPlaceName,
+  FrequentPlace,
+  parseLocalDate,
+  PlacesEntry,
+  toLocalDate,
+  TripMode,
+} from '@pd/contracts';
 import { DurationPipe, todayLocalDate } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { ActivityApi } from '../activity.api';
+import { PlacesMapComponent } from './places-map.component';
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
+/** The map the user picked last on this device. */
+const MAP_KEY = 'pd.places.map';
+const MODE_ICONS: Record<TripMode, string> = {
+  walk: 'directions_walk',
+  bike: 'directions_bike',
+  ride: 'directions_car',
+};
 
 /** A point on OpenStreetMap: opened by the user, so nothing goes to it by itself. */
 function mapUrl(latitude: number, longitude: number): string {
@@ -24,10 +42,18 @@ function seconds(entry: { startedAt: string; endedAt: string }): number {
   return (Date.parse(entry.endedAt) - Date.parse(entry.startedAt)) / 1000;
 }
 
+function savedMap(): 'osm' | 'google' {
+  try {
+    return localStorage.getItem(MAP_KEY) === 'google' ? 'google' : 'osm';
+  } catch {
+    return 'osm';
+  }
+}
+
 /**
- * Activity → Places: where a day went, from the phone's location (the Android app takes a
- * low-power fix every 15 minutes once allowed) — the places it was spent at and the trips between
- * them, and the places of the last 30 days, which the user names ("Home", "Work").
+ * Activity → Places: where a day went, like the timeline of Google Maps — the routes on a map,
+ * the places the day was spent at with their names (the user's own, else what OpenStreetMap or
+ * Google calls them), how each trip went, and the places of the last 30 days.
  */
 @Component({
   selector: 'pd-activity-places-page',
@@ -37,9 +63,11 @@ function seconds(entry: { startedAt: string; endedAt: string }): number {
     DecimalPipe,
     DurationPipe,
     MatButtonModule,
+    MatButtonToggleModule,
     MatCardModule,
     MatIconModule,
     MatTooltipModule,
+    PlacesMapComponent,
     TranslocoPipe,
   ],
   template: `
@@ -60,9 +88,27 @@ function seconds(entry: { startedAt: string; endedAt: string }): number {
       >
         <mat-icon>chevron_right</mat-icon>
       </button>
+      @if (googleMapsKey()) {
+        <mat-button-toggle-group
+          class="map-switch"
+          [value]="map()"
+          (change)="pickMap($event.value)"
+          [attr.aria-label]="'activity.places.mapKind' | transloco"
+        >
+          <mat-button-toggle value="osm">OpenStreetMap</mat-button-toggle>
+          <mat-button-toggle value="google">Google</mat-button-toggle>
+        </mat-button-toggle-group>
+      }
     </div>
 
     @if (overview.value(); as o) {
+      <pd-places-map
+        [entries]="o.entries"
+        [frequent]="o.frequent"
+        [labelOf]="label"
+        [googleKey]="map() === 'google' ? googleMapsKey() : null"
+      />
+
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-card-title>
@@ -82,34 +128,37 @@ function seconds(entry: { startedAt: string; endedAt: string }): number {
           }
           @for (entry of o.entries; track entry.startedAt) {
             <div class="entry" [class.trip]="entry.kind === 'trip'">
-              <mat-icon>{{ entry.kind === 'stay' ? 'place' : 'route' }}</mat-icon>
-              <div class="what">
-                @if (entry.kind === 'stay') {
-                  <div class="name">
-                    {{ entry.name ?? ('activity.places.unnamed' | transloco) }}
-                  </div>
-                } @else {
-                  <div class="name">
-                    {{
-                      'activity.places.trip'
-                        | transloco: { km: (entry.meters / 1000 | number: '1.0-1') }
-                    }}
-                  </div>
-                }
-                <div class="when">
-                  {{ entry.startedAt | date: 'HH:mm' }}–{{ entry.endedAt | date: 'HH:mm' }} ·
-                  {{ duration(entry) | pdDuration }}
-                </div>
-              </div>
               @if (entry.kind === 'stay') {
+                <mat-icon>{{ entry.placeId ? 'bookmark' : 'place' }}</mat-icon>
+                <div class="what">
+                  <div class="name">{{ label(entry) }}</div>
+                  <div class="when">
+                    {{ entry.startedAt | date: 'HH:mm' }}–{{ entry.endedAt | date: 'HH:mm' }} ·
+                    {{ duration(entry) | pdDuration }}
+                    @if (!entry.placeId && entry.found?.kind; as kind) {
+                      · {{ kindLabel(kind) }}
+                    }
+                  </div>
+                </div>
                 @if (!entry.placeId) {
-                  <button matButton (click)="name(entry.latitude, entry.longitude)">
+                  @if (googlePlaces()) {
+                    <button
+                      matIconButton
+                      (click)="lookUpOnGoogle(entry)"
+                      [disabled]="busy()"
+                      [matTooltip]="'activity.places.google' | transloco"
+                      [attr.aria-label]="'activity.places.google' | transloco"
+                    >
+                      <mat-icon>travel_explore</mat-icon>
+                    </button>
+                  }
+                  <button matButton (click)="name(entry.latitude, entry.longitude, entry.found)">
                     {{ 'activity.places.name' | transloco }}
                   </button>
                 }
                 <a
                   matIconButton
-                  [href]="map(entry.latitude, entry.longitude)"
+                  [href]="mapLink(entry.latitude, entry.longitude)"
                   target="_blank"
                   rel="noopener"
                   [matTooltip]="'activity.places.map' | transloco"
@@ -117,6 +166,20 @@ function seconds(entry: { startedAt: string; endedAt: string }): number {
                 >
                   <mat-icon>map</mat-icon>
                 </a>
+              } @else {
+                <mat-icon>{{ modeIcons[entry.mode] }}</mat-icon>
+                <div class="what">
+                  <div class="name">
+                    {{
+                      'activity.places.modes.' + entry.mode
+                        | transloco: { km: (entry.meters / 1000 | number: '1.0-1') }
+                    }}
+                  </div>
+                  <div class="when">
+                    {{ entry.startedAt | date: 'HH:mm' }}–{{ entry.endedAt | date: 'HH:mm' }} ·
+                    {{ duration(entry) | pdDuration }}
+                  </div>
+                </div>
               }
             </div>
           }
@@ -134,9 +197,7 @@ function seconds(entry: { startedAt: string; endedAt: string }): number {
               <div class="entry">
                 <mat-icon>{{ place.placeId ? 'bookmark' : 'place' }}</mat-icon>
                 <div class="what">
-                  <div class="name">
-                    {{ place.name ?? ('activity.places.unnamed' | transloco) }}
-                  </div>
+                  <div class="name">{{ label(place) }}</div>
                   <div class="when">
                     {{ place.seconds | pdDuration }} ·
                     {{ 'activity.places.visits' | transloco: { count: place.visits } }}
@@ -160,20 +221,10 @@ function seconds(entry: { startedAt: string; endedAt: string }): number {
                     <mat-icon>bookmark_remove</mat-icon>
                   </button>
                 } @else {
-                  <button matButton (click)="name(place.latitude, place.longitude)">
+                  <button matButton (click)="name(place.latitude, place.longitude, place.found)">
                     {{ 'activity.places.name' | transloco }}
                   </button>
                 }
-                <a
-                  matIconButton
-                  [href]="map(place.latitude, place.longitude)"
-                  target="_blank"
-                  rel="noopener"
-                  [matTooltip]="'activity.places.map' | transloco"
-                  [attr.aria-label]="'activity.places.map' | transloco"
-                >
-                  <mat-icon>map</mat-icon>
-                </a>
               </div>
             }
           </mat-card-content>
@@ -190,12 +241,16 @@ function seconds(entry: { startedAt: string; endedAt: string }): number {
     .day-bar {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 4px;
     }
     .day {
       min-width: 12em;
       text-align: center;
       font-weight: 500;
+    }
+    .map-switch {
+      margin-left: auto;
     }
     .padded {
       padding-top: 12px;
@@ -216,6 +271,7 @@ function seconds(entry: { startedAt: string; endedAt: string }): number {
     }
     .name {
       font-weight: 500;
+      overflow-wrap: anywhere;
     }
     .when,
     .hint {
@@ -227,6 +283,7 @@ function seconds(entry: { startedAt: string; endedAt: string }): number {
 export class PlacesPage {
   private readonly api = inject(ActivityApi);
   private readonly transloco = inject(TranslocoService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -234,11 +291,25 @@ export class PlacesPage {
   protected readonly day = signal(this.initialDay());
   protected readonly isToday = computed(() => this.day() >= todayLocalDate());
   protected readonly overview = this.api.places(() => this.day());
+  private readonly settings = this.api.placesSettings();
+  protected readonly googlePlaces = computed(() => this.settings.value()?.googlePlaces ?? false);
+  protected readonly googleMapsKey = computed(() => this.settings.value()?.googleMapsKey ?? null);
+  protected readonly map = signal(savedMap());
+  protected readonly busy = signal(false);
   protected readonly stays = computed(() =>
     (this.overview.value()?.entries ?? []).filter((entry) => entry.kind === 'stay'),
   );
-  protected readonly map = mapUrl;
+  protected readonly modeIcons = MODE_ICONS;
+  /** OpenStreetMap's and Google's kinds are words of a tag: `fast_food` → "fast food". */
+  protected readonly kindLabel = (kind: string) => kind.replace(/_/g, ' ');
+  protected readonly mapLink = mapUrl;
   protected readonly duration = (entry: PlacesEntry) => seconds(entry);
+  /** The user's name, else the one found on a map, else "a place without a name". */
+  protected readonly label = (place: {
+    name: string | null;
+    found: { name: string } | null;
+  }): string =>
+    place.name ?? place.found?.name ?? this.transloco.translate('activity.places.unnamed');
 
   protected shift(days: number): void {
     const day = toLocalDate(addDays(parseLocalDate(this.day()), days));
@@ -246,8 +317,45 @@ export class PlacesPage {
     void this.router.navigate([], { queryParams: { day }, replaceUrl: true });
   }
 
-  protected async name(latitude: number, longitude: number): Promise<void> {
-    const name = prompt(this.transloco.translate('activity.places.namePrompt'))?.trim();
+  protected pickMap(map: 'osm' | 'google'): void {
+    this.map.set(map);
+    try {
+      localStorage.setItem(MAP_KEY, map);
+    } catch {
+      // Without storage the choice lasts until the page is left.
+    }
+  }
+
+  protected async lookUpOnGoogle(point: { latitude: number; longitude: number }): Promise<void> {
+    this.busy.set(true);
+    try {
+      const found = await firstValueFrom(
+        this.api.lookUpOnGoogle({ latitude: point.latitude, longitude: point.longitude }),
+      );
+      if (!found) {
+        this.snackBar.open(this.transloco.translate('activity.places.googleNone'), 'OK', {
+          duration: 5000,
+        });
+      }
+      this.overview.reload();
+    } catch {
+      this.snackBar.open(this.transloco.translate('activity.places.googleFailed'), 'OK', {
+        duration: 6000,
+      });
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected async name(
+    latitude: number,
+    longitude: number,
+    found: FoundPlaceName | null,
+  ): Promise<void> {
+    const name = prompt(
+      this.transloco.translate('activity.places.namePrompt'),
+      found?.name ?? '',
+    )?.trim();
     if (name) {
       await firstValueFrom(this.api.addPlace({ name, latitude, longitude, radiusM: 150 }));
       this.overview.reload();

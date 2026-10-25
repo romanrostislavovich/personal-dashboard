@@ -23,8 +23,11 @@ import {
   ActivityLimit,
   ActivityLimitInput,
   ActivityTimelineEntry,
+  GoogleKeysInput,
   PlaceInput,
+  PlaceLookup,
   PlacesOverview,
+  PlacesSettings,
   WorkstateInput,
   WorkstatePage,
   WorkstateQuery,
@@ -107,6 +110,22 @@ export class ActivityApi {
 
   removePlace(id: string) {
     return fromCore(() => this.activity.removePlace(id));
+  }
+
+  placesSettings() {
+    return httpResource<PlacesSettings>(() => ACTIVITY_READS.placesSettings());
+  }
+
+  saveGoogleKeys(keys: GoogleKeysInput) {
+    return fromCore(() => this.activity.saveGoogleKeys(keys));
+  }
+
+  removeGoogleKey(which: 'places' | 'maps') {
+    return fromCore(() => this.activity.removeGoogleKey(which));
+  }
+
+  lookUpOnGoogle(point: PlaceLookup) {
+    return fromCore(() => this.activity.lookUpOnGoogle(point));
   }
 
   settings() {

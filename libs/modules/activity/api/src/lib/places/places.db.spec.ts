@@ -52,7 +52,12 @@ describe.skipIf(!ADMIN_URL)("the phone's places", { timeout: 60_000 }, () => {
       findById: async () => ({ timeZone: 'Europe/Warsaw' }),
       timeZoneOf: (user: { timeZone: string }) => user.timeZone,
     };
-    places = new PlacesService(db as never, users as never);
+    const names = {
+      known: async () => [],
+      nameAt: () => null,
+      lookUpMissing: async () => undefined,
+    };
+    places = new PlacesService(db as never, users as never, names as never);
   }, 60_000);
 
   afterAll(async () => {

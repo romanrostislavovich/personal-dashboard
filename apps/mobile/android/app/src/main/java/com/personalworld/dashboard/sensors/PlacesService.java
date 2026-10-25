@@ -25,10 +25,11 @@ import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 
 /**
- * Where the phone is, every minute: Android lets an app in the background know the location
- * only a few times an hour, so the places of a day (and the trips between them) need a service
- * the user sees — the quiet notification "records the places", like a fitness app's. Wi-Fi and
- * cell towers only, no GPS. The fixes wait in SensorsStore for SensorsWorker to send.
+ * Where the phone is: Android lets an app in the background know the location only a few times
+ * an hour, so the places of a day and the routes between them need a service the user sees —
+ * the quiet notification "records the places", like a fitness app's. Still: Wi-Fi and cell
+ * towers every minute. On the move (MotionMode): GPS every 5 seconds too, so a route follows the
+ * streets; it stops when the phone stays. The fixes wait in SensorsStore for SensorsWorker.
  */
 public class PlacesService extends Service {
 
@@ -36,8 +37,13 @@ public class PlacesService extends Service {
     private static final String CHANNEL = "places";
     private static final int NOTIFICATION_ID = 4208;
     private static final long EVERY_MS = TimeUnit.MINUTES.toMillis(1);
+    private static final long MOVING_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final float MOVING_MIN_M = 5;
 
+    private final MotionMode mode = new MotionMode();
     private LocationListener listener;
+    /** Only while moving. */
+    private LocationListener gps;
 
     /** Started when the collection is on and the location allowed; safe to call again. */
     public static void start(Context context) {
@@ -114,10 +120,55 @@ public class PlacesService extends Service {
             stopSelf();
             return;
         }
+        float accuracy = location.hasAccuracy() ? location.getAccuracy() : 1000;
+        if (mode.onFix(location.getLatitude(), location.getLongitude(), accuracy, location.getTime())) {
+            follow(mode.moving());
+        }
         try {
             store.queueLocation(PhoneLocation.toJson(location));
         } catch (JSONException e) {
             Log.w(TAG, "A fix was not kept", e);
+        }
+    }
+
+    /** On the move: GPS every few seconds as well; still: the network fixes alone. */
+    @SuppressWarnings("MissingPermission")
+    private void follow(boolean moving) {
+        LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (manager == null) {
+            return;
+        }
+        if (moving && gps == null && manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            gps = new LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {
+                    keep(location);
+                }
+
+                @Override
+                public void onStatusChanged(String p, int status, Bundle extras) {}
+
+                @Override
+                public void onProviderEnabled(String p) {}
+
+                @Override
+                public void onProviderDisabled(String p) {}
+            };
+            try {
+                manager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER, MOVING_MS, MOVING_MIN_M, gps, Looper.getMainLooper()
+                );
+            } catch (RuntimeException e) {
+                Log.w(TAG, "GPS was not requested", e);
+                gps = null;
+            }
+        } else if (!moving && gps != null) {
+            manager.removeUpdates(gps);
+            gps = null;
+        }
+        NotificationManager notifications = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notifications != null) {
+            notifications.notify(NOTIFICATION_ID, notification());
         }
     }
 
@@ -137,7 +188,7 @@ public class PlacesService extends Service {
         PendingIntent open = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), flags);
         return new NotificationCompat.Builder(this, CHANNEL)
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setContentTitle(getString(R.string.places_title))
+            .setContentTitle(getString(mode.moving() ? R.string.places_moving : R.string.places_title))
             .setContentText(getString(R.string.places_text))
             .setContentIntent(open)
             .setOngoing(true)
@@ -152,7 +203,11 @@ public class PlacesService extends Service {
         if (manager != null && listener != null) {
             manager.removeUpdates(listener);
         }
+        if (manager != null && gps != null) {
+            manager.removeUpdates(gps);
+        }
         listener = null;
+        gps = null;
         super.onDestroy();
     }
 

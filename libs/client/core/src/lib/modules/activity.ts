@@ -22,7 +22,10 @@ import {
   ActivityLimit,
   ActivityLimitInput,
   ActivityTimelineEntry,
+  FoundPlaceName,
+  GoogleKeysInput,
   NamedPlace,
+  PlaceLookup,
   PhoneNotificationsQuery,
   PhoneUsageQuery,
   PlaceInput,
@@ -48,6 +51,8 @@ export const ACTIVITY_READS = {
   phoneUsage: (query: PhoneUsageQuery) => apiRequest(`${BASE}/phone`, query),
   /** A day in places and trips, with the places of the last 30 days (the phone's location). */
   places: (query: PlacesQuery) => apiRequest(`${BASE}/places`, query),
+  /** Whether Google is connected for the places, and the map's key. */
+  placesSettings: () => apiRequest(`${BASE}/places/settings`),
   settings: () => apiRequest(`${BASE}/settings`),
   /** Every program seen, with its category and whether it is recorded. */
   apps: () => apiRequest(`${BASE}/apps`),
@@ -85,6 +90,12 @@ export function activityApi(api: ApiClient) {
     renamePlace: (id: string, name: string) => api.patch<void>(`${BASE}/places/${id}`, { name }),
     /** Forgets the name; the fixes stay. */
     removePlace: (id: string) => api.delete(`${BASE}/places/${id}`),
+    /** The Places key is checked against Google first. */
+    saveGoogleKeys: (keys: GoogleKeysInput) => api.put<void>(`${BASE}/places/google`, keys),
+    removeGoogleKey: (which: 'places' | 'maps') => api.delete(`${BASE}/places/google/${which}`),
+    /** "Look up on Google" for one stay; `null` — Google knows nothing there. */
+    lookUpOnGoogle: (point: PlaceLookup) =>
+      api.post<FoundPlaceName | null>(`${BASE}/places/lookup-google`, point),
 
     settings: () => api.read<ActivitySettings>(ACTIVITY_READS.settings()),
     /** Only the fields sent change. */

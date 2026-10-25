@@ -21,8 +21,8 @@
             "input": "apps/web/public"
           }
         ],
-        "styles": ["apps/web/src/styles.scss"],
-        "allowedCommonJsDependencies": ["qrcode"]
+        "styles": ["apps/web/src/styles.scss", "node_modules/leaflet/dist/leaflet.css"],
+        "allowedCommonJsDependencies": ["qrcode", "leaflet"]
       },
       "configurations": {
         "production": {

@@ -57,6 +57,28 @@ describe('the places of a day', () => {
     expect(entries).toHaveLength(1);
   });
 
+  it('a short walk by GPS between two places is a trip on foot, not part of them', () => {
+    // 450 m north in ten minutes, a GPS fix every 30 seconds.
+    const cafe = { latitude: HOME.latitude + 0.004, longitude: HOME.longitude };
+    const walk: Fix[] = [];
+    for (let i = 1; i < 20; i++) {
+      walk.push({
+        at: (60 + i / 2) * MIN,
+        latitude: HOME.latitude + (0.004 * i) / 20,
+        longitude: HOME.longitude,
+        accuracy: 8,
+      });
+    }
+    const entries = entriesOf([...every15(0, 60, HOME), ...walk, ...every15(70, 130, cafe)]);
+    expect(entries.map((entry) => entry.kind)).toEqual(['stay', 'trip', 'stay']);
+    const trip = entries[1];
+    // The first and the last steps, within GPS reach of a place, count to it.
+    expect(trip).toMatchObject({ kind: 'trip', mode: 'walk' });
+    expect(trip.start).toBeLessThanOrEqual(62 * MIN);
+    expect(trip.end).toBeGreaterThanOrEqual(68 * MIN);
+    expect(trip.kind === 'trip' && trip.path.length).toBeGreaterThan(15);
+  });
+
   it('a stay over midnight counts on the day by its part', () => {
     const entries = entriesOf(every15(0, 600, HOME));
     expect(clip(entries, 120 * MIN, 1440 * MIN)).toEqual([

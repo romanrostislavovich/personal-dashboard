@@ -73,6 +73,13 @@ export const activityModule: WebDashboardModule = {
       url: '/activity/settings',
     },
   ],
+  integrations: [
+    {
+      id: 'activity.google-places',
+      loadComponent: () =>
+        import('./places/google-places.integration').then((m) => m.GooglePlacesIntegration),
+    },
+  ],
   // The trackers of every device: Settings → Devices (and Activity → Setup).
   devices: [
     {

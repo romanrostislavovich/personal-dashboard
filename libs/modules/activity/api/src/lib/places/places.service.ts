@@ -3,6 +3,7 @@ import { DB, Database, UsersService } from '@pd/api-core';
 import {
   ActivityPeriod,
   addDays,
+  FoundPlaceName,
   LocalDate,
   NamedPlace,
   parseLocalDate,
@@ -17,7 +18,8 @@ import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
 import { ActivityDeviceRow } from '../activity.schema';
 import { frequentPlaces, Named, namedAt } from './frequent';
 import { activityPhoneLocations, activityPlaces } from './places.schema';
-import { clip, Entry, entriesOf, Fix } from './stays';
+import { PlaceNamesService } from './place-names.service';
+import { clip, Entry, entriesOf, Fix, Point } from './stays';
 
 const INSERT_CHUNK = 200;
 /** The frequent places are the ones of this many days up to the day shown. */
@@ -35,6 +37,11 @@ export interface PlacesDay {
   entries: Entry[];
   meters: number;
   points: number;
+}
+
+/** Six digits: ten centimetres, more than any phone knows. */
+function round(degrees: number): number {
+  return Math.round(degrees * 1e6) / 1e6;
 }
 
 function pointOf(text: string): { latitude: number; longitude: number } {
@@ -56,6 +63,7 @@ export class PlacesService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly users: UsersService,
+    private readonly names: PlaceNamesService,
   ) {}
 
   async ingest(device: ActivityDeviceRow, items: PhoneLocationInput[]): Promise<number> {
@@ -82,19 +90,32 @@ export class PlacesService {
     const zone = await this.zone(userId);
     const from = toLocalDate(addDays(parseLocalDate(day), 1 - FREQUENT_DAYS));
     // The day with every fix, the 30 days thinned: the frequent places need only the stays.
-    const [[today], days, named] = await Promise.all([
+    const [[today], days, named, known] = await Promise.all([
       this.days(userId, { from: day, to: day }, zone),
       this.days(userId, { from, to: day }, zone),
       this.named(userId),
+      this.names.known(userId),
     ]);
     const stays = days.flatMap((item) => item.entries).filter((entry) => entry.kind === 'stay');
+    const frequent = frequentPlaces(stays, named, FREQUENT_LIMIT);
+    // The places with no name of the user's and none found yet: looked up in the background,
+    // so they are named the next time the page is opened.
+    const unnamed = [...today.entries.filter((entry) => entry.kind === 'stay'), ...frequent].filter(
+      (point) => !namedAt(point, named),
+    );
+    void this.names.lookUpMissing(userId, unnamed, known).catch(() => undefined);
+    const foundAt = (point: Point) => {
+      const found = this.names.nameAt(point, known);
+      return found?.name ? found : null;
+    };
     return {
       day,
-      entries: today.entries.map((entry) => this.entry(entry, named)),
+      entries: today.entries.map((entry) => this.entry(entry, named, foundAt)),
       meters: today.meters,
       points: today.points,
-      frequent: frequentPlaces(stays, named, FREQUENT_LIMIT).map((place) => ({
+      frequent: frequent.map((place) => ({
         ...place,
+        found: place.placeId ? null : foundAt(place),
         lastAt: new Date(place.lastAt).toISOString(),
       })),
       named,
@@ -178,17 +199,29 @@ export class PlacesService {
       .where(and(eq(activityPlaces.userId, userId), eq(activityPlaces.id, id)));
   }
 
-  private entry(entry: Entry, named: Named[]): PlacesEntry {
+  private entry(
+    entry: Entry,
+    named: Named[],
+    foundAt: (point: Point) => FoundPlaceName | null,
+  ): PlacesEntry {
     const startedAt = new Date(entry.start).toISOString();
     const endedAt = new Date(entry.end).toISOString();
     if (entry.kind === 'trip') {
-      return { kind: 'trip', startedAt, endedAt, meters: entry.meters };
+      return {
+        kind: 'trip',
+        startedAt,
+        endedAt,
+        meters: entry.meters,
+        mode: entry.mode,
+        path: entry.path.map((point) => [round(point.latitude), round(point.longitude)]),
+      };
     }
     const place = namedAt(entry, named);
     return {
       kind: 'stay',
       placeId: place?.id ?? null,
       name: place?.name ?? null,
+      found: place ? null : foundAt(entry),
       latitude: entry.latitude,
       longitude: entry.longitude,
       startedAt,
