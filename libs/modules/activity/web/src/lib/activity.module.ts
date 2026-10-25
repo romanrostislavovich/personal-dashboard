@@ -35,6 +35,10 @@ export const activityModule: WebDashboardModule = {
             import('./notifications/notifications.page').then((m) => m.NotificationsPage),
         },
         {
+          path: 'places',
+          loadComponent: () => import('./places/places.page').then((m) => m.PlacesPage),
+        },
+        {
           path: 'computers',
           loadComponent: () => import('./computers/computers.page').then((m) => m.ComputersPage),
         },
@@ -67,6 +71,13 @@ export const activityModule: WebDashboardModule = {
       labelKey: 'activity.commands.settings',
       icon: 'tune',
       url: '/activity/settings',
+    },
+  ],
+  // The trackers of every device: Settings → Devices (and Activity → Setup).
+  devices: [
+    {
+      id: 'activity.trackers',
+      loadComponent: () => import('./tracker-card.component').then((m) => m.TrackerCardComponent),
     },
   ],
   widgets: [

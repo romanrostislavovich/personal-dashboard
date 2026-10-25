@@ -4,9 +4,10 @@
  * - `error` — its last refresh failed (a rejected token, a service that is down);
  * - `stale` — it has not refreshed for longer than it should;
  * - `expiring` — its token expires within two weeks;
- * - `expired` — its token has expired.
+ * - `expired` — its token has expired;
+ * - `off` — the dashboard can connect it, but it is not connected.
  */
-export const INTEGRATION_STATES = ['ok', 'error', 'stale', 'expiring', 'expired'] as const;
+export const INTEGRATION_STATES = ['ok', 'error', 'stale', 'expiring', 'expired', 'off'] as const;
 export type IntegrationState = (typeof INTEGRATION_STATES)[number];
 
 /** One connection of the user, as "Settings → Integrations" lists it. */

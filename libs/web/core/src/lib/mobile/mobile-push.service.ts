@@ -6,10 +6,10 @@ import { AuthService } from '../auth/auth.service';
 import { DASHBOARD_CLIENT } from '../client/dashboard-client';
 import { installId, isMobileApp, phoneModel } from './mobile-app';
 
-/** Switched off on this phone by its user (Settings → Integrations). */
+/** Switched off on this phone by its user (Settings → Notifications). */
 const OFF_KEY = 'pd.mobile.pushOff';
 
-/** Where the phone stands with push notifications, for Settings → Integrations. */
+/** Where the phone stands with push notifications, for Settings → Notifications. */
 export type PhonePush = 'on' | 'off' | 'denied' | 'unavailable';
 
 /**

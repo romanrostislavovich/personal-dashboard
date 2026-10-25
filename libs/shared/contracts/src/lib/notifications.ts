@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export interface NotificationSettings {
   telegram: {
-    /** The bot is running: the owner set its token (Settings → Integrations). */
+    /** The bot is running: the owner set its token (Settings → Notifications). */
     available: boolean;
     /** The user has linked their Telegram chat. */
     connected: boolean;
@@ -49,7 +49,7 @@ export const NOTIFICATION_DELIVERY_STATUSES = [
 ] as const;
 export type NotificationDeliveryStatus = (typeof NOTIFICATION_DELIVERY_STATUSES)[number];
 
-/** A line of the delivery log (Settings → Integrations). */
+/** A line of the delivery log (Settings → Notifications). */
 export interface NotificationDelivery {
   id: string;
   source: string;

@@ -309,9 +309,25 @@
       "system": "System",
       "appearance": "Appearance",
       "automations": "Automations",
-      "apps": "Apps"
+      "apps": "Apps",
+      "notifications": "Notifications",
+      "devices": "Devices"
     },
-    "integrationsIntro": "Connections to outside services: where notifications go, where the modules take their data from, which AI answers.",
+    "integrationsIntro": "Connections to outside services: where the modules take their data from, which AI answers. Grey — what can be connected but is not.",
+    "notificationsIntro": "Where the dashboard's messages come (Telegram, the phone), when they keep quiet, and what was sent.",
+    "devicesIntro": "What the phone and the computers do for the dashboard. The settings are the same on every device; the ones of one kind of device are marked with its colour.",
+    "deviceOnly": {
+      "phone": {
+        "title": "Only for the phone",
+        "here": "set on this phone",
+        "elsewhere": "it is set in the Android app; here you see its state"
+      },
+      "desktop": {
+        "title": "Only for the computer",
+        "here": "set on this computer",
+        "elsewhere": "it is set in the desktop app; here you see its state"
+      }
+    },
     "openIntegrations": "Connect in Settings → Integrations",
     "system": {
       "ownerOnly": "Only the owner of the dashboard sees the system status.",
@@ -386,7 +402,8 @@
       "hint": "A hidden section leaves the menu and the home page. Its data keeps coming and the assistant still sees it."
     },
     "deviceBackup": {
-      "title": "Copies on this computer",
+      "title": "Copies on the computer",
+      "elsewhere": "The desktop app keeps a copy of your data on its computer every day. Install it in Settings → Apps.",
       "subtitle": "Your data kept here too, in case the server is gone",
       "latest": "The latest copy: {{date}}, {{size}} MB. Copies kept: {{count}}.",
       "none": "No copy yet: the first one is made within a minute of the start, then once a day.",
@@ -530,23 +547,27 @@
     },
     "phone": {
       "title": "The phone as a sensor",
-      "hint": "Time in apps and their notifications, to Activity — for the dashboard to see what takes the day",
+      "hint": "Time in apps, their notifications and the places of the day, to Activity — for the dashboard to see what takes the day",
       "enable": "Switch on",
       "allow": "Allow",
       "open": "Open",
       "steps": {
         "usageAccess": "Time in apps (Usage access)",
         "notificationAccess": "Notifications of other apps (Notification access)",
+        "location": "Location, all the time (places and trips; a low-power fix every 15 minutes)",
         "unrestricted": "No battery limits in the background",
         "autostart": "Autostart (MIUI: switch it on for Personal Dashboard)"
       },
-      "where": "The time in apps comes to Activity as this phone, the notifications to Activity → Notifications, every 15 minutes.",
+      "where": "The time in apps comes to Activity as this phone, the notifications to Activity → Notifications, the places to Activity → Places, every 15 minutes.",
       "disable": "Switch off",
       "error": "Could not switch it on:",
       "update": "This version of the app cannot collect yet: install the new one over it, then come back here.",
       "checking": "Checking what this phone can do…",
       "reason": "The app answered",
-      "again": "Check again"
+      "again": "Check again",
+      "lastSeen": "last data",
+      "neverSeen": "sent nothing yet",
+      "noPhones": "No phone collects yet. Install the Android app (Settings → Apps) and switch it on in it: Settings → Devices."
     }
   },
   "toast": {
@@ -653,7 +674,8 @@
       "error": "The last refresh failed",
       "stale": "Has not refreshed for too long",
       "expiring": "The token expires soon",
-      "expired": "The token has expired"
+      "expired": "The token has expired",
+      "off": "Not connected"
     }
   },
   "serverKey": {

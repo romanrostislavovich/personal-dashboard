@@ -76,14 +76,14 @@ Electron.
   - Not yet: photos of the diary offline (they are files, not answers).
 - **1c, push notifications (built, 2026-10-24):** through Google (FCM HTTP v1), a channel
   next to Telegram (`notifications/push` in api-core): the owner pastes the Firebase service
-  account's JSON in Settings → Integrations → Push on the phone (kept as a server key); the app
+  account's JSON in Settings → Notifications → Push on the phone (kept as a server key); the app
   asks Android for the permission, takes its token and tells the server; a phone whose token is
   gone is forgotten; a sync client sends none. The APK is built with
   `deploy/google-services.json` (not in git) when it is there. Switched off per phone in the same
   card; **per kind of notification — with the quiet hours of 1d.**
 - **1d, gentle (built, 2026-10-24)** — the owner's choices: quiet hours 21:00–09:00, nothing
   comes in them; soft overdue always; the close person through Telegram.
-  - **A gentle mode** (Settings → Appearance, `calm` of the account, every device): in the quiet
+  - **A gentle mode** (Settings → Notifications, `calm` of the account, every device): in the quiet
     hours Telegram and push wait (`held` in the outbox) and come at their end as **one** message,
     "while it was quiet: N"; a toast in an open tab still shows, a test the user sends comes at
     once. **Soft overdue:** no red in the task list and the home widget, nothing overdue in the
@@ -110,7 +110,21 @@ build) and posts them as spans to `/api/activity/device/spans`, and the notifica
 (`activity_phone_notifications`, title and text encrypted; Activity → Notifications). The card
 leads through Usage access, Notification access, no battery limits and MIUI's autostart. Common
 Android apps have categories (Instagram → media, Telegram → communication…). Not yet: unlocks
-and night use as their own numbers, the location (2c).
+and night use as their own numbers.
+
+**2c, the location (built, 2026-10-25):** the card's step "Location, all the time" asks Android
+(10 offers "Allow all the time" in its own question; 11+ and a second tap — the app's settings).
+Each run of `SensorsWorker` takes one fix (`PhoneLocation`): one another app asked for in the last
+5 minutes as it is, else Wi-Fi and cell towers (no GPS; GPS for 20 s only when that is off) — the
+battery barely notices. Fixes wait in `SensorsStore` without a network and go to
+`/api/activity/device/locations` (`activity_phone_locations`, the point encrypted). The server
+tells a day as stays (two fixes in a row within 200 m) and trips between them (`places/stays.ts`),
+gathers the stays of 30 days into places, and the user names them ("Home") —
+`activity_places`, the stays within 150 m take the name. Activity → Places shows a day; a link
+opens a point on OpenStreetMap (no map is loaded by itself: tiles would tell the area). Links
+gets "km on the move" and "places visited" for the days with enough fixes; the life timeline a
+line. Not yet: a map on the page, names of places from an address lookup (it would send the
+points out).
 
 To Activity (a "phone" device) and Life, and from there to Links:
 
@@ -118,6 +132,15 @@ To Activity (a "phone" device) and Life, and from there to Links:
 - notifications: which app, when, how many, and their titles and text (encrypted like the
   diary) — to see what interrupts and how it goes with focus and mood;
 - places and trips from the location, with care for the battery.
+
+**Settings (2026-10-25), the owner's choices:** the settings are the same on every device;
+a card of one kind of device shows everywhere with a mark of its colour (`pd-device-only`:
+phone — tertiary, computer — primary) and says where it is set. Settings → Devices holds the
+phone as a sensor (elsewhere: which phones collect, when each last sent), the trackers (a module
+registers `devices` cards) and the copies on a computer; Settings → Apps stays for installing.
+Settings → Notifications holds Telegram, push, the gentle mode and the delivery log; the language
+stays in Account → Profile. Settings → Integrations lists every service the dashboard can
+connect, the ones not connected greyed (`off`).
 
 ## Stage 3 — health and stress
 

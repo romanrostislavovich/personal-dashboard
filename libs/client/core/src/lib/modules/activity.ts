@@ -22,7 +22,10 @@ import {
   ActivityLimit,
   ActivityLimitInput,
   ActivityTimelineEntry,
+  NamedPlace,
   PhoneNotificationsQuery,
+  PlaceInput,
+  PlacesQuery,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -40,6 +43,8 @@ export const ACTIVITY_READS = {
   /** The phone's notifications: which apps, how many, in which hours (the Android app). */
   phoneNotifications: (query: PhoneNotificationsQuery) =>
     apiRequest(`${BASE}/notifications`, query),
+  /** A day in places and trips, with the places of the last 30 days (the phone's location). */
+  places: (query: PlacesQuery) => apiRequest(`${BASE}/places`, query),
   settings: () => apiRequest(`${BASE}/settings`),
   /** Every program seen, with its category and whether it is recorded. */
   apps: () => apiRequest(`${BASE}/apps`),
@@ -72,6 +77,11 @@ export function activityApi(api: ApiClient) {
     /** Hands the device's records to `into`, then removes it. */
     mergeDevice: (id: string, into: string) =>
       api.post<void>(`${BASE}/devices/${id}/merge`, { into }),
+    /** Names a place: the stays within its radius take the name. */
+    addPlace: (input: PlaceInput) => api.post<NamedPlace>(`${BASE}/places`, input),
+    renamePlace: (id: string, name: string) => api.patch<void>(`${BASE}/places/${id}`, { name }),
+    /** Forgets the name; the fixes stay. */
+    removePlace: (id: string) => api.delete(`${BASE}/places/${id}`),
 
     settings: () => api.read<ActivitySettings>(ACTIVITY_READS.settings()),
     /** Only the fields sent change. */

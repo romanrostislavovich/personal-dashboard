@@ -63,7 +63,8 @@
     "settings": "Setup",
     "focus": "Focus",
     "computers": "Computers",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "places": "Places"
   },
   "commands": {
     "settings": "Activity: trackers and programs",
@@ -409,6 +410,7 @@
     "total": "Screen time",
     "topApp": "mostly {{app}}",
     "focus": "In focus",
+    "places": "Places: {{places}}, {{km}} km on the move",
     "focusSessions": "{{count}} sessions"
   },
   "automations": {
@@ -423,6 +425,8 @@
     "lastUse": "Last at a screen",
     "lateGames": "In games late at night (23–4)",
     "browser": "In the browser",
+    "km": "Km on the move",
+    "places": "Places visited",
     "site": "On a site"
   },
   "usage": {
@@ -500,10 +504,28 @@
   "notifications": {
     "period": "Period",
     "days": "{{count}} days",
-    "none": "No notifications from the phone yet. Switch the collection on in the Android app: Settings → Apps.",
+    "none": "No notifications from the phone yet. Switch the collection on in the Android app: Settings → Devices.",
     "total": "Notifications: {{count}}",
     "byHour": "In which hours they came",
     "apps": "Which apps",
     "latest": "The latest"
+  },
+  "places": {
+    "previous": "The day before",
+    "next": "The day after",
+    "dayTitle": "Places of the day: {{places}}",
+    "km": "{{km}} km on the move",
+    "none": "The phone told nothing about this day. Allow the location in the Android app: Settings → Devices → The phone as a sensor.",
+    "few": "Too few points to tell the places of this day.",
+    "unnamed": "A place without a name",
+    "trip": "On the move, {{km}} km",
+    "name": "Name it",
+    "namePrompt": "The name of the place (Home, Work…)",
+    "rename": "Rename",
+    "forget": "Forget the name",
+    "map": "On the map",
+    "frequent": "Places of the last 30 days",
+    "frequentHint": "Name a place, and its stays take the name",
+    "visits": "visits: {{count}}"
   }
 }

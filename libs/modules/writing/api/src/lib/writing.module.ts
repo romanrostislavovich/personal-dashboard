@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { WritingAchievements } from './writing.achievements';
 import { WritingController } from './writing.controller';
+import { WritingIntegrations } from './writing.integrations';
 import { WritingService } from './writing.service';
 
 /**
@@ -10,6 +11,6 @@ import { WritingService } from './writing.service';
  */
 @Module({
   controllers: [WritingController],
-  providers: [WritingService, WritingAchievements],
+  providers: [WritingService, WritingAchievements, WritingIntegrations],
 })
 export class WritingModule {}

@@ -16,7 +16,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ActivityDevice, ActivityPlatform } from '@pd/contracts';
-import { desktopBridge, DesktopActivityStatus } from '@pd/web-core';
+import { desktopBridge, DesktopActivityStatus, DeviceOnlyComponent } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { ActivityApi } from './activity.api';
 
@@ -36,6 +36,7 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
+    DeviceOnlyComponent,
     MatButtonModule,
     MatCardModule,
     MatIconModule,
@@ -50,6 +51,7 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
         <mat-card-title>{{ 'activity.tracker.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
+        <pd-device-only kind="desktop" />
         @if (!desktop) {
           <p class="hint">{{ 'activity.tracker.browser' | transloco }}</p>
         } @else if (status(); as s) {
