@@ -88,6 +88,12 @@ export class NotificationsService implements OnModuleInit {
     // The user's quiet hours: Telegram and the phone wait for their end; a toast in a tab the
     // user has open now still shows — they are looking anyway.
     const quietUntil = notification.now ? null : this.quietUntil(user);
+    // The desktop app's system notification: like the phone's push, quiet in the quiet hours
+    // and off for a section kept off the computer; the toast in the window shows anyway.
+    notification = {
+      ...notification,
+      desktop: !quietUntil && !isMuted(user.calm, section, 'desktop'),
+    };
     if (quietUntil && durable.length) {
       await this.outbox.add(userId, notification, durable, 'held', null, quietUntil);
       await this.sendNow(user, notification, channels);

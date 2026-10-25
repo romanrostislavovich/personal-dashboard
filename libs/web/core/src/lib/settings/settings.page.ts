@@ -22,6 +22,7 @@ import { ThemeSettingsComponent } from './theme-settings.component';
 import { TrashSettingsComponent } from './trash-settings.component';
 import { DataSettingsComponent } from './data-settings.component';
 import { DeviceBackupSettingsComponent } from './device-backup-settings.component';
+import { DesktopNotificationsComponent } from './desktop-notifications.component';
 import { IntegrationStatusComponent } from './integration-status.component';
 import { AutomationsSettingsComponent } from '../automations/automations-settings.component';
 import { AppsSettingsComponent } from './apps-settings.component';
@@ -73,6 +74,7 @@ const TABS = [
     TrashSettingsComponent,
     DataSettingsComponent,
     DeviceBackupSettingsComponent,
+    DesktopNotificationsComponent,
     AutomationsSettingsComponent,
     AppsSettingsComponent,
     PhoneSensorsComponent,
@@ -115,6 +117,7 @@ const TABS = [
         <div class="grid">
           <pd-telegram-settings />
           <pd-push-settings />
+          <pd-desktop-notifications />
           <pd-calm-settings />
           <pd-notification-kinds />
           <pd-notification-log />

@@ -6,6 +6,8 @@ import { ToastService } from '../toast/toast.service';
 import { desktopBridge } from './desktop-bridge';
 import { RealtimeClient } from './realtime.client';
 
+import { desktopNotificationsOn } from './desktop-notifications';
+
 /**
  * Turns live events into what the user sees: a toast in the page, and in the desktop app
  * also a system notification when the window is hidden or not in focus.
@@ -47,13 +49,20 @@ export class RealtimeNotifier {
       }
     } else if (event.type === 'notification') {
       this.toasts.show({ icon: '🔔', title: event.title, text: event.body });
-      this.notifyDesktop(event.title, event.body);
+      // Not in the quiet hours, not for a section kept off the computer (the server tells).
+      if (event.system !== false) {
+        this.notifyDesktop(event.title, event.body);
+      }
     }
   }
 
   /** A system notification only when the user might miss the toast. */
   private notifyDesktop(title: string, body: string, route?: string): void {
-    if (this.desktop?.notify && (document.hidden || !document.hasFocus())) {
+    if (
+      this.desktop?.notify &&
+      desktopNotificationsOn() &&
+      (document.hidden || !document.hasFocus())
+    ) {
       this.desktop.notify({ title, body, route });
     }
   }

@@ -64,6 +64,30 @@ describe('NotificationsService', () => {
     expect(outbox.calls).toEqual(['add sending', 'delivered 1', 'add sending', 'delivered 2']);
   });
 
+  it('tells the desktop app which may be system notifications: not a section kept off it', async () => {
+    const seen: Record<string, boolean | undefined> = {};
+    const inApp = {
+      name: 'in-app',
+      durable: false,
+      isEnabledFor: () => true,
+      send: async (_u: unknown, n: { source: string; desktop?: boolean }) =>
+        void (seen[n.source] = n.desktop),
+    };
+    const muted = {
+      ...user,
+      calm: { quietHours: null, softOverdue: false, muted: { music: ['desktop'] } },
+    };
+    const service = new NotificationsService(
+      { ...users, findById: async () => muted } as never,
+      fakeOutbox() as never,
+      scheduler as never,
+      [inApp] as never,
+    );
+    await service.send('u1', { title: 't', body: 'b', source: 'lastfm' });
+    await service.send('u1', { title: 't', body: 'b', source: 'finance' });
+    expect(seen).toEqual({ lastfm: false, finance: true });
+  });
+
   it('keeps a muted section off just that channel; a service inside it too', async () => {
     const telegram = channel('telegram', true);
     const push = channel('push', true);
@@ -193,7 +217,8 @@ describe('quiet hours', () => {
         name: 'in-app',
         durable: false,
         isEnabledFor: () => true,
-        send: async (_u: unknown, n: { title: string }) => void toasts.push(n.title),
+        send: async (_u: unknown, n: { title: string; desktop?: boolean }) =>
+          void toasts.push(n.desktop ? `${n.title} (system)` : n.title),
       },
     ];
     const service = new NotificationsService(

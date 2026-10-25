@@ -28,6 +28,11 @@ export interface Notification {
    * every other one until morning (see CalmSettings).
    */
   now?: boolean;
+  /**
+   * Set by NotificationsService, not by a module: whether the desktop app may show it as a system
+   * notification — not in the quiet hours, not for a section kept off the computer.
+   */
+  desktop?: boolean;
 }
 
 /**
