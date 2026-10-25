@@ -41,6 +41,9 @@ export function gamesApi(api: ApiClient) {
     /** The Steam Web API key: it is checked and every account is refreshed with it. */
     saveSteamKey: (apiKey: string) => api.put<void>(`${BASE}/steam/key`, { apiKey }),
     removeSteamKey: () => api.delete(`${BASE}/steam/key`),
+    /** The OpenXBL key is checked against Xbox before it is kept. */
+    saveXboxKey: (apiKey: string) => api.put<void>(`${BASE}/xbox/key`, { apiKey }),
+    removeXboxKey: () => api.delete(`${BASE}/xbox/key`),
     saveWowCredentials: (input: WowCredentialsInput) =>
       api.put<void>(`${BASE}/wow/credentials`, input),
     wowTokens: () => api.read<WowToken[]>(GAMES_READS.wowTokens()),

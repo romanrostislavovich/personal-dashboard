@@ -48,6 +48,15 @@ function progress(account: GameAccount) {
       achievements: summary.totals.achievements,
     };
   }
+  if (summary.game === 'xbox') {
+    return {
+      game: 'xbox',
+      account: summary.gamertag,
+      // Whole hundreds: a few points do not change the digest.
+      gamerscore: Math.floor(summary.gamerscore / 100) * 100,
+      achievements: summary.totals.achievements,
+    };
+  }
   if (summary.game === 'dota2') {
     return {
       game: 'dota2',

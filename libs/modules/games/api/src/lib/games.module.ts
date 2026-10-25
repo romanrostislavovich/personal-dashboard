@@ -23,6 +23,7 @@ import { SteamAchievements } from './steam/steam.achievements';
 import { SteamKeyService } from './steam/steam-key.service';
 import { SteamService } from './steam/steam.service';
 import { WowService } from './wow/wow.service';
+import { XboxService } from './xbox/xbox.service';
 
 /**
  * Games: Steam (profile and library), Dota 2 (Steam, complemented by OpenDota) and World of
@@ -32,6 +33,7 @@ import { WowService } from './wow/wow.service';
 @Module({
   controllers: [GamesController],
   providers: [
+    XboxService,
     GamesDemo,
     GamesIntegrations,
     GamesLife,

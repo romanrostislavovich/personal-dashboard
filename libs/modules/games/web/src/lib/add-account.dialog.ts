@@ -39,6 +39,7 @@ import {
           <mat-button-toggle value="steam">Steam</mat-button-toggle>
           <mat-button-toggle value="dota2">Dota 2</mat-button-toggle>
           <mat-button-toggle value="wow">World of Warcraft</mat-button-toggle>
+          <mat-button-toggle value="xbox">Xbox</mat-button-toggle>
         </mat-button-toggle-group>
 
         @if (game() === 'steam') {
@@ -53,6 +54,8 @@ import {
             <input matInput formControlName="steamId" cdkFocusInitial />
             <mat-hint>{{ 'games.dota.steamIdHint' | transloco }}</mat-hint>
           </mat-form-field>
+        } @else if (game() === 'xbox') {
+          <p class="hint">{{ 'games.xbox.addHint' | transloco }}</p>
         } @else {
           <mat-form-field>
             <mat-label>{{ 'games.wow.version' | transloco }}</mat-label>
@@ -143,6 +146,8 @@ export class AddGameAccountDialog {
         return c.steamId.valid;
       case 'wow':
         return c.realm.valid && c.name.valid;
+      case 'xbox':
+        return true;
     }
   }
 
@@ -152,6 +157,7 @@ export class AddGameAccountDialog {
       steam: { game: 'steam', steamId: v.steamProfile },
       dota2: { game: 'dota2', steamId: v.steamId },
       wow: { game: 'wow', region: v.region, version: v.version, realm: v.realm, name: v.name },
+      xbox: { game: 'xbox' },
     };
     this.dialogRef.close(input[v.game]);
   }

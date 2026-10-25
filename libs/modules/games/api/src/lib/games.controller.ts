@@ -26,6 +26,8 @@ import {
   openDotaKeyInputSchema,
   SteamKeyInput,
   steamKeyInputSchema,
+  OpenXblKeyInput,
+  openXblKeyInputSchema,
   WowCharacterUpdate,
   wowCharacterUpdateSchema,
   WowCredentialsInput,
@@ -38,6 +40,7 @@ import { GameAccountsService } from './game-accounts.service';
 import { WowService } from './wow/wow.service';
 import { GAMES_ACTIONS } from './games.server-actions';
 import { SteamKeyService } from './steam/steam-key.service';
+import { XboxService } from './xbox/xbox.service';
 
 @Controller('games')
 export class GamesController {
@@ -48,6 +51,7 @@ export class GamesController {
     private readonly dota: DotaOverviewService,
     private readonly openDotaKeys: OpenDotaKeyService,
     private readonly steamKeys: SteamKeyService,
+    private readonly xbox: XboxService,
   ) {}
 
   @Get('accounts')
@@ -104,6 +108,7 @@ export class GamesController {
   async settings(@CurrentUser() user: AuthUser): Promise<GamesSettings> {
     return {
       steamKey: await this.steamKeys.has(user.id),
+      xboxKey: await this.xbox.hasKey(user.id),
       wowCredentials: await this.wow.hasCredentials(user.id),
       openDotaKeyAccounts: await this.openDotaKeys.accountsWithKey(
         user.id,
@@ -152,6 +157,22 @@ export class GamesController {
   @HttpCode(204)
   removeSteamKey(@CurrentUser() user: AuthUser) {
     return this.steamKeys.remove(user.id);
+  }
+
+  /** Checks the OpenXBL key against Xbox and saves it; the account is then added on the page. */
+  @Put('xbox/key')
+  @HttpCode(204)
+  saveXboxKey(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(openXblKeyInputSchema)) input: OpenXblKeyInput,
+  ) {
+    return this.xbox.saveKey(user.id, input.apiKey);
+  }
+
+  @Delete('xbox/key')
+  @HttpCode(204)
+  removeXboxKey(@CurrentUser() user: AuthUser) {
+    return this.xbox.removeKey(user.id);
   }
 
   /** Checks the OpenDota API key of a Dota account, saves it and refreshes the account with it. */

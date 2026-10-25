@@ -1,0 +1,1 @@
+ALTER TYPE "public"."games_game" ADD VALUE 'xbox';
