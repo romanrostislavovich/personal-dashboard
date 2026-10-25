@@ -4,6 +4,8 @@ import { XboxGame } from '@pd/contracts';
 /** OpenXBL's API (its OpenAPI spec: https://api.xbl.io/docs/json); the old xbl.io/api/v2 takes no new keys. */
 const API = 'https://api.xbl.io/v2';
 const TIMEOUT_MS = 20_000;
+/** The locale Xbox is asked in, by the user's language. */
+const ACCEPT_LANGUAGES: Record<string, string> = { en: 'en-US', ru: 'ru-RU' };
 /** The games kept: the last played first. */
 const MAX_GAMES = 100;
 
@@ -50,8 +52,15 @@ export function shapeOf(raw: unknown, depth = 0): string {
     .join(',')}}`;
 }
 
-/** OpenXBL wraps every answer: `{ "content": {…}, "code": 200 }`; an older one did not. */
+/**
+ * OpenXBL wraps every answer: `{ "content": {…}, "code": 200 }`; an older one did not. Xbox's own
+ * refusal comes as a string in `content`, still with 200 — it is an error, not "no games".
+ */
 function unwrap(raw: unknown): unknown {
+  if (isObject(raw) && (typeof raw['content'] === 'string' || Array.isArray(raw['content']))) {
+    const said = typeof raw['content'] === 'string' ? raw['content'] : raw['content'].join(' ');
+    throw new Error(`Xbox answered: ${said.replace(/[[\]"]/g, '').slice(0, 200)}`);
+  }
   return isObject(raw) && isObject(raw['content']) ? raw['content'] : raw;
 }
 
@@ -137,7 +146,11 @@ export function parseTitles(raw: unknown): XboxGame[] {
  * makes two.
  */
 export class OpenXblClient {
-  constructor(private readonly key: string) {}
+  /** `language` — the user's (`ru`, `en`): Xbox refuses the `*` fetch sends by default. */
+  constructor(
+    private readonly key: string,
+    private readonly language = 'en',
+  ) {}
 
   async profile(): Promise<XboxProfile> {
     return parseProfile(await this.get('/account'));
@@ -155,17 +168,21 @@ export class OpenXblClient {
       `/achievements/player/${xuid}`,
       '/achievements',
     ]) {
-      const raw = await this.get(path).catch((error: unknown) => {
+      try {
+        const raw = await this.get(path);
+        const games = parseTitles(raw);
+        if (games.length) {
+          return { games, shapes: [] };
+        }
+        shapes.push(`${path} → ${shapeOf(raw)}`);
+      } catch (error) {
         if (error instanceof OpenXblKeyError || error instanceof OpenXblRateLimitError) {
           throw error;
         }
-        return { failed: String(error).slice(0, 60) };
-      });
-      const games = parseTitles(raw);
-      if (games.length) {
-        return { games, shapes: [] };
+        shapes.push(
+          `${path} → ${error instanceof Error ? error.message : String(error)}`.slice(0, 260),
+        );
       }
-      shapes.push(`${path} → ${shapeOf(raw)}`);
     }
     return { games: [], shapes };
   }
@@ -173,7 +190,14 @@ export class OpenXblClient {
   private async get(path: string): Promise<unknown> {
     const response = await fetchWithTimeout(
       `${API}${path}`,
-      { headers: { 'x-authorization': this.key, accept: 'application/json' } },
+      {
+        headers: {
+          'x-authorization': this.key,
+          accept: 'application/json',
+          // Without it Node's fetch sends `*`, and Xbox's title history answers with an error.
+          'accept-language': ACCEPT_LANGUAGES[this.language] ?? 'en-US',
+        },
+      },
       TIMEOUT_MS,
     );
     if (response.status === 401 || response.status === 403) {
