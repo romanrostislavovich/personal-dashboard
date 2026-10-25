@@ -83,18 +83,42 @@ Every section is a module: hide what you do not use, or [write your own](docs/ar
 
 ## Integrations
 
-- **AI:** DeepSeek · OpenAI · Ollama · any OpenAI-compatible API
-- **Messaging:** Telegram (bot, notifications, voice)
-- **Code:** GitHub · GitLab · Bitbucket · npm · WakaTime
-- **Music:** Last.fm · Spotify · SoundCloud
-- **Games:** Steam · Dota 2 (OpenDota) · World of Warcraft (Battle.net, incl. Classic) · Xbox (OpenXBL)<br>
+- **AI:**<br>
+  ![DeepSeek](https://img.shields.io/badge/DeepSeek-4D6BFE?logo=deepseek&logoColor=white)
+  ![OpenAI](https://img.shields.io/badge/OpenAI-412991)
+  ![Ollama](https://img.shields.io/badge/Ollama-000000?logo=ollama&logoColor=white)
+  ![OpenAI-compatible API](https://img.shields.io/badge/OpenAI--compatible%20API-6E6E6E)
+- **Messaging:**<br>
+  ![Telegram](https://img.shields.io/badge/Telegram-26A5E4?logo=telegram&logoColor=white)
+  ![Firebase push](https://img.shields.io/badge/Firebase%20push-DD2C00?logo=firebase&logoColor=white)
+- **Code:**<br>
+  ![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white)
+  ![GitLab](https://img.shields.io/badge/GitLab-FC6D26?logo=gitlab&logoColor=white)
+  ![Bitbucket](https://img.shields.io/badge/Bitbucket-0052CC?logo=bitbucket&logoColor=white)
+  ![npm](https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white)
+  ![WakaTime](https://img.shields.io/badge/WakaTime-000000?logo=wakatime&logoColor=white)
+- **Music:**<br>
+  ![Last.fm](https://img.shields.io/badge/Last.fm-D51007?logo=lastdotfm&logoColor=white)
+  ![Spotify](https://img.shields.io/badge/Spotify-1DB954?logo=spotify&logoColor=white)
+  ![SoundCloud](https://img.shields.io/badge/SoundCloud-FF5500?logo=soundcloud&logoColor=white)
+- **Games:**<br>
   ![Steam](https://img.shields.io/badge/Steam-000000?logo=steam&logoColor=white)
   ![Dota 2](https://img.shields.io/badge/Dota%202-BF2E1A?logo=dota2&logoColor=white)
   ![World of Warcraft](https://img.shields.io/badge/World%20of%20Warcraft-148EFF?logo=battledotnet&logoColor=white)
   ![Xbox](https://img.shields.io/badge/Xbox-107C10)
-- **Money:** Enable Banking (open banking) · ECB exchange rates · Hetzner Cloud and DeepSeek costs · bank
-  statements (PDF / Excel / CSV)
-- **Other:** Open-Meteo weather (no key)
+- **Money:**<br>
+  ![Enable Banking](https://img.shields.io/badge/Enable%20Banking-2E7D32)
+  ![ECB rates](https://img.shields.io/badge/ECB%20rates-003299)
+  ![Hetzner Cloud](https://img.shields.io/badge/Hetzner%20Cloud-D50C2D?logo=hetzner&logoColor=white)
+  ![DeepSeek costs](https://img.shields.io/badge/DeepSeek%20costs-4D6BFE?logo=deepseek&logoColor=white)
+  ![Bank statements PDF · Excel · CSV](https://img.shields.io/badge/Bank%20statements%20PDF%20·%20Excel%20·%20CSV-6E6E6E)
+- **Places:**<br>
+  ![OpenStreetMap](https://img.shields.io/badge/OpenStreetMap-7EBC6F?logo=openstreetmap&logoColor=white)
+  ![Google Maps](https://img.shields.io/badge/Google%20Maps-4285F4?logo=googlemaps&logoColor=white)
+  ![Google Places](https://img.shields.io/badge/Google%20Places-4285F4?logo=googlemaps&logoColor=white)
+- **Other:**<br>
+  ![Open-Meteo weather](https://img.shields.io/badge/Open--Meteo%20weather-FF8C00)
+  ![LanguageTool](https://img.shields.io/badge/LanguageTool-45A1FC?logo=languagetool&logoColor=white)
 
 Everything is connected in Settings → Integrations, each with a step-by-step guide —
 see [docs/integrations.md](docs/integrations.md).
