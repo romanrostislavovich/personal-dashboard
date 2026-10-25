@@ -65,4 +65,19 @@ export const activityPlaceNames = pgTable(
   (table) => [index().on(table.userId)],
 );
 
+/**
+ * Where the user is now, as the automations last told it: a named place, or away from all of
+ * them. Kept so that "came to the gym" fires once, not on every batch of fixes or after a restart.
+ */
+export const activityPlacePresence = pgTable('activity_place_presence', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  /** `null` — at none of the named places. */
+  placeId: uuid().references(() => activityPlaces.id, { onDelete: 'set null' }),
+  changedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
 registerEncryptedTables(activityPhoneLocations, activityPlaces, activityPlaceNames);

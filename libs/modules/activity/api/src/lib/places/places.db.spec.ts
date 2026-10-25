@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { Pool } from 'pg';
 import { DevicesService } from '../devices.service';
+import { PlacesAutomations } from './places.automations';
 import { PlacesService } from './places.service';
 
 /** Runs against the generated migrations, like devices.db.spec.ts. */
@@ -115,5 +116,34 @@ describe.skipIf(!ADMIN_URL)("the phone's places", { timeout: 60_000 }, () => {
       .find((one) => one.day === '2026-10-22')
       ?.entries.filter((entry) => entry.kind === 'stay');
     expect(stays).toHaveLength(1);
+  });
+
+  it('tells "came to" and "left" a named place once each', async () => {
+    const phone = await devices.register(userId, { name: 'Redmi 3', platform: 'android' });
+    const device = await devices.authenticate(`Device ${phone.token}`);
+    const gym = await places.addPlace(userId, { name: 'Gym', radiusM: 150, ...WORK });
+    const emitted: string[] = [];
+    const automations = {
+      registerTrigger: () => undefined,
+      emit: async (_user: string, trigger: string, vars: Record<string, string>) =>
+        void emitted.push(`${trigger} ${vars['place']}`),
+    };
+    const rules = new PlacesAutomations(db as never, automations as never, places);
+    const now = Date.now();
+    const fix = (minutesAgo: number, point: typeof HOME) => ({
+      at: new Date(now - minutesAgo * 60_000).toISOString(),
+      ...point,
+      accuracy: 20,
+    });
+    await places.ingest(device, [fix(40, WORK), fix(30, WORK), fix(20, WORK), fix(12, WORK)]);
+    await rules.check(userId);
+    await rules.check(userId);
+    expect(emitted).toEqual(['activity.place.arrive Gym']);
+
+    // Gone: the newest fixes are far away.
+    await places.ingest(device, [fix(4, HOME), fix(3, HOME)]);
+    await rules.check(userId);
+    expect(emitted).toEqual(['activity.place.arrive Gym', 'activity.place.leave Gym']);
+    await places.removePlace(userId, gym.id);
   });
 });

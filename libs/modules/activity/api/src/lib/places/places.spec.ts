@@ -1,5 +1,5 @@
 import { frequentPlaces, namedAt } from './frequent';
-import { clip, distanceM, entriesOf, Fix } from './stays';
+import { clip, distanceM, entriesOf, Fix, stayNow } from './stays';
 
 const MIN = 60_000;
 const HOME = { latitude: 52.2297, longitude: 21.0122 };
@@ -77,6 +77,15 @@ describe('the places of a day', () => {
     expect(trip.start).toBeLessThanOrEqual(62 * MIN);
     expect(trip.end).toBeGreaterThanOrEqual(68 * MIN);
     expect(trip.kind === 'trip' && trip.path.length).toBeGreaterThan(15);
+  });
+
+  it('tells the stay going on now, and none once the phone has left', () => {
+    const atHome = every15(0, 30, HOME);
+    expect(stayNow(atHome)).toMatchObject({ start: 0, end: 30 * MIN });
+    // Ten minutes after: a fix far away — on the way.
+    expect(stayNow([...atHome, at(40, WORK)])).toBeNull();
+    // Five minutes there is not a stay yet.
+    expect(stayNow([at(0, HOME), at(5, HOME)])).toBeNull();
   });
 
   it('a stay over midnight counts on the day by its part', () => {

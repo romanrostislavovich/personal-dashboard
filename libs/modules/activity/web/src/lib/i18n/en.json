@@ -414,6 +414,9 @@
     "focusSessions": "{{count}} sessions"
   },
   "automations": {
+    "arrive": "Came to a place",
+    "leave": "Left a place",
+    "place": "Place (its name in Activity → Places; empty — any)",
     "limit": "A daily limit is reached"
   },
   "links": {

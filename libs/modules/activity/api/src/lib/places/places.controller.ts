@@ -34,6 +34,7 @@ import {
 } from '@pd/contracts';
 import { DevicesService } from '../devices.service';
 import { PlaceNamesService } from './place-names.service';
+import { PlacesAutomations } from './places.automations';
 import { PlacesService } from './places.service';
 
 /**
@@ -46,6 +47,7 @@ export class PlacesController {
     private readonly devices: DevicesService,
     private readonly places: PlacesService,
     private readonly names: PlaceNamesService,
+    private readonly automations: PlacesAutomations,
   ) {}
 
   @Public()
@@ -55,7 +57,10 @@ export class PlacesController {
     @Body(new ZodValidationPipe(phoneLocationIngestSchema)) body: PhoneLocationIngest,
   ): Promise<{ saved: number }> {
     const device = await this.devices.authenticate(authorization);
-    return { saved: await this.places.ingest(device, body.locations) };
+    const saved = await this.places.ingest(device, body.locations);
+    // Came to a place, left it: in the background, the phone need not wait for the rules.
+    void this.automations.check(device.userId);
+    return { saved };
   }
 
   @Get('places')

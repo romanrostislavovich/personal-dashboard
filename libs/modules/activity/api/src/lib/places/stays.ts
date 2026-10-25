@@ -176,3 +176,20 @@ export function modeOf(meters: number, ms: number): TripMode {
   const kmh = ms > 0 ? meters / 1000 / (ms / 3_600_000) : 0;
   return kmh < WALK_KMH ? 'walk' : kmh < BIKE_KMH ? 'bike' : 'ride';
 }
+
+/** A stay whose last fix is this close to the latest one is going on now. */
+const NOW_MS = 3 * 60_000;
+
+/**
+ * The stay going on at the last fix, if any: the phone stood there for ten minutes or more and
+ * has not left since. `null` — on the way, or not there long enough yet.
+ */
+export function stayNow(fixes: Fix[]): Stay | null {
+  if (!fixes.length) {
+    return null;
+  }
+  const last = Math.max(...fixes.map((fix) => fix.at));
+  const entries = entriesOf(fixes);
+  const stay = entries[entries.length - 1];
+  return stay?.kind === 'stay' && last - stay.end <= NOW_MS ? stay : null;
+}

@@ -252,6 +252,11 @@ export class PlacesService {
     };
   }
 
+  /** Every fix between two moments (ms), oldest first. */
+  fixesBetween(userId: string, from: number, to: number): Promise<Fix[]> {
+    return this.fixes(userId, from, to, 0);
+  }
+
   /** `step` — seconds: the first fix of each such stretch only; `0` — every fix. */
   private async fixes(userId: string, from: number, to: number, step: number): Promise<Fix[]> {
     const l = activityPhoneLocations;

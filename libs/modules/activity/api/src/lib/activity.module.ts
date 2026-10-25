@@ -19,6 +19,7 @@ import { PhoneUsageLinks } from './phone/phone-usage.links';
 import { PhoneUsageService } from './phone/phone-usage.service';
 import { PlacesController } from './places/places.controller';
 import { PlaceNamesService } from './places/place-names.service';
+import { PlacesAutomations } from './places/places.automations';
 import { PlacesIntegrations } from './places/places.integrations';
 import { PlacesLinks } from './places/places.links';
 import { PlacesService } from './places/places.service';
@@ -65,6 +66,7 @@ import { TelemetrySummaryService } from './telemetry-summary.service';
     PlacesLinks,
     PlaceNamesService,
     PlacesIntegrations,
+    PlacesAutomations,
     PhoneUsageLinks,
     PhoneUsageService,
     PlacesService,
