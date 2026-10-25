@@ -1,7 +1,7 @@
 # Proposal: Links v2 — from "what goes together" to "what it means for me"
 
 Status: proposal (2026-10-25), nothing built yet. The owner's ideas and the assistant's, in one
-plan; the open questions are at the end. Health diagnoses of the owner never go into this file.
+plan; the owner's decisions are at the end. Health diagnoses of the owner never go into this file.
 
 ## What there is now (v1)
 
@@ -66,6 +66,14 @@ App categories need care: "YouTube" can be a lecture or Shorts. The phone gives 
 browser extension gives the site; a user override per app/site (exists for the desktop) is the
 answer, plus a third category "it depends" that is not counted either way.
 
+**Learned draining score** (the owner wants the number to find it by itself): for each app, what
+the hour after it looks like against the user's same hours without it — focus and deep work in
+the next hour, the number of unlocks, coding minutes — and, by day, its time against the mood and
+tasks done. An app that keeps being followed by worse hours is "draining for you", one followed by
+better ones "nourishing"; shown with how sure it is, never decided on a handful of days. The
+starting list until there are enough days: **Instagram and TikTok** draining (the owner's), IDEs,
+terminals, docs nourishing.
+
 ## 2. Hours, not only days
 
 v1 lives on days; many questions are about hours ("notifications break the flow"). v2 adds:
@@ -94,9 +102,8 @@ v1 lives on days; many questions are about hours ("notifications break the flow"
   number's level changed, found by a simple two-segment test, and what else changed around then.
 - **Your hypotheses** (the owner's), each as a ready "question" card that the engine answers with
   the data there is, and says "not enough days yet" otherwise:
-  - restless phone days, late social apps, low energy → **impulse spending** (the number and the
-    average size of online/small unplanned purchases; "unplanned" needs a definition — see the
-    questions);
+  - restless phone days, late social apps, low energy → **impulse spending** — postponed: there
+    is no sound way to tell an impulse purchase yet (the owner's decision);
   - notifications in coding hours → **the first commit's hour, coding minutes, deep work**;
   - **time away from home** (café, coworking, trips) → tasks done, mood;
   - **music** (artists, genres from Last.fm tags) → deep work blocks that follow it;
@@ -111,7 +118,8 @@ user's held-out recent days** (as the mood forecast does now). Each says what dr
 - **Overload early warning** (the owner's "burnout forecast" — named "overload" on purpose: it is
   not a diagnosis): a score from the last 3–5 days against the baseline — night phone up, sleep
   down (stage 3), short messenger bursts up, deep work and commits down, mood down. Above the
-  user's own threshold: one gentle message (Telegram or push) with what drove it and one small
+  user's own threshold: one gentle message (Telegram, push and a desktop notification) with what
+  drove it and one small
   suggestion; at most once in a few days; off in the gentle mode's quiet hours; switchable.
 - **Habit lapse risk** (the owner's idea): the chance a habit is missed tomorrow from tonight's
   numbers (phone after midnight, late games, mood); a gentle evening nudge, not a scolding.
@@ -162,12 +170,13 @@ user's held-out recent days** (as the mood forecast does now). Each says what dr
    the stress index make them much better).
 6. **Experiments** (personal-lab).
 
-## Open questions
+## Decisions (2026-10-25, the owner's)
 
-- Which apps and sites are "draining" for you and which "nourishing" — start from defaults and let
-  you correct, or you list them first?
-- "Impulse spending": online shops only, purchases under some amount, anything not in a budget
-  category you plan, or you mark them?
-- The overload warning: Telegram, push, or only on the page? How often at most?
-- Insight cards worded by the AI (DeepSeek now) — fine to send it the aggregates (numbers, names of
-  apps and categories, no texts, no places)?
+- **Draining apps:** Instagram and TikTok to start with; in the end the number should find them by
+  itself — see "Learned draining score" in section 1.
+- **Impulse spending:** not now — there is no sound way to tell an impulse purchase yet; the
+  hypothesis waits.
+- **The overload warning:** Telegram, push and the desktop app's own notifications (desktop
+  notifications are built right after Xbox, see the roadmap).
+- **The AI** may get the aggregates for the insight cards (numbers, names of apps and categories;
+  still no texts and no places).
