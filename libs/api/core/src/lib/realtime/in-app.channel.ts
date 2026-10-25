@@ -18,9 +18,15 @@ export class InAppChannel implements NotificationChannel {
     return this.realtime.isConnected(user.id);
   }
 
-  async send(user: UserRow, { title, body, source }: Notification): Promise<void> {
+  async send(user: UserRow, { title, body, source, desktop }: Notification): Promise<void> {
     if (source !== 'achievements') {
-      this.realtime.emit(user.id, { type: 'notification', title, body, source });
+      this.realtime.emit(user.id, {
+        type: 'notification',
+        title,
+        body,
+        source,
+        system: desktop ?? true,
+      });
     }
   }
 }

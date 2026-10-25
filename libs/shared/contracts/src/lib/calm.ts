@@ -18,8 +18,8 @@ export interface CalmSettings {
   muted?: Record<string, MutableChannel[]>;
 }
 
-/** The channels a section can be kept off: the ones that reach the user away from the screen. */
-export const MUTABLE_CHANNELS = ['telegram', 'push'] as const;
+/** The channels a section can be kept off: the ones that reach the user beyond the open page. */
+export const MUTABLE_CHANNELS = ['telegram', 'push', 'desktop'] as const;
 export type MutableChannel = (typeof MUTABLE_CHANNELS)[number];
 
 /** Whether a section's notifications skip a channel. */
