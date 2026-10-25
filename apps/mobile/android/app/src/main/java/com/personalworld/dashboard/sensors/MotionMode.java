@@ -26,6 +26,19 @@ public final class MotionMode {
         return moving;
     }
 
+    /**
+     * The phone's motion sensor says it started moving: on the move now, before any fix tells it
+     * (a fix far away comes late with the screen off). `true` when the mode changed.
+     */
+    public boolean startMoving(long at) {
+        if (moving) {
+            return false;
+        }
+        moving = true;
+        lastMovedAt = at;
+        return true;
+    }
+
     /** Takes a fix; `true` when the mode changed with it. */
     public boolean onFix(double lat, double lon, double accuracy, long at) {
         if (accuracy > USABLE_ACCURACY_M) {

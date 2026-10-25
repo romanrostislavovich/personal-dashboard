@@ -43,4 +43,15 @@ public class MotionModeTest {
         assertFalse(mode.onFix(LAT + 10 * DEG_111_M, LON, 1500, MIN));
         assertFalse(mode.moving());
     }
+
+    @Test
+    public void theMotionSensorStartsTheMoveAndStayingStillEndsIt() {
+        MotionMode mode = new MotionMode();
+        mode.onFix(LAT, LON, 30, 0);
+        assertTrue(mode.startMoving(MIN));
+        assertFalse(mode.startMoving(2 * MIN));
+        // It went nowhere after all: five minutes later, still.
+        assertTrue(mode.onFix(LAT, LON, 10, 7 * MIN));
+        assertFalse(mode.moving());
+    }
 }
