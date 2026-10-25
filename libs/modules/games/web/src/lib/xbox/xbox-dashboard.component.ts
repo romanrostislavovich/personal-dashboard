@@ -91,6 +91,10 @@ interface Profile {
             </div>
           </div>
 
+          @if (s.noGames; as shapes) {
+            <p class="muted">{{ 'games.xbox.noGames' | transloco }}</p>
+            <p class="muted small">{{ shapes.join(' · ') }}</p>
+          }
           <div class="table-wrap">
             <table>
               <thead>

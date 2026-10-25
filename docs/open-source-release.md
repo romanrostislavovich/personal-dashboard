@@ -148,6 +148,7 @@ Once public, anyone can read the code looking for a way in to every self-hosted 
 
 ## 8. After
 
-- [ ] Tell people: r/selfhosted, "Show HN", the awesome-selfhosted list (needs a demo or
-      screenshots and a working Docker setup)
+- [ ] Tell people (marketing): Reddit — r/selfhosted, r/opensource, r/HomeServer; a post on
+      dev.to; "Show HN"; the awesome-selfhosted list (needs a demo or screenshots and a working
+      Docker setup)
 - [ ] Watch the first issues and the security workflow for a week

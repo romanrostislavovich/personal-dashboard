@@ -66,6 +66,19 @@ describe('ApiClient', () => {
     expect(session.token).toBeNull();
   });
 
+  it('a server that is restarting (502) does not end the session', async () => {
+    const { session, storage, api } = await setup(
+      json({ message: 'Unauthorized' }, 401),
+      new Response('Bad Gateway', { status: 502 }),
+    );
+
+    const error = await api.get('/api/auth/me').catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(502);
+    expect(session.token).toBe('access-1');
+    expect(storage.values.get('pd.refreshToken')).toBe('refresh-1');
+  });
+
   it('a 401 on sign-in is a wrong password, not an expired token', async () => {
     const { fetch, session, api } = await setup(
       json({ message: 'Invalid email or password' }, 401),

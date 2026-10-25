@@ -216,9 +216,15 @@ export class ApiClient {
       { body: refreshToken ? { refreshToken } : {} },
       'application/json',
     );
-    if (!response.ok) {
+    if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+      // The server refused the token: the session is over.
       await this.session.end();
       return null;
+    }
+    if (!response.ok) {
+      // The server is restarting (a deploy: 502/503 from the proxy) or asks to slow down: as
+      // good as no answer — the session stays and is tried again, nobody is signed out for it.
+      throw new ApiError(response.status, await readBody(response).catch(() => null));
     }
     const result = (await readBody(response)) as LoginResponse;
     await this.session.start(result.accessToken, result.refreshToken);

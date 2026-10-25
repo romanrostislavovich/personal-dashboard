@@ -9,6 +9,8 @@ const KEY_SECRET = 'games.openxbl-key';
 /** What is kept of an Xbox account between syncs (`games_accounts.profile`). */
 export interface XboxStored extends XboxProfile {
   games: XboxGame[];
+  /** No games came: what each way of asking answered (shapes only), shown on the page. */
+  noGames?: string[];
 }
 
 /**
@@ -55,7 +57,8 @@ export class XboxService {
       // A key of another Xbox account was saved since: this account cannot be read with it.
       throw new Error('The OpenXBL key is of another Xbox account');
     }
-    return { ...profile, games: await client.games() };
+    const { games, shapes } = await client.games(profile.xuid);
+    return { ...profile, games, ...(shapes.length ? { noGames: shapes } : {}) };
   }
 
   summary(account: GameAccountRow): XboxSummary | null {
@@ -78,6 +81,7 @@ export class XboxService {
         ),
       },
       games: stored.games,
+      noGames: stored.noGames ?? null,
     };
   }
 
