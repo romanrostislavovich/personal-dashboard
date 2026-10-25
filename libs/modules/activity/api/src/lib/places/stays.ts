@@ -1,3 +1,5 @@
+import { TripMode } from '@pd/contracts';
+
 /** A fix of the phone's location; `at` in milliseconds. */
 export interface Fix {
   at: number;
@@ -18,10 +20,14 @@ export interface Stay extends Point {
 }
 
 /** From one stay to the next, along the fixes taken on the way. */
+
 export interface Trip {
   start: number;
   end: number;
   meters: number;
+  mode: TripMode;
+  /** The way, from the stay before to the stay after: the line on the map. */
+  path: Point[];
 }
 
 export type Entry = ({ kind: 'stay' } & Stay) | ({ kind: 'trip' } & Trip);
@@ -31,8 +37,26 @@ export const PLACE_RADIUS_M = 200;
 /** A fix less sure than this (a cell tower far away) tells nothing about the place. */
 const MAX_ACCURACY_M = 500;
 /**
- * Shorter is passing by. The phone tells where it is every 15 minutes, so a stay is at least
- * two fixes in a row at one place.
+ * How far from a place's middle a fix may be and still be there: as far as the fix is unsure,
+ * between these. A GPS fix 60 m off is on its way (a short walk is a trip, not part of a stay);
+ * a cell fix 150 m off is still at home.
+ */
+const REACH_MIN_M = 50;
+const REACH_PER_ACCURACY = 1.5;
+
+function reachOf(fix: Fix): number {
+  return Math.min(PLACE_RADIUS_M, Math.max(REACH_MIN_M, fix.accuracy * REACH_PER_ACCURACY));
+}
+
+/** On the move the phone takes GPS fixes this sure: the way goes by them, not the rough ones. */
+const PRECISE_M = 50;
+/** km/h: slower is on foot, then a bike, faster is riding. */
+const WALK_KMH = 7;
+const BIKE_KMH = 25;
+
+/**
+ * Shorter is passing by. Ten minutes in one place is a stay whether the phone told it every
+ * minute or every quarter of an hour (two fixes in a row).
  */
 const MIN_STAY_MS = 10 * 60_000;
 
@@ -72,7 +96,7 @@ export function entriesOf(input: Fix[]): Entry[] {
   const groups: { fixes: Fix[]; middle: Point }[] = [];
   for (const fix of fixes) {
     const last = groups[groups.length - 1];
-    if (last && distanceM(last.middle, fix) <= PLACE_RADIUS_M) {
+    if (last && distanceM(last.middle, fix) <= reachOf(fix)) {
       last.fixes.push(fix);
       last.middle = middle(last.fixes);
     } else {
@@ -105,12 +129,24 @@ export function entriesOf(input: Fix[]): Entry[] {
   stays.forEach((stay, i) => {
     if (i > 0) {
       const from = stays[i - 1];
-      const path: Point[] = [from, ...onTheWay[i], stay];
+      const way = onTheWay[i];
+      const precise = way.filter((fix) => fix.accuracy <= PRECISE_M);
+      const path: Point[] = [from, ...(precise.length ? precise : way), stay].map((point) => ({
+        latitude: point.latitude,
+        longitude: point.longitude,
+      }));
       let meters = 0;
       for (let j = 1; j < path.length; j++) {
         meters += distanceM(path[j - 1], path[j]);
       }
-      entries.push({ kind: 'trip', start: from.end, end: stay.start, meters: Math.round(meters) });
+      entries.push({
+        kind: 'trip',
+        start: from.end,
+        end: stay.start,
+        meters: Math.round(meters),
+        mode: modeOf(meters, stay.start - from.end),
+        path,
+      });
     }
     entries.push({
       kind: 'stay',
@@ -133,4 +169,27 @@ export function clip(entries: Entry[], from: number, to: number): Entry[] {
       end: Math.min(entry.end, to),
     }))
     .filter((entry) => entry.kind === 'trip' || entry.end > entry.start);
+}
+
+/** By the average speed; a trip of no time (fixes a moment apart) is on foot. */
+export function modeOf(meters: number, ms: number): TripMode {
+  const kmh = ms > 0 ? meters / 1000 / (ms / 3_600_000) : 0;
+  return kmh < WALK_KMH ? 'walk' : kmh < BIKE_KMH ? 'bike' : 'ride';
+}
+
+/** A stay whose last fix is this close to the latest one is going on now. */
+const NOW_MS = 3 * 60_000;
+
+/**
+ * The stay going on at the last fix, if any: the phone stood there for ten minutes or more and
+ * has not left since. `null` — on the way, or not there long enough yet.
+ */
+export function stayNow(fixes: Fix[]): Stay | null {
+  if (!fixes.length) {
+    return null;
+  }
+  const last = Math.max(...fixes.map((fix) => fix.at));
+  const entries = entriesOf(fixes);
+  const stay = entries[entries.length - 1];
+  return stay?.kind === 'stay' && last - stay.end <= NOW_MS ? stay : null;
 }

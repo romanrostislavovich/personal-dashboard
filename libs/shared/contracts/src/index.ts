@@ -65,3 +65,4 @@ export * from './lib/writing-text';
 export * from './lib/screenshots';
 export * from './lib/access-tokens';
 export * from './lib/device-tools';
+export * from './lib/google-timeline';

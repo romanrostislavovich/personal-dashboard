@@ -11,5 +11,6 @@
     <!-- The places of a day, recorded every minute (sensors/PlacesService) -->
     <string name="places_channel">Places</string>
     <string name="places_title">Recording the places of the day</string>
-    <string name="places_text">Wi-Fi and cell towers every minute, no GPS. Switched off in Settings → Devices.</string>
+    <string name="places_text">Every minute; on the move GPS every 5 seconds. Switched off in Settings → Devices.</string>
+    <string name="places_moving">Recording the route</string>
 </resources>

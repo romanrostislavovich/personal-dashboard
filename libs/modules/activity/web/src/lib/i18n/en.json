@@ -414,6 +414,9 @@
     "focusSessions": "{{count}} sessions"
   },
   "automations": {
+    "arrive": "Came to a place",
+    "leave": "Left a place",
+    "place": "Place (its name in Activity → Places; empty — any)",
     "limit": "A daily limit is reached"
   },
   "links": {
@@ -425,6 +428,10 @@
     "lastUse": "Last at a screen",
     "lateGames": "In games late at night (23–4)",
     "browser": "In the browser",
+    "walk": "On foot",
+    "onTheWay": "On the way",
+    "home": "At home",
+    "newPlaces": "New places",
     "unlocks": "Phone unlocks",
     "phoneNight": "On the phone late at night (23–4)",
     "km": "Km on the move",
@@ -520,7 +527,22 @@
     "none": "The phone told nothing about this day. Allow the location in the Android app: Settings → Devices → The phone as a sensor.",
     "few": "Too few points to tell the places of this day.",
     "unnamed": "A place without a name",
-    "trip": "On the move, {{km}} km",
+    "modes": {
+      "walk": "On foot, {{km}} km",
+      "bike": "By bike, {{km}} km",
+      "ride": "Riding, {{km}} km"
+    },
+    "import": {
+      "title": "The Google Maps timeline",
+      "hint": "Import your past places from Google: Takeout (Location History — Records.json or Semantic Location History) or Maps on the phone → Settings → Location → Export Timeline data (Timeline.json). The file is read here; only the points go to your server.",
+      "pick": "Pick the files",
+      "done": "Imported {{saved}} new points of {{read}}; places named by Google: {{names}}.",
+      "failed": "Nothing to import: this is not a Google Maps timeline file."
+    },
+    "mapKind": "Map",
+    "google": "Look up on Google",
+    "googleNone": "Google knows no place here",
+    "googleFailed": "Google did not answer: check the Places key in Settings → Integrations",
     "name": "Name it",
     "namePrompt": "The name of the place (Home, Work…)",
     "rename": "Rename",
@@ -536,5 +558,21 @@
     "night": "at night",
     "byDay": "Unlocks by day",
     "nightHint": "At night — in apps of the phone from 23:00 to 4:00; the night counts to the evening it began on."
+  },
+  "google": {
+    "subtitle": "Optional: without them OpenStreetMap names the places and draws the map",
+    "placesKey": "Google Places key (stays on the server)",
+    "mapsKey": "Google Maps key (for the map, seen by the browser)",
+    "placesSaved": "Google Places is connected: a place has \"Look up on Google\"",
+    "mapsSaved": "Google Maps is connected: Activity → Places can switch the map",
+    "remove": "Remove",
+    "invalid": "Google did not take the key",
+    "guide": {
+      "1": "Open Google Cloud Console and make a project (or pick one); a billing account is needed, the free monthly credit covers personal use.",
+      "2": "APIs & Services → Library: enable \"Places API (New)\" and \"Maps JavaScript API\".",
+      "3": "Credentials → Create credentials → API key, twice: one for Places, one for Maps.",
+      "4": "Restrict the Maps key: Application restrictions → Websites → your dashboard's address and https://localhost/* (the Android app). Restrict the Places key to the Places API.",
+      "5": "Paste each key here and save: the Places key is checked against Google."
+    }
   }
 }

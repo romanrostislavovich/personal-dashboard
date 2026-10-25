@@ -155,6 +155,37 @@ Settings → Notifications holds Telegram, push, the gentle mode and the deliver
 stays in Account → Profile. Settings → Integrations lists every service the dashboard can
 connect, the ones not connected greyed (`off`).
 
+## Stage 2d — a timeline of places (built 2026-10-25, the owner's choices)
+
+Like Google Maps' timeline: a day as the places it was spent at, with names, and the routes
+between them on a map.
+
+- **Two modes of recording** (`PlacesService`): still — Wi-Fi and cell towers every minute; once a
+  fix is ~150 m from where the phone stood, GPS every 5 seconds (like Strava, ~5–8% of the
+  battery an hour of walking); back to still after 5 minutes within ~50 m.
+- **Names of places:** a stay of 10 minutes or more is looked up once on OpenStreetMap
+  (Nominatim reverse + nearby points of interest: the café, the gym, else the address) and kept;
+  a place met again is not looked up again; the user's own name wins. A button "look up on
+  Google" for a stay OpenStreetMap named wrong — needs a Google Places key (server key, kept on
+  the server). Only the stays' points leave the server, never the routes.
+- **The map** in Activity → Places: OpenStreetMap through Leaflet by default (no key; the tiles
+  tell OSM which area is looked at); Google Maps as a switch once a browser key (restricted to
+  the dashboard's addresses) is set. The day's route as a line, the stays as marks with their
+  names and times, and every place of a period.
+- **How one moved:** walking, cycling or riding, by the speed of a trip; time on foot and outdoors.
+- **To Links and Life:** new places a week, hours at home, time on the way, places ↔ mood/sleep.
+- **Automations by places:** came to / left a place (the gym → mark the habit; left work → a
+  reminder).
+- **Google Takeout import:** the old timeline of Google Maps (places and routes of past years).
+
+All of it is built (2026-10-25): `MotionMode` + `PlacesService` (apps/mobile), `places/` in the
+activity module (`stays.ts`, `frequent.ts`, `day-numbers.ts`, `place-names.service.ts` with
+`place-lookup.clients.ts`, `places.automations.ts`), `google-timeline.ts` in contracts (the
+Takeout parser, run in the browser), and Activity → Places with `places-map.component.ts`.
+Home is the place of most nights (3 am) in the 60 days before. Checked on a throwaway server with
+public points of central Warsaw; the GPS mode on a real walk, Google's keys and a real Takeout
+file are not checked yet.
+
 ## Stage 3 — health and stress
 
 - From Health Connect: steps, calories, heart rate, sleep and its stages, heart rate variability

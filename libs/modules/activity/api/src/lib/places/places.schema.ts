@@ -42,4 +42,42 @@ export const activityPlaces = pgTable('activity_places', {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-registerEncryptedTables(activityPhoneLocations, activityPlaces);
+/**
+ * What a map service called the place of a stay (the café, the gym, else the address): looked up
+ * once and kept, so a place met again is named without asking. The point and the name are
+ * encrypted — an address is as private as the fixes.
+ */
+export const activityPlaceNames = pgTable(
+  'activity_place_names',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    point: encryptedText().notNull(),
+    name: encryptedText().notNull(),
+    /** `cafe`, `supermarket`, `gym`…; `null` — an address. */
+    kind: text(),
+    /** `osm` or `google`. */
+    source: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId)],
+);
+
+/**
+ * Where the user is now, as the automations last told it: a named place, or away from all of
+ * them. Kept so that "came to the gym" fires once, not on every batch of fixes or after a restart.
+ */
+export const activityPlacePresence = pgTable('activity_place_presence', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  /** `null` — at none of the named places. */
+  placeId: uuid().references(() => activityPlaces.id, { onDelete: 'set null' }),
+  changedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+registerEncryptedTables(activityPhoneLocations, activityPlaces, activityPlaceNames);

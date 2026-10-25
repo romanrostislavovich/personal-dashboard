@@ -3,6 +3,7 @@ import { DB, Database, UsersService } from '@pd/api-core';
 import {
   ActivityPeriod,
   addDays,
+  FoundPlaceName,
   LocalDate,
   NamedPlace,
   parseLocalDate,
@@ -14,15 +15,24 @@ import {
   zonedToUtc,
 } from '@pd/contracts';
 import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
-import { ActivityDeviceRow } from '../activity.schema';
+import { activityDevices, ActivityDeviceRow } from '../activity.schema';
+import { DevicesService } from '../devices.service';
 import { frequentPlaces, Named, namedAt } from './frequent';
 import { activityPhoneLocations, activityPlaces } from './places.schema';
-import { clip, Entry, entriesOf, Fix } from './stays';
+import { PlaceDayNumbers, placeDayNumbers } from './day-numbers';
+import { PlaceNamesService } from './place-names.service';
+import { clip, Entry, entriesOf, Fix, Point } from './stays';
 
 const INSERT_CHUNK = 200;
 /** The frequent places are the ones of this many days up to the day shown. */
 const FREQUENT_DAYS = 30;
 const FREQUENT_LIMIT = 10;
+/** The device the imported Google Maps timeline is written under. */
+const TIMELINE_DEVICE = 'Google Timeline';
+/** The days read before a period for its numbers (home, new places). */
+const HISTORY_DAYS = 60;
+/** A day the phone told less than this about has no numbers: they would be guesses. */
+export const MIN_DAY_POINTS = 8;
 /** Longer periods read one fix in this many seconds (see `days`). */
 const THIN_AFTER_DAYS = 2;
 const THIN_SECONDS = 300;
@@ -32,9 +42,16 @@ const MARGIN_MS = 6 * 3600_000;
 /** One day in places: the entries, the meters of its trips, the fixes it had. */
 export interface PlacesDay {
   day: LocalDate;
+  /** The local midnight that starts it, ms. */
+  start: number;
   entries: Entry[];
   meters: number;
   points: number;
+}
+
+/** Six digits: ten centimetres, more than any phone knows. */
+function round(degrees: number): number {
+  return Math.round(degrees * 1e6) / 1e6;
 }
 
 function pointOf(text: string): { latitude: number; longitude: number } {
@@ -56,6 +73,8 @@ export class PlacesService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly users: UsersService,
+    private readonly names: PlaceNamesService,
+    private readonly devices: DevicesService,
   ) {}
 
   async ingest(device: ActivityDeviceRow, items: PhoneLocationInput[]): Promise<number> {
@@ -78,23 +97,59 @@ export class PlacesService {
     return saved;
   }
 
+  /**
+   * A batch of an imported Google Maps timeline: its fixes go to a device of their own, "Google
+   * Timeline" (made on the first batch), so they never mix with the phone's; a batch sent twice
+   * is written once.
+   */
+  async importTimeline(userId: string, locations: PhoneLocationInput[]): Promise<number> {
+    let [device] = await this.db
+      .select()
+      .from(activityDevices)
+      .where(and(eq(activityDevices.userId, userId), eq(activityDevices.name, TIMELINE_DEVICE)));
+    if (!device) {
+      const created = await this.devices.register(userId, {
+        name: TIMELINE_DEVICE,
+        platform: 'android',
+      });
+      [device] = await this.db
+        .select()
+        .from(activityDevices)
+        .where(eq(activityDevices.id, created.id));
+    }
+    return this.ingest(device, locations);
+  }
+
   async overview(userId: string, day: LocalDate): Promise<PlacesOverview> {
     const zone = await this.zone(userId);
     const from = toLocalDate(addDays(parseLocalDate(day), 1 - FREQUENT_DAYS));
     // The day with every fix, the 30 days thinned: the frequent places need only the stays.
-    const [[today], days, named] = await Promise.all([
+    const [[today], days, named, known] = await Promise.all([
       this.days(userId, { from: day, to: day }, zone),
       this.days(userId, { from, to: day }, zone),
       this.named(userId),
+      this.names.known(userId),
     ]);
     const stays = days.flatMap((item) => item.entries).filter((entry) => entry.kind === 'stay');
+    const frequent = frequentPlaces(stays, named, FREQUENT_LIMIT);
+    // The places with no name of the user's and none found yet: looked up in the background,
+    // so they are named the next time the page is opened.
+    const unnamed = [...today.entries.filter((entry) => entry.kind === 'stay'), ...frequent].filter(
+      (point) => !namedAt(point, named),
+    );
+    void this.names.lookUpMissing(userId, unnamed, known).catch(() => undefined);
+    const foundAt = (point: Point) => {
+      const found = this.names.nameAt(point, known);
+      return found?.name ? found : null;
+    };
     return {
       day,
-      entries: today.entries.map((entry) => this.entry(entry, named)),
+      entries: today.entries.map((entry) => this.entry(entry, named, foundAt)),
       meters: today.meters,
       points: today.points,
-      frequent: frequentPlaces(stays, named, FREQUENT_LIMIT).map((place) => ({
+      frequent: frequent.map((place) => ({
         ...place,
+        found: place.placeId ? null : foundAt(place),
         lastAt: new Date(place.lastAt).toISOString(),
       })),
       named,
@@ -126,11 +181,27 @@ export class PlacesService {
       const ofDay = clip(entries, start, dayEnd);
       return {
         day,
+        start,
         entries: ofDay,
         meters: ofDay.reduce((sum, entry) => sum + (entry.kind === 'trip' ? entry.meters : 0), 0),
         points: fixes.filter((fix) => fix.at >= start && fix.at < dayEnd).length,
       };
     });
+  }
+
+  /**
+   * The numbers of each day of the period for Links: on foot, on the way, at home, new places.
+   * Read with 60 days before it: home is the place of most nights, and a place seen in them is
+   * not new.
+   */
+  async dayNumbers(userId: string, period: ActivityPeriod): Promise<PlaceDayNumbers[]> {
+    const history = toLocalDate(addDays(parseLocalDate(period.from), -HISTORY_DAYS));
+    const [days, named] = await Promise.all([
+      this.days(userId, { from: history, to: period.to }),
+      this.named(userId),
+    ]);
+    const told = new Set(days.filter((day) => day.points >= MIN_DAY_POINTS).map((day) => day.day));
+    return placeDayNumbers(days, named, period.from).filter((day) => told.has(day.day));
   }
 
   async named(userId: string): Promise<NamedPlace[]> {
@@ -178,22 +249,39 @@ export class PlacesService {
       .where(and(eq(activityPlaces.userId, userId), eq(activityPlaces.id, id)));
   }
 
-  private entry(entry: Entry, named: Named[]): PlacesEntry {
+  private entry(
+    entry: Entry,
+    named: Named[],
+    foundAt: (point: Point) => FoundPlaceName | null,
+  ): PlacesEntry {
     const startedAt = new Date(entry.start).toISOString();
     const endedAt = new Date(entry.end).toISOString();
     if (entry.kind === 'trip') {
-      return { kind: 'trip', startedAt, endedAt, meters: entry.meters };
+      return {
+        kind: 'trip',
+        startedAt,
+        endedAt,
+        meters: entry.meters,
+        mode: entry.mode,
+        path: entry.path.map((point) => [round(point.latitude), round(point.longitude)]),
+      };
     }
     const place = namedAt(entry, named);
     return {
       kind: 'stay',
       placeId: place?.id ?? null,
       name: place?.name ?? null,
+      found: place ? null : foundAt(entry),
       latitude: entry.latitude,
       longitude: entry.longitude,
       startedAt,
       endedAt,
     };
+  }
+
+  /** Every fix between two moments (ms), oldest first. */
+  fixesBetween(userId: string, from: number, to: number): Promise<Fix[]> {
+    return this.fixes(userId, from, to, 0);
   }
 
   /** `step` — seconds: the first fix of each such stretch only; `0` — every fix. */

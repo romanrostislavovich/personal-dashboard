@@ -47,6 +47,18 @@ export type PlaceInput = z.infer<typeof placeInputSchema>;
 export const placeUpdateSchema = z.object({ name: z.string().trim().min(1).max(60) });
 export type PlaceUpdate = z.infer<typeof placeUpdateSchema>;
 
+/** What a map service called a place: the café, the gym, else the address. */
+export interface FoundPlaceName {
+  name: string;
+  /** `cafe`, `supermarket`, `gym`…; `null` — an address. */
+  kind: string | null;
+  source: 'osm' | 'google';
+}
+
+/** How a trip went, by its speed. */
+export const TRIP_MODES = ['walk', 'bike', 'ride'] as const;
+export type TripMode = (typeof TRIP_MODES)[number];
+
 /** A part of the day: a time spent in one place, or a trip from one place to the next. */
 export type PlacesEntry =
   | {
@@ -54,6 +66,8 @@ export type PlacesEntry =
       /** The named place it was at; `null` — a place with no name yet. */
       placeId: string | null;
       name: string | null;
+      /** Looked up on a map; `null` — not yet, or nothing there. */
+      found: FoundPlaceName | null;
       latitude: number;
       longitude: number;
       startedAt: string;
@@ -65,12 +79,16 @@ export type PlacesEntry =
       endedAt: string;
       /** Along the points known: a straight line between them, so a little less than the road. */
       meters: number;
+      mode: TripMode;
+      /** `[latitude, longitude]` from the place before to the place after: the line on the map. */
+      path: [number, number][];
     };
 
 /** A place often visited lately (the last 30 days), named or not. */
 export interface FrequentPlace {
   placeId: string | null;
   name: string | null;
+  found: FoundPlaceName | null;
   latitude: number;
   longitude: number;
   seconds: number;
@@ -90,3 +108,30 @@ export interface PlacesOverview {
   frequent: FrequentPlace[];
   named: NamedPlace[];
 }
+
+/** Google, if the user connected it: the Places key stays on the server, the map's goes to it. */
+export interface PlacesSettings {
+  googlePlaces: boolean;
+  /** Restricted by the user to the dashboard's addresses in Google Cloud: it is seen anyway. */
+  googleMapsKey: string | null;
+}
+
+export const googleKeysInputSchema = z.object({
+  placesKey: z.string().trim().min(20).max(200).optional(),
+  mapsKey: z.string().trim().min(20).max(200).optional(),
+});
+export type GoogleKeysInput = z.infer<typeof googleKeysInputSchema>;
+
+/** "Look up on Google" for one stay. */
+export const placeLookupSchema = z.object({ latitude, longitude });
+export type PlaceLookup = z.infer<typeof placeLookupSchema>;
+
+/** A batch of an imported Google Maps timeline (parsed in the browser: see google-timeline.ts). */
+export const placesImportSchema = z.object({
+  locations: z.array(phoneLocationSchema).max(500),
+  names: z
+    .array(z.object({ latitude, longitude, name: z.string().trim().min(1).max(200) }))
+    .max(200)
+    .default([]),
+});
+export type PlacesImport = z.input<typeof placesImportSchema>;

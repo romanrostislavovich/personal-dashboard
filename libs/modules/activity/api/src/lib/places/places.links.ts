@@ -1,10 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LifeService, LinksService } from '@pd/api-core';
-import { DailyMetric, LifeEvent } from '@pd/contracts';
-import { PlacesService } from './places.service';
+import { ActivityPeriod, DailyMetric, LifeEvent } from '@pd/contracts';
+import { PlaceDayNumbers } from './day-numbers';
+import { MIN_DAY_POINTS, PlacesService } from './places.service';
 
-/** A day the phone told less than this about is not counted: the numbers would be guesses. */
-const MIN_POINTS = 8;
+const HOUR = 3600;
+const hours = (seconds: number) => Math.round((seconds / HOUR) * 10) / 10;
 
 /**
  * Places for the other sections: the kilometres on the move and the places of a day to Links
@@ -24,12 +25,14 @@ export class PlacesLinks implements OnModuleInit {
       module: 'activity',
       metrics: async (userId, period): Promise<DailyMetric[]> => {
         const days = (await this.places.days(userId, period)).filter(
-          (day) => day.points >= MIN_POINTS,
+          (day) => day.points >= MIN_DAY_POINTS,
         );
+        const numbers = await this.numbers(userId, period);
         if (!days.length) {
-          return [];
+          return numbers;
         }
         return [
+          ...numbers,
           {
             key: 'activity.places.km',
             module: 'activity',
@@ -57,7 +60,7 @@ export class PlacesLinks implements OnModuleInit {
       day: async (userId, day): Promise<LifeEvent[]> => {
         const [today] = await this.places.days(userId, { from: day, to: day });
         const stays = today.entries.filter((entry) => entry.kind === 'stay').length;
-        if (today.points < MIN_POINTS || !stays) {
+        if (today.points < MIN_DAY_POINTS || !stays) {
           return [];
         }
         return [
@@ -72,5 +75,31 @@ export class PlacesLinks implements OnModuleInit {
         ];
       },
     });
+  }
+
+  /** On foot, on the way, at home, new places: each only on the days the phone told enough. */
+  private async numbers(userId: string, period: ActivityPeriod): Promise<DailyMetric[]> {
+    const days = await this.places.dayNumbers(userId, period);
+    const metric = (
+      key: string,
+      unit: DailyMetric['unit'],
+      value: (day: PlaceDayNumbers) => number | null,
+    ): DailyMetric => ({
+      key: `activity.places.${key}`,
+      module: 'activity',
+      labelKey: `activity.links.${key}`,
+      unit,
+      missing: 'absent',
+      days: days.flatMap((day) => {
+        const number = value(day);
+        return number === null ? [] : [{ day: day.day, value: number }];
+      }),
+    });
+    return [
+      metric('walk', 'hours', (day) => hours(day.walkSeconds)),
+      metric('onTheWay', 'hours', (day) => hours(day.tripSeconds)),
+      metric('home', 'hours', (day) => (day.homeSeconds === null ? null : hours(day.homeSeconds))),
+      metric('newPlaces', 'count', (day) => day.newPlaces),
+    ].filter((one) => one.days.length);
   }
 }
