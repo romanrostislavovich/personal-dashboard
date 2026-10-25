@@ -30,11 +30,14 @@ export function namedAt(point: Point, named: Named[]): Named | null {
 }
 
 /**
- * The places the stays were at, the most time first: a named place takes the stays in its
- * radius; the others gather around the longest stays near them, so a place with no name yet is
- * one place on every day, not a new one each time.
+ * The places the stays were at: a named place takes the stays in its radius; the others gather
+ * around the longest stays near them, so a place with no name yet is one place on every day, not
+ * a new one each time. `placeOf` tells the place of each stay.
  */
-export function frequentPlaces(stays: Stay[], named: Named[], limit: number): Frequent[] {
+export function gatherPlaces(
+  stays: Stay[],
+  named: Named[],
+): { places: Frequent[]; placeOf: Map<Stay, Frequent> } {
   const places: Frequent[] = named.map((place) => ({
     placeId: place.id,
     name: place.name,
@@ -44,6 +47,7 @@ export function frequentPlaces(stays: Stay[], named: Named[], limit: number): Fr
     visits: 0,
     lastAt: 0,
   }));
+  const placeOf = new Map<Stay, Frequent>();
   const longestFirst = [...stays].sort((a, b) => b.end - b.start - (a.end - a.start));
   for (const stay of longestFirst) {
     const seconds = Math.round((stay.end - stay.start) / 1000);
@@ -74,9 +78,14 @@ export function frequentPlaces(stays: Stay[], named: Named[], limit: number): Fr
     place.seconds += seconds;
     place.visits += 1;
     place.lastAt = Math.max(place.lastAt, stay.end);
+    placeOf.set(stay, place);
   }
-  return places
-    .filter((place) => place.visits > 0)
-    .sort((a, b) => b.seconds - a.seconds)
+  return { places: places.filter((place) => place.visits > 0), placeOf };
+}
+
+/** The places the stays were at, the most time first. */
+export function frequentPlaces(stays: Stay[], named: Named[], limit: number): Frequent[] {
+  return gatherPlaces(stays, named)
+    .places.sort((a, b) => b.seconds - a.seconds)
     .slice(0, limit);
 }

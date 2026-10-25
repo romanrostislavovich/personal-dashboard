@@ -18,6 +18,7 @@ import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
 import { ActivityDeviceRow } from '../activity.schema';
 import { frequentPlaces, Named, namedAt } from './frequent';
 import { activityPhoneLocations, activityPlaces } from './places.schema';
+import { PlaceDayNumbers, placeDayNumbers } from './day-numbers';
 import { PlaceNamesService } from './place-names.service';
 import { clip, Entry, entriesOf, Fix, Point } from './stays';
 
@@ -25,6 +26,10 @@ const INSERT_CHUNK = 200;
 /** The frequent places are the ones of this many days up to the day shown. */
 const FREQUENT_DAYS = 30;
 const FREQUENT_LIMIT = 10;
+/** The days read before a period for its numbers (home, new places). */
+const HISTORY_DAYS = 60;
+/** A day the phone told less than this about has no numbers: they would be guesses. */
+export const MIN_DAY_POINTS = 8;
 /** Longer periods read one fix in this many seconds (see `days`). */
 const THIN_AFTER_DAYS = 2;
 const THIN_SECONDS = 300;
@@ -34,6 +39,8 @@ const MARGIN_MS = 6 * 3600_000;
 /** One day in places: the entries, the meters of its trips, the fixes it had. */
 export interface PlacesDay {
   day: LocalDate;
+  /** The local midnight that starts it, ms. */
+  start: number;
   entries: Entry[];
   meters: number;
   points: number;
@@ -147,11 +154,27 @@ export class PlacesService {
       const ofDay = clip(entries, start, dayEnd);
       return {
         day,
+        start,
         entries: ofDay,
         meters: ofDay.reduce((sum, entry) => sum + (entry.kind === 'trip' ? entry.meters : 0), 0),
         points: fixes.filter((fix) => fix.at >= start && fix.at < dayEnd).length,
       };
     });
+  }
+
+  /**
+   * The numbers of each day of the period for Links: on foot, on the way, at home, new places.
+   * Read with 60 days before it: home is the place of most nights, and a place seen in them is
+   * not new.
+   */
+  async dayNumbers(userId: string, period: ActivityPeriod): Promise<PlaceDayNumbers[]> {
+    const history = toLocalDate(addDays(parseLocalDate(period.from), -HISTORY_DAYS));
+    const [days, named] = await Promise.all([
+      this.days(userId, { from: history, to: period.to }),
+      this.named(userId),
+    ]);
+    const told = new Set(days.filter((day) => day.points >= MIN_DAY_POINTS).map((day) => day.day));
+    return placeDayNumbers(days, named, period.from).filter((day) => told.has(day.day));
   }
 
   async named(userId: string): Promise<NamedPlace[]> {
