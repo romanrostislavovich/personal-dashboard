@@ -32,6 +32,8 @@ export interface IntegrationSource {
   name?: string;
   /** How long without a refresh is too long for it (DEFAULT_STALE_HOURS when left out). */
   staleHours?: number;
+  /** The tab of Settings where it is set up, when not Integrations (`notifications`). */
+  settingsTab?: string;
   reports(userId: string): Promise<IntegrationReport[]>;
 }
 
@@ -84,6 +86,7 @@ export class IntegrationsService implements OnModuleInit {
             name: source.name,
             detail: null,
             state: 'off',
+            settingsTab: source.settingsTab ?? null,
             lastSyncedAt: null,
             error: null,
             expiresAt: null,
@@ -95,6 +98,7 @@ export class IntegrationsService implements OnModuleInit {
             module: source.module,
             name: report.name,
             detail: report.detail ?? null,
+            settingsTab: source.settingsTab ?? null,
             state: stateOf(
               report,
               neverStale ? Number.POSITIVE_INFINITY : (source.staleHours ?? DEFAULT_STALE_HOURS),

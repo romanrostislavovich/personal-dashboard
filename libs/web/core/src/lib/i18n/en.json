@@ -676,7 +676,8 @@
       "expiring": "The token expires soon",
       "expired": "The token has expired",
       "off": "Not connected"
-    }
+    },
+    "setUp": "Set up"
   },
   "serverKey": {
     "title": "Server key — only you see it",
