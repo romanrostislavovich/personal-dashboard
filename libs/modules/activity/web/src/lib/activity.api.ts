@@ -26,6 +26,7 @@ import {
   GoogleKeysInput,
   PlaceInput,
   PlaceLookup,
+  PlacesImport,
   PlacesOverview,
   PlacesSettings,
   WorkstateInput,
@@ -122,6 +123,10 @@ export class ActivityApi {
 
   removeGoogleKey(which: 'places' | 'maps') {
     return fromCore(() => this.activity.removeGoogleKey(which));
+  }
+
+  importTimeline(batch: PlacesImport) {
+    return fromCore(() => this.activity.importTimeline(batch));
   }
 
   lookUpOnGoogle(point: PlaceLookup) {

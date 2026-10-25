@@ -20,6 +20,7 @@ import {
 import { DurationPipe, todayLocalDate } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { ActivityApi } from '../activity.api';
+import { PlacesImportComponent } from './places-import.component';
 import { PlacesMapComponent } from './places-map.component';
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -67,6 +68,7 @@ function savedMap(): 'osm' | 'google' {
     MatCardModule,
     MatIconModule,
     MatTooltipModule,
+    PlacesImportComponent,
     PlacesMapComponent,
     TranslocoPipe,
   ],
@@ -231,6 +233,8 @@ function savedMap(): 'osm' | 'google' {
         </mat-card>
       }
     }
+
+    <pd-places-import (imported)="overview.reload()" />
   `,
   styles: `
     :host {

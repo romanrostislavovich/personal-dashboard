@@ -15,7 +15,8 @@ import {
   zonedToUtc,
 } from '@pd/contracts';
 import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
-import { ActivityDeviceRow } from '../activity.schema';
+import { activityDevices, ActivityDeviceRow } from '../activity.schema';
+import { DevicesService } from '../devices.service';
 import { frequentPlaces, Named, namedAt } from './frequent';
 import { activityPhoneLocations, activityPlaces } from './places.schema';
 import { PlaceDayNumbers, placeDayNumbers } from './day-numbers';
@@ -26,6 +27,8 @@ const INSERT_CHUNK = 200;
 /** The frequent places are the ones of this many days up to the day shown. */
 const FREQUENT_DAYS = 30;
 const FREQUENT_LIMIT = 10;
+/** The device the imported Google Maps timeline is written under. */
+const TIMELINE_DEVICE = 'Google Timeline';
 /** The days read before a period for its numbers (home, new places). */
 const HISTORY_DAYS = 60;
 /** A day the phone told less than this about has no numbers: they would be guesses. */
@@ -71,6 +74,7 @@ export class PlacesService {
     @Inject(DB) private readonly db: Database,
     private readonly users: UsersService,
     private readonly names: PlaceNamesService,
+    private readonly devices: DevicesService,
   ) {}
 
   async ingest(device: ActivityDeviceRow, items: PhoneLocationInput[]): Promise<number> {
@@ -91,6 +95,29 @@ export class PlacesService {
       saved += inserted.length;
     }
     return saved;
+  }
+
+  /**
+   * A batch of an imported Google Maps timeline: its fixes go to a device of their own, "Google
+   * Timeline" (made on the first batch), so they never mix with the phone's; a batch sent twice
+   * is written once.
+   */
+  async importTimeline(userId: string, locations: PhoneLocationInput[]): Promise<number> {
+    let [device] = await this.db
+      .select()
+      .from(activityDevices)
+      .where(and(eq(activityDevices.userId, userId), eq(activityDevices.name, TIMELINE_DEVICE)));
+    if (!device) {
+      const created = await this.devices.register(userId, {
+        name: TIMELINE_DEVICE,
+        platform: 'android',
+      });
+      [device] = await this.db
+        .select()
+        .from(activityDevices)
+        .where(eq(activityDevices.id, created.id));
+    }
+    return this.ingest(device, locations);
   }
 
   async overview(userId: string, day: LocalDate): Promise<PlacesOverview> {

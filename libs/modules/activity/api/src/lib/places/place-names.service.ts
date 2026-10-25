@@ -120,6 +120,22 @@ export class PlaceNamesService {
     return { ...found, source: 'google' };
   }
 
+  /** The names an imported Google timeline knew; one already kept there is not kept twice. */
+  async importNames(
+    userId: string,
+    names: { latitude: number; longitude: number; name: string }[],
+  ) {
+    const known = await this.known(userId);
+    for (const { name, ...point } of names) {
+      const there = this.nameAt(point, known);
+      if (there?.source === 'google' && there.name === name) {
+        continue;
+      }
+      await this.save(userId, point, { name, kind: null, source: 'google' });
+      known.push({ id: '', ...point, found: { name, kind: null, source: 'google' } });
+    }
+  }
+
   async googleKeys(userId: string): Promise<{ places: boolean; mapsKey: string | null }> {
     return {
       places: await this.secrets.has(userId, GOOGLE_PLACES_SECRET),

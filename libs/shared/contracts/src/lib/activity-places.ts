@@ -125,3 +125,13 @@ export type GoogleKeysInput = z.infer<typeof googleKeysInputSchema>;
 /** "Look up on Google" for one stay. */
 export const placeLookupSchema = z.object({ latitude, longitude });
 export type PlaceLookup = z.infer<typeof placeLookupSchema>;
+
+/** A batch of an imported Google Maps timeline (parsed in the browser: see google-timeline.ts). */
+export const placesImportSchema = z.object({
+  locations: z.array(phoneLocationSchema).max(500),
+  names: z
+    .array(z.object({ latitude, longitude, name: z.string().trim().min(1).max(200) }))
+    .max(200)
+    .default([]),
+});
+export type PlacesImport = z.input<typeof placesImportSchema>;

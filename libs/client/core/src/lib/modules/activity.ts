@@ -26,6 +26,7 @@ import {
   GoogleKeysInput,
   NamedPlace,
   PlaceLookup,
+  PlacesImport,
   PhoneNotificationsQuery,
   PhoneUsageQuery,
   PlaceInput,
@@ -93,6 +94,9 @@ export function activityApi(api: ApiClient) {
     /** The Places key is checked against Google first. */
     saveGoogleKeys: (keys: GoogleKeysInput) => api.put<void>(`${BASE}/places/google`, keys),
     removeGoogleKey: (which: 'places' | 'maps') => api.delete(`${BASE}/places/google/${which}`),
+    /** A batch of a Google Maps timeline read from a Takeout file. */
+    importTimeline: (batch: PlacesImport) =>
+      api.post<{ saved: number }>(`${BASE}/places/import`, batch),
     /** "Look up on Google" for one stay; `null` — Google knows nothing there. */
     lookUpOnGoogle: (point: PlaceLookup) =>
       api.post<FoundPlaceName | null>(`${BASE}/places/lookup-google`, point),

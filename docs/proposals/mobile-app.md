@@ -155,7 +155,7 @@ Settings → Notifications holds Telegram, push, the gentle mode and the deliver
 stays in Account → Profile. Settings → Integrations lists every service the dashboard can
 connect, the ones not connected greyed (`off`).
 
-## Stage 2d — a timeline of places (planned 2026-10-25, the owner's choices)
+## Stage 2d — a timeline of places (built 2026-10-25, the owner's choices)
 
 Like Google Maps' timeline: a day as the places it was spent at, with names, and the routes
 between them on a map.
@@ -178,8 +178,13 @@ between them on a map.
   reminder).
 - **Google Takeout import:** the old timeline of Google Maps (places and routes of past years).
 
-Order: recording modes + map + names (OSM) + how one moved → Google button and map → numbers to
-Links/Life → automations → Takeout.
+All of it is built (2026-10-25): `MotionMode` + `PlacesService` (apps/mobile), `places/` in the
+activity module (`stays.ts`, `frequent.ts`, `day-numbers.ts`, `place-names.service.ts` with
+`place-lookup.clients.ts`, `places.automations.ts`), `google-timeline.ts` in contracts (the
+Takeout parser, run in the browser), and Activity → Places with `places-map.component.ts`.
+Home is the place of most nights (3 am) in the 60 days before. Checked on a throwaway server with
+public points of central Warsaw; the GPS mode on a real walk, Google's keys and a real Takeout
+file are not checked yet.
 
 ## Stage 3 — health and stress
 

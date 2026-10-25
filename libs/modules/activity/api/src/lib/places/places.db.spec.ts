@@ -58,7 +58,7 @@ describe.skipIf(!ADMIN_URL)("the phone's places", { timeout: 60_000 }, () => {
       nameAt: () => null,
       lookUpMissing: async () => undefined,
     };
-    places = new PlacesService(db as never, users as never, names as never);
+    places = new PlacesService(db as never, users as never, names as never, devices);
   }, 60_000);
 
   afterAll(async () => {
@@ -145,5 +145,13 @@ describe.skipIf(!ADMIN_URL)("the phone's places", { timeout: 60_000 }, () => {
     await rules.check(userId);
     expect(emitted).toEqual(['activity.place.arrive Gym', 'activity.place.leave Gym']);
     await places.removePlace(userId, gym.id);
+  });
+
+  it('imports a Google timeline under a device of its own, once', async () => {
+    const batch = every15('05:00', '06:00', HOME);
+    expect(await places.importTimeline(userId, batch)).toBe(batch.length);
+    expect(await places.importTimeline(userId, batch)).toBe(0);
+    const list = await devices.list(userId);
+    expect(list.filter((device) => device.name === 'Google Timeline')).toHaveLength(1);
   });
 });

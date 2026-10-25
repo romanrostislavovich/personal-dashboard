@@ -532,6 +532,13 @@
       "bike": "By bike, {{km}} km",
       "ride": "Riding, {{km}} km"
     },
+    "import": {
+      "title": "The Google Maps timeline",
+      "hint": "Import your past places from Google: Takeout (Location History — Records.json or Semantic Location History) or Maps on the phone → Settings → Location → Export Timeline data (Timeline.json). The file is read here; only the points go to your server.",
+      "pick": "Pick the files",
+      "done": "Imported {{saved}} new points of {{read}}; places named by Google: {{names}}.",
+      "failed": "Nothing to import: this is not a Google Maps timeline file."
+    },
     "mapKind": "Map",
     "google": "Look up on Google",
     "googleNone": "Google knows no place here",

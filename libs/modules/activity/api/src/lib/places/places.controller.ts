@@ -22,6 +22,7 @@ import {
   PlaceLookup,
   placeLookupSchema,
   PlacesSettings,
+  placesImportSchema,
   PhoneLocationIngest,
   phoneLocationIngestSchema,
   PlaceInput,
@@ -33,6 +34,7 @@ import {
   placeUpdateSchema,
 } from '@pd/contracts';
 import { DevicesService } from '../devices.service';
+import { z } from 'zod';
 import { PlaceNamesService } from './place-names.service';
 import { PlacesAutomations } from './places.automations';
 import { PlacesService } from './places.service';
@@ -102,6 +104,17 @@ export class PlacesController {
     @Body(new ZodValidationPipe(placeLookupSchema)) body: PlaceLookup,
   ): Promise<FoundPlaceName | null> {
     return this.names.lookUpOnGoogle(user.id, body);
+  }
+
+  /** A batch of a Google Maps timeline the browser read from a Takeout file. */
+  @Post('places/import')
+  async import(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(placesImportSchema)) body: z.output<typeof placesImportSchema>,
+  ): Promise<{ saved: number }> {
+    const saved = await this.places.importTimeline(user.id, body.locations);
+    await this.names.importNames(user.id, body.names);
+    return { saved };
   }
 
   @Post('places')
