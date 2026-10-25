@@ -707,6 +707,11 @@ assistant as a tutor that knows the materials of the courses.
 
 #### Big steps
 
+- **Links v2** — indices made of several signals (phone restlessness, deep work, nourishing vs
+  draining time), hours and not only days, personal baselines, dose–response and change points,
+  the owner's hypotheses as question cards, insight cards, forecasts (overload, habit lapse, the
+  productive window). The plan: [proposals/links-v2.md](proposals/links-v2.md)
+
 - **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
   the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health).
   The plan in stages: [proposals/mobile-app.md](proposals/mobile-app.md):
