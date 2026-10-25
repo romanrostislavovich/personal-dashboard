@@ -82,6 +82,7 @@ public class PhoneSensorsPlugin extends Plugin {
         new SensorsStore(getContext()).configure(server, token);
         SensorsWorker.schedule(getContext());
         SensorsWorker.runNow(getContext());
+        PlacesService.start(getContext());
         call.resolve();
     }
 

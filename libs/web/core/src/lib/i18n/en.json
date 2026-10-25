@@ -561,7 +561,7 @@
       "steps": {
         "usageAccess": "Time in apps (Usage access)",
         "notificationAccess": "Notifications of other apps (Notification access)",
-        "location": "Location, all the time (places and trips; a low-power fix every 15 minutes)",
+        "location": "Location, all the time (places and trips: Wi-Fi and cell towers every minute, a quiet notification while it records)",
         "unrestricted": "No battery limits in the background",
         "autostart": "Autostart (MIUI: switch it on for Personal Dashboard)"
       },

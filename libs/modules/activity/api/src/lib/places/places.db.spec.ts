@@ -91,4 +91,24 @@ describe.skipIf(!ADMIN_URL)("the phone's places", { timeout: 60_000 }, () => {
     await places.removePlace(userId, home.id);
     expect(await places.named(userId)).toEqual([]);
   });
+
+  it('reads one fix in five minutes for a long period, every fix for a day', async () => {
+    const phone = await devices.register(userId, { name: 'Redmi 2', platform: 'android' });
+    const device = await devices.authenticate(`Device ${phone.token}`);
+    const minutes = [];
+    for (let minute = 0; minute < 30; minute++) {
+      const at = new Date(Date.parse('2026-10-22T08:00:00Z') + minute * 60_000);
+      minutes.push({ at: at.toISOString(), ...HOME, accuracy: 25 });
+    }
+    expect(await places.ingest(device, minutes)).toBe(30);
+    const [day] = await places.days(userId, { from: '2026-10-22', to: '2026-10-22' });
+    expect(day.points).toBe(30);
+    const week = await places.days(userId, { from: '2026-10-20', to: '2026-10-26' });
+    expect(week.find((one) => one.day === '2026-10-22')?.points).toBe(6);
+    // Thinned, the half hour is still one stay (the trip there comes from the first test's work).
+    const stays = week
+      .find((one) => one.day === '2026-10-22')
+      ?.entries.filter((entry) => entry.kind === 'stay');
+    expect(stays).toHaveLength(1);
+  });
 });

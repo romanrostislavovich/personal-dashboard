@@ -17,8 +17,8 @@ public final class SensorsStore {
     private static final String PREFS = "phone_sensors";
     /** Notifications kept while the server cannot be reached; the oldest go first. */
     private static final int MAX_QUEUED = 1000;
-    /** Fixes kept while the server cannot be reached: three weeks of one every 15 minutes. */
-    private static final int MAX_LOCATIONS = 2000;
+    /** Fixes kept while the server cannot be reached: three days of one a minute. */
+    private static final int MAX_LOCATIONS = 5000;
 
     private final SharedPreferences prefs;
 

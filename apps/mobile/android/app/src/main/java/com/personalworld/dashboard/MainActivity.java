@@ -3,6 +3,7 @@ package com.personalworld.dashboard;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 import com.personalworld.dashboard.sensors.PhoneSensorsPlugin;
+import com.personalworld.dashboard.sensors.PlacesService;
 
 public class MainActivity extends BridgeActivity {
 
@@ -12,5 +13,13 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(GentleWidgetPlugin.class);
         registerPlugin(PhoneSensorsPlugin.class);
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Android 12 and later start the places service only from the screen: each time the
+        // app comes up it is made sure to run (and after the location was just allowed).
+        PlacesService.start(this);
     }
 }

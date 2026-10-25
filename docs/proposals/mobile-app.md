@@ -121,7 +121,10 @@ phone told something.
 
 **2c, the location (built, 2026-10-25):** the card's step "Location, all the time" asks Android
 (10 offers "Allow all the time" in its own question; 11+ and a second tap — the app's settings).
-Android delivers a fix about every 15 minutes to `LocationUpdatesReceiver`
+Every minute, the owner's choice: `PlacesService`, a foreground service with a quiet
+notification "recording the places" (Android gives an app in the background the location only a
+few times an hour), started when the app comes up and by the worker; as a fallback Android
+delivers a fix about every 15 minutes to `LocationUpdatesReceiver`
 (`requestLocationUpdates` to a PendingIntent): on MIUI a fix asked for from a background job is
 never answered — checked on the phone on 2026-10-25. Each run of `SensorsWorker` also takes one
 fix (`PhoneLocation`): one another app asked for in the last

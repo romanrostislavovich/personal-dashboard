@@ -8,4 +8,8 @@
     <string name="gentle_widget_title">Gentle day</string>
     <string name="gentle_widget_open">Tap to open the gentle day</string>
     <string name="gentle_widget_description">Today\'s one to three small steps</string>
+    <!-- The places of a day, recorded every minute (sensors/PlacesService) -->
+    <string name="places_channel">Places</string>
+    <string name="places_title">Recording the places of the day</string>
+    <string name="places_text">Wi-Fi and cell towers every minute, no GPS. Switched off in Settings → Devices.</string>
 </resources>
