@@ -14,6 +14,9 @@ import { ActivityService } from './activity.service';
 import { DevicesService } from './devices.service';
 import { PhoneNotificationsController } from './phone-notifications.controller';
 import { PhoneNotificationsService } from './phone-notifications.service';
+import { PhoneUsageController } from './phone/phone-usage.controller';
+import { PhoneUsageLinks } from './phone/phone-usage.links';
+import { PhoneUsageService } from './phone/phone-usage.service';
 import { PlacesController } from './places/places.controller';
 import { PlacesLinks } from './places/places.links';
 import { PlacesService } from './places/places.service';
@@ -41,6 +44,7 @@ import { TelemetrySummaryService } from './telemetry-summary.service';
     ActivityContextController,
     PhoneNotificationsController,
     PlacesController,
+    PhoneUsageController,
   ],
   providers: [
     ActivityContextJobs,
@@ -57,6 +61,8 @@ import { TelemetrySummaryService } from './telemetry-summary.service';
     DevicesService,
     PhoneNotificationsService,
     PlacesLinks,
+    PhoneUsageLinks,
+    PhoneUsageService,
     PlacesService,
     SitesService,
     ProjectTimeService,

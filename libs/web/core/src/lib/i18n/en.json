@@ -558,7 +558,7 @@
         "unrestricted": "No battery limits in the background",
         "autostart": "Autostart (MIUI: switch it on for Personal Dashboard)"
       },
-      "where": "The time in apps comes to Activity as this phone, the notifications to Activity → Notifications, the places to Activity → Places, every 15 minutes.",
+      "where": "The time in apps comes to Activity as this phone, the unlocks and notifications to Activity → Phone, the places to Activity → Places, every 15 minutes.",
       "disable": "Switch off",
       "error": "Could not switch it on:",
       "update": "This version of the app cannot collect yet: install the new one over it, then come back here.",

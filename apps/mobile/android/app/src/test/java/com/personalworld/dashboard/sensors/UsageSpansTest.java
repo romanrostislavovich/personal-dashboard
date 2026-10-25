@@ -75,4 +75,16 @@ public class UsageSpansTest {
         assertEquals(1, result.spans.size());
         assertEquals("maps", result.spans.get(0).app);
     }
+
+    @Test
+    public void unlocksAreTheMomentsTheLockScreenWentAway() {
+        List<UsageSpans.Event> events = Arrays.asList(
+            e("", UsageSpans.UNLOCKED, 1_000),
+            e("instagram", UsageSpans.RESUMED, 2_000),
+            e("", UsageSpans.LOCKED, 60_000),
+            e("", UsageSpans.UNLOCKED, 90_000),
+            e("", UsageSpans.UNLOCKED, 300_000)
+        );
+        assertEquals(Arrays.asList(1_000L, 90_000L), UsageSpans.unlocks(events, 200_000));
+    }
 }

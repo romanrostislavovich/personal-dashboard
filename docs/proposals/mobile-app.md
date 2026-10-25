@@ -109,12 +109,21 @@ build) and posts them as spans to `/api/activity/device/spans`, and the notifica
 `PhoneNotificationListener` wrote down to `/api/activity/device/notifications`
 (`activity_phone_notifications`, title and text encrypted; Activity → Notifications). The card
 leads through Usage access, Notification access, no battery limits and MIUI's autostart. Common
-Android apps have categories (Instagram → media, Telegram → communication…). Not yet: unlocks
-and night use as their own numbers.
+Android apps have categories (Instagram → media, Telegram → communication…).
+
+**Unlocks and the night (built, 2026-10-25):** the worker sends each unlock (Android's
+`KEYGUARD_HIDDEN` usage event) to `/api/activity/device/unlocks` (`activity_phone_unlocks`);
+the night is the time in the phone's apps from 23:00 to 04:00, counted to the evening it began
+on, like late games. Activity → Phone (it was Notifications) shows both above the
+notifications; Links gets "phone unlocks" and "on the phone late at night" for the days the
+phone told something.
 
 **2c, the location (built, 2026-10-25):** the card's step "Location, all the time" asks Android
 (10 offers "Allow all the time" in its own question; 11+ and a second tap — the app's settings).
-Each run of `SensorsWorker` takes one fix (`PhoneLocation`): one another app asked for in the last
+Android delivers a fix about every 15 minutes to `LocationUpdatesReceiver`
+(`requestLocationUpdates` to a PendingIntent): on MIUI a fix asked for from a background job is
+never answered — checked on the phone on 2026-10-25. Each run of `SensorsWorker` also takes one
+fix (`PhoneLocation`): one another app asked for in the last
 5 minutes as it is, else Wi-Fi and cell towers (no GPS; GPS for 20 s only when that is off) — the
 battery barely notices. Fixes wait in `SensorsStore` without a network and go to
 `/api/activity/device/locations` (`activity_phone_locations`, the point encrypted). The server

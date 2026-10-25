@@ -20,6 +20,8 @@ public final class UsageSpans {
     public static final int SCREEN_OFF = 16;
     /** The lock screen came up. */
     public static final int LOCKED = 17;
+    /** The lock screen went away: the phone was unlocked (Android 9 and later). */
+    public static final int UNLOCKED = 18;
 
     /** Two spans of one app this close are one (switching screens inside it). */
     static final long JOIN_MS = 2_000;
@@ -103,6 +105,17 @@ public final class UsageSpans {
             return new Result(spans, new Open(app, until));
         }
         return new Result(spans, null);
+    }
+
+    /** The moments the phone was unlocked, up to `until`, in order. */
+    public static List<Long> unlocks(List<Event> events, long until) {
+        List<Long> moments = new ArrayList<>();
+        for (Event event : events) {
+            if (event.type == UNLOCKED && event.at <= until) {
+                moments.add(event.at);
+            }
+        }
+        return moments;
     }
 
     private static void add(List<Span> spans, String app, long start, long end, java.util.Set<String> ignored) {

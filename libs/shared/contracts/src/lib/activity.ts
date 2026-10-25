@@ -475,7 +475,7 @@ export type PhoneNotificationIngest = z.infer<typeof phoneNotificationIngestSche
 export const phoneNotificationsQuerySchema = z.object({ from: LOCAL_DATE, to: LOCAL_DATE });
 export type PhoneNotificationsQuery = z.infer<typeof phoneNotificationsQuerySchema>;
 
-/** Activity → Notifications: what interrupts, how often and when (the user's own hours). */
+/** Activity → Phone: what interrupts, how often and when (the user's own hours). */
 export interface PhoneNotificationsSummary {
   total: number;
   /** Most first. */

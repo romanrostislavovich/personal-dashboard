@@ -24,6 +24,7 @@ import {
   ActivityTimelineEntry,
   NamedPlace,
   PhoneNotificationsQuery,
+  PhoneUsageQuery,
   PlaceInput,
   PlacesQuery,
 } from '@pd/contracts';
@@ -43,6 +44,8 @@ export const ACTIVITY_READS = {
   /** The phone's notifications: which apps, how many, in which hours (the Android app). */
   phoneNotifications: (query: PhoneNotificationsQuery) =>
     apiRequest(`${BASE}/notifications`, query),
+  /** The phone's unlocks and its nights (the Android app). */
+  phoneUsage: (query: PhoneUsageQuery) => apiRequest(`${BASE}/phone`, query),
   /** A day in places and trips, with the places of the last 30 days (the phone's location). */
   places: (query: PlacesQuery) => apiRequest(`${BASE}/places`, query),
   settings: () => apiRequest(`${BASE}/settings`),
