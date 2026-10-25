@@ -9,10 +9,13 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.HandlerThread;
+import android.util.Log;
 import androidx.core.content.ContextCompat;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Where the phone is, at a small cost to the battery: a fix another app asked for lately is
@@ -46,6 +49,14 @@ final class PhoneLocation {
 
     private static boolean granted(Context context, String permission) {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    static JSONObject toJson(Location fix) throws JSONException {
+        return new JSONObject()
+            .put("at", fix.getTime())
+            .put("latitude", fix.getLatitude())
+            .put("longitude", fix.getLongitude())
+            .put("accuracy", fix.hasAccuracy() ? fix.getAccuracy() : 1000);
     }
 
     /** `null` — not allowed, or the phone could not tell. */
@@ -118,7 +129,8 @@ final class PhoneLocation {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (RuntimeException e) {
-            // The provider went away meanwhile: no fix this time.
+            // The provider went away, or the system refused: no fix this time, said in the log.
+            Log.w("PhoneLocation", "No fix from " + provider, e);
         } finally {
             manager.removeUpdates(listener);
             thread.quitSafely();

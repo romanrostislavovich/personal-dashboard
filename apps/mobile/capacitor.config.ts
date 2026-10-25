@@ -15,6 +15,11 @@ const config: CapacitorConfig = {
   // chrome://inspect sees the page of the release build too: a problem on the phone is looked
   // at, not guessed. Only a computer the phone allowed over USB debugging can connect.
   android: { webContentsDebuggingEnabled: true },
+  plugins: {
+    // A push that comes while the app is open shows in the shade too: without "alert" the
+    // plugin only hands it to the page, and a test sent from Settings seems lost.
+    PushNotifications: { presentationOptions: ['badge', 'sound', 'alert'] },
+  },
 };
 
 export default config;
