@@ -1,5 +1,6 @@
 import { createSign } from 'node:crypto';
 import { fetchWithTimeout } from '../../net/outbound';
+import { PUSH_CHANNEL } from '@pd/contracts';
 import { DeliveryError } from '../notification-channel';
 
 /**
@@ -83,7 +84,12 @@ export class FcmClient {
             token: deviceToken,
             notification: { title: message.title, body },
             data: message.data ?? {},
-            android: { priority: 'HIGH', notification: { sound: 'default' } },
+            // The app's own channel (MobilePushService makes it): Firebase's fallback one is
+            // silent on MIUI.
+            android: {
+              priority: 'HIGH',
+              notification: { sound: 'default', channel_id: PUSH_CHANNEL },
+            },
           },
         }),
       },
