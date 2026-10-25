@@ -30,7 +30,10 @@ export class XboxService {
       if (error instanceof OpenXblKeyError) {
         throw new BadRequestException('OpenXBL key is invalid');
       }
-      throw error;
+      // Anything else (OpenXBL down, an answer of another shape) is told as it is, not as a 500.
+      throw new BadRequestException(
+        `OpenXBL did not answer as expected: ${error instanceof Error ? error.message : error}`,
+      );
     }
     await this.secrets.set(userId, KEY_SECRET, apiKey);
   }

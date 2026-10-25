@@ -118,7 +118,7 @@ interface Profile {
                     <td class="numeric">
                       {{
                         game.achievements
-                          ? game.achievements.unlocked + ' / ' + game.achievements.total
+                          ? game.achievements.unlocked + ' / ' + (game.achievements.total ?? '—')
                           : '—'
                       }}
                     </td>
