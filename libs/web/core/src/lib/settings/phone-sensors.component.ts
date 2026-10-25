@@ -152,11 +152,20 @@ function describe(failure: unknown): string {
       gap: 8px;
       padding-top: 12px;
     }
+    /* The icon stays beside its words on a narrow phone; a long label wraps, not the row. */
     .step {
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
+      width: 100%;
+    }
+    .step > span {
+      flex: 1;
+      min-width: 0;
+    }
+    .step > mat-icon,
+    .step > button {
+      flex: none;
     }
     .ok {
       color: var(--mat-sys-primary);
