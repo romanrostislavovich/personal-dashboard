@@ -6,12 +6,25 @@ import { z } from 'zod';
  * - quiet hours: notifications (Telegram, push) made in them wait and come at their end as one
  *   message, "during the night: …";
  * - soft overdue: a task past its date is not shown in red and is not named in the morning
- *   digest; it stays in the list as it is.
+ *   digest; it stays in the list as it is;
+ * - muted: the sections whose notifications skip Telegram or the phone (an open tab still
+ *   shows them, and the delivery log keeps them).
  */
 export interface CalmSettings {
   /** `null` — notifications come at any time. */
   quietHours: { from: string; to: string } | null;
   softOverdue: boolean;
+  /** Section id → the channels it does not send to; missing — every section sends everywhere. */
+  muted?: Record<string, MutableChannel[]>;
+}
+
+/** The channels a section can be kept off: the ones that reach the user away from the screen. */
+export const MUTABLE_CHANNELS = ['telegram', 'push'] as const;
+export type MutableChannel = (typeof MUTABLE_CHANNELS)[number];
+
+/** Whether a section's notifications skip a channel. */
+export function isMuted(calm: CalmSettings | null, section: string, channel: string): boolean {
+  return (calm?.muted?.[section] ?? []).some((muted) => muted === channel);
 }
 
 /** `HH:MM`, 24 hours. */
@@ -25,6 +38,13 @@ export const calmSchema = z.object({
     })
     .nullable(),
   softOverdue: z.boolean(),
+  // Left out by an older client: the muted sections stay as they were (AuthService).
+  muted: z
+    .record(
+      z.string().regex(/^[a-z][a-z0-9-]{0,39}$/),
+      z.array(z.enum(MUTABLE_CHANNELS)).max(MUTABLE_CHANNELS.length),
+    )
+    .optional(),
 });
 
 /** Nothing set yet: as before. */

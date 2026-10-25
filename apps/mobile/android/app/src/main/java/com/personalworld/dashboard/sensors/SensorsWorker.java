@@ -118,6 +118,15 @@ public class SensorsWorker extends Worker {
             }
             post(store, "/api/activity/device/spans", new JSONObject().put("spans", spans));
         }
+        // How often the phone is picked up: each unlock, sent with the time in apps.
+        List<Long> unlocks = UsageSpans.unlocks(events, until);
+        for (int i = 0; i < unlocks.size(); i += BATCH) {
+            JSONArray moments = new JSONArray();
+            for (long at : unlocks.subList(i, Math.min(i + BATCH, unlocks.size()))) {
+                moments.put(iso(at));
+            }
+            post(store, "/api/activity/device/unlocks", new JSONObject().put("unlocks", moments));
+        }
         store.advance(until, result.open);
     }
 

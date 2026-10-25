@@ -12,7 +12,7 @@ import { PhoneNotificationsService } from './phone-notifications.service';
 
 /**
  * The phone's notifications: the Android app sends them with its device token, like a computer
- * sends its spans; Activity → Notifications reads the summary.
+ * sends its spans; Activity → Phone reads the summary.
  */
 @Controller('activity')
 export class PhoneNotificationsController {

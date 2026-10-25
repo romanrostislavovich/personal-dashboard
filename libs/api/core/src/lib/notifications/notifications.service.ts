@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { NO_CALM, quietMinutesLeft, zonedDateTime } from '@pd/contracts';
+import { isMuted, NO_CALM, quietMinutesLeft, zonedDateTime } from '@pd/contracts';
 import { coreMessages } from '../i18n/core.messages';
 import { SchedulerService } from '../scheduler/scheduler.service';
 import { UserRow } from '../users/users.schema';
@@ -79,7 +79,11 @@ export class NotificationsService implements OnModuleInit {
       return;
     }
 
-    const channels = this.channels.filter((channel) => channel.isEnabledFor(user));
+    const section = sectionOfSource(notification.source);
+    // A section kept off Telegram or the phone (Settings → Notifications) skips just that one.
+    const channels = this.channels.filter(
+      (channel) => channel.isEnabledFor(user) && !isMuted(user.calm, section, channel.name),
+    );
     const durable = channels.filter((channel) => channel.durable).map((channel) => channel.name);
     // The user's quiet hours: Telegram and the phone wait for their end; a toast in a tab the
     // user has open now still shows — they are looking anyway.

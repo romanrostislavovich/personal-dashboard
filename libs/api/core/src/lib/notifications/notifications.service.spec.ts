@@ -64,6 +64,26 @@ describe('NotificationsService', () => {
     expect(outbox.calls).toEqual(['add sending', 'delivered 1', 'add sending', 'delivered 2']);
   });
 
+  it('keeps a muted section off just that channel; a service inside it too', async () => {
+    const telegram = channel('telegram', true);
+    const push = channel('push', true);
+    const muted = {
+      ...user,
+      calm: { quietHours: null, softOverdue: false, muted: { music: ['push'] } },
+    };
+    const service = new NotificationsService(
+      { ...users, findById: async () => muted } as never,
+      fakeOutbox() as never,
+      scheduler as never,
+      [telegram, push] as never,
+    );
+    for (const source of ['music', 'lastfm', 'finance']) {
+      await service.send('u1', { title: 't', body: 'b', source });
+    }
+    expect(telegram.sent).toEqual(['music', 'lastfm', 'finance']);
+    expect(push.sent).toEqual(['finance']);
+  });
+
   it('marks a failed channel to be tried again, and gives up when it cannot help', async () => {
     const outbox = fakeOutbox();
     const busy = channel('telegram', true, async () => {

@@ -16,7 +16,7 @@ const INSERT_CHUNK = 200;
 
 /**
  * The notifications of other apps on the user's phone (sent by the Android app): written down,
- * and summed up for Activity → Notifications — which apps interrupt, in which hours, how many.
+ * and summed up for Activity → Phone — which apps interrupt, in which hours, how many.
  */
 @Injectable()
 export class PhoneNotificationsService {

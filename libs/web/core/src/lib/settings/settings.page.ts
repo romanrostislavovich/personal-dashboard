@@ -13,6 +13,7 @@ import { SecuritySettingsComponent } from './security-settings.component';
 import { SyncSettingsComponent } from './sync-settings.component';
 import { McpSettingsComponent } from './mcp-settings.component';
 import { NotificationLogComponent } from './notification-log.component';
+import { NotificationKindsComponent } from './notification-kinds.component';
 import { SystemSettingsComponent } from './system-settings.component';
 import { CalmSettingsComponent } from './calm-settings.component';
 import { PushSettingsComponent } from './push-settings.component';
@@ -77,6 +78,7 @@ const TABS = [
     PhoneSensorsComponent,
     SyncSettingsComponent,
     NotificationLogComponent,
+    NotificationKindsComponent,
     McpSettingsComponent,
     SystemSettingsComponent,
     TelegramSettingsComponent,
@@ -114,6 +116,7 @@ const TABS = [
           <pd-telegram-settings />
           <pd-push-settings />
           <pd-calm-settings />
+          <pd-notification-kinds />
           <pd-notification-log />
         </div>
       </mat-tab>

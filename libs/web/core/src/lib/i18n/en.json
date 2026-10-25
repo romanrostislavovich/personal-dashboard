@@ -316,6 +316,13 @@
     "integrationsIntro": "Connections to outside services: where the modules take their data from, which AI answers. Grey — what can be connected but is not.",
     "notificationsIntro": "Where the dashboard's messages come (Telegram, the phone), when they keep quiet, and what was sent.",
     "devicesIntro": "What the phone and the computers do for the dashboard. The settings are the same on every device; the ones of one kind of device are marked with its colour.",
+    "kinds": {
+      "title": "What comes where",
+      "hint": "Each section to Telegram and to the phone, on or off. An open tab still shows everything.",
+      "telegram": "Telegram",
+      "push": "Phone",
+      "core": "The dashboard itself (sync, backups, security)"
+    },
     "deviceOnly": {
       "phone": {
         "title": "Only for the phone",
@@ -558,7 +565,7 @@
         "unrestricted": "No battery limits in the background",
         "autostart": "Autostart (MIUI: switch it on for Personal Dashboard)"
       },
-      "where": "The time in apps comes to Activity as this phone, the notifications to Activity → Notifications, the places to Activity → Places, every 15 minutes.",
+      "where": "The time in apps comes to Activity as this phone, the unlocks and notifications to Activity → Phone, the places to Activity → Places, every 15 minutes.",
       "disable": "Switch off",
       "error": "Could not switch it on:",
       "update": "This version of the app cannot collect yet: install the new one over it, then come back here.",

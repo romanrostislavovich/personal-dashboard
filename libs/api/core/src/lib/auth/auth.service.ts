@@ -211,6 +211,11 @@ export class AuthService implements OnApplicationBootstrap {
 
   async updateProfile(userId: string, changes: ProfileUpdate): Promise<CurrentUser> {
     const { theme, layout, ...rest } = changes;
+    if (rest.calm && rest.calm.muted === undefined) {
+      // A client that does not know the muted sections keeps them as they were.
+      const muted = (await this.users.findById(userId))?.calm?.muted;
+      rest.calm = { ...rest.calm, ...(muted ? { muted } : {}) };
+    }
     // The time tells the devices this is newer than their own (see `resolveTheme`).
     const everywhereAt = new Date().toISOString();
     return toCurrentUser(

@@ -5,7 +5,7 @@ import { activityDevices } from './activity.schema';
 /**
  * A notification another app showed on the user's phone (the Android app writes them down once
  * allowed): which app, when, and its title and text — stored encrypted, like the diary. What
- * interrupts and how often, next to the time in apps (Activity → Notifications).
+ * interrupts and how often, next to the time in apps (Activity → Phone).
  */
 export const activityPhoneNotifications = pgTable(
   'activity_phone_notifications',

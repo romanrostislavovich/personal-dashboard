@@ -63,7 +63,7 @@
     "settings": "Setup",
     "focus": "Focus",
     "computers": "Computers",
-    "notifications": "Notifications",
+    "notifications": "Phone",
     "places": "Places"
   },
   "commands": {
@@ -425,6 +425,8 @@
     "lastUse": "Last at a screen",
     "lateGames": "In games late at night (23–4)",
     "browser": "In the browser",
+    "unlocks": "Phone unlocks",
+    "phoneNight": "On the phone late at night (23–4)",
     "km": "Km on the move",
     "places": "Places visited",
     "site": "On a site"
@@ -527,5 +529,12 @@
     "frequent": "Places of the last 30 days",
     "frequentHint": "Name a place, and its stays take the name",
     "visits": "visits: {{count}}"
+  },
+  "phone": {
+    "unlocks": "Phone unlocks: {{count}}",
+    "perDay": "{{count}} a day",
+    "night": "at night",
+    "byDay": "Unlocks by day",
+    "nightHint": "At night — in apps of the phone from 23:00 to 4:00; the night counts to the evening it began on."
   }
 }
