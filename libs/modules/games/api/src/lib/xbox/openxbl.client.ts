@@ -1,7 +1,8 @@
 import { fetchWithTimeout } from '@pd/api-core';
 import { XboxGame } from '@pd/contracts';
 
-const API = 'https://xbl.io/api/v2';
+/** OpenXBL's API (its OpenAPI spec: https://api.xbl.io/docs/json); the old xbl.io/api/v2 takes no new keys. */
+const API = 'https://api.xbl.io/v2';
 const TIMEOUT_MS = 20_000;
 /** The games kept: the last played first. */
 const MAX_GAMES = 100;
@@ -29,6 +30,11 @@ function num(value: unknown): number {
   return typeof n === 'number' && Number.isFinite(n) ? n : 0;
 }
 
+/** OpenXBL wraps every answer: `{ "content": {…}, "code": 200 }`; an older one did not. */
+function unwrap(raw: unknown): unknown {
+  return isObject(raw) && isObject(raw['content']) ? raw['content'] : raw;
+}
+
 function text(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value : null;
 }
@@ -38,7 +44,9 @@ function text(value: unknown): string | null {
  * Gamerscore, GameDisplayPicRaw, AccountTier…).
  */
 export function parseProfile(raw: unknown): XboxProfile {
-  const user = isObject(raw) && Array.isArray(raw['profileUsers']) ? raw['profileUsers'][0] : null;
+  const body = unwrap(raw);
+  const user =
+    isObject(body) && Array.isArray(body['profileUsers']) ? body['profileUsers'][0] : null;
   if (!isObject(user)) {
     throw new Error('OpenXBL gave no profile');
   }
@@ -63,11 +71,12 @@ export function parseProfile(raw: unknown): XboxProfile {
 }
 
 /**
- * The answer of `/achievements`: Xbox's title history with each title's achievements (TitleHub:
+ * The answer of `/titles`: Xbox's title history with each title's achievements (TitleHub:
  * `titles[]` with `achievement` and `titleHistory`). The last played first.
  */
 export function parseTitles(raw: unknown): XboxGame[] {
-  const titles = isObject(raw) && Array.isArray(raw['titles']) ? raw['titles'] : [];
+  const body = unwrap(raw);
+  const titles = isObject(body) && Array.isArray(body['titles']) ? body['titles'] : [];
   const games: XboxGame[] = [];
   for (const title of titles) {
     if (!isObject(title)) {
@@ -81,13 +90,15 @@ export function parseTitles(raw: unknown): XboxGame[] {
     const achievement = isObject(title['achievement']) ? title['achievement'] : {};
     const history = isObject(title['titleHistory']) ? title['titleHistory'] : {};
     const total = num(achievement['totalAchievements']);
+    const unlocked = num(achievement['currentAchievements']);
     games.push({
       titleId,
       name,
       imageUrl: text(title['displayImage']),
       gamerscore: num(achievement['currentGamerscore']),
       totalGamerscore: num(achievement['totalGamerscore']),
-      achievements: total > 0 ? { unlocked: num(achievement['currentAchievements']), total } : null,
+      // Older games tell what was unlocked but not how many there are (total 0).
+      achievements: total > 0 || unlocked > 0 ? { unlocked, total: total || null } : null,
       lastPlayedAt: text(history['lastTimePlayed']),
     });
   }
@@ -109,7 +120,7 @@ export class OpenXblClient {
   }
 
   async games(): Promise<XboxGame[]> {
-    return parseTitles(await this.get('/achievements'));
+    return parseTitles(await this.get('/titles'));
   }
 
   private async get(path: string): Promise<unknown> {

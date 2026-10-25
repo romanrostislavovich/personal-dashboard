@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { IntegrationGuideComponent, errorStatus } from '@pd/web-core';
+import { IntegrationGuideComponent, errorBody, errorStatus } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { GamesApi } from './games.api';
 
@@ -98,8 +98,15 @@ export class XboxIntegration {
       this.form.reset();
       this.settings.reload();
     } catch (error) {
-      const key = errorStatus(error) === 400 ? 'games.xbox.keyInvalid' : 'games.errors.generic';
-      this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });
+      // A wrong key is told in the user's words; anything else as the server said it.
+      const message = (errorBody(error) as { message?: string } | null)?.message ?? '';
+      const text =
+        errorStatus(error) === 400 && message !== 'OpenXBL key is invalid' && message
+          ? message
+          : this.transloco.translate(
+              errorStatus(error) === 400 ? 'games.xbox.keyInvalid' : 'games.errors.generic',
+            );
+      this.snackBar.open(text, 'OK', { duration: 10000 });
     } finally {
       this.busy.set(false);
     }

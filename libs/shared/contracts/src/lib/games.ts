@@ -331,8 +331,8 @@ export interface XboxGame {
   /** Gamerscore earned in it and the most it gives. */
   gamerscore: number;
   totalGamerscore: number;
-  /** `null` — the game has no achievements. */
-  achievements: { unlocked: number; total: number } | null;
+  /** `null` — the game has no achievements; `total` null — Xbox does not tell it (older games). */
+  achievements: { unlocked: number; total: number | null } | null;
   lastPlayedAt: string | null;
 }
 
