@@ -5,14 +5,6 @@
 [![Release](https://img.shields.io/github/v/release/romanrostislavovich/personal-dashboard)](https://github.com/romanrostislavovich/personal-dashboard/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[![Web · PWA](https://img.shields.io/badge/Web-PWA-5A0FC8?logo=pwa&logoColor=white)](#run-it)
-[![Android](https://img.shields.io/badge/Android-app-3DDC84?logo=android&logoColor=white)](apps/mobile/README.md)
-[![Windows](https://img.shields.io/badge/Windows-app-0078D4?logo=windows&logoColor=white)](docs/desktop.md)
-[![macOS](https://img.shields.io/badge/macOS-app-000000?logo=apple&logoColor=white)](docs/desktop.md)
-[![Linux](https://img.shields.io/badge/Linux-app-FCC624?logo=linux&logoColor=black)](docs/desktop.md)
-[![Chrome extension](https://img.shields.io/badge/Chrome-extension-4285F4?logo=googlechrome&logoColor=white)](apps/extension/README.md)
-[![Telegram bot](https://img.shields.io/badge/Telegram-bot-26A5E4?logo=telegram&logoColor=white)](#highlights)
-
 **Your whole life in one self-hosted dashboard — with an AI that knows all of it.**
 
 Finance, a diary, tasks, music, games, coding stats, time at the computer, uptime of your sites —
@@ -21,6 +13,16 @@ installable PWA, desktop (Windows / macOS / Linux), Android, a Chrome extension.
 Russian.
 
 ![A 40-second tour: links between every daily number, achievements, the home page, search across every section, finance, activity, development, monitoring and music](docs/images/demo.gif)
+
+<p align="center">
+  <a href="docs/desktop.md"><img alt="Desktop app: Windows, macOS, Linux" src="https://img.shields.io/badge/Desktop-Windows%20·%20macOS%20·%20Linux-0078D4?style=for-the-badge&logo=electron&logoColor=white"></a>
+  <a href="apps/mobile/README.md"><img alt="Android app" src="https://img.shields.io/badge/Android-app-3DDC84?style=for-the-badge&logo=android&logoColor=white"></a>
+  <a href="apps/extension/README.md"><img alt="Browser extension for Chrome" src="https://img.shields.io/badge/Browser-extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+</p>
+<p align="center">
+  <a href="#run-it"><img alt="Web and an installable PWA" src="https://img.shields.io/badge/Web-PWA-5A0FC8?logo=pwa&logoColor=white"></a>
+  <a href="#highlights"><img alt="Telegram bot" src="https://img.shields.io/badge/Telegram-bot-26A5E4?logo=telegram&logoColor=white"></a>
+</p>
 
 > **Status:** a personal project, used every day by its author. It works and is tested, but
 > before 1.0 an update may need attention — read the [changelog](CHANGELOG.md) first.
