@@ -5,6 +5,8 @@ plan; the owner's decisions are at the end. Health diagnoses of the owner never 
 
 ## What there is now (v1)
 
+Every signal collected, with its daily numbers, is listed in [../telemetry.md](../telemetry.md).
+
 Life → Links, in the core (`libs/api/core/src/lib/links/`) with the page in
 `libs/modules/life/web/src/lib/links/`:
 
