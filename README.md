@@ -8,10 +8,21 @@
 **Your whole life in one self-hosted dashboard — with an AI that knows all of it.**
 
 Finance, a diary, tasks, music, games, coding stats, time at the computer, uptime of your sites —
-in one place on your own server, with notifications and an assistant in Telegram. Web, desktop
-(Windows / macOS / Linux) and an installable PWA. English and Russian.
+in one place on your own server, with notifications and an assistant in Telegram. Web and an
+installable PWA, desktop (Windows / macOS / Linux), Android, a Chrome extension. English and
+Russian.
 
 ![A 40-second tour: links between every daily number, achievements, the home page, search across every section, finance, activity, development, monitoring and music](docs/images/demo.gif)
+
+<p align="center">
+  <a href="docs/desktop.md"><img alt="Desktop app: Windows, macOS, Linux" src="https://img.shields.io/badge/Desktop-Windows%20·%20macOS%20·%20Linux-0078D4?style=for-the-badge&logo=electron&logoColor=white"></a>
+  <a href="apps/mobile/README.md"><img alt="Android app" src="https://img.shields.io/badge/Android-app-3DDC84?style=for-the-badge&logo=android&logoColor=white"></a>
+  <a href="apps/extension/README.md"><img alt="Browser extension for Chrome" src="https://img.shields.io/badge/Browser-extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+</p>
+<p align="center">
+  <a href="#run-it"><img alt="Web and an installable PWA" src="https://img.shields.io/badge/Web-PWA-5A0FC8?logo=pwa&logoColor=white"></a>
+  <a href="#highlights"><img alt="Telegram bot" src="https://img.shields.io/badge/Telegram-bot-26A5E4?logo=telegram&logoColor=white"></a>
+</p>
 
 > **Status:** a personal project, used every day by its author. It works and is tested, but
 > before 1.0 an update may need attention — read the [changelog](CHANGELOG.md) first.
@@ -36,6 +47,10 @@ in one place on your own server, with notifications and an assistant in Telegram
   reminders, daily limits on games, disk cleanup advice from the AI, work contexts you can come
   back to; an optional, off-by-default telemetry with its limits written down
   ([apps/desktop/TELEMETRY.md](apps/desktop/TELEMETRY.md))
+- 📱 **The phone as a sensor** (Android) — time in apps, unlocks and late nights, the
+  notifications that interrupt you, and a timeline of places like Google Maps': the routes on a
+  map, the places with their names (OpenStreetMap, or Google with your key), on foot or riding;
+  push notifications, offline reading, a home-screen widget
 - 🛡️ **Security agent** — watches sign-ins, the server (SSH, firewall, open ports), your computers
   and repositories every hour; an AI investigates every morning and tells what to fix
 - 🏆 **400+ achievements** across all sections, with XP and a player level
