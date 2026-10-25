@@ -49,18 +49,18 @@ Each is a daily number registered like the others, so every v1 view gets it for 
 from one section are computed by that section; the ones across sections by the core from the
 sections' numbers (modules never read each other).
 
-| Index | How it is counted | Needs |
-| --- | --- | --- |
-| **Phone restlessness** ("digital anxiety") | unlocks per hour of phone use, and the share of sessions under 30 s (unlock → nothing → lock); against the user's 28-day median | unlocks, spans (have) |
-| **Phone app switching** | switches between apps per hour of use, on the phone (the desktop has `contextSwitches`) | spans (have) |
-| **Context switching cost** | switches per hour during work hours ÷ tasks done that day; and the minutes after a switch to social/messengers before the next coding span | desktop telemetry, spans, tasks (have) |
-| **Deep work** | blocks of 25+ min in one work app (IDE, terminal, docs) without a switch or a notification; minutes a day, the longest block | spans, notifications (have) |
-| **Nourishing vs draining time** | the share of the day's screen time in work/learning/creating categories against short-video, social, endless feeds; per day and per week | app categories (have; to be refined, see below) |
-| **Interruptions in focus** | notifications during focus sessions and coding hours, per hour; which apps | notifications, focus, coding hours (have) |
-| **Late-night load** | phone after 23:00 + late games + last use; one number of "the night ate into sleep" | have |
-| **Time outside / movement** | hours away from home, on foot, new places (have since 2d) | have |
-| **Recovery** | after a bad day (mood ≤ 2 or a heavy-load day): days until the numbers are back to the baseline | mood, baseline |
-| **Sleep** (stage 3) | duration, regularity (bedtime spread), deep/REM share, HRV, resting pulse; **our stress index** from HRV and resting pulse against the baseline | the band |
+| Index                                      | How it is counted                                                                                                                               | Needs                                           |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| **Phone restlessness** ("digital anxiety") | unlocks per hour of phone use, and the share of sessions under 30 s (unlock → nothing → lock); against the user's 28-day median                 | unlocks, spans (have)                           |
+| **Phone app switching**                    | switches between apps per hour of use, on the phone (the desktop has `contextSwitches`)                                                         | spans (have)                                    |
+| **Context switching cost**                 | switches per hour during work hours ÷ tasks done that day; and the minutes after a switch to social/messengers before the next coding span      | desktop telemetry, spans, tasks (have)          |
+| **Deep work**                              | blocks of 25+ min in one work app (IDE, terminal, docs) without a switch or a notification; minutes a day, the longest block                    | spans, notifications (have)                     |
+| **Nourishing vs draining time**            | the share of the day's screen time in work/learning/creating categories against short-video, social, endless feeds; per day and per week        | app categories (have; to be refined, see below) |
+| **Interruptions in focus**                 | notifications during focus sessions and coding hours, per hour; which apps                                                                      | notifications, focus, coding hours (have)       |
+| **Late-night load**                        | phone after 23:00 + late games + last use; one number of "the night ate into sleep"                                                             | have                                            |
+| **Time outside / movement**                | hours away from home, on foot, new places (have since 2d)                                                                                       | have                                            |
+| **Recovery**                               | after a bad day (mood ≤ 2 or a heavy-load day): days until the numbers are back to the baseline                                                 | mood, baseline                                  |
+| **Sleep** (stage 3)                        | duration, regularity (bedtime spread), deep/REM share, HRV, resting pulse; **our stress index** from HRV and resting pulse against the baseline | the band                                        |
 
 App categories need care: "YouTube" can be a lecture or Shorts. The phone gives the app only, the
 browser extension gives the site; a user override per app/site (exists for the desktop) is the
