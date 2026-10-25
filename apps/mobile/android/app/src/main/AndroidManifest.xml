@@ -55,6 +55,12 @@
             </intent-filter>
         </service>
 
+        <!-- The places of a day, every minute, with a notification (sensors/PlacesService). -->
+        <service
+            android:name=".sensors.PlacesService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
         <!-- The location Android delivers in the background (sensors/LocationUpdatesReceiver). -->
         <receiver
             android:name=".sensors.LocationUpdatesReceiver"
@@ -85,6 +91,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />

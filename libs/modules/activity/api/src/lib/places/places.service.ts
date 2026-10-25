@@ -13,7 +13,7 @@ import {
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
-import { and, asc, eq, gte, lt } from 'drizzle-orm';
+import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
 import { ActivityDeviceRow } from '../activity.schema';
 import { frequentPlaces, Named, namedAt } from './frequent';
 import { activityPhoneLocations, activityPlaces } from './places.schema';
@@ -23,6 +23,9 @@ const INSERT_CHUNK = 200;
 /** The frequent places are the ones of this many days up to the day shown. */
 const FREQUENT_DAYS = 30;
 const FREQUENT_LIMIT = 10;
+/** Longer periods read one fix in this many seconds (see `days`). */
+const THIN_AFTER_DAYS = 2;
+const THIN_SECONDS = 300;
 /** Fixes read around a period: a stay that began before it still shows from its start. */
 const MARGIN_MS = 6 * 3600_000;
 
@@ -78,11 +81,12 @@ export class PlacesService {
   async overview(userId: string, day: LocalDate): Promise<PlacesOverview> {
     const zone = await this.zone(userId);
     const from = toLocalDate(addDays(parseLocalDate(day), 1 - FREQUENT_DAYS));
-    const [days, named] = await Promise.all([
+    // The day with every fix, the 30 days thinned: the frequent places need only the stays.
+    const [[today], days, named] = await Promise.all([
+      this.days(userId, { from: day, to: day }, zone),
       this.days(userId, { from, to: day }, zone),
       this.named(userId),
     ]);
-    const today = days[days.length - 1];
     const stays = days.flatMap((item) => item.entries).filter((entry) => entry.kind === 'stay');
     return {
       day,
@@ -97,7 +101,11 @@ export class PlacesService {
     };
   }
 
-  /** Each day of the period in places, in the user's own days. */
+  /**
+   * Each day of the period in places, in the user's own days. Longer than a couple of days, one
+   * fix in five minutes is read (the phone sends one a minute): a stay is ten minutes or more,
+   * and a year of every fix would be half a million to decrypt.
+   */
   async days(userId: string, period: ActivityPeriod, zone?: string): Promise<PlacesDay[]> {
     const timeZone = zone ?? (await this.zone(userId));
     const dayStarts: { day: LocalDate; start: number }[] = [];
@@ -110,7 +118,8 @@ export class PlacesService {
     }
     const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
     const end = zonedToUtc({ date: after, time: '00:00' }, timeZone).getTime();
-    const fixes = await this.fixes(userId, dayStarts[0].start - MARGIN_MS, end + MARGIN_MS);
+    const step = dayStarts.length > THIN_AFTER_DAYS ? THIN_SECONDS : 0;
+    const fixes = await this.fixes(userId, dayStarts[0].start - MARGIN_MS, end + MARGIN_MS, step);
     const entries = entriesOf(fixes);
     return dayStarts.map(({ day, start }, i) => {
       const dayEnd = dayStarts[i + 1]?.start ?? end;
@@ -187,23 +196,21 @@ export class PlacesService {
     };
   }
 
-  private async fixes(userId: string, from: number, to: number): Promise<Fix[]> {
+  /** `step` — seconds: the first fix of each such stretch only; `0` — every fix. */
+  private async fixes(userId: string, from: number, to: number, step: number): Promise<Fix[]> {
+    const l = activityPhoneLocations;
+    const columns = { at: l.at, point: l.point, accuracy: l.accuracy };
+    const where = and(eq(l.userId, userId), gte(l.at, new Date(from)), lt(l.at, new Date(to)));
+    // Written in, not a parameter: PostgreSQL matches DISTINCT ON and ORDER BY by their text.
+    const bucket = sql`floor(extract(epoch from ${l.at}) / ${sql.raw(String(Math.trunc(step)))})`;
     // Read through Drizzle's columns: the point is decrypted on the way.
-    const rows = await this.db
-      .select({
-        at: activityPhoneLocations.at,
-        point: activityPhoneLocations.point,
-        accuracy: activityPhoneLocations.accuracy,
-      })
-      .from(activityPhoneLocations)
-      .where(
-        and(
-          eq(activityPhoneLocations.userId, userId),
-          gte(activityPhoneLocations.at, new Date(from)),
-          lt(activityPhoneLocations.at, new Date(to)),
-        ),
-      )
-      .orderBy(asc(activityPhoneLocations.at));
+    const rows = step
+      ? await this.db
+          .selectDistinctOn([bucket], columns)
+          .from(l)
+          .where(where)
+          .orderBy(bucket, asc(l.at))
+      : await this.db.select(columns).from(l).where(where).orderBy(asc(l.at));
     return rows.map((row) => ({
       at: row.at.getTime(),
       ...pointOf(row.point),

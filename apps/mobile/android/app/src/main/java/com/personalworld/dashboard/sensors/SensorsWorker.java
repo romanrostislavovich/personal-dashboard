@@ -68,6 +68,7 @@ public class SensorsWorker extends Worker {
     public static void cancel(Context context) {
         WorkManager.getInstance(context).cancelUniqueWork(PERIODIC);
         LocationUpdatesReceiver.unsubscribe(context);
+        PlacesService.stop(context);
     }
 
     @NonNull
@@ -151,7 +152,9 @@ public class SensorsWorker extends Worker {
     }
 
     private void takeLocation(SensorsStore store) throws JSONException {
-        // The updates Android delivers by itself (kept asked for: an app update drops them)…
+        // Every minute while the service runs (started again here after a reboot)…
+        PlacesService.start(getApplicationContext());
+        // …the updates Android delivers by itself if it does not (an app update drops them)…
         LocationUpdatesReceiver.subscribe(getApplicationContext());
         // …and a fix of its own, which works while the app is on the screen.
         Location fix = PhoneLocation.take(getApplicationContext());
