@@ -30,6 +30,7 @@ export class CoreIntegrations implements OnModuleInit {
       id: 'core.telegram',
       module: 'core',
       name: 'Telegram',
+      settingsTab: 'notifications',
       reports: async (userId) => {
         const [user] = await this.db
           .select({ chatId: users.telegramChatId })
@@ -44,6 +45,7 @@ export class CoreIntegrations implements OnModuleInit {
       id: 'core.push',
       module: 'core',
       name: 'Firebase',
+      settingsTab: 'notifications',
       // The server's Firebase key, then each phone of the Android app that takes notifications.
       reports: async (userId) => {
         if ((await this.keys.get(PUSH_KEY)) === null) {

@@ -20,6 +20,8 @@ export interface IntegrationStatus {
   /** What is connected: the account, the number of repositories. */
   detail: string | null;
   state: IntegrationState;
+  /** The tab of Settings where it is set up, when not Integrations itself (`notifications`). */
+  settingsTab: string | null;
   /** `null` — it does not refresh by itself (a bot, an AI connection), or never did yet. */
   lastSyncedAt: string | null;
   error: string | null;

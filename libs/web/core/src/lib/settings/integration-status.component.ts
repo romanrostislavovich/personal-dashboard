@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CORE_READS } from '@pd/client-core';
 import { IntegrationState, IntegrationStatus } from '@pd/contracts';
@@ -31,6 +32,7 @@ const ICONS: Record<IntegrationState, string> = {
     MatCardModule,
     MatIconModule,
     MatTooltipModule,
+    RouterLink,
     TranslocoPipe,
   ],
   template: `
@@ -77,6 +79,12 @@ const ICONS: Record<IntegrationState, string> = {
                   </span>
                 }
               </span>
+              @if (status.settingsTab) {
+                <!-- Set up on another tab (Telegram, push): the way there from its line. -->
+                <a matButton routerLink="/settings" [queryParams]="{ tab: status.settingsTab }">
+                  {{ 'core.integrations.setUp' | transloco }}
+                </a>
+              }
               <span class="hint when">
                 @if (status.lastSyncedAt) {
                   {{ status.lastSyncedAt | date: 'd MMM, HH:mm' }}
