@@ -5,11 +5,20 @@
 [![Release](https://img.shields.io/github/v/release/romanrostislavovich/personal-dashboard)](https://github.com/romanrostislavovich/personal-dashboard/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+[![Web · PWA](https://img.shields.io/badge/Web-PWA-5A0FC8?logo=pwa&logoColor=white)](#run-it)
+[![Android](https://img.shields.io/badge/Android-app-3DDC84?logo=android&logoColor=white)](apps/mobile/README.md)
+[![Windows](https://img.shields.io/badge/Windows-app-0078D4?logo=windows&logoColor=white)](docs/desktop.md)
+[![macOS](https://img.shields.io/badge/macOS-app-000000?logo=apple&logoColor=white)](docs/desktop.md)
+[![Linux](https://img.shields.io/badge/Linux-app-FCC624?logo=linux&logoColor=black)](docs/desktop.md)
+[![Chrome extension](https://img.shields.io/badge/Chrome-extension-4285F4?logo=googlechrome&logoColor=white)](apps/extension/README.md)
+[![Telegram bot](https://img.shields.io/badge/Telegram-bot-26A5E4?logo=telegram&logoColor=white)](#highlights)
+
 **Your whole life in one self-hosted dashboard — with an AI that knows all of it.**
 
 Finance, a diary, tasks, music, games, coding stats, time at the computer, uptime of your sites —
-in one place on your own server, with notifications and an assistant in Telegram. Web, desktop
-(Windows / macOS / Linux) and an installable PWA. English and Russian.
+in one place on your own server, with notifications and an assistant in Telegram. Web and an
+installable PWA, desktop (Windows / macOS / Linux), Android, a Chrome extension. English and
+Russian.
 
 ![A 40-second tour: links between every daily number, achievements, the home page, search across every section, finance, activity, development, monitoring and music](docs/images/demo.gif)
 
@@ -36,6 +45,10 @@ in one place on your own server, with notifications and an assistant in Telegram
   reminders, daily limits on games, disk cleanup advice from the AI, work contexts you can come
   back to; an optional, off-by-default telemetry with its limits written down
   ([apps/desktop/TELEMETRY.md](apps/desktop/TELEMETRY.md))
+- 📱 **The phone as a sensor** (Android) — time in apps, unlocks and late nights, the
+  notifications that interrupt you, and a timeline of places like Google Maps': the routes on a
+  map, the places with their names (OpenStreetMap, or Google with your key), on foot or riding;
+  push notifications, offline reading, a home-screen widget
 - 🛡️ **Security agent** — watches sign-ins, the server (SSH, firewall, open ports), your computers
   and repositories every hour; an AI investigates every morning and tells what to fix
 - 🏆 **400+ achievements** across all sections, with XP and a player level
