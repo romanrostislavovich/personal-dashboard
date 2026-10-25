@@ -156,4 +156,15 @@ describe('OpenXBL answers', () => {
     );
     expect(shapeOf({ failed: 'Error: OpenXBL answered 404' })).toBe('{failed}');
   });
+
+  it("Xbox's refusal, a string in content, is an error, not an empty history", () => {
+    expect(() =>
+      parseTitles({
+        content: '["Request contains Accept-Language header with invalid locale value: *"]',
+        code: 200,
+      }),
+    ).toThrow(
+      'Xbox answered: Request contains Accept-Language header with invalid locale value: *',
+    );
+  });
 });

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { SecretsService } from '@pd/api-core';
+import { SecretsService, UsersService } from '@pd/api-core';
 import { XboxGame, XboxSummary } from '@pd/contracts';
 import { GameAccountRow } from '../games.schema';
 import { OpenXblClient, OpenXblKeyError, XboxProfile } from './openxbl.client';
@@ -19,7 +19,10 @@ export interface XboxStored extends XboxProfile {
  */
 @Injectable()
 export class XboxService {
-  constructor(private readonly secrets: SecretsService) {}
+  constructor(
+    private readonly secrets: SecretsService,
+    private readonly users: UsersService,
+  ) {}
 
   hasKey(userId: string): Promise<boolean> {
     return this.secrets.has(userId, KEY_SECRET);
@@ -90,6 +93,6 @@ export class XboxService {
     if (!key) {
       throw new BadRequestException('No OpenXBL key: set it in Settings → Integrations');
     }
-    return new OpenXblClient(key);
+    return new OpenXblClient(key, (await this.users.findById(userId))?.locale ?? 'en');
   }
 }
