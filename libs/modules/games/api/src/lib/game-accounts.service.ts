@@ -18,6 +18,7 @@ import { gamesMessages } from './games.messages';
 import { WowCharacterNotFoundError, WowRealmNotFoundError } from './wow/battlenet.client';
 import { SteamProfileNotFoundError } from './steam/steam.client';
 import { SteamService } from './steam/steam.service';
+import { XboxService } from './xbox/xbox.service';
 import { toWowExternalId, WowService } from './wow/wow.service';
 
 @Injectable()
@@ -30,6 +31,7 @@ export class GameAccountsService {
     private readonly openDotaKeys: OpenDotaKeyService,
     private readonly wow: WowService,
     private readonly steam: SteamService,
+    private readonly xbox: XboxService,
     private readonly users: UsersService,
     private readonly notifications: NotificationsService,
   ) {}
@@ -151,6 +153,8 @@ export class GameAccountsService {
         return this.wow.summary(row);
       case 'steam':
         return this.steam.summary(row);
+      case 'xbox':
+        return Promise.resolve(this.xbox.summary(row));
     }
   }
 
@@ -166,6 +170,8 @@ export class GameAccountsService {
         return this.syncWow(row);
       case 'steam':
         return this.syncSteam(row);
+      case 'xbox':
+        return this.syncXbox(row);
     }
   }
 
@@ -173,6 +179,13 @@ export class GameAccountsService {
   private async syncSteam(row: GameAccountRow): Promise<string[]> {
     const profile = await this.steam.sync(row);
     await this.saveProfile(row, profile.personaName, { ...profile });
+    return [];
+  }
+
+  /** Like a Steam library: the games and the gamerscore are on the page, not in notifications. */
+  private async syncXbox(row: GameAccountRow): Promise<string[]> {
+    const profile = await this.xbox.sync(row);
+    await this.saveProfile(row, profile.gamertag, { ...profile });
     return [];
   }
 
@@ -225,6 +238,9 @@ export class GameAccountsService {
     userId: string,
     input: GameAccountInput,
   ): Promise<{ externalId: string; displayName: string }> {
+    if (input.game === 'xbox') {
+      return this.xbox.identify(userId);
+    }
     if (input.game === 'steam') {
       const steamId = await this.steam.resolveSteamId(userId, input.steamId);
       return { externalId: steamId, displayName: steamId };

@@ -60,6 +60,14 @@ export class GamesApi {
     return fromCore(() => this.games.removeSteamKey());
   }
 
+  saveXboxKey(apiKey: string) {
+    return fromCore(() => this.games.saveXboxKey(apiKey));
+  }
+
+  removeXboxKey() {
+    return fromCore(() => this.games.removeXboxKey());
+  }
+
   saveWowCredentials(input: WowCredentialsInput) {
     return fromCore(() => this.games.saveWowCredentials(input));
   }

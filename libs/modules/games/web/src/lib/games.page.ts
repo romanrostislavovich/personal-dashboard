@@ -14,6 +14,7 @@ import { AddGameAccountDialog } from './add-account.dialog';
 import { DotaDashboardComponent } from './dota/dota-dashboard.component';
 import { GamesApi } from './games.api';
 import { SteamDashboardComponent } from './steam/steam-dashboard.component';
+import { XboxDashboardComponent } from './xbox/xbox-dashboard.component';
 import { WowDashboardComponent } from './wow/wow-dashboard.component';
 
 @Component({
@@ -28,6 +29,7 @@ import { WowDashboardComponent } from './wow/wow-dashboard.component';
     TranslocoPipe,
     DotaDashboardComponent,
     SteamDashboardComponent,
+    XboxDashboardComponent,
     WowDashboardComponent,
   ],
   templateUrl: './games.page.html',
@@ -51,6 +53,7 @@ export class GamesPage {
   );
   protected readonly dota = computed(() => this.accounts.value().filter((a) => a.game === 'dota2'));
   protected readonly wow = computed(() => this.accounts.value().filter((a) => a.game === 'wow'));
+  protected readonly xbox = computed(() => this.accounts.value().filter((a) => a.game === 'xbox'));
   protected readonly tabIndex = signal(0);
 
   /** `game` — the game the dialog opens on (a tab's own "add" button). */

@@ -24,6 +24,10 @@ export const gamesModule: WebDashboardModule = {
       loadComponent: () => import('./steam.integration').then((m) => m.SteamIntegration),
     },
     {
+      id: 'games.xbox',
+      loadComponent: () => import('./xbox.integration').then((m) => m.XboxIntegration),
+    },
+    {
       id: 'games.battle-net',
       loadComponent: () => import('./battle-net.integration').then((m) => m.BattleNetIntegration),
     },

@@ -119,4 +119,42 @@
       }
     </div>
   </mat-tab>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      Xbox
+      @if (xbox().length) {
+        <span class="count">{{ xbox().length }}</span>
+      }
+    </ng-template>
+    <div class="tab">
+      <pd-xbox-dashboard
+        [accounts]="xbox()"
+        [busy]="busy()"
+        (sync)="sync($event)"
+        (remove)="remove($event)"
+      />
+
+      <!-- The OpenXBL key is in Settings → Integrations; it reads the Xbox account it was made with. -->
+      @if (settings.value() && !settings.value()?.xboxKey) {
+        <section class="credentials">
+          <h3>{{ 'games.xbox.keyTitle' | transloco }}</h3>
+          <p class="hint">{{ 'games.xbox.keyHint' | transloco }}</p>
+          <a
+            matButton="filled"
+            [routerLink]="integrations.path"
+            [queryParams]="integrations.queryParams"
+          >
+            {{ 'core.settings.openIntegrations' | transloco }}
+          </a>
+        </section>
+      } @else if (xbox().length === 0) {
+        <section class="credentials">
+          <p class="hint">{{ 'games.xbox.addHint' | transloco }}</p>
+          <button matButton="filled" (click)="add('xbox')" [disabled]="busy()">
+            <mat-icon>add</mat-icon> {{ 'games.add' | transloco }}
+          </button>
+        </section>
+      }
+    </div>
+  </mat-tab>
 </mat-tab-group>

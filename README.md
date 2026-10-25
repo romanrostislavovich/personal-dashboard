@@ -72,7 +72,7 @@ Russian.
 | ✅ **Tasks**       | TODO list with short / normal / long-running tasks, repeating tasks, reminders at your local time                 |
 | 👨‍💻 **Development** | repositories, stars, releases, npm downloads, contribution streaks, coding time                                   |
 | 🎧 **Music**       | listening history and tops, now playing, your own tracks' stats                                                   |
-| 🎮 **Games**       | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP)                                         |
+| 🎮 **Games**       | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP), Xbox gamerscore and achievements       |
 | ⏱️ **Activity**    | time at the computer per program, project and day, Pomodoro, work contexts                                        |
 | 📡 **Monitoring**  | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                               |
 | 🌤️ **Weather**     | today and the week ahead, what to wear — tuned to how you take the cold                                           |
@@ -87,7 +87,11 @@ Every section is a module: hide what you do not use, or [write your own](docs/ar
 - **Messaging:** Telegram (bot, notifications, voice)
 - **Code:** GitHub · GitLab · Bitbucket · npm · WakaTime
 - **Music:** Last.fm · Spotify · SoundCloud
-- **Games:** Steam · Dota 2 (OpenDota) · World of Warcraft (Battle.net, incl. Classic)
+- **Games:** Steam · Dota 2 (OpenDota) · World of Warcraft (Battle.net, incl. Classic) · Xbox (OpenXBL)<br>
+  ![Steam](https://img.shields.io/badge/Steam-000000?logo=steam&logoColor=white)
+  ![Dota 2](https://img.shields.io/badge/Dota%202-BF2E1A?logo=dota2&logoColor=white)
+  ![World of Warcraft](https://img.shields.io/badge/World%20of%20Warcraft-148EFF?logo=battledotnet&logoColor=white)
+  ![Xbox](https://img.shields.io/badge/Xbox-107C10)
 - **Money:** Enable Banking (open banking) · ECB exchange rates · Hetzner Cloud and DeepSeek costs · bank
   statements (PDF / Excel / CSV)
 - **Other:** Open-Meteo weather (no key)

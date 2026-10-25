@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { WowDetails, WowHistoryPoint } from './wow-details';
 
-export const GAMES = ['dota2', 'wow', 'steam'] as const;
+export const GAMES = ['dota2', 'wow', 'steam', 'xbox'] as const;
 export type Game = (typeof GAMES)[number];
 
 export const WOW_REGIONS = ['eu', 'us', 'kr', 'tw'] as const;
@@ -27,6 +27,10 @@ export const gameAccountInputSchema = z.discriminatedUnion('game', [
     steamId: z.string().trim().min(2).max(200),
   }),
   z.object({
+    /** The account of the OpenXBL key: the key belongs to one Xbox profile. */
+    game: z.literal('xbox'),
+  }),
+  z.object({
     game: z.literal('wow'),
     region: z.enum(WOW_REGIONS),
     version: z.enum(WOW_VERSIONS).default('retail'),
@@ -49,6 +53,12 @@ export const openDotaKeyInputSchema = z.object({
 });
 export type OpenDotaKeyInput = z.infer<typeof openDotaKeyInputSchema>;
 
+export const openXblKeyInputSchema = z.object({
+  /** The API key from xbl.io (signed in with the Xbox account). */
+  apiKey: z.string().trim().min(10).max(200),
+});
+export type OpenXblKeyInput = z.infer<typeof openXblKeyInputSchema>;
+
 export const steamKeyInputSchema = z.object({
   /** The Web API key from steamcommunity.com/dev/apikey. */
   apiKey: z.string().trim().min(10).max(200),
@@ -58,6 +68,8 @@ export type SteamKeyInput = z.infer<typeof steamKeyInputSchema>;
 export interface GamesSettings {
   /** Whether the Steam Web API key is set: Steam accounts and Dota matches are read with it. */
   steamKey: boolean;
+  /** Whether the OpenXBL key is set: the Xbox account is read with it. */
+  xboxKey: boolean;
   /** Whether the Battle.net app keys are set (needed for WoW). */
   wowCredentials: boolean;
   /** Dota accounts (ids) with an OpenDota API key of their own: not bound by the free limit. */
@@ -309,6 +321,34 @@ export function steamIconUrl(appId: number, iconHash: string): string {
   return `https://shared.fastly.steamstatic.com/community_assets/images/apps/${appId}/${iconHash}.jpg`;
 }
 
+// --- Xbox ---
+
+/** A game of the Xbox title history (with its achievements). */
+export interface XboxGame {
+  titleId: string;
+  name: string;
+  imageUrl: string | null;
+  /** Gamerscore earned in it and the most it gives. */
+  gamerscore: number;
+  totalGamerscore: number;
+  /** `null` — the game has no achievements. */
+  achievements: { unlocked: number; total: number } | null;
+  lastPlayedAt: string | null;
+}
+
+export interface XboxSummary {
+  game: 'xbox';
+  gamertag: string;
+  avatarUrl: string | null;
+  gamerscore: number;
+  /** Silver, Gold… as Xbox calls the account's tier; `null` — not told. */
+  tier: string | null;
+  profileUrl: string;
+  totals: { games: number; achievements: number };
+  /** The games, the last played first (at most a hundred). */
+  games: XboxGame[];
+}
+
 // --- World of Warcraft ---
 
 export interface WowAchievement {
@@ -353,5 +393,5 @@ export interface GameAccount {
   lastSyncedAt: string | null;
   lastError: string | null;
   /** `null` until the first sync has run. */
-  summary: DotaSummary | WowSummary | SteamSummary | null;
+  summary: DotaSummary | WowSummary | SteamSummary | XboxSummary | null;
 }

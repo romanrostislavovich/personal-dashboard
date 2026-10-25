@@ -1,7 +1,7 @@
 {
   "title": "Games",
   "add": "Add account",
-  "empty": "No accounts yet. Add a Steam profile, a Dota 2 account or a WoW character.",
+  "empty": "No accounts yet. Add a Steam profile, a Dota 2 account, a WoW character or your Xbox account.",
   "synced": "Updated",
   "syncNow": "Update",
   "syncAll": "Refresh all",
@@ -244,5 +244,24 @@
     "dotaLateMatches": "Dota 2 matches late at night",
     "dotaWins": "Dota 2 matches won",
     "steam": "In Steam"
+  },
+  "xbox": {
+    "keyTitle": "The OpenXBL key",
+    "keySaved": "The key is saved: the Xbox account is read with it",
+    "keyRemove": "Remove the key",
+    "keyHint": "OpenXBL reads Xbox Live for you: sign in at xbl.io with your Xbox account and paste its API key here.",
+    "keyLabel": "OpenXBL API key",
+    "keyInvalid": "OpenXBL did not accept the key",
+    "addHint": "The account of the OpenXBL key is added as it is: nothing to type.",
+    "games": "Games",
+    "achievements": "Achievements",
+    "game": "Game",
+    "lastPlayed": "Last played",
+    "empty": "No Xbox account yet.",
+    "guide": {
+      "1": "Open xbl.io and sign in with the Microsoft account of your Xbox profile.",
+      "2": "In your profile there, copy the API key (the free plan is enough: about 150 requests an hour, a sync takes two).",
+      "3": "Paste it here and save, then add the account on the Games page → Xbox."
+    }
   }
 }
