@@ -80,7 +80,8 @@ Electron.
   asks Android for the permission, takes its token and tells the server; a phone whose token is
   gone is forgotten; a sync client sends none. The APK is built with
   `deploy/google-services.json` (not in git) when it is there. Switched off per phone in the same
-  card; **per kind of notification — with the quiet hours of 1d.**
+  card; per section and channel in Settings → Notifications → "What comes where" (`muted` of
+  the gentle mode, built 2026-10-25).
 - **1d, gentle (built, 2026-10-24)** — the owner's choices: quiet hours 21:00–09:00, nothing
   comes in them; soft overdue always; the close person through Telegram.
   - **A gentle mode** (Settings → Notifications, `calm` of the account, every device): in the quiet
