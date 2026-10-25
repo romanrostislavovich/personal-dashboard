@@ -164,7 +164,8 @@ public class SensorsWorker extends Worker {
         store.queueLocation(PhoneLocation.toJson(fix));
     }
 
-    private void sendLocations(SensorsStore store) throws IOException, JSONException {
+    /** The fixes waiting in the store; PlacesService sends them too, every few minutes. */
+    static synchronized void sendLocations(SensorsStore store) throws IOException, JSONException {
         JSONArray queue = store.locations();
         while (queue.length() > 0) {
             int count = Math.min(BATCH, queue.length());

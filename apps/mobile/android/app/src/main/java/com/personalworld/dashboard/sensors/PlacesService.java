@@ -8,6 +8,10 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.hardware.TriggerEvent;
+import android.hardware.TriggerEventListener;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -21,6 +25,8 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import com.personalworld.dashboard.MainActivity;
 import com.personalworld.dashboard.R;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 
@@ -40,7 +46,13 @@ public class PlacesService extends Service {
     private static final long MOVING_MS = TimeUnit.SECONDS.toMillis(5);
     private static final float MOVING_MIN_M = 5;
 
+    /** The fixes go to the server this often: a background job waits for hours in deep sleep. */
+    private static final long SEND_EVERY_MIN = 5;
+
     private final MotionMode mode = new MotionMode();
+    private ScheduledExecutorService sender;
+    private SensorManager sensors;
+    private TriggerEventListener motion;
     private LocationListener listener;
     /** Only while moving. */
     private LocationListener gps;
@@ -75,6 +87,8 @@ public class PlacesService extends Service {
             return START_NOT_STICKY;
         }
         subscribe();
+        armMotion();
+        startSending();
         // Killed for memory: Android starts it again.
         return START_STICKY;
     }
@@ -131,6 +145,51 @@ public class PlacesService extends Service {
         }
     }
 
+    /**
+     * The motion sensor (a hardware one: it costs nothing while it waits) wakes the service when
+     * the phone starts moving; with the screen off the network fixes come too rarely to tell it.
+     * It fires once, so it is armed again each time the phone is still.
+     */
+    private void armMotion() {
+        if (sensors == null) {
+            sensors = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        }
+        Sensor sensor = sensors == null ? null : sensors.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+        if (sensor == null) {
+            return;
+        }
+        if (motion == null) {
+            motion = new TriggerEventListener() {
+                @Override
+                public void onTrigger(TriggerEvent event) {
+                    if (mode.startMoving(System.currentTimeMillis())) {
+                        follow(true);
+                    }
+                }
+            };
+        }
+        sensors.requestTriggerSensor(motion, sensor);
+    }
+
+    private void startSending() {
+        if (sender != null) {
+            return;
+        }
+        sender = Executors.newSingleThreadScheduledExecutor();
+        sender.scheduleWithFixedDelay(() -> {
+            SensorsStore store = new SensorsStore(this);
+            if (!store.configured()) {
+                return;
+            }
+            try {
+                SensorsWorker.sendLocations(store);
+            } catch (Exception e) {
+                // No network now: they wait in the store for the next time.
+                Log.w(TAG, "Fixes were not sent", e);
+            }
+        }, SEND_EVERY_MIN, SEND_EVERY_MIN, TimeUnit.MINUTES);
+    }
+
     /** On the move: GPS every few seconds as well; still: the network fixes alone. */
     @SuppressWarnings("MissingPermission")
     private void follow(boolean moving) {
@@ -165,6 +224,9 @@ public class PlacesService extends Service {
         } else if (!moving && gps != null) {
             manager.removeUpdates(gps);
             gps = null;
+        }
+        if (!moving) {
+            armMotion();
         }
         NotificationManager notifications = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (notifications != null) {
@@ -208,6 +270,13 @@ public class PlacesService extends Service {
         }
         listener = null;
         gps = null;
+        if (sensors != null && motion != null) {
+            sensors.cancelTriggerSensor(motion, null);
+        }
+        if (sender != null) {
+            sender.shutdownNow();
+            sender = null;
+        }
         super.onDestroy();
     }
 
