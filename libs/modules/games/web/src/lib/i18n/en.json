@@ -262,6 +262,7 @@
       "1": "Open xbl.io and sign in with the Microsoft account of your Xbox profile.",
       "2": "In your profile there, copy the API key (the free plan is enough: about 150 requests an hour, a sync takes two).",
       "3": "Paste it here and save, then add the account on the Games page → Xbox."
-    }
+    },
+    "noGames": "Xbox gave no games. Check Xbox privacy: account.xbox.com → Privacy → \"Others can see your game and app history\" — Everyone; then sync again. What each way of asking answered:"
   }
 }

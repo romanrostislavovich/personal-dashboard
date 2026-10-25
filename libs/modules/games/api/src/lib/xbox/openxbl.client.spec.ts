@@ -1,4 +1,4 @@
-import { parseProfile, parseTitles } from './openxbl.client';
+import { parseProfile, parseTitles, shapeOf } from './openxbl.client';
 
 // The examples of OpenXBL's own OpenAPI spec (https://api.xbl.io/docs/json), and the bare shape
 // an older OpenXBL answered with; not from a live key.
@@ -123,5 +123,37 @@ describe('OpenXBL answers', () => {
       totalGamerscore: 1600,
       achievements: { unlocked: 12, total: 119 },
     });
+  });
+
+  it('reads the other shape, of /achievements: the gamerscore on the title, the achievements listed', () => {
+    const games = parseTitles({
+      content: {
+        titles: [
+          {
+            titleId: '1810924247',
+            name: 'Halo Infinite',
+            currentGamerscore: 450,
+            maxGamerscore: 1000,
+            achievements: [
+              { id: '1', isUnlocked: true, gamerscore: 100 },
+              { id: '2', isUnlocked: false, gamerscore: 50 },
+            ],
+          },
+        ],
+      },
+      code: 200,
+    });
+    expect(games[0]).toMatchObject({
+      gamerscore: 450,
+      totalGamerscore: 1000,
+      achievements: { unlocked: 1, total: 2 },
+    });
+  });
+
+  it('describes an answer by its keys only, to tell why it had no games', () => {
+    expect(shapeOf({ content: { xuid: '253…', titles: [] }, code: 200 })).toBe(
+      '{content{xuid,titles[0]},code}',
+    );
+    expect(shapeOf({ failed: 'Error: OpenXBL answered 404' })).toBe('{failed}');
   });
 });

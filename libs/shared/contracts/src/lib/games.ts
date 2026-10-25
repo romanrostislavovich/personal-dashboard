@@ -347,6 +347,11 @@ export interface XboxSummary {
   totals: { games: number; achievements: number };
   /** The games, the last played first (at most a hundred). */
   games: XboxGame[];
+  /**
+   * No games came from any way of asking: what each answered, its shape only — Xbox's privacy
+   * ("Others can see your game and app history") or an answer the parser does not know.
+   */
+  noGames: string[] | null;
 }
 
 // --- World of Warcraft ---

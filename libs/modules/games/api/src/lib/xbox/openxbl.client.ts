@@ -30,6 +30,26 @@ function num(value: unknown): number {
   return typeof n === 'number' && Number.isFinite(n) ? n : 0;
 }
 
+/** The keys of an answer, two levels deep, with array lengths: why it gave no games, no values. */
+export function shapeOf(raw: unknown, depth = 0): string {
+  if (Array.isArray(raw)) {
+    return `[${raw.length}]${raw.length && depth < 2 ? shapeOf(raw[0], depth + 1) : ''}`;
+  }
+  if (!isObject(raw)) {
+    return typeof raw;
+  }
+  if (depth >= 2) {
+    return '{…}';
+  }
+  return `{${Object.keys(raw)
+    .slice(0, 8)
+    .map((key) => {
+      const value = raw[key];
+      return isObject(value) || Array.isArray(value) ? `${key}${shapeOf(value, depth + 1)}` : key;
+    })
+    .join(',')}}`;
+}
+
 /** OpenXBL wraps every answer: `{ "content": {…}, "code": 200 }`; an older one did not. */
 function unwrap(raw: unknown): unknown {
   return isObject(raw) && isObject(raw['content']) ? raw['content'] : raw;
@@ -89,14 +109,18 @@ export function parseTitles(raw: unknown): XboxGame[] {
     }
     const achievement = isObject(title['achievement']) ? title['achievement'] : {};
     const history = isObject(title['titleHistory']) ? title['titleHistory'] : {};
-    const total = num(achievement['totalAchievements']);
-    const unlocked = num(achievement['currentAchievements']);
+    // `/achievements` answers another shape: the gamerscore on the title, the achievements listed.
+    const listed = Array.isArray(title['achievements']) ? title['achievements'] : null;
+    const total = listed ? listed.length : num(achievement['totalAchievements']);
+    const unlocked = listed
+      ? listed.filter((item) => isObject(item) && item['isUnlocked'] === true).length
+      : num(achievement['currentAchievements']);
     games.push({
       titleId,
       name,
       imageUrl: text(title['displayImage']),
-      gamerscore: num(achievement['currentGamerscore']),
-      totalGamerscore: num(achievement['totalGamerscore']),
+      gamerscore: num(achievement['currentGamerscore'] ?? title['currentGamerscore']),
+      totalGamerscore: num(achievement['totalGamerscore'] ?? title['maxGamerscore']),
       // Older games tell what was unlocked but not how many there are (total 0).
       achievements: total > 0 || unlocked > 0 ? { unlocked, total: total || null } : null,
       lastPlayedAt: text(history['lastTimePlayed']),
@@ -119,8 +143,31 @@ export class OpenXblClient {
     return parseProfile(await this.get('/account'));
   }
 
-  async games(): Promise<XboxGame[]> {
-    return parseTitles(await this.get('/titles'));
+  /**
+   * The games: `/titles` first, then the other ways OpenXBL tells them, until one has any. With
+   * none, `shapes` says what each answered (its keys, no values), to tell why.
+   */
+  async games(xuid: string): Promise<{ games: XboxGame[]; shapes: string[] }> {
+    const shapes: string[] = [];
+    for (const path of [
+      '/titles',
+      `/titles/${xuid}`,
+      `/achievements/player/${xuid}`,
+      '/achievements',
+    ]) {
+      const raw = await this.get(path).catch((error: unknown) => {
+        if (error instanceof OpenXblKeyError || error instanceof OpenXblRateLimitError) {
+          throw error;
+        }
+        return { failed: String(error).slice(0, 60) };
+      });
+      const games = parseTitles(raw);
+      if (games.length) {
+        return { games, shapes: [] };
+      }
+      shapes.push(`${path} → ${shapeOf(raw)}`);
+    }
+    return { games: [], shapes };
   }
 
   private async get(path: string): Promise<unknown> {
