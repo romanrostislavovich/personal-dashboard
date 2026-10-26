@@ -1,7 +1,13 @@
 import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, Signal } from '@angular/core';
 import { HEALTH_READS, healthApi } from '@pd/client-core';
-import { HealthRecord, IcdDictionary } from '@pd/contracts';
+import {
+  HealthRecord,
+  IcdDictionary,
+  WearableDay,
+  WearableDaysQuery,
+  WearableStatus,
+} from '@pd/contracts';
 import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
 
 /** The Health requests of the client core (`@pd/client-core`) for Angular. */
@@ -16,6 +22,17 @@ export class HealthApi {
 
   dictionaries() {
     return httpResource<IcdDictionary[]>(() => HEALTH_READS.dictionaries(), {
+      defaultValue: [],
+    });
+  }
+
+  /** The band through the Google Health API: connected or not, the last sync. */
+  wearable() {
+    return httpResource<WearableStatus>(() => HEALTH_READS.wearable());
+  }
+
+  wearableDays(period: Signal<WearableDaysQuery>) {
+    return httpResource<WearableDay[]>(() => HEALTH_READS.wearableDays(period()), {
       defaultValue: [],
     });
   }

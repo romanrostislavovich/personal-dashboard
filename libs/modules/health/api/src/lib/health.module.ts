@@ -20,6 +20,11 @@ import { SharedSummaryController } from './summary/shared.controller';
 import { SummaryController } from './summary/summary.controller';
 import { SummaryService } from './summary/summary.service';
 import { HealthRecall } from './health.recall';
+import { WearableController } from './wearable/wearable.controller';
+import { WearableIntegrations } from './wearable/wearable.integrations';
+import { WearableJob } from './wearable/wearable.job';
+import { WearableLinks } from './wearable/wearable.links';
+import { WearableService } from './wearable/wearable.service';
 
 /**
  * Health: one medical history across countries and clinics — visits, diagnoses by ICD code,
@@ -27,7 +32,13 @@ import { HealthRecall } from './health.recall';
  * module is in docs/health.md.
  */
 @Module({
-  controllers: [HealthController, ProfileController, SummaryController, SharedSummaryController],
+  controllers: [
+    HealthController,
+    ProfileController,
+    SummaryController,
+    SharedSummaryController,
+    WearableController,
+  ],
   providers: [
     HealthService,
     LabsService,
@@ -46,6 +57,10 @@ import { HealthRecall } from './health.recall';
     IntakesService,
     IntakesJobs,
     HealthAchievements,
+    WearableService,
+    WearableJob,
+    WearableLinks,
+    WearableIntegrations,
   ],
 })
 export class HealthModule {}

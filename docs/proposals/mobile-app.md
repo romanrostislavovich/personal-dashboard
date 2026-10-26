@@ -5,7 +5,7 @@ account).
 
 ## Decisions so far (2026-10-24)
 
-- **The phone:** a Redmi Note 9 (MIUI): the setup screen must walk through autostart and battery
+- **The phone:** a Redmi 9 (MIUI): the setup screen must walk through autostart and battery
   saving, or MIUI kills the collection in the background. Health Connect needs Android 11+ for
   the Google Health app — check the phone's version.
 - **For whom:** the owner only for now, maybe everyone later. The APK is served by the server
@@ -197,6 +197,8 @@ file are not checked yet.
   count our own stress index from HRV and resting heart rate, so any band that writes HRV will
   do; a band's own API (Polar, Fitbit) only if ours is not enough. The band to buy is the one that
   writes HRV to Health Connect — to be checked on its permission screen before buying.
+
+**Built (2026-10-26), before the band arrived:** the band is read from the server through the Google Health API (Health → Band, Settings → Integrations → Google Health; `libs/modules/health/api/src/lib/wearable`), not through Health Connect on the phone: the Fitbit Air needs the Google Health app, which needs Android 11+, and the owner's phone is a Redmi 9 (`galahad`) on Android 10 with no update (the official Redmi 9 ROM refuses it). The band can be paired with any Android 11+ phone or an iPhone — the dashboard does not care which. Written from the documented API shapes; nothing ran against the real API yet. The stress index from HRV and resting heart rate is still to come.
 
 ## Stage 4 — voice
 

@@ -81,4 +81,27 @@ function withArrows(row: HTMLElement): void {
   row.addEventListener('scroll', update, { passive: true });
   new ResizeObserver(update).observe(row);
   update();
+  // Material's paging brought the chosen tab into view; the native scroll has to do it itself,
+  // or a page opened on a far tab (/health/band on a phone) shows a row without it.
+  const reveal = () => revealActive(row);
+  new MutationObserver(reveal).observe(row, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class'],
+  });
+  reveal();
+}
+
+/** The active tab is rolled to the middle of the row when it is not wholly seen. */
+function revealActive(row: HTMLElement): void {
+  const tab = row.querySelector<HTMLElement>('.mdc-tab--active');
+  if (!tab) {
+    return;
+  }
+  const seen =
+    tab.offsetLeft >= row.scrollLeft &&
+    tab.offsetLeft + tab.offsetWidth <= row.scrollLeft + row.clientWidth;
+  if (!seen) {
+    row.scrollTo({ left: tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2 });
+  }
 }

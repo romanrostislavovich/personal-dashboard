@@ -1,5 +1,8 @@
 {
-  "upcoming": { "today": "The visit is today", "title": "Next visit in {{days}} d." },
+  "upcoming": {
+    "today": "The visit is today",
+    "title": "Next visit in {{days}} d."
+  },
   "title": "Health",
   "about": "One medical history of your own across countries and clinics: visits, diagnoses, medications and the documents. Kept encrypted. It records facts and never interprets them.",
   "tabs": {
@@ -9,7 +12,8 @@
     "doctors": "Doctors and clinics",
     "results": "Results",
     "summary": "For a doctor",
-    "profile": "Profile"
+    "profile": "Profile",
+    "band": "Band"
   },
   "all": "All",
   "country": "Country",
@@ -449,6 +453,75 @@
   "links": {
     "intakes": "Medications taken",
     "visits": "Visits to doctors",
-    "lab": "Lab result"
+    "lab": "Lab result",
+    "band": {
+      "sleep": "Sleep (band)",
+      "deepSleep": "Deep sleep",
+      "remSleep": "REM sleep",
+      "bedtime": "Fell asleep",
+      "wake": "Woke up",
+      "restingHeartRate": "Resting heart rate",
+      "hrv": "Heart rate variability",
+      "spo2": "SpO2 at night",
+      "steps": "Steps (band)",
+      "calories": "Calories burned",
+      "zoneMinutes": "Active zone minutes"
+    }
+  },
+  "band": {
+    "period": "Period",
+    "days": "{{count}} days",
+    "daysTold": "over {{count}} d",
+    "h": "h",
+    "noDays": "No days from the band in this period yet. Google Health is read every hour.",
+    "empty": {
+      "title": "The band is not connected",
+      "text": "Connect Google Health to see sleep, the resting heart rate, HRV, SpO2 and steps from a Fitbit.",
+      "connect": "Connect in Settings"
+    },
+    "charts": {
+      "sleep": "Sleep per night, h",
+      "steps": "Steps per day"
+    },
+    "fields": {
+      "sleepMinutes": "Sleep",
+      "deepMinutes": "Deep sleep",
+      "remMinutes": "REM sleep",
+      "lightMinutes": "Light sleep",
+      "awakeMinutes": "Awake at night",
+      "restingHeartRate": "Resting heart rate",
+      "hrvMs": "Heart rate variability",
+      "spo2": "SpO2 at night",
+      "steps": "Steps",
+      "activeZoneMinutes": "Active zone minutes",
+      "calories": "Calories",
+      "distanceKm": "Distance, km",
+      "heartRateAvg": "Average heart rate",
+      "heartRateMax": "Highest heart rate"
+    },
+    "integration": {
+      "subtitle": "A Fitbit band: sleep, heart, HRV, activity",
+      "notConfigured": "The owner of the dashboard has not set the keys of a Google Cloud app yet (see the guide below).",
+      "hint": "Sign in with the Google account the band is set up in: the dashboard reads its days every hour, read-only.",
+      "connected": "Google Health is connected",
+      "error": "Could not connect Google Health",
+      "actionFailed": "Google Health did not answer, try again later",
+      "synced": "Last read:",
+      "failed": "The last read failed:",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "sync": "Read now",
+      "redirectUri": "Authorized redirect URI of the app:",
+      "clientId": "Client ID",
+      "clientSecret": "Client secret"
+    },
+    "guide": {
+      "1": "Open console.cloud.google.com, make a project (any name) and enable the Google Health API in it.",
+      "2": "APIs & Services → OAuth consent screen: type External, add your Google address as a test user, add the googlehealth …readonly scopes (activity, health metrics, sleep).",
+      "3": "Publish the app (Publishing status → In production): in Testing, Google drops the consent every 7 days. An unverified app is fine for yourself — Google warns once on sign-in.",
+      "4": "Credentials → Create credentials → OAuth client ID → Web application; put the redirect URI shown below into Authorized redirect URIs.",
+      "5": "Copy the Client ID and the client secret into \"Server key\" below and save.",
+      "6": "Press Connect, sign in with the account of the band and allow the access."
+    }
   }
 }

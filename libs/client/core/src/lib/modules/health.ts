@@ -1,4 +1,5 @@
 import {
+  GoogleHealthAppInput,
   HealthAllergy,
   HealthAllergyInput,
   HealthClinic,
@@ -38,6 +39,7 @@ import {
   IcdEntry,
   IcdImportInput,
   IcdLoadInput,
+  WearableDaysQuery,
 } from '@pd/contracts';
 import { ApiClient, apiRequest } from '../api-client';
 
@@ -51,6 +53,10 @@ export const HEALTH_READS = {
   dictionaries: () => apiRequest(`${BASE}/icd`),
   /** The links for doctors, the latest first. */
   shares: () => apiRequest(`${BASE}/shares`),
+  /** The band through the Google Health API: connected or not, the last sync. */
+  wearable: () => apiRequest(`${BASE}/wearable`),
+  /** The band's days of a period, oldest first. */
+  wearableDays: (query: WearableDaysQuery) => apiRequest(`${BASE}/wearable/days`, query),
 };
 
 /** Adds without an id, changes with one. */
@@ -165,5 +171,15 @@ export function healthApi(api: ApiClient) {
     },
     searchIcd: (q: string, limit?: number) =>
       api.read<IcdEntry[]>(apiRequest(`${BASE}/icd/search`, { q, limit })),
+
+    /** The Google sign-in page the user has to open to connect the band. */
+    wearableConnectUrl: () => api.post<{ url: string }>(`${BASE}/wearable/connect`, {}),
+    disconnectWearable: () => api.delete(`${BASE}/wearable`),
+    /** Reads the band's new days now. */
+    syncWearable: () => api.post<void>(`${BASE}/wearable/sync`, {}),
+    /** The owner sets the keys of the server's Google Cloud app. */
+    setGoogleHealthApp: (input: GoogleHealthAppInput) =>
+      api.put<void>(`${BASE}/wearable/app`, input),
+    removeGoogleHealthApp: () => api.delete(`${BASE}/wearable/app`),
   };
 }
