@@ -9,6 +9,7 @@ const TABS = [
   { path: 'profile', labelKey: 'health.tabs.profile' },
   { path: 'conditions', labelKey: 'health.tabs.conditions' },
   { path: 'results', labelKey: 'health.tabs.results' },
+  { path: 'band', labelKey: 'health.tabs.band' },
   { path: 'medications', labelKey: 'health.tabs.medications' },
   { path: 'doctors', labelKey: 'health.tabs.doctors' },
   { path: 'summary', labelKey: 'health.tabs.summary' },

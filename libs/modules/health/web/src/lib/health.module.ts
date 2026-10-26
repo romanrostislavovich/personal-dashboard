@@ -31,6 +31,10 @@ export const healthModule: WebDashboardModule = {
           loadComponent: () => import('./results/results.page').then((m) => m.ResultsPage),
         },
         {
+          path: 'band',
+          loadComponent: () => import('./wearable/band.page').then((m) => m.BandPage),
+        },
+        {
           path: 'medications',
           loadComponent: () =>
             import('./medications/medications.page').then((m) => m.MedicationsPage),
@@ -70,6 +74,12 @@ export const healthModule: WebDashboardModule = {
       url: '/health/summary',
     },
     {
+      id: 'health.band',
+      labelKey: 'health.tabs.band',
+      icon: 'watch',
+      url: '/health/band',
+    },
+    {
       id: 'health.medications',
       labelKey: 'health.tabs.medications',
       icon: 'medication',
@@ -77,6 +87,11 @@ export const healthModule: WebDashboardModule = {
     },
   ],
   integrations: [
+    {
+      id: 'health.google-health',
+      loadComponent: () =>
+        import('./wearable/google-health.integration').then((m) => m.GoogleHealthIntegration),
+    },
     {
       id: 'health.icd',
       loadComponent: () =>

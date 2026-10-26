@@ -1,5 +1,8 @@
 {
-  "upcoming": { "today": "Визит сегодня", "title": "Ближайший визит через {{days}} дн." },
+  "upcoming": {
+    "today": "Визит сегодня",
+    "title": "Ближайший визит через {{days}} дн."
+  },
   "title": "Здоровье",
   "about": "Одна своя медицинская история для всех стран и клиник: визиты, диагнозы, лекарства и документы. Хранится зашифрованной. Записывает факты и никогда их не толкует.",
   "tabs": {
@@ -9,7 +12,8 @@
     "doctors": "Врачи и клиники",
     "results": "Анализы",
     "summary": "Для врача",
-    "profile": "Профиль"
+    "profile": "Профиль",
+    "band": "Браслет"
   },
   "all": "Все",
   "country": "Страна",
@@ -449,6 +453,75 @@
   "links": {
     "intakes": "Принятые лекарства",
     "visits": "Визиты к врачам",
-    "lab": "Результат анализа"
+    "lab": "Результат анализа",
+    "band": {
+      "sleep": "Сон (браслет)",
+      "deepSleep": "Глубокий сон",
+      "remSleep": "Фаза REM",
+      "bedtime": "Засыпание",
+      "wake": "Пробуждение",
+      "restingHeartRate": "Пульс покоя",
+      "hrv": "Вариабельность пульса",
+      "spo2": "SpO2 ночью",
+      "steps": "Шаги (браслет)",
+      "calories": "Сожжённые калории",
+      "zoneMinutes": "Минуты в активных зонах"
+    }
+  },
+  "band": {
+    "period": "Период",
+    "days": "{{count}} дней",
+    "daysTold": "за {{count}} дн.",
+    "h": "ч",
+    "noDays": "За этот период данных с браслета пока нет. Google Health читается каждый час.",
+    "empty": {
+      "title": "Браслет не подключён",
+      "text": "Подключи Google Health, чтобы видеть сон, пульс покоя, вариабельность пульса, SpO2 и шаги с Fitbit.",
+      "connect": "Подключить в Настройках"
+    },
+    "charts": {
+      "sleep": "Сон за ночь, ч",
+      "steps": "Шаги за день"
+    },
+    "fields": {
+      "sleepMinutes": "Сон",
+      "deepMinutes": "Глубокий сон",
+      "remMinutes": "Фаза REM",
+      "lightMinutes": "Лёгкий сон",
+      "awakeMinutes": "Пробуждения ночью",
+      "restingHeartRate": "Пульс покоя",
+      "hrvMs": "Вариабельность пульса",
+      "spo2": "SpO2 ночью",
+      "steps": "Шаги",
+      "activeZoneMinutes": "Минуты в активных зонах",
+      "calories": "Калории",
+      "distanceKm": "Расстояние, км",
+      "heartRateAvg": "Средний пульс",
+      "heartRateMax": "Максимальный пульс"
+    },
+    "integration": {
+      "subtitle": "Браслет Fitbit: сон, пульс, вариабельность, активность",
+      "notConfigured": "Владелец дашборда ещё не указал ключи приложения Google Cloud (см. инструкцию ниже).",
+      "hint": "Войди тем Google-аккаунтом, в котором настроен браслет: дашборд будет каждый час читать его дни, только чтение.",
+      "connected": "Google Health подключён",
+      "error": "Не удалось подключить Google Health",
+      "actionFailed": "Google Health не ответил, попробуй позже",
+      "synced": "Последнее чтение:",
+      "failed": "Последнее чтение не удалось:",
+      "connect": "Подключить",
+      "disconnect": "Отключить",
+      "sync": "Прочитать сейчас",
+      "redirectUri": "Authorized redirect URI приложения:",
+      "clientId": "Client ID",
+      "clientSecret": "Client secret"
+    },
+    "guide": {
+      "1": "Открой console.cloud.google.com, создай проект (название любое) и включи в нём Google Health API.",
+      "2": "APIs & Services → OAuth consent screen: тип External, добавь свой Google-адрес в тестовые пользователи и scopes googlehealth …readonly (activity, health metrics, sleep).",
+      "3": "Опубликуй приложение (Publishing status → In production): в режиме Testing Google сбрасывает согласие каждые 7 дней. Непроверенное приложение для себя подходит — Google один раз предупредит при входе.",
+      "4": "Credentials → Create credentials → OAuth client ID → Web application; в Authorized redirect URIs вставь адрес, показанный ниже.",
+      "5": "Скопируй Client ID и client secret в «Ключ сервера» ниже и сохрани.",
+      "6": "Нажми «Подключить», войди аккаунтом браслета и разреши доступ."
+    }
   }
 }

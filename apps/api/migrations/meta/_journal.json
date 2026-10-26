@@ -785,6 +785,13 @@
       "when": 1793007884084,
       "tag": "0111_notification_link",
       "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1793012991356,
+      "tag": "0112_health_wearable",
+      "breakpoints": true
     }
   ]
 }

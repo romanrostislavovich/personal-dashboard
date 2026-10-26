@@ -46,6 +46,11 @@ export class HealthLinks implements OnModuleInit {
       { module: 'health', path: '/health/history', description: 'medical visits, documents' },
       { module: 'health', path: '/health/conditions', description: 'diagnoses over the years' },
       { module: 'health', path: '/health/results', description: 'lab results and studies' },
+      {
+        module: 'health',
+        path: '/health/band',
+        description: 'the band: sleep, heart rate, HRV, steps',
+      },
       { module: 'health', path: '/health/medications', description: 'medications' },
       { module: 'health', path: '/health/summary', description: 'a summary for a new doctor' },
     ]);

@@ -14,7 +14,9 @@ export type ServerKey =
   | 'writing.languagetool-url'
   | 'finance.enablebanking-app-id'
   | 'finance.enablebanking-key'
-  | 'push.fcm-service-account';
+  | 'push.fcm-service-account'
+  | 'health.google-client-id'
+  | 'health.google-client-secret';
 
 /** Kept among the owner's secrets: encrypted, and synced to a sync client with the rest. */
 const PREFIX = 'server.';
