@@ -5,6 +5,7 @@ import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.location.Location;
 import androidx.annotation.NonNull;
+import android.util.Log;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
@@ -42,6 +43,8 @@ public class SensorsWorker extends Worker {
     private static final String NOW = "phone-sensors-now";
     /** The first run reads this far back. */
     private static final long FIRST_READ_MS = TimeUnit.DAYS.toMillis(1);
+    /** The security report (PhoneSecurity) goes once a day. */
+    private static final long SECURITY_EVERY_MS = TimeUnit.DAYS.toMillis(1);
     /** The server takes at most this many in one request. */
     private static final int BATCH = 500;
 
@@ -87,6 +90,7 @@ public class SensorsWorker extends Worker {
             sendLocations(store);
             collectSignals(store);
             sendSignals(store);
+            sendSecurity(store);
             return Result.success();
         } catch (IOException | JSONException e) {
             return Result.retry();
@@ -235,6 +239,23 @@ public class SensorsWorker extends Worker {
             store.keepDailiesOf(PhoneSignals.today());
             queue = store.signals();
         } while (queue.length() > 0);
+    }
+
+    /**
+     * The security report, once a day (Security → Phone). A failure is not retried before the next
+     * day: a server without this address yet must not hold the rest of the collection back.
+     */
+    private void sendSecurity(SensorsStore store) {
+        long now = System.currentTimeMillis();
+        if (now - store.number("securityAt") < SECURITY_EVERY_MS) {
+            return;
+        }
+        store.setNumber("securityAt", now);
+        try {
+            post(store, "/api/activity/device/security", PhoneSecurity.report(getApplicationContext()));
+        } catch (IOException | JSONException | RuntimeException e) {
+            Log.w("SensorsWorker", "The security report was not sent", e);
+        }
     }
 
     /** Throws on no answer or an error of the server, so the run is tried again. */

@@ -109,3 +109,44 @@ export interface PhoneSignalsDay {
   /** Hours in daylight (light over 1 000 lux). */
   daylightHours: number | null;
 }
+
+const appName = z.string().trim().max(200);
+/** An app of the phone as the security report names it: its package and its label. */
+const securityApp = z.object({ package: z.string().trim().min(1).max(200), name: appName });
+
+/**
+ * What the phone tells about its own safety once a day (Security → Phone): the system and its
+ * patch, the lock, the encryption, root; the apps with the strongest access, the apps that may
+ * install others, the apps not from Google Play; the certificates added by hand, the Wi-Fi it is
+ * on, a VPN. Developer options and USB debugging are told but are no finding (the owner's choice).
+ */
+export const phoneSecuritySchema = z.object({
+  at: moment,
+  android: z.object({
+    release: z.string().max(20),
+    sdk: z.number().int().min(1).max(100),
+    /** `YYYY-MM-DD`; empty when the system does not tell. */
+    securityPatch: z.string().max(20),
+    model: z.string().max(100),
+  }),
+  /** A PIN, a pattern, a password or a fingerprint locks it. */
+  screenLock: z.boolean(),
+  /** `null` — the system does not tell. */
+  encrypted: z.boolean().nullable(),
+  rooted: z.boolean(),
+  developerOptions: z.boolean(),
+  usbDebugging: z.boolean(),
+  /** Apps with device administrator rights, the system's own left out. */
+  deviceAdmins: z.array(securityApp).max(50),
+  /** Apps with an accessibility service on: they see and press everything on the screen. */
+  accessibility: z.array(securityApp).max(50),
+  /** Apps allowed to install other apps ("unknown sources"), the dashboard itself left out. */
+  installers: z.array(securityApp).max(100),
+  /** Apps installed by something other than Google Play (and not with the system). */
+  notFromPlay: z.array(securityApp.extend({ installer: z.string().max(200).nullable() })).max(300),
+  /** Certificate authorities added by the user: they can read the phone's HTTPS. */
+  userCertificates: z.array(z.string().max(300)).max(50),
+  wifi: z.object({ name: z.string().max(100), open: z.boolean() }).nullable(),
+  vpn: z.boolean(),
+});
+export type PhoneSecurity = z.infer<typeof phoneSecuritySchema>;

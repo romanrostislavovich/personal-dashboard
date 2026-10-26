@@ -13,6 +13,7 @@
     "app": "The dashboard",
     "host": "The server",
     "desktop": "Computers",
+    "phone": "Phones",
     "repo": "Code hostings"
   },
   "areaChecked": "checked",
@@ -20,6 +21,7 @@
     "app": "not checked yet",
     "host": "no report: the server’s scan is installed by deploy.sh on the next deploy",
     "desktop": "no computer with the desktop app is registered (Settings → Devices)",
+    "phone": "no phone with the Android app (Settings → Devices); it reports once a day",
     "repo": "connect GitHub, GitLab or Bitbucket in Settings → Integrations"
   },
   "report": "The agent’s report",

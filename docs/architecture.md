@@ -269,7 +269,8 @@ To add a service (e.g. DigitalOcean):
   dashboard and the server (`deploy/security-scan.sh` writes `SECURITY_DIR/host.json` on the
   host every hour); a module adds one in `<module>.security.ts`
   (`SecurityService.registerSource`: facts for the AI and the problems its own rules see —
-  example: `libs/modules/activity/api/src/lib/activity.security.ts`). `SecurityAgent` is the AI
+  example: `libs/modules/activity/api/src/lib/activity.security.ts`, the computers and the
+  phones — `POST /api/activity/device/security` takes a phone's daily report). `SecurityAgent` is the AI
   half: a tool loop with one read-only tool a source and `security_report_finding`. It shares
   nothing with the assistant — not the tools, not the conversation, optionally not the
   connection — and the rules' findings never pass through the model. An AI finding names the
