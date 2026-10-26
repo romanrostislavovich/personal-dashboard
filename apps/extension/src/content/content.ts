@@ -1,3 +1,4 @@
+import type { WatchHints } from '@pd/contracts';
 import {
   ask,
   FillAnswer,
@@ -19,8 +20,10 @@ import { closeMenu, fieldById, setupInline } from './inline';
 import { showSaveBar } from './save-bar';
 import { resetWriting, setupWriting } from './writing/writing';
 import { setupEngagement } from './engagement';
+import { setupWatching, watchHints } from './watching';
 
 setupEngagement();
+setupWatching();
 
 /*
  * The content script, in every frame of every page. It tells the background about login forms
@@ -40,7 +43,7 @@ chrome.runtime.onMessage.addListener(
   (
     command: PageCommand,
     _sender,
-    reply: (answer: FillAnswer | PageSnapshot | PageHtml) => void,
+    reply: (answer: FillAnswer | PageSnapshot | PageHtml | WatchHints) => void,
   ) => {
     switch (command.type) {
       case 'fill':
@@ -90,6 +93,11 @@ chrome.runtime.onMessage.addListener(
         if (window === window.top) {
           // Read in the background: the parser stays out of the script of every page.
           reply({ html: document.documentElement.outerHTML.slice(0, PAGE_HTML_MAX) });
+        }
+        break;
+      case 'watch-hints':
+        if (window === window.top) {
+          reply(watchHints());
         }
         break;
     }

@@ -1,0 +1,83 @@
+{
+  "title": "Movies",
+  "tabs": {
+    "history": "Watched",
+    "want": "To watch",
+    "unknown": "Not found",
+    "videos": "Videos"
+  },
+  "noTmdb": "Without a TMDB key the titles are kept as the sites name them, with no posters and no search.",
+  "connect": "Connect TMDB",
+  "film": "film",
+  "show": "show",
+  "lastEpisode": "S{{season}} E{{episode}}",
+  "episodes": "episodes: {{count}}",
+  "history": {
+    "summary": "Films: {{films}}, shows: {{shows}}",
+    "empty": {
+      "title": "Nothing watched yet",
+      "text": "The browser extension notes a film or a show on any site that plays it — Netflix, a site with a player of its own. Install the extension and sign in to it."
+    }
+  },
+  "want": {
+    "list": "The list",
+    "add": "To watch",
+    "seen": "Already seen",
+    "added": "«{{title}}» is in the list",
+    "markedSeen": "«{{title}}» is marked seen",
+    "empty": {
+      "title": "The list is empty",
+      "text": "Find a film or a show above and add it."
+    }
+  },
+  "unknown": {
+    "hint": "Videos the dashboard could not find in TMDB. Find the film by hand, or put the view aside — and a site you do not want noted can be left alone (its views go).",
+    "find": "Find",
+    "thisOne": "This one",
+    "notFilm": "Not a film",
+    "ignoreSite": "Not on this site",
+    "empty": "Everything is found"
+  },
+  "video": {
+    "empty": "No videos yet"
+  },
+  "search": {
+    "label": "A film or a show",
+    "failed": "TMDB did not answer"
+  },
+  "dialog": {
+    "rating": "Rating",
+    "note": "Note",
+    "seen": "Seen",
+    "notSeen": "Not seen",
+    "want": "To watch",
+    "unwant": "Out of the list",
+    "remove": "Remove"
+  },
+  "integration": {
+    "subtitle": "Films and shows: titles, posters, search",
+    "connected": "The key is saved",
+    "disconnect": "Remove the key",
+    "hint": "A TMDB key finds what you watched among films and shows and gives the search of the list to watch.",
+    "key": "API key or API Read Access Token",
+    "invalid": "TMDB refused this key",
+    "track": "Note what plays in the browser",
+    "trackHint": "The browser extension tells the dashboard which video plays on which site — never the page's address. Private windows and the private words of Activity are left out.",
+    "ignored": "Left alone",
+    "guide": {
+      "1": "Sign up at themoviedb.org (free).",
+      "2": "Settings → API → \"Create\" → \"Developer\", fill in the form (a personal project).",
+      "3": "Copy the \"API Key\" or the \"API Read Access Token\".",
+      "4": "Paste it here and save: what was watched without a key is found again."
+    }
+  },
+  "links": {
+    "hours": "Watching films and shows",
+    "lateHours": "Watching from 23:00",
+    "videoHours": "Watching videos (YouTube)",
+    "episodes": "Episodes"
+  },
+  "errors": {
+    "generic": "Something went wrong, try again"
+  }
+}

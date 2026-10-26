@@ -550,6 +550,10 @@ assistant as a tutor that knows the materials of the courses.
 
 #### New modules
 
+- **Quests** — goals for a day or a week made of the numbers the dashboard already has
+  ("walk 10 km today", "no games after 23:00 this week", "read 30 minutes"): progress live from
+  the phone, the band and the other sections, a notice when done, XP like achievements; the AI
+  may suggest a quest from the Links findings
 - **Time tracker** — track time per project or task (focus sessions are done, see Activity)
 - **Calendar** — Google Calendar / CalDAV: today's meetings in the morning digest, linked to the
   time tracker and tasks
@@ -619,7 +623,16 @@ assistant as a tutor that knows the materials of the courses.
   with reminders well in advance (domains can live in Monitoring)
 - **Investments and net worth** — stocks, crypto, deposits; net worth over time on top of the
   Finance wallets
-- **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
+- ✅ **Movies and TV shows** — watched and want-to-watch lists, ratings, episode progress for shows
+  (built 2026-10-26, never run on real sites yet: the browser extension notes what plays on any
+  site — Netflix, YouTube, a site with its own player in a frame —, `movies.match` finds it in
+  TMDB with the user's key; Movies → Watched / To watch / Not found / Videos)
+- **Movies: the past from the computer's window titles** — the desktop tracker already keeps
+  titles like "Моана (2026) смотреть онлайн … - Google Chrome": a one-time import of the past
+  evenings into Movies (through Links, the modules do not read each other)
+- **Movies: what was watched on a TV or a phone** — the Netflix viewing history
+  (`netflix.com/viewingactivity` or its download) read by the extension, so titles watched
+  outside the browser reach the Movies section too
 - **Books** — reading list, progress, ratings and notes
 - **Bookmarks / read later** — links sent to Telegram are saved, the AI writes a short summary,
   full-text search
