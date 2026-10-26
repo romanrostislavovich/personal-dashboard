@@ -6,7 +6,7 @@ const messages = {
     silent: (name: string, days: number) => ({
       title: `${name}: no report for ${days} days`,
       details: 'The desktop app has not told anything about this computer: its state is unknown.',
-      fix: 'Start the app on that computer, or remove the computer in Activity → Setup if it is gone.',
+      fix: 'Start the app on that computer, or remove the computer in Settings → Devices if it is gone.',
     }),
     antivirusOff: (name: string) => ({
       title: `${name}: the antivirus is off`,
@@ -56,7 +56,7 @@ const messages = {
       title: `${name}: нет данных уже ${days} дн.`,
       details:
         'Десктопное приложение ничего не сообщает об этом компьютере: его состояние неизвестно.',
-      fix: 'Запустите приложение на этом компьютере или удалите компьютер в «Активность → Настройка», если его больше нет.',
+      fix: 'Запустите приложение на этом компьютере или удалите компьютер в «Настройки → Устройства», если его больше нет.',
     }),
     antivirusOff: (name: string) => ({
       title: `${name}: антивирус выключен`,

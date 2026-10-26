@@ -13,8 +13,7 @@ import { pickableProjects, ProjectsApi } from '@pd/web-core';
 import { firstValueFrom } from 'rxjs';
 import { ActivityApi } from '../activity.api';
 import { RuleSuggestionsComponent } from './rule-suggestions.component';
-import { TrackerCardComponent } from '../tracker-card.component';
-import { OtherComputersSettingsComponent } from './other-computers-settings.component';
+import { RouterLink } from '@angular/router';
 import { PrivacySettingsComponent } from './privacy-settings.component';
 import { WellbeingSettingsComponent } from './wellbeing-settings.component';
 import { BrowserSettingsComponent } from './browser-settings.component';
@@ -39,10 +38,9 @@ const IDLE_MINUTES = [1, 2, 3, 5, 10, 15, 30, 60];
     MatSlideToggleModule,
     MatTooltipModule,
     TranslocoPipe,
-    TrackerCardComponent,
+    RouterLink,
     WellbeingSettingsComponent,
     BrowserSettingsComponent,
-    OtherComputersSettingsComponent,
     PrivacySettingsComponent,
   ],
   templateUrl: './settings.page.html',

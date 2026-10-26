@@ -68,3 +68,10 @@
 .category {
   width: 200px;
 }
+
+.devices-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mat-sys-on-surface-variant);
+}

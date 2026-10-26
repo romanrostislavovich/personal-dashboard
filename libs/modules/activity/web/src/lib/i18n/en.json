@@ -109,7 +109,9 @@
   "setup": {
     "title": "No tracker yet",
     "hint": "Time is recorded by the desktop app of the dashboard: open the dashboard in it and switch tracking on in the Setup tab. It then starts with the computer, sits in the tray and sends what it records by itself.",
-    "open": "Open setup"
+    "open": "Open setup",
+    "devicesMoved": "The trackers of the devices and the time of devices without one are in",
+    "devicesLink": "Settings → Devices"
   },
   "timeline": {
     "title": "The day, window by window",

@@ -1,6 +1,13 @@
-<pd-activity-tracker-card (changed)="apps.reload()" />
-
-<pd-activity-other-computers-settings />
+<!-- The trackers and the time of other devices live in Settings → Devices. -->
+<p class="devices-link">
+  <mat-icon>devices</mat-icon>
+  <span>
+    {{ 'activity.setup.devicesMoved' | transloco }}
+    <a routerLink="/settings" [queryParams]="{ tab: 'devices' }">{{
+      'activity.setup.devicesLink' | transloco
+    }}</a>
+  </span>
+</p>
 
 <mat-card appearance="outlined">
   <mat-card-header>

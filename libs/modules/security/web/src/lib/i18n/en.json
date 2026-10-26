@@ -19,7 +19,7 @@
   "areaHints": {
     "app": "not checked yet",
     "host": "no report: the server’s scan is installed by deploy.sh on the next deploy",
-    "desktop": "no computer with the desktop app is registered (Activity → Setup)",
+    "desktop": "no computer with the desktop app is registered (Settings → Devices)",
     "repo": "connect GitHub, GitLab or Bitbucket in Settings → Integrations"
   },
   "report": "The agent’s report",
