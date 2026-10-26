@@ -248,12 +248,12 @@ public class SensorsWorker extends Worker {
      */
     private void sendSecurity(SensorsStore store) {
         long now = System.currentTimeMillis();
-        if (now - store.number("securityAt") < SECURITY_EVERY_MS) {
+        if (now - store.number("securityReportedAt") < SECURITY_EVERY_MS) {
             return;
         }
         try {
             post(store, "/api/activity/device/security", PhoneSecurity.report(getApplicationContext()));
-            store.setNumber("securityAt", now);
+            store.setNumber("securityReportedAt", now);
         } catch (IOException | JSONException | RuntimeException e) {
             Log.w("SensorsWorker", "The security report was not sent", e);
         }
