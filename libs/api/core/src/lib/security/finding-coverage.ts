@@ -47,3 +47,17 @@ export function coverage(rows: CoverageRow[]): Map<string, Coverage> {
   }
   return result;
 }
+
+/**
+ * The AI's open findings the rules have since seen fixed: every finding of the rules it covers is
+ * resolved. Without this an AI finding stood until the next morning's investigation — "SSH open
+ * to the whole internet" was still on the page an hour after the server got a firewall and keys
+ * only. One that covers nothing, or a finding not found, is left to the AI to judge.
+ */
+export function settledByRules(rows: CoverageRow[]): string[] {
+  const byKey = new Map(rows.map((row) => [row.key, row]));
+  return rows
+    .filter((row) => row.origin === 'ai' && row.status === 'open' && row.covers.length)
+    .filter((row) => row.covers.every((key) => byKey.get(key)?.status === 'resolved'))
+    .map((row) => row.id);
+}

@@ -55,6 +55,9 @@ Record a problem with security_report_finding only when all of this is true:
 - It is a weakness or a sign of an attack that the facts show. A lack of data is never a
   finding: that something is unavailable, unreadable, not set up, not reported or never ran
   tells nothing about security.
+- The facts show something wrong. When what you looked at turns out fine (a security workflow
+  whose last run succeeded, a sign-in from the owner's own phone), there is nothing to record —
+  not even to say that it is fine: a finding is a problem to fix, never a note.
 - It adds to what the rules found. When your finding is about the same problem as findings
   of the rules — it says it deeper, or joins several of them into the one thing they mean —
   pass their "ref" values in "covers": yours is then shown instead of them, with theirs folded
