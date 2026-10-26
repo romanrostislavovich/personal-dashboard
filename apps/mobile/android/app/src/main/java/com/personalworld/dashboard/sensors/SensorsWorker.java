@@ -242,17 +242,18 @@ public class SensorsWorker extends Worker {
     }
 
     /**
-     * The security report, once a day (Security → Phone). A failure is not retried before the next
-     * day: a server without this address yet must not hold the rest of the collection back.
+     * The security report, once a day (Security → Phone). A failure is only logged — it must not hold
+     * the rest of the collection back — and tried again at the next run: the day counts from a
+     * report the server took (the first one met a server without this address yet: HTTP 404).
      */
     private void sendSecurity(SensorsStore store) {
         long now = System.currentTimeMillis();
         if (now - store.number("securityAt") < SECURITY_EVERY_MS) {
             return;
         }
-        store.setNumber("securityAt", now);
         try {
             post(store, "/api/activity/device/security", PhoneSecurity.report(getApplicationContext()));
+            store.setNumber("securityAt", now);
         } catch (IOException | JSONException | RuntimeException e) {
             Log.w("SensorsWorker", "The security report was not sent", e);
         }
