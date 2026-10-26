@@ -28,6 +28,7 @@ export * from './lib/vault/vault-crypto';
 export * from './lib/vault/password-generator';
 export * from './lib/vault/password-strength';
 export * from './lib/modules/habits';
+export * from './lib/modules/movies';
 export * from './lib/modules/writing';
 export * from './lib/modules/screenshots';
 export * from './lib/device-link';

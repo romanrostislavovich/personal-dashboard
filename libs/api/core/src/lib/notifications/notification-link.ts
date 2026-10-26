@@ -39,6 +39,7 @@ const SECTION_PAGES = new Set([
   'health',
   'life',
   'monitoring',
+  'movies',
   'music',
   'psychology',
   'security',

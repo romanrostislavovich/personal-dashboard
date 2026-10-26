@@ -61,6 +61,7 @@ export * from './lib/push';
 export * from './lib/calm';
 export * from './lib/crisis-lines';
 export * from './lib/habits';
+export * from './lib/movies';
 export * from './lib/writing';
 export * from './lib/writing-text';
 export * from './lib/screenshots';

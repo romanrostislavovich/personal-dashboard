@@ -11,6 +11,7 @@ import { healthModule } from '@pd/health-web';
 import { developmentModule } from '@pd/development-web';
 import { monitoringModule } from '@pd/monitoring-web';
 import { musicModule } from '@pd/music-web';
+import { moviesModule } from '@pd/movies-web';
 import { psychologyModule } from '@pd/psychology-web';
 import { tasksModule } from '@pd/tasks-web';
 import { vaultModule } from '@pd/vault-web';
@@ -41,6 +42,7 @@ export const enabledModules: WebDashboardModule[] = [
   developmentModule,
   monitoringModule,
   musicModule,
+  moviesModule,
   gamesModule,
   activityModule,
   lifeModule,

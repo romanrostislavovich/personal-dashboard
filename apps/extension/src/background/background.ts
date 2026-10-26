@@ -38,6 +38,13 @@ import {
   sitesTick,
 } from './sites';
 import {
+  ensureWatching,
+  noteWatching,
+  scheduleWatching,
+  WATCH_ALARM,
+  watchingTick,
+} from './watching';
+import {
   acceptedInWriting,
   checkWriting,
   ignoreInWriting,
@@ -127,17 +134,23 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     void checkForUpdate();
   } else if (alarm.name === SITES_ALARM) {
     void sitesTick();
+  } else if (alarm.name === WATCH_ALARM) {
+    void watchingTick().catch(() => undefined);
   }
 });
+
+ensureWatching();
 
 // The extension updates itself from its folder on the disk (see self-update.ts).
 chrome.runtime.onInstalled.addListener(() => {
   scheduleSelfUpdate();
   scheduleSites();
+  scheduleWatching();
 });
 chrome.runtime.onStartup.addListener(() => {
   scheduleSelfUpdate();
   scheduleSites();
+  scheduleWatching();
   void checkForUpdate();
 });
 
@@ -206,6 +219,9 @@ async function route(
   }
   if (message.type === 'telemetry-engagement') {
     return receiveEngagement(message.report, sender);
+  }
+  if (message.type === 'watching') {
+    return noteWatching(message.report, sender);
   }
   if (message.type === 'telemetry-consent' || message.type === 'telemetry-exclude') {
     if (

@@ -14,6 +14,7 @@ import type {
   WritingRewriteMode,
 } from '@pd/contracts';
 import type { EngagementReport } from './engagement';
+import type { WatchReport } from './watch-session';
 
 /** The vault on the server: not created yet, locked here, or open here. */
 export type VaultStatus = 'none' | 'locked' | 'unlocked';
@@ -168,6 +169,8 @@ export type PopupRequest =
 /** From a content script, about its own tab. */
 export type ContentRequest =
   | { type: 'telemetry-engagement'; report: EngagementReport }
+  /** A video plays in this frame (Movies): where it stands, and what the page says it is. */
+  | { type: 'watching'; report: WatchReport }
   /** The page has a password field: the badge counts the logins for it. */
   | { type: 'login-form' }
   /** A login form was sent; an empty password — the first step of a two-step sign-in. */
@@ -210,7 +213,9 @@ export type PageCommand =
   /** The vault was unlocked: a login waiting to be saved is offered again, now with "Save". */
   | { type: 'offer-again' }
   /** The page's markup, for the product it describes (the wishlist). */
-  | { type: 'product' };
+  | { type: 'product' }
+  /** What the page says plays: asked when a player in a frame of it reports (Movies). */
+  | { type: 'watch-hints' };
 
 /** A page's answer to `snapshot`: the selection, and its readable text when asked. */
 export interface PageSnapshot {
