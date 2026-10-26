@@ -373,6 +373,14 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     for (const part of splitMessage(`🎤 ${result.text}`)) {
       await ctx.reply(part);
     }
+    // The bot asked a question a moment ago: the voice message is the answer, as a typed one is.
+    const chatId = String(ctx.chat.id);
+    const expected = this.expectedText.get(chatId);
+    this.expectedText.delete(chatId);
+    if (expected && expected.expiresAt > Date.now()) {
+      await this.answer(ctx, user, await expected.handler(user, result.text));
+      return;
+    }
     await this.answer(
       ctx,
       user,
@@ -584,8 +592,9 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     actions: NotificationAction[] = [],
   ): Promise<void> {
     const keyboard = new InlineKeyboard();
-    actions.forEach(({ label, action }, index) => {
-      if (index > 0 && index % BUTTONS_PER_ROW === 0) {
+    const ownRows = actions.some((item) => item.newRow);
+    actions.forEach(({ label, action, newRow }, index) => {
+      if (index > 0 && (ownRows ? newRow : index % BUTTONS_PER_ROW === 0)) {
         keyboard.row();
       }
       keyboard.text(label, action);
