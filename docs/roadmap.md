@@ -245,6 +245,12 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 #### Bugs
 
+- **Voice assistant: too many false alarms** — in a real room «Люцифер» woke up on ordinary
+  speech (2026-10-26, 20:07: a bit of a conversation was sent as a question); the owner switched
+  it off. The test of the wake word used synthesized phrases, which a room does not sound like:
+  record real samples (the owner's voice, TV, a conversation) for the test set, then try a
+  confirmation step (the name heard twice, or with a minimum confidence), a stricter gain, or
+  only while the screen is on or the phone charges
 - **Desktop app: two instances, one as administrator** — seen 2026-10-26: two tray icons, one
   instance running since 22.10 elevated (started by the installer, its parent gone), the other the
   normal one relaunched by an update. `requestSingleInstanceLock` does not see across integrity
