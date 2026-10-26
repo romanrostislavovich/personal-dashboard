@@ -55,8 +55,9 @@ Russian.
 - 🎬 **What you watched, by itself** — the browser extension notices a film or a show playing on
   any site (Netflix, a site with its own player), finds it in TMDB, and keeps the hours, the
   episodes and the late nights for Links; ratings, notes and a list to watch
-- 🛡️ **Security agent** — watches sign-ins, the server (SSH, firewall, open ports), your computers
-  and repositories every hour; an AI investigates every morning and tells what to fix
+- 🛡️ **Security agent** — watches sign-ins, the server (SSH, firewall, open ports), your computers,
+  your phone (its patch, lock, device admins, certificates, apps that install apps) and
+  repositories every hour; an AI investigates every morning and tells what to fix
 - 🏆 **400+ achievements** across all sections, with XP and a player level
 - 🎨 **Comfortable** — Ctrl+K opens any page and searches all your data, themes and accents, a
   home page you arrange yourself, an installable app that opens offline

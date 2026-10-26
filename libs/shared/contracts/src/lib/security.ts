@@ -9,7 +9,7 @@ export type SecuritySeverity = (typeof SECURITY_SEVERITIES)[number];
  * dependencies), the server it runs on, the computers with the desktop app, the accounts and
  * repositories of the connected code hostings (GitHub, GitLab, Bitbucket).
  */
-export const SECURITY_AREAS = ['app', 'host', 'desktop', 'repo'] as const;
+export const SECURITY_AREAS = ['app', 'host', 'desktop', 'phone', 'repo'] as const;
 export type SecurityArea = (typeof SECURITY_AREAS)[number];
 
 /** `ignored` — the user knows and accepts it: it is not reported again. */
