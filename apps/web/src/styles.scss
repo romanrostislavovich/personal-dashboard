@@ -224,3 +224,38 @@ h3 {
 .pd-palette-panel .mat-mdc-dialog-surface {
   overflow: hidden;
 }
+
+// Tabs scroll like any row (libs/web/core/src/lib/ui/scrollable-tabs.ts): a swipe on a phone,
+// a wheel or a touchpad on a computer, the < > arrows a step; no scrollbar drawn.
+.mat-mdc-tab-label-container,
+.mat-mdc-tab-link-container {
+  overflow-x: auto !important;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.pd-tab-arrow {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--mat-sys-on-surface-variant);
+  cursor: pointer;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &:hover {
+    color: var(--mat-sys-on-surface);
+  }
+}
