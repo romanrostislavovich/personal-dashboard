@@ -243,6 +243,13 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   import's new counterparties once it has proven itself), today's mood forecast in Life; evals of
   the AI jobs (`npm run ai:eval`); an optional Ollama next to the server
 
+#### Bugs
+
+- **Voice assistant: dry answers and the voice** — the answers of «Люцифер» sound flat: make them
+  livelier (the spoken prompt: a person's tone, a short reaction, not a report), and let the voice
+  be chosen — Android's TextToSpeech voices of the language (male/female, speed, pitch) in Settings
+  → Devices → Voice assistant, or a server voice (OpenAI TTS) sent back as audio
+
 #### Quick wins
 
 - **Life: steps** — in the day feed, once the steps come from somewhere (a phone, a band)
