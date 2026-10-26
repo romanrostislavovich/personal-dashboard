@@ -1,4 +1,4 @@
-import { coverage, CoverageRow } from './finding-coverage';
+import { coverage, CoverageRow, settledByRules } from './finding-coverage';
 
 const row = (id: string, changes: Partial<CoverageRow> = {}): CoverageRow => ({
   id,
@@ -72,5 +72,18 @@ describe('coverage', () => {
     expect(result.get('ssh-password')?.coveredBy).toBe('first');
     expect(result.get('second')?.covers).toEqual([]);
     expect(result.get('first')?.coveredBy).toBeNull();
+  });
+
+  it('closes an AI finding once the rules saw every finding it covers fixed', () => {
+    const rows = [
+      row('ssh-password', { status: 'resolved' }),
+      row('firewall-off', { status: 'resolved' }),
+      row('two-factor-off'),
+      ai('exposed', ['server:ssh-password', 'server:firewall-off']),
+      ai('weak-login', ['server:two-factor-off', 'server:ssh-password']),
+      ai('own-idea', []),
+      ai('unknown', ['server:never-existed']),
+    ];
+    expect(settledByRules(rows)).toEqual(['exposed']);
   });
 });

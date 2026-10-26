@@ -205,6 +205,56 @@ To stop it: `rm /etc/cron.d/dashboard-security`.
 A firewall of the hosting (Hetzner Cloud Firewall) is outside the server and not visible to the
 script: with one in place, mark the "no firewall" finding as known.
 
+## Hardening the server
+
+What the security agent asks for, as it was done on personal-world.com (2026-10-26). Check that
+you can sign in **with a key** before switching passwords off, and keep the hosting's console
+(Hetzner: Console in the server's menu) as a way back.
+
+SSH — keys only, root too (`deploy.sh` signs in as root with a key). sshd takes the first value it
+reads, so the file goes before `50-cloud-init.conf`, which turns passwords on. Save as
+`/etc/ssh/sshd_config.d/00-hardening.conf`:
+
+```
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin prohibit-password
+PubkeyAuthentication yes
+```
+
+Then `sshd -t && systemctl reload ssh`, and from another terminal: `ssh root@<server> true` still
+gets in, `ssh -o PubkeyAuthentication=no root@<server> true` answers "Permission denied
+(publickey)".
+
+Firewall — SSH, HTTP, HTTPS and HTTP/3 in, everything else closed (Docker's published ports, 80 and
+443 of Caddy, keep working: Docker manages its own rules):
+
+```bash
+ufw default deny incoming && ufw default allow outgoing
+ufw allow 22/tcp && ufw allow 80/tcp && ufw allow 443/tcp && ufw allow 443/udp
+ufw --force enable
+```
+
+fail2ban — bots guessing passwords are banned for an hour, longer each time they return:
+`apt-get install -y fail2ban`, then `/etc/fail2ban/jail.d/sshd.local`:
+
+```
+[sshd]
+enabled = true
+backend = systemd
+maxretry = 5
+findtime = 10m
+bantime = 1h
+bantime.increment = true
+bantime.maxtime = 1w
+```
+
+and `systemctl restart fail2ban`.
+
+Updates — `apt-get update && apt-get -y full-upgrade`, then `systemctl reboot` when
+`/var/run/reboot-required` exists (the containers come back by themselves). Ubuntu installs
+security updates on its own (unattended-upgrades); the agent says when a restart is due.
+
 ## Rolling back
 
 Before every update `deploy/deploy.sh` keeps the running image and a dump of the database

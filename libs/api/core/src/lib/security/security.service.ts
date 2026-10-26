@@ -10,12 +10,12 @@ import {
   SecuritySettings,
   SecurityStatus,
 } from '@pd/contracts';
-import { and, desc, eq, like } from 'drizzle-orm';
+import { and, desc, eq, inArray, like } from 'drizzle-orm';
 import { AiConnectionsService } from '../ai/ai-connections.service';
 import { DB, Database } from '../database/database.module';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
-import { Coverage, coverage } from './finding-coverage';
+import { Coverage, coverage, settledByRules } from './finding-coverage';
 import { FoundProblem, Inspection, SecuritySource } from './security-source';
 import { securityMessages } from './security.messages';
 import {
@@ -98,6 +98,7 @@ export class SecurityService {
       const problems = inspection.problems.map((problem) => ({ ...problem, area: source.area }));
       fresh.push(...(await this.keep(userId, source.id, 'rules', problems)));
     }
+    await this.settleAiFindings(userId);
     await this.db
       .insert(securitySettings)
       .values({ userId, scannedAt: new Date(), areas: [...areas] })
@@ -165,6 +166,21 @@ export class SecurityService {
         .where(eq(securityFindings.id, row.id));
     }
     return fresh;
+  }
+
+  /** The AI's findings whose every covered finding of the rules is now fixed are fixed too. */
+  private async settleAiFindings(userId: string): Promise<void> {
+    const rows = await this.db
+      .select()
+      .from(securityFindings)
+      .where(eq(securityFindings.userId, userId));
+    const settled = settledByRules(rows);
+    if (settled.length) {
+      await this.db
+        .update(securityFindings)
+        .set({ status: 'resolved', resolvedAt: new Date() })
+        .where(and(eq(securityFindings.userId, userId), inArray(securityFindings.id, settled)));
+    }
   }
 
   /** One message about what is new and serious. */

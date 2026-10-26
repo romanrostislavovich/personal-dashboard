@@ -272,7 +272,9 @@ To add a service (e.g. DigitalOcean):
   example: `libs/modules/activity/api/src/lib/activity.security.ts`). `SecurityAgent` is the AI
   half: a tool loop with one read-only tool a source and `security_report_finding`. It shares
   nothing with the assistant — not the tools, not the conversation, optionally not the
-  connection — and the rules' findings never pass through the model. Sign-ins are journaled in
+  connection — and the rules' findings never pass through the model. An AI finding names the
+  rules' findings it is about (`covers`): they fold under it, and it is resolved with them once
+  the rules see every one of them fixed (not only at the next morning's investigation). Sign-ins are journaled in
   `auth.sign_ins` (`SignInLog`). Only the owner of the instance sees the section.
 - **Other computers:** `OtherComputersService` — a module that knows about time at a computer
   the desktop app does not run on registers a source (`<module>.other-computers.ts`: WakaTime's

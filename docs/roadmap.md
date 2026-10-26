@@ -649,6 +649,10 @@ assistant as a tutor that knows the materials of the courses.
   (`netflix.com/viewingactivity` or its download) read by the extension, so titles watched
   outside the browser reach the Movies section too
 - **Books** — reading list, progress, ratings and notes
+- **Share a number or an achievement** — a good-looking card of a stat (the month's hours of
+  code, a streak, the films of the year, the Life "Wrapped") or of an achievement, made as an
+  image for social networks (Instagram story, Threads, X, LinkedIn) or a link; nothing private
+  on it unless chosen
 - **Bookmarks / read later** — links sent to Telegram are saved, the AI writes a short summary,
   full-text search
 - **Travel** — a map of countries and cities, trips with their costs from Finance; pairs with the
