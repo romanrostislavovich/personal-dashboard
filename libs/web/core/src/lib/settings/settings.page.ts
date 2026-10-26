@@ -27,6 +27,7 @@ import { IntegrationStatusComponent } from './integration-status.component';
 import { AutomationsSettingsComponent } from '../automations/automations-settings.component';
 import { AppsSettingsComponent } from './apps-settings.component';
 import { PhoneSensorsComponent } from './phone-sensors.component';
+import { VoiceAssistantComponent } from './voice-assistant.component';
 
 interface LoadedCard {
   id: string;
@@ -78,6 +79,7 @@ const TABS = [
     AutomationsSettingsComponent,
     AppsSettingsComponent,
     PhoneSensorsComponent,
+    VoiceAssistantComponent,
     SyncSettingsComponent,
     NotificationLogComponent,
     NotificationKindsComponent,
@@ -140,6 +142,7 @@ const TABS = [
           <p class="intro">{{ 'core.settings.devicesIntro' | transloco }}</p>
           <div class="grid">
             <pd-phone-sensors />
+            <pd-voice-assistant />
             @for (card of deviceCards(); track card.id) {
               <ng-container *ngComponentOutlet="card.component" />
             }

@@ -117,6 +117,11 @@ const ATTACHMENT_RULES = [
   'was not read.',
 ];
 
+/** The voice assistant's answer is heard, not read. */
+const SPOKEN_RULE =
+  'The answer will be read aloud by a speech synthesizer: one to three short sentences, no ' +
+  'markdown, no lists, no links, no emoji; round numbers and say durations as hours and minutes.';
+
 export interface PromptOptions {
   /** For Telegram and notifications: no markdown markup. */
   plainText?: boolean;
@@ -128,6 +133,8 @@ export interface PromptOptions {
   pages?: AppPage[];
   /** What the user asked the assistant to remember (see AiMemoryService). */
   memories?: { id: string; text: string }[];
+  /** The answer is read aloud by the phone (the voice assistant): short, nothing to look at. */
+  spoken?: boolean;
 }
 
 /**
@@ -137,7 +144,7 @@ export interface PromptOptions {
 export function systemPrompt(
   user: UserRow | undefined,
   timeZone: string,
-  { plainText, allowWrites, hasAttachments, pages, memories }: PromptOptions,
+  { plainText, allowWrites, hasAttachments, pages, memories, spoken }: PromptOptions,
 ): string {
   const now = zonedDateTime(new Date(), timeZone);
   return [
@@ -145,9 +152,11 @@ export function systemPrompt(
     `Always answer in ${coreMessages(user?.locale).aiLanguage}, briefly and to the point.`,
     'Get any data about the user only through the tools and never make things up;',
     'if there is no data, say so. Always state currencies for amounts.',
-    plainText
-      ? 'Write plain text without markdown formatting; emoji are fine.'
-      : 'You may use markdown (lists, bold).',
+    spoken
+      ? SPOKEN_RULE
+      : plainText
+        ? 'Write plain text without markdown formatting; emoji are fine.'
+        : 'You may use markdown (lists, bold).',
     ...TONE_RULES,
     ...HISTORY_RULES,
     // Telegram shows plain text: a link into the app would be noise there.

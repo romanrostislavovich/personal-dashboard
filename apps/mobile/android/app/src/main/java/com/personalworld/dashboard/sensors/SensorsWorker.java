@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import com.personalworld.dashboard.voice.VoiceService;
 
 /**
  * Every 15 minutes (the least Android allows), in the background: the time in apps since the
@@ -157,6 +158,8 @@ public class SensorsWorker extends Worker {
     private void takeLocation(SensorsStore store) throws JSONException {
         // Every minute while the service runs (started again here after a reboot)…
         PlacesService.start(getApplicationContext());
+        // Restarted when Android or MIUI stopped it.
+        VoiceService.start(getApplicationContext());
         // …the updates Android delivers by itself if it does not (an app update drops them)…
         LocationUpdatesReceiver.subscribe(getApplicationContext());
         // …and a fix of its own, which works while the app is on the screen.

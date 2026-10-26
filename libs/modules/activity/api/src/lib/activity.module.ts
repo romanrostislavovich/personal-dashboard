@@ -15,6 +15,7 @@ import { DevicesService } from './devices.service';
 import { PhoneNotificationsController } from './phone-notifications.controller';
 import { PhoneNotificationsService } from './phone-notifications.service';
 import { PhoneUsageController } from './phone/phone-usage.controller';
+import { PhoneVoiceController } from './phone/phone-voice.controller';
 import { PhoneUsageLinks } from './phone/phone-usage.links';
 import { PhoneSignalsService } from './phone/phone-signals.service';
 import { PhoneUsageService } from './phone/phone-usage.service';
@@ -49,6 +50,7 @@ import { TelemetrySummaryService } from './telemetry-summary.service';
     PhoneNotificationsController,
     PlacesController,
     PhoneUsageController,
+    PhoneVoiceController,
   ],
   providers: [
     ActivityContextJobs,

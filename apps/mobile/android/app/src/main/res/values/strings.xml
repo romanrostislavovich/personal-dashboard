@@ -13,4 +13,14 @@
     <string name="places_title">Recording the places of the day</string>
     <string name="places_text">Every minute; on the move GPS every 5 seconds. Switched off in Settings → Devices.</string>
     <string name="places_moving">Recording the route</string>
+    <!-- The voice assistant, listening for its name (voice/VoiceService) -->
+    <string name="voice_channel">Voice assistant</string>
+    <string name="voice_answers_channel">Voice assistant answers</string>
+    <string name="voice_listening">Listening for «%1$s»</string>
+    <string name="voice_listening_text">The words are recognised on the phone; only what follows the name goes to the dashboard.</string>
+    <string name="voice_loading">Getting the speech model ready</string>
+    <string name="voice_heard">Listening…</string>
+    <string name="voice_thinking">Thinking…</string>
+    <string name="voice_not_heard">I did not catch that.</string>
+    <string name="voice_no_server">No connection to the dashboard.</string>
 </resources>

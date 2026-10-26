@@ -25,6 +25,7 @@ import android.util.Log;
 import androidx.core.content.ContextCompat;
 import org.json.JSONException;
 import org.json.JSONObject;
+import com.personalworld.dashboard.voice.VoiceService;
 
 /**
  * The phone's signals heard as they happen, while PlacesService runs (docs/telemetry.md, the
@@ -236,6 +237,11 @@ final class LiveSignals {
     private Double noise() {
         if (!hasMicrophone(context)) {
             return null;
+        }
+        // The voice assistant has the microphone open all the time: its level is taken.
+        Double heard = VoiceService.recentDb();
+        if (heard != null) {
+            return heard;
         }
         int size = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
         if (size <= 0) {

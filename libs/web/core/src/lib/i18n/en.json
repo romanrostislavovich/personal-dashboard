@@ -593,6 +593,18 @@
         "microphone": "The noise level around every 15 minutes (a number, no sound kept)",
         "bluetooth": "Bluetooth devices: headphones, the car"
       }
+    },
+    "voice": {
+      "title": "Voice assistant",
+      "hint": "Called by its name, like a smart speaker",
+      "enable": "Listen for «{{name}}»",
+      "noMicrophone": "Allow the microphone in the phone card above (the noise level) first.",
+      "name": "Its name — one word",
+      "unknownName": "The speech model does not know the word «{{name}}»: it will never be heard. Pick another one (Lucifer, Jarvis, Alice, Computer…).",
+      "downloading": "Downloading the speech model (45 MB, once): {{progress}}%",
+      "failed": "The speech model was not downloaded:",
+      "try": "Try without the name",
+      "about": "The phone listens all the time and recognises the name on itself; only what you say after the name goes to the dashboard, recognised by the AI's speech connection (Settings → Integrations), and is not kept. The answer is read aloud and stays in a notification. \"…, put in the diary that…\" works too."
     }
   },
   "toast": {

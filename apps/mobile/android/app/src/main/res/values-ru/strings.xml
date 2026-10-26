@@ -7,4 +7,13 @@
     <string name="places_title">Записываю места дня</string>
     <string name="places_text">Раз в минуту, в дороге — GPS каждые 5 секунд. Выключается в Настройки → Устройства.</string>
     <string name="places_moving">Записываю маршрут</string>
+    <string name="voice_channel">Голосовой ассистент</string>
+    <string name="voice_answers_channel">Ответы голосового ассистента</string>
+    <string name="voice_listening">Жду «%1$s»</string>
+    <string name="voice_listening_text">Слова распознаются на телефоне; в дашборд уходит только сказанное после имени.</string>
+    <string name="voice_loading">Готовлю модель речи</string>
+    <string name="voice_heard">Слушаю…</string>
+    <string name="voice_thinking">Думаю…</string>
+    <string name="voice_not_heard">Не расслышал.</string>
+    <string name="voice_no_server">Нет связи с дашбордом.</string>
 </resources>
