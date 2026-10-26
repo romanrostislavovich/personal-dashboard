@@ -68,6 +68,8 @@ export class PushController {
       title: 'Personal Dashboard',
       body: coreMessages(row.locale).testNotification,
       source: 'core',
+      // A tap brings the user back to where the test was sent from.
+      link: '/settings?tab=notifications',
     });
     return { sent };
   }
