@@ -90,9 +90,12 @@ export class MobilePushService {
       console.error(`Push notifications: ${error}`);
       this.state.set('unavailable');
     });
-    // A tap on a notification: the app comes up on its home page.
-    await PushNotifications.addListener('pushNotificationActionPerformed', () => {
-      void this.router.navigateByUrl('/');
+    // A tap on a notification: the app comes up on the page it is about (the server tells).
+    await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+      const route = action.notification.data?.['route'];
+      void this.router.navigateByUrl(
+        typeof route === 'string' && route.startsWith('/') ? route : '/',
+      );
     });
   }
 }

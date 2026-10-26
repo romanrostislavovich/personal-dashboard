@@ -14,6 +14,7 @@ import { ServerKeysService } from '../../server-keys/server-keys.service';
 import { UserRow } from '../../users/users.schema';
 import { DeliveryError, Notification } from '../notification-channel';
 import { FcmClient, parseServiceAccount } from './fcm';
+import { linkOf } from '../notification-link';
 import { PushDeviceRow, pushDevices } from './push.schema';
 
 /** The Firebase service account's JSON, a server key (Settings → Notifications → Push). */
@@ -131,7 +132,8 @@ export class PushService implements OnApplicationBootstrap {
         const result = await fcm.fcm.send(device.token, {
           title: notification.title,
           body: notification.body,
-          data: { source: notification.source },
+          // The app opens this page on a tap.
+          data: { source: notification.source, route: linkOf(notification) },
         });
         if (result === 'gone') {
           this.logger.log(`A phone of ${user.email} no longer takes notifications: forgotten`);
