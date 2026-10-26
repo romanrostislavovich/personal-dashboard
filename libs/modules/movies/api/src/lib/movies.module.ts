@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MovieQuestionService } from './movie-question.service';
 import { MoviesMatchService } from './movies-match.service';
 import { MoviesController } from './movies.controller';
 import { MoviesIntegrations } from './movies.integrations';
@@ -17,6 +18,7 @@ import { MoviesService } from './movies.service';
   providers: [
     MoviesService,
     MoviesMatchService,
+    MovieQuestionService,
     MoviesServerActions,
     MoviesJob,
     MoviesLinks,

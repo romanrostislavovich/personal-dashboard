@@ -8,6 +8,11 @@ import type { UserRow } from '../users/users.schema';
 export interface NotificationAction {
   label: string;
   action: string;
+  /**
+   * The button starts a row of its own. Without any such mark the buttons go three in a row;
+   * with one, rows break only where it says (ratings 1–5 and 6–10 as two rows).
+   */
+  newRow?: boolean;
 }
 
 export interface Notification {

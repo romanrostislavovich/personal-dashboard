@@ -37,6 +37,8 @@ export const movieTitles = pgTable(
     watchedOn: date(),
     rating: integer(),
     note: text(),
+    /** "How was the film?" went out (an hour after it was seen); `null` — not yet. */
+    askedAt: timestamp({ withTimezone: true }),
     /** The page titles already found as this one: they are not looked up again. */
     matchKeys: text().array().notNull().default([]),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

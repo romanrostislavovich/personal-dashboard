@@ -266,7 +266,7 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 #### Quick wins
 
-- **Movies: "How was the film?"** — an hour after a film is seen (marked watched by its views),
+- ✅ **Movies: "How was the film?"** (built 2026-10-26) — an hour after a film is seen (marked watched by its views),
   Telegram and push ask «Как тебе «…»?» with buttons 1–10 in two rows and "Не досмотрел"; the
   answer is the film's rating, then an optional few words (text or a voice message) become its
   note. Films only, not shows. Quiet hours hold it till the morning. (The owner's choices,

@@ -6,6 +6,7 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { Pool } from 'pg';
+import { MovieQuestionService } from './movie-question.service';
 import { MoviesMatchService } from './movies-match.service';
 import { MoviesLinks } from './movies.links';
 import { MoviesService } from './movies.service';
@@ -147,6 +148,48 @@ describe.skipIf(!ADMIN_URL)('movies', { timeout: 60_000 }, () => {
     await match.resolvePending();
     expect(fetchMock).not.toHaveBeenCalled();
     expect((await movies.titles(userId, 'history'))[0].watchedSeconds).toBe(6900);
+  });
+
+  it('asks how the film was an hour after it ends, once; the rating and a few words are kept', async () => {
+    const sent: {
+      title: string;
+      actions?: { label: string; action: string; newRow?: boolean }[];
+    }[] = [];
+    const notifications = {
+      send: async (_: string, n: (typeof sent)[number]) => void sent.push(n),
+    };
+    const users = { findById: async () => ({ id: userId, locale: 'ru' }) };
+    const question = new MovieQuestionService(db as never, notifications as never, users as never);
+    // Moana's last view (the second evening) ended at 20:15 UTC: not yet at 20:45, asked at 21:20, not twice.
+    await question.askDue(new Date('2026-10-26T20:45:00Z'));
+    expect(sent).toHaveLength(0);
+    await question.askDue(new Date('2026-10-26T21:20:00Z'));
+    await question.askDue(new Date('2026-10-26T21:25:00Z'));
+    expect(sent.map((n) => n.title)).toEqual(['🎬 Как тебе «Моана»?']);
+    const buttons = sent[0].actions ?? [];
+    expect(buttons.map((b) => b.label)).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+      'Не досмотрел',
+    ]);
+    expect(buttons.filter((b) => b.newRow).map((b) => b.label)).toEqual(['1', '6', 'Не досмотрел']);
+
+    const eight = buttons[7].action.split(':').slice(1).join(':');
+    const reply = await question.answer({ id: userId, locale: 'ru' } as never, eight);
+    expect(typeof reply === 'string' ? reply : reply.reply).toContain('8/10');
+    if (typeof reply !== 'string') {
+      await reply.expectText({ id: userId } as never, 'Очень красивая, музыка супер');
+    }
+    const [title] = await movies.titles(userId, 'history');
+    expect(title).toMatchObject({ rating: 8, note: 'Очень красивая, музыка супер' });
   });
 
   it('gives Links the hours of an evening, the late part of it with them', async () => {
