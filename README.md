@@ -50,7 +50,11 @@ Russian.
 - 📱 **The phone as a sensor** (Android) — time in apps, unlocks and late nights, the
   notifications that interrupt you, and a timeline of places like Google Maps': the routes on a
   map, the places with their names (OpenStreetMap, or Google with your key), on foot or riding;
-  push notifications, offline reading, a home-screen widget
+  push notifications, offline reading, a home-screen widget; a voice assistant called by a name you
+  choose — the name is heard on the phone itself, the answer comes from the same AI, read aloud
+- 🎬 **What you watched, by itself** — the browser extension notices a film or a show playing on
+  any site (Netflix, a site with its own player), finds it in TMDB, and keeps the hours, the
+  episodes and the late nights for Links; ratings, notes and a list to watch
 - 🛡️ **Security agent** — watches sign-ins, the server (SSH, firewall, open ports), your computers
   and repositories every hour; an AI investigates every morning and tells what to fix
 - 🏆 **400+ achievements** across all sections, with XP and a player level
@@ -61,23 +65,24 @@ Russian.
 
 ## Sections
 
-|                    |                                                                                                                   |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| 💰 **Finance**     | wallets, main currency, budgets, subscriptions, net worth, your bank directly, wishlist price watch               |
-| 📔 **Diary**       | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                 |
-| 🧠 **Psychology**  | mood patterns, check-ups, life events, a gentle day for hard days, a brief for an appointment                     |
-| 🌱 **Habits**      | quitting alcohol, smoking or your own, building the gym or your own: runs, an evening question in Telegram        |
-| 🔑 **Passwords**   | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext |
-| 🩺 **Health**      | one medical history across countries: visits, ICD diagnoses, medications, documents                               |
-| ✅ **Tasks**       | TODO list with short / normal / long-running tasks, repeating tasks, reminders at your local time                 |
-| 👨‍💻 **Development** | repositories, stars, releases, npm downloads, contribution streaks, coding time                                   |
-| 🎧 **Music**       | listening history and tops, now playing, your own tracks' stats                                                   |
-| 🎮 **Games**       | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP), Xbox gamerscore and achievements       |
-| ⏱️ **Activity**    | time at the computer per program, project and day, Pomodoro, work contexts                                        |
-| 📡 **Monitoring**  | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                               |
-| 🌤️ **Weather**     | today and the week ahead, what to wear — tuned to how you take the cold                                           |
-| 🎂 **Birthdays**   | countdowns and reminders                                                                                          |
-| 🚀 **Projects**    | your sites and services — finance, monitoring and AI refer to them                                                |
+|                    |                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| 💰 **Finance**     | wallets, main currency, budgets, subscriptions, net worth, your bank directly, wishlist price watch                 |
+| 📔 **Diary**       | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                   |
+| 🧠 **Psychology**  | mood patterns, check-ups, life events, a gentle day for hard days, a brief for an appointment                       |
+| 🌱 **Habits**      | quitting alcohol, smoking or your own, building the gym or your own: runs, an evening question in Telegram          |
+| 🔑 **Passwords**   | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext   |
+| 🩺 **Health**      | one medical history across countries: visits, ICD diagnoses, medications, documents; sleep, HRV and steps of a band |
+| 🎬 **Movies**      | films and shows watched (noticed by the browser extension), ratings and notes, a list to watch with TMDB search     |
+| ✅ **Tasks**       | TODO list with short / normal / long-running tasks, repeating tasks, reminders at your local time                   |
+| 👨‍💻 **Development** | repositories, stars, releases, npm downloads, contribution streaks, coding time                                     |
+| 🎧 **Music**       | listening history and tops, now playing, your own tracks' stats                                                     |
+| 🎮 **Games**       | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP), Xbox gamerscore and achievements         |
+| ⏱️ **Activity**    | time at the computer per program, project and day, Pomodoro, work contexts                                          |
+| 📡 **Monitoring**  | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                                 |
+| 🌤️ **Weather**     | today and the week ahead, what to wear — tuned to how you take the cold                                             |
+| 🎂 **Birthdays**   | countdowns and reminders                                                                                            |
+| 🚀 **Projects**    | your sites and services — finance, monitoring and AI refer to them                                                  |
 
 Every section is a module: hide what you do not use, or [write your own](docs/architecture.md).
 
@@ -116,6 +121,9 @@ Every section is a module: hide what you do not use, or [write your own](docs/ar
   ![OpenStreetMap](https://img.shields.io/badge/OpenStreetMap-7EBC6F?logo=openstreetmap&logoColor=white)
   ![Google Maps](https://img.shields.io/badge/Google%20Maps-4285F4?logo=googlemaps&logoColor=white)
   ![Google Places](https://img.shields.io/badge/Google%20Places-4285F4?logo=googlemaps&logoColor=white)
+- **Health and films:**
+  ![Google Health](<https://img.shields.io/badge/Google%20Health%20(Fitbit)-4285F4?logo=fitbit&logoColor=white>)
+  ![TMDB](https://img.shields.io/badge/TMDB-01B4E4?logo=themoviedatabase&logoColor=white)
 - **Other:**
   ![Open-Meteo weather](https://img.shields.io/badge/Open--Meteo%20weather-FF8C00)
   ![LanguageTool](https://img.shields.io/badge/LanguageTool-45A1FC?logo=languagetool&logoColor=white)

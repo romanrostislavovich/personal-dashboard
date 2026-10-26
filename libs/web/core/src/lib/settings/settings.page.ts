@@ -146,7 +146,6 @@ const TABS = [
             @for (card of deviceCards(); track card.id) {
               <ng-container *ngComponentOutlet="card.component" />
             }
-            <pd-device-backup-settings />
           </div>
         </ng-template>
       </mat-tab>
@@ -161,6 +160,7 @@ const TABS = [
         <div class="grid">
           <pd-sync-settings />
           <pd-data-settings />
+          <pd-device-backup-settings />
           <pd-trash-settings />
         </div>
       </mat-tab>

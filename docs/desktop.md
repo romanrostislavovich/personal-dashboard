@@ -6,7 +6,7 @@ The tray menu has “Start with the system” and “Change server”. The app s
 (switch it off in the tray) and stays in the tray when its window is closed.
 
 On Windows it can also record the time at the computer for the Activity section: switch it on in
-Activity → Setup. The tracker notes which program and window is in front, sends it to your server
+Settings → Devices. The tracker notes which program and window is in front, sends it to your server
 every minute and keeps it on the computer while there is no connection; the tray menu pauses it.
 The tray also runs focus sessions (Pomodoro: notifications wait until the work part ends, time in
 games and messengers is noted), reminds to take a break after an hour at the computer and reports

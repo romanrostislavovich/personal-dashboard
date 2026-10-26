@@ -80,11 +80,18 @@ export const activityModule: WebDashboardModule = {
         import('./places/google-places.integration').then((m) => m.GooglePlacesIntegration),
     },
   ],
-  // The trackers of every device: Settings → Devices (and Activity → Setup).
+  // The trackers of every device and the time of devices without one: Settings → Devices.
   devices: [
     {
       id: 'activity.trackers',
       loadComponent: () => import('./tracker-card.component').then((m) => m.TrackerCardComponent),
+    },
+    {
+      id: 'activity.other-computers',
+      loadComponent: () =>
+        import('./settings/other-computers-settings.component').then(
+          (m) => m.OtherComputersSettingsComponent,
+        ),
     },
   ],
   widgets: [
