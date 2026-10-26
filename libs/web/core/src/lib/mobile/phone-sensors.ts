@@ -21,6 +21,23 @@ export interface PhoneSensorsStatus {
   bluetooth?: boolean;
 }
 
+/** The voice assistant of the phone (VoiceService in apps/mobile). */
+export interface VoiceStatus {
+  enabled: boolean;
+  /** The word it answers to, lower case. */
+  name: string;
+  /** The speech model on the phone: `none`, `downloading` (with `progress`), `ready`, `failed`. */
+  model: 'none' | 'downloading' | 'ready' | 'failed';
+  progress: number;
+  /** Whether the model knows the name; missing — not checked yet (no model). */
+  known?: boolean;
+  microphone: boolean;
+  error: string;
+  lastQuestion: string;
+  lastAnswer: string;
+  lastAt: number;
+}
+
 /** The optional signals of the phone, each a permission of its own. */
 export type PhoneExtra = 'steps' | 'calls' | 'photos' | 'microphone' | 'bluetooth';
 
@@ -37,6 +54,10 @@ interface PhoneSensorsPlugin {
   /** Android's question about one optional signal, or the app's settings once it was asked. */
   allow(options: { kind: PhoneExtra }): Promise<void>;
   openAutostart(): Promise<void>;
+  /** Missing in an APK built before the voice assistant. */
+  voiceStatus?(): Promise<VoiceStatus>;
+  voiceConfigure?(options: { enabled: boolean; name: string }): Promise<VoiceStatus>;
+  voiceTry?(): Promise<void>;
 }
 
 /** How long the app may take to answer whether it can collect. */

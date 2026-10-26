@@ -266,3 +266,16 @@ export interface AiAction {
 export interface AiConversationDetail extends AiConversation {
   messages: AiStoredMessage[];
 }
+
+/**
+ * The voice assistant's turn (the phone: "Люцифер, …"): what was heard and the answer to read
+ * aloud. `answer` is also a sentence to say when nothing could be done (no AI, no speech
+ * recognition, nothing heard) — `ok` tells which.
+ */
+export interface VoiceAnswer {
+  ok: boolean;
+  question: string;
+  answer: string;
+  /** The assistant asks to confirm a deletion or an overwrite: the user says "yes" or "no". */
+  awaitsConfirmation: boolean;
+}

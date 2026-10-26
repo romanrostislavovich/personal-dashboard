@@ -61,6 +61,12 @@
             android:exported="false"
             android:foregroundServiceType="location|microphone" />
 
+        <!-- The voice assistant: listens for its name, all the time (voice/VoiceService). -->
+        <service
+            android:name=".voice.VoiceService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+
         <!-- The location Android delivers in the background (sensors/LocationUpdatesReceiver). -->
         <receiver
             android:name=".sensors.LocationUpdatesReceiver"

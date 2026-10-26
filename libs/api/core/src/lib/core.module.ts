@@ -8,6 +8,7 @@ import { AiConnectionsService } from './ai/ai-connections.service';
 import { AiUsageService } from './ai/ai-usage.service';
 import { AiController } from './ai/ai.controller';
 import { AiTelegramAssistant } from './ai/ai-telegram.assistant';
+import { VoiceAssistantService } from './ai/voice-assistant.service';
 import { AiActionsService } from './ai/ai-actions.service';
 import { AiConversationsService } from './ai/ai-conversations.service';
 import { AiLinks } from './ai/ai.links';
@@ -217,6 +218,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     CoreAiTools,
     AiLinks,
     AiTelegramAssistant,
+    VoiceAssistantService,
     MorningDigestService,
     MorningDigestJob,
     SyncStore,
@@ -274,6 +276,8 @@ import { UserActivityService } from './realtime/user-activity.service';
     AutomationsService,
     // For actions that reach outside services: they run on the server (see ServerActions).
     ServerActions,
+    // For the phone's voice assistant (Activity holds the phone's device token).
+    VoiceAssistantService,
   ],
 })
 export class CoreModule {}

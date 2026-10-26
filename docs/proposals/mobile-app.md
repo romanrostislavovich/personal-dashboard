@@ -208,6 +208,21 @@ file are not checked yet.
 - Voice notes into the diary (speech to text already works for Telegram).
 - Maybe: the noise level around as a number (no sound kept).
 
+**Built (2026-10-26, the owner's choices):** the name is heard on the phone by **Vosk** (offline,
+the small Russian model, ~45 MB, downloaded once into the app's files), with a grammar of that one
+word; it listens **all the time** (a foreground service with a quiet notification); the default
+name is **«Люцифер»**, changed in Settings → Devices → Voice assistant — the phone checks the word
+is in the model's vocabulary (the symbol table of `graph/Gr.fst`) and warns if not. After the name:
+a beep, the question recorded until a pause (with the 1.5 s before the name, for a question said
+in one breath), sent as WAV to `POST /api/activity/device/voice` with the phone's device token,
+recognised by the AI's speech connection, answered by the assistant (same conversation as the
+web chat and Telegram, every section's tools, writes too — "…, put in the diary that…"), with a
+prompt for a short spoken answer; the answer is read by Android's TextToSpeech and kept in a
+notification. A question to confirm is listened for again at once. The noise level of the day
+is taken from the open microphone while it listens. Code: `apps/mobile/.../voice/`,
+`VoiceAssistantService` in api-core, `PhoneVoiceController` in activity. Not tried on the phone
+yet at the time of writing.
+
 ## Later
 
 - **A seizure alert for close people** (behind a feature flag): the app notices a likely seizure

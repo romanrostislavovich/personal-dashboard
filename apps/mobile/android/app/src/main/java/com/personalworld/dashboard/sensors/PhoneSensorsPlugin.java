@@ -25,6 +25,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.List;
+import com.personalworld.dashboard.voice.VoiceModel;
+import com.personalworld.dashboard.voice.VoiceService;
+import com.personalworld.dashboard.voice.VoiceStore;
 
 /**
  * The phone as a sensor, switched on and looked after from the page (`phone-sensors.ts` in
@@ -147,10 +150,70 @@ public class PhoneSensorsPlugin extends Plugin {
         call.resolve();
     }
 
+    /** The voice assistant: on or off, its name, the speech model, the last question. */
+    @PluginMethod
+    public void voiceStatus(PluginCall call) {
+        guarded(call, () -> call.resolve(voiceNow()));
+    }
+
+    private JSObject voiceNow() {
+        VoiceStore voice = new VoiceStore(getContext());
+        JSObject result = new JSObject();
+        result.put("enabled", voice.enabled());
+        result.put("name", voice.name());
+        result.put("model", voice.model());
+        result.put("progress", voice.progress());
+        result.put("known", voice.known());
+        result.put("microphone", VoiceService.hasMicrophone(getContext()));
+        result.put("error", voice.error());
+        result.put("lastQuestion", voice.lastQuestion());
+        result.put("lastAnswer", voice.lastAnswer());
+        result.put("lastAt", voice.lastAt());
+        return result;
+    }
+
+    /**
+     * On or off, and the name it answers to: one word, lower case (Vosk hears words, not
+     * letters). Whether the speech model knows the word is told back once the model is there.
+     */
+    @PluginMethod
+    public void voiceConfigure(PluginCall call) {
+        guarded(call, () -> {
+            boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false));
+            String name = call.getString("name", VoiceStore.DEFAULT_NAME).trim().toLowerCase(java.util.Locale.ROOT);
+            if (!name.matches("\\p{L}{2,30}")) {
+                call.reject("The name must be one word of letters");
+                return;
+            }
+            Context context = getContext();
+            new VoiceStore(context).configure(enabled, name);
+            VoiceModel model = new VoiceModel(context);
+            if (model.ready()) {
+                new VoiceStore(context).setKnown(model.knows(name));
+            }
+            if (enabled) {
+                VoiceService.restart(context);
+            } else {
+                VoiceService.stop(context);
+            }
+            call.resolve(voiceNow());
+        });
+    }
+
+    /** As if the name was heard: the beep, and the question is listened for. */
+    @PluginMethod
+    public void voiceTry(PluginCall call) {
+        guarded(call, () -> {
+            VoiceService.tryNow(getContext());
+            call.resolve();
+        });
+    }
+
     @PluginMethod
     public void disable(PluginCall call) {
         guarded(call, () -> {
             SensorsWorker.cancel(getContext());
+            VoiceService.stop(getContext());
             new SensorsStore(getContext()).clear();
             call.resolve();
         });
