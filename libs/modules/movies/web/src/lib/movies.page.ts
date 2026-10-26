@@ -76,6 +76,9 @@ const TABS = [
       gap: 8px;
       color: var(--mat-sys-on-surface-variant);
     }
+    .hint mat-icon {
+      flex: none;
+    }
     .count {
       margin-left: 6px;
       padding: 0 6px;
