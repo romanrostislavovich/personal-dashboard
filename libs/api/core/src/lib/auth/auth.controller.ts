@@ -145,22 +145,19 @@ export class AuthController {
     if (!token) {
       throw new UnauthorizedException('Signed out');
     }
-    try {
-      const { response: result, refreshToken } = await this.auth.refresh(
-        token,
-        clientMeta(request),
-      );
-      if (refreshToken) {
-        if (body.refreshToken) {
-          return { ...result, refreshToken };
-        }
-        setRefreshCookie(request, response, refreshToken);
+    // A refused token leaves the cookie as it is. Clearing it here cleared the cookie by its name:
+    // a request with an old token, answered after a sign-in elsewhere in the same browser (the
+    // desktop app's second window, another tab), wiped the new session's cookie too, and the
+    // owner was signed out a few seconds after signing in. A dead cookie harms nothing — the next
+    // refresh is refused again —; signing out (`logout`) still clears it.
+    const { response: result, refreshToken } = await this.auth.refresh(token, clientMeta(request));
+    if (refreshToken) {
+      if (body.refreshToken) {
+        return { ...result, refreshToken };
       }
-      return result;
-    } catch (error) {
-      clearRefreshCookie(request, response);
-      throw error;
+      setRefreshCookie(request, response, refreshToken);
     }
+    return result;
   }
 
   @Public()
