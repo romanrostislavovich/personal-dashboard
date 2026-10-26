@@ -40,6 +40,18 @@ const apiKeySecret = (connectionId: string) => `ai.connection.${connectionId}`;
 /** OpenAI's own small embedding model, when an OpenAI connection makes the vectors. */
 const OPENAI_EMBEDDING_MODEL = 'text-embedding-3-small';
 
+/**
+ * The model that turns speech into text. A chat model typed into the field by mistake (the owner
+ * had `gpt-6-luna` there, and OpenAI answered every recording with "Invalid URL") can never do
+ * it, so the default one is used instead; a model of another provider passes when its name says
+ * it is for speech (whisper, transcribe, speech, audio, stt).
+ */
+export function speechModelOf(chosen: string | null | undefined): string {
+  return chosen && /whisper|transcri|speech|audio|stt/i.test(chosen)
+    ? chosen
+    : DEFAULT_SPEECH_MODEL;
+}
+
 @Injectable()
 export class AiConnectionsService {
   constructor(
@@ -240,7 +252,7 @@ export class AiConnectionsService {
     return {
       baseUrl: row.baseUrl,
       apiKey: await this.secrets.get(userId, apiKeySecret(row.id)),
-      model: settings?.speechModel ?? DEFAULT_SPEECH_MODEL,
+      model: speechModelOf(settings?.speechModel),
     };
   }
 

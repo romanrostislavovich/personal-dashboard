@@ -95,41 +95,60 @@ public class VoiceModel {
         progress.at(100);
     }
 
-    /**
-     * Whether the model knows a word: Vosk hears only the words of its vocabulary. The small
-     * models keep it as the symbol table inside `graph/Gr.fst` — each word as its length (4 bytes,
-     * little-endian) and its UTF-8 letters — so the word is looked for in that form.
-     */
+    /** Whether the model knows a word (see `known`). */
     public boolean knows(String word) throws IOException {
-        byte[] letters = word.getBytes(StandardCharsets.UTF_8);
-        byte[] pattern = new byte[letters.length + 4];
-        pattern[0] = (byte) letters.length;
-        pattern[1] = (byte) (letters.length >> 8);
-        pattern[2] = (byte) (letters.length >> 16);
-        pattern[3] = (byte) (letters.length >> 24);
-        System.arraycopy(letters, 0, pattern, 4, letters.length);
+        return !known(java.util.Collections.singletonList(word)).isEmpty();
+    }
+
+    /**
+     * The words of a list the model knows: Vosk hears only the words of its vocabulary. The small
+     * models keep it as the symbol table inside `graph/Gr.fst` — each word as its length (4 bytes,
+     * little-endian) and its UTF-8 letters — so each word is looked for in that form, all in one
+     * pass over the file.
+     */
+    public java.util.List<String> known(java.util.List<String> words) throws IOException {
+        java.util.List<String> found = new java.util.ArrayList<>();
         File graph = new File(dir, "graph/Gr.fst");
         if (!graph.exists()) {
-            // A model of another kind: nothing to check by, so it is taken as known.
-            return true;
+            // A model of another kind: nothing to check by, so all are taken as known.
+            found.addAll(words);
+            return found;
         }
+        byte[][] patterns = new byte[words.size()][];
+        int longest = 0;
+        for (int i = 0; i < words.size(); i++) {
+            byte[] letters = words.get(i).getBytes(StandardCharsets.UTF_8);
+            byte[] pattern = new byte[letters.length + 4];
+            pattern[0] = (byte) letters.length;
+            pattern[1] = (byte) (letters.length >> 8);
+            pattern[2] = (byte) (letters.length >> 16);
+            pattern[3] = (byte) (letters.length >> 24);
+            System.arraycopy(letters, 0, pattern, 4, letters.length);
+            patterns[i] = pattern;
+            longest = Math.max(longest, pattern.length);
+        }
+        boolean[] seen = new boolean[words.size()];
         byte[] chunk = new byte[1 << 20];
-        int keep = pattern.length - 1;
         int filled = 0;
         try (InputStream in = new BufferedInputStream(new FileInputStream(graph))) {
             int read;
             while ((read = in.read(chunk, filled, chunk.length - filled)) > 0) {
                 int end = filled + read;
-                if (indexOf(chunk, end, pattern) >= 0) {
-                    return true;
+                for (int i = 0; i < patterns.length; i++) {
+                    seen[i] = seen[i] || indexOf(chunk, end, patterns[i]) >= 0;
                 }
-                // The end of this chunk may begin the word: it is kept for the next one.
-                int tail = Math.min(keep, end);
+                // The end of this chunk may begin a word: it is kept for the next one.
+                int tail = Math.min(longest - 1, end);
                 System.arraycopy(chunk, end - tail, chunk, 0, tail);
                 filled = tail;
             }
         }
-        return false;
+        for (int i = 0; i < seen.length; i++) {
+            if (seen[i]) {
+                found.add(words.get(i));
+            }
+        }
+        return found;
     }
 
     private static int indexOf(byte[] data, int length, byte[] pattern) {

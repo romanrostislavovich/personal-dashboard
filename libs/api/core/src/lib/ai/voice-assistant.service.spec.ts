@@ -60,3 +60,13 @@ describe('VoiceAssistantService', () => {
     expect(ask).not.toHaveBeenCalled();
   });
 });
+
+describe('speechModelOf', () => {
+  it('keeps a speech model and replaces a chat one typed by mistake', async () => {
+    const { speechModelOf } = await import('./ai-connections.service');
+    expect(speechModelOf('whisper-1')).toBe('whisper-1');
+    expect(speechModelOf('gpt-4o-transcribe')).toBe('gpt-4o-transcribe');
+    expect(speechModelOf('gpt-6-luna')).toBe('gpt-4o-mini-transcribe');
+    expect(speechModelOf(null)).toBe('gpt-4o-mini-transcribe');
+  });
+});
