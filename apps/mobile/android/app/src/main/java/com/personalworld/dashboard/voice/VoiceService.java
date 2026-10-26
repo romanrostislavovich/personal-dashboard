@@ -35,7 +35,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Locale;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.vosk.Model;
 import org.vosk.Recognizer;
@@ -84,6 +83,8 @@ public class VoiceService extends Service {
     private Thread worker;
     private TextToSpeech tts;
     private VoiceStore store;
+    /** The forms of the name the model knows (see WakeGrammar). */
+    private java.util.List<String> forms = java.util.Collections.emptyList();
 
     /** Listening when it is on, the phone set up and the microphone allowed; safe to call again. */
     public static void start(Context context) {
@@ -209,7 +210,12 @@ public class VoiceService extends Service {
                 model.download(percent -> store.setModel("downloading", percent));
             }
             store.setModel("ready", 100);
-            store.setKnown(model.knows(store.name()));
+            forms = model.known(WakeGrammar.forms(store.name()));
+            store.setKnown(forms.contains(store.name()));
+            if (forms.isEmpty()) {
+                // Not in the vocabulary: listened for anyway, the settings warn it will not be heard.
+                forms = java.util.Collections.singletonList(store.name());
+            }
         } catch (IOException e) {
             Log.w(TAG, "The speech model was not downloaded", e);
             store.setModel("failed", 0);
@@ -222,7 +228,7 @@ public class VoiceService extends Service {
         int size = Math.max(AudioRecord.getMinBufferSize(RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT), CHUNK * 2) * 2;
         AudioRecord microphone = null;
         try (Model vosk = new Model(model.path());
-             Recognizer recognizer = new Recognizer(vosk, RATE, new JSONArray().put(name).put("[unk]").toString())) {
+             Recognizer recognizer = new Recognizer(vosk, RATE, WakeGrammar.json(forms))) {
             microphone = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, RATE,
                 AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, size);
             if (microphone.getState() != AudioRecord.STATE_INITIALIZED) {
@@ -232,6 +238,7 @@ public class VoiceService extends Service {
             store.setError("");
             ArrayDeque<short[]> before = new ArrayDeque<>();
             Loudness loudness = new Loudness();
+            Gain gain = new Gain();
             while (!stopping) {
                 short[] chunk = new short[CHUNK];
                 int read = microphone.read(chunk, 0, CHUNK);
@@ -247,7 +254,7 @@ public class VoiceService extends Service {
                     // Its own voice is not a question.
                     continue;
                 }
-                boolean heard = tryNow || said(recognizer, chunk, read, name);
+                boolean heard = tryNow || said(recognizer, gain.lift(chunk, read), read, forms);
                 if (!heard) {
                     continue;
                 }
@@ -274,17 +281,12 @@ public class VoiceService extends Service {
         }
     }
 
-    /** Whether the name is in what the recognizer has heard so far. */
-    private static boolean said(Recognizer recognizer, short[] chunk, int read, String name) {
+    /** Whether the name (one of its forms) is in what the recognizer has heard so far. */
+    private static boolean said(Recognizer recognizer, short[] chunk, int read, java.util.List<String> forms) {
         String json = recognizer.acceptWaveForm(chunk, read) ? recognizer.getResult() : recognizer.getPartialResult();
         try {
             JSONObject result = new JSONObject(json);
-            String text = result.optString("text", result.optString("partial", ""));
-            for (String word : text.split("\\s+")) {
-                if (word.equals(name)) {
-                    return true;
-                }
-            }
+            return WakeGrammar.said(result.optString("text", result.optString("partial", "")), forms);
         } catch (org.json.JSONException e) {
             // Nothing heard.
         }
@@ -496,6 +498,31 @@ public class VoiceService extends Service {
         Intent intent = new Intent(this, MainActivity.class)
             .setData(android.net.Uri.parse("personaldashboard://ai"));
         return PendingIntent.getActivity(this, 1, intent, flags);
+    }
+
+    /**
+     * A quiet voice made loud enough for Vosk: the microphone source for speech recognition has no
+     * gain of its own, and a name said across the room was missed (in the test, quiet and noisy
+     * speech went from 3 of 12 heard to 10 of 12). Only what Vosk hears is lifted — never more than
+     * eightfold, never down —; the question is sent as it was recorded.
+     */
+    private static class Gain {
+        private double gain = 1;
+
+        short[] lift(short[] chunk, int read) {
+            double sum = 0;
+            for (int i = 0; i < read; i++) {
+                sum += (double) chunk[i] * chunk[i];
+            }
+            double rms = Math.max(Math.sqrt(sum / Math.max(read, 1)), 1);
+            double want = Math.min(8, Math.max(1, 3000 / rms));
+            gain = gain * 0.7 + want * 0.3;
+            short[] lifted = new short[read];
+            for (int i = 0; i < read; i++) {
+                lifted[i] = (short) Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, Math.round(chunk[i] * gain)));
+            }
+            return lifted;
+        }
     }
 
     /**

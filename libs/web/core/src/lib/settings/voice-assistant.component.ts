@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -35,6 +35,7 @@ const POLL_MS = 2_000;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
+    TitleCasePipe,
     FormsModule,
     MatButtonModule,
     MatCardModule,
@@ -62,7 +63,7 @@ const POLL_MS = 2_000;
               [disabled]="busy()"
               (change)="save($event.checked)"
             >
-              {{ 'core.settings.voice.enable' | transloco: { name: s.name } }}
+              {{ 'core.settings.voice.enable' | transloco: { name: s.name | titlecase } }}
             </mat-slide-toggle>
             @if (!s.microphone) {
               <p class="warn">{{ 'core.settings.voice.noMicrophone' | transloco }}</p>
@@ -82,7 +83,7 @@ const POLL_MS = 2_000;
             </form>
             @if (s.known === false) {
               <p class="warn">
-                {{ 'core.settings.voice.unknownName' | transloco: { name: s.name } }}
+                {{ 'core.settings.voice.unknownName' | transloco: { name: s.name | titlecase } }}
               </p>
             }
             @if (s.model === 'downloading') {
@@ -169,7 +170,8 @@ export class VoiceAssistantComponent implements OnInit {
     await this.read();
     // The model downloads in the background: its progress, and the name's check after it.
     this.poll = setInterval(() => {
-      if (this.status()?.model === 'downloading') {
+      const status = this.status();
+      if (status?.model === 'downloading' || (status?.enabled && status.model === 'none')) {
         void this.read();
       }
     }, POLL_MS);
