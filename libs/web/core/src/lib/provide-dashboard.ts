@@ -27,6 +27,7 @@ import { DesktopInstallService } from './apps/desktop-install.service';
 import { OfflineService } from './offline/offline.service';
 import { ThemeService } from './theme/theme.service';
 import { provideDashboardModules, WebDashboardModule } from './dashboard-module';
+import { provideScrollableTabs, startScrollableTabs } from './ui/scrollable-tabs';
 import { provideI18n } from './i18n/i18n';
 import { initialLanguage } from './i18n/language';
 
@@ -79,6 +80,9 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
           .catch((error: unknown) => console.error(`${module.id}: ${error}`));
       }
     }),
+    // Tabs scroll by a swipe, a wheel or the arrows (ui/scrollable-tabs.ts).
+    provideScrollableTabs(),
+    provideAppInitializer(startScrollableTabs),
     // <mat-icon> uses rounded Material Symbols (loaded in index.html).
     provideAppInitializer(() => {
       inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-rounded');
