@@ -48,10 +48,10 @@ export class RealtimeNotifier {
         this.notifyDesktop(`${label} ${achievement.icon}`, achievement.title, '/achievements');
       }
     } else if (event.type === 'notification') {
-      this.toasts.show({ icon: '🔔', title: event.title, text: event.body });
+      this.toasts.show({ icon: '🔔', title: event.title, text: event.body, route: event.route });
       // Not in the quiet hours, not for a section kept off the computer (the server tells).
       if (event.system !== false) {
-        this.notifyDesktop(event.title, event.body);
+        this.notifyDesktop(event.title, event.body, event.route);
       }
     }
   }

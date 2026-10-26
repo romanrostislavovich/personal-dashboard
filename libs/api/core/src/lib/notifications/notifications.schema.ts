@@ -20,6 +20,8 @@ export const notificationOutbox = pgTable(
     title: encryptedText().notNull(),
     body: encryptedText().notNull(),
     actions: jsonb().$type<NotificationAction[]>().notNull().default([]),
+    /** The page a tap opens (see `linkOf`); `null` — the page of its section. */
+    link: text(),
     /** A keyed hash of the dedupe key, or of the text when the sender gave none. */
     dedupeKey: text().notNull(),
     status: text().$type<NotificationDeliveryStatus>().notNull(),

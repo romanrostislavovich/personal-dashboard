@@ -1,0 +1,1 @@
+ALTER TABLE "notification_outbox" ADD COLUMN "link" text;

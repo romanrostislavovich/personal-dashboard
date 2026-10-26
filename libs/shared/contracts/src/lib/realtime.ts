@@ -13,6 +13,8 @@ export type RealtimeEvent =
       source: string;
       /** The desktop app may show it as a system notification (not in the quiet hours…). */
       system?: boolean;
+      /** The page a click on it opens. */
+      route?: string;
     }
   /** Keeps proxies from closing an idle connection; the client ignores it. */
   | { type: 'ping' };

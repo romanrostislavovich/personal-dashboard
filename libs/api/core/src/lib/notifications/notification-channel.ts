@@ -29,6 +29,11 @@ export interface Notification {
    */
   now?: boolean;
   /**
+   * The page a tap on it opens (`/tasks`, `/finance?tab=budgets`); missing — the page of its
+   * section (see `linkOf`).
+   */
+  link?: string;
+  /**
    * Set by NotificationsService, not by a module: whether the desktop app may show it as a system
    * notification — not in the quiet hours, not for a section kept off the computer.
    */

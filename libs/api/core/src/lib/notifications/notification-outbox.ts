@@ -43,7 +43,7 @@ export class NotificationOutbox {
     /** For `held`: the end of the quiet hours, when it goes out. */
     heldUntil: Date | null = null,
   ): Promise<NotificationOutboxRow | null> {
-    const { title, body, source, actions = [], dedupe } = notification;
+    const { title, body, source, actions = [], dedupe, link } = notification;
     const dedupeKey = keyedHash(dedupe?.key ?? `${source}\n${title}\n${body}`);
     const since = new Date(Date.now() - (dedupe?.minutes ?? SAME_TEXT_MINUTES) * 60_000);
     return this.db.transaction(async (tx) => {
@@ -68,6 +68,7 @@ export class NotificationOutbox {
           title,
           body,
           actions,
+          link: link ?? null,
           dedupeKey,
           status: seen ? 'deduplicated' : status,
           channels: seen ? [] : channels,

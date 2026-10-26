@@ -10,26 +10,14 @@ import {
   NOTIFICATION_CHANNELS,
   NotificationChannel,
 } from './notification-channel';
+import { sectionOfSource } from './notification-link';
 import { NotificationOutbox } from './notification-outbox';
 import { NotificationOutboxRow } from './notifications.schema';
-
-/** Sources that are a service inside a section: they are hidden with the section. */
-const SOURCE_SECTIONS: Record<string, string> = {
-  wakatime: 'development',
-  steam: 'games',
-  spotify: 'music',
-  lastfm: 'music',
-};
 
 /** The night's message lists this many; the rest are counted. */
 const QUIET_LIST_MAX = 15;
 /** A line of the night's message is cut to this. */
 const QUIET_LINE_MAX = 160;
-
-/** The section a notification is about, as the menu names it. */
-function sectionOfSource(source: string): string {
-  return SOURCE_SECTIONS[source] ?? source;
-}
 
 /**
  * Single entry point for sending notifications from all modules.
@@ -227,6 +215,7 @@ export class NotificationsService implements OnModuleInit {
       body: row.body,
       source: row.source,
       actions: row.actions,
+      ...(row.link ? { link: row.link } : {}),
     };
     const remaining: string[] = [];
     const errors: DeliveryError[] = [];

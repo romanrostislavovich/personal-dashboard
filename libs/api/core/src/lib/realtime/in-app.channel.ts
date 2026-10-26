@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Notification, NotificationChannel } from '../notifications/notification-channel';
+import { linkOf } from '../notifications/notification-link';
 import { UserRow } from '../users/users.schema';
 import { RealtimeService } from './realtime.service';
 
@@ -18,7 +19,8 @@ export class InAppChannel implements NotificationChannel {
     return this.realtime.isConnected(user.id);
   }
 
-  async send(user: UserRow, { title, body, source, desktop }: Notification): Promise<void> {
+  async send(user: UserRow, notification: Notification): Promise<void> {
+    const { title, body, source, desktop } = notification;
     if (source !== 'achievements') {
       this.realtime.emit(user.id, {
         type: 'notification',
@@ -26,6 +28,7 @@ export class InAppChannel implements NotificationChannel {
         body,
         source,
         system: desktop ?? true,
+        route: linkOf(notification),
       });
     }
   }
