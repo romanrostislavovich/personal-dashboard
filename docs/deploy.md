@@ -52,8 +52,10 @@ package): the server pulls it itself, nothing big goes over your connection. A c
 waits for CI (up to `CI_WAIT_MINUTES`, 25 by default) and a failed CI is not waited out. Without an
 image of CI — uncommitted changes, a commit not on `origin/main`, a failed CI, an arm64 server, or
 `--local` — the image is built here and uploaded over SSH (about 440 MB). At the end the script trims
-Docker on this computer: the build cache down to its newest 15 GB, and the images of older deploys
-but the last two. The script also installs
+Docker on this computer: the build cache not used for 3 days, and the images of older deploys but
+the last two. Docker Desktop's disk file (`docker_data.vhdx`) does not shrink by itself: after a
+big cleanup, quit Docker Desktop, run `wsl --shutdown` and compact the file (`Optimize-VHD`, or
+`diskpart` → `select vdisk file=…` → `compact vdisk`). The script also installs
 Docker on the first run, writes the server's `.env` from yours (the same `ENCRYPTION_KEY` and
 integration tokens, new secrets for the rest), switches your computer to a sync client of the server
 (the old `.env` is kept as `.env.before-sync`) and starts everything. Steps 3–6 below are the same

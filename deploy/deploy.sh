@@ -366,8 +366,9 @@ upload_mobile_apk ||
   echo "The Android app was not updated: Settings → Apps keeps the previous one." >&2
 
 # This computer: Docker's disk only grows (it held 135 GB of build cache on 2026-10-27). The cache
-# is cut to its newest 15 GB (npm, Gradle) and the images of older deploys go, but the last two.
-docker builder prune -f --keep-storage 15GB >/dev/null 2>&1 || true
+# not used for 3 days goes (what the builds use — npm, Gradle — stays fresh), and the images of
+# older deploys, but the last two. (--keep-storage frees next to nothing on BuildKit 0.32.)
+docker buildx prune -f --all --filter until=72h >/dev/null 2>&1 || true
 docker images personal-dashboard --format '{{.CreatedAt}}\t{{.Repository}}:{{.Tag}}' | sort -r |
   tail -n +3 | cut -f2 | xargs -r docker rmi >/dev/null 2>&1 || true
 
