@@ -105,8 +105,17 @@ export class ApiClient {
   /**
    * A file (a diary photo): its bytes, for an object URL. With a body it is asked for with a
    * POST — a document made from options that do not belong in an address.
+   *
+   * `immutable`: the file at this address never changes (a photo by its id), so a kept copy
+   * (ReadCache.getFile, the Android app) is shown without asking the server — offline too.
    */
-  async blob(path: string, body?: unknown): Promise<Blob> {
+  async blob(path: string, body?: unknown, { immutable = false } = {}): Promise<Blob> {
+    const cache = immutable && body === undefined ? this.platform.readCache : undefined;
+    const url = this.url(path);
+    const kept = await cache?.getFile?.(url).catch(() => null);
+    if (kept) {
+      return kept;
+    }
     const response = await this.sendAuthorized(
       body === undefined ? 'GET' : 'POST',
       path,
@@ -116,7 +125,9 @@ export class ApiClient {
     if (!response.ok) {
       throw new ApiError(response.status, await readBody(response));
     }
-    return response.blob();
+    const file = await response.blob();
+    void cache?.putFile?.(url, file).catch(() => undefined);
+    return file;
   }
 
   /**
