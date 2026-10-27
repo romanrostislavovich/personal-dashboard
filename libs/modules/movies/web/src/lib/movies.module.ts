@@ -38,6 +38,13 @@ export const moviesModule: WebDashboardModule = {
   },
   commands: [
     { id: 'movies.want', labelKey: 'movies.tabs.want', icon: 'bookmark', url: '/movies/want' },
+    {
+      // A film's name or link shared from another app (or copied on the desktop).
+      id: 'movies.search',
+      labelKey: 'movies.commands.search',
+      icon: 'movie',
+      loadAction: () => import('./movies.commands').then((m) => m.searchToWatch),
+    },
   ],
   integrations: [
     {

@@ -1,5 +1,6 @@
 package com.personalworld.dashboard;
 
+import android.content.Intent;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 import com.personalworld.dashboard.sensors.PhoneSensorsPlugin;
@@ -13,7 +14,16 @@ public class MainActivity extends BridgeActivity {
         // The app's own plugins, before Capacitor starts.
         registerPlugin(GentleWidgetPlugin.class);
         registerPlugin(PhoneSensorsPlugin.class);
+        registerPlugin(ShareTargetPlugin.class);
         super.onCreate(savedInstanceState);
+        ShareTargetPlugin.receive(this, getIntent());
+    }
+
+    /** A share while the app runs (singleTask: the same activity gets it). */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        ShareTargetPlugin.receive(this, intent);
     }
 
     @Override

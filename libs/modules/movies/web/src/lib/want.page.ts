@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MovieSearchResult, MovieTitle } from '@pd/contracts';
 import { EmptyStateComponent } from '@pd/web-core';
@@ -22,7 +23,11 @@ const ACTIONS = [
   imports: [TranslocoPipe, EmptyStateComponent, MovieSearchComponent, TitleCardComponent],
   template: `
     @if (status.value()?.tmdb) {
-      <pd-movie-search [actions]="actions" (picked)="add($event.result, $event.action)" />
+      <pd-movie-search
+        [actions]="actions"
+        [initial]="initial"
+        (picked)="add($event.result, $event.action)"
+      />
     }
 
     <h2 class="heading">{{ 'movies.want.list' | transloco }}</h2>
@@ -57,6 +62,8 @@ export class WantPage {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly transloco = inject(TranslocoService);
+  /** A film shared from another app (`?q=`, movies.commands.ts): searched at once. */
+  protected readonly initial = inject(ActivatedRoute).snapshot.queryParamMap.get('q') ?? '';
 
   protected readonly actions = ACTIONS;
   protected readonly status = this.api.status();

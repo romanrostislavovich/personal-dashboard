@@ -79,5 +79,8 @@
   },
   "errors": {
     "generic": "Something went wrong, try again"
+  },
+  "commands": {
+    "search": "Find a film to watch"
   }
 }

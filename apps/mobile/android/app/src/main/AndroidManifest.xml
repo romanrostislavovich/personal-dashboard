@@ -30,6 +30,18 @@
                 <data android:scheme="personaldashboard" />
             </intent-filter>
 
+            <!-- "Share" from other apps: a link or a text, a picture (ShareTargetPlugin). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
         </activity>
 
         <!-- The gentle day on the home screen (GentleWidget). -->
