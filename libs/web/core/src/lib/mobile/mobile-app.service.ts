@@ -9,6 +9,8 @@ import { applyPendingBundle, fetchNewerBundle, removeOldBundles } from './interf
 import { installId, isMobileApp, mobileServer, phoneModel } from './mobile-app';
 import { MobilePushService } from './mobile-push.service';
 import { prefetchForOffline } from './offline-prefetch';
+import { ShareInbox } from './share-inbox';
+import { onShared, takeShared } from './share-target';
 
 /** Not in the middle of the start. */
 const FIRST_CHECK_MS = 20_000;
@@ -29,10 +31,12 @@ const PREFETCH_ON_RESUME_MS = 60 * 60_000;
 @Injectable({ providedIn: 'root' })
 export class MobileAppService {
   private readonly auth = inject(AuthService);
-  private readonly apps = appsApi(inject(DASHBOARD_CLIENT).api);
+  private readonly api = inject(DASHBOARD_CLIENT).api;
+  private readonly apps = appsApi(this.api);
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly push = inject(MobilePushService);
+  private readonly inbox = inject(ShareInbox);
   private started = false;
   private prefetchedAt = 0;
   private updateCheckedAt = 0;
@@ -67,12 +71,25 @@ export class MobileAppService {
           void this.router.navigateByUrl(route);
         }
       }).catch(() => undefined);
+      // "Share" from another app: the capture page offers where it goes.
+      onShared(() => void this.openShared());
+      void this.openShared();
       void removeOldBundles().catch(() => undefined);
     } catch (error) {
       console.error(`The app's native part: ${error}`);
     }
     setTimeout(() => void this.tick(), FIRST_CHECK_MS);
     setInterval(() => void this.tick(), CHECK_EVERY_MS);
+  }
+
+  private async openShared(): Promise<void> {
+    const content = await takeShared();
+    if (content) {
+      this.inbox.put(content);
+      // Reloaded if it is open already: it takes the new share.
+      await this.router.navigateByUrl('/', { skipLocationChange: true });
+      await this.router.navigateByUrl('/capture');
+    }
   }
 
   /** Now (Settings → Apps is opened): the list shows this phone as it is. */
@@ -112,6 +129,6 @@ export class MobileAppService {
       return;
     }
     this.prefetchedAt = Date.now();
-    await prefetchForOffline(this.http).catch(() => undefined);
+    await prefetchForOffline(this.http, this.api).catch(() => undefined);
   }
 }

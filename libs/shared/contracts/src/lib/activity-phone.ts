@@ -37,7 +37,7 @@ export interface PhoneUsage {
   unlocksByHour: number[];
 }
 
-/** The kinds of the phone's signals (docs/telemetry.md, the phone's collectors 1–10). */
+/** The kinds of the phone's signals (docs/telemetry.md, the phone's collectors 1–15). */
 export const PHONE_SIGNAL_KINDS = [
   'screenOn',
   'screenOff',
@@ -52,6 +52,11 @@ export const PHONE_SIGNAL_KINDS = [
   'noise',
   'light',
   'pressure',
+  'alarm',
+  'country',
+  'battery',
+  'headphones',
+  'notificationReaction',
 ] as const;
 export type PhoneSignalKind = (typeof PHONE_SIGNAL_KINDS)[number];
 
@@ -108,6 +113,13 @@ export interface PhoneSignalsDay {
   noiseDb: number | null;
   /** Hours in daylight (light over 1 000 lux). */
   daylightHours: number | null;
+  /** The alarm set for this morning (the wake planned), `HH:MM`. */
+  alarm: string | null;
+  /** Of the notifications reacted to: the share opened (%), and the median seconds to open one. */
+  notificationsOpened: number | null;
+  secondsToOpen: number | null;
+  /** The battery's highest temperature, °C. */
+  batteryMaxC: number | null;
 }
 
 const appName = z.string().trim().max(200);

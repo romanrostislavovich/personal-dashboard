@@ -1,4 +1,5 @@
 import { ApiClient, ApiError } from './api-client';
+import { memoryReadCache } from './read-cache';
 import { Session } from './session';
 import { memoryStorage } from './testing';
 
@@ -15,6 +16,28 @@ async function setup(...responses: Response[]) {
 }
 
 describe('ApiClient', () => {
+  it('an immutable file is kept and shown again without asking the server', async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(new Response('jpeg-bytes', { status: 200 }));
+    const storage = memoryStorage();
+    const session = new Session(storage, 'storage');
+    await session.start('access-1');
+    const readCache = memoryReadCache();
+    const api = new ApiClient({ baseUrl: 'https://dash.test', storage, fetch, readCache }, session);
+
+    expect(
+      await (await api.blob('/api/diary/photos/p1', undefined, { immutable: true })).text(),
+    ).toBe('jpeg-bytes');
+    await new Promise((resolve) => setTimeout(resolve));
+    // Offline now: the kept copy answers, the server is not asked again.
+    fetch.mockRejectedValue(new TypeError('Failed to fetch'));
+    expect(
+      await (await api.blob('/api/diary/photos/p1', undefined, { immutable: true })).text(),
+    ).toBe('jpeg-bytes');
+    expect(fetch).toHaveBeenCalledTimes(1);
+    // Anything else (an export) is never kept.
+    await expect(api.blob('/api/data/export')).rejects.toThrow();
+  });
+
   it('sends the token and JSON to the server address and reads JSON back', async () => {
     const { fetch, api } = await setup(json({ id: 'p1' }));
 

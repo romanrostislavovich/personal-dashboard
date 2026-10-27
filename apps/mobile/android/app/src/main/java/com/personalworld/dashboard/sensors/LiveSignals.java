@@ -29,7 +29,8 @@ import com.personalworld.dashboard.voice.VoiceService;
 
 /**
  * The phone's signals heard as they happen, while PlacesService runs (docs/telemetry.md, the
- * phone's collectors 1, 3, 5, 9, 10): charging, the ringer, Wi-Fi and Bluetooth, and every quarter
+ * phone's collectors 1, 3, 5, 9, 10, 14): charging, the ringer, Wi-Fi and Bluetooth, wired
+ * headphones, and every quarter
  * of an hour the light, the air pressure (if the phone has a barometer) and the noise level — a
  * number of decibels from three seconds, never a sound kept.
  */
@@ -62,7 +63,7 @@ final class LiveSignals {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context c, Intent intent) {
-                heard(intent);
+                heard(intent, isInitialStickyBroadcast());
             }
         };
         IntentFilter filter = new IntentFilter();
@@ -71,6 +72,7 @@ final class LiveSignals {
         filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        filter.addAction(AudioManager.ACTION_HEADSET_PLUG);
         context.registerReceiver(receiver, filter);
 
         ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -115,7 +117,7 @@ final class LiveSignals {
         }
     }
 
-    private void heard(Intent intent) {
+    private void heard(Intent intent, boolean sticky) {
         String action = intent.getAction();
         long now = System.currentTimeMillis();
         try {
@@ -135,6 +137,11 @@ final class LiveSignals {
                     .put("connected", BluetoothDevice.ACTION_ACL_CONNECTED.equals(action))
                     .put("name", deviceName(device))
                     .put("kind", deviceKind(device)));
+            } else if (AudioManager.ACTION_HEADSET_PLUG.equals(action) && !sticky) {
+                // Sticky: on registering Android tells the state as it is, which is no change.
+                store.queueSignal("headphones", now, new JSONObject()
+                    .put("connected", intent.getIntExtra("state", 0) == 1)
+                    .put("microphone", intent.getIntExtra("microphone", 0) == 1));
             }
         } catch (JSONException e) {
             // Skipped.

@@ -32,6 +32,10 @@ const TILES: Tile[] = [
   { field: 'mobileMegabytes', icon: 'signal_cellular_alt', as: 'number' },
   { field: 'noiseDb', icon: 'graphic_eq', as: 'number' },
   { field: 'daylightHours', icon: 'wb_sunny', as: 'hours' },
+  { field: 'alarm', icon: 'alarm', as: 'clock' },
+  { field: 'notificationsOpened', icon: 'touch_app', as: 'number' },
+  { field: 'secondsToOpen', icon: 'hourglass_bottom', as: 'number' },
+  { field: 'batteryMaxC', icon: 'thermostat', as: 'number' },
 ];
 
 function hoursOf(clock: string): number {

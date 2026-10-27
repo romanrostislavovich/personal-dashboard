@@ -94,4 +94,47 @@ describe("the phone's signals of a day", () => {
     expect(hoursOf('07:15')).toBe(7.25);
     expect(hoursOf(null)).toBeNull();
   });
+  it('tells the alarm of the morning, even once it rang and the next one was set', () => {
+    const [day] = signalsDays(
+      [DAY],
+      [
+        s('alarm', -3 * H, { at: 7 * H }), // set at 21:00 for 07:00
+        s('alarm', -2 * H, { at: 7 * H + 30 * MIN }), // moved to 07:30
+        s('alarm', 7 * H + 31 * MIN, { at: 31 * H + 30 * MIN }), // rang; tomorrow's next
+        s('screenOn', 8 * H),
+      ],
+      new Map(),
+      48 * H,
+    );
+    expect(day.alarm).toBe('07:30');
+    const [off] = signalsDays(
+      [DAY],
+      [s('alarm', -3 * H, { at: 7 * H }), s('alarm', -1 * H, { at: null }), s('screenOn', 8 * H)],
+      new Map(),
+      48 * H,
+    );
+    expect(off.alarm).toBeNull();
+  });
+
+  it('tells how notifications were met, the battery heat and wired headphones', () => {
+    const [day] = signalsDays(
+      [DAY],
+      [
+        s('notificationReaction', 9 * H, { reaction: 'opened', seconds: 10 }),
+        s('notificationReaction', 10 * H, { reaction: 'opened', seconds: 30 }),
+        s('notificationReaction', 11 * H, { reaction: 'dismissed', seconds: 5 }),
+        s('notificationReaction', 12 * H, { reaction: 'opened', seconds: 600 }),
+        s('battery', 13 * H, { temperature: 31.5 }),
+        s('battery', 14 * H, { temperature: 38.2 }),
+        s('headphones', 15 * H, { connected: true }),
+        s('headphones', 16 * H + 30 * MIN, { connected: false }),
+      ],
+      new Map(),
+      48 * H,
+    );
+    expect(day.notificationsOpened).toBe(75);
+    expect(day.secondsToOpen).toBe(30);
+    expect(day.batteryMaxC).toBe(38.2);
+    expect(day.headphonesHours).toBe(1.5);
+  });
 });

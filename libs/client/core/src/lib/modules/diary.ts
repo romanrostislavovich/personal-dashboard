@@ -60,7 +60,7 @@ export function diaryApi(api: ApiClient) {
     saveSettings: (settings: DiarySettings) => api.put<DiarySettings>(`${BASE}/settings`, settings),
 
     /** The image bytes, for an object URL (`<img src>` cannot send the auth header). */
-    photo: (id: string) => api.blob(diaryPhotoPath(id)),
+    photo: (id: string) => api.blob(diaryPhotoPath(id), undefined, { immutable: true }),
     uploadPhoto: (day: LocalDate, file: Blob) => {
       const form = new FormData();
       form.append('file', file);

@@ -454,7 +454,11 @@
       "photos": "Photos taken",
       "mobileData": "Mobile data, MB",
       "noise": "Noise around, dB",
-      "daylight": "In daylight"
+      "daylight": "In daylight",
+      "alarm": "Alarm set for",
+      "notificationsOpened": "Notifications opened, %",
+      "secondsToOpen": "Seconds to open a notification",
+      "batteryMaxC": "Phone battery, max °C"
     }
   },
   "usage": {
@@ -595,6 +599,10 @@
       "mobileMegabytes": "Mobile data, MB",
       "noiseDb": "Noise, dB",
       "daylightHours": "Daylight",
+      "alarm": "Alarm",
+      "notificationsOpened": "Notifications opened, %",
+      "secondsToOpen": "Seconds to open",
+      "batteryMaxC": "Battery, max °C",
       "h": "h",
       "days": "{{count}} days"
     }

@@ -31,6 +31,8 @@ const OPEN_MAX = 12 * HOUR;
 /** The light and the noise are sampled every quarter of an hour. */
 const SAMPLE_HOURS = 0.25;
 const DAYLIGHT_LUX = 1000;
+/** An alarm for the morning rings before this hour (later is a nap or a reminder). */
+const ALARM_BY_H = 14;
 
 const round = (value: number, digits = 1) => Math.round(value * 10 ** digits) / 10 ** digits;
 
@@ -107,12 +109,22 @@ export function signalsDays(
   const kindsSeen = new Set(sorted.map((signal) => signal.kind));
   const screen = sorted.filter((s) => s.kind === 'screenOn' || s.kind === 'screenOff');
   const bluetooth = of('bluetooth');
-  const headphones = stretches(
-    bluetooth.filter((s) => s.data?.['kind'] === 'headphones'),
-    (s) => s.data?.['connected'] === true,
-    (s) => String(s.data?.['name'] ?? ''),
-    now,
-  );
+  // Bluetooth headphones by their name, the wired ones as one.
+  const headphones = [
+    ...stretches(
+      bluetooth.filter((s) => s.data?.['kind'] === 'headphones'),
+      (s) => s.data?.['connected'] === true,
+      (s) => String(s.data?.['name'] ?? ''),
+      now,
+    ),
+    ...stretches(
+      of('headphones'),
+      (s) => s.data?.['connected'] === true,
+      () => 'wired',
+      now,
+    ),
+  ];
+  const headphonesKinds = kindsSeen.has('bluetooth') ? 'bluetooth' : 'headphones';
   const car = stretches(
     bluetooth.filter((s) => s.data?.['kind'] === 'car'),
     (s) => s.data?.['connected'] === true,
@@ -172,6 +184,12 @@ export function signalsDays(
       .filter(within)
       .map((s) => Number(s.data?.['lux']))
       .filter(Number.isFinite);
+    const reactions = of('notificationReaction').filter(within);
+    const opened = reactions.filter((s) => s.data?.['reaction'] === 'opened');
+    const battery = of('battery')
+      .filter(within)
+      .map((s) => Number(s.data?.['temperature']))
+      .filter((c) => Number.isFinite(c) && c !== 0);
     const values = daily.get(day);
     return {
       day,
@@ -179,7 +197,7 @@ export function signalsDays(
       lastUse: lastOff ? clock((lastOff.at - start) / HOUR) : null,
       restHours: longestRest > 0 ? round(longestRest / HOUR) : null,
       steps: values?.steps ?? null,
-      headphonesHours: hours(headphones, 'bluetooth'),
+      headphonesHours: hours(headphones, headphonesKinds),
       carHours: hours(car, 'bluetooth'),
       mediaHours: hours(media, 'media'),
       dndHours: hours(dnd, 'dnd'),
@@ -198,8 +216,42 @@ export function signalsDays(
       daylightHours: light.length
         ? round(light.filter((lux) => lux >= DAYLIGHT_LUX).length * SAMPLE_HOURS)
         : null,
+      alarm: alarmOf(of('alarm'), start),
+      notificationsOpened: reactions.length
+        ? Math.round((opened.length / reactions.length) * 100)
+        : null,
+      secondsToOpen: median(opened.map((s) => Number(s.data?.['seconds'])).filter(Number.isFinite)),
+      batteryMaxC: battery.length ? Math.max(...battery) : null,
     };
   });
+}
+
+/**
+ * The alarm the morning of the day starting at `start` rang (or would have): the next alarm the
+ * phone told before it rang, when it falls between midnight and ALARM_BY_H. A signal is a change
+ * of the next alarm: set, moved, switched off (no `at`) — or the next one once this one rang.
+ */
+function alarmOf(alarms: Signal[], start: number): string | null {
+  const morning = start + ALARM_BY_H * HOUR;
+  let found: number | null = null;
+  for (const signal of alarms) {
+    // Told after it rang: the next alarm, for another day; this one stays.
+    if (signal.at >= morning || (found !== null && signal.at >= found)) {
+      break;
+    }
+    const at = signal.data?.['at'];
+    found = typeof at === 'number' && at >= start && at < morning ? at : null;
+  }
+  return found === null ? null : clock((found - start) / HOUR);
+}
+
+function median(values: number[]): number | null {
+  if (!values.length) {
+    return null;
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return Math.round(sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2);
 }
 
 /** Hours since midnight as `HH:MM`; after midnight it goes on (25:30 — half past one). */

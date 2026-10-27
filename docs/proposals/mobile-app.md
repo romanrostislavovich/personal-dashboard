@@ -73,7 +73,9 @@ Electron.
   - the fonts and icons are served by the dashboard itself (`apps/web/fonts.mjs`), not Google:
     without a network the icons would show as words;
   - the app starts without a network, signed in as before, and the bar says it is offline.
-  - Not yet: photos of the diary offline (they are files, not answers).
+  - **The diary's photos offline (built 2026-10-27):** a photo by its id never changes, so the
+    app keeps the file (IndexedDB `files`, the newest 300) and shows the kept one without asking
+    the server; the photos of the last 31 days are read ahead (`offline-prefetch.ts`).
 - **1c, push notifications (built, 2026-10-24):** through Google (FCM HTTP v1), a channel
   next to Telegram (`notifications/push` in api-core): the owner pastes the Firebase service
   account's JSON in Settings → Notifications → Push on the phone (kept as a server key); the app
@@ -99,6 +101,12 @@ Electron.
     (`personaldashboard://psychology/gentle`); a day that has passed asks to open the app.
 - MIUI and similar systems kill apps in the background: a setup screen walks through autostart
   and battery settings.
+
+- **"Share" into the dashboard (built 2026-10-27):** a link, a text or a picture shared from any
+  app (Android's share sheet) opens the capture page of the desktop app's shortcuts
+  (`ShareTargetPlugin` in apps/mobile, `share-target.ts` and `capture.page.ts` in web-core): every
+  module offers its commands — a task, a reminder in an hour, a note or a photo for today's diary,
+  a film to watch (Movies → To watch searches TMDB by the text, links left out).
 
 ## Stage 2 — the phone as a sensor
 
@@ -154,6 +162,13 @@ registers `devices` cards) and the copies on a computer; Settings → Apps stays
 Settings → Notifications holds Telegram, push, the gentle mode and the delivery log; the language
 stays in Account → Profile. Settings → Integrations lists every service the dashboard can
 connect, the ones not connected greyed (`off`).
+
+**More of the phone (built 2026-10-27, the owner's choices; collectors 11–15 of
+docs/telemetry.md):** the next alarm (the wake planned, to Links next to the real first use), the
+mobile network's country (trips without the GPS), the battery's temperature and health once an
+hour, wired headphones (counted with the Bluetooth ones), and what was done with a notification —
+opened or swiped away, and how fast. "Picked up" is not collected: Android tells no pick-up on most
+phones; the unlocks say it.
 
 ## Stage 2d — a timeline of places (built 2026-10-25, the owner's choices)
 

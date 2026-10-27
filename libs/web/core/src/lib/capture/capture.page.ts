@@ -9,17 +9,19 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DashboardCommand, DASHBOARD_MODULES } from '../dashboard-module';
 import { LayoutService } from '../layout/layout.service';
-import { desktopBridge, DesktopCapture } from '../realtime/desktop-bridge';
-
-type Captured = Awaited<ReturnType<DesktopCapture['pending']>>;
+import { ShareInbox } from '../mobile/share-inbox';
+import { SharedContent } from '../mobile/share-target';
+import { desktopBridge } from '../realtime/desktop-bridge';
 
 /**
- * What the desktop app captured with a shortcut — copied text or a piece of the screen — and
- * where it can go: every module offers its own commands (a task, a diary note, a reminder,
- * a photo for the diary). The page lives in a small window of its own, without the menu.
+ * What the desktop app captured with a shortcut — copied text or a piece of the screen — or what
+ * another app shared into the Android app, and where it can go: every module offers its own
+ * commands (a task, a diary note, a reminder, a photo for the diary, a film to watch). On the
+ * desktop the page lives in a small window of its own, without the menu.
  */
 @Component({
   selector: 'pd-capture-page',
@@ -110,9 +112,10 @@ export class CapturePage implements OnDestroy {
   private readonly transloco = inject(TranslocoService);
   private readonly modules = inject(DASHBOARD_MODULES);
   private readonly layout = inject(LayoutService);
+  private readonly router = inject(Router);
   private readonly capture = desktopBridge()?.capture ?? null;
 
-  protected readonly captured = signal<Captured>(null);
+  protected readonly captured = signal<SharedContent | null>(null);
   protected readonly text = signal('');
   protected readonly busy = signal(false);
   protected readonly done = signal<string | null>(null);
@@ -126,7 +129,7 @@ export class CapturePage implements OnDestroy {
     if (this.objectUrl) {
       URL.revokeObjectURL(this.objectUrl);
     }
-    this.objectUrl = URL.createObjectURL(new Blob([toBytes(c.base64)], { type: 'image/png' }));
+    this.objectUrl = URL.createObjectURL(c.image);
     return this.objectUrl;
   });
 
@@ -140,12 +143,28 @@ export class CapturePage implements OnDestroy {
   });
 
   constructor() {
+    const shared = inject(ShareInbox).take();
+    if (shared) {
+      this.show(shared);
+      return;
+    }
     void this.capture?.pending().then((captured) => {
-      this.captured.set(captured);
-      if (captured?.kind === 'text') {
-        this.text.set(captured.text);
+      if (captured?.kind === 'image') {
+        const image = new File([toBytes(captured.base64)], `screenshot-${Date.now()}.png`, {
+          type: 'image/png',
+        });
+        this.show({ kind: 'image', image });
+      } else if (captured) {
+        this.show(captured);
       }
     });
+  }
+
+  private show(content: SharedContent): void {
+    this.captured.set(content);
+    if (content.kind === 'text') {
+      this.text.set(content.text);
+    }
   }
 
   ngOnDestroy(): void {
@@ -163,10 +182,7 @@ export class CapturePage implements OnDestroy {
     try {
       if (c.kind === 'image') {
         const act = await command.loadImageAction?.();
-        const file = new File([toBytes(c.base64)], `screenshot-${Date.now()}.png`, {
-          type: 'image/png',
-        });
-        await act?.(file, this.injector);
+        await act?.(c.image, this.injector);
       } else {
         const text = this.text().trim();
         if (!text) {
@@ -185,8 +201,9 @@ export class CapturePage implements OnDestroy {
   protected close(): void {
     if (this.capture) {
       void this.capture.close();
-    } else {
-      window.close();
+    } else if (this.router.url.startsWith('/capture')) {
+      // The Android app: back to the dashboard (a command may have opened a page already).
+      void this.router.navigateByUrl('/');
     }
   }
 }
