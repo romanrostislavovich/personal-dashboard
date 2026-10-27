@@ -92,6 +92,10 @@ export class PhoneUsageLinks implements OnModuleInit {
       metric('mobileData', 'count', (day) => day.mobileMegabytes),
       metric('noise', 'score', (day) => day.noiseDb),
       metric('daylight', 'hours', (day) => day.daylightHours),
+      metric('alarm', 'clock', (day) => hoursOf(day.alarm)),
+      metric('notificationsOpened', 'score', (day) => day.notificationsOpened),
+      metric('secondsToOpen', 'count', (day) => day.secondsToOpen),
+      metric('batteryMaxC', 'score', (day) => day.batteryMaxC),
     ].filter((one) => one.days.length);
   }
 }

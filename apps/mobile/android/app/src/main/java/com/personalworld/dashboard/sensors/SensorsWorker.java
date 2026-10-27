@@ -194,13 +194,19 @@ public class SensorsWorker extends Worker {
         }
     }
 
-    /** Steps, calls, photos, mobile data: each only when Android allows it (PhoneSignals). */
+    /**
+     * Steps, calls, photos, mobile data: each only when Android allows it (PhoneSignals); the
+     * alarm, the network's country, the battery (PhoneState).
+     */
     private void collectSignals(SensorsStore store) {
         Context context = getApplicationContext();
         PhoneSignals.steps(context, store);
         PhoneSignals.calls(context, store);
         PhoneSignals.photos(context, store);
         PhoneSignals.dataUsage(context, store);
+        PhoneState.alarm(context, store);
+        PhoneState.country(context, store);
+        PhoneState.battery(context, store);
     }
 
     /** The signals waiting and the numbers of the days; the past days are dropped once taken. */

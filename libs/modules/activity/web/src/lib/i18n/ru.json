@@ -454,7 +454,11 @@
       "photos": "Снято фото",
       "mobileData": "Мобильный интернет, МБ",
       "noise": "Шум вокруг, дБ",
-      "daylight": "На дневном свету"
+      "daylight": "На дневном свету",
+      "alarm": "Будильник на",
+      "notificationsOpened": "Открыто уведомлений, %",
+      "secondsToOpen": "Секунд до открытия уведомления",
+      "batteryMaxC": "Батарея телефона, макс. °C"
     }
   },
   "usage": {
@@ -595,6 +599,10 @@
       "mobileMegabytes": "Моб. интернет, МБ",
       "noiseDb": "Шум, дБ",
       "daylightHours": "Дневной свет",
+      "alarm": "Будильник",
+      "notificationsOpened": "Открыто уведомлений, %",
+      "secondsToOpen": "Секунд до открытия",
+      "batteryMaxC": "Батарея, макс. °C",
       "h": "ч",
       "days": "{{count}} дн."
     }

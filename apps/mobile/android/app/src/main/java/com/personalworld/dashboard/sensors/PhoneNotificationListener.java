@@ -156,6 +156,30 @@ public class PhoneNotificationListener extends NotificationListenerService {
         }
     }
 
+    /**
+     * Collector 15: what was done with a notification — opened (tapped) or swiped away, and how
+     * many seconds after it came. Removed by its app, or by a timeout, is no reaction.
+     */
+    @Override
+    public void onNotificationRemoved(StatusBarNotification removed, RankingMap ranking, int reason) {
+        String reaction = reason == REASON_CLICK ? "opened"
+            : reason == REASON_CANCEL || reason == REASON_CANCEL_ALL ? "dismissed" : null;
+        SensorsStore store = new SensorsStore(this);
+        if (reaction == null || !store.configured() || getPackageName().equals(removed.getPackageName())
+            || removed.isOngoing()) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        try {
+            store.queueSignal("notificationReaction", now, new JSONObject()
+                .put("app", removed.getPackageName())
+                .put("reaction", reaction)
+                .put("seconds", Math.max(0, (now - removed.getPostTime()) / 1000)));
+        } catch (JSONException e) {
+            // Skipped.
+        }
+    }
+
     private static String text(Bundle extras, String key) {
         CharSequence value = extras == null ? null : extras.getCharSequence(key);
         return value == null ? "" : value.toString();
