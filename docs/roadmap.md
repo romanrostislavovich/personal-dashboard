@@ -251,14 +251,6 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   record real samples (the owner's voice, TV, a conversation) for the test set, then try a
   confirmation step (the name heard twice, or with a minimum confidence), a stricter gain, or
   only while the screen is on or the phone charges
-- **Desktop app: two instances, one as administrator** — seen 2026-10-26: two tray icons, one
-  instance running since 22.10 elevated (started by the installer, its parent gone), the other the
-  normal one relaunched by an update. `requestSingleInstanceLock` does not see across integrity
-  levels (Windows keeps a normal process from reaching an elevated one). Wanted: only one instance
-  ever — the owner's idea: the one with the higher rights stays when it is the admin one. To weigh
-  when fixing: an elevated app that loads the server's pages is a security risk (the security
-  section), so relaunching itself as the normal user may be the safer way; and whether two
-  trackers with one device token doubled the time of 22–26.10
 - **Voice assistant: dry answers and the voice** — the answers of «Люцифер» sound flat: make them
   livelier (the spoken prompt: a person's tone, a short reaction, not a report), and let the voice
   be chosen — Android's TextToSpeech voices of the language (male/female, speed, pitch) in Settings

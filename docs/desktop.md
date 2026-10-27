@@ -33,6 +33,11 @@ newer version, checks it against the hashes of its manifest and restarts into it
 is in the tray. No installer is run, so nothing asks for administrator rights. A new installer is
 needed only when the app moves to a newer Electron — the tray menu says so.
 
+One copy runs, never as administrator (`single-instance.ts`): Electron's lock does not see across
+the administrator boundary on Windows, so a copy started elevated (the installer starts the app at
+its end) starts itself again as the signed-in user and quits, and a copy that finds another live
+one in `instance.pid` of its profile quits too.
+
 The app also keeps the browser extension (the password vault in Chrome) up to date: it holds
 the extension in its own folder (`%APPDATA%/Personal Dashboard/browser-extension`), brings it to
 the server's version (`/extension-updates`) on the same checks, and the extension, loaded from
