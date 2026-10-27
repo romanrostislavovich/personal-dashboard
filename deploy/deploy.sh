@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Deploys the dashboard from this computer to your server (docs/deploy.md).
 #
-#   deploy/deploy.sh               build, upload and restart (every update)
+#   deploy/deploy.sh               update and restart (every update)
+#   deploy/deploy.sh --local       the same with the image built here, not the one of CI
 #   deploy/deploy.sh --with-data   the first time: also copy the local database to the server
 #   deploy/deploy.sh --rollback    back to the previous version (and its database, if the
 #                                  update changed the schema)
 #
 # Before every update the server keeps the previous image and a dump of the database
 # (backups/pre-deploy-*.dump) — that is what --rollback goes back to.
-# The image is built here and uploaded over SSH — no registry login on the server.
+# The image is the one CI built for this commit: the server pulls it from ghcr.io itself (a
+# public package, no login). Without one — local changes, a commit not pushed, a failed CI,
+# an arm64 server — it is built here and uploaded over SSH, as with --local.
 # Settings: deploy/deploy.local.env (not committed), see deploy/deploy.local.env.example.
 #
 # The first run also prepares the server (installs Docker, writes its .env from yours:
@@ -36,10 +39,17 @@ LOCAL_ENV=.env
 
 WITH_DATA=false
 ROLLBACK=false
+LOCAL_BUILD=false
 case "${1:-}" in
   --with-data) WITH_DATA=true ;;
   --rollback) ROLLBACK=true ;;
+  --local) LOCAL_BUILD=true ;;
 esac
+# Where CI publishes the image (.github/workflows/image.yml) and its repository on GitHub.
+CI_IMAGE="${CI_IMAGE:-ghcr.io/romanrostislavovich/personal-dashboard}"
+GITHUB_REPO="${CI_IMAGE#ghcr.io/}"
+# How long to wait for CI to publish the image of this commit before building it here.
+CI_WAIT_MINUTES="${CI_WAIT_MINUTES:-25}"
 
 step() { printf '\n\033[1m▶ %s\033[0m\n' "$*"; }
 remote() { ssh -i "$DEPLOY_SSH_KEY" -o BatchMode=yes "$DEPLOY_HOST" "$@"; }
@@ -79,6 +89,39 @@ keep_rollback_point() {
   remote "cd $REMOTE_DIR && printf 'PREVIOUS_IMAGE=%s\nSNAPSHOT=%s\nMIGRATIONS=%s\n' \
     '$previous' '$snapshot' '$count' > rollback.env &&
     ls -1t backups/pre-deploy-*.dump | tail -n +4 | xargs -r rm -f"
+}
+
+# The image of this commit pulled by the server from ghcr.io, tagged as $IMAGE there (rollback
+# and the cleanup know only those names). Fails when CI did not publish it: not pushed, failed,
+# or still running after CI_WAIT_MINUTES.
+pull_ci_image() {
+  local sha ci tries
+  sha=$(git rev-parse HEAD)
+  ci="$CI_IMAGE:sha-$sha"
+  [ "$PLATFORM" = linux/amd64 ] || return 1
+  case "$VERSION" in *-dirty) return 1 ;; esac
+  remote "docker pull -q $ci" >/dev/null 2>&1 || {
+    # CI builds only what reaches main.
+    git fetch -q origin main 2>/dev/null || true
+    [ "$sha" = "$(git rev-parse origin/main 2>/dev/null)" ] || return 1
+    echo "Waiting for CI to publish $ci (up to $CI_WAIT_MINUTES min; Ctrl+C and --local to build here)"
+    tries=$((CI_WAIT_MINUTES * 2))
+    until remote "docker pull -q $ci" >/dev/null 2>&1; do
+      tries=$((tries - 1))
+      [ "$tries" -gt 0 ] || { echo "CI did not publish it in time." >&2 && return 1; }
+      # A failed run never publishes: no reason to wait it out. (Anonymous API: 60 calls an hour.)
+      if [ $((tries % 4)) -eq 0 ] &&
+        curl -fsS "https://api.github.com/repos/$GITHUB_REPO/actions/runs?head_sha=$sha" 2>/dev/null |
+        grep -qE '"conclusion": *"(failure|cancelled|timed_out)"'; then
+        echo "CI failed on this commit." >&2
+        return 1
+      fi
+      sleep 30
+    done
+  }
+  remote "docker tag $ci $IMAGE && docker rmi $ci >/dev/null"
+  # The Android app takes its interface from the same image (deploy/mobile-apk.Dockerfile).
+  WEB_IMAGE="$ci"
 }
 
 # What the desktop installers are made of, besides the app's code (which updates itself):
@@ -158,7 +201,7 @@ upload_mobile_apk() {
   MOBILE_KEYSTORE_PASSWORD="$MOBILE_KEYSTORE_PASSWORD" docker buildx build \
     -f deploy/mobile-apk.Dockerfile --build-arg "BUILD_ID=$key" \
     --build-arg "VERSION_NAME=$(node -p "require('./package.json').version").$count" \
-    --build-arg "VERSION_CODE=$count" \
+    --build-arg "VERSION_CODE=$count" --build-arg "WEB_IMAGE=$WEB_IMAGE" \
     --secret id=keystore,src=deploy/mobile-release.keystore \
     --secret id=keystore_password,env=MOBILE_KEYSTORE_PASSWORD \
     "${firebase[@]}" \
@@ -228,11 +271,16 @@ esac
 
 VERSION="$(git rev-parse --short HEAD)$(git diff --quiet HEAD -- . ':!deploy' || echo -dirty)"
 IMAGE="personal-dashboard:$VERSION"
-step "Building $IMAGE for $PLATFORM"
-docker buildx build --platform "$PLATFORM" -t "$IMAGE" --load --quiet . >/dev/null
+WEB_IMAGE="$IMAGE"
+if ! $LOCAL_BUILD && { step "Taking the image CI built"; pull_ci_image; }; then
+  echo "The server pulled the image of $VERSION from ghcr.io."
+else
+  step "Building $IMAGE for $PLATFORM"
+  docker buildx build --platform "$PLATFORM" -t "$IMAGE" --load --quiet . >/dev/null
 
-step "Uploading the image"
-docker save "$IMAGE" | gzip -1 | remote 'gunzip | docker load' | tail -1
+  step "Uploading the image"
+  docker save "$IMAGE" | gzip -1 | remote 'gunzip | docker load' | tail -1
+fi
 
 keep_rollback_point
 

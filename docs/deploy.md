@@ -44,9 +44,14 @@ From your computer, with SSH access to the server by key:
 cp deploy/deploy.local.env.example deploy/deploy.local.env   # server address, domain, SSH key
 deploy/deploy.sh --with-data   # the first time: also copies your local database
 deploy/deploy.sh               # every update
+deploy/deploy.sh --local       # an update with the image built here
 ```
 
-It builds the image here and uploads it over SSH (no registry, no token on the server), installs
+The image is the one CI built for the commit (`sha-<commit>` in GitHub Container Registry, a public
+package): the server pulls it itself, nothing big goes over your connection. A commit just pushed
+waits for CI (up to `CI_WAIT_MINUTES`, 25 by default) and a failed CI is not waited out. Without an
+image of CI — uncommitted changes, a commit not on `origin/main`, a failed CI, an arm64 server, or
+`--local` — the image is built here and uploaded over SSH (about 440 MB). The script also installs
 Docker on the first run, writes the server's `.env` from yours (the same `ENCRYPTION_KEY` and
 integration tokens, new secrets for the rest), switches your computer to a sync client of the server
 (the old `.env` is kept as `.env.before-sync`) and starts everything. Steps 3–6 below are the same
@@ -69,8 +74,9 @@ From your computer, copy the deploy files:
 scp deploy/compose.yml deploy/Caddyfile deploy/backup.sh deploy/.env.example root@<server-ip>:/opt/dashboard/
 ```
 
-The repository is private, so the image is too: log in to the registry once. Create a
-[token](https://github.com/settings/tokens) (classic) with only the `read:packages` scope:
+The image is a public package: no login. For a fork whose package is private, log in to the
+registry once with a [token](https://github.com/settings/tokens) (classic) with only the
+`read:packages` scope:
 
 ```bash
 docker login ghcr.io -u <github-user>   # password: the token
@@ -162,6 +168,11 @@ Docker (`deploy/desktop-installers.Dockerfile`, with Wine — an x86-64 computer
 they are made of changes: Electron, the loader, the icon or the version — rarely, they are about
 250 MB, and the code inside updates itself anyway. Without them (an image from GHCR) Settings →
 Apps links to GitHub Releases; macOS is always there, a `.dmg` is built only on a Mac.
+
+The Android app (`downloads/mobile`) is built the same way, only when its native part changes
+(`deploy/mobile-apk.Dockerfile`): the interface inside is copied from the server image of the same
+commit instead of being built again, and npm and Gradle keep their downloads in BuildKit caches,
+so a rebuild takes a few minutes instead of about ten.
 
 ## Backups
 

@@ -1,7 +1,8 @@
-# Docker image to ghcr.io/<owner>/personal-dashboard, for amd64 and arm64:
-# - every commit to main, once CI has passed on it → tags `main` and `sha-<commit>` (the server
-#   follows `main`, see docs/deploy.md): a commit that breaks CI is never published;
-# - a tag like v0.2.0 → tags `0.2.0` and `latest`.
+# Docker image to ghcr.io/<owner>/personal-dashboard:
+# - every commit to main, once CI has passed on it → tags `main` and `sha-<commit>`, amd64 only
+#   (the server is amd64; deploy/deploy.sh pulls `sha-<commit>`, see docs/deploy.md): a commit
+#   that breaks CI is never published;
+# - a tag like v0.2.0 → tags `0.2.0` and `latest`, for amd64 and arm64.
 name: Image
 
 on:
@@ -49,7 +50,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ github.event_name == 'push' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
