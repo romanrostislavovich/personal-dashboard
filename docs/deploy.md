@@ -51,7 +51,9 @@ The image is the one CI built for the commit (`sha-<commit>` in GitHub Container
 package): the server pulls it itself, nothing big goes over your connection. A commit just pushed
 waits for CI (up to `CI_WAIT_MINUTES`, 25 by default) and a failed CI is not waited out. Without an
 image of CI — uncommitted changes, a commit not on `origin/main`, a failed CI, an arm64 server, or
-`--local` — the image is built here and uploaded over SSH (about 440 MB). The script also installs
+`--local` — the image is built here and uploaded over SSH (about 440 MB). At the end the script trims
+Docker on this computer: the build cache down to its newest 15 GB, and the images of older deploys
+but the last two. The script also installs
 Docker on the first run, writes the server's `.env` from yours (the same `ENCRYPTION_KEY` and
 integration tokens, new secrets for the rest), switches your computer to a sync client of the server
 (the old `.env` is kept as `.env.before-sync`) and starts everything. Steps 3–6 below are the same
