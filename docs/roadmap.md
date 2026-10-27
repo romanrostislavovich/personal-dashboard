@@ -297,7 +297,9 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   shortcuts) with instant natural language parsing ("15 coffee", "headache right side",
   "doctor tomorrow at 14:00") to eliminate recording friction
 - **Notification centre and quiet hours** — the history of every notification with filters;
-  nothing at night, one summary in the morning; minor ones gathered into one message an hour
+  nothing at night, one summary in the morning (a question with buttons — the habit's, the
+  film's — never in it: it follows on its own, with its day: «Вчера, 26.10 — …»; built
+  2026-10-27); minor ones gathered into one message an hour
 - **A calendar feed (ICS)** — a private link with the birthdays, days of memory, reminders, due
   dates of tasks, subscription charges and the end of free trials, subscribed to in the calendar
   of a phone

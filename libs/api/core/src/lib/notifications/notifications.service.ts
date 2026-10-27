@@ -10,6 +10,7 @@ import {
   NOTIFICATION_CHANNELS,
   NotificationChannel,
 } from './notification-channel';
+import { heldTitle } from './held-title';
 import { sectionOfSource } from './notification-link';
 import { NotificationOutbox } from './notification-outbox';
 import { NotificationOutboxRow } from './notifications.schema';
@@ -139,9 +140,12 @@ export class NotificationsService implements OnModuleInit {
 
   /**
    * The quiet hours are over (every minute): what each user got during them goes out as one
-   * message to the channels they had, and one alone goes out as it was.
+   * message to the channels they had (one alone as it was). A question with buttons never goes
+   * into that summary — its buttons would be lost ("A day without alcohol?" came as a line of the
+   * list on 2026-10-27): it follows the summary on its own, with the day it is about when that is
+   * not today.
    */
-  async releaseHeld(): Promise<void> {
+  async releaseHeld(now = new Date()): Promise<void> {
     const byUser = new Map<string, NotificationOutboxRow[]>();
     for (const row of await this.outbox.claimHeld()) {
       byUser.set(row.userId, [...(byUser.get(row.userId) ?? []), row]);
@@ -151,11 +155,19 @@ export class NotificationsService implements OnModuleInit {
       if (!user) {
         continue;
       }
-      if (rows.length === 1) {
-        await this.deliver(user, rows[0]);
-        continue;
+      const questions = rows.filter((row) => row.actions.length);
+      const rest = rows.filter((row) => !row.actions.length);
+      if (rest.length === 1) {
+        await this.deliver(user, rest[0]);
+      } else if (rest.length) {
+        await this.deliverNight(user, rest);
       }
-      await this.deliverNight(user, rows);
+      const text = coreMessages(user.locale);
+      const words = { yesterday: text.heldYesterday, earlier: text.heldEarlier };
+      for (const row of questions) {
+        const title = heldTitle(row.title, row.createdAt, now, this.users.timeZoneOf(user), words);
+        await this.deliver(user, { ...row, title });
+      }
     }
   }
 
