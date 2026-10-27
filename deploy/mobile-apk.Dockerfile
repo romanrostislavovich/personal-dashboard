@@ -3,7 +3,7 @@
 # itself from the server anyway (MobileUpdateService in web-core).
 #
 #   docker buildx build -f deploy/mobile-apk.Dockerfile --build-arg BUILD_ID=… \
-#     --build-arg VERSION_NAME=… --build-arg VERSION_CODE=… \
+#     --build-arg VERSION_NAME=… --build-arg VERSION_CODE=… --build-arg WEB_IMAGE=… \
 #     --secret id=keystore,src=deploy/mobile-release.keystore \
 #     --secret id=keystore_password,env=MOBILE_KEYSTORE_PASSWORD \
 #     [--secret id=google_services,src=deploy/google-services.json] \
@@ -11,15 +11,22 @@
 #
 # The signing key comes as a build secret: it is in no layer of the image. So does the Firebase
 # file of push notifications; without it the app is built without push.
+#
+# The interface is not built again: it comes from the server image of the same commit
+# (WEB_IMAGE — the one CI built or the one deploy.sh just built here). npm and Gradle keep their
+# downloads in BuildKit caches between builds.
+
+ARG WEB_IMAGE=personal-dashboard:local
+FROM ${WEB_IMAGE} AS server
 
 # --- 1. The interface packed into the app ---
 FROM node:24-bookworm AS web
 WORKDIR /repo
-ENV NX_DAEMON=false NX_NO_CLOUD=true
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts --prefer-offline
 COPY . .
-RUN npx nx build web && cd apps/mobile && npx cap sync android
+COPY --from=server /app/web ./dist/apps/web/browser
+RUN cd apps/mobile && npx cap sync android
 
 # --- 2. The APK ---
 FROM eclipse-temurin:21-jdk AS apk
@@ -44,7 +51,8 @@ COPY --from=web /repo/apps/mobile/android ./apps/mobile/android
 WORKDIR /repo/apps/mobile/android
 ARG VERSION_NAME=dev
 ARG VERSION_CODE=1
-RUN --mount=type=secret,id=keystore,required=true \
+RUN --mount=type=cache,target=/root/.gradle \
+    --mount=type=secret,id=keystore,required=true \
     --mount=type=secret,id=keystore_password,required=true \
     --mount=type=secret,id=google_services,required=false \
     { [ ! -f /run/secrets/google_services ] || cp /run/secrets/google_services app/google-services.json; } && \

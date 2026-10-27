@@ -28,6 +28,7 @@ import { Capture } from './capture/capture';
 import { DiskCleaner } from './disk/disk-cleaner';
 import { DiskFix } from './disk/disk-fixes';
 import { StatementWatch } from './downloads/statement-watch';
+import { claimInstanceFile, isElevated, relaunchAsUser } from './single-instance';
 import { createTray } from './tray';
 import { ExtensionKeeper } from './update/extension-keeper';
 import { AppUpdater, secureOrigin } from './update/updater';
@@ -132,7 +133,11 @@ const extension = new ExtensionKeeper(serverUrl);
 
 let startHidden = process.argv.includes('--hidden');
 
-if (!app.requestSingleInstanceLock()) {
+if (app.isPackaged && isElevated()) {
+  // Never as administrator (single-instance.ts): again as the signed-in user, and this one goes.
+  relaunchAsUser();
+  app.quit();
+} else if (!app.requestSingleInstanceLock() || !claimInstanceFile()) {
   // Already running — the second instance just exits and the first one restores its window.
   app.quit();
 } else {
