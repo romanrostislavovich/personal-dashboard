@@ -11,7 +11,10 @@ the decisions and why the interface is packed into the APK: `docs/proposals/mobi
 | `icons.mjs`           | the launcher icons and start screens, from `apps/web/public`              |
 
 The code of the app is in web-core (`libs/web/core/src/lib/mobile`): the connect page, the API at
-the server's address, the system Back button, Settings → Apps, the interface update.
+the server's address, the system Back button, Settings → Apps, the interface update, offline
+reading (diary photos too), "Share" from other apps (`share-target.ts`, the native side is
+`ShareTargetPlugin.java`). The phone's collectors are Java in `android/.../sensors`
+(docs/telemetry.md lists each one).
 
 ## Building
 
