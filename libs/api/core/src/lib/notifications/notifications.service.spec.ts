@@ -178,6 +178,8 @@ describe('quiet hours', () => {
         body: 'не отвечает',
         channels: ['telegram'],
         attempts: 0,
+        actions: [] as { label: string; action: string }[],
+        createdAt: new Date('2026-10-26T22:00:00Z'),
       },
       {
         id: 'h2',
@@ -186,6 +188,8 @@ describe('quiet hours', () => {
         body: 'Как прошёл день?',
         channels: ['telegram'],
         attempts: 0,
+        actions: [] as { label: string; action: string }[],
+        createdAt: new Date('2026-10-26T22:30:00Z'),
       },
     ];
     const outbox = {
@@ -204,14 +208,15 @@ describe('quiet hours', () => {
       failed: async () => undefined,
       claimHeld: async () => held,
     };
-    const sent: { title: string; body: string }[] = [];
+    const sent: { title: string; body: string; actions?: unknown[] }[] = [];
     const toasts: string[] = [];
     const channels = [
       {
         name: 'telegram',
         durable: true,
         isEnabledFor: () => true,
-        send: async (_u: unknown, n: { title: string; body: string }) => void sent.push(n),
+        send: async (_u: unknown, n: { title: string; body: string; actions?: unknown[] }) =>
+          void sent.push(n),
       },
       {
         name: 'in-app',
@@ -227,7 +232,7 @@ describe('quiet hours', () => {
       scheduler as never,
       channels as never,
     );
-    return { service, added, delivered, sent, toasts };
+    return { service, added, delivered, sent, toasts, held };
   }
 
   afterEach(() => vi.useRealTimers());
@@ -253,7 +258,7 @@ describe('quiet hours', () => {
 
   it('sends the night as one message in the morning', async () => {
     const { service, delivered, sent } = setup();
-    await service.releaseHeld();
+    await service.releaseHeld(new Date('2026-10-27T08:00:00Z'));
     expect(sent).toEqual([
       {
         title: '🌙 Пока было тихо: 2',
@@ -262,5 +267,30 @@ describe('quiet hours', () => {
       },
     ]);
     expect(delivered).toEqual(['h1', 'h2']);
+  });
+
+  it('sends a question after the summary, on its own with its buttons and its day', async () => {
+    const { service, sent, held } = setup();
+    const buttons = [
+      { label: 'Не пил', action: 'hb:c:x:2026-10-26' },
+      { label: 'Пил', action: 'hb:u:x:2026-10-26' },
+    ];
+    held.push({
+      id: 'h3',
+      userId: 'u1',
+      title: '🌙 День без алкоголя?',
+      body: '4 дня подряд',
+      channels: ['telegram'],
+      attempts: 0,
+      actions: buttons,
+      // 21:00 in Warsaw on 26.10, sent at 09:00 on 27.10.
+      createdAt: new Date('2026-10-26T20:00:00Z'),
+    });
+    await service.releaseHeld(new Date('2026-10-27T08:00:00Z'));
+    expect(sent.map((n) => n.title)).toEqual([
+      '🌙 Пока было тихо: 2',
+      'Вчера, 26.10 — 🌙 День без алкоголя?',
+    ]);
+    expect(sent[1].actions).toEqual(buttons);
   });
 });
