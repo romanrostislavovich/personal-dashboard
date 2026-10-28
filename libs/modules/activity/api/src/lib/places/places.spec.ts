@@ -79,6 +79,26 @@ describe('the places of a day', () => {
     expect(trip.kind === 'trip' && trip.path.length).toBeGreaterThan(15);
   });
 
+  it('GPS wandering indoors is still one stay', () => {
+    // At work, a GPS fix every 5 seconds for two hours, sure to 10 m yet up to 80 m off.
+    const indoors: Fix[] = [];
+    for (let i = 0; i < 2 * 720; i++) {
+      const angle = i * 2.4;
+      const meters = ((i * 37) % 80) + 1;
+      indoors.push({
+        at: 90 * MIN + i * 5000,
+        latitude: WORK.latitude + (Math.sin(angle) * meters) / 111_000,
+        longitude: WORK.longitude + (Math.cos(angle) * meters) / 68_000,
+        accuracy: 10,
+      });
+    }
+    const entries = entriesOf([...every15(0, 60, HOME), ...indoors]);
+    expect(entries.map((entry) => entry.kind)).toEqual(['stay', 'trip', 'stay']);
+    const work = entries[2];
+    expect(work.kind === 'stay' && distanceM(work, WORK)).toBeLessThan(30);
+    expect(work.end - work.start).toBeGreaterThan(115 * MIN);
+  });
+
   it('tells the stay going on now, and none once the phone has left', () => {
     const atHome = every15(0, 30, HOME);
     expect(stayNow(atHome)).toMatchObject({ start: 0, end: 30 * MIN });
