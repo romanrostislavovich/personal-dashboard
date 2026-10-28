@@ -37,6 +37,36 @@ public class MotionModeTest {
     }
 
     @Test
+    public void gpsWanderingIndoorsEndsTheMove() {
+        MotionMode mode = new MotionMode();
+        mode.onFix(LAT, LON, 30, 0);
+        assertTrue(mode.onFix(LAT + 2 * DEG_111_M, LON, 10, MIN));
+        // A GPS fix every 5 seconds, jumping 70 m back and forth across the office.
+        long at = MIN;
+        boolean stopped = false;
+        for (int i = 1; i <= 12 * 6 && !stopped; i++) {
+            at += 5_000;
+            double off = (i % 2 == 0 ? 0.35 : -0.35) * DEG_111_M;
+            stopped = mode.onFix(LAT + 2 * DEG_111_M + off, LON, 10, at);
+        }
+        assertTrue(stopped);
+        assertFalse(mode.moving());
+        assertTrue(at - MIN <= 6 * MIN);
+    }
+
+    @Test
+    public void walkingOnStaysOnTheMove() {
+        MotionMode mode = new MotionMode();
+        mode.onFix(LAT, LON, 30, 0);
+        assertTrue(mode.onFix(LAT + 2 * DEG_111_M, LON, 10, MIN));
+        // A slow walk, 5 m in 5 seconds (60 m a minute), for ten minutes.
+        for (int i = 1; i <= 10 * 12; i++) {
+            mode.onFix(LAT + 2 * DEG_111_M + i * 5 * DEG_111_M / 111, LON, 10, MIN + i * 5_000L);
+        }
+        assertTrue(mode.moving());
+    }
+
+    @Test
     public void aFixFarFromSureDoesNotStartAMove() {
         MotionMode mode = new MotionMode();
         mode.onFix(LAT, LON, 30, 0);
