@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UserRow } from '../../users/users.schema';
 import { BotPhoto } from './bot-command';
+import { NotificationActions } from '../notification-actions';
 import { TelegramBotService } from './telegram-bot.service';
 
 const user = { id: 'user', locale: 'en' } as UserRow;
@@ -15,6 +16,7 @@ function service(): TelegramBotService {
     users as never,
     activity as never,
     {} as never,
+    new NotificationActions(),
   );
   // A file is "downloaded" as its id, so the order of the pages can be told.
   Object.assign(telegram, { downloadFile: async (id: string) => Buffer.from(id) });

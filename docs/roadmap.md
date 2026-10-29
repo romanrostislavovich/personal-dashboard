@@ -288,10 +288,15 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 - **Quick capture (2-second rule)** — minimal global entry (desktop hotkey and mobile PWA
   shortcuts) with instant natural language parsing ("15 coffee", "headache right side",
   "doctor tomorrow at 14:00") to eliminate recording friction
-- **Notification centre and quiet hours** — the history of every notification with filters;
-  nothing at night, one summary in the morning (a question with buttons — the habit's, the
-  film's — never in it: it follows on its own, with its day: «Вчера, 26.10 — …»; built
-  2026-10-27); minor ones gathered into one message an hour
+- ✅ **Notification centre: the bell (built 2026-10-27)** — every notification of 90 days in the
+  bell of the web, desktop and phone app, read or not the same everywhere; a question is answered
+  once wherever its button is pressed — the bell's card (`/notifications/:id`, a tap on a push
+  opens it, then the next question waiting), Telegram, or right in the phone's shade (up to three
+  buttons, without opening the app) — and closed in the other channels. Still to come: the AI
+  assistant reading and answering the inbox ("what did I miss?")
+- **Quiet hours** — nothing at night, one summary in the morning (a question with buttons — the
+  habit's, the film's — never in it: it follows on its own, with its day: «Вчера, 26.10 — …»;
+  built 2026-10-27); minor ones gathered into one message an hour
 - **A calendar feed (ICS)** — a private link with the birthdays, days of memory, reminders, due
   dates of tasks, subscription charges and the end of free trials, subscribed to in the calendar
   of a phone

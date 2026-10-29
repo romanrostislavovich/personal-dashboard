@@ -26,6 +26,7 @@ import { ToastHostComponent } from '../toast/toast-host.component';
 import { DASHBOARD_MODULES, NAV_GROUPS, NavGroupId } from '../dashboard-module';
 import { CommandPaletteComponent } from '../palette/command-palette.component';
 import { OfflineService } from '../offline/offline.service';
+import { InboxBellComponent } from '../inbox/inbox-bell.component';
 import { LayoutService } from './layout.service';
 
 interface NavItem {
@@ -58,6 +59,7 @@ const FOLDED_KEY = 'pd.nav.folded';
   selector: 'pd-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    InboxBellComponent,
     NgTemplateOutlet,
     RouterOutlet,
     RouterLink,

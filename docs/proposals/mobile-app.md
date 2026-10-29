@@ -108,6 +108,13 @@ Electron.
   module offers its commands — a task, a reminder in an hour, a note or a photo for today's diary,
   a film to watch (Movies → To watch searches TMDB by the text, links left out).
 
+- **The bell and the shade (built 2026-10-27):** a tap on a push opens the notification's card
+  (`/notifications/:id`), and after an answer the next question waiting. The app draws the
+  bell's notifications itself (`inbox/PushMessagingService` replaces the push plugin's service;
+  data messages to a phone registered as `rich`): a question of up to three buttons is answered in
+  the shade without opening the app (`PushActionReceiver`, with a key that fits that notification
+  alone), and its notification goes once it is answered elsewhere.
+
 ## Stage 2 — the phone as a sensor
 
 **2a and 2b built (2026-10-24):** Settings → Apps inside the app → "The phone as a sensor":

@@ -20,11 +20,19 @@
   gap: 4px;
 }
 
+.brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 16px;
+}
+
 .brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 10px 20px;
+  min-width: 0;
+  padding: 4px 10px;
   color: inherit;
   text-decoration: none;
 }
@@ -215,7 +223,7 @@ mat-sidenav-content {
   }
 }
 
-.mobile-search {
+.mobile-bell {
   margin-left: auto;
 }
 

@@ -8,7 +8,11 @@ import { and, desc, eq, gte, lt, ne, sql } from 'drizzle-orm';
 import { DB, Database } from '../database/database.module';
 import { keyedHash } from '../crypto/encrypted-columns';
 import { Notification } from './notification-channel';
-import { NotificationOutboxRow, notificationOutbox } from './notifications.schema';
+import {
+  NotificationOutboxRow,
+  notificationOutbox,
+  TelegramMessageRef,
+} from './notifications.schema';
 
 /** A notification with the same text is not sent again within this time (a job run twice). */
 const SAME_TEXT_MINUTES = 5;
@@ -18,8 +22,8 @@ const SENDING_LEASE_MS = 15 * 60 * 1000;
 const BACKOFF_MS = [60_000, 5 * 60_000, 30 * 60_000, 2 * 3_600_000, 6 * 3_600_000];
 /** How many are picked up by one run of the retry job. */
 const BATCH = 50;
-/** The log keeps a month. */
-const KEEP_DAYS = 30;
+/** The log — and the bell's inbox — keep 90 days. */
+const KEEP_DAYS = 90;
 
 /**
  * The table of notifications (see `notificationOutbox`): what is due again, what went out the
@@ -147,6 +151,14 @@ export class NotificationOutbox {
       .orderBy(notificationOutbox.createdAt);
   }
 
+  /** The Telegram message a question became: its buttons go once it is answered elsewhere. */
+  async setTelegramMessage(id: string, message: TelegramMessageRef): Promise<void> {
+    await this.db
+      .update(notificationOutbox)
+      .set({ telegramMessage: message })
+      .where(eq(notificationOutbox.id, id));
+  }
+
   /** Every channel took it. */
   async delivered(id: string): Promise<void> {
     await this.db
@@ -218,7 +230,7 @@ export class NotificationOutbox {
     };
   }
 
-  /** Drops what is older than a month. */
+  /** Drops what is older than 90 days. */
   async prune(now = new Date()): Promise<void> {
     await this.db
       .delete(notificationOutbox)

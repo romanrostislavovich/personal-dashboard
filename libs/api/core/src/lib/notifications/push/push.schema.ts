@@ -1,4 +1,4 @@
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../users/users.schema';
 
 /**
@@ -15,6 +15,8 @@ export const pushDevices = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     token: text().notNull(),
     name: text().notNull(),
+    /** Draws notifications itself, with buttons in the shade: gets data messages. */
+    rich: boolean().notNull().default(false),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     lastSentAt: timestamp({ withTimezone: true }),
   },

@@ -1,5 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { pushApi } from '@pd/client-core';
 import { PUSH_CHANNEL } from '@pd/contracts';
@@ -82,7 +83,13 @@ export class MobilePushService {
     this.listening = true;
     await PushNotifications.addListener('registration', ({ value }) => {
       void this.push
-        .register(installId(), { token: value, name: phoneModel(navigator.userAgent) })
+        .register(installId(), {
+          token: value,
+          name: phoneModel(navigator.userAgent),
+          // The APK draws the bell's notifications itself, with buttons in the shade
+          // (NotificationShadePlugin): it takes data messages. An older one, plain ones.
+          rich: Capacitor.isPluginAvailable('NotificationShade'),
+        })
         .then(() => this.state.set('on'))
         .catch(() => undefined);
     });

@@ -17,6 +17,11 @@ import {
   LoginRequest,
   LoginResponse,
   LoginResult,
+  InboxAnswerInput,
+  InboxAnswerResult,
+  InboxItem,
+  InboxQuery,
+  InboxSummary,
   NotificationSettings,
   PasswordChange,
   ProfileUpdate,
@@ -72,6 +77,7 @@ export const API_PATHS = {
   telegramBot: '/api/notifications/telegram/bot',
   testNotification: '/api/notifications/test',
   notificationLog: '/api/notifications/log',
+  inbox: '/api/notifications/inbox',
   accessTokens: '/api/access-tokens',
   accessToken: (id: string) => `/api/access-tokens/${encodeURIComponent(id)}`,
   syncStatus: '/api/sync/status',
@@ -105,6 +111,10 @@ export const CORE_READS = {
   notificationSettings: () => apiRequest(API_PATHS.notificationSettings),
   /** What became of the latest notifications (sent, tried again, failed). */
   notificationLog: () => apiRequest(API_PATHS.notificationLog),
+  /** The bell: the newest first; `questions` — only the ones waiting for an answer. */
+  inbox: (query: InboxQuery = {}) => apiRequest(API_PATHS.inbox, { ...query }),
+  inboxSummary: () => apiRequest(`${API_PATHS.inbox}/summary`),
+  inboxItem: (id: string) => apiRequest(`${API_PATHS.inbox}/${id}`),
   /** Where an MCP client connects, and the access tokens. */
   mcp: () => apiRequest(API_PATHS.accessTokens),
   syncStatus: () => apiRequest(API_PATHS.syncStatus),
@@ -265,6 +275,14 @@ export function notificationsApi(api: ApiClient) {
     setBot: (input: TelegramBotInput) => api.put<void>(API_PATHS.telegramBot, input),
     removeBot: () => api.delete(API_PATHS.telegramBot),
     sendTest: () => api.post<void>(API_PATHS.testNotification, {}),
+    inbox: (query?: InboxQuery) => api.read<InboxItem[]>(CORE_READS.inbox(query)),
+    inboxSummary: () => api.read<InboxSummary>(CORE_READS.inboxSummary()),
+    inboxItem: (id: string) => api.read<InboxItem>(CORE_READS.inboxItem(id)),
+    markRead: (id: string) => api.post<void>(`${API_PATHS.inbox}/${id}/read`, {}),
+    markAllRead: () => api.post<void>(`${API_PATHS.inbox}/read`, {}),
+    /** A button pressed, or the words it asked for. */
+    answer: (id: string, input: InboxAnswerInput) =>
+      api.post<InboxAnswerResult>(`${API_PATHS.inbox}/${id}/answer`, input),
   };
 }
 

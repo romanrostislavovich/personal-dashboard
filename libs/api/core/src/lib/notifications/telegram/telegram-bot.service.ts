@@ -19,7 +19,9 @@ import { UserActivityService } from '../../realtime/user-activity.service';
 import { ServerKeysService } from '../../server-keys/server-keys.service';
 import { UserRow } from '../../users/users.schema';
 import { UsersService } from '../../users/users.service';
+import { ActionResult, NotificationActions } from '../notification-actions';
 import { NotificationAction } from '../notification-channel';
+import type { TelegramMessageRef } from '../notifications.schema';
 import {
   BotAction,
   BotCommand,
@@ -37,8 +39,6 @@ import { splitMessage } from './split-message';
 const TYPING_REFRESH_MS = 4_000;
 
 const LINK_CODE_TTL_MS = 10 * 60 * 1000;
-/** How long the bot waits for the answer to its question (see BotActionReply). */
-const EXPECTED_TEXT_TTL_MS = 10 * 60 * 1000;
 /** Buttons in a row under a message. */
 const BUTTONS_PER_ROW = 3;
 /** How often the token set in Settings → Notifications is looked at again. */
@@ -46,9 +46,15 @@ const RELOAD_MS = 60_000;
 /** The Bot API does not let bots download larger files. */
 const DOWNLOAD_LIMIT_BYTES = 20 * 1024 * 1024;
 
-interface ExpectedText {
-  handler: (user: UserRow, text: string) => Promise<string>;
-  expiresAt: number;
+/**
+ * The bell's side of a press in Telegram (NotificationInboxService): a button under a
+ * notification answers it everywhere, and the words written after it are kept with the answer.
+ */
+export interface NotificationAnswers {
+  /** `null` — the message is not a notification's (a reply of the assistant): the plain handler. */
+  button(user: UserRow, message: TelegramMessageRef, action: string): Promise<ActionResult | null>;
+  /** `null` — no words are awaited: the text is for the assistant. */
+  text(user: UserRow, text: string): Promise<string | null>;
 }
 
 interface PendingLink {
@@ -97,9 +103,7 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
   // Codes live in memory for 10 minutes — enough for a single API instance.
   private readonly pendingLinks = new Map<string, PendingLink>();
   private readonly commands: BotCommand[] = [];
-  private readonly actions: BotAction[] = [];
-  /** Chats the bot asked something: the next message there is the answer. */
-  private readonly expectedText = new Map<string, ExpectedText>();
+  private answers: NotificationAnswers | null = null;
   private readonly photoHandlers: PhotoEntry[] = [];
   /** Photos waiting for the user to say where they go (with several photo handlers). */
   private readonly pendingPhotos = new Map<string, PendingPhoto>();
@@ -122,9 +126,10 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     private readonly users: UsersService,
     private readonly activity: UserActivityService,
     private readonly keys: ServerKeysService,
+    private readonly actions: NotificationActions,
   ) {
     this.isSyncClient = config.get('SYNC_MODE', { infer: true }) === 'client';
-    this.actions.push({
+    this.actions.register({
       name: 'pho',
       handler: (user, payload) => this.onPhotoChoice(user, payload),
     });
@@ -149,9 +154,17 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     this.commands.push(command);
   }
 
-  /** Handlers of the buttons under the bot's messages (see BotAction). */
+  /**
+   * Handlers of the buttons under the bot's messages (see BotAction) — and under the same
+   * notification in the bell and on the phone (NotificationActions).
+   */
   registerAction(action: BotAction): void {
-    this.actions.push(action);
+    this.actions.register(action);
+  }
+
+  /** The bell takes the presses of notifications' buttons (NotificationInboxService). */
+  useAnswers(answers: NotificationAnswers): void {
+    this.answers = answers;
   }
 
   /** Who answers plain text messages (see BotTextHandler). */
@@ -285,46 +298,46 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
 
   /**
    * A button under a message: its handler answers, the buttons go away (the choice is made),
-   * and the handler may ask for a text — the user's next message.
+   * and the handler may ask for a text — the user's next message. A notification's button
+   * answers it in the bell too (and an answered one is not answered twice).
    */
   private async onButton(ctx: Filter<Context, 'callback_query:data'>): Promise<void> {
     const chatId = String(ctx.chat?.id ?? ctx.from.id);
     const user = await this.users.findByTelegramChatId(chatId);
-    const [name, ...payload] = ctx.callbackQuery.data.split(':');
-    const action = this.actions.find((a) => a.name === name);
+    const action = ctx.callbackQuery.data;
     // Telegram shows a spinner on the button until the press is answered.
     await ctx.answerCallbackQuery().catch(() => undefined);
-    if (!user || !action) {
+    if (!user) {
       return;
     }
-    const result = await action.handler(user, payload.join(':'));
+    const message = ctx.callbackQuery.message;
+    const result =
+      (message && this.answers
+        ? await this.answers.button(user, { chatId, messageId: message.message_id }, action)
+        : null) ?? (await this.actions.run(user, action));
+    if (!result) {
+      return;
+    }
     await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => undefined);
-    if (typeof result === 'string') {
-      this.expectedText.delete(chatId);
-      await this.answer(ctx, user, result);
-      return;
-    }
-    this.expectedText.set(chatId, {
-      handler: result.expectText,
-      expiresAt: Date.now() + EXPECTED_TEXT_TTL_MS,
-    });
     await this.answer(ctx, user, result.reply);
+  }
+
+  /** The words a button asked for, if they are awaited now (kept with the bell's answer). */
+  private awaitedText(user: UserRow, text: string): Promise<string | null> {
+    return this.answers
+      ? this.answers.text(user, text)
+      : this.actions.answerText(user, text).then((answered) => answered?.reply ?? null);
   }
 
   private async onText(ctx: Filter<Context, 'message:text'>): Promise<void> {
     if (ctx.message.text.startsWith('/')) {
       return;
     }
-    const chatId = String(ctx.chat.id);
-    const expected = this.expectedText.get(chatId);
-    this.expectedText.delete(chatId);
-    if (!expected && !this.textHandler) {
-      return;
-    }
     const user = await this.linkedUserOrHint(ctx);
     // The bot asked a question a moment ago: this message is the answer, not one for the assistant.
-    if (user && expected && expected.expiresAt > Date.now()) {
-      await this.answer(ctx, user, await expected.handler(user, ctx.message.text));
+    const awaited = user ? await this.awaitedText(user, ctx.message.text) : null;
+    if (user && awaited !== null) {
+      await this.answer(ctx, user, awaited);
       return;
     }
     if (user) {
@@ -374,11 +387,9 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       await ctx.reply(part);
     }
     // The bot asked a question a moment ago: the voice message is the answer, as a typed one is.
-    const chatId = String(ctx.chat.id);
-    const expected = this.expectedText.get(chatId);
-    this.expectedText.delete(chatId);
-    if (expected && expected.expiresAt > Date.now()) {
-      await this.answer(ctx, user, await expected.handler(user, result.text));
+    const awaited = await this.awaitedText(user, result.text);
+    if (awaited !== null) {
+      await this.answer(ctx, user, awaited);
       return;
     }
     await this.answer(
@@ -586,11 +597,12 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
    * `actions` become buttons under the message (see NotificationAction). A text over Telegram's
    * limit goes as several messages, the buttons under the last one.
    */
+  /** Sends a message (split when long); the last part's id, which carries the buttons. */
   async sendMessage(
     chatId: string,
     html: string,
     actions: NotificationAction[] = [],
-  ): Promise<void> {
+  ): Promise<TelegramMessageRef | null> {
     const keyboard = new InlineKeyboard();
     const ownRows = actions.some((item) => item.newRow);
     actions.forEach(({ label, action, newRow }, index) => {
@@ -600,13 +612,34 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
       keyboard.text(label, action);
     });
     const parts = splitMessage(html);
+    let sent: TelegramMessageRef | null = null;
     for (const [index, part] of parts.entries()) {
       const last = index === parts.length - 1;
-      await this.bot?.api.sendMessage(chatId, part, {
+      const message = await this.bot?.api.sendMessage(chatId, part, {
         parse_mode: 'HTML',
         ...(last && actions.length ? { reply_markup: keyboard } : {}),
       });
+      sent = message ? { chatId, messageId: message.message_id } : null;
     }
+    return sent;
+  }
+
+  /**
+   * A notification answered elsewhere (the bell, the phone): its buttons go, and a reply under it
+   * says what was answered — pressing an old button would answer it twice.
+   */
+  async closeMessage(message: TelegramMessageRef, text: string): Promise<void> {
+    if (!this.bot) {
+      return;
+    }
+    await this.bot.api
+      .editMessageReplyMarkup(message.chatId, message.messageId, { reply_markup: undefined })
+      .catch(() => undefined);
+    await this.bot.api
+      .sendMessage(message.chatId, text, {
+        reply_parameters: { message_id: message.messageId, allow_sending_without_reply: true },
+      })
+      .catch(() => undefined);
   }
 
   /** Shows "typing…" until a slow reply (an AI answer) is ready. */

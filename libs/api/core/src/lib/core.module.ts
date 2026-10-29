@@ -58,6 +58,9 @@ import { AccessTokensService } from './mcp/access-tokens.service';
 import { DeviceSocket } from './devices/device-socket';
 import { DeviceToolsService } from './devices/device-tools.service';
 import { AccessTokensController, McpController } from './mcp/mcp.controller';
+import { NotificationActions } from './notifications/notification-actions';
+import { NotificationInboxController } from './notifications/notification-inbox.controller';
+import { NotificationInboxService } from './notifications/notification-inbox.service';
 import { NotificationOutbox } from './notifications/notification-outbox';
 import { NotificationsService } from './notifications/notifications.service';
 import { TelegramBotService } from './notifications/telegram/telegram-bot.service';
@@ -133,6 +136,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     SecurityController,
     ProjectsController,
     NotificationsController,
+    NotificationInboxController,
     McpController,
     AccessTokensController,
     AchievementsController,
@@ -196,6 +200,8 @@ import { UserActivityService } from './realtime/user-activity.service';
     ServerKeysService,
     NotificationsService,
     NotificationOutbox,
+    NotificationActions,
+    NotificationInboxService,
     AccessTokensService,
     DeviceToolsService,
     DeviceSocket,
