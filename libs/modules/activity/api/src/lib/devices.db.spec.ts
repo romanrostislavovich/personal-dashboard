@@ -1,3 +1,4 @@
+import { DeviceAuthService } from '@pd/api-core';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -47,7 +48,7 @@ describe.skipIf(!ADMIN_URL)('merging devices', { timeout: 60_000 }, () => {
     await db.execute(sql`INSERT INTO users (id, email, password_hash, display_name, locale)
       VALUES (${userId}, 'devices@test', 'hash', 'Test', 'en'),
              (${otherUserId}, 'other-devices@test', 'hash', 'Other', 'en')`);
-    devices = new DevicesService(db as never);
+    devices = new DevicesService(db as never, new DeviceAuthService());
   }, 60_000);
 
   afterAll(async () => {

@@ -34,7 +34,8 @@ import com.personalworld.dashboard.voice.VoiceService;
 /**
  * Every 15 minutes (the least Android allows), in the background: the time in apps since the
  * last run goes to the Activity section as this phone's spans, and the notifications written
- * down meanwhile go with it, and where the phone is now (once the location is allowed). Without a connection nothing is lost: the read position moves on
+ * down meanwhile go with it, and where the phone is now (once the location is allowed), and the
+ * band's data from Health Connect (HealthConnectSync). Without a connection nothing is lost: the read position moves on
  * only after the server took the spans, and the notifications wait in SensorsStore.
  */
 public class SensorsWorker extends Worker {
@@ -90,6 +91,7 @@ public class SensorsWorker extends Worker {
             sendLocations(store);
             collectSignals(store);
             sendSignals(store);
+            HealthConnectSync.run(getApplicationContext(), store);
             sendSecurity(store);
             return Result.success();
         } catch (IOException | JSONException e) {
@@ -266,7 +268,7 @@ public class SensorsWorker extends Worker {
     }
 
     /** Throws on no answer or an error of the server, so the run is tried again. */
-    private static void post(SensorsStore store, String path, JSONObject body) throws IOException {
+    static void post(SensorsStore store, String path, JSONObject body) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(store.server() + path).openConnection();
         try {
             connection.setRequestMethod("POST");
@@ -292,7 +294,7 @@ public class SensorsWorker extends Worker {
         }
     }
 
-    private static String iso(long millis) {
+    static String iso(long millis) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
         return format.format(new Date(millis));

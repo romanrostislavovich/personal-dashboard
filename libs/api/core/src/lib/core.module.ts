@@ -56,6 +56,7 @@ import { NOTIFICATION_CHANNELS, NotificationChannel } from './notifications/noti
 import { NotificationsController } from './notifications/notifications.controller';
 import { AccessTokensService } from './mcp/access-tokens.service';
 import { DeviceSocket } from './devices/device-socket';
+import { DeviceAuthService } from './devices/device-auth.service';
 import { DeviceToolsService } from './devices/device-tools.service';
 import { AccessTokensController, McpController } from './mcp/mcp.controller';
 import { NotificationActions } from './notifications/notification-actions';
@@ -204,6 +205,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     NotificationInboxService,
     AccessTokensService,
     DeviceToolsService,
+    DeviceAuthService,
     DeviceSocket,
     TelegramBotService,
     TelegramChannel,
@@ -284,6 +286,8 @@ import { UserActivityService } from './realtime/user-activity.service';
     ServerActions,
     // For the phone's voice assistant (Activity holds the phone's device token).
     VoiceAssistantService,
+    // For a device's uploads to any section: Activity registers the check of its tokens.
+    DeviceAuthService,
   ],
 })
 export class CoreModule {}

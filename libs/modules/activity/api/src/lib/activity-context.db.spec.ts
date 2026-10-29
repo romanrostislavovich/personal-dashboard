@@ -1,3 +1,4 @@
+import { DeviceAuthService } from '@pd/api-core';
 import {
   BadRequestException,
   ConflictException,
@@ -78,7 +79,7 @@ describe.skipIf(!ADMIN_URL)('activity context repository', { timeout: 60_000 }, 
     await db.execute(sql`INSERT INTO users (id, email, password_hash, display_name, locale)
       VALUES (${userId}, 'context@test', 'hash', 'Test', 'en'),
              (${otherUserId}, 'other-context@test', 'hash', 'Other', 'en')`);
-    devices = new DevicesService(db as never);
+    devices = new DevicesService(db as never, new DeviceAuthService());
     const device = await devices.register(userId, { name: 'PC', platform: 'windows' });
     deviceId = device.id;
     token = device.token;

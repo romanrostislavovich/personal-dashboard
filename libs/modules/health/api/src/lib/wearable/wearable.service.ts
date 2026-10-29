@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig, DB, Database, SecretsService, ServerKeysService } from '@pd/api-core';
 import { WearableDay, WearableDaysQuery, WearableStatus } from '@pd/contracts';
-import { and, asc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
 import {
   GoogleHealthAuthError,
@@ -10,6 +10,7 @@ import {
   GoogleTokens,
   MAX_RANGE_DAYS,
 } from './google-health.client';
+import { healthBandDays } from './band.schema';
 import { healthWearableAccounts, healthWearableDays } from './wearable.schema';
 
 const REFRESH_TOKEN_SECRET = 'health.google-health.refresh-token';
@@ -38,6 +39,16 @@ const NUMBERS = [
   'awakeMinutes',
   'sleepStart',
   'sleepEnd',
+] as const satisfies readonly (keyof WearableDay)[];
+
+/** What only the dashboard counts, from the phone's Health Connect data (band-days.service.ts). */
+const COUNTED = [
+  'sleepScore',
+  'stressScore',
+  'resilience',
+  'reactions',
+  'mindfulnessMinutes',
+  'skinTempDelta',
 ] as const satisfies readonly (keyof WearableDay)[];
 
 /**
@@ -78,6 +89,10 @@ export class WearableService {
       .select({ day: sql<string | null>`min(${healthWearableDays.day})` })
       .from(healthWearableDays)
       .where(eq(healthWearableDays.userId, userId));
+    const [firstOfPhone] = await this.db
+      .select({ day: sql<string | null>`min(${healthBandDays.day})` })
+      .from(healthBandDays)
+      .where(eq(healthBandDays.userId, userId));
     return {
       available: (await this.client()) !== null,
       connected: await this.secrets.has(userId, REFRESH_TOKEN_SECRET),
@@ -89,7 +104,7 @@ export class WearableService {
         : null,
       lastSyncedAt: account?.lastSyncedAt?.toISOString() ?? null,
       error: account?.lastError ?? null,
-      firstDay: first?.day ?? null,
+      firstDay: [first?.day, firstOfPhone?.day].filter(Boolean).sort()[0] ?? null,
     };
   }
 
@@ -213,17 +228,38 @@ export class WearableService {
     }
   }
 
+  /**
+   * The band's days: the Google Health API's numbers first (Google removes the duplicates of
+   * several apps), the gaps filled from the phone's Health Connect, and what the dashboard
+   * counts from the phone's data.
+   */
   async days(userId: string, query: WearableDaysQuery): Promise<WearableDay[]> {
     const d = healthWearableDays;
-    const rows = await this.db
-      .select()
-      .from(d)
-      .where(and(eq(d.userId, userId), gte(d.day, query.from), lte(d.day, query.to)))
-      .orderBy(asc(d.day));
-    return rows.map((row) => ({
-      day: row.day,
-      ...Object.fromEntries(NUMBERS.map((key) => [key, row[key]])),
-    })) as WearableDay[];
+    const b = healthBandDays;
+    const [api, phone] = await Promise.all([
+      this.db
+        .select()
+        .from(d)
+        .where(and(eq(d.userId, userId), gte(d.day, query.from), lte(d.day, query.to))),
+      this.db
+        .select()
+        .from(b)
+        .where(and(eq(b.userId, userId), gte(b.day, query.from), lte(b.day, query.to))),
+    ]);
+    const byDay = new Map(api.map((row) => [row.day, row]));
+    const phoneByDay = new Map(phone.map((row) => [row.day, row]));
+    return [...new Set([...byDay.keys(), ...phoneByDay.keys()])].sort().map((day) => {
+      const fromApi = byDay.get(day);
+      // The phone has no zone minutes or SpO2: Health Connect is not told them.
+      const fromPhone = phoneByDay.get(day) as Partial<Record<string, unknown>> | undefined;
+      return {
+        day,
+        ...Object.fromEntries(
+          NUMBERS.map((key) => [key, fromApi?.[key] ?? fromPhone?.[key] ?? null]),
+        ),
+        ...Object.fromEntries(COUNTED.map((key) => [key, fromPhone?.[key] ?? null])),
+      } as WearableDay;
+    });
   }
 
   private async save(userId: string, days: Map<string, Partial<WearableDay>>): Promise<void> {

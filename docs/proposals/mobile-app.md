@@ -222,6 +222,37 @@ file are not checked yet.
 
 **Built (2026-10-26), before the band arrived:** the band is read from the server through the Google Health API (Health → Band, Settings → Integrations → Google Health; `libs/modules/health/api/src/lib/wearable`), not through Health Connect on the phone: the Fitbit Air needs the Google Health app, which needs Android 11+, and the owner's phone is a Redmi 9 (`galahad`) on Android 10 with no update (the official Redmi 9 ROM refuses it). The band can be paired with any Android 11+ phone or an iPhone — the dashboard does not care which. Written from the documented API shapes; nothing ran against the real API yet. The stress index from HRV and resting heart rate is still to come.
 
+**Decisions (2026-10-29, the owner's)** — the owner's new phone (REDMI 17, Android 16) runs the
+Google Health app, and it writes to Health Connect (steps, heart rate, HRV, sleep, calories,
+distance, floors, exercise, skin temperature; not the resting pulse, SpO2 or zone minutes):
+
+- **Both sources.** The phone reads Health Connect (the platform API of Android 14+, every 15
+  minutes in the background, the whole history the first time) and sends it with its device
+  token; the server keeps reading the Google Health API for what Health Connect lacks (resting
+  pulse, SpO2, zone minutes). A day's totals: the API's when it is connected (Google removes the
+  duplicates), else counted from Health Connect.
+- **Everything, in detail** — for the telemetry and Links v2's hourly series: the pulse per
+  minute, every HRV reading, sleep sessions with their stage timeline, exercises, steps and
+  calories per hour, skin temperature.
+- **Our stress index now**, 0–100 with a level (calm / normal / raised / high), against the
+  owner's 28-day baseline: per day from the night's HRV and resting pulse, per hour from the pulse
+  at rest (no steps) — the band writes HRV at night only, so the daytime index is the pulse's.
+- **Health → Band:** the day by hours (pulse, stress, steps, exercises), the night (stage
+  timeline, HRV and resting pulse against the baseline, skin temperature, **a sleep quality
+  score**), trends, and a home widget. The owner also wants something like Google Health's
+  mental-health section — to be specified.
+- **High stress is notified always, even in the quiet hours** (at most once in a few hours).
+- **Mind** (2026-10-29, after the owner showed the band app's "mental health" — mindfulness,
+  body reactions, resilience — all empty then): the dashboard counts its own. Mindfulness from
+  Health Connect and a breathing session in the dashboard; a **body reaction** is a run of minutes
+  at rest with a high index, and its notification asks what it was (six answers, kept with it);
+  **resilience** is the night's recovery against the day's load, with the owner's usual range.
+
+**Built (2026-10-29):** all of the above — the phone's `sensors/HealthConnectSync.java`, the
+server's `health/api/.../wearable/band*.ts` (migration 0118), Health → Band with the views Day /
+Trends / Mind, a home widget; the counting is in docs/telemetry.md ("The band through the
+phone"). Not yet run on the phone or with the real band's data.
+
 ## Stage 4 — voice
 
 - A voice assistant called by its name, like a smart speaker: "Hey <name>, how long was I on

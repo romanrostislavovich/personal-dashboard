@@ -54,6 +54,10 @@ public class PhoneSensorsPlugin extends Plugin {
         if (Build.VERSION.SDK_INT >= 31) {
             EXTRAS.put("bluetooth", new String[] {"android.permission.BLUETOOTH_CONNECT"});
         }
+        // The band through Health Connect: part of Android from 14 on.
+        if (HealthConnectSync.supported()) {
+            EXTRAS.put("health", HealthConnectSync.PERMISSIONS);
+        }
     }
 
     private static boolean allGranted(Context context, String[] permissions) {
@@ -81,6 +85,13 @@ public class PhoneSensorsPlugin extends Plugin {
                 return;
             }
             SensorsStore store = new SensorsStore(getContext());
+            if ("health".equals(kind) && store.number("asked:" + kind) == 1) {
+                // Health Connect keeps its permissions on a screen of its own.
+                Intent manage = new Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS")
+                    .putExtra(Intent.EXTRA_PACKAGE_NAME, activity.getPackageName());
+                open(call, manage);
+                return;
+            }
             if (store.number("asked:" + kind) == 1) {
                 Intent details = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 details.setData(Uri.parse("package:" + activity.getPackageName()));
@@ -126,6 +137,10 @@ public class PhoneSensorsPlugin extends Plugin {
         // The optional signals: each a permission of its own (see `allow`).
         for (Map.Entry<String, String[]> extra : EXTRAS.entrySet()) {
             result.put(extra.getKey(), allGranted(context, extra.getValue()));
+        }
+        // A kind or two may stay off (no band writes it): the pulse in the background is enough.
+        if (HealthConnectSync.supported()) {
+            result.put("health", HealthConnectSync.allowed(context));
         }
         call.resolve(result);
     }

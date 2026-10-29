@@ -34,6 +34,7 @@ export * from './lib/ai/eval-model';
 export { RecallService, type RecallItem, type RecallSource } from './lib/recall/recall.service';
 export { ServerActions, type ServerActionHandler } from './lib/sync/server-actions';
 export { VoiceAssistantService } from './lib/ai/voice-assistant.service';
+export { DeviceAuthService, type DeviceIdentity } from './lib/devices/device-auth.service';
 export { pickMessages, type LocalizedText } from './lib/i18n/locale';
 export { DataExportService } from './lib/data-export/data-export.service';
 export type { ReadableExport, ReadableFile } from './lib/data-export/data-export.service';

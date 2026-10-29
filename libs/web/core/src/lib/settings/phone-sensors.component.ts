@@ -210,7 +210,14 @@ export class PhoneSensorsComponent {
   private readonly apps = appsApi(inject(DASHBOARD_CLIENT).api);
 
   /** The optional signals: each is asked for only when the user wants it. */
-  protected readonly extras: PhoneExtra[] = ['steps', 'calls', 'photos', 'microphone', 'bluetooth'];
+  protected readonly extras: PhoneExtra[] = [
+    'steps',
+    'calls',
+    'photos',
+    'microphone',
+    'bluetooth',
+    'health',
+  ];
 
   protected hasExtras(status: PhoneSensorsStatus): boolean {
     return this.extras.some((extra) => status[extra] !== undefined);

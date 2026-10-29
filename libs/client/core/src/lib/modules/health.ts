@@ -1,5 +1,8 @@
 import {
+  BandDayQuery,
   GoogleHealthAppInput,
+  MindfulnessInput,
+  ReactionFeeling,
   HealthAllergy,
   HealthAllergyInput,
   HealthClinic,
@@ -57,6 +60,8 @@ export const HEALTH_READS = {
   wearable: () => apiRequest(`${BASE}/wearable`),
   /** The band's days of a period, oldest first. */
   wearableDays: (query: WearableDaysQuery) => apiRequest(`${BASE}/wearable/days`, query),
+  /** A day of the band from the phone's Health Connect: by hours, its night, its reactions. */
+  bandDay: (query: BandDayQuery) => apiRequest(`${BASE}/band/day`, query),
 };
 
 /** Adds without an id, changes with one. */
@@ -181,5 +186,11 @@ export function healthApi(api: ApiClient) {
     setGoogleHealthApp: (input: GoogleHealthAppInput) =>
       api.put<void>(`${BASE}/wearable/app`, input),
     removeGoogleHealthApp: () => api.delete(`${BASE}/wearable/app`),
+    /** What a reaction of the body was (the owner's answer). */
+    setReactionFeeling: (id: string, feeling: ReactionFeeling) =>
+      api.put<void>(`${BASE}/band/reactions/${id}`, { feeling }),
+    /** A breathing session done in the dashboard. */
+    addMindfulness: (input: MindfulnessInput) => api.post<void>(`${BASE}/band/mindfulness`, input),
+    removeMindfulness: (id: string) => api.delete(`${BASE}/band/mindfulness/${id}`),
   };
 }

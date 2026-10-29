@@ -2,6 +2,8 @@ import { httpResource } from '@angular/common/http';
 import { inject, Injectable, Signal } from '@angular/core';
 import { HEALTH_READS, healthApi } from '@pd/client-core';
 import {
+  BandDayDetail,
+  BandDayQuery,
   HealthRecord,
   IcdDictionary,
   WearableDay,
@@ -34,6 +36,14 @@ export class HealthApi {
   wearableDays(period: Signal<WearableDaysQuery>) {
     return httpResource<WearableDay[]>(() => HEALTH_READS.wearableDays(period()), {
       defaultValue: [],
+    });
+  }
+
+  /** A day of the band by hours; `null` — no day picked. */
+  bandDay(query: Signal<BandDayQuery | null>) {
+    return httpResource<BandDayDetail>(() => {
+      const day = query();
+      return day ? HEALTH_READS.bandDay(day) : undefined;
     });
   }
 

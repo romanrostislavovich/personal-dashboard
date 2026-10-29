@@ -1,3 +1,4 @@
+import { DeviceAuthService } from '@pd/api-core';
 import { configureFieldEncryption } from '@pd/api-core/schema';
 import { sql } from 'drizzle-orm';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -48,7 +49,7 @@ describe.skipIf(!ADMIN_URL)("the phone's places", { timeout: 60_000 }, () => {
     await migrate(db, { migrationsFolder: MIGRATIONS });
     await db.execute(sql`INSERT INTO users (id, email, password_hash, display_name, locale, time_zone)
       VALUES (${userId}, 'places@test', 'hash', 'Test', 'en', 'Europe/Warsaw')`);
-    devices = new DevicesService(db as never);
+    devices = new DevicesService(db as never, new DeviceAuthService());
     const users = {
       findById: async () => ({ timeZone: 'Europe/Warsaw' }),
       timeZoneOf: (user: { timeZone: string }) => user.timeZone,

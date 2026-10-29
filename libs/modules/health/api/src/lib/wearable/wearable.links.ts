@@ -59,6 +59,13 @@ export class WearableLinks implements OnModuleInit {
           metric('steps', 'count', (day) => day.steps),
           metric('calories', 'count', (day) => day.calories),
           metric('zoneMinutes', 'count', (day) => day.activeZoneMinutes),
+          // Counted by the dashboard from the phone's Health Connect data (band-days.service.ts).
+          metric('sleepScore', 'score', (day) => day.sleepScore),
+          metric('stress', 'score', (day) => day.stressScore),
+          metric('resilience', 'score', (day) => day.resilience),
+          metric('reactions', 'count', (day) => day.reactions),
+          metric('mindfulness', 'count', (day) => day.mindfulnessMinutes),
+          metric('skinTemp', 'degrees', (day) => day.skinTempDelta),
         ].filter((one) => one.days.length);
       },
     });

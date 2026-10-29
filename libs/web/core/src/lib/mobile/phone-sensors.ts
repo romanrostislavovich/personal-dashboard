@@ -19,6 +19,8 @@ export interface PhoneSensorsStatus {
   microphone?: boolean;
   /** Android 12 and later only. */
   bluetooth?: boolean;
+  /** The band through Health Connect: Android 14 and later only. */
+  health?: boolean;
 }
 
 /** The voice assistant of the phone (VoiceService in apps/mobile). */
@@ -39,7 +41,7 @@ export interface VoiceStatus {
 }
 
 /** The optional signals of the phone, each a permission of its own. */
-export type PhoneExtra = 'steps' | 'calls' | 'photos' | 'microphone' | 'bluetooth';
+export type PhoneExtra = 'steps' | 'calls' | 'photos' | 'microphone' | 'bluetooth' | 'health';
 
 interface PhoneSensorsPlugin {
   status(): Promise<PhoneSensorsStatus>;

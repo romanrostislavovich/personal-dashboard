@@ -465,7 +465,13 @@
       "spo2": "SpO2 at night",
       "steps": "Steps (band)",
       "calories": "Calories burned",
-      "zoneMinutes": "Active zone minutes"
+      "zoneMinutes": "Active zone minutes",
+      "sleepScore": "Sleep score",
+      "stress": "Stress index",
+      "resilience": "Resilience",
+      "reactions": "Body reactions",
+      "mindfulness": "Mindfulness minutes",
+      "skinTemp": "Skin temperature at night"
     }
   },
   "band": {
@@ -473,11 +479,11 @@
     "days": "{{count}} days",
     "daysTold": "over {{count}} d",
     "h": "h",
-    "noDays": "No days from the band in this period yet. Google Health is read every hour.",
+    "noDays": "No days from the band in this period yet.",
     "empty": {
-      "title": "The band is not connected",
-      "text": "Connect Google Health to see sleep, the resting heart rate, HRV, SpO2 and steps from a Fitbit.",
-      "connect": "Connect in Settings"
+      "title": "No band yet",
+      "text": "Allow \"The band through Health Connect\" in the phone app (Settings → Apps → the phone as a sensor), or connect Google Health, to see sleep, the pulse, HRV, stress and steps.",
+      "connect": "Connect Google Health"
     },
     "charts": {
       "sleep": "Sleep per night, h",
@@ -497,7 +503,13 @@
       "calories": "Calories",
       "distanceKm": "Distance, km",
       "heartRateAvg": "Average heart rate",
-      "heartRateMax": "Highest heart rate"
+      "heartRateMax": "Highest heart rate",
+      "sleepScore": "Sleep score",
+      "stressScore": "Stress index",
+      "resilience": "Resilience",
+      "reactions": "Body reactions",
+      "mindfulnessMinutes": "Mindfulness, min",
+      "skinTempDelta": "Skin temperature at night"
     },
     "integration": {
       "subtitle": "A Fitbit band: sleep, heart, HRV, activity",
@@ -522,6 +534,84 @@
       "4": "Credentials → Create credentials → OAuth client ID → Web application; put the redirect URI shown below into Authorized redirect URIs.",
       "5": "Copy the Client ID and the client secret into \"Server key\" below and save.",
       "6": "Press Connect, sign in with the account of the band and allow the access."
+    },
+    "views": {
+      "label": "View",
+      "day": "Day",
+      "trends": "Trends",
+      "mind": "Mind"
+    },
+    "levels": {
+      "calm": "calm",
+      "normal": "normal",
+      "raised": "raised",
+      "high": "high"
+    },
+    "stages": {
+      "awake": "Awake",
+      "rem": "REM",
+      "light": "Light",
+      "deep": "Deep"
+    },
+    "day": {
+      "previous": "Previous day",
+      "next": "Next day",
+      "today": "Today",
+      "empty": "Nothing from the band on this day. The phone sends Health Connect's data every 15 minutes.",
+      "pulse": "Pulse",
+      "stress": "Stress by hours",
+      "stressHint": "0–100 at rest, against your usual pulse at rest while awake: up to 25 calm, 60 normal, 85 raised, then high",
+      "steps": "Steps by hours",
+      "exercises": "Exercises",
+      "exercise": "Exercise"
+    },
+    "night": {
+      "title": "Night",
+      "stages": "Sleep stages through the night",
+      "none": "No sleep from the band ended on this day.",
+      "usual": "usually {{value}}"
+    },
+    "reactions": {
+      "title": "Body reactions",
+      "hint": "Your pulse rose well above yours at rest while you were still. What was it?",
+      "minutes": "{{count}} min",
+      "pulse": "up to {{peak}} bpm (at rest {{base}})",
+      "how": "How did you feel",
+      "none": "No reactions.",
+      "failed": "The answer was not saved, try again"
+    },
+    "feelings": {
+      "calm": "Calm",
+      "anxious": "Anxious",
+      "irritated": "Irritated",
+      "excited": "Excited",
+      "active": "I was moving",
+      "other": "Something else"
+    },
+    "mind": {
+      "mindfulness": "Mindfulness",
+      "thisWeek": "{{count}} min in the last 7 days",
+      "today": "Today: {{count}}",
+      "resilienceToday": "Today: {{value}}",
+      "noResilience": "Not counted yet today",
+      "usual": "usually {{low}}–{{high}}",
+      "resilienceHint": "How the night's recovery (sleep, HRV, resting pulse) covers the day's load (stress at rest): 50 is even, higher means more reserve. Counted against your own baselines — it gets accurate after a couple of weeks."
+    },
+    "breathing": {
+      "title": "Breathing session",
+      "intro": "Breathe in while the circle grows, out while it shrinks — about six breaths a minute.",
+      "minutes": "{{count}} min",
+      "start": "Start",
+      "stop": "Finish",
+      "cancel": "Cancel",
+      "in": "Breathe in",
+      "out": "Breathe out"
+    },
+    "widget": {
+      "title": "Band",
+      "night": "Last night",
+      "empty": "No data from the band yet.",
+      "open": "Open"
     }
   }
 }

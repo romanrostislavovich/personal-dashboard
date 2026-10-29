@@ -102,6 +102,12 @@ Fixed keys plus families (`<category>`, `<site>`, `<habit id>`, `<analyte>`, `<n
 | 🧪 `health.band.steps`                  | count                               | the band's steps                                                               | yes    |                     |
 | 🧪 `health.band.calories`               | count (kcal)                        | total calories                                                                 | yes    |                     |
 | 🧪 `health.band.zoneMinutes`            | count                               | active zone minutes (fat burn + cardio + peak)                                 | yes    |                     |
+| 🧪 `health.band.sleepScore`             | score                               | the night's sleep score (the phone's Health Connect, counted)                  | yes    |                     |
+| 🧪 `health.band.stress`                 | score                               | the day's stress index against the owner's baseline                            | yes    |                     |
+| 🧪 `health.band.resilience`             | score                               | the night's recovery against the day's load                                    | yes    |                     |
+| 🧪 `health.band.reactions`              | count                               | body reactions (the pulse up at rest)                                          | yes    |                     |
+| 🧪 `health.band.mindfulness`            | count                               | minutes of mindfulness (Health Connect and breathing sessions)                 | yes    |                     |
+| 🧪 `health.band.skinTemp`               | degrees                             | the night's skin temperature against the band's baseline                       | yes    |                     |
 | `health.intakes`                        | percent                             | doses taken of those answered (taken or skipped)                               |        |                     |
 | `health.visits`                         | count                               | doctor visits                                                                  |        |                     |
 | `health.lab.<analyte>\|<unit>`          | score                               | each lab value on the day it was taken                                         |        |                     |
@@ -268,9 +274,67 @@ out, a day without a value is `null` (never 0).
 | `distance_km`                        | distance roll-up                                   | —                                           |
 | `active_zone_minutes`                | fat burn + cardio + peak                           | `health.band.zoneMinutes`                   |
 
-Not read yet: minute-level heart rate, the sleep's stage timeline, naps as their own entries,
-exercises and the API's other data types. The stress index from HRV and resting heart rate is
-still to come.
+Not read from the API: minute-level heart rate, the sleep's stage timeline, naps, exercises —
+the phone's Health Connect gives them (below).
+
+## The band through the phone (Health Connect)
+
+🧪 **Built 2026-10-29, not yet run on the phone.** The owner's REDMI 17 (Android 16) runs the
+Google Health app, which writes the Fitbit Air's data to Health Connect. The app reads it
+(`apps/mobile/.../sensors/HealthConnectSync.java`, Android 14+, the platform API) when "The band
+through Health Connect" is allowed in the phone card (Settings → Apps), every 15 minutes with the
+other collectors: the first run sends 60 days, later runs ask Health Connect's change log what
+changed and send those hours again, whole — `POST /api/medical/band/device` (device token)
+replaces the window it is sent, so a band that syncs late or a deleted record leaves no
+duplicates. Server: `libs/modules/health/api/src/lib/wearable/band*.ts`.
+
+| Table                      | What                                                                                                                                | From Health Connect                                                              |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `health_band_minutes`      | the pulse (avg / min / max) and the steps of each minute                                                                            | `aggregateGroupByDuration` by 1 minute (other apps' duplicates removed)          |
+| `health_band_hours`        | steps, calories, distance, floors of each hour (an hour of calories alone is left out)                                              | the same by 1 hour                                                               |
+| `health_band_points`       | `hrv` (RMSSD, ms), `skinTemp` (°C against the band's baseline), `restingHr`, `spo2`, `respiratoryRate`                              | their records (the last three only when a band writes them; the Fitbit does not) |
+| `health_band_sessions`     | `sleep` with its stages, `exercise` (HC type, title), `mindfulness` (also the dashboard's breathing sessions, `source = dashboard`) | their records                                                                    |
+| `health_band_stress_hours` | the stress index of each hour (counted)                                                                                             | —                                                                                |
+| `health_band_reactions`    | the body's reactions, with the owner's answer (`feeling`)                                                                           | —                                                                                |
+| `health_band_days`         | the day as the phone tells it, and what is counted (below)                                                                          | —                                                                                |
+
+**Counted** (`band-math.ts`, after every upload for the days it touched; the baselines are the
+owner's own medians of the 28 days before):
+
+- **At rest:** a minute with a pulse, no steps in it and the 5 before, not in an exercise or asleep.
+- **Resting pulse** (when the band writes none): the lowest 30-minute mean of the night's sleep,
+  else the 10th percentile of the day's minutes at rest.
+- **The pulse at rest while awake** (`health_band_days.rest_bpm`): the median of the day's minutes
+  at rest (60 at least). Its median over the 28 days before (else the day's own) is the stress
+  index's baseline — not the night's resting pulse: sitting still by day is 15–25 % above it for
+  anyone, and against it every quiet hour would read as stress.
+- **Stress index, 0–100** — per minute at rest from the pulse against that baseline (−5 % and
+  below → 0, at it → 25, +12 % → 60, +25 % → 85, +45 % → 100); an hour with ≥ 10 such minutes gets their
+  mean; the day is its hours' (weighted by minutes) × 0.6 + the night's × 0.4. The night's: 50 ± 20
+  per standard deviation of HRV below and resting pulse above their baselines (≥ 5 nights). Levels:
+  < 25 calm, < 60 normal, < 85 raised, else high. The Fitbit writes HRV at night only, so the
+  daytime index is the pulse's.
+- **A body reaction:** ≥ 5 minutes at rest with a high index, ≥ 85 (gaps ≤ 2 min). A fresh one (ended
+  within 2 h) is notified with six answers — even in the quiet hours (the owner's choice), at most
+  once in 3 h; the answer is kept, a reaction answered survives a recount.
+- **Sleep score, 0–100:** length 50 (7½ h asleep = full), deep + REM 25 (two fifths of the sleep =
+  full), restful 25 (time awake, and the night's lowest pulse against the day's at rest).
+- **Resilience, 0–100:** 50 + (recovery − load) / 2, recovery = mean of the sleep score and
+  100 − the night's stress, load = the daytime stress.
+
+The day the pages and Links read (`WearableService.days`) takes each number from the Google Health
+API first and fills the gaps from the phone; the counted numbers come only from the phone.
+
+| Links key (🧪)            | Unit    | What                               |
+| ------------------------- | ------- | ---------------------------------- |
+| `health.band.sleepScore`  | score   | the night's sleep score            |
+| `health.band.stress`      | score   | the day's stress index             |
+| `health.band.resilience`  | score   | resilience                         |
+| `health.band.reactions`   | count   | body reactions                     |
+| `health.band.mindfulness` | count   | minutes of mindfulness             |
+| `health.band.skinTemp`    | degrees | the night's skin temperature delta |
+
+The minute and hour tables are the hourly series Links v2 will read (docs/proposals/links-v2.md).
 
 ## Outside services
 
@@ -296,6 +360,7 @@ keys. Each integration has its own health check (`integration_alerts`, daily 09:
 | Open-Meteo                                 | the forecast; the past days' temperature, rain, sun where the user is                                                                                                                                                      | when asked (kept 6 h in memory)                 | `weather_locations` (the place only)                                                                      | `weather.temperature`, `rain`, `sun`                                      |
 | OpenStreetMap / Google Places              | names of places                                                                                                                                                                                                            | once per place                                  | `activity_place_names`                                                                                    | —                                                                         |
 | Google Health                              | the band — see [above](#the-band-google-health-api)                                                                                                                                                                        | hourly (:07)                                    | `health_wearable_days`                                                                                    | 🧪 `health.band.*`                                                        |
+| Health Connect (the phone)                 | the band in detail — see [above](#the-band-through-the-phone-health-connect)                                                                                                                                               | every 15 min (the phone)                        | `health_band_*`                                                                                           | 🧪 `health.band.*`                                                        |
 | TMDB (themoviedb.org)                      | the film or show of a view: title, original title, year, poster, genres, length                                                                                                                                            | when a view arrives (every 2 min) and on search | `movies_titles`                                                                                           | (the `movies.*` numbers)                                                  |
 | Monitoring (own sites)                     | each check: up, status code, response ms; SSL expiry                                                                                                                                                                       | every 5 min                                     | `monitoring_monitors`, `monitoring_check_results`                                                         | `monitoring.downMinutes`; project facts (uptime, incidents, SSL days)     |
 | The AI providers                           | tokens and requests per day per model                                                                                                                                                                                      | each request                                    | `ai_usage`                                                                                                | —                                                                         |
