@@ -40,6 +40,7 @@ public class PhoneSensorsPlugin extends Plugin {
 
     private static final int LOCATION_REQUEST = 4207;
     private static final int EXTRA_REQUEST = 4209;
+    private static final int HEALTH_REQUEST = 4211;
 
     /** The optional signals and the permissions each needs (docs/telemetry.md). */
     private static final Map<String, String[]> EXTRAS = new LinkedHashMap<>();
@@ -85,11 +86,25 @@ public class PhoneSensorsPlugin extends Plugin {
                 return;
             }
             SensorsStore store = new SensorsStore(getContext());
-            if ("health".equals(kind) && store.number("asked:" + kind) == 1) {
-                // Health Connect keeps its permissions on a screen of its own.
-                Intent manage = new Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS")
-                    .putExtra(Intent.EXTRA_PACKAGE_NAME, activity.getPackageName());
-                open(call, manage);
+            if ("health".equals(kind)) {
+                // Health Connect asks on a screen of its own: Android's ordinary question refuses
+                // health permissions without showing anything. Asked once, its screen of the app's
+                // permissions, where the background and history switches are too.
+                Intent ask = store.number("asked:" + kind) == 1
+                    ? new Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS")
+                        .putExtra(Intent.EXTRA_PACKAGE_NAME, activity.getPackageName())
+                    : new Intent("android.health.connect.action.REQUEST_HEALTH_PERMISSIONS")
+                        .putExtra("android.content.pm.extra.REQUEST_PERMISSIONS_NAMES", permissions);
+                store.setNumber("asked:" + kind, 1);
+                // For a result: Health Connect's screen asks which app called it.
+                activity.runOnUiThread(() -> {
+                    try {
+                        activity.startActivityForResult(ask, HEALTH_REQUEST);
+                        call.resolve();
+                    } catch (Exception e) {
+                        call.reject(e.getClass().getSimpleName() + ": " + e.getMessage());
+                    }
+                });
                 return;
             }
             if (store.number("asked:" + kind) == 1) {
