@@ -54,6 +54,13 @@ export const healthModule: WebDashboardModule = {
     en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
+  widgets: [
+    {
+      id: 'health.band',
+      size: 'small',
+      loadComponent: () => import('./wearable/band.widget').then((m) => m.BandWidget),
+    },
+  ],
   commands: [
     {
       id: 'health.conditions',

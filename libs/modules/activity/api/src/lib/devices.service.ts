@@ -3,9 +3,10 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
+import { DB, Database, DeviceAuthService } from '@pd/api-core';
 import { ActivityDevice, ActivityDeviceCreated, ActivityDeviceInput } from '@pd/contracts';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { createHash, randomBytes } from 'node:crypto';
@@ -34,8 +35,19 @@ const hashOf = (token: string) => createHash('sha256').update(token).digest('hex
  * can do nothing but send activity.
  */
 @Injectable()
-export class DevicesService {
-  constructor(@Inject(DB) private readonly db: Database) {}
+export class DevicesService implements OnModuleInit {
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    private readonly deviceAuth: DeviceAuthService,
+  ) {}
+
+  /** Other sections take a device's uploads too (Health: the band through the phone). */
+  onModuleInit(): void {
+    this.deviceAuth.use(async (authorization) => {
+      const device = await this.authenticate(authorization);
+      return { id: device.id, userId: device.userId };
+    });
+  }
 
   async list(userId: string): Promise<ActivityDevice[]> {
     const rows = await this.db

@@ -20,6 +20,10 @@ import { SharedSummaryController } from './summary/shared.controller';
 import { SummaryController } from './summary/summary.controller';
 import { SummaryService } from './summary/summary.service';
 import { HealthRecall } from './health.recall';
+import { BandDaysService } from './wearable/band-days.service';
+import { BandAiTools } from './wearable/band.ai-tools';
+import { BandController } from './wearable/band.controller';
+import { BandService } from './wearable/band.service';
 import { WearableController } from './wearable/wearable.controller';
 import { WearableIntegrations } from './wearable/wearable.integrations';
 import { WearableJob } from './wearable/wearable.job';
@@ -38,6 +42,7 @@ import { WearableService } from './wearable/wearable.service';
     SummaryController,
     SharedSummaryController,
     WearableController,
+    BandController,
   ],
   providers: [
     HealthService,
@@ -61,6 +66,9 @@ import { WearableService } from './wearable/wearable.service';
     WearableJob,
     WearableLinks,
     WearableIntegrations,
+    BandDaysService,
+    BandService,
+    BandAiTools,
   ],
 })
 export class HealthModule {}

@@ -55,6 +55,7 @@ export * from './lib/health';
 export * from './lib/health-labs';
 export * from './lib/health-summary';
 export * from './lib/health-wearable';
+export * from './lib/health-band';
 export * from './lib/vault';
 export * from './lib/apps';
 export * from './lib/push';

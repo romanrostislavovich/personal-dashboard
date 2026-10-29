@@ -42,6 +42,18 @@ export interface WearableDay {
   /** HH:MM, local time of the band. */
   sleepStart: string | null;
   sleepEnd: string | null;
+  /** Counted by the dashboard from the phone's Health Connect data (health-band.ts): */
+  /** The night's sleep, 0–100: its length, deep and REM, how restful. */
+  sleepScore: number | null;
+  /** The stress index of the day, 0–100, against the owner's own baseline. */
+  stressScore: number | null;
+  /** The day's load (stress at rest) against the night's recovery, 0–100; higher is better. */
+  resilience: number | null;
+  /** How many times the body reacted (the pulse up without moving). */
+  reactions: number | null;
+  mindfulnessMinutes: number | null;
+  /** The night's skin temperature against the band's own baseline, °C. */
+  skinTempDelta: number | null;
 }
 
 export interface WearableStatus {

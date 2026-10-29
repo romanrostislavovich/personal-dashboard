@@ -591,7 +591,8 @@
         "calls": "Calls: how many, minutes, how many people (numbers stay on the phone)",
         "photos": "Photos taken: how many and when (the pictures stay on the phone)",
         "microphone": "The noise level around every 15 minutes (a number, no sound kept)",
-        "bluetooth": "Bluetooth devices: headphones, the car"
+        "bluetooth": "Bluetooth devices: headphones, the car",
+        "health": "The band through Health Connect: pulse, HRV, sleep, steps (Health → Band)"
       }
     },
     "voice": {

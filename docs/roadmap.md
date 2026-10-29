@@ -761,7 +761,9 @@ assistant as a tutor that knows the materials of the courses.
     through Google, a gentle-day widget, quiet hours, a help button (crisis lines by country and
     a close person's contact)
   - **time per app** on the phone (Instagram, LinkedIn, …) and the notifications that interrupt
-  - **stress:** our own index from HRV and resting heart rate (Health Connect has no stress type)
+  - ✅ **stress:** our own index from HRV and resting heart rate (Health Connect has no stress type) —
+    built 2026-10-29 with the band through Health Connect: the pulse by minutes, sleep stages, the
+    body's reactions with a question, the sleep score, resilience, breathing sessions
   - **a voice assistant** called by name, like a smart speaker
   - **a seizure alert for close people** (behind a feature flag)
   - **financial auto-capture:** push notifications / SMS → draft transactions
