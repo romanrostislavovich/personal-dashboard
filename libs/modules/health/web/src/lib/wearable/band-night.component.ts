@@ -67,57 +67,58 @@ const ROW = 22;
         } @else {
           <p class="hint">{{ 'health.band.night.none' | transloco }}</p>
         }
-        <dl class="numbers">
-          @if (day()?.sleepScore != null) {
-            <div>
-              <dt>{{ 'health.band.fields.sleepScore' | transloco }}</dt>
-              <dd>{{ day()?.sleepScore }} / 100</dd>
-            </div>
-          }
-          @if (day()?.sleepMinutes != null) {
-            <div>
-              <dt>{{ 'health.band.fields.sleepMinutes' | transloco }}</dt>
-              <dd>
-                {{ day()!.sleepMinutes! / 60 | number: '1.1-1' }} {{ 'health.band.h' | transloco }}
-              </dd>
-            </div>
-          }
-          @if (day()?.hrvMs != null) {
-            <div>
-              <dt>{{ 'health.band.fields.hrvMs' | transloco }}</dt>
-              <dd>
-                {{ day()?.hrvMs | number: '1.0-0' }} ms
-                @if (detail().baseline.hrvMs; as base) {
-                  <span class="base">{{
-                    'health.band.night.usual' | transloco: { value: (base | number: '1.0-0') }
-                  }}</span>
-                }
-              </dd>
-            </div>
-          }
-          @if (day()?.restingHeartRate != null) {
-            <div>
-              <dt>{{ 'health.band.fields.restingHeartRate' | transloco }}</dt>
-              <dd>
-                {{ day()?.restingHeartRate }} bpm
-                @if (detail().baseline.restingHeartRate; as base) {
-                  <span class="base">{{
-                    'health.band.night.usual' | transloco: { value: (base | number: '1.0-0') }
-                  }}</span>
-                }
-              </dd>
-            </div>
-          }
-          @if (day()?.skinTempDelta != null) {
-            <div>
-              <dt>{{ 'health.band.fields.skinTempDelta' | transloco }}</dt>
-              <dd>
-                {{ day()!.skinTempDelta! > 0 ? '+' : ''
-                }}{{ day()?.skinTempDelta | number: '1.1-2' }} °C
-              </dd>
-            </div>
-          }
-        </dl>
+        @if (day(); as d) {
+          <dl class="numbers">
+            @if (d.sleepScore !== null) {
+              <div>
+                <dt>{{ 'health.band.fields.sleepScore' | transloco }}</dt>
+                <dd>{{ d.sleepScore }} / 100</dd>
+              </div>
+            }
+            @if (d.sleepMinutes !== null) {
+              <div>
+                <dt>{{ 'health.band.fields.sleepMinutes' | transloco }}</dt>
+                <dd>
+                  {{ d.sleepMinutes / 60 | number: '1.1-1' }} {{ 'health.band.h' | transloco }}
+                </dd>
+              </div>
+            }
+            @if (d.hrvMs !== null) {
+              <div>
+                <dt>{{ 'health.band.fields.hrvMs' | transloco }}</dt>
+                <dd>
+                  {{ d.hrvMs | number: '1.0-0' }} ms
+                  @if (detail().baseline.hrvMs; as base) {
+                    <span class="base">{{
+                      'health.band.night.usual' | transloco: { value: (base | number: '1.0-0') }
+                    }}</span>
+                  }
+                </dd>
+              </div>
+            }
+            @if (d.restingHeartRate !== null) {
+              <div>
+                <dt>{{ 'health.band.fields.restingHeartRate' | transloco }}</dt>
+                <dd>
+                  {{ d.restingHeartRate }} bpm
+                  @if (detail().baseline.restingHeartRate; as base) {
+                    <span class="base">{{
+                      'health.band.night.usual' | transloco: { value: (base | number: '1.0-0') }
+                    }}</span>
+                  }
+                </dd>
+              </div>
+            }
+            @if (d.skinTempDelta !== null) {
+              <div>
+                <dt>{{ 'health.band.fields.skinTempDelta' | transloco }}</dt>
+                <dd>
+                  {{ d.skinTempDelta > 0 ? '+' : '' }}{{ d.skinTempDelta | number: '1.1-2' }} °C
+                </dd>
+              </div>
+            }
+          </dl>
+        }
       </mat-card-content>
     </mat-card>
   `,
