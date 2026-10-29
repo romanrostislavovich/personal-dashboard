@@ -59,6 +59,12 @@ const BIKE_KMH = 25;
  * minute or every quarter of an hour (two fixes in a row).
  */
 const MIN_STAY_MS = 10 * 60_000;
+/**
+ * Fixes away from a place this long in a row: the phone left it. Shorter, and back near it, they
+ * were noise — indoors GPS wanders by tens of metres every few seconds, past the reach of its own
+ * accuracy, and each such fix starting a group of its own left no group ten minutes long.
+ */
+const LEFT_MS = 5 * 60_000;
 
 const EARTH_M = 6_371_000;
 
@@ -85,22 +91,37 @@ function middle(fixes: Fix[]): Point {
 }
 
 /**
- * The day as stays and trips. Fixes in a row near one middle are a place; one that was there
- * long enough is a stay, the rest are fixes on the way. Two stays in a row at one place (a fix
- * gone astray between them) are one. A trip is everything between two stays.
+ * The day as stays and trips. Fixes in a row near one middle are a place (a few minutes away
+ * from it and back are noise); one that was there long enough is a stay, the rest are fixes on
+ * the way. Two stays in a row at one place (a fix gone astray between them) are one. A trip is
+ * everything between two stays.
  */
 export function entriesOf(input: Fix[]): Entry[] {
   const fixes = input.filter((fix) => fix.accuracy <= MAX_ACCURACY_M).sort((a, b) => a.at - b.at);
 
   // Groups of fixes in a row near one middle; a group long enough is a stay.
   const groups: { fixes: Fix[]; middle: Point }[] = [];
-  for (const fix of fixes) {
+  // The first fix away from the last group since the last one near it; -1 — none.
+  let away = -1;
+  for (let i = 0; i < fixes.length; i++) {
+    const fix = fixes[i];
     const last = groups[groups.length - 1];
     if (last && distanceM(last.middle, fix) <= reachOf(fix)) {
+      // Back near it: the fixes away were noise, not a leave.
+      away = -1;
       last.fixes.push(fix);
       last.middle = middle(last.fixes);
-    } else {
-      groups.push({ fixes: [fix], middle: fix });
+      continue;
+    }
+    if (away < 0) {
+      away = i;
+    }
+    const left = !last || fix.at - fixes[away].at >= LEFT_MS || i === fixes.length - 1;
+    if (left) {
+      // A new group from the first fix away; the fixes after it are read again against it.
+      groups.push({ fixes: [fixes[away]], middle: fixes[away] });
+      i = away;
+      away = -1;
     }
   }
 
