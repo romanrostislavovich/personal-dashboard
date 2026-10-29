@@ -1,0 +1,1 @@
+ALTER TABLE "push_devices" ADD COLUMN "rich" boolean DEFAULT false NOT NULL;

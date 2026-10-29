@@ -45,17 +45,17 @@ app: plain TypeScript on the client core, no module of its own.
 
 ## Key decisions
 
-| Decision                             | Why                                                                                                                                                                                                                                  |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Nx monorepo**                      | Angular and Nest in one repository, shared types, module boundaries checked by the linter                                                                                                                                            |
-| **zod contracts** (`@pd/contracts`)  | one schema gives both the TS type for the frontend and validation on the backend (`ZodValidationPipe`)                                                                                                                               |
-| **Drizzle ORM**                      | tables are defined in TS next to the module (`*.schema.ts`), not in one big file; SQL migrations are human-readable                                                                                                                  |
-| **pg-boss** for background jobs      | the queue and cron live in the same PostgreSQL — no Redis; missed runs are caught up                                                                                                                                                 |
-| **Notifications through channels**   | a module calls `notifications.send()` and does not know where the message goes; Telegram is the first `NotificationChannel`                                                                                                          |
-| **Everything is scoped by `userId`** | multiple users are supported without any schema changes                                                                                                                                                                              |
-| **One Docker image**                 | the API serves the built frontend — self-hosting with one command                                                                                                                                                                    |
-| **Electron as a thin shell**         | the desktop app loads the same web app from the server (or localhost) and adds tray, autostart and background running; its own code is a bundle the server hands out, so it updates without an installer (`apps/desktop/src/update`) |
-| **i18n via Transloco**               | each module keeps its translations (`i18n/en.json`, `i18n/ru.json`); the core merges them into one dictionary                                                                                                                        |
+| Decision                             | Why                                                                                                                                                                                                                                                |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nx monorepo**                      | Angular and Nest in one repository, shared types, module boundaries checked by the linter                                                                                                                                                          |
+| **zod contracts** (`@pd/contracts`)  | one schema gives both the TS type for the frontend and validation on the backend (`ZodValidationPipe`)                                                                                                                                             |
+| **Drizzle ORM**                      | tables are defined in TS next to the module (`*.schema.ts`), not in one big file; SQL migrations are human-readable                                                                                                                                |
+| **pg-boss** for background jobs      | the queue and cron live in the same PostgreSQL — no Redis; missed runs are caught up                                                                                                                                                               |
+| **Notifications through channels**   | a module calls `notifications.send()` and does not know where the message goes; Telegram is the first `NotificationChannel`; every notification is kept 90 days as the bell's inbox (the outbox table), read and answered the same on every device |
+| **Everything is scoped by `userId`** | multiple users are supported without any schema changes                                                                                                                                                                                            |
+| **One Docker image**                 | the API serves the built frontend — self-hosting with one command                                                                                                                                                                                  |
+| **Electron as a thin shell**         | the desktop app loads the same web app from the server (or localhost) and adds tray, autostart and background running; its own code is a bundle the server hands out, so it updates without an installer (`apps/desktop/src/update`)               |
+| **i18n via Transloco**               | each module keeps its translations (`i18n/en.json`, `i18n/ru.json`); the core merges them into one dictionary                                                                                                                                      |
 
 ## Anatomy of a module
 
@@ -117,10 +117,13 @@ Say it is `strava`.
      `strava.messages.ts` via `pickMessages({ en: {...}, ru: {...} }, user.locale)`;
    - Telegram commands: `TelegramBotService.registerCommand({ command, description, handler })`
      (example — `/d` in `libs/modules/diary/api/src/lib/diary.jobs.ts`);
-   - buttons under a Telegram notification: `actions` of the notification (`{ label, data }`) and
-     `TelegramBotService.registerAction(prefix, handler)` for the presses; a reply with
-     `expectText` takes the user's next message as the answer (example — the reminder buttons in
-     `libs/modules/tasks/api/src/lib/tasks.jobs.ts`);
+   - buttons under a notification: `actions` of the notification (`{ label, action }`) and
+     `TelegramBotService.registerAction({ name, handler })` for the presses; a reply with
+     `expectText` takes the user's next words as the answer (example — the reminder buttons in
+     `libs/modules/tasks/api/src/lib/tasks.jobs.ts`). The handlers live in `NotificationActions`
+     (api-core), not in Telegram: the same button answers from Telegram, the bell of the app
+     (`/notifications/:id`) and the phone's shade, once — the first press takes the question
+     (`NotificationInboxService`) and closes it in the other channels;
    - achievements: `strava.achievements.ts` — a metric (`measure(userId) → number`) and tiers via
      `achievementTiers([goal, icon, title, description], ...)`, registered with
      `AchievementsService.register()` (example — `libs/modules/games/api/src/lib/dota/dota.achievements.ts`).

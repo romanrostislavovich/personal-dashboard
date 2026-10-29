@@ -71,6 +71,27 @@ export class FcmClient {
   ): Promise<FcmResult> {
     const body =
       message.body.length > MAX_BODY ? `${message.body.slice(0, MAX_BODY)}…` : message.body;
+    return this.post(deviceToken, {
+      notification: { title: message.title, body },
+      data: message.data ?? {},
+      // The app's own channel (MobilePushService makes it): Firebase's fallback one is
+      // silent on MIUI.
+      android: {
+        priority: 'HIGH',
+        notification: { sound: 'default', channel_id: PUSH_CHANNEL },
+      },
+    });
+  }
+
+  /**
+   * A data message only: the app draws the notification itself, with its buttons
+   * (`PushMessagingService`), or takes one away. High priority, so Android wakes the app for it.
+   */
+  async sendData(deviceToken: string, data: Record<string, string>): Promise<FcmResult> {
+    return this.post(deviceToken, { data, android: { priority: 'HIGH' } });
+  }
+
+  private async post(deviceToken: string, message: Record<string, unknown>): Promise<FcmResult> {
     const response = await this.http(
       `https://fcm.googleapis.com/v1/projects/${this.account.projectId}/messages:send`,
       {
@@ -79,19 +100,7 @@ export class FcmClient {
           Authorization: `Bearer ${await this.token()}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          message: {
-            token: deviceToken,
-            notification: { title: message.title, body },
-            data: message.data ?? {},
-            // The app's own channel (MobilePushService makes it): Firebase's fallback one is
-            // silent on MIUI.
-            android: {
-              priority: 'HIGH',
-              notification: { sound: 'default', channel_id: PUSH_CHANNEL },
-            },
-          },
-        }),
+        body: JSON.stringify({ message: { token: deviceToken, ...message } }),
       },
     );
     if (response.ok) {

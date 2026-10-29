@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { GrammyError, HttpError } from 'grammy';
 import { UserRow } from '../../users/users.schema';
-import { DeliveryError, Notification, NotificationChannel } from '../notification-channel';
+import {
+  DeliveryError,
+  DeliveryReceipt,
+  Notification,
+  NotificationChannel,
+} from '../notification-channel';
 import { TelegramBotService } from './telegram-bot.service';
 
 @Injectable()
@@ -15,16 +20,17 @@ export class TelegramChannel implements NotificationChannel {
     return this.bot.isAvailable && user.telegramChatId !== null;
   }
 
-  async send(user: UserRow, { title, body, actions }: Notification): Promise<void> {
+  async send(user: UserRow, { title, body, actions }: Notification): Promise<DeliveryReceipt> {
     if (!user.telegramChatId) {
       throw new DeliveryError('Telegram is not connected', { permanent: true });
     }
     try {
-      await this.bot.sendMessage(
+      const message = await this.bot.sendMessage(
         user.telegramChatId,
         `<b>${escapeHtml(title)}</b>\n${escapeHtml(body)}`,
         actions,
       );
+      return message ? { telegram: message } : {};
     } catch (error) {
       throw deliveryError(error);
     }

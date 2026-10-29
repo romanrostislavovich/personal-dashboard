@@ -738,5 +738,33 @@
       "unreachable": "No dashboard answered at this address. Check it and the network.",
       "change": "another server"
     }
+  },
+  "inbox": {
+    "title": "Notifications",
+    "bell": "Notifications: {{waiting}} questions waiting, {{unread}} unread",
+    "questions": "Waiting for an answer",
+    "latest": "Latest",
+    "readAll": "Read all",
+    "all": "All notifications",
+    "empty": "No notifications yet",
+    "noQuestions": "No questions waiting",
+    "filterAll": "All",
+    "more": "More",
+    "waiting": "waiting for an answer",
+    "yesterday": "yesterday",
+    "answered": "Answered: {{answer}}",
+    "via": {
+      "web": "in the app",
+      "telegram": "in Telegram",
+      "push": "on the phone"
+    },
+    "wordsHint": "A few words, if you like",
+    "save": "Save",
+    "skip": "Without words",
+    "openSection": "Open the section",
+    "next": "Next question ({{count}})",
+    "allAnswered": "All questions answered",
+    "gone": "This notification is gone: they are kept for 90 days.",
+    "failed": "Did not work, try again."
   }
 }

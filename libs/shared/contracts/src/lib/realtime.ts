@@ -16,5 +16,7 @@ export type RealtimeEvent =
       /** The page a click on it opens. */
       route?: string;
     }
+  /** The bell changed: a notification came, was read or answered (on any device). */
+  | { type: 'inbox' }
   /** Keeps proxies from closing an idle connection; the client ignores it. */
   | { type: 'ping' };

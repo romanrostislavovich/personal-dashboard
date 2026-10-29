@@ -47,6 +47,16 @@ export function buildAppRoutes(modules: WebDashboardModule[]): Routes {
           loadComponent: () => import('./projects/project.page').then((m) => m.ProjectPage),
         },
         {
+          // The bell: every notification, and one's card with its buttons.
+          path: 'notifications',
+          loadComponent: () =>
+            import('./inbox/notifications.page').then((m) => m.NotificationsPage),
+        },
+        {
+          path: 'notifications/:id',
+          loadComponent: () => import('./inbox/notification.page').then((m) => m.NotificationPage),
+        },
+        {
           path: 'settings',
           loadComponent: () => import('./settings/settings.page').then((m) => m.SettingsPage),
         },

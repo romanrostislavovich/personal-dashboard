@@ -3,6 +3,7 @@ package com.personalworld.dashboard;
 import android.content.Intent;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
+import com.personalworld.dashboard.inbox.NotificationShadePlugin;
 import com.personalworld.dashboard.sensors.PhoneSensorsPlugin;
 import com.personalworld.dashboard.sensors.PlacesService;
 import com.personalworld.dashboard.voice.VoiceService;
@@ -15,6 +16,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(GentleWidgetPlugin.class);
         registerPlugin(PhoneSensorsPlugin.class);
         registerPlugin(ShareTargetPlugin.class);
+        registerPlugin(NotificationShadePlugin.class);
         super.onCreate(savedInstanceState);
         ShareTargetPlugin.receive(this, getIntent());
     }

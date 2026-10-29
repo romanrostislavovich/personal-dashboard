@@ -1,3 +1,4 @@
+import type { TelegramMessageRef } from './notifications.schema';
 import type { UserRow } from '../users/users.schema';
 
 /**
@@ -16,6 +17,11 @@ export interface NotificationAction {
 }
 
 export interface Notification {
+  /**
+   * Set by NotificationsService, not by a module: the notification in the bell (its row), which
+   * a tap on the phone opens and a press of its buttons answers.
+   */
+  id?: string;
   title: string;
   body: string;
   /** Source module, for example `birthdays`. Useful for "what goes where" settings. */
@@ -72,7 +78,12 @@ export interface NotificationChannel {
   readonly durable: boolean;
   /** Whether the channel can deliver to this user (for example, whether Telegram is linked). */
   isEnabledFor(user: UserRow): boolean;
-  send(user: UserRow, notification: Notification): Promise<void>;
+  send(user: UserRow, notification: Notification): Promise<DeliveryReceipt | void>;
+}
+
+/** What a channel made of a notification, kept to close it once it is answered elsewhere. */
+export interface DeliveryReceipt {
+  telegram?: TelegramMessageRef;
 }
 
 export const NOTIFICATION_CHANNELS = Symbol('NOTIFICATION_CHANNELS');

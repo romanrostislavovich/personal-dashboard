@@ -53,6 +53,11 @@ const SECTION_PAGES = new Set([
  * Where a tap on a notification leads (a push, the desktop app's system notification, a toast):
  * the page the module named, else its section's page, else the home page.
  */
+/** The notification's card in the bell: its text, its buttons, the questions after it. */
+export function inboxLinkOf(id: string): string {
+  return `/notifications/${id}`;
+}
+
 export function linkOf(notification: Pick<Notification, 'source' | 'link'>): string {
   if (notification.link) {
     return notification.link;

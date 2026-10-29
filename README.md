@@ -34,6 +34,9 @@ Russian.
   DeepSeek, OpenAI, Ollama (fully local) or any OpenAI-compatible API
 - 💬 **Telegram as a remote** — voice messages, a photo of a receipt becomes an expense, a bank
   statement PDF becomes transactions, reminders with "Done / +1 hour / Tomorrow" buttons
+- 🔔 **One bell everywhere** — every notification in the web, desktop and phone app, read or not
+  the same on each; a question ("How was the film?", "A day without alcohol?") is answered once —
+  in the bell, in Telegram or right in the phone's notification — and closed everywhere else
 - 📖 **Life** — one feed of any day across every section, a daily chronicle with an optional
   story of the day by the AI, a "Wrapped" of the month or the year, questions to your own history
 - 🔗 **Sections that know each other** — a project with its hours, commits, money and uptime on

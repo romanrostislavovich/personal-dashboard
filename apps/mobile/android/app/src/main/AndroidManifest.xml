@@ -93,6 +93,23 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+        <!-- Firebase's messages: the bell's are drawn by the app, with buttons in the shade
+             (inbox/PushMessagingService); it takes the push plugin's own service's place. -->
+        <service
+            android:name="com.capacitorjs.plugins.pushnotifications.MessagingService"
+            tools:node="remove" />
+        <service
+            android:name=".inbox.PushMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <!-- A button pressed in the shade: the answer goes to the server (inbox/). -->
+        <receiver
+            android:name=".inbox.PushActionReceiver"
+            android:exported="false" />
+
     </application>
 
     <!-- Permissions -->

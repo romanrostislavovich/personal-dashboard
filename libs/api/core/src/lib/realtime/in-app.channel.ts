@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Notification, NotificationChannel } from '../notifications/notification-channel';
-import { linkOf } from '../notifications/notification-link';
+import { inboxLinkOf, linkOf } from '../notifications/notification-link';
 import { UserRow } from '../users/users.schema';
 import { RealtimeService } from './realtime.service';
 
@@ -20,7 +20,7 @@ export class InAppChannel implements NotificationChannel {
   }
 
   async send(user: UserRow, notification: Notification): Promise<void> {
-    const { title, body, source, desktop } = notification;
+    const { id, title, body, source, desktop, actions } = notification;
     if (source !== 'achievements') {
       this.realtime.emit(user.id, {
         type: 'notification',
@@ -28,7 +28,8 @@ export class InAppChannel implements NotificationChannel {
         body,
         source,
         system: desktop ?? true,
-        route: linkOf(notification),
+        // A question opens its card, with its buttons; anything else its section.
+        route: id && actions?.length ? inboxLinkOf(id) : linkOf(notification),
       });
     }
   }

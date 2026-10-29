@@ -13,8 +13,13 @@ export const pushDeviceInputSchema = z.object({
   token: z.string().trim().min(10).max(4096),
   /** The phone's model, for the list: `Redmi Note 9 Pro`. */
   name: z.string().trim().min(1).max(100),
+  /**
+   * The app draws notifications itself, with their buttons in the shade (`PushMessagingService`):
+   * it gets data messages. An app built before gets plain ones.
+   */
+  rich: z.boolean().default(false),
 });
-export type PushDeviceInput = z.infer<typeof pushDeviceInputSchema>;
+export type PushDeviceInput = z.input<typeof pushDeviceInputSchema>;
 
 export interface PushDevice {
   /** The app's own id on the phone (the same as in Settings → Apps). */

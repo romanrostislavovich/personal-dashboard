@@ -16,4 +16,5 @@
     <string name="voice_thinking">Думаю…</string>
     <string name="voice_not_heard">Не расслышал.</string>
     <string name="voice_no_server">Нет связи с дашбордом.</string>
+    <string name="inbox_not_sent">Не отправилось: нет связи. Нажми, чтобы ответить в приложении.</string>
 </resources>

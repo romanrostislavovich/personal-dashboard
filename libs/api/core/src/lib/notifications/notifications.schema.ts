@@ -1,13 +1,21 @@
-import type { NotificationDeliveryStatus } from '@pd/contracts';
+import type { InboxAnswerChannel, NotificationDeliveryStatus } from '@pd/contracts';
 import { index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { encryptedText, registerEncryptedTables } from '../crypto/encrypted-columns';
 import { users } from '../users/users.schema';
 import type { NotificationAction } from './notification-channel';
 
+/** The message a notification became in Telegram: its buttons go once it is answered elsewhere. */
+export interface TelegramMessageRef {
+  chatId: string;
+  messageId: number;
+}
+
 /**
- * Every notification sent, kept for a month: a channel that failed (Telegram down, a 429) is
- * tried again by a job with a backoff, and the same notification within its window goes out
- * once (see NotificationsService). The text is kept encrypted — it may be a medication reminder.
+ * Every notification sent, kept for 90 days — the bell's inbox as well as the delivery's outbox:
+ * a channel that failed (Telegram down, a 429) is tried again by a job with a backoff, the same
+ * notification within its window goes out once (see NotificationsService), and the user's read and
+ * answer are kept on it (NotificationInboxService). The text is kept encrypted — it may be a
+ * medication reminder.
  */
 export const notificationOutbox = pgTable(
   'notification_outbox',
@@ -33,6 +41,13 @@ export const notificationOutbox = pgTable(
     lastError: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     sentAt: timestamp({ withTimezone: true }),
+    /** Seen in the bell (or answered). */
+    readAt: timestamp({ withTimezone: true }),
+    answeredAt: timestamp({ withTimezone: true }),
+    /** The button pressed, and the words written after it. */
+    answer: encryptedText(),
+    answeredVia: text().$type<InboxAnswerChannel>(),
+    telegramMessage: jsonb().$type<TelegramMessageRef>(),
   },
   (table) => [
     index().on(table.userId, table.createdAt),

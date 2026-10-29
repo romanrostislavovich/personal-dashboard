@@ -84,8 +84,8 @@ export class NotificationsService implements OnModuleInit {
       desktop: !quietUntil && !isMuted(user.calm, section, 'desktop'),
     };
     if (quietUntil && durable.length) {
-      await this.outbox.add(userId, notification, durable, 'held', null, quietUntil);
-      await this.sendNow(user, notification, channels);
+      const held = await this.outbox.add(userId, notification, durable, 'held', null, quietUntil);
+      await this.sendNow(user, { ...notification, id: held?.id }, channels);
       return;
     }
     const row = await this.outbox.add(
@@ -102,7 +102,7 @@ export class NotificationsService implements OnModuleInit {
       this.logger.warn(`No notification channels for user ${user.email}: "${notification.title}"`);
       return;
     }
-    await this.sendNow(user, notification, channels);
+    await this.sendNow(user, { ...notification, id: row.id }, channels);
     if (durable.length) {
       await this.deliver(user, row);
     }
@@ -223,6 +223,7 @@ export class NotificationsService implements OnModuleInit {
   /** To the channels the row still has to reach; one failing does not stop the others. */
   private async deliver(user: UserRow, row: NotificationOutboxRow): Promise<void> {
     const notification: Notification = {
+      id: row.id,
       title: row.title,
       body: row.body,
       source: row.source,
@@ -238,7 +239,11 @@ export class NotificationsService implements OnModuleInit {
         continue;
       }
       try {
-        await channel.send(user, notification);
+        const receipt = await channel.send(user, notification);
+        // Its buttons go once it is answered elsewhere (NotificationInboxService).
+        if (receipt?.telegram && row.actions.length) {
+          await this.outbox.setTelegramMessage(row.id, receipt.telegram);
+        }
       } catch (error) {
         const failure = error instanceof DeliveryError ? error : new DeliveryError(String(error));
         this.logger.warn(`Channel ${name} failed (try ${row.attempts + 1}): ${failure.message}`);

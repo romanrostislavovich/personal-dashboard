@@ -57,6 +57,9 @@ dependencies {
     // The voice assistant's name, heard on the phone (voice/): Vosk, offline speech recognition.
     implementation 'net.java.dev.jna:jna:5.13.0@aar'
     implementation 'com.alphacephei:vosk-android:0.3.47@aar'
+    // Notifications drawn by the app, with their buttons in the shade (inbox/PushMessagingService):
+    // the same Firebase as the push plugin's, which keeps it to itself.
+    implementation "com.google.firebase:firebase-messaging:25.0.1"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
