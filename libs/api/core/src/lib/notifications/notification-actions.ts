@@ -41,6 +41,15 @@ export class NotificationActions {
     return this.find(action) !== undefined;
   }
 
+  /** Whether a question with this button needs no answer any more (see BotAction.settled). */
+  async settled(user: UserRow, action: string): Promise<boolean> {
+    const handler = this.find(action);
+    if (!handler?.settled) {
+      return false;
+    }
+    return handler.settled(user, action.slice(handler.name.length + 1));
+  }
+
   /** Runs the handler of `action`; `null` — none takes it. */
   async run(
     user: UserRow,

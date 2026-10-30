@@ -172,6 +172,23 @@ export class HabitsService {
     }
   }
 
+  /**
+   * The evening question needs no answer any more: its day was marked on the page, or the habit
+   * is gone. "Not today" leaves no mark, so a habit to build is asked about anyway.
+   */
+  async buttonSettled(user: UserRow, payload: string): Promise<boolean> {
+    const [, id, day] = payload.split(':');
+    const [habit] = await this.db
+      .select({id: habits.id, marked: habitDays.id})
+      .from(habits)
+      .leftJoin(
+        habitDays,
+        and(eq(habitDays.habitId, habits.id), eq(habitDays.day, day)),
+      )
+      .where(and(eq(habits.id, id), eq(habits.userId, user.id)));
+    return !habit || habit.marked !== null;
+  }
+
   /** A button under the evening question. */
   async answerButton(user: UserRow, payload: string): Promise<BotActionReply> {
     const [what, id, day] = payload.split(':');

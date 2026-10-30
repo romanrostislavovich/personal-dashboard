@@ -52,6 +52,12 @@ export interface BotAction {
   /** Short, Latin letters: it is part of the 64 bytes a button carries. */
   name: string;
   handler: (user: UserRow, payload: string) => Promise<BotActionReply>;
+  /**
+   * Whether the question of this button was closed some other way (the day written in the
+   * diary, the habit marked on its page): one held for the quiet hours is then not sent in the
+   * morning.
+   */
+  settled?: (user: UserRow, payload: string) => Promise<boolean>;
 }
 
 /** A photo sent to the bot by a user who has linked Telegram. */

@@ -138,6 +138,9 @@ export class DiaryJobs implements OnModuleInit {
           },
         };
       },
+      // Held by the quiet hours till the morning, the reminder is not sent if the day got written.
+      settled: (user, payload) =>
+        this.diary.dayStarted(user.id, payload.split(':')[0]),
     });
 
     this.scheduler.register({

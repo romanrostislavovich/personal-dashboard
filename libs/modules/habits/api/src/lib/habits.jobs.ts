@@ -22,6 +22,7 @@ export class HabitsJobs implements OnModuleInit {
     this.telegram.registerAction({
       name: HABIT_ACTION,
       handler: (user, payload) => this.habits.answerButton(user, payload),
+      settled: (user, payload) => this.habits.buttonSettled(user, payload),
     });
   }
 }
