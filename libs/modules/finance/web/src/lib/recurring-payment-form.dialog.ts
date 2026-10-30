@@ -1,23 +1,36 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { DatePipe } from '@angular/common';
-import { pickableProjects } from '@pd/web-core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Project, RecurringPayment, RecurringPaymentInput } from '@pd/contracts';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {DatePipe} from '@angular/common';
+import {pickableProjects, withDefaults} from '@pd/web-core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Project, RecurringPayment, RecurringPaymentInput} from '@pd/contracts';
 
 /** The usual lengths of a contract, in months. */
 const TERMS = [6, 12, 24, 36];
 
 /** January … December, for the month of a yearly payment. */
-const MONTHS = Array.from({ length: 12 }, (_, index) => ({
+const MONTHS = Array.from({length: 12}, (_, index) => ({
   value: index + 1,
   date: new Date(2000, index, 1),
 }));
@@ -28,7 +41,7 @@ export interface RecurringPaymentFormData {
   draft?: Partial<RecurringPaymentInput>;
   projects: Project[];
   categories: string[];
-  defaults: { currency: string; projectId: string | null };
+  defaults: {currency: string; projectId: string | null};
 }
 
 @Component({
@@ -48,7 +61,10 @@ export interface RecurringPaymentFormData {
   ],
   template: `
     <h2 mat-dialog-title>
-      {{ (data.payment ? 'finance.recurring.edit' : 'finance.recurring.add') | transloco }}
+      {{
+        (data.payment ? 'finance.recurring.edit' : 'finance.recurring.add')
+          | transloco
+      }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
@@ -65,7 +81,13 @@ export interface RecurringPaymentFormData {
         <div class="row">
           <mat-form-field>
             <mat-label>{{ 'finance.amount' | transloco }}</mat-label>
-            <input matInput type="number" min="0.01" step="0.01" formControlName="amount" />
+            <input
+              matInput
+              type="number"
+              min="0.01"
+              step="0.01"
+              formControlName="amount"
+            />
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'finance.currency' | transloco }}</mat-label>
@@ -77,37 +99,61 @@ export interface RecurringPaymentFormData {
           <mat-form-field>
             <mat-label>{{ 'finance.recurring.period' | transloco }}</mat-label>
             <mat-select formControlName="period">
-              <mat-option value="month">{{ 'finance.recurring.monthly' | transloco }}</mat-option>
-              <mat-option value="year">{{ 'finance.recurring.yearly' | transloco }}</mat-option>
+              <mat-option value="month">{{
+                'finance.recurring.monthly' | transloco
+              }}</mat-option>
+              <mat-option value="year">{{
+                'finance.recurring.yearly' | transloco
+              }}</mat-option>
             </mat-select>
           </mat-form-field>
           @if (period() === 'year') {
             <mat-form-field>
-              <mat-label>{{ 'finance.recurring.monthOfYear' | transloco }}</mat-label>
+              <mat-label>{{
+                'finance.recurring.monthOfYear' | transloco
+              }}</mat-label>
               <mat-select formControlName="monthOfYear">
                 @for (month of months; track month.value) {
-                  <mat-option [value]="month.value">{{ month.date | date: 'LLLL' }}</mat-option>
+                  <mat-option [value]="month.value">{{
+                    month.date | date: 'LLLL'
+                  }}</mat-option>
                 }
               </mat-select>
             </mat-form-field>
           } @else {
             <mat-form-field>
-              <mat-label>{{ 'finance.recurring.trialEndsOn' | transloco }}</mat-label>
+              <mat-label>{{
+                'finance.recurring.trialEndsOn' | transloco
+              }}</mat-label>
               <input matInput type="date" formControlName="trialEndsOn" />
-              <mat-hint>{{ 'finance.recurring.trialHint' | transloco }}</mat-hint>
+              <mat-hint>{{
+                'finance.recurring.trialHint' | transloco
+              }}</mat-hint>
             </mat-form-field>
           }
         </div>
 
         <div class="row">
           <mat-form-field>
-            <mat-label>{{ 'finance.recurring.dayOfMonth' | transloco }}</mat-label>
-            <input matInput type="number" min="1" max="31" formControlName="dayOfMonth" />
+            <mat-label>{{
+              'finance.recurring.dayOfMonth' | transloco
+            }}</mat-label>
+            <input
+              matInput
+              type="number"
+              min="1"
+              max="31"
+              formControlName="dayOfMonth"
+            />
             <mat-hint>{{ 'finance.recurring.dayHint' | transloco }}</mat-hint>
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'finance.category' | transloco }}</mat-label>
-            <input matInput formControlName="category" [matAutocomplete]="categoryList" />
+            <input
+              matInput
+              formControlName="category"
+              [matAutocomplete]="categoryList"
+            />
             <mat-autocomplete #categoryList>
               @for (category of data.categories; track category) {
                 <mat-option [value]="category">{{ category }}</mat-option>
@@ -120,7 +166,9 @@ export interface RecurringPaymentFormData {
           <mat-label>{{ 'finance.wallet' | transloco }}</mat-label>
           <mat-select formControlName="projectId">
             <!-- "Personal" = empty string: mat-select treats null as no selection. -->
-            <mat-option value="">{{ 'finance.scope.personal' | transloco }}</mat-option>
+            <mat-option value="">{{
+              'finance.scope.personal' | transloco
+            }}</mat-option>
             @for (project of projects; track project.id) {
               <mat-option [value]="project.id">{{ project.name }}</mat-option>
             }
@@ -132,37 +180,65 @@ export interface RecurringPaymentFormData {
         }}</mat-slide-toggle>
 
         <!-- Rent, the internet, insurance: the terms give the last day to give notice. -->
-        <mat-slide-toggle [checked]="hasContract()" (change)="hasContract.set($event.checked)">{{
-          'finance.contract.has' | transloco
-        }}</mat-slide-toggle>
+        <mat-slide-toggle
+          [checked]="hasContract()"
+          (change)="hasContract.set($event.checked)"
+          >{{ 'finance.contract.has' | transloco }}</mat-slide-toggle
+        >
         @if (hasContract()) {
           <div class="contract">
             <div class="row">
               <mat-form-field>
-                <mat-label>{{ 'finance.contract.months' | transloco }}</mat-label>
+                <mat-label>{{
+                  'finance.contract.months' | transloco
+                }}</mat-label>
                 <mat-select formControlName="contractMonths">
                   @for (term of terms; track term) {
                     <mat-option [value]="term">{{
-                      'finance.contract.monthsValue' | transloco: { count: term }
+                      'finance.contract.monthsValue' | transloco: {count: term}
                     }}</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
               <mat-form-field>
-                <mat-label>{{ 'finance.contract.startedOn' | transloco }}</mat-label>
-                <input matInput type="date" formControlName="contractStartedOn" />
-                <mat-hint>{{ 'finance.contract.startedHint' | transloco }}</mat-hint>
+                <mat-label>{{
+                  'finance.contract.startedOn' | transloco
+                }}</mat-label>
+                <input
+                  matInput
+                  type="date"
+                  formControlName="contractStartedOn"
+                />
+                <mat-hint>{{
+                  'finance.contract.startedHint' | transloco
+                }}</mat-hint>
               </mat-form-field>
             </div>
             <div class="row">
               <mat-form-field>
-                <mat-label>{{ 'finance.contract.noticeDays' | transloco }}</mat-label>
-                <input matInput type="number" min="0" max="365" formControlName="noticeDays" />
-                <mat-hint>{{ 'finance.contract.noticeHint' | transloco }}</mat-hint>
+                <mat-label>{{
+                  'finance.contract.noticeDays' | transloco
+                }}</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  min="0"
+                  max="365"
+                  formControlName="noticeDays"
+                />
+                <mat-hint>{{
+                  'finance.contract.noticeHint' | transloco
+                }}</mat-hint>
               </mat-form-field>
               <mat-form-field>
-                <mat-label>{{ 'finance.contract.priceLockedUntil' | transloco }}</mat-label>
-                <input matInput type="date" formControlName="priceLockedUntil" />
+                <mat-label>{{
+                  'finance.contract.priceLockedUntil' | transloco
+                }}</mat-label>
+                <input
+                  matInput
+                  type="date"
+                  formControlName="priceLockedUntil"
+                />
               </mat-form-field>
             </div>
             <mat-slide-toggle formControlName="autoRenews">{{
@@ -208,7 +284,9 @@ export class RecurringPaymentFormDialog {
   /** Closed projects are not offered, but the one the record already has stays. */
   protected readonly projects = pickableProjects(
     this.data.projects,
-    (this.data.payment ? this.data.payment.projectId : this.data.defaults.projectId) ?? null,
+    (this.data.payment
+      ? this.data.payment.projectId
+      : this.data.defaults.projectId) ?? null,
   );
   private readonly dialogRef = inject(
     MatDialogRef<RecurringPaymentFormDialog, RecurringPaymentInput>,
@@ -217,36 +295,55 @@ export class RecurringPaymentFormDialog {
   protected readonly months = MONTHS;
   protected readonly terms = TERMS;
   protected readonly hasContract = signal(
-    !!this.data.payment?.contractMonths || !!this.data.payment?.priceLockedUntil,
+    !!this.data.payment?.contractMonths ||
+      !!this.data.payment?.priceLockedUntil,
   );
-  private readonly initial = this.data.payment ?? this.data.draft ?? null;
+  /** The payment being edited, else a suggested one, with every field's default filled in. */
+  private readonly initial = withDefaults(
+    this.data.payment ?? this.data.draft,
+    {
+      name: '',
+      period: 'month' as 'month' | 'year',
+      monthOfYear: new Date().getMonth() + 1,
+      trialEndsOn: '',
+      amount: null as number | null,
+      currency: this.data.defaults.currency,
+      category: '',
+      dayOfMonth: 1,
+      isActive: true,
+      contractMonths: 12 as number | null,
+      contractStartedOn: '',
+      noticeDays: 30 as number | null,
+      autoRenews: true,
+      priceLockedUntil: '',
+    },
+  );
   protected readonly form = inject(NonNullableFormBuilder).group({
-    name: [this.initial?.name ?? '', Validators.required],
-    period: [(this.initial?.period ?? 'month') as 'month' | 'year'],
-    monthOfYear: [this.initial?.monthOfYear ?? new Date().getMonth() + 1],
-    trialEndsOn: [this.initial?.trialEndsOn ?? ''],
-    amount: [
-      this.initial?.amount ?? (null as number | null),
-      [Validators.required, Validators.min(0.01)],
-    ],
+    name: [this.initial.name, Validators.required],
+    period: [this.initial.period],
+    monthOfYear: [this.initial.monthOfYear],
+    trialEndsOn: [this.initial.trialEndsOn],
+    amount: [this.initial.amount, [Validators.required, Validators.min(0.01)]],
     currency: [
-      this.initial?.currency ?? this.data.defaults.currency,
+      this.initial.currency,
       [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)],
     ],
-    category: [this.initial?.category ?? '', Validators.required],
+    category: [this.initial.category, Validators.required],
     dayOfMonth: [
-      this.initial?.dayOfMonth ?? 1,
+      this.initial.dayOfMonth,
       [Validators.required, Validators.min(1), Validators.max(31)],
     ],
     projectId: [
-      (this.data.payment ? this.data.payment.projectId : this.data.defaults.projectId) ?? '',
+      (this.data.payment
+        ? this.data.payment.projectId
+        : this.data.defaults.projectId) ?? '',
     ],
-    isActive: [this.initial?.isActive ?? true],
-    contractMonths: [this.initial?.contractMonths ?? (12 as number | null)],
-    contractStartedOn: [this.initial?.contractStartedOn ?? ''],
-    noticeDays: [this.initial?.noticeDays ?? (30 as number | null)],
-    autoRenews: [this.initial?.autoRenews ?? true],
-    priceLockedUntil: [this.initial?.priceLockedUntil ?? ''],
+    isActive: [this.initial.isActive],
+    contractMonths: [this.initial.contractMonths],
+    contractStartedOn: [this.initial.contractStartedOn],
+    noticeDays: [this.initial.noticeDays],
+    autoRenews: [this.initial.autoRenews],
+    priceLockedUntil: [this.initial.priceLockedUntil],
   });
   protected readonly period = toSignal(this.form.controls.period.valueChanges, {
     initialValue: this.form.controls.period.value,

@@ -1,5 +1,5 @@
-import { randomBytes } from 'node:crypto';
-import { validateEnv } from './env';
+import {randomBytes} from 'node:crypto';
+import {validateEnv} from './env';
 
 // Made at run time: a literal that looks like a key would be taken for one by secret scanners.
 const random = () => randomBytes(32).toString('hex');
@@ -28,19 +28,34 @@ describe('validateEnv', () => {
   });
 
   it('refuses to start without the secrets or with short ones', () => {
-    expect(() => validateEnv({ DATABASE_URL: valid.DATABASE_URL })).toThrow(/JWT_SECRET/);
-    expect(() => validateEnv({ ...valid, ENCRYPTION_KEY: 'short' })).toThrow(/32 characters/);
+    expect(() => validateEnv({DATABASE_URL: valid.DATABASE_URL})).toThrow(
+      /JWT_SECRET/,
+    );
+    expect(() => validateEnv({...valid, ENCRYPTION_KEY: 'short'})).toThrow(
+      /32 characters/,
+    );
   });
 
   it('refuses the placeholders of .env.example: they are public', () => {
     const example = 'change-me-to-a-long-random-string-of-32-chars';
-    expect(() => validateEnv({ ...valid, JWT_SECRET: example })).toThrow(/placeholder/);
+    expect(() => validateEnv({...valid, JWT_SECRET: example})).toThrow(
+      /placeholder/,
+    );
     expect(() =>
-      validateEnv({ ...valid, ENCRYPTION_KEY: 'change-me-to-another-long-random-string' }),
+      validateEnv({
+        ...valid,
+        ENCRYPTION_KEY: 'change-me-to-another-long-random-string',
+      }),
     ).toThrow(/placeholder/);
-    expect(() => validateEnv({ ...valid, JWT_SECRET: 'a'.repeat(40) })).toThrow(/placeholder/);
+    expect(() => validateEnv({...valid, JWT_SECRET: 'a'.repeat(40)})).toThrow(
+      /placeholder/,
+    );
     expect(() =>
-      validateEnv({ ...valid, ADMIN_EMAIL: 'me@example.com', ADMIN_PASSWORD: 'change-me-please' }),
+      validateEnv({
+        ...valid,
+        ADMIN_EMAIL: 'me@example.com',
+        ADMIN_PASSWORD: 'change-me-please',
+      }),
     ).toThrow(/ADMIN_PASSWORD/);
   });
 });

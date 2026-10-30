@@ -1,5 +1,15 @@
-import { AccountRepo, RepoIssue, RepoSnapshot, RepoSource } from '../open-source/repo-source';
-import { GitlabClient, projectPath, RawGitlabProject, RawGitlabUser } from './gitlab.client';
+import {
+  AccountRepo,
+  RepoIssue,
+  RepoSnapshot,
+  RepoSource,
+} from '../open-source/repo-source';
+import {
+  GitlabClient,
+  projectPath,
+  RawGitlabProject,
+  RawGitlabUser,
+} from './gitlab.client';
 
 const NEW_ITEMS = '30';
 
@@ -12,11 +22,18 @@ export class GitlabRepoSource implements RepoSource {
   /** The projects the user is a member of: their own and those of their groups. */
   async listAccount(): Promise<AccountRepo[]> {
     const me = await this.gitlab.get<RawGitlabUser>('/user');
-    const projects = await this.gitlab.all<RawGitlabProject>('/projects', { membership: 'true' });
+    const projects = await this.gitlab.all<RawGitlabProject>('/projects', {
+      membership: 'true',
+    });
     const repos: AccountRepo[] = [];
     for (const project of projects) {
-      const own = project.namespace.kind === 'user' && project.namespace.path === me?.username;
-      repos.push({ ...(await this.snapshot(project)), relation: own ? 'owner' : 'organization' });
+      const own =
+        project.namespace.kind === 'user' &&
+        project.namespace.path === me?.username;
+      repos.push({
+        ...(await this.snapshot(project)),
+        relation: own ? 'owner' : 'organization',
+      });
     }
     return repos;
   }
@@ -24,17 +41,22 @@ export class GitlabRepoSource implements RepoSource {
   async getMany(fullNames: string[]): Promise<(RepoSnapshot | null)[]> {
     const found: (RepoSnapshot | null)[] = [];
     for (const fullName of fullNames) {
-      const project = await this.gitlab.get<RawGitlabProject>(projectPath(fullName));
+      const project = await this.gitlab.get<RawGitlabProject>(
+        projectPath(fullName),
+      );
       found.push(project ? await this.snapshot(project) : null);
     }
     return found;
   }
 
   async listCreatedSince(fullName: string, since: Date): Promise<RepoIssue[]> {
-    const params = { created_after: since.toISOString(), per_page: NEW_ITEMS };
+    const params = {created_after: since.toISOString(), per_page: NEW_ITEMS};
     const [issues, mergeRequests] = await Promise.all([
       this.gitlab.page<RawItem>(`${projectPath(fullName)}/issues`, params),
-      this.gitlab.page<RawItem>(`${projectPath(fullName)}/merge_requests`, params),
+      this.gitlab.page<RawItem>(
+        `${projectPath(fullName)}/merge_requests`,
+        params,
+      ),
     ]);
     const item = (raw: RawItem, isPullRequest: boolean): RepoIssue => ({
       title: raw.title,
@@ -44,8 +66,8 @@ export class GitlabRepoSource implements RepoSource {
       isPullRequest,
     });
     return [
-      ...issues.rows.map((raw) => item(raw, false)),
-      ...mergeRequests.rows.map((raw) => item(raw, true)),
+      ...issues.rows.map(raw => item(raw, false)),
+      ...mergeRequests.rows.map(raw => item(raw, true)),
     ];
   }
 
@@ -56,12 +78,17 @@ export class GitlabRepoSource implements RepoSource {
   private async snapshot(project: RawGitlabProject): Promise<RepoSnapshot> {
     const path = `/projects/${project.id}`;
     const [mergeRequests, releases, languages] = await Promise.all([
-      this.gitlab.page<unknown>(`${path}/merge_requests`, { state: 'opened', per_page: '1' }),
-      this.gitlab.page<RawRelease>(`${path}/releases`, { per_page: '1' }),
+      this.gitlab.page<unknown>(`${path}/merge_requests`, {
+        state: 'opened',
+        per_page: '1',
+      }),
+      this.gitlab.page<RawRelease>(`${path}/releases`, {per_page: '1'}),
       this.gitlab.get<Record<string, number>>(`${path}/languages`),
     ]);
     const release = releases.rows[0];
-    const [language] = Object.entries(languages ?? {}).sort((a, b) => b[1] - a[1])[0] ?? [null];
+    const [language] = Object.entries(languages ?? {}).sort(
+      (a, b) => b[1] - a[1],
+    )[0] ?? [null];
     return {
       externalId: String(project.id),
       fullName: project.path_with_namespace,
@@ -95,11 +122,11 @@ interface RawItem {
   title: string;
   web_url: string;
   created_at: string;
-  author: { username: string } | null;
+  author: {username: string} | null;
 }
 
 interface RawRelease {
   tag_name: string;
   released_at: string | null;
-  _links?: { self?: string };
+  _links?: {self?: string};
 }

@@ -1,9 +1,9 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, SchedulerService } from '@pd/api-core';
-import { users } from '@pd/api-core/schema';
-import { asc, gt } from 'drizzle-orm';
-import { TelemetryService } from './telemetry.service';
-import { WorkstateService } from './workstate.service';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, SchedulerService} from '@pd/api-core';
+import {users} from '@pd/api-core/schema';
+import {asc, gt} from 'drizzle-orm';
+import {TelemetryService} from './telemetry.service';
+import {WorkstateService} from './workstate.service';
 
 @Injectable()
 export class ActivityContextJobs implements OnModuleInit {
@@ -26,7 +26,7 @@ export class ActivityContextJobs implements OnModuleInit {
     let after: string | undefined;
     for (;;) {
       const batch = await this.db
-        .select({ id: users.id })
+        .select({id: users.id})
         .from(users)
         .where(after ? gt(users.id, after) : undefined)
         .orderBy(asc(users.id))

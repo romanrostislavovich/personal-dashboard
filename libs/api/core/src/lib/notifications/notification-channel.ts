@@ -1,5 +1,5 @@
-import type { TelegramMessageRef } from './notifications.schema';
-import type { UserRow } from '../users/users.schema';
+import type {TelegramMessageRef} from './notifications.schema';
+import type {UserRow} from '../users/users.schema';
 
 /**
  * A button under a notification (Telegram shows it under the message): "Done", "In an hour".
@@ -33,7 +33,7 @@ export interface Notification {
    * certificate checked every hour. Without it a notification with the same text is not sent
    * again within a few minutes (a job run twice).
    */
-  dedupe?: { key: string; minutes: number };
+  dedupe?: {key: string; minutes: number};
   /**
    * Asked for by the user right now (a test): it goes out in their quiet hours too, which hold
    * every other one until morning (see CalmSettings).
@@ -58,7 +58,7 @@ export interface Notification {
 export class DeliveryError extends Error {
   constructor(
     message: string,
-    readonly options: { retryAfterMs?: number; permanent?: boolean } = {},
+    readonly options: {retryAfterMs?: number; permanent?: boolean} = {},
   ) {
     super(message);
   }
@@ -78,7 +78,10 @@ export interface NotificationChannel {
   readonly durable: boolean;
   /** Whether the channel can deliver to this user (for example, whether Telegram is linked). */
   isEnabledFor(user: UserRow): boolean;
-  send(user: UserRow, notification: Notification): Promise<DeliveryReceipt | void>;
+  send(
+    user: UserRow,
+    notification: Notification,
+  ): Promise<DeliveryReceipt | void>;
 }
 
 /** What a channel made of a notification, kept to close it once it is answered elsewhere. */

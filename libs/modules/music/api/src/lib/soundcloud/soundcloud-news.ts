@@ -1,7 +1,8 @@
-import { DateParts, daysBetween, LocalDate, parseLocalDate } from '@pd/contracts';
+import {DateParts, daysBetween, LocalDate, parseLocalDate} from '@pd/contracts';
 
 const PLAY_MILESTONES = [
-  100, 250, 500, 1000, 2500, 5000, 10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000,
+  100, 250, 500, 1000, 2500, 5000, 10_000, 25_000, 50_000, 100_000, 250_000,
+  500_000, 1_000_000,
 ];
 
 /** What happened to a track since the last sync — for a notification. */
@@ -23,16 +24,19 @@ interface Counters {
  * 480 → 1,030 plays is "1,000" (500 is not told separately — the largest is enough).
  */
 export function trackNews(
-  track: { title: string; permalinkUrl: string },
+  track: {title: string; permalinkUrl: string},
   previous: Counters,
   current: Counters,
 ): TrackNews | null {
   const crossed = PLAY_MILESTONES.filter(
-    (milestone) => previous.plays < milestone && current.plays >= milestone,
+    milestone => previous.plays < milestone && current.plays >= milestone,
   );
-  const playsMilestone = crossed.length > 0 ? crossed[crossed.length - 1] : null;
+  const playsMilestone =
+    crossed.length > 0 ? crossed[crossed.length - 1] : null;
   const newComments = Math.max(0, current.comments - previous.comments);
-  return playsMilestone || newComments > 0 ? { ...track, playsMilestone, newComments } : null;
+  return playsMilestone || newComments > 0
+    ? {...track, playsMilestone, newComments}
+    : null;
 }
 
 /**
@@ -40,7 +44,7 @@ export function trackNews(
  * shorter, it is counted from the earliest point.
  */
 export function growth(
-  history: { day: LocalDate; value: number }[],
+  history: {day: LocalDate; value: number}[],
   current: number,
   today: DateParts,
   days: number,
@@ -50,7 +54,9 @@ export function growth(
   }
   const sorted = [...history].sort((a, b) => a.day.localeCompare(b.day));
   const baseline =
-    [...sorted].reverse().find((point) => daysBetween(parseLocalDate(point.day), today) >= days) ??
+    [...sorted]
+      .reverse()
+      .find(point => daysBetween(parseLocalDate(point.day), today) >= days) ??
     sorted[0];
   return current - baseline.value;
 }

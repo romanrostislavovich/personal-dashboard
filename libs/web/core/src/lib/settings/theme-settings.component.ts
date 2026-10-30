@@ -1,14 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSliderModule } from '@angular/material/slider';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {MatSliderModule} from '@angular/material/slider';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {
   THEME_DENSITIES,
   THEME_FONTS,
@@ -18,8 +24,8 @@ import {
   THEME_RADIUS,
   ThemePreset,
 } from '@pd/contracts';
-import { LayoutService } from '../layout/layout.service';
-import { ThemeService } from '../theme/theme.service';
+import {LayoutService} from '../layout/layout.service';
+import {ThemeService} from '../theme/theme.service';
 
 /**
  * The look of the dashboard. Every change shows at once and stays on this device; "apply
@@ -45,16 +51,20 @@ import { ThemeService } from '../theme/theme.service';
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>palette</mat-icon>
-        <mat-card-title>{{ 'core.settings.theme.colors' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'core.settings.theme.colors' | transloco
+        }}</mat-card-title>
       </mat-card-header>
       <mat-card-content class="fields">
         <div class="field">
-          <span class="label">{{ 'core.settings.theme.mode' | transloco }}</span>
+          <span class="label">{{
+            'core.settings.theme.mode' | transloco
+          }}</span>
           <mat-button-toggle-group
             hideSingleSelectionIndicator
             [value]="t.mode"
             [attr.aria-label]="'core.settings.theme.mode' | transloco"
-            (change)="theme.update({ mode: $event.value })"
+            (change)="theme.update({mode: $event.value})"
           >
             @for (mode of modes; track mode) {
               <mat-button-toggle [value]="mode">
@@ -65,7 +75,9 @@ import { ThemeService } from '../theme/theme.service';
         </div>
 
         <div class="field">
-          <span class="label">{{ 'core.settings.theme.accent' | transloco }}</span>
+          <span class="label">{{
+            'core.settings.theme.accent' | transloco
+          }}</span>
           <div class="swatches" role="radiogroup">
             @for (preset of presets; track preset) {
               <button
@@ -74,7 +86,9 @@ import { ThemeService } from '../theme/theme.service';
                 role="radio"
                 [class.selected]="!t.accent && t.preset === preset"
                 [attr.aria-checked]="!t.accent && t.preset === preset"
-                [attr.aria-label]="'core.settings.theme.presets.' + preset | transloco"
+                [attr.aria-label]="
+                  'core.settings.theme.presets.' + preset | transloco
+                "
                 [title]="'core.settings.theme.presets.' + preset | transloco"
                 [style.background]="colors[preset]"
                 (click)="pick(preset)"
@@ -98,10 +112,16 @@ import { ThemeService } from '../theme/theme.service';
           </div>
         </div>
 
-        <mat-slide-toggle [checked]="t.black" (change)="theme.update({ black: $event.checked })">
+        <mat-slide-toggle
+          [checked]="t.black"
+          (change)="theme.update({black: $event.checked})"
+        >
           {{ 'core.settings.theme.black' | transloco }}
         </mat-slide-toggle>
-        <mat-slide-toggle [checked]="t.glow" (change)="theme.update({ glow: $event.checked })">
+        <mat-slide-toggle
+          [checked]="t.glow"
+          (change)="theme.update({glow: $event.checked})"
+        >
           {{ 'core.settings.theme.glow' | transloco }}
         </mat-slide-toggle>
       </mat-card-content>
@@ -110,12 +130,17 @@ import { ThemeService } from '../theme/theme.service';
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>format_size</mat-icon>
-        <mat-card-title>{{ 'core.settings.theme.shape' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'core.settings.theme.shape' | transloco
+        }}</mat-card-title>
       </mat-card-header>
       <mat-card-content class="fields">
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'core.settings.theme.font' | transloco }}</mat-label>
-          <mat-select [value]="t.font" (selectionChange)="theme.update({ font: $event.value })">
+          <mat-select
+            [value]="t.font"
+            (selectionChange)="theme.update({font: $event.value})"
+          >
             @for (font of fonts; track font) {
               <mat-option [value]="font">
                 {{ 'core.settings.theme.fonts.' + font | transloco }}
@@ -125,12 +150,14 @@ import { ThemeService } from '../theme/theme.service';
         </mat-form-field>
 
         <div class="field">
-          <span class="label">{{ 'core.settings.theme.density' | transloco }}</span>
+          <span class="label">{{
+            'core.settings.theme.density' | transloco
+          }}</span>
           <mat-button-toggle-group
             hideSingleSelectionIndicator
             [value]="t.density"
             [attr.aria-label]="'core.settings.theme.density' | transloco"
-            (change)="theme.update({ density: $event.value })"
+            (change)="theme.update({density: $event.value})"
           >
             @for (density of densities; track density) {
               <mat-button-toggle [value]="density">
@@ -149,7 +176,7 @@ import { ThemeService } from '../theme/theme.service';
               matSliderThumb
               [value]="t.radius"
               [attr.aria-label]="'core.settings.theme.radius' | transloco"
-              (valueChange)="theme.update({ radius: $event })"
+              (valueChange)="theme.update({radius: $event})"
             />
           </mat-slider>
         </div>
@@ -159,14 +186,22 @@ import { ThemeService } from '../theme/theme.service';
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>devices</mat-icon>
-        <mat-card-title>{{ 'core.settings.theme.devices' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'core.settings.theme.devices' | transloco
+        }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <p>{{ (isOwn() ? 'core.settings.theme.own' : status()) | transloco }}</p>
+        <p>
+          {{ (isOwn() ? 'core.settings.theme.own' : status()) | transloco }}
+        </p>
         <p class="hint">{{ 'core.settings.theme.devicesHint' | transloco }}</p>
       </mat-card-content>
       <mat-card-actions>
-        <button matButton="filled" (click)="applyEverywhere()" [disabled]="busy()">
+        <button
+          matButton="filled"
+          (click)="applyEverywhere()"
+          [disabled]="busy()"
+        >
           {{ 'core.settings.theme.applyEverywhere' | transloco }}
         </button>
         @if (isOwn()) {
@@ -259,7 +294,9 @@ export class ThemeSettingsComponent {
   protected readonly busy = signal(false);
 
   /** This device differs from the account in the theme or in the layout. */
-  protected readonly isOwn = computed(() => this.theme.isOwn() || this.layout.isOwn());
+  protected readonly isOwn = computed(
+    () => this.theme.isOwn() || this.layout.isOwn(),
+  );
 
   /** What a device without its own look shows. */
   protected readonly status = computed(() =>
@@ -274,11 +311,11 @@ export class ThemeSettingsComponent {
   }
 
   protected pick(preset: ThemePreset): void {
-    this.theme.update({ preset, accent: null });
+    this.theme.update({preset, accent: null});
   }
 
   protected pickCustom(accent: string): void {
-    this.theme.update({ accent });
+    this.theme.update({accent});
   }
 
   protected async applyEverywhere(): Promise<void> {
@@ -286,13 +323,21 @@ export class ThemeSettingsComponent {
     try {
       await this.theme.applyEverywhere();
       await this.layout.applyEverywhere();
-      this.snackBar.open(this.transloco.translate('core.settings.theme.applied'), 'OK', {
-        duration: 4000,
-      });
+      this.snackBar.open(
+        this.transloco.translate('core.settings.theme.applied'),
+        'OK',
+        {
+          duration: 4000,
+        },
+      );
     } catch {
-      this.snackBar.open(this.transloco.translate('core.settings.theme.notApplied'), 'OK', {
-        duration: 6000,
-      });
+      this.snackBar.open(
+        this.transloco.translate('core.settings.theme.notApplied'),
+        'OK',
+        {
+          duration: 6000,
+        },
+      );
     } finally {
       this.busy.set(false);
     }

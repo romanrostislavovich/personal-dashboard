@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { FoundProblem } from './security-source';
-import { SecurityMessages } from './security.messages';
+import {z} from 'zod';
+import {FoundProblem} from './security-source';
+import {SecurityMessages} from './security.messages';
 
 const flag = z.boolean().nullable().catch(null);
 const count = z.number().int().min(0).nullable().catch(null);
@@ -21,11 +21,20 @@ export const hostReportSchema = z.object({
     failed24h: count,
     /** The last sign-ins that worked. */
     accepted: z
-      .array(z.object({ user: z.string().max(60), ip: z.string().max(60), at: z.string().max(40) }))
+      .array(
+        z.object({
+          user: z.string().max(60),
+          ip: z.string().max(60),
+          at: z.string().max(40),
+        }),
+      )
       .max(20)
       .catch([]),
   }),
-  firewall: z.object({ active: flag, tool: z.string().max(40).nullable().catch(null) }),
+  firewall: z.object({
+    active: flag,
+    tool: z.string().max(40).nullable().catch(null),
+  }),
   /** Sockets listening on other than the loopback address. */
   listening: z
     .array(
@@ -56,7 +65,13 @@ const STALE_HOURS = 6;
  * What a web server with SSH is expected to have open; 68/udp is the DHCP client of the
  * server's own network interface, not a service.
  */
-const EXPECTED_PORTS = new Set(['tcp/22', 'tcp/80', 'tcp/443', 'udp/443', 'udp/68']);
+const EXPECTED_PORTS = new Set([
+  'tcp/22',
+  'tcp/80',
+  'tcp/443',
+  'udp/443',
+  'udp/68',
+]);
 const SSH_FAILURES_NOTICED = 100;
 const DISK_HIGH = 90;
 const DISK_MEDIUM = 80;
@@ -71,26 +86,43 @@ export function hostProblems(
   const hours = Math.floor((now.getTime() - Date.parse(report.at)) / 3_600_000);
   if (hours >= STALE_HOURS) {
     // What follows is about a server as it was: only the staleness is reported.
-    return [{ key: 'host.report-stale', severity: 'medium', ...text.hostStale(hours) }];
+    return [
+      {key: 'host.report-stale', severity: 'medium', ...text.hostStale(hours)},
+    ];
   }
 
-  const { ssh, firewall, updates } = report;
+  const {ssh, firewall} = report;
   if (ssh.passwordAuthentication) {
-    problems.push({ key: 'host.ssh-password', severity: 'high', ...text.sshPassword() });
+    problems.push({
+      key: 'host.ssh-password',
+      severity: 'high',
+      ...text.sshPassword(),
+    });
   }
   if (ssh.permitRootLogin === 'yes') {
-    problems.push({ key: 'host.ssh-root', severity: 'medium', ...text.sshRoot() });
+    problems.push({
+      key: 'host.ssh-root',
+      severity: 'medium',
+      ...text.sshRoot(),
+    });
   }
   if (firewall.active === false) {
-    problems.push({ key: 'host.firewall-off', severity: 'high', ...text.firewallOff() });
+    problems.push({
+      key: 'host.firewall-off',
+      severity: 'high',
+      ...text.firewallOff(),
+    });
   }
   const unexpected = [
     ...new Set(
       report.listening
-        .filter((socket) => !EXPECTED_PORTS.has(`${socket.protocol}/${socket.port}`))
+        .filter(
+          socket => !EXPECTED_PORTS.has(`${socket.protocol}/${socket.port}`),
+        )
         .map(
-          (socket) =>
-            `${socket.port}/${socket.protocol}` + (socket.process ? ` (${socket.process})` : ''),
+          socket =>
+            `${socket.port}/${socket.protocol}` +
+            (socket.process ? ` (${socket.process})` : ''),
         ),
     ),
   ];
@@ -102,13 +134,27 @@ export function hostProblems(
       ...text.openPorts(unexpected),
     });
   }
-  if ((ssh.failed24h ?? 0) >= SSH_FAILURES_NOTICED && report.fail2ban === false) {
+  if (
+    (ssh.failed24h ?? 0) >= SSH_FAILURES_NOTICED &&
+    report.fail2ban === false
+  ) {
     problems.push({
       key: 'host.ssh-failures',
       severity: ssh.passwordAuthentication ? 'medium' : 'info',
       ...text.sshFailures(ssh.failed24h ?? 0),
     });
   }
+  problems.push(...upkeepProblems(report, text));
+  return problems;
+}
+
+/** The server's upkeep: its updates, a reboot it waits for, its disk. */
+function upkeepProblems(
+  report: HostReport,
+  text: SecurityMessages,
+): FoundProblem[] {
+  const problems: FoundProblem[] = [];
+  const {updates} = report;
   if ((updates.security ?? 0) > 0) {
     problems.push({
       key: 'host.updates-pending',
@@ -117,10 +163,18 @@ export function hostProblems(
     });
   }
   if (updates.rebootRequired) {
-    problems.push({ key: 'host.reboot-required', severity: 'low', ...text.rebootRequired() });
+    problems.push({
+      key: 'host.reboot-required',
+      severity: 'low',
+      ...text.rebootRequired(),
+    });
   }
   if (updates.automatic === false) {
-    problems.push({ key: 'host.updates-manual', severity: 'low', ...text.updatesManual() });
+    problems.push({
+      key: 'host.updates-manual',
+      severity: 'low',
+      ...text.updatesManual(),
+    });
   }
   const disk = report.diskUsedPercent;
   if (disk !== null && disk >= DISK_MEDIUM) {

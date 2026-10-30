@@ -7,15 +7,23 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Achievement, ACHIEVEMENT_RARITIES, AchievementRarity } from '@pd/contracts';
-import { EmptyStateComponent, LevelCardComponent, RealtimeClient } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { AchievementCardComponent } from './achievement-card.component';
-import { AchievementsApi } from './achievements.api';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {
+  Achievement,
+  ACHIEVEMENT_RARITIES,
+  AchievementRarity,
+} from '@pd/contracts';
+import {
+  EmptyStateComponent,
+  LevelCardComponent,
+  RealtimeClient,
+} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {AchievementCardComponent} from './achievement-card.component';
+import {AchievementsApi} from './achievements.api';
 
 type Filter = 'all' | 'unlocked' | 'locked';
 
@@ -53,7 +61,8 @@ const RECENT_COUNT = 4;
       </mat-button-toggle-group>
       <!-- After the rules of achievements change: take back what is not earned today. -->
       <button matButton [disabled]="recounting()" (click)="recount()">
-        <mat-icon>restart_alt</mat-icon> {{ 'achievements.recount' | transloco }}
+        <mat-icon>restart_alt</mat-icon>
+        {{ 'achievements.recount' | transloco }}
       </button>
     </header>
 
@@ -69,7 +78,9 @@ const RECENT_COUNT = 4;
           [attr.aria-pressed]="rarity() === stat.rarity"
           (click)="toggleRarity(stat.rarity)"
         >
-          <span class="rarity-name">{{ 'achievements.rarity.' + stat.rarity | transloco }}</span>
+          <span class="rarity-name">{{
+            'achievements.rarity.' + stat.rarity | transloco
+          }}</span>
           <span class="rarity-count">
             {{ stat.unlocked }}<span class="of">/{{ stat.total }}</span>
           </span>
@@ -93,7 +104,9 @@ const RECENT_COUNT = 4;
         <!-- A section is named like the module in the menu: translation key '<module>.title'. -->
         <h2 class="group-title">
           {{ group.titleKey | transloco }}
-          <span class="group-count">{{ group.unlocked }} / {{ group.total }}</span>
+          <span class="group-count"
+            >{{ group.unlocked }} / {{ group.total }}</span
+          >
         </h2>
         <div class="grid">
           @for (achievement of group.items; track achievement.id) {
@@ -107,8 +120,13 @@ const RECENT_COUNT = 4;
         [title]="'achievements.emptyTitle' | transloco"
         [text]="'achievements.empty' | transloco"
       >
-        <button matButton="filled" [disabled]="recounting()" (click)="recount()">
-          <mat-icon>refresh</mat-icon> {{ 'achievements.recountNow' | transloco }}
+        <button
+          matButton="filled"
+          [disabled]="recounting()"
+          (click)="recount()"
+        >
+          <mat-icon>refresh</mat-icon>
+          {{ 'achievements.recountNow' | transloco }}
         </button>
       </pd-empty-state>
     }
@@ -212,16 +230,20 @@ export class AchievementsPage {
   protected readonly rarity = signal<AchievementRarity | null>(null);
 
   protected readonly rarityStats = computed(() =>
-    ACHIEVEMENT_RARITIES.map((rarity) => {
-      const items = this.achievements.value().filter((a) => a.rarity === rarity);
-      return { rarity, total: items.length, unlocked: items.filter((a) => a.unlockedAt).length };
+    ACHIEVEMENT_RARITIES.map(rarity => {
+      const items = this.achievements.value().filter(a => a.rarity === rarity);
+      return {
+        rarity,
+        total: items.length,
+        unlocked: items.filter(a => a.unlockedAt).length,
+      };
     }),
   );
 
   protected readonly recent = computed(() =>
     this.achievements
       .value()
-      .filter((a) => a.unlockedAt)
+      .filter(a => a.unlockedAt)
       .sort((a, b) => (b.unlockedAt ?? '').localeCompare(a.unlockedAt ?? ''))
       .slice(0, RECENT_COUNT),
   );
@@ -230,12 +252,16 @@ export class AchievementsPage {
   protected readonly groups = computed(() => {
     const filter = this.filter();
     const rarity = this.rarity();
-    const groups = new Map<string, { all: Achievement[]; visible: Achievement[] }>();
+    const groups = new Map<
+      string,
+      {all: Achievement[]; visible: Achievement[]}
+    >();
     for (const achievement of this.achievements.value()) {
-      const group = groups.get(achievement.module) ?? { all: [], visible: [] };
+      const group = groups.get(achievement.module) ?? {all: [], visible: []};
       group.all.push(achievement);
       const statusMatches =
-        filter === 'all' || (filter === 'unlocked') === Boolean(achievement.unlockedAt);
+        filter === 'all' ||
+        (filter === 'unlocked') === Boolean(achievement.unlockedAt);
       if (statusMatches && (!rarity || achievement.rarity === rarity)) {
         group.visible.push(achievement);
       }
@@ -247,10 +273,11 @@ export class AchievementsPage {
         module,
         // The core's own achievements ('dashboard') are named like the home page: the core's
         // translations live under 'core.', not under the module id.
-        titleKey: module === 'dashboard' ? 'core.dashboard.title' : `${module}.title`,
+        titleKey:
+          module === 'dashboard' ? 'core.dashboard.title' : `${module}.title`,
         items: group.visible,
         total: group.all.length,
-        unlocked: group.all.filter((a) => a.unlockedAt).length,
+        unlocked: group.all.filter(a => a.unlockedAt).length,
       }));
   });
 
@@ -278,6 +305,6 @@ export class AchievementsPage {
   }
 
   protected toggleRarity(rarity: AchievementRarity): void {
-    this.rarity.update((current) => (current === rarity ? null : rarity));
+    this.rarity.update(current => (current === rarity ? null : rarity));
   }
 }

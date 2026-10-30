@@ -12,7 +12,7 @@ import {
   AiPreferences,
   AiSettings,
 } from '@pd/contracts';
-import { ApiClient, apiRequest } from '../api-client';
+import {ApiClient, apiRequest} from '../api-client';
 
 const BASE = '/api/ai';
 
@@ -33,7 +33,8 @@ export function aiApi(api: ApiClient) {
       id
         ? api.put<AiSettings>(`${BASE}/connections/${id}`, input)
         : api.post<AiSettings>(`${BASE}/connections`, input),
-    removeConnection: (id: string) => api.delete<AiSettings>(`${BASE}/connections/${id}`),
+    removeConnection: (id: string) =>
+      api.delete<AiSettings>(`${BASE}/connections/${id}`),
     activateConnection: (id: string) =>
       api.post<AiSettings>(`${BASE}/connections/${id}/activate`, {}),
     /** Modules that give the AI data: the switches of "what the AI sees". */
@@ -44,7 +45,7 @@ export function aiApi(api: ApiClient) {
     actions: () => api.get<AiAction[]>(`${BASE}/actions`),
     /** What the assistant keeps between conversations. */
     memories: () => api.get<AiMemory[]>(`${BASE}/memories`),
-    addMemory: (text: string) => api.post<AiMemory>(`${BASE}/memories`, { text }),
+    addMemory: (text: string) => api.post<AiMemory>(`${BASE}/memories`, {text}),
     removeMemory: (id: string) => api.delete(`${BASE}/memories/${id}`),
 
     /** Search by meaning over the user's history; 400 — no connection makes vectors. */
@@ -52,21 +53,26 @@ export function aiApi(api: ApiClient) {
       api.get<AiRecallHit[]>(
         `${BASE}/recall?q=${encodeURIComponent(question)}${module ? `&module=${encodeURIComponent(module)}` : ''}`,
       ),
-    recallStatus: () => api.get<{ indexed: number }>(`${BASE}/recall/status`),
+    recallStatus: () => api.get<{indexed: number}>(`${BASE}/recall/status`),
     /** Brings the index up to date now (it is also done every hour). */
-    recallIndex: () => api.post<{ indexed: number }>(`${BASE}/recall/index`, {}),
+    recallIndex: () => api.post<{indexed: number}>(`${BASE}/recall/index`, {}),
 
     /** Puts back what one change of the assistant did; 409 — changed again since. */
-    undoAction: (id: string) => api.post<void>(`${BASE}/actions/${id}/undo`, {}),
+    undoAction: (id: string) =>
+      api.post<void>(`${BASE}/actions/${id}/undo`, {}),
 
     /** One message; the server keeps the conversation (shared with Telegram). */
-    chat: (request: AiChatRequest) => api.post<AiChatResponse>(`${BASE}/chat`, request),
+    chat: (request: AiChatRequest) =>
+      api.post<AiChatResponse>(`${BASE}/chat`, request),
     currentConversation: () =>
       api.get<AiConversationDetail | null>(`${BASE}/conversations/current`),
-    conversation: (id: string) => api.get<AiConversationDetail>(`${BASE}/conversations/${id}`),
+    conversation: (id: string) =>
+      api.get<AiConversationDetail>(`${BASE}/conversations/${id}`),
     conversations: () => api.get<AiConversation[]>(`${BASE}/conversations`),
-    startConversation: () => api.post<AiConversationDetail>(`${BASE}/conversations`, {}),
-    removeConversation: (id: string) => api.delete(`${BASE}/conversations/${id}`),
+    startConversation: () =>
+      api.post<AiConversationDetail>(`${BASE}/conversations`, {}),
+    removeConversation: (id: string) =>
+      api.delete(`${BASE}/conversations/${id}`),
 
     /** The server reads the file's text; it goes back with the next chat message. */
     uploadAttachment: (file: Blob, fileName?: string) => {
@@ -83,7 +89,10 @@ export function aiApi(api: ApiClient) {
  * brings a picture of it) stays a text paste: then nothing is returned. A picture from the
  * clipboard is named "image.png" by every browser, so it gets the time it was pasted.
  */
-export function pastedFiles(clipboard: DataTransfer | null, now = new Date()): File[] {
+export function pastedFiles(
+  clipboard: DataTransfer | null,
+  now = new Date(),
+): File[] {
   if (!clipboard || clipboard.getData('text/plain')) {
     return [];
   }
@@ -94,6 +103,6 @@ export function pastedFiles(clipboard: DataTransfer | null, now = new Date()): F
     }
     const time = now.toTimeString().slice(0, 8).replace(/:/g, '-');
     const name = `image-${time}${index ? `-${index + 1}` : ''}${extension}`;
-    return new File([file], name, { type: file.type });
+    return new File([file], name, {type: file.type});
   });
 }

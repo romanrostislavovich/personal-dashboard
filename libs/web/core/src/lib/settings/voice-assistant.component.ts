@@ -1,4 +1,4 @@
-import { DatePipe, TitleCasePipe } from '@angular/common';
+import {DatePipe, TitleCasePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,17 +7,21 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { isMobileApp } from '../mobile/mobile-app';
-import { checkPhoneSensors, PhoneSensorsCheck, VoiceStatus } from '../mobile/phone-sensors';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {isMobileApp} from '../mobile/mobile-app';
+import {
+  checkPhoneSensors,
+  PhoneSensorsCheck,
+  VoiceStatus,
+} from '../mobile/phone-sensors';
 
 type Plugin = NonNullable<PhoneSensorsCheck['plugin']>;
 
@@ -51,8 +55,12 @@ const POLL_MS = 2_000;
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-icon mat-card-avatar>record_voice_over</mat-icon>
-          <mat-card-title>{{ 'core.settings.voice.title' | transloco }}</mat-card-title>
-          <mat-card-subtitle>{{ 'core.settings.voice.hint' | transloco }}</mat-card-subtitle>
+          <mat-card-title>{{
+            'core.settings.voice.title' | transloco
+          }}</mat-card-title>
+          <mat-card-subtitle>{{
+            'core.settings.voice.hint' | transloco
+          }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content class="content">
           @if (unsupported()) {
@@ -63,42 +71,65 @@ const POLL_MS = 2_000;
               [disabled]="busy()"
               (change)="save($event.checked)"
             >
-              {{ 'core.settings.voice.enable' | transloco: { name: s.name | titlecase } }}
+              {{
+                'core.settings.voice.enable'
+                  | transloco: {name: s.name | titlecase}
+              }}
             </mat-slide-toggle>
             @if (!s.microphone) {
-              <p class="warn">{{ 'core.settings.voice.noMicrophone' | transloco }}</p>
+              <p class="warn">
+                {{ 'core.settings.voice.noMicrophone' | transloco }}
+              </p>
             }
             <form class="name" (ngSubmit)="save(s.enabled)">
               <mat-form-field subscriptSizing="dynamic">
-                <mat-label>{{ 'core.settings.voice.name' | transloco }}</mat-label>
-                <input matInput name="name" [(ngModel)]="name" autocomplete="off" />
+                <mat-label>{{
+                  'core.settings.voice.name' | transloco
+                }}</mat-label>
+                <input
+                  matInput
+                  name="name"
+                  [(ngModel)]="name"
+                  autocomplete="off"
+                />
               </mat-form-field>
               <button
                 matButton
                 type="submit"
-                [disabled]="busy() || !name.trim() || name.trim().toLowerCase() === s.name"
+                [disabled]="
+                  busy() || !name.trim() || name.trim().toLowerCase() === s.name
+                "
               >
                 {{ 'core.actions.save' | transloco }}
               </button>
             </form>
             @if (s.known === false) {
               <p class="warn">
-                {{ 'core.settings.voice.unknownName' | transloco: { name: s.name | titlecase } }}
+                {{
+                  'core.settings.voice.unknownName'
+                    | transloco: {name: s.name | titlecase}
+                }}
               </p>
             }
             @if (s.model === 'downloading') {
               <p class="hint">
-                {{ 'core.settings.voice.downloading' | transloco: { progress: s.progress } }}
+                {{
+                  'core.settings.voice.downloading'
+                    | transloco: {progress: s.progress}
+                }}
               </p>
               <mat-progress-bar mode="determinate" [value]="s.progress" />
             } @else if (s.model === 'failed') {
-              <p class="warn">{{ 'core.settings.voice.failed' | transloco }} {{ s.error }}</p>
+              <p class="warn">
+                {{ 'core.settings.voice.failed' | transloco }} {{ s.error }}
+              </p>
             } @else if (s.error) {
               <p class="warn">{{ s.error }}</p>
             }
             @if (s.enabled && s.model === 'ready') {
               <button matButton="tonal" (click)="tryIt()">
-                <mat-icon>mic</mat-icon> {{ 'core.settings.voice.try' | transloco }}
+                <mat-icon>mic</mat-icon>
+                {{ 'core.settings.voice.try' | transloco }}
               </button>
             }
             @if (s.lastQuestion || s.lastAnswer) {
@@ -171,7 +202,10 @@ export class VoiceAssistantComponent implements OnInit {
     // The model downloads in the background: its progress, and the name's check after it.
     this.poll = setInterval(() => {
       const status = this.status();
-      if (status?.model === 'downloading' || (status?.enabled && status.model === 'none')) {
+      if (
+        status?.model === 'downloading' ||
+        (status?.enabled && status.model === 'none')
+      ) {
         void this.read();
       }
     }, POLL_MS);
@@ -183,8 +217,12 @@ export class VoiceAssistantComponent implements OnInit {
     }
     this.busy.set(true);
     try {
-      const name = (this.name.trim() || this.status()?.name || '').toLowerCase();
-      this.status.set(await this.plugin.voiceConfigure({ enabled, name }));
+      const name = (
+        this.name.trim() ||
+        this.status()?.name ||
+        ''
+      ).toLowerCase();
+      this.status.set(await this.plugin.voiceConfigure({enabled, name}));
       this.name = this.status()?.name ?? name;
     } catch {
       // A name of more than one word: the field keeps it, the status stays.

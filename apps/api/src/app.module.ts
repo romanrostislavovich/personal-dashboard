@@ -1,6 +1,9 @@
-import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { ServeStaticModule, ServeStaticModuleOptions } from '@nestjs/serve-static';
+import {Module} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {
+  ServeStaticModule,
+  ServeStaticModuleOptions,
+} from '@nestjs/serve-static';
 import {
   AppConfig,
   CoreModule,
@@ -10,15 +13,18 @@ import {
   MOBILE_DOWNLOADS_PATH,
   MOBILE_UPDATES_PATH,
 } from '@pd/api-core';
-import { ServerResponse } from 'node:http';
-import { resolve } from 'node:path';
-import { enabledModules } from './modules';
+import {ServerResponse} from 'node:http';
+import {resolve} from 'node:path';
+import {enabledModules} from './modules';
 
 /**
  * A folder the apps fetch from: nothing is cached, so an app sees a deploy at once (the code of
  * the desktop app, the browser extension; Settings → Apps, apps/api/core apps/app-files.ts).
  */
-function appFiles(dir: string | undefined, serveRoot: string): ServeStaticModuleOptions[] {
+function appFiles(
+  dir: string | undefined,
+  serveRoot: string,
+): ServeStaticModuleOptions[] {
   return dir
     ? [
         {
@@ -44,16 +50,28 @@ function appFiles(dir: string | undefined, serveRoot: string): ServeStaticModule
     ServeStaticModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: AppConfig) => {
-        const webDist = config.get('WEB_DIST_PATH', { infer: true });
+        const webDist = config.get('WEB_DIST_PATH', {infer: true});
         return [
-          ...appFiles(config.get('DESKTOP_BUNDLE_PATH', { infer: true }), DESKTOP_UPDATES_PATH),
-          ...appFiles(config.get('EXTENSION_BUNDLE_PATH', { infer: true }), EXTENSION_UPDATES_PATH),
           ...appFiles(
-            config.get('DESKTOP_INSTALLERS_PATH', { infer: true }),
+            config.get('DESKTOP_BUNDLE_PATH', {infer: true}),
+            DESKTOP_UPDATES_PATH,
+          ),
+          ...appFiles(
+            config.get('EXTENSION_BUNDLE_PATH', {infer: true}),
+            EXTENSION_UPDATES_PATH,
+          ),
+          ...appFiles(
+            config.get('DESKTOP_INSTALLERS_PATH', {infer: true}),
             DESKTOP_DOWNLOADS_PATH,
           ),
-          ...appFiles(config.get('MOBILE_BUNDLE_PATH', { infer: true }), MOBILE_UPDATES_PATH),
-          ...appFiles(config.get('MOBILE_APK_PATH', { infer: true }), MOBILE_DOWNLOADS_PATH),
+          ...appFiles(
+            config.get('MOBILE_BUNDLE_PATH', {infer: true}),
+            MOBILE_UPDATES_PATH,
+          ),
+          ...appFiles(
+            config.get('MOBILE_APK_PATH', {infer: true}),
+            MOBILE_DOWNLOADS_PATH,
+          ),
           // Absolute: the SPA fallback sends index.html with res.sendFile, which rejects relative paths.
           ...(webDist
             ? [

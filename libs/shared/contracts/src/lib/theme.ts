@@ -1,10 +1,17 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /** Light, dark, or whatever the device is set to. */
 export const THEME_MODES = ['system', 'light', 'dark'] as const;
 
 /** Ready-made themes: an accent colour each; `violet` is the look the dashboard ships with. */
-export const THEME_PRESETS = ['violet', 'blue', 'green', 'orange', 'pink', 'gray'] as const;
+export const THEME_PRESETS = [
+  'violet',
+  'blue',
+  'green',
+  'orange',
+  'pink',
+  'gray',
+] as const;
 export type ThemePreset = (typeof THEME_PRESETS)[number];
 
 /** The colour every other colour of a ready-made theme is derived from. */
@@ -24,7 +31,7 @@ export type ThemeFont = (typeof THEME_FONTS)[number];
 export const THEME_DENSITIES = ['normal', 'compact'] as const;
 
 /** Corners of cards, in pixels. */
-export const THEME_RADIUS = { min: 0, max: 28, default: 20 } as const;
+export const THEME_RADIUS = {min: 0, max: 28, default: 20} as const;
 
 export const themeSchema = z.object({
   mode: z.enum(THEME_MODES),
@@ -76,7 +83,10 @@ export interface DeviceTheme {
  * The theme a device shows: its own while that is newer than the account's, the account's
  * otherwise, the built-in one when neither is set.
  */
-export function resolveTheme(device: DeviceTheme | null, account: AccountTheme | null): Theme {
+export function resolveTheme(
+  device: DeviceTheme | null,
+  account: AccountTheme | null,
+): Theme {
   if (device && (!account || device.savedAt > account.everywhereAt)) {
     return device.theme;
   }

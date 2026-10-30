@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService } from '@pd/api-core';
-import { MonitorsService } from './monitors.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService} from '@pd/api-core';
+import {MonitorsService} from './monitors.service';
 
 /** The digest warns about a certificate this many days before it expires. */
 const SSL_WARNING_DAYS = 14;
@@ -23,18 +23,23 @@ export class MonitoringDigest implements OnModuleInit {
         `when it is within ${SSL_WARNING_DAYS} days. Tell which sites went down or came back ` +
         'and which certificates expire soon.',
       // Response times and uptime percentages change with every check, so they are left out.
-      collect: async (userId) =>
-        (await this.monitors.list(userId)).map((monitor) => ({
+      collect: async userId =>
+        (await this.monitors.list(userId)).map(monitor => ({
           url: monitor.url,
           status: monitor.status,
           downSince: monitor.downSince,
           error: monitor.status === 'down' ? monitor.lastError : null,
-          sslExpiresAt: expiresSoon(monitor.sslExpiresAt) ? monitor.sslExpiresAt : null,
+          sslExpiresAt: expiresSoon(monitor.sslExpiresAt)
+            ? monitor.sslExpiresAt
+            : null,
         })),
     });
   }
 }
 
 function expiresSoon(at: string | null): boolean {
-  return at !== null && new Date(at).getTime() - Date.now() < SSL_WARNING_DAYS * DAY_MS;
+  return (
+    at !== null &&
+    new Date(at).getTime() - Date.now() < SSL_WARNING_DAYS * DAY_MS
+  );
 }

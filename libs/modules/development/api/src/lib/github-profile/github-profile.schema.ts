@@ -1,5 +1,5 @@
-import { users } from '@pd/api-core/schema';
-import { GithubLanguageShare, GithubTopRepo } from '@pd/contracts';
+import {users} from '@pd/api-core/schema';
+import {GithubLanguageShare, GithubTopRepo} from '@pd/contracts';
 import {
   date,
   integer,
@@ -15,12 +15,12 @@ import {
 export const githubProfiles = pgTable('github_profiles', {
   userId: uuid()
     .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   login: text().notNull(),
   name: text(),
   avatarUrl: text().notNull(),
   htmlUrl: text().notNull(),
-  joinedAt: timestamp({ withTimezone: true }).notNull(),
+  joinedAt: timestamp({withTimezone: true}).notNull(),
   followers: integer().notNull(),
   following: integer().notNull(),
   /** The user's own repositories, forks left out. */
@@ -28,7 +28,7 @@ export const githubProfiles = pgTable('github_profiles', {
   totalStars: integer().notNull(),
   languages: jsonb().$type<GithubLanguageShare[]>().notNull(),
   topRepos: jsonb().$type<GithubTopRepo[]>().notNull(),
-  lastSyncedAt: timestamp({ withTimezone: true }),
+  lastSyncedAt: timestamp({withTimezone: true}),
   syncError: text(),
 });
 
@@ -38,11 +38,11 @@ export const githubContributionDays = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    day: date({ mode: 'string' }).notNull(),
+      .references(() => users.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
     count: integer().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.day] })],
+  table => [primaryKey({columns: [table.userId, table.day]})],
 );
 
 /** What a year's contributions were made of. */
@@ -51,7 +51,7 @@ export const githubContributionYears = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     year: integer().notNull(),
     contributions: integer().notNull(),
     commits: integer().notNull(),
@@ -61,7 +61,7 @@ export const githubContributionYears = pgTable(
     /** Contributions to private repositories the token cannot see into. */
     restricted: integer().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.year] })],
+  table => [primaryKey({columns: [table.userId, table.year]})],
 );
 
 /** Daily history of the account: one row per day (the last value of the day). */
@@ -70,13 +70,13 @@ export const githubProfileDailyStats = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    day: date({ mode: 'string' }).notNull(),
+      .references(() => users.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
     followers: integer().notNull(),
     repos: integer().notNull(),
     totalStars: integer().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.day] })],
+  table => [primaryKey({columns: [table.userId, table.day]})],
 );
 
 export type GithubProfileRow = typeof githubProfiles.$inferSelect;

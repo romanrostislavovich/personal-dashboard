@@ -1,4 +1,4 @@
-import { ProjectTime, WorkPiece } from './project-context';
+import {ProjectTime, WorkPiece} from './project-context';
 
 /** What is offered at all: less time next to a project tells nothing yet. */
 const MIN_NEAR_SECONDS = 10 * 60;
@@ -50,17 +50,17 @@ export function suggestionCandidates(
       total.set(keyOf(piece), (total.get(keyOf(piece)) ?? 0) + seconds(piece));
     }
   }
-  const near = new Map<string, { piece: WorkPiece; seconds: number }>();
+  const near = new Map<string, {piece: WorkPiece; seconds: number}>();
   for (const piece of time.context) {
     if (!piece.label.trim()) {
       continue;
     }
-    const known = near.get(keyOf(piece)) ?? { piece, seconds: 0 };
+    const known = near.get(keyOf(piece)) ?? {piece, seconds: 0};
     known.seconds += seconds(piece);
     near.set(keyOf(piece), known);
   }
   return [...near.entries()]
-    .map(([key, { piece, seconds: nearSeconds }]) => ({
+    .map(([key, {piece, seconds: nearSeconds}]) => ({
       kind: piece.kind,
       app: piece.app,
       label: piece.label,
@@ -68,8 +68,9 @@ export function suggestionCandidates(
       totalSeconds: Math.round(total.get(key) ?? nearSeconds),
     }))
     .filter(
-      (item) =>
-        item.nearSeconds >= MIN_NEAR_SECONDS && item.nearSeconds >= item.totalSeconds * MIN_SHARE,
+      item =>
+        item.nearSeconds >= MIN_NEAR_SECONDS &&
+        item.nearSeconds >= item.totalSeconds * MIN_SHARE,
     )
     .sort((a, b) => b.nearSeconds - a.nearSeconds)
     .slice(0, MAX_CANDIDATES);
@@ -82,14 +83,14 @@ export function sureSuggestions(
 ): NewSuggestion[] {
   return candidates
     .filter(
-      (item) =>
+      item =>
         item.kind === 'site' &&
         item.nearSeconds >= SURE_SECONDS &&
         item.nearSeconds >= item.totalSeconds * SURE_SHARE &&
         !taken.has(item.label.toLowerCase()),
     )
     .slice(0, MAX_SUGGESTIONS)
-    .map((item) => ({
+    .map(item => ({
       pattern: item.label,
       kind: item.kind,
       seconds: item.nearSeconds,
@@ -107,23 +108,26 @@ export function parseSuggestions(
   answer: string,
   candidates: readonly SuggestionCandidate[],
   taken: ReadonlySet<string>,
-  shareOf: (pattern: string) => { near: number; total: number },
+  shareOf: (pattern: string) => {near: number; total: number},
 ): NewSuggestion[] | null {
   let raw: unknown;
   try {
-    raw = JSON.parse(answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1));
+    raw = JSON.parse(
+      answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1),
+    );
   } catch {
     return null;
   }
-  const items = (raw as { suggestions?: unknown })?.suggestions;
+  const items = (raw as {suggestions?: unknown})?.suggestions;
   if (!Array.isArray(items)) {
     return null;
   }
   const seen = new Set(taken);
   const result: NewSuggestion[] = [];
   for (const item of items as Record<string, unknown>[]) {
-    const candidate = candidates.find((one) => one.label === item['label']);
-    const pattern = typeof item['pattern'] === 'string' ? item['pattern'].trim() : '';
+    const candidate = candidates.find(one => one.label === item['label']);
+    const pattern =
+      typeof item['pattern'] === 'string' ? item['pattern'].trim() : '';
     const lower = pattern.toLowerCase();
     if (
       !candidate ||
@@ -134,7 +138,7 @@ export function parseSuggestions(
     ) {
       continue;
     }
-    const { near, total } = shareOf(lower);
+    const {near, total} = shareOf(lower);
     if (near < MIN_NEAR_SECONDS || near < total * MIN_SHARE) {
       continue;
     }
@@ -143,7 +147,10 @@ export function parseSuggestions(
       pattern,
       kind: candidate.kind,
       seconds: Math.round(near),
-      reason: typeof item['reason'] === 'string' ? item['reason'].trim().slice(0, 300) : null,
+      reason:
+        typeof item['reason'] === 'string'
+          ? item['reason'].trim().slice(0, 300)
+          : null,
     });
   }
   return result.slice(0, MAX_SUGGESTIONS);
@@ -153,9 +160,9 @@ export function parseSuggestions(
 export function patternShare(
   pieces: readonly WorkPiece[],
   time: ProjectTime,
-): (pattern: string) => { near: number; total: number } {
+): (pattern: string) => {near: number; total: number} {
   const context = new Set(time.context);
-  return (pattern) => {
+  return pattern => {
     let near = 0;
     let total = 0;
     for (const piece of pieces) {
@@ -171,6 +178,6 @@ export function patternShare(
         near += seconds(piece);
       }
     }
-    return { near, total };
+    return {near, total};
   };
 }

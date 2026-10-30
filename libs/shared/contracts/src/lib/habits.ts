@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { addDays, LocalDate, parseLocalDate, toLocalDate } from './local-date';
+import {z} from 'zod';
+import {addDays, LocalDate, parseLocalDate, toLocalDate} from './local-date';
 
 /*
  * Habits to quit or to cut down — alcohol, smoking, anything of one's own — and habits to build:
@@ -16,7 +16,10 @@ export const HABIT_KINDS = ['alcohol', 'smoking', 'gym', 'custom'] as const;
 export type HabitKind = (typeof HABIT_KINDS)[number];
 
 /** The kinds that are only quit or cut down, and the one that is only built. */
-export const QUIT_KINDS = ['alcohol', 'smoking'] as const satisfies readonly HabitKind[];
+export const QUIT_KINDS = [
+  'alcohol',
+  'smoking',
+] as const satisfies readonly HabitKind[];
 export const BUILD_KINDS = ['gym'] as const satisfies readonly HabitKind[];
 
 /**
@@ -53,7 +56,7 @@ const optionalText = (max: number) =>
     .trim()
     .max(max)
     .nullish()
-    .transform((value) => value || null);
+    .transform(value => value || null);
 
 export const habitInputSchema = z
   .object({
@@ -74,26 +77,36 @@ export const habitInputSchema = z
       .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:mm')
       .nullish(),
   })
-  .refine((habit) => habit.kind !== 'custom' || !!habit.name, {
+  .refine(habit => habit.kind !== 'custom' || !!habit.name, {
     message: 'A habit of your own needs a name',
     path: ['name'],
   })
-  .refine((habit) => !isBuilding(habit.goal) || !isQuitKind(habit.kind), {
+  .refine(habit => !isBuilding(habit.goal) || !isQuitKind(habit.kind), {
     message: 'Alcohol and smoking are quit, not built',
     path: ['goal'],
   })
-  .refine((habit) => isBuilding(habit.goal) || !isBuildKind(habit.kind), {
+  .refine(habit => isBuilding(habit.goal) || !isBuildKind(habit.kind), {
     message: 'The gym is built, not quit',
     path: ['goal'],
   })
-  .refine((habit) => habit.goal !== 'weekly' || habit.timesPerWeek != null, {
-    message: 'How many days a week',
-    path: ['timesPerWeek'],
-  })
-  .refine((habit) => habit.goal !== 'less' || habit.maxDaysPerWeek != null, {
-    message: 'How many days a week at most',
-    path: ['maxDaysPerWeek'],
-  });
+  .refine(
+    habit =>
+      habit.goal !== 'weekly' ||
+      (habit.timesPerWeek !== null && habit.timesPerWeek !== undefined),
+    {
+      message: 'How many days a week',
+      path: ['timesPerWeek'],
+    },
+  )
+  .refine(
+    habit =>
+      habit.goal !== 'less' ||
+      (habit.maxDaysPerWeek !== null && habit.maxDaysPerWeek !== undefined),
+    {
+      message: 'How many days a week at most',
+      path: ['maxDaysPerWeek'],
+    },
+  );
 export type HabitInput = z.input<typeof habitInputSchema>;
 export type ValidHabitInput = z.output<typeof habitInputSchema>;
 
@@ -164,7 +177,9 @@ export function habitStats(
   if (isBuilding(habit.goal)) {
     return buildingStats(habit, marks, today);
   }
-  const used = new Set(marks.filter((mark) => mark.status === 'used').map((mark) => mark.day));
+  const used = new Set(
+    marks.filter(mark => mark.status === 'used').map(mark => mark.day),
+  );
   const days = daysFrom(habit.startedOn, today);
   let run = 0;
   let best = 0;
@@ -189,9 +204,13 @@ export function habitStats(
     cleanDays,
     usedDays: days.length - cleanDays,
     cleanDaysThisYear,
-    usedThisWeek: days.filter((current) => current >= weekStart && used.has(current)).length,
+    usedThisWeek: days.filter(
+      current => current >= weekStart && used.has(current),
+    ).length,
     weeksWithinLimit:
-      habit.goal === 'less' && habit.maxDaysPerWeek != null
+      habit.goal === 'less' &&
+      habit.maxDaysPerWeek !== null &&
+      habit.maxDaysPerWeek !== undefined
         ? weeksWithin(habit.startedOn, weekStart, used, habit.maxDaysPerWeek)
         : 0,
     doneDays: 0,
@@ -205,25 +224,34 @@ export function habitStats(
  * them (this week counts once it has them).
  */
 function buildingStats(
-  habit: { startedOn: LocalDate; goal: HabitGoal; timesPerWeek?: number | null },
+  habit: {startedOn: LocalDate; goal: HabitGoal; timesPerWeek?: number | null},
   marks: readonly HabitDay[],
   today: LocalDate,
 ): HabitStats {
   const done = new Set(
     marks
-      .filter((mark) => mark.status === 'done' && mark.day >= habit.startedOn && mark.day <= today)
-      .map((mark) => mark.day),
+      .filter(
+        mark =>
+          mark.status === 'done' &&
+          mark.day >= habit.startedOn &&
+          mark.day <= today,
+      )
+      .map(mark => mark.day),
   );
   const weekStart = mondayOf(today);
-  const doneThisWeek = [...done].filter((d) => d >= weekStart).length;
+  const doneThisWeek = [...done].filter(d => d >= weekStart).length;
   let current: number;
   let best: number;
   if (habit.goal === 'weekly') {
     const target = habit.timesPerWeek ?? 1;
     const weeks: boolean[] = [];
-    for (let monday = mondayOf(habit.startedOn); monday <= weekStart; monday = shift(monday, 7)) {
-      const count = Array.from({ length: 7 }, (_, i) => shift(monday, i)).filter((d) =>
-        done.has(d),
+    for (
+      let monday = mondayOf(habit.startedOn);
+      monday <= weekStart;
+      monday = shift(monday, 7)
+    ) {
+      const count = Array.from({length: 7}, (_, i) => shift(monday, i)).filter(
+        d => done.has(d),
       ).length;
       weeks.push(count >= target);
     }
@@ -231,20 +259,22 @@ function buildingStats(
     if (weeks.length && !weeks[weeks.length - 1]) {
       weeks.pop();
     }
-    ({ current, best } = runs(weeks));
+    ({current, best} = runs(weeks));
   } else {
-    const days = daysFrom(habit.startedOn, today).map((d) => done.has(d));
+    const days = daysFrom(habit.startedOn, today).map(d => done.has(d));
     if (days.length && !days[days.length - 1]) {
       days.pop();
     }
-    ({ current, best } = runs(days));
+    ({current, best} = runs(days));
   }
   return {
     currentStreak: current,
     bestStreak: best,
     cleanDays: 0,
     usedDays: 0,
-    cleanDaysThisYear: [...done].filter((d) => d.slice(0, 4) === today.slice(0, 4)).length,
+    cleanDaysThisYear: [...done].filter(
+      d => d.slice(0, 4) === today.slice(0, 4),
+    ).length,
     usedThisWeek: 0,
     weeksWithinLimit: 0,
     doneDays: done.size,
@@ -253,14 +283,14 @@ function buildingStats(
 }
 
 /** The run at the end and the longest one, of a row of yes and no. */
-function runs(row: boolean[]): { current: number; best: number } {
+function runs(row: boolean[]): {current: number; best: number} {
   let current = 0;
   let best = 0;
   for (const yes of row) {
     current = yes ? current + 1 : 0;
     best = Math.max(best, current);
   }
-  return { current, best };
+  return {current, best};
 }
 
 /** The finished weeks before `weekStart`, the last first, within the limit — from the start on. */
@@ -276,9 +306,9 @@ function weeksWithin(
     monday >= mondayOf(startedOn);
     monday = shift(monday, -7)
   ) {
-    const usedDays = Array.from({ length: 7 }, (_, index) => shift(monday, index)).filter((d) =>
-      used.has(d),
-    ).length;
+    const usedDays = Array.from({length: 7}, (_, index) =>
+      shift(monday, index),
+    ).filter(d => used.has(d)).length;
     if (usedDays > limit) {
       break;
     }
@@ -301,7 +331,8 @@ function shift(date: LocalDate, days: number): LocalDate {
 }
 
 function mondayOf(date: LocalDate): LocalDate {
-  const { year, month, day: dayOfMonth } = parseLocalDate(date);
-  const weekday = (new Date(Date.UTC(year, month - 1, dayOfMonth)).getUTCDay() + 6) % 7;
+  const {year, month, day: dayOfMonth} = parseLocalDate(date);
+  const weekday =
+    (new Date(Date.UTC(year, month - 1, dayOfMonth)).getUTCDay() + 6) % 7;
   return shift(date, -weekday);
 }

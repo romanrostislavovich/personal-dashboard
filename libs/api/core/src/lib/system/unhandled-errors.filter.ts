@@ -6,7 +6,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { BaseExceptionFilter, HttpAdapterHost } from '@nestjs/core';
+import {BaseExceptionFilter, HttpAdapterHost} from '@nestjs/core';
 
 /**
  * Errors nobody caught, with the request they happened in. Nest's own handler logs only
@@ -28,7 +28,9 @@ export class UnhandledErrorsFilter extends BaseExceptionFilter {
       super.catch(exception, host);
       return;
     }
-    const request = host.switchToHttp().getRequest<{ method: string; path: string }>();
+    const request = host
+      .switchToHttp()
+      .getRequest<{method: string; path: string}>();
     // The path without the query: a query may carry the user's data.
     const where = `${request.method} ${request.path}`;
     const outside = describeFetchFailure(exception);
@@ -37,7 +39,8 @@ export class UnhandledErrorsFilter extends BaseExceptionFilter {
       super.catch(new BadGatewayException(outside), host);
       return;
     }
-    const error = exception instanceof Error ? exception : new Error(String(exception));
+    const error =
+      exception instanceof Error ? exception : new Error(String(exception));
     this.logger.error(`${where}: ${error.message}`, error.stack);
     super.catch(new InternalServerErrorException(), host);
   }
@@ -57,7 +60,9 @@ export function describeFetchFailure(error: unknown): string | null {
   if (!(error instanceof TypeError) || error.message !== 'fetch failed') {
     return null;
   }
-  const cause = error.cause as { code?: string; hostname?: string; message?: string } | undefined;
-  const reason = [cause?.code, cause?.hostname].filter(Boolean).join(' ') || cause?.message;
+  const cause = error.cause as
+    {code?: string; hostname?: string; message?: string} | undefined;
+  const reason =
+    [cause?.code, cause?.hostname].filter(Boolean).join(' ') || cause?.message;
   return `An outside service could not be reached${reason ? ` (${reason})` : ''}`;
 }

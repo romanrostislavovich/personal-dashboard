@@ -21,10 +21,14 @@
             @if (d.guild; as guild) {
               · &lt;{{ guild.name }}&gt;
               @if (guild.members !== null) {
-                · {{ 'games.wow.details.members' | transloco: { count: guild.members } }}
+                ·
+                {{
+                  'games.wow.details.members'
+                    | transloco: {count: guild.members}
+                }}
               }
               @if (guild.rank !== null) {
-                · {{ 'games.wow.details.rank' | transloco: { rank: guild.rank } }}
+                · {{ 'games.wow.details.rank' | transloco: {rank: guild.rank} }}
               }
             }
           </p>
@@ -40,7 +44,9 @@
                         : ('games.wow.stats.' + stat.key | transloco)
                     }}
                   </dt>
-                  <dd>{{ stat.value | number }}{{ stat.percent ? '%' : '' }}</dd>
+                  <dd>
+                    {{ stat.value | number }}{{ stat.percent ? '%' : '' }}
+                  </dd>
                 </div>
               }
             </dl>
@@ -61,7 +67,9 @@
                 <li>
                   <b>{{ profession.name }}</b>
                   @for (tier of profession.tiers; track tier.name) {
-                    <span class="muted">{{ tier.name }} {{ tier.skill }}/{{ tier.max }}</span>
+                    <span class="muted"
+                      >{{ tier.name }} {{ tier.skill }}/{{ tier.max }}</span
+                    >
                   }
                 </li>
               }
@@ -78,12 +86,16 @@
             <li>
               <span class="slot">{{ item.slot }}</span>
               <span class="item">
-                <b [style.color]="qualityColor(item.quality)">{{ item.name }}</b>
+                <b [style.color]="qualityColor(item.quality)">{{
+                  item.name
+                }}</b>
                 @for (line of item.enchants; track line) {
                   <span class="muted">{{ line }}</span>
                 }
                 @for (gem of item.gems; track $index) {
-                  <span class="muted"><mat-icon inline>diamond</mat-icon> {{ gem }}</span>
+                  <span class="muted"
+                    ><mat-icon inline>diamond</mat-icon> {{ gem }}</span
+                  >
                 }
               </span>
               <span class="level">{{ item.level ?? '' }}</span>
@@ -101,7 +113,9 @@
               <h4>
                 {{ spec.name }}
                 @if (spec.active) {
-                  <span class="badge">{{ 'games.wow.details.active' | transloco }}</span>
+                  <span class="badge">{{
+                    'games.wow.details.active' | transloco
+                  }}</span>
                 }
               </h4>
               @if (spec.talents.length) {
@@ -111,7 +125,9 @@
                   }
                 </p>
               } @else {
-                <p class="muted">{{ 'games.wow.details.noTalents' | transloco }}</p>
+                <p class="muted">
+                  {{ 'games.wow.details.noTalents' | transloco }}
+                </p>
               }
             </section>
           }
@@ -124,7 +140,9 @@
         <div class="tab">
           <p class="big">
             {{ mythic.rating | number }}
-            <span class="muted">{{ 'games.wow.details.rating' | transloco }}</span>
+            <span class="muted">{{
+              'games.wow.details.rating' | transloco
+            }}</span>
           </p>
           @if (ratingHistory().length > 1) {
             <pd-sparkline [points]="ratingHistory()" label="Mythic+" />
@@ -134,10 +152,18 @@
               <thead>
                 <tr>
                   <th>{{ 'games.wow.details.dungeon' | transloco }}</th>
-                  <th class="numeric">{{ 'games.wow.details.key' | transloco }}</th>
-                  <th class="numeric">{{ 'games.wow.details.time' | transloco }}</th>
-                  <th class="numeric">{{ 'games.wow.details.rating' | transloco }}</th>
-                  <th class="numeric">{{ 'games.wow.details.date' | transloco }}</th>
+                  <th class="numeric">
+                    {{ 'games.wow.details.key' | transloco }}
+                  </th>
+                  <th class="numeric">
+                    {{ 'games.wow.details.time' | transloco }}
+                  </th>
+                  <th class="numeric">
+                    {{ 'games.wow.details.rating' | transloco }}
+                  </th>
+                  <th class="numeric">
+                    {{ 'games.wow.details.date' | transloco }}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -150,14 +176,18 @@
                         <mat-icon
                           inline
                           class="late"
-                          [attr.aria-label]="'games.wow.details.overTime' | transloco"
+                          [attr.aria-label]="
+                            'games.wow.details.overTime' | transloco
+                          "
                           >timer_off</mat-icon
                         >
                       }
                     </td>
                     <td class="numeric">{{ duration(run.durationMs) }}</td>
                     <td class="numeric">{{ run.rating ?? '—' }}</td>
-                    <td class="numeric">{{ run.completedAt | date: 'd MMM y' }}</td>
+                    <td class="numeric">
+                      {{ run.completedAt | date: 'd MMM y' }}
+                    </td>
                   </tr>
                 }
               </tbody>
@@ -176,7 +206,11 @@
               <span class="muted">{{ raid.expansion }}</span>
               <span class="modes">
                 @for (mode of raid.modes; track mode.difficulty) {
-                  <span [class.cleared]="mode.total > 0 && mode.killed === mode.total">
+                  <span
+                    [class.cleared]="
+                      mode.total > 0 && mode.killed === mode.total
+                    "
+                  >
                     {{ mode.difficulty }} {{ mode.killed }}/{{ mode.total }}
                   </span>
                 }
@@ -209,9 +243,15 @@
               <thead>
                 <tr>
                   <th>{{ 'games.wow.details.bracket' | transloco }}</th>
-                  <th class="numeric">{{ 'games.wow.details.rating' | transloco }}</th>
-                  <th class="numeric">{{ 'games.wow.details.played' | transloco }}</th>
-                  <th class="numeric">{{ 'games.wow.details.won' | transloco }}</th>
+                  <th class="numeric">
+                    {{ 'games.wow.details.rating' | transloco }}
+                  </th>
+                  <th class="numeric">
+                    {{ 'games.wow.details.played' | transloco }}
+                  </th>
+                  <th class="numeric">
+                    {{ 'games.wow.details.won' | transloco }}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -226,7 +266,9 @@
               </tbody>
             </table>
           } @else {
-            <p class="muted">{{ 'games.wow.details.noBrackets' | transloco }}</p>
+            <p class="muted">
+              {{ 'games.wow.details.noBrackets' | transloco }}
+            </p>
           }
         </div>
       </mat-tab>
@@ -238,7 +280,9 @@
           <dl class="stats">
             @for (collection of collections(); track collection.key) {
               <div>
-                <dt>{{ 'games.wow.collections.' + collection.key | transloco }}</dt>
+                <dt>
+                  {{ 'games.wow.collections.' + collection.key | transloco }}
+                </dt>
                 <dd>{{ collection.value | number }}</dd>
               </div>
             }
@@ -256,7 +300,9 @@
               <span class="muted">
                 {{ reputation.standing }}
                 @if (reputation.max) {
-                  · {{ reputation.value | number }}/{{ reputation.max | number }}
+                  · {{ reputation.value | number }}/{{
+                    reputation.max | number
+                  }}
                 }
               </span>
             </li>

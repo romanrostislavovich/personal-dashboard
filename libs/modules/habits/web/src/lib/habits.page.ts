@@ -1,16 +1,16 @@
-import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { EmptyStateComponent } from '@pd/web-core';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Habit, HabitInput, HabitKind, isBuilding } from '@pd/contracts';
-import { firstValueFrom, Observable } from 'rxjs';
-import { HabitCardAction, HabitCardComponent } from './habit-card.component';
-import { HabitDialog, HabitDialogData } from './habit.dialog';
-import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
+import {NgTemplateOutlet} from '@angular/common';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {EmptyStateComponent} from '@pd/web-core';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {Habit, HabitInput, HabitKind, isBuilding} from '@pd/contracts';
+import {firstValueFrom, Observable} from 'rxjs';
+import {HabitCardAction, HabitCardComponent} from './habit-card.component';
+import {HabitDialog, HabitDialogData} from './habit.dialog';
+import {BUILD_ICON, HABIT_ICONS, HabitsApi} from './habits.api';
 
 /**
  * Habits: "I quit drinking", "I quit smoking", the gym, or one's own — to quit, with a run of
@@ -36,14 +36,17 @@ import { BUILD_ICON, HABIT_ICONS, HabitsApi } from './habits.api';
     <ng-template #starts>
       @for (kind of kinds; track kind) {
         <button matButton="tonal" (click)="start(kind)">
-          <span class="emoji">{{ icons[kind] }}</span> {{ 'habits.start.' + kind | transloco }}
+          <span class="emoji">{{ icons[kind] }}</span>
+          {{ 'habits.start.' + kind | transloco }}
         </button>
       }
       <button matButton="tonal" (click)="start('gym', true)">
-        <span class="emoji">{{ icons.gym }}</span> {{ 'habits.start.gym' | transloco }}
+        <span class="emoji">{{ icons.gym }}</span>
+        {{ 'habits.start.gym' | transloco }}
       </button>
       <button matButton="tonal" (click)="start('custom', true)">
-        <span class="emoji">{{ buildIcon }}</span> {{ 'habits.start.build' | transloco }}
+        <span class="emoji">{{ buildIcon }}</span>
+        {{ 'habits.start.build' | transloco }}
       </button>
     </ng-template>
     <!-- With habits the starts are a row on top; without, they are the empty page's action. -->
@@ -115,7 +118,7 @@ export class HabitsPage {
   protected readonly habits = this.api.list();
 
   protected async start(kind: HabitKind, build = false): Promise<void> {
-    const input = await this.open({ kind, build });
+    const input = await this.open({kind, build});
     if (input) {
       await this.run(this.api.create(input));
     }
@@ -125,14 +128,21 @@ export class HabitsPage {
     switch (action.type) {
       case 'mark':
         await this.run(
-          this.api.mark(habit.id, action.day, { status: action.status, amount: action.amount }),
+          this.api.mark(habit.id, action.day, {
+            status: action.status,
+            amount: action.amount,
+          }),
         );
         break;
       case 'unmark':
         await this.run(this.api.unmark(habit.id, action.day));
         break;
       case 'edit': {
-        const input = await this.open({ kind: habit.kind, habit, build: isBuilding(habit.goal) });
+        const input = await this.open({
+          kind: habit.kind,
+          habit,
+          build: isBuilding(habit.goal),
+        });
         if (input) {
           await this.run(this.api.update(habit.id, input));
         }
@@ -143,7 +153,7 @@ export class HabitsPage {
           habit.kind === 'custom'
             ? (habit.name ?? '')
             : this.transloco.translate(`habits.kinds.${habit.kind}`);
-        if (confirm(this.transloco.translate('habits.confirmDelete', { name }))) {
+        if (confirm(this.transloco.translate('habits.confirmDelete', {name}))) {
           await this.run(this.api.remove(habit.id));
         }
         break;
@@ -154,7 +164,7 @@ export class HabitsPage {
   private open(data: HabitDialogData): Promise<HabitInput | undefined> {
     return firstValueFrom(
       this.dialog
-        .open<HabitDialog, HabitDialogData, HabitInput>(HabitDialog, { data })
+        .open<HabitDialog, HabitDialogData, HabitInput>(HabitDialog, {data})
         .afterClosed(),
     );
   }

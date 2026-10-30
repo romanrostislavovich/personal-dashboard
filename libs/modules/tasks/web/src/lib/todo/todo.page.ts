@@ -1,24 +1,40 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { AuthService, DurationPipe } from '@pd/web-core';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Task, TASK_HORIZONS } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { todayLocal } from '../local-time';
-import { ReminderDialogData, ReminderFormDialog } from '../reminders/reminder-form.dialog';
-import { TasksApi } from '../tasks.api';
-import { TaskDialogData, TaskFormDialog } from './task-form.dialog';
-import { allTags, filterTasks, isOverdue, TASK_VIEWS, TaskFilter, TaskView } from './task-filter';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatDialog} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {AuthService, DurationPipe} from '@pd/web-core';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {Task, TASK_HORIZONS} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {todayLocal} from '../local-time';
+import {
+  ReminderDialogData,
+  ReminderFormDialog,
+} from '../reminders/reminder-form.dialog';
+import {TasksApi} from '../tasks.api';
+import {TaskDialogData, TaskFormDialog} from './task-form.dialog';
+import {
+  allTags,
+  filterTasks,
+  isOverdue,
+  TASK_VIEWS,
+  TaskFilter,
+  TaskView,
+} from './task-filter';
 
 /**
  * The TODO list: quick adding, views (today with the overdue, upcoming, all, done), the user's
@@ -71,15 +87,19 @@ export class TodoPage {
   protected readonly counts = computed(() => {
     const tasks = this.tasks.value();
     const count = (view: TaskView) =>
-      filterTasks(tasks, { view, listId: null, tag: null }, this.today).length;
-    return { today: count('today'), upcoming: count('upcoming'), all: count('all') };
+      filterTasks(tasks, {view, listId: null, tag: null}, this.today).length;
+    return {
+      today: count('today'),
+      upcoming: count('upcoming'),
+      all: count('all'),
+    };
   });
   protected readonly listNames = computed(
-    () => new Map(this.lists.value().map((list) => [list.id, list.name])),
+    () => new Map(this.lists.value().map(list => [list.id, list.name])),
   );
 
   protected setFilter(change: Partial<TaskFilter>): void {
-    this.filter.update((filter) => ({ ...filter, ...change }));
+    this.filter.update(filter => ({...filter, ...change}));
   }
 
   /** Past its date, shown in red — unless the user asked for soft overdue (CalmSettings). */
@@ -88,7 +108,7 @@ export class TodoPage {
   }
 
   protected checklistDone(task: Task): number {
-    return task.checklist.filter((item) => item.done).length;
+    return task.checklist.filter(item => item.done).length;
   }
 
   /** A task typed in the quick field lands in the list and on the day of the current view. */
@@ -98,7 +118,7 @@ export class TodoPage {
       return;
     }
     input.value = '';
-    const { view, listId } = this.filter();
+    const {view, listId} = this.filter();
     await firstValueFrom(
       this.api.create({
         title,
@@ -110,12 +130,14 @@ export class TodoPage {
   }
 
   protected async toggle(task: Task, done: boolean): Promise<void> {
-    await firstValueFrom(done ? this.api.complete(task.id) : this.api.reopen(task.id));
+    await firstValueFrom(
+      done ? this.api.complete(task.id) : this.api.reopen(task.id),
+    );
     this.reload();
   }
 
   protected async open(task: Task | null): Promise<void> {
-    const { view, listId } = this.filter();
+    const {view, listId} = this.filter();
     const data: TaskDialogData = {
       task,
       lists: this.lists.value(),
@@ -124,21 +146,39 @@ export class TodoPage {
         dueDate: view === 'today' ? this.today : null,
       },
     };
-    if (await firstValueFrom(this.dialog.open(TaskFormDialog, { data }).afterClosed())) {
+    if (
+      await firstValueFrom(
+        this.dialog.open(TaskFormDialog, {data}).afterClosed(),
+      )
+    ) {
       this.reload();
     }
   }
 
   /** "Remind me about this task": a reminder tied to it. */
   protected async remind(task: Task): Promise<void> {
-    const data: ReminderDialogData = { mode: 'new', text: task.title, taskId: task.id };
-    if (await firstValueFrom(this.dialog.open(ReminderFormDialog, { data }).afterClosed())) {
+    const data: ReminderDialogData = {
+      mode: 'new',
+      text: task.title,
+      taskId: task.id,
+    };
+    if (
+      await firstValueFrom(
+        this.dialog.open(ReminderFormDialog, {data}).afterClosed(),
+      )
+    ) {
       this.reload();
     }
   }
 
   protected async remove(task: Task): Promise<void> {
-    if (confirm(this.transloco.translate('tasks.todo.confirmDelete', { title: task.title }))) {
+    if (
+      confirm(
+        this.transloco.translate('tasks.todo.confirmDelete', {
+          title: task.title,
+        }),
+      )
+    ) {
       await firstValueFrom(this.api.remove(task.id));
       this.reload();
     }
@@ -156,9 +196,11 @@ export class TodoPage {
 
   /** The tasks of a deleted list go back to the inbox. */
   protected async removeList(id: string, name: string): Promise<void> {
-    if (confirm(this.transloco.translate('tasks.todo.confirmDeleteList', { name }))) {
+    if (
+      confirm(this.transloco.translate('tasks.todo.confirmDeleteList', {name}))
+    ) {
       await firstValueFrom(this.api.removeList(id));
-      this.setFilter({ listId: null });
+      this.setFilter({listId: null});
       this.reload();
     }
   }

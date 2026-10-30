@@ -1,9 +1,9 @@
-import { app } from 'electron';
-import { ChildProcess, spawn } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createInterface } from 'node:readline';
-import { WindowSample } from './span-builder';
+import {app} from 'electron';
+import {ChildProcess, spawn} from 'node:child_process';
+import {readFileSync, writeFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {createInterface} from 'node:readline';
+import {WindowSample} from './span-builder';
 
 /** How often the window in front is looked at. */
 export const SAMPLE_SECONDS = 5;
@@ -20,7 +20,9 @@ export class WindowWatcher {
   private stopped = false;
   private restartTimer: NodeJS.Timeout | null = null;
 
-  constructor(private readonly onSample: (sample: WindowSample | null) => void) {}
+  constructor(
+    private readonly onSample: (sample: WindowSample | null) => void,
+  ) {}
 
   static get supported(): boolean {
     return process.platform === 'win32';
@@ -33,7 +35,10 @@ export class WindowWatcher {
     this.stopped = false;
     // PowerShell cannot run a file from inside the app's archive: the script is copied out.
     const script = join(app.getPath('userData'), 'active-window.ps1');
-    writeFileSync(script, readFileSync(join(__dirname, 'assets', 'active-window.ps1')));
+    writeFileSync(
+      script,
+      readFileSync(join(__dirname, 'assets', 'active-window.ps1')),
+    );
 
     const child = spawn(
       'powershell.exe',
@@ -47,10 +52,12 @@ export class WindowWatcher {
         '-IntervalSeconds',
         String(SAMPLE_SECONDS),
       ],
-      { windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] },
+      {windowsHide: true, stdio: ['ignore', 'pipe', 'ignore']},
     );
     this.child = child;
-    createInterface({ input: child.stdout }).on('line', (line) => this.onSample(parse(line)));
+    createInterface({input: child.stdout}).on('line', line =>
+      this.onSample(parse(line)),
+    );
     // PowerShell missing or blocked: without a listener the error would end the whole app.
     child.on('error', () => this.ended(child));
     child.on('exit', () => this.ended(child));

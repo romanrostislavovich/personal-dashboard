@@ -1,4 +1,4 @@
-import type { TelemetryMetrics } from '@pd/contracts';
+import type {TelemetryMetrics} from '@pd/contracts';
 
 /** Explicit reports only. Never inspect shell history, process arguments, output or commands. */
 export interface TerminalCompletion {
@@ -17,7 +17,7 @@ export class TerminalFriction {
     if (
       !report ||
       Object.keys(report).some(
-        (key) => !['exitCode', 'durationMs', 'kind', 'context'].includes(key),
+        key => !['exitCode', 'durationMs', 'kind', 'context'].includes(key),
       ) ||
       report.context !== 'public-terminal' ||
       !['command', 'build'].includes(report.kind) ||

@@ -1,18 +1,27 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { MovieSettings } from '@pd/contracts';
-import { errorStatus, IntegrationGuideComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { MoviesApi } from './movies.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {MovieSettings} from '@pd/contracts';
+import {errorStatus, IntegrationGuideComponent} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {MoviesApi} from './movies.api';
 
 /**
  * Movies in Settings → Integrations: the TMDB key that finds the titles, whether the browser
@@ -38,13 +47,16 @@ import { MoviesApi } from './movies.api';
       <mat-card-header>
         <mat-icon mat-card-avatar>movie</mat-icon>
         <mat-card-title>TMDB</mat-card-title>
-        <mat-card-subtitle>{{ 'movies.integration.subtitle' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'movies.integration.subtitle' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (status.value(); as s) {
           @if (s.tmdb) {
             <p class="ok">
-              <mat-icon>check_circle</mat-icon> {{ 'movies.integration.connected' | transloco }}
+              <mat-icon>check_circle</mat-icon>
+              {{ 'movies.integration.connected' | transloco }}
             </p>
             <button matButton (click)="removeKey()">
               {{ 'movies.integration.disconnect' | transloco }}
@@ -53,10 +65,21 @@ import { MoviesApi } from './movies.api';
             <p class="hint">{{ 'movies.integration.hint' | transloco }}</p>
             <form class="form" [formGroup]="form" (ngSubmit)="saveKey()">
               <mat-form-field subscriptSizing="dynamic">
-                <mat-label>{{ 'movies.integration.key' | transloco }}</mat-label>
-                <input matInput type="password" formControlName="key" autocomplete="off" />
+                <mat-label>{{
+                  'movies.integration.key' | transloco
+                }}</mat-label>
+                <input
+                  matInput
+                  type="password"
+                  formControlName="key"
+                  autocomplete="off"
+                />
               </mat-form-field>
-              <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+              <button
+                matButton="filled"
+                type="submit"
+                [disabled]="form.invalid || busy()"
+              >
                 {{ 'core.actions.save' | transloco }}
               </button>
             </form>
@@ -65,7 +88,7 @@ import { MoviesApi } from './movies.api';
           <mat-slide-toggle
             class="track"
             [checked]="s.settings.track"
-            (change)="save({ ...s.settings, track: $event.checked })"
+            (change)="save({...s.settings, track: $event.checked})"
           >
             {{ 'movies.integration.track' | transloco }}
           </mat-slide-toggle>
@@ -77,7 +100,10 @@ import { MoviesApi } from './movies.api';
               @for (site of s.settings.ignoredSites; track site) {
                 <mat-chip (removed)="unignore(s.settings, site)">
                   {{ site }}
-                  <button matChipRemove [attr.aria-label]="'core.actions.delete' | transloco">
+                  <button
+                    matChipRemove
+                    [attr.aria-label]="'core.actions.delete' | transloco"
+                  >
                     <mat-icon>cancel</mat-icon>
                   </button>
                 </mat-chip>
@@ -136,13 +162,17 @@ export class MoviesIntegration {
   async saveKey(): Promise<void> {
     this.busy.set(true);
     try {
-      await firstValueFrom(this.api.setTmdbKey(this.form.getRawValue().key.trim()));
+      await firstValueFrom(
+        this.api.setTmdbKey(this.form.getRawValue().key.trim()),
+      );
       this.form.reset();
       this.status.reload();
     } catch (error) {
       const key =
-        errorStatus(error) === 400 ? 'movies.integration.invalid' : 'movies.errors.generic';
-      this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });
+        errorStatus(error) === 400
+          ? 'movies.integration.invalid'
+          : 'movies.errors.generic';
+      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 6000});
     } finally {
       this.busy.set(false);
     }
@@ -161,7 +191,7 @@ export class MoviesIntegration {
   unignore(settings: MovieSettings, site: string): Promise<void> {
     return this.save({
       ...settings,
-      ignoredSites: settings.ignoredSites.filter((one) => one !== site),
+      ignoredSites: settings.ignoredSites.filter(one => one !== site),
     });
   }
 }

@@ -1,5 +1,5 @@
-import { isProjectClosed, Project } from '@pd/contracts';
-import { todayLocalDate } from '../utils/month';
+import {isProjectClosed, Project} from '@pd/contracts';
+import {todayLocalDate} from '../utils/month';
 
 /**
  * The projects to choose from in a form: the closed ones are left out — new work does not go
@@ -10,5 +10,7 @@ export function pickableProjects(
   keep: string | null = null,
   today = todayLocalDate(),
 ): Project[] {
-  return projects.filter((project) => project.id === keep || !isProjectClosed(project, today));
+  return projects.filter(
+    project => project.id === keep || !isProjectClosed(project, today),
+  );
 }

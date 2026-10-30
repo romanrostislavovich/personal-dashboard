@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from '@pd/api-core';
+import {fetchWithTimeout} from '@pd/api-core';
 
 const API = 'https://api.opendota.com/api';
 const STEAM_CDN = 'https://cdn.cloudflare.steamstatic.com';
@@ -83,7 +83,10 @@ export const openDota = {
     await request('GET', '/constants/game_mode', apiKey);
   },
 
-  async getProfile(accountId: number, apiKey: string | null = null): Promise<DotaProfile> {
+  async getProfile(
+    accountId: number,
+    apiKey: string | null = null,
+  ): Promise<DotaProfile> {
     const data = await get<RawPlayer>(`/players/${accountId}`, apiKey);
     // For a non-existent or private account OpenDota responds without a profile.
     if (!data.profile) {
@@ -108,13 +111,16 @@ export const openDota = {
     limit?: number,
     apiKey: string | null = null,
   ): Promise<OpenDotaMatch[]> {
-    const params = new URLSearchParams({ significant: '0' });
+    const params = new URLSearchParams({significant: '0'});
     if (limit) {
       params.set('limit', String(limit));
     }
-    MATCH_FIELDS.forEach((field) => params.append('project', field));
-    const matches = await get<RawMatch[]>(`/players/${accountId}/matches?${params}`, apiKey);
-    return matches.filter(wasPlayed).map((m) => ({
+    MATCH_FIELDS.forEach(field => params.append('project', field));
+    const matches = await get<RawMatch[]>(
+      `/players/${accountId}/matches?${params}`,
+      apiKey,
+    );
+    return matches.filter(wasPlayed).map(m => ({
       matchId: m.match_id,
       heroId: m.hero_id as number,
       // player_slot < 128 means the player is on Radiant.
@@ -139,7 +145,10 @@ export const openDota = {
   },
 
   /** Asks OpenDota to re-download the player's history from Steam (takes minutes to hours). */
-  async requestRefresh(accountId: number, apiKey: string | null = null): Promise<void> {
+  async requestRefresh(
+    accountId: number,
+    apiKey: string | null = null,
+  ): Promise<void> {
     await request('POST', `/players/${accountId}/refresh`, apiKey);
   },
 
@@ -158,11 +167,13 @@ export const openDota = {
 };
 
 /** Hero id → name and picture from the constants file (OpenDota and its mirror share the format). */
-export function toHeroes(heroes: Record<string, RawHero>): Map<number, HeroInfo> {
+export function toHeroes(
+  heroes: Record<string, RawHero>,
+): Map<number, HeroInfo> {
   return new Map(
-    Object.values(heroes).map((h) => [
+    Object.values(heroes).map(h => [
       h.id,
-      { name: h.localized_name, imageUrl: STEAM_CDN + h.img.replace(/\?$/, '') },
+      {name: h.localized_name, imageUrl: STEAM_CDN + h.img.replace(/\?$/, '')},
     ]),
   );
 }
@@ -176,16 +187,22 @@ async function request(
   path: string,
   apiKey: string | null = null,
 ): Promise<Response> {
-  const response = await fetchWithTimeout(withKey(API + path, apiKey), { method });
+  const response = await fetchWithTimeout(withKey(API + path, apiKey), {
+    method,
+  });
   // The key never gets into an error text: it would end up in the log and on the page.
   if (apiKey && [400, 401, 403].includes(response.status)) {
-    const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    const body = (await response.json().catch(() => null)) as {
+      error?: string;
+    } | null;
     if (/api key/i.test(body?.error ?? '')) {
       throw new OpenDotaKeyError(`OpenDota: ${body?.error}`);
     }
   }
   if (!response.ok) {
-    throw new Error(`OpenDota ${response.status}: ${method} ${path.split('?')[0]}`);
+    throw new Error(
+      `OpenDota ${response.status}: ${method} ${path.split('?')[0]}`,
+    );
   }
   return response;
 }
@@ -194,7 +211,9 @@ async function request(
  * A record of a game that was really played. Old histories hold broken ones — no hero (the
  * game ended before the pick) or no winner — which cannot be saved or counted as a loss.
  */
-export function wasPlayed(match: Pick<RawMatch, 'hero_id' | 'radiant_win'>): boolean {
+export function wasPlayed(
+  match: Pick<RawMatch, 'hero_id' | 'radiant_win'>,
+): boolean {
   return Boolean(match.hero_id) && typeof match.radiant_win === 'boolean';
 }
 
@@ -206,7 +225,11 @@ export function withKey(url: string, apiKey: string | null): string {
 }
 
 interface RawPlayer {
-  profile?: { personaname: string; avatarfull?: string; fh_unavailable?: boolean };
+  profile?: {
+    personaname: string;
+    avatarfull?: string;
+    fh_unavailable?: boolean;
+  };
   rank_tier?: number | null;
   leaderboard_rank?: number | null;
 }

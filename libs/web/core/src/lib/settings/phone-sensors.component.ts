@@ -1,15 +1,26 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { App } from '@capacitor/app';
-import { activityApi, appsApi } from '@pd/client-core';
-import { ActivityDevice } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { apiBaseUrl, isMobileApp, mobileServer, phoneModel } from '../mobile/mobile-app';
-import { DeviceOnlyComponent } from './device-only.component';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {App} from '@capacitor/app';
+import {activityApi, appsApi} from '@pd/client-core';
+import {ActivityDevice} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {
+  apiBaseUrl,
+  isMobileApp,
+  mobileServer,
+  phoneModel,
+} from '../mobile/mobile-app';
+import {DeviceOnlyComponent} from './device-only.component';
 import {
   checkPhoneSensors,
   PhoneExtra,
@@ -34,7 +45,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 
 function describe(failure: unknown): string {
   if (failure && typeof failure === 'object' && 'status' in failure) {
-    return `HTTP ${(failure as { status: unknown }).status}`;
+    return `HTTP ${(failure as {status: unknown}).status}`;
   }
   return failure instanceof Error ? failure.message : String(failure);
 }
@@ -61,8 +72,12 @@ function describe(failure: unknown): string {
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>sensors</mat-icon>
-        <mat-card-title>{{ 'core.settings.phone.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'core.settings.phone.hint' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'core.settings.phone.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'core.settings.phone.hint' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content class="content">
         <pd-device-only kind="phone" />
@@ -93,7 +108,8 @@ function describe(failure: unknown): string {
           <p>{{ 'core.settings.phone.update' | transloco }}</p>
           @if (checkError(); as reason) {
             <p class="hint">
-              {{ 'core.settings.phone.reason' | transloco }}: <code>{{ reason }}</code>
+              {{ 'core.settings.phone.reason' | transloco }}:
+              <code>{{ reason }}</code>
             </p>
           }
           <button matButton (click)="refresh()">
@@ -119,7 +135,9 @@ function describe(failure: unknown): string {
                   <mat-icon [class.ok]="s[step]">
                     {{ s[step] ? 'check_circle' : 'radio_button_unchecked' }}
                   </mat-icon>
-                  <span>{{ 'core.settings.phone.steps.' + step | transloco }}</span>
+                  <span>{{
+                    'core.settings.phone.steps.' + step | transloco
+                  }}</span>
                   @if (!s[step]) {
                     <button matButton="tonal" (click)="open(step)">
                       {{ 'core.settings.phone.allow' | transloco }}
@@ -129,14 +147,18 @@ function describe(failure: unknown): string {
               }
             }
             @if (hasExtras(s)) {
-              <p class="extras">{{ 'core.settings.phone.extrasTitle' | transloco }}</p>
+              <p class="extras">
+                {{ 'core.settings.phone.extrasTitle' | transloco }}
+              </p>
               @for (extra of extras; track extra) {
                 @if (s[extra] !== undefined) {
                   <div class="step">
                     <mat-icon [class.ok]="s[extra]">
                       {{ s[extra] ? 'check_circle' : 'radio_button_unchecked' }}
                     </mat-icon>
-                    <span>{{ 'core.settings.phone.extras.' + extra | transloco }}</span>
+                    <span>{{
+                      'core.settings.phone.extras.' + extra | transloco
+                    }}</span>
                     @if (!s[extra]) {
                       <button matButton="tonal" (click)="allow(extra)">
                         {{ 'core.settings.phone.allow' | transloco }}
@@ -148,7 +170,9 @@ function describe(failure: unknown): string {
             }
             <div class="step">
               <mat-icon>rocket_launch</mat-icon>
-              <span>{{ 'core.settings.phone.steps.autostart' | transloco }}</span>
+              <span>{{
+                'core.settings.phone.steps.autostart' | transloco
+              }}</span>
               <button matButton="tonal" (click)="openAutostart()">
                 {{ 'core.settings.phone.open' | transloco }}
               </button>
@@ -160,7 +184,8 @@ function describe(failure: unknown): string {
           }
           @if (error(); as reason) {
             <p class="error" role="alert">
-              {{ 'core.settings.phone.error' | transloco }} <code>{{ reason }}</code>
+              {{ 'core.settings.phone.error' | transloco }}
+              <code>{{ reason }}</code>
             </p>
           }
         }
@@ -220,11 +245,11 @@ export class PhoneSensorsComponent {
   ];
 
   protected hasExtras(status: PhoneSensorsStatus): boolean {
-    return this.extras.some((extra) => status[extra] !== undefined);
+    return this.extras.some(extra => status[extra] !== undefined);
   }
 
   protected allow(kind: PhoneExtra): Promise<void> {
-    return this.openScreen((plugin) => plugin.allow({ kind }));
+    return this.openScreen(plugin => plugin.allow({kind}));
   }
 
   protected readonly steps: Step[] = [
@@ -251,7 +276,10 @@ export class PhoneSensorsComponent {
   constructor() {
     if (!this.inApp) {
       void this.activity.devices().then(
-        (devices) => this.phones.set(devices.filter((device) => device.platform === 'android')),
+        devices =>
+          this.phones.set(
+            devices.filter(device => device.platform === 'android'),
+          ),
         () => undefined,
       );
       return;
@@ -259,16 +287,21 @@ export class PhoneSensorsComponent {
     void this.refresh();
     if (this.inApp) {
       void this.apps.overview().then(
-        (overview) => {
-          const apk = overview.apps.find((app) => app.kind === 'mobile')?.downloads[0];
+        overview => {
+          const apk = overview.apps.find(app => app.kind === 'mobile')
+            ?.downloads[0];
           this.apkUrl.set(apk ? `${apiBaseUrl()}${apk.url}` : null);
         },
         () => undefined,
       );
     }
     // Back from Android's settings: what was allowed shows at once.
-    const resumed = App.addListener('resume', () => void this.refresh()).catch(() => null);
-    inject(DestroyRef).onDestroy(() => void resumed.then((handle) => handle?.remove()));
+    const resumed = App.addListener('resume', () => void this.refresh()).catch(
+      () => null,
+    );
+    inject(DestroyRef).onDestroy(
+      () => void resumed.then(handle => handle?.remove()),
+    );
   }
 
   /** Each step says where it stopped: a phone's problem can only be told from its words. */
@@ -276,7 +309,7 @@ export class PhoneSensorsComponent {
     this.busy.set(true);
     this.error.set(null);
     try {
-      const { plugin, error } = await checkPhoneSensors();
+      const {plugin, error} = await checkPhoneSensors();
       const server = mobileServer();
       if (!plugin) {
         throw new Error(`app: ${error ?? 'no collection in this version'}`);
@@ -285,15 +318,19 @@ export class PhoneSensorsComponent {
         throw new Error('no server address');
       }
       const device = await this.activity
-        .registerDevice({ name: phoneModel(navigator.userAgent), platform: 'android' })
+        .registerDevice({
+          name: phoneModel(navigator.userAgent),
+          platform: 'android',
+        })
         .catch((failure: unknown) => {
           throw new Error(`server: ${describe(failure)}`);
         });
-      await withTimeout(plugin.configure({ server, token: device.token }), STEP_MS).catch(
-        (failure: unknown) => {
-          throw new Error(`app: ${describe(failure)}`);
-        },
-      );
+      await withTimeout(
+        plugin.configure({server, token: device.token}),
+        STEP_MS,
+      ).catch((failure: unknown) => {
+        throw new Error(`app: ${describe(failure)}`);
+      });
       await this.refresh();
     } catch (failure) {
       this.error.set(describe(failure));
@@ -305,7 +342,7 @@ export class PhoneSensorsComponent {
   protected async disable(): Promise<void> {
     this.error.set(null);
     try {
-      await this.withPlugin((plugin) => plugin.disable());
+      await this.withPlugin(plugin => plugin.disable());
       await this.refresh();
     } catch (failure) {
       this.error.set(describe(failure));
@@ -313,7 +350,7 @@ export class PhoneSensorsComponent {
   }
 
   protected open(step: Step): Promise<void> {
-    return this.openScreen(async (plugin) => {
+    return this.openScreen(async plugin => {
       if (step === 'usageAccess') {
         await plugin.openUsageAccess();
       } else if (step === 'notificationAccess') {
@@ -327,11 +364,13 @@ export class PhoneSensorsComponent {
   }
 
   protected openAutostart(): Promise<void> {
-    return this.openScreen((plugin) => plugin.openAutostart());
+    return this.openScreen(plugin => plugin.openAutostart());
   }
 
   /** A settings screen of Android; when it does not open, the reason shows under the steps. */
-  private async openScreen(run: (plugin: Plugin) => Promise<void>): Promise<void> {
+  private async openScreen(
+    run: (plugin: Plugin) => Promise<void>,
+  ): Promise<void> {
     this.error.set(null);
     try {
       await this.withPlugin(run);
@@ -341,8 +380,10 @@ export class PhoneSensorsComponent {
   }
 
   /** One call of the app, or an error saying why it did not answer. */
-  private async withPlugin(run: (plugin: Plugin) => Promise<void>): Promise<void> {
-    const { plugin, error } = await checkPhoneSensors();
+  private async withPlugin(
+    run: (plugin: Plugin) => Promise<void>,
+  ): Promise<void> {
+    const {plugin, error} = await checkPhoneSensors();
     if (!plugin) {
       throw new Error(`app: ${error ?? 'no collection in this version'}`);
     }
@@ -351,7 +392,7 @@ export class PhoneSensorsComponent {
 
   protected async refresh(): Promise<void> {
     this.available.set(null);
-    const { plugin, error } = await checkPhoneSensors();
+    const {plugin, error} = await checkPhoneSensors();
     this.available.set(plugin !== null);
     this.checkError.set(error);
     this.status.set(plugin ? await plugin.status() : null);

@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { DiaryMark } from './diary-marks';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {DiaryMark} from './diary-marks';
+import {LocalDate} from './local-date';
 
 export const MOODS = [1, 2, 3, 4, 5] as const;
 
@@ -42,11 +42,11 @@ export interface DiaryStats {
   totalEntries: number;
   hasEntryToday: boolean;
   /** Mood per day for the last 30 days (only days with a rating). */
-  moodHistory: { day: LocalDate; mood: number }[];
+  moodHistory: {day: LocalDate; mood: number}[];
   /** Most frequent tags. */
-  topTags: { tag: string; count: number }[];
+  topTags: {tag: string; count: number}[];
   /** Emojis used in marks, most frequent first. */
-  topMarks: { emoji: string; count: number }[];
+  topMarks: {emoji: string; count: number}[];
 }
 
 export const diarySettingsSchema = z.object({
@@ -59,7 +59,10 @@ export const diarySettingsSchema = z.object({
 });
 export type DiarySettings = z.infer<typeof diarySettingsSchema>;
 
-export const diarySummaryRequestSchema = z.object({ from: z.iso.date(), to: z.iso.date() });
+export const diarySummaryRequestSchema = z.object({
+  from: z.iso.date(),
+  to: z.iso.date(),
+});
 export type DiarySummaryRequest = z.infer<typeof diarySummaryRequestSchema>;
 
 export interface DiarySummary {
@@ -74,9 +77,13 @@ export interface DiaryMarkHit {
   text: string;
 }
 
-export const diaryMarksQuerySchema = z.object({ emoji: z.string().min(1).max(32) });
+export const diaryMarksQuerySchema = z.object({
+  emoji: z.string().min(1).max(32),
+});
 
-export const diarySearchQuerySchema = z.object({ q: z.string().trim().min(2).max(200) });
+export const diarySearchQuerySchema = z.object({
+  q: z.string().trim().min(2).max(200),
+});
 
 export interface DiarySearchHit {
   day: LocalDate;
@@ -106,9 +113,9 @@ export interface DiaryMemory {
 
 export interface DiaryInsights {
   /** ISO weekday: 1 — Monday … 7 — Sunday; `average` is `null` without rated days. */
-  moodByWeekday: { weekday: number; average: number | null; count: number }[];
+  moodByWeekday: {weekday: number; average: number | null; count: number}[];
   /** Average mood of days with the tag (tags used on at least 3 rated days). */
-  tagMoods: { tag: string; average: number; count: number }[];
+  tagMoods: {tag: string; average: number; count: number}[];
 }
 
 export interface DiaryPhoto {
@@ -122,4 +129,9 @@ export interface DiaryPhoto {
 
 /** Photos are stored in PostgreSQL, so a regular database backup includes them. */
 export const DIARY_PHOTO_MAX_BYTES = 10 * 1024 * 1024;
-export const DIARY_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+export const DIARY_PHOTO_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];

@@ -33,7 +33,9 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   if (props.text !== undefined) node.textContent = props.text;
   if (props.title) node.title = props.title;
   if (props.attrs)
-    Object.entries(props.attrs).forEach(([name, value]) => node.setAttribute(name, value));
+    Object.entries(props.attrs).forEach(([name, value]) =>
+      node.setAttribute(name, value),
+    );
   if (node instanceof HTMLInputElement || node instanceof HTMLButtonElement) {
     if (props.type) node.type = props.type;
     if (props.value !== undefined) node.value = props.value;
@@ -46,9 +48,11 @@ export function h<K extends keyof HTMLElementTagNameMap>(
     if (props.required) node.required = true;
     if (props.autofocus) queueMicrotask(() => node.focus());
   }
-  if (props.onClick) node.addEventListener('click', props.onClick as EventListener);
+  if (props.onClick)
+    node.addEventListener('click', props.onClick as EventListener);
   if (props.onInput) node.addEventListener('input', props.onInput);
-  if (props.onSubmit) node.addEventListener('submit', props.onSubmit as EventListener);
+  if (props.onSubmit)
+    node.addEventListener('submit', props.onSubmit as EventListener);
   node.append(...children.filter((child): child is Node | string => !!child));
   return node;
 }
@@ -59,8 +63,11 @@ export function t(key: string, ...substitutions: string[]): string {
 }
 
 /** A labelled field, as the dashboard's forms have. */
-export function field(label: string, input: HTMLInputElement): HTMLLabelElement {
-  return h('label', { class: 'field' }, h('span', { text: label }), input);
+export function field(
+  label: string,
+  input: HTMLInputElement,
+): HTMLLabelElement {
+  return h('label', {class: 'field'}, h('span', {text: label}), input);
 }
 
 /** Icons of Material Symbols (Apache 2.0), as paths in a 24×24 box. */
@@ -95,10 +102,14 @@ export function icon(name: IconName): SVGSVGElement {
 }
 
 /** A round button with an icon; the label is its tooltip and its name for screen readers. */
-export function iconButton(name: IconName, label: string, onClick: () => void): HTMLButtonElement {
+export function iconButton(
+  name: IconName,
+  label: string,
+  onClick: () => void,
+): HTMLButtonElement {
   const button = h(
     'button',
-    { class: 'icon-button', type: 'button', title: label, onClick },
+    {class: 'icon-button', type: 'button', title: label, onClick},
     icon(name),
   );
   button.setAttribute('aria-label', label);

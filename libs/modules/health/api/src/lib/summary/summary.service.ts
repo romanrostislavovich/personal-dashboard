@@ -1,6 +1,6 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AiService, AppConfig, DB, Database, UsersService } from '@pd/api-core';
+import {Inject, Injectable, Logger} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AiService, AppConfig, DB, Database, UsersService} from '@pd/api-core';
 import {
   buildHealthSummary,
   HealthShare,
@@ -10,15 +10,15 @@ import {
   HealthSummaryOptions,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, desc, eq, sql } from 'drizzle-orm';
-import { createHash, randomBytes } from 'node:crypto';
-import { z } from 'zod';
-import { HealthShareRow, healthShares } from '../health.schema';
-import { HealthService } from '../health.service';
-import { found } from '../owned';
-import { summaryBlocks } from './summary-blocks';
-import { summaryDocx } from './summary-docx';
-import { summaryHtml } from './summary-html';
+import {and, desc, eq, sql} from 'drizzle-orm';
+import {createHash, randomBytes} from 'node:crypto';
+import {z} from 'zod';
+import {HealthShareRow, healthShares} from '../health.schema';
+import {HealthService} from '../health.service';
+import {found} from '../owned';
+import {summaryBlocks} from './summary-blocks';
+import {summaryDocx} from './summary-docx';
+import {summaryHtml} from './summary-html';
 import {
   parseTranslations,
   translatableTexts,
@@ -48,15 +48,24 @@ export class SummaryService {
     private readonly users: UsersService,
     private readonly ai: AiService,
   ) {
-    this.publicUrl = config.get('PUBLIC_URL', { infer: true }).replace(/\/+$/, '');
+    this.publicUrl = config
+      .get('PUBLIC_URL', {infer: true})
+      .replace(/\/+$/, '');
   }
 
-  async summary(userId: string, options: HealthSummaryOptions): Promise<HealthSummary> {
+  async summary(
+    userId: string,
+    options: HealthSummaryOptions,
+  ): Promise<HealthSummary> {
     const user = await this.users.findById(userId);
-    const summary = buildHealthSummary(await this.health.record(userId), options, {
-      patient: user?.displayName ?? '',
-      today: zonedDateTime(new Date(), this.users.timeZoneOf(user)).date,
-    });
+    const summary = buildHealthSummary(
+      await this.health.record(userId),
+      options,
+      {
+        patient: user?.displayName ?? '',
+        today: zonedDateTime(new Date(), this.users.timeZoneOf(user)).date,
+      },
+    );
     return options.translate ? this.translate(userId, summary) : summary;
   }
 
@@ -81,7 +90,10 @@ export class SummaryService {
   }
 
   /** The address is given once: only the hash of its token is kept. */
-  async share(userId: string, input: ValidShareInput): Promise<HealthShareCreated> {
+  async share(
+    userId: string,
+    input: ValidShareInput,
+  ): Promise<HealthShareCreated> {
     const page = await this.html(userId, input.options);
     const token = randomBytes(24).toString('base64url');
     const [row] = await this.db
@@ -95,16 +107,19 @@ export class SummaryService {
         expiresAt: new Date(Date.now() + input.days * DAY_MS),
       })
       .returning(shareColumns);
-    return { share: toShare(row), url: `${this.publicUrl}/api/medical/shared/${token}` };
+    return {
+      share: toShare(row),
+      url: `${this.publicUrl}/api/medical/shared/${token}`,
+    };
   }
 
   /** The link stops working at once; it stays in the list as revoked. */
   async revoke(userId: string, id: string): Promise<void> {
     const [row] = await this.db
       .update(healthShares)
-      .set({ revokedAt: new Date() })
+      .set({revokedAt: new Date()})
       .where(and(eq(healthShares.id, id), eq(healthShares.userId, userId)))
-      .returning({ id: healthShares.id });
+      .returning({id: healthShares.id});
     found(row, 'Link');
   }
 
@@ -112,7 +127,7 @@ export class SummaryService {
   async open(token: string): Promise<string | null> {
     const [row] = await this.db
       .update(healthShares)
-      .set({ opened: sql`${healthShares.opened} + 1`, lastOpenedAt: new Date() })
+      .set({opened: sql`${healthShares.opened} + 1`, lastOpenedAt: new Date()})
       .where(
         and(
           eq(healthShares.tokenHash, hash(token)),
@@ -120,11 +135,14 @@ export class SummaryService {
           sql`${healthShares.expiresAt} > now()`,
         ),
       )
-      .returning({ page: healthShares.page });
+      .returning({page: healthShares.page});
     return row?.page ?? null;
   }
 
-  private async translate(userId: string, summary: HealthSummary): Promise<HealthSummary> {
+  private async translate(
+    userId: string,
+    summary: HealthSummary,
+  ): Promise<HealthSummary> {
     const texts = translatableTexts(summary);
     if (!texts.length) {
       return summary;
@@ -135,7 +153,7 @@ export class SummaryService {
         translationInstruction(summary.language),
         JSON.stringify(texts),
         'health',
-        { keepLanguage: true },
+        {keepLanguage: true},
       );
       return withTranslations(summary, parseTranslations(texts, answer));
     } catch (error) {
@@ -161,7 +179,9 @@ const shareColumns = {
   lastOpenedAt: healthShares.lastOpenedAt,
 };
 
-function toShare(row: Pick<HealthShareRow, keyof typeof shareColumns>): HealthShare {
+function toShare(
+  row: Pick<HealthShareRow, keyof typeof shareColumns>,
+): HealthShare {
   return {
     id: row.id,
     note: row.note,

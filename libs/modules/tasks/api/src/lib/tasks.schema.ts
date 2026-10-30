@@ -1,5 +1,11 @@
-import { projects, users } from '@pd/api-core/schema';
-import { ChecklistItem, ReminderStatus, Repeat, TaskHorizon, TaskPriority } from '@pd/contracts';
+import {projects, users} from '@pd/api-core/schema';
+import {
+  ChecklistItem,
+  ReminderStatus,
+  Repeat,
+  TaskHorizon,
+  TaskPriority,
+} from '@pd/contracts';
 import {
   date,
   index,
@@ -19,11 +25,11 @@ export const taskLists = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     name: text().notNull(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [unique().on(table.userId, table.name)],
+  table => [unique().on(table.userId, table.name)],
 );
 
 /** The TODO list. A done task stays, with `completedAt` set. */
@@ -33,14 +39,14 @@ export const tasks = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     // A deleted list or project leaves its tasks: they go back to the inbox.
-    listId: uuid().references(() => taskLists.id, { onDelete: 'set null' }),
-    projectId: uuid().references(() => projects.id, { onDelete: 'set null' }),
+    listId: uuid().references(() => taskLists.id, {onDelete: 'set null'}),
+    projectId: uuid().references(() => projects.id, {onDelete: 'set null'}),
     title: text().notNull(),
     notes: text().notNull().default(''),
     /** The day it is due, in the user's own calendar (no time zone). */
-    dueDate: date({ mode: 'string' }),
+    dueDate: date({mode: 'string'}),
     priority: smallint().$type<TaskPriority>().notNull().default(0),
     /** Short, normal or long-running (see TASK_HORIZONS). */
     horizon: text().$type<TaskHorizon>().notNull().default('normal'),
@@ -48,10 +54,10 @@ export const tasks = pgTable(
     checklist: jsonb().$type<ChecklistItem[]>().notNull().default([]),
     /** Once done, a repeating task comes back as a new one on its next day. */
     repeat: jsonb().$type<Repeat>(),
-    completedAt: timestamp({ withTimezone: true }),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp({withTimezone: true}),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [
+  table => [
     index().on(table.userId, table.completedAt),
     index().on(table.listId),
     index().on(table.projectId),
@@ -69,17 +75,17 @@ export const reminders = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     /** The task it is about; the reminder goes with the task. */
-    taskId: uuid().references(() => tasks.id, { onDelete: 'cascade' }),
+    taskId: uuid().references(() => tasks.id, {onDelete: 'cascade'}),
     text: text().notNull(),
-    remindAt: timestamp({ withTimezone: true }).notNull(),
+    remindAt: timestamp({withTimezone: true}).notNull(),
     repeat: jsonb().$type<Repeat>(),
     status: text().$type<ReminderStatus>().notNull().default('scheduled'),
-    firedAt: timestamp({ withTimezone: true }),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    firedAt: timestamp({withTimezone: true}),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [
+  table => [
     index().on(table.status, table.remindAt),
     index().on(table.userId),
     index().on(table.taskId),

@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { SecretsService } from '@pd/api-core';
-import { GithubSettings } from '@pd/contracts';
-import { GithubAuthError, GithubClient } from './github.client';
+import {BadRequestException, Injectable} from '@nestjs/common';
+import {SecretsService} from '@pd/api-core';
+import {GithubSettings} from '@pd/contracts';
+import {GithubAuthError, GithubClient} from './github.client';
 
 const TOKEN_KEY = 'development.github-token';
 
@@ -20,7 +20,7 @@ export class GithubTokenService {
   }
 
   async settings(userId: string): Promise<GithubSettings> {
-    return { tokenConfigured: await this.hasToken(userId) };
+    return {tokenConfigured: await this.hasToken(userId)};
   }
 
   async save(userId: string, token: string): Promise<void> {

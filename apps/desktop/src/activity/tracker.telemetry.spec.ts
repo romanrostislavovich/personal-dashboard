@@ -1,9 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { WindowSample } from './span-builder';
-import { TELEMETRY_INGEST_PATH } from '@pd/client-core';
-import { ActivityTracker } from './tracker';
-import type { NativeInputAggregate } from './input-dynamics';
-import type { TerminalReport } from './telemetry-sources';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import type {WindowSample} from './span-builder';
+import {TELEMETRY_INGEST_PATH} from '@pd/client-core';
+import {ActivityTracker} from './tracker';
+import type {NativeInputAggregate} from './input-dynamics';
+import type {TerminalReport} from './telemetry-sources';
 
 const env = vi.hoisted(() => ({
   sample: (_sample: WindowSample | null) => undefined as void,
@@ -29,7 +29,7 @@ vi.mock('./telemetry-sources', () => ({
 }));
 
 vi.mock('electron', () => ({
-  net: { fetch: env.fetch },
+  net: {fetch: env.fetch},
   powerMonitor: {
     getSystemIdleTime: () => env.idle,
     on: (event: string, fn: () => void) => env.events.set(event, fn),
@@ -76,9 +76,9 @@ vi.mock('./activity-store', () => ({
       breakMinutes: 0,
       distractingApps: [],
       meetingApps: [],
-      focus: { roundsBeforeLongBreak: 4 },
+      focus: {roundsBeforeLongBreak: 4},
     };
-    setDevice(device: { id: string; token: string } | null) {
+    setDevice(device: {id: string; token: string} | null) {
       this.deviceId = device?.id ?? null;
       this.token = device?.token ?? null;
     }
@@ -100,7 +100,9 @@ const windowSample = (app = 'editor', title = 'Document'): WindowSample => ({
   fullscreen: false,
 });
 const telemetryCalls = () =>
-  env.fetch.mock.calls.filter(([url]) => new URL(url).pathname === TELEMETRY_INGEST_PATH);
+  env.fetch.mock.calls.filter(
+    ([url]) => new URL(url).pathname === TELEMETRY_INGEST_PATH,
+  );
 
 describe('ActivityTracker telemetry integration', () => {
   beforeEach(() => {
@@ -110,9 +112,11 @@ describe('ActivityTracker telemetry integration', () => {
     env.idle = 0;
     env.sourceUpdate.mockClear();
     env.sourceStop.mockClear();
-    env.fetch
-      .mockReset()
-      .mockImplementation(async () => ({ ok: true, status: 200, json: async () => ({}) }));
+    env.fetch.mockReset().mockImplementation(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({}),
+    }));
   });
   afterEach(() => {
     vi.clearAllTimers();
@@ -127,12 +131,18 @@ describe('ActivityTracker telemetry integration', () => {
   }
 
   it('is off by default even when activity tracking is enabled', async () => {
-    const tracker = new ActivityTracker(() => 'https://dashboard.example.com', vi.fn(), vi.fn());
+    const tracker = new ActivityTracker(
+      () => 'https://dashboard.example.com',
+      vi.fn(),
+      vi.fn(),
+    );
     tracker.start();
     await watch(windowSample());
     expect(telemetryCalls()).toHaveLength(0);
     expect(tracker.observeInput('input', 'public-editable')).toBe(false);
-    expect(env.sourceUpdate.mock.calls.every(([gate]) => gate === null)).toBe(true);
+    expect(env.sourceUpdate.mock.calls.every(([gate]) => gate === null)).toBe(
+      true,
+    );
   });
 
   it('tells why the telemetry is off, without secrets', async () => {
@@ -160,10 +170,14 @@ describe('ActivityTracker telemetry integration', () => {
       delivery: 'accepted',
       lastHttpStatus: 200,
     });
-    expect(JSON.stringify(collecting)).not.toMatch(/device-token|Document|editor/);
+    expect(JSON.stringify(collecting)).not.toMatch(
+      /device-token|Document|editor/,
+    );
 
     await watch(windowSample('browser', 'confidential plan'), 10_000);
-    expect(tracker.telemetryDiagnostics(null).collection).toBe('private-window');
+    expect(tracker.telemetryDiagnostics(null).collection).toBe(
+      'private-window',
+    );
     await watch(windowSample('excluded'), 10_000);
     expect(tracker.telemetryDiagnostics(null).collection).toBe('excluded-app');
     env.idle = 600;
@@ -200,7 +214,7 @@ describe('ActivityTracker telemetry integration', () => {
     'unknown',
     'disabled',
     'revoked',
-  ])('discards buffered data when %s', async (reason) => {
+  ])('discards buffered data when %s', async reason => {
     let consent = true;
     const tracker = new ActivityTracker(
       () => 'https://dashboard.example.com',
@@ -217,11 +231,12 @@ describe('ActivityTracker telemetry integration', () => {
       env.events.get('suspend')?.();
     }
     if (reason === 'private') sample = windowSample('browser', 'Incognito');
-    if (reason === 'private-word') sample = windowSample('editor', 'confidential');
+    if (reason === 'private-word')
+      sample = windowSample('editor', 'confidential');
     if (reason === 'excluded') sample = windowSample('excluded');
     if (reason === 'idle') {
       env.idle = 301;
-      sample = { ...windowSample('player'), fullscreen: true };
+      sample = {...windowSample('player'), fullscreen: true};
     }
     if (reason === 'unknown') sample = null;
     if (reason === 'disabled') tracker.disable();
@@ -243,7 +258,9 @@ describe('ActivityTracker telemetry integration', () => {
     );
     tracker.start();
     env.sample(windowSample());
-    expect(env.sourceUpdate).toHaveBeenLastCalledWith(expect.objectContaining({ idleMs: 300_000 }));
+    expect(env.sourceUpdate).toHaveBeenLastCalledWith(
+      expect.objectContaining({idleMs: 300_000}),
+    );
     await watch(windowSample(), 5000);
     env.input({
       inputCount: 12,
@@ -253,12 +270,15 @@ describe('ActivityTracker telemetry integration', () => {
       pauseMeanMs: 2000,
       pauseM2: 0,
     });
-    env.terminal({ category: 'test', durationMs: 1000, exitCode: 1 });
-    env.terminal({ category: 'build', durationMs: 1000, exitCode: 0 });
-    env.terminal({ category: 'test', durationMs: 1000, exitCode: 0 });
-    env.terminal({ category: 'commit', durationMs: 1000, exitCode: 0 });
-    env.terminal({ category: 'test', durationMs: 6000, exitCode: 0 });
-    expect(successful.mock.calls.map(([event]) => event.category)).toEqual(['test', 'commit']);
+    env.terminal({category: 'test', durationMs: 1000, exitCode: 1});
+    env.terminal({category: 'build', durationMs: 1000, exitCode: 0});
+    env.terminal({category: 'test', durationMs: 1000, exitCode: 0});
+    env.terminal({category: 'commit', durationMs: 1000, exitCode: 0});
+    env.terminal({category: 'test', durationMs: 6000, exitCode: 0});
+    expect(successful.mock.calls.map(([event]) => event.category)).toEqual([
+      'test',
+      'commit',
+    ]);
     expect(successful.mock.calls[0][0]).toEqual({
       category: 'test',
       durationMs: 1000,
@@ -275,7 +295,7 @@ describe('ActivityTracker telemetry integration', () => {
     });
     tracker.pause(0);
     expect(env.sourceStop).toHaveBeenCalled();
-    env.terminal({ category: 'commit', durationMs: 0, exitCode: 0 });
+    env.terminal({category: 'commit', durationMs: 0, exitCode: 0});
     expect(successful).toHaveBeenCalledTimes(2);
     await tracker.stop();
   });
@@ -294,11 +314,11 @@ describe('ActivityTracker telemetry integration', () => {
     env.sample(windowSample());
     await vi.advanceTimersByTimeAsync(11_000);
     expect(env.sourceUpdate).toHaveBeenLastCalledWith(null);
-    env.terminal({ category: 'test', durationMs: 1000, exitCode: 0 });
+    env.terminal({category: 'test', durationMs: 1000, exitCode: 0});
     expect(successful).not.toHaveBeenCalled();
     env.sample(windowSample());
     server = 'https://two.example.com';
-    env.terminal({ category: 'commit', durationMs: 0, exitCode: 0 });
+    env.terminal({category: 'commit', durationMs: 0, exitCode: 0});
     expect(successful).not.toHaveBeenCalled();
     expect(env.sourceUpdate).toHaveBeenLastCalledWith(null);
     await tracker.stop();
@@ -315,7 +335,7 @@ describe('ActivityTracker telemetry integration', () => {
     tracker.start();
     await watch(windowSample(), 65_000);
     server = 'https://two.example.com';
-    tracker.enable({ id: 'device-two', token: 'new-token' });
+    tracker.enable({id: 'device-two', token: 'new-token'});
     await watch(windowSample());
     const calls = telemetryCalls();
     expect(calls).toHaveLength(1);
@@ -323,7 +343,7 @@ describe('ActivityTracker telemetry integration', () => {
     expect(calls[0][1].headers.Authorization).toBe('Device new-token');
     expect(
       JSON.parse(calls[0][1].body).buckets.every(
-        (bucket: { startedAt: string }) => Date.parse(bucket.startedAt) >= 65_000,
+        (bucket: {startedAt: string}) => Date.parse(bucket.startedAt) >= 65_000,
       ),
     ).toBe(true);
     await tracker.stop();
@@ -355,23 +375,23 @@ describe('ActivityTracker telemetry integration', () => {
     env.idle = 2;
     activeWork();
     expect(notice).not.toHaveBeenCalled();
-    env.terminal({ category: 'test', durationMs: 1000, exitCode: 1 });
-    env.terminal({ category: 'general', durationMs: 1000, exitCode: 0 });
-    env.terminal({ category: 'build', durationMs: 1000, exitCode: 0 });
+    env.terminal({category: 'test', durationMs: 1000, exitCode: 1});
+    env.terminal({category: 'general', durationMs: 1000, exitCode: 0});
+    env.terminal({category: 'build', durationMs: 1000, exitCode: 0});
     expect(notice).not.toHaveBeenCalled();
-    env.terminal({ category: 'test', durationMs: 1000, exitCode: 0 });
-    expect(notice).toHaveBeenCalledExactlyOnceWith({ kind: 'smart-break' });
+    env.terminal({category: 'test', durationMs: 1000, exitCode: 0});
+    expect(notice).toHaveBeenCalledExactlyOnceWith({kind: 'smart-break'});
     expect(successful).toHaveBeenCalledExactlyOnceWith({
       category: 'test',
       durationMs: 1000,
       completedAt: Date.now(),
     });
-    env.terminal({ category: 'commit', durationMs: 1000, exitCode: 0 });
+    env.terminal({category: 'commit', durationMs: 1000, exitCode: 0});
     activeWork(29);
-    env.terminal({ category: 'commit', durationMs: 1000, exitCode: 0 });
+    env.terminal({category: 'commit', durationMs: 1000, exitCode: 0});
     expect(notice).toHaveBeenCalledTimes(1);
     activeWork(1);
-    env.terminal({ category: 'commit', durationMs: 1000, exitCode: 0 });
+    env.terminal({category: 'commit', durationMs: 1000, exitCode: 0});
     expect(notice).toHaveBeenCalledTimes(2);
     await tracker.stop();
   });
@@ -387,15 +407,18 @@ describe('ActivityTracker telemetry integration', () => {
     tracker.start();
     env.idle = 2;
     activeWork();
-    env.terminal({ category: 'commit', durationMs: 0, exitCode: 0 });
+    env.terminal({category: 'commit', durationMs: 0, exitCode: 0});
     expect(notice).not.toHaveBeenCalled();
-    expect(tracker.smartBreakStatus()).toEqual({ enabled: false, available: true });
+    expect(tracker.smartBreakStatus()).toEqual({
+      enabled: false,
+      available: true,
+    });
     await tracker.stop();
   });
 
   it.each(['typing', 'focus', 'focus-break', 'meeting', 'idle'])(
     'drops the transition during %s without a deferred notification',
-    async (reason) => {
+    async reason => {
       const notice = vi.fn();
       const tracker = new ActivityTracker(
         () => 'https://dashboard.example.com',
@@ -416,8 +439,9 @@ describe('ActivityTracker telemetry integration', () => {
           phase: reason === 'focus' ? 'focus' : 'short-break',
         });
       }
-      if (reason === 'meeting') vi.spyOn(tracker, 'inMeeting', 'get').mockReturnValue(true);
-      env.terminal({ category: 'test', durationMs: 1000, exitCode: 0 });
+      if (reason === 'meeting')
+        vi.spyOn(tracker, 'inMeeting', 'get').mockReturnValue(true);
+      env.terminal({category: 'test', durationMs: 1000, exitCode: 0});
       expect(notice).not.toHaveBeenCalled();
       vi.restoreAllMocks();
       env.idle = 2;
@@ -441,7 +465,7 @@ describe('ActivityTracker telemetry integration', () => {
     'stale',
     'clock',
     'stop',
-  ])('clears smart-break work across %s', async (reason) => {
+  ])('clears smart-break work across %s', async reason => {
     const notice = vi.fn();
     let consent = true;
     let telemetryConsent = true;
@@ -466,18 +490,18 @@ describe('ActivityTracker telemetry integration', () => {
     if (reason === 'revoked') consent = false;
     if (reason === 'telemetry-revoked') telemetryConsent = false;
     if (reason === 'server') server = 'https://other.example.com';
-    if (reason === 'device') tracker.enable({ id: 'other', token: 'other' });
+    if (reason === 'device') tracker.enable({id: 'other', token: 'other'});
     if (reason === 'stale') vi.setSystemTime(Date.now() + 11_000);
     if (reason === 'clock') vi.setSystemTime(0);
     if (reason === 'stop') await tracker.stop();
-    env.terminal({ category: 'commit', durationMs: 0, exitCode: 0 });
+    env.terminal({category: 'commit', durationMs: 0, exitCode: 0});
     expect(notice).not.toHaveBeenCalled();
     tracker.pause(null);
     env.events.get('unlock-screen')?.();
     env.events.get('resume')?.();
     consent = telemetryConsent = true;
     activeWork(1);
-    env.terminal({ category: 'commit', durationMs: 0, exitCode: 0 });
+    env.terminal({category: 'commit', durationMs: 0, exitCode: 0});
     expect(notice).not.toHaveBeenCalled();
     await tracker.stop();
   });
@@ -502,11 +526,11 @@ describe('ActivityTracker telemetry integration', () => {
     }
     env.idle = 2;
     activeWork(1);
-    env.terminal({ category: 'commit', durationMs: 0, exitCode: 0 });
+    env.terminal({category: 'commit', durationMs: 0, exitCode: 0});
     expect(notice).not.toHaveBeenCalled();
     activeWork(50);
-    env.terminal({ category: 'commit', durationMs: 0, exitCode: 0 });
-    expect(notice).toHaveBeenCalledExactlyOnceWith({ kind: 'smart-break' });
+    env.terminal({category: 'commit', durationMs: 0, exitCode: 0});
+    expect(notice).toHaveBeenCalledExactlyOnceWith({kind: 'smart-break'});
     await tracker.stop();
   });
 });

@@ -1,13 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthClinic, HealthDoctor, HealthRecord } from '@pd/contracts';
-import { HealthDialogs } from '../dialogs/health-dialogs.service';
-import { HealthApi } from '../health.api';
-import { CountryPipe, SpecialityPipe } from '../health-labels';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {HealthClinic, HealthDoctor, HealthRecord} from '@pd/contracts';
+import {HealthDialogs} from '../dialogs/health-dialogs.service';
+import {HealthApi} from '../health.api';
+import {CountryPipe, SpecialityPipe} from '../health-labels';
 
 /** The clinics and doctors of every country, with their contacts. */
 @Component({
@@ -181,24 +186,34 @@ export class DoctorsPage {
     this.record.hasValue() ? this.record.value() : undefined,
   );
 
-  protected clinicOf(data: HealthRecord, doctor: HealthDoctor): HealthClinic | undefined {
-    return data.clinics.find((clinic) => clinic.id === doctor.clinicId);
+  protected clinicOf(
+    data: HealthRecord,
+    doctor: HealthDoctor,
+  ): HealthClinic | undefined {
+    return data.clinics.find(clinic => clinic.id === doctor.clinicId);
   }
 
   protected async addDoctor(record: HealthRecord): Promise<void> {
-    if (await this.dialogs.doctor({ clinics: record.clinics })) {
+    if (await this.dialogs.doctor({clinics: record.clinics})) {
       this.record.reload();
     }
   }
 
-  protected async editDoctor(record: HealthRecord, doctor: HealthDoctor): Promise<void> {
-    if (await this.dialogs.doctor({ clinics: record.clinics, doctor })) {
+  protected async editDoctor(
+    record: HealthRecord,
+    doctor: HealthDoctor,
+  ): Promise<void> {
+    if (await this.dialogs.doctor({clinics: record.clinics, doctor})) {
       this.record.reload();
     }
   }
 
   protected async removeDoctor(doctor: HealthDoctor): Promise<void> {
-    if (await this.dialogs.remove(doctor.name, () => this.api.client.removeDoctor(doctor.id))) {
+    if (
+      await this.dialogs.remove(doctor.name, () =>
+        this.api.client.removeDoctor(doctor.id),
+      )
+    ) {
       this.record.reload();
     }
   }
@@ -216,7 +231,11 @@ export class DoctorsPage {
   }
 
   protected async removeClinic(clinic: HealthClinic): Promise<void> {
-    if (await this.dialogs.remove(clinic.name, () => this.api.client.removeClinic(clinic.id))) {
+    if (
+      await this.dialogs.remove(clinic.name, () =>
+        this.api.client.removeClinic(clinic.id),
+      )
+    ) {
       this.record.reload();
     }
   }

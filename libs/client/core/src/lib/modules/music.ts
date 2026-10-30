@@ -12,7 +12,7 @@ import {
   SoundcloudTrackUpdate,
   SpotifyAppInput,
 } from '@pd/contracts';
-import { ApiClient, apiRequest } from '../api-client';
+import {ApiClient, apiRequest} from '../api-client';
 
 const BASE = '/api/music';
 
@@ -20,7 +20,7 @@ const BASE = '/api/music';
 export const MUSIC_READS = {
   settings: () => apiRequest(`${BASE}/settings`),
   stats: () => apiRequest(`${BASE}/stats`),
-  tops: (period: MusicTopPeriod) => apiRequest(`${BASE}/tops`, { period }),
+  tops: (period: MusicTopPeriod) => apiRequest(`${BASE}/tops`, {period}),
   nowPlaying: () => apiRequest(`${BASE}/now-playing`),
   /** The user's own tracks on SoundCloud; `null` — not connected. */
   soundcloud: () => apiRequest(`${BASE}/soundcloud`),
@@ -30,25 +30,30 @@ export function musicApi(api: ApiClient) {
   return {
     settings: () => api.read<MusicSettings>(MUSIC_READS.settings()),
     stats: () => api.read<MusicStats>(MUSIC_READS.stats()),
-    tops: (period: MusicTopPeriod) => api.read<MusicTops | null>(MUSIC_READS.tops(period)),
+    tops: (period: MusicTopPeriod) =>
+      api.read<MusicTops | null>(MUSIC_READS.tops(period)),
     nowPlaying: () => api.read<NowPlaying | null>(MUSIC_READS.nowPlaying()),
     /** The links straight to a song on YouTube Music and Spotify ("Share"). */
     songLinks: (song: SongLinksQuery) =>
-      api.read<SongLinks>(apiRequest(`${BASE}/song-links`, { ...song })),
+      api.read<SongLinks>(apiRequest(`${BASE}/song-links`, {...song})),
 
-    connectLastfm: (input: LastfmSettingsInput) => api.put<void>(`${BASE}/lastfm`, input),
+    connectLastfm: (input: LastfmSettingsInput) =>
+      api.put<void>(`${BASE}/lastfm`, input),
     disconnectLastfm: () => api.delete(`${BASE}/lastfm`),
     syncLastfm: () => api.post<void>(`${BASE}/lastfm/sync`, {}),
     /** Starts importing the rest of the history; progress comes with `settings`. */
     importLastfmHistory: () => api.post<void>(`${BASE}/lastfm/history`, {}),
     /** The Spotify sign-in page the user has to open. */
-    spotifyConnectUrl: () => api.post<{ url: string }>(`${BASE}/spotify/connect`, {}),
+    spotifyConnectUrl: () =>
+      api.post<{url: string}>(`${BASE}/spotify/connect`, {}),
     disconnectSpotify: () => api.delete(`${BASE}/spotify`),
     /** The owner sets the keys of the server's Spotify app. */
-    setSpotifyApp: (input: SpotifyAppInput) => api.put<void>(`${BASE}/spotify/app`, input),
+    setSpotifyApp: (input: SpotifyAppInput) =>
+      api.put<void>(`${BASE}/spotify/app`, input),
     removeSpotifyApp: () => api.delete(`${BASE}/spotify/app`),
 
-    soundcloud: () => api.read<SoundcloudStats | null>(MUSIC_READS.soundcloud()),
+    soundcloud: () =>
+      api.read<SoundcloudStats | null>(MUSIC_READS.soundcloud()),
     /** Finds the profile and loads its tracks right away. */
     connectSoundcloud: (input: SoundcloudConnectInput) =>
       api.put<void>(`${BASE}/soundcloud`, input),

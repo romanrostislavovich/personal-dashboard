@@ -1,12 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { desktopBridge } from '../realtime/desktop-bridge';
-import { desktopNotificationsOn, setDesktopNotifications } from '../realtime/desktop-notifications';
-import { DeviceOnlyComponent } from './device-only.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {desktopBridge} from '../realtime/desktop-bridge';
+import {
+  desktopNotificationsOn,
+  setDesktopNotifications,
+} from '../realtime/desktop-notifications';
+import {DeviceOnlyComponent} from './device-only.component';
 
 /**
  * The desktop app's system notifications: on this computer, on or off, and a test. Which
@@ -44,7 +52,9 @@ import { DeviceOnlyComponent } from './device-only.component';
             {{ 'core.settings.desktopNotifications.test' | transloco }}
           </button>
         } @else {
-          <p class="hint">{{ 'core.settings.desktopNotifications.elsewhere' | transloco }}</p>
+          <p class="hint">
+            {{ 'core.settings.desktopNotifications.elsewhere' | transloco }}
+          </p>
         }
       </mat-card-content>
     </mat-card>
@@ -76,8 +86,12 @@ export class DesktopNotificationsComponent {
   /** Shown at once, even with the window in front: the user asked for it. */
   protected test(): void {
     this.desktop?.notify?.({
-      title: this.transloco.translate('core.settings.desktopNotifications.testTitle'),
-      body: this.transloco.translate('core.settings.desktopNotifications.testBody'),
+      title: this.transloco.translate(
+        'core.settings.desktopNotifications.testTitle',
+      ),
+      body: this.transloco.translate(
+        'core.settings.desktopNotifications.testBody',
+      ),
       route: '/settings?tab=notifications',
     });
   }

@@ -1,21 +1,27 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTabsModule } from '@angular/material/tabs';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Game, GameAccountInput } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { errorBody, errorStatus, INTEGRATIONS_LINK } from '@pd/web-core';
-import { AddGameAccountDialog } from './add-account.dialog';
-import { DotaDashboardComponent } from './dota/dota-dashboard.component';
-import { GamesApi } from './games.api';
-import { SteamDashboardComponent } from './steam/steam-dashboard.component';
-import { XboxDashboardComponent } from './xbox/xbox-dashboard.component';
-import { WowDashboardComponent } from './wow/wow-dashboard.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatTabsModule} from '@angular/material/tabs';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {Game, GameAccountInput} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {errorBody, errorStatus, INTEGRATIONS_LINK} from '@pd/web-core';
+import {AddGameAccountDialog} from './add-account.dialog';
+import {DotaDashboardComponent} from './dota/dota-dashboard.component';
+import {GamesApi} from './games.api';
+import {SteamDashboardComponent} from './steam/steam-dashboard.component';
+import {XboxDashboardComponent} from './xbox/xbox-dashboard.component';
+import {WowDashboardComponent} from './wow/wow-dashboard.component';
 
 @Component({
   selector: 'pd-games-page',
@@ -49,20 +55,29 @@ export class GamesPage {
   protected readonly integrations = INTEGRATIONS_LINK;
 
   protected readonly steam = computed(() =>
-    this.accounts.value().filter((a) => a.game === 'steam'),
+    this.accounts.value().filter(a => a.game === 'steam'),
   );
-  protected readonly dota = computed(() => this.accounts.value().filter((a) => a.game === 'dota2'));
-  protected readonly wow = computed(() => this.accounts.value().filter((a) => a.game === 'wow'));
-  protected readonly xbox = computed(() => this.accounts.value().filter((a) => a.game === 'xbox'));
+  protected readonly dota = computed(() =>
+    this.accounts.value().filter(a => a.game === 'dota2'),
+  );
+  protected readonly wow = computed(() =>
+    this.accounts.value().filter(a => a.game === 'wow'),
+  );
+  protected readonly xbox = computed(() =>
+    this.accounts.value().filter(a => a.game === 'xbox'),
+  );
   protected readonly tabIndex = signal(0);
 
   /** `game` — the game the dialog opens on (a tab's own "add" button). */
   async add(game?: Game): Promise<void> {
     const input = await firstValueFrom(
       this.dialog
-        .open<AddGameAccountDialog, Game | undefined, GameAccountInput>(AddGameAccountDialog, {
-          data: game,
-        })
+        .open<AddGameAccountDialog, Game | undefined, GameAccountInput>(
+          AddGameAccountDialog,
+          {
+            data: game,
+          },
+        )
         .afterClosed(),
     );
     if (input) {
@@ -83,14 +98,19 @@ export class GamesPage {
   }
 
   async remove(accountId: string): Promise<void> {
-    const name = this.accounts.value().find((a) => a.id === accountId)?.displayName;
-    if (confirm(this.transloco.translate('games.confirmDelete', { name }))) {
+    const name = this.accounts
+      .value()
+      .find(a => a.id === accountId)?.displayName;
+    if (confirm(this.transloco.translate('games.confirmDelete', {name}))) {
       await this.run(() => firstValueFrom(this.api.remove(accountId)));
     }
   }
 
   /** Loading indicator, list refresh and a clear error by HTTP status. */
-  private async run(action: () => Promise<unknown>, errorKeys: Record<number, string> = {}) {
+  private async run(
+    action: () => Promise<unknown>,
+    errorKeys: Record<number, string> = {},
+  ) {
     this.busy.set(true);
     try {
       await action();
@@ -98,12 +118,13 @@ export class GamesPage {
     } catch (error) {
       const key = errorKeys[errorStatus(error)];
       // "No realm … Realms: a, b, c": the server lists the realms the user can choose from.
-      const said = (errorBody(error) as { message?: string } | null)?.message ?? '';
+      const said =
+        (errorBody(error) as {message?: string} | null)?.message ?? '';
       const realms = said.split('Realms: ')[1];
       const text = realms
-        ? this.transloco.translate('games.errors.realmNotFound', { realms })
+        ? this.transloco.translate('games.errors.realmNotFound', {realms})
         : this.transloco.translate(key ?? 'games.errors.generic');
-      this.snackBar.open(text, 'OK', { duration: realms ? 30000 : 6000 });
+      this.snackBar.open(text, 'OK', {duration: realms ? 30000 : 6000});
     } finally {
       this.busy.set(false);
     }

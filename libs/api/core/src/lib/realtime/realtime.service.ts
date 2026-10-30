@@ -1,6 +1,6 @@
-import { Injectable, MessageEvent } from '@nestjs/common';
-import { RealtimeEvent } from '@pd/contracts';
-import { interval, map, merge, Observable, Subject } from 'rxjs';
+import {Injectable, MessageEvent} from '@nestjs/common';
+import {RealtimeEvent} from '@pd/contracts';
+import {interval, map, merge, Observable, Subject} from 'rxjs';
 
 const PING_INTERVAL_MS = 25_000;
 
@@ -14,15 +14,17 @@ export class RealtimeService {
 
   /** The SSE stream of one connection; ends when the client disconnects. */
   stream(userId: string): Observable<MessageEvent> {
-    return new Observable<MessageEvent>((subscriber) => {
+    return new Observable<MessageEvent>(subscriber => {
       const events = new Subject<RealtimeEvent>();
       const userConnections = this.connections.get(userId) ?? new Set();
       userConnections.add(events);
       this.connections.set(userId, userConnections);
 
-      const ping = interval(PING_INTERVAL_MS).pipe(map((): RealtimeEvent => ({ type: 'ping' })));
+      const ping = interval(PING_INTERVAL_MS).pipe(
+        map((): RealtimeEvent => ({type: 'ping'})),
+      );
       const subscription = merge(events, ping)
-        .pipe(map((event) => ({ data: event })))
+        .pipe(map(event => ({data: event})))
         .subscribe(subscriber);
 
       return () => {
@@ -40,6 +42,6 @@ export class RealtimeService {
   }
 
   emit(userId: string, event: RealtimeEvent): void {
-    this.connections.get(userId)?.forEach((connection) => connection.next(event));
+    this.connections.get(userId)?.forEach(connection => connection.next(event));
   }
 }

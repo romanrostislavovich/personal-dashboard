@@ -1,8 +1,17 @@
 <header class="toolbar">
   <h2>{{ 'life.tabs.chronicle' | transloco }}</h2>
-  <input type="date" [value]="day()" [max]="today" [attr.aria-label]="'life.day' | transloco"
-    (change)="pick($any($event.target).value)" />
-  <a matButton routerLink="/life/summary" [queryParams]="{ month: day().slice(0, 7) }">
+  <input
+    type="date"
+    [value]="day()"
+    [max]="today"
+    [attr.aria-label]="'life.day' | transloco"
+    (change)="pick($any($event.target).value)"
+  />
+  <a
+    matButton
+    routerLink="/life/summary"
+    [queryParams]="{month: day().slice(0, 7)}"
+  >
     {{ 'life.chronicle.journal' | transloco }}
   </a>
 </header>
@@ -15,8 +24,12 @@
     @if (narrative.isLoading()) {
       <p role="status">{{ 'life.chronicle.loading' | transloco }}</p>
     } @else if (narrative.error()) {
-      <p class="error" role="alert">{{ 'life.chronicle.loadError' | transloco }}</p>
-      <button matButton (click)="narrative.reload()">{{ 'life.chronicle.retry' | transloco }}</button>
+      <p class="error" role="alert">
+        {{ 'life.chronicle.loadError' | transloco }}
+      </p>
+      <button matButton (click)="narrative.reload()">
+        {{ 'life.chronicle.retry' | transloco }}
+      </button>
     } @else {
       @if (record()?.summaryText) {
         <p class="text">{{ record()?.summaryText }}</p>
@@ -29,12 +42,19 @@
           · {{ record()?.generatedAt | date: 'medium' }}
         </p>
         <details>
-          <summary>{{ 'life.chronicle.sources' | transloco }} ({{ record()?.sources?.length }})</summary>
+          <summary>
+            {{ 'life.chronicle.sources' | transloco }} ({{
+              record()?.sources?.length
+            }})
+          </summary>
           <ul>
             @for (source of record()?.sources ?? []; track $index) {
               <li>
-                {{ source.module + '.title' | transloco }} · <code>{{ source.key }}</code>
-                @if (source.at) { · {{ source.at | date: 'short' }} }
+                {{ source.module + '.title' | transloco }} ·
+                <code>{{ source.key }}</code>
+                @if (source.at) {
+                  · {{ source.at | date: 'short' }}
+                }
               </li>
             }
           </ul>
@@ -46,16 +66,31 @@
     <p class="hint">{{ 'life.chronicle.accuracy' | transloco }}</p>
     <p class="hint">{{ 'life.chronicle.generationHint' | transloco }}</p>
     @if (message(); as feedback) {
-      <p [class.error]="feedback.error" [attr.role]="feedback.error ? 'alert' : 'status'">{{ feedback.key | transloco }}</p>
+      <p
+        [class.error]="feedback.error"
+        [attr.role]="feedback.error ? 'alert' : 'status'"
+      >
+        {{ feedback.key | transloco }}
+      </p>
     }
-    @if (busy()) { <p role="status">{{ 'life.chronicle.working' | transloco }}</p> }
+    @if (busy()) {
+      <p role="status">{{ 'life.chronicle.working' | transloco }}</p>
+    }
   </mat-card-content>
   <mat-card-actions>
-    <button matButton (click)="generate()" [disabled]="busy() || narrative.isLoading() || !!narrative.error()">
+    <button
+      matButton
+      (click)="generate()"
+      [disabled]="busy() || narrative.isLoading() || !!narrative.error()"
+    >
       {{ 'life.chronicle.generate' | transloco }}
     </button>
     @if (record()) {
-      <button matButton (click)="remove()" [disabled]="busy() || narrative.isLoading() || !!narrative.error()">
+      <button
+        matButton
+        (click)="remove()"
+        [disabled]="busy() || narrative.isLoading() || !!narrative.error()"
+      >
         {{ 'life.chronicle.delete' | transloco }}
       </button>
     }
@@ -64,13 +99,34 @@
 
 <mat-card appearance="outlined">
   <mat-card-content>
-    <h3><label for="lifelog-note">{{ 'life.chronicle.note' | transloco }}</label></h3>
-    <p id="lifelog-note-hint" class="hint">{{ 'life.chronicle.noteHint' | transloco }}</p>
-    <textarea id="lifelog-note" rows="5" maxlength="2000" aria-describedby="lifelog-note-hint"
-      [value]="note()" [disabled]="narrative.isLoading() || !!narrative.error()"
-      (input)="edit($any($event.target).value)"></textarea>
-    <p class="hint">{{ note().length }} / 2000 @if (dirty()) { · {{ 'life.chronicle.unsaved' | transloco }} }</p>
-    <button matButton (click)="saveNote()" [disabled]="busy() || !dirty() || narrative.isLoading() || !!narrative.error()">
+    <h3>
+      <label for="lifelog-note">{{ 'life.chronicle.note' | transloco }}</label>
+    </h3>
+    <p id="lifelog-note-hint" class="hint">
+      {{ 'life.chronicle.noteHint' | transloco }}
+    </p>
+    <textarea
+      id="lifelog-note"
+      rows="5"
+      maxlength="2000"
+      aria-describedby="lifelog-note-hint"
+      [value]="note()"
+      [disabled]="narrative.isLoading() || !!narrative.error()"
+      (input)="edit($any($event.target).value)"
+    ></textarea>
+    <p class="hint">
+      {{ note().length }} / 2000
+      @if (dirty()) {
+        · {{ 'life.chronicle.unsaved' | transloco }}
+      }
+    </p>
+    <button
+      matButton
+      (click)="saveNote()"
+      [disabled]="
+        busy() || !dirty() || narrative.isLoading() || !!narrative.error()
+      "
+    >
       {{ 'life.chronicle.saveNote' | transloco }}
     </button>
   </mat-card-content>
@@ -84,17 +140,25 @@
 <mat-card appearance="outlined">
   <mat-card-content>
     <h3>{{ 'life.chronicle.settings' | transloco }}</h3>
-    <mat-slide-toggle [checked]="nightlyEnabled()"
+    <mat-slide-toggle
+      [checked]="nightlyEnabled()"
       [disabled]="configuring() || settings.isLoading() || !!settings.error()"
-      (toggleChange)="configure(!nightlyEnabled())">
+      (toggleChange)="configure(!nightlyEnabled())"
+    >
       {{ 'life.chronicle.nightly' | transloco }}
     </mat-slide-toggle>
     <p class="hint">{{ 'life.chronicle.nightlyHint' | transloco }}</p>
     <p class="hint">{{ 'life.chronicle.privacy' | transloco }}</p>
-    @if (settings.isLoading() || configuring()) { <p role="status">{{ 'life.chronicle.working' | transloco }}</p> }
+    @if (settings.isLoading() || configuring()) {
+      <p role="status">{{ 'life.chronicle.working' | transloco }}</p>
+    }
     @if (settings.error() || settingsError()) {
-      <p class="error" role="alert">{{ 'life.chronicle.settingsError' | transloco }}</p>
-      <button matButton (click)="settings.reload()">{{ 'life.chronicle.retry' | transloco }}</button>
+      <p class="error" role="alert">
+        {{ 'life.chronicle.settingsError' | transloco }}
+      </p>
+      <button matButton (click)="settings.reload()">
+        {{ 'life.chronicle.retry' | transloco }}
+      </button>
     }
   </mat-card-content>
 </mat-card>

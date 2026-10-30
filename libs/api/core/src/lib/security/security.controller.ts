@@ -1,4 +1,13 @@
-import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
 import {
   FindingStatusChange,
   findingStatusSchema,
@@ -6,11 +15,11 @@ import {
   securitySettingsSchema,
   SecurityStatus,
 } from '@pd/contracts';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { ServerActions } from '../sync/server-actions';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
-import { SECURITY_ACTIONS } from './security.jobs';
-import { SecurityService } from './security.service';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {ServerActions} from '../sync/server-actions';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
+import {SECURITY_ACTIONS} from './security.jobs';
+import {SecurityService} from './security.service';
 
 /** The security agent, for the owner of the instance only: `/api/security`. */
 @Controller('security')
@@ -48,7 +57,8 @@ export class SecurityController {
   @HttpCode(204)
   async saveSettings(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(securitySettingsSchema)) input: SecuritySettings,
+    @Body(new ZodValidationPipe(securitySettingsSchema))
+    input: SecuritySettings,
   ): Promise<void> {
     await this.security.assertOwner(user.id);
     await this.security.saveSettings(user.id, input);
@@ -62,7 +72,7 @@ export class SecurityController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<SecurityStatus> {
     await this.security.assertOwner(user.id);
-    await this.actions.run(user.id, SECURITY_ACTIONS.guide, { id });
+    await this.actions.run(user.id, SECURITY_ACTIONS.guide, {id});
     return this.security.status(user.id);
   }
 
@@ -72,7 +82,8 @@ export class SecurityController {
   async setStatus(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(findingStatusSchema)) { status }: FindingStatusChange,
+    @Body(new ZodValidationPipe(findingStatusSchema))
+    {status}: FindingStatusChange,
   ): Promise<void> {
     await this.security.assertOwner(user.id);
     await this.security.setStatus(user.id, id, status);

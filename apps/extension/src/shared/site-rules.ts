@@ -1,4 +1,4 @@
-import { ActivityBrowserConfig, isSiteOf } from '@pd/contracts';
+import {ActivityBrowserConfig, isSiteOf} from '@pd/contracts';
 
 /** A stretch of time one site was in front, waiting to be sent. */
 export interface Visit {
@@ -10,7 +10,8 @@ export interface Visit {
 
 /** Why a site is closed now, for the page shown instead of it. */
 export type BlockReason =
-  { reason: 'focus'; until: string } | { reason: 'limit'; minutes: number; usedSeconds: number };
+  | {reason: 'focus'; until: string}
+  | {reason: 'limit'; minutes: number; usedSeconds: number};
 
 /** The local date of a moment (`YYYY-MM-DD`), as the user's day. */
 export function localDay(at: Date): string {
@@ -19,15 +20,24 @@ export function localDay(at: Date): string {
 }
 
 /** Seconds on a site (its subdomains too) today that the server does not know of yet. */
-export function unsentSeconds(visits: Visit[], domain: string, now: Date): number {
+export function unsentSeconds(
+  visits: Visit[],
+  domain: string,
+  now: Date,
+): number {
   const today = localDay(now);
   return visits
     .filter(
-      (visit) => isSiteOf(visit.site, domain) && localDay(new Date(visit.startedAt)) === today,
+      visit =>
+        isSiteOf(visit.site, domain) &&
+        localDay(new Date(visit.startedAt)) === today,
     )
     .reduce(
       (sum, visit) =>
-        sum + (new Date(visit.endedAt).getTime() - new Date(visit.startedAt).getTime()) / 1000,
+        sum +
+        (new Date(visit.endedAt).getTime() -
+          new Date(visit.startedAt).getTime()) /
+          1000,
       0,
     );
 }
@@ -52,17 +62,18 @@ export function blockReason(
   if (
     config.focusUntil &&
     new Date(config.focusUntil) > now &&
-    config.distractingSites.some((domain) => isSiteOf(site, domain))
+    config.distractingSites.some(domain => isSiteOf(site, domain))
   ) {
-    return { reason: 'focus', until: config.focusUntil };
+    return {reason: 'focus', until: config.focusUntil};
   }
   for (const limit of config.siteLimits) {
     if (!isSiteOf(site, limit.site)) {
       continue;
     }
-    const usedSeconds = limit.usedSeconds + unsentSeconds(unsent, limit.site, now);
+    const usedSeconds =
+      limit.usedSeconds + unsentSeconds(unsent, limit.site, now);
     if (usedSeconds >= limit.minutes * 60) {
-      return { reason: 'limit', minutes: limit.minutes, usedSeconds };
+      return {reason: 'limit', minutes: limit.minutes, usedSeconds};
     }
   }
   return null;
@@ -70,5 +81,5 @@ export function blockReason(
 
 /** A site whose domain has one of the private words of Activity is never recorded. */
 export function isPrivateSite(site: string, privateWords: string[]): boolean {
-  return privateWords.some((word) => site.includes(word.toLowerCase()));
+  return privateWords.some(word => site.includes(word.toLowerCase()));
 }

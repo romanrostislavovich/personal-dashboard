@@ -9,13 +9,22 @@ import {
 } from './activity-stats';
 
 const projects = [
-  { projectId: 'p1', name: 'Dashboard', patterns: ['Dashboard', 'personal-dashboard'] },
-  { projectId: 'p2', name: 'Dashboard API', patterns: ['dashboard-api'] },
+  {
+    projectId: 'p1',
+    name: 'Dashboard',
+    patterns: ['Dashboard', 'personal-dashboard'],
+  },
+  {projectId: 'p2', name: 'Dashboard API', patterns: ['dashboard-api']},
 ];
 
 describe('matchProject', () => {
   it('finds the project by its name or a rule, whatever the case', () => {
-    expect(matchProject('main.ts — personal-dashboard — Visual Studio Code', projects)).toBe('p1');
+    expect(
+      matchProject(
+        'main.ts — personal-dashboard — Visual Studio Code',
+        projects,
+      ),
+    ).toBe('p1');
     expect(matchProject('DASHBOARD — Figma', projects)).toBe('p1');
     expect(matchProject('YouTube', projects)).toBeNull();
   });
@@ -25,7 +34,9 @@ describe('matchProject', () => {
   });
 
   it('ignores a pattern too short to mean anything', () => {
-    expect(matchProject('a', [{ projectId: 'p', name: 'a', patterns: ['a'] }])).toBeNull();
+    expect(
+      matchProject('a', [{projectId: 'p', name: 'a', patterns: ['a']}]),
+    ).toBeNull();
   });
 });
 
@@ -41,8 +52,21 @@ describe('daysOf', () => {
 });
 
 describe('buildStats', () => {
-  const row = (day: string, app: string, title: string, seconds: number, deviceId = 'd1') =>
-    ({ day, deviceId, app, appName: app.toUpperCase(), title, seconds }) satisfies UsageRow;
+  const row = (
+    day: string,
+    app: string,
+    title: string,
+    seconds: number,
+    deviceId = 'd1',
+  ) =>
+    ({
+      day,
+      deviceId,
+      app,
+      appName: app.toUpperCase(),
+      title,
+      seconds,
+    }) satisfies UsageRow;
 
   const stats = buildStats(
     [
@@ -51,14 +75,14 @@ describe('buildStats', () => {
       row('2026-10-02', 'chrome', 'YouTube', 600, 'd2'),
       row('2026-10-02', 'wow', 'World of Warcraft', 1800),
     ],
-    { from: '2026-10-01', to: '2026-10-03' },
+    {from: '2026-10-01', to: '2026-10-03'},
     {
       // The user moved the browser to "media".
       categories: new Map([['chrome', 'media']]),
       projects,
       devices: [
-        { id: 'd1', name: 'PC' },
-        { id: 'd2', name: 'Laptop' },
+        {id: 'd1', name: 'PC'},
+        {id: 'd2', name: 'Laptop'},
       ],
     },
   );
@@ -66,46 +90,48 @@ describe('buildStats', () => {
   it('adds the time up by day, with the empty days', () => {
     expect(stats.totalSeconds).toBe(7200);
     expect(stats.days).toEqual([
-      { day: '2026-10-01', seconds: 4800 },
-      { day: '2026-10-02', seconds: 2400 },
-      { day: '2026-10-03', seconds: 0 },
+      {day: '2026-10-01', seconds: 4800},
+      {day: '2026-10-02', seconds: 2400},
+      {day: '2026-10-03', seconds: 0},
     ]);
   });
 
   it('ranks programs, categories, projects, devices and titles', () => {
-    expect(stats.apps.map((app) => `${app.app}:${app.category}:${app.seconds}`)).toEqual([
-      'code:development:3600',
-      'chrome:media:1800',
-      'wow:games:1800',
-    ]);
+    expect(
+      stats.apps.map(app => `${app.app}:${app.category}:${app.seconds}`),
+    ).toEqual(['code:development:3600', 'chrome:media:1800', 'wow:games:1800']);
     expect(stats.categories).toEqual([
-      { category: 'development', seconds: 3600 },
-      { category: 'games', seconds: 1800 },
-      { category: 'media', seconds: 1800 },
+      {category: 'development', seconds: 3600},
+      {category: 'games', seconds: 1800},
+      {category: 'media', seconds: 1800},
     ]);
     expect(stats.projects).toEqual([
       {
         projectId: 'p1',
         name: 'Dashboard',
         seconds: 3600,
-        days: [{ day: '2026-10-01', seconds: 3600 }],
+        days: [{day: '2026-10-01', seconds: 3600}],
       },
     ]);
     expect(stats.devices).toEqual([
-      { id: 'd1', name: 'PC', seconds: 6600 },
-      { id: 'd2', name: 'Laptop', seconds: 600 },
+      {id: 'd1', name: 'PC', seconds: 6600},
+      {id: 'd2', name: 'Laptop', seconds: 600},
     ]);
-    expect(stats.titles[1]).toMatchObject({ app: 'chrome', title: 'YouTube', seconds: 1800 });
+    expect(stats.titles[1]).toMatchObject({
+      app: 'chrome',
+      title: 'YouTube',
+      seconds: 1800,
+    });
   });
 });
 
 describe('buildRecords', () => {
   const records = buildRecords(
     [
-      { day: '2026-09-30', app: 'code', seconds: 7200 },
-      { day: '2026-10-01', app: 'code', seconds: 3600 },
-      { day: '2026-10-01', app: 'chrome', seconds: 1800 },
-      { day: '2026-10-03', app: 'wow', seconds: 600 },
+      {day: '2026-09-30', app: 'code', seconds: 7200},
+      {day: '2026-10-01', app: 'code', seconds: 3600},
+      {day: '2026-10-01', app: 'chrome', seconds: 1800},
+      {day: '2026-10-03', app: 'wow', seconds: 600},
     ],
     new Map([['chrome', 'development']]),
   );
@@ -127,16 +153,18 @@ describe('buildRecords', () => {
 
 describe('longestRun', () => {
   it('counts days in a row across a month border', () => {
-    expect(longestRun(['2026-10-01', '2026-09-30', '2026-09-29', '2026-10-05'])).toBe(3);
+    expect(
+      longestRun(['2026-10-01', '2026-09-30', '2026-09-29', '2026-10-05']),
+    ).toBe(3);
     expect(longestRun([])).toBe(0);
   });
 });
 
 describe('watchedApps', () => {
   const watched = watchedApps([
-    { app: 'wow', category: null },
-    { app: 'chrome', category: 'development' },
-    { app: 'kinopoisk', category: 'media' },
+    {app: 'wow', category: null},
+    {app: 'chrome', category: 'development'},
+    {app: 'kinopoisk', category: 'media'},
   ]);
 
   it("takes players and browsers, the user's categories first", () => {

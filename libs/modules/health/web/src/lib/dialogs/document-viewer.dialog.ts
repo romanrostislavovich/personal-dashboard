@@ -1,9 +1,18 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthDocument } from '@pd/contracts';
-import { DocumentPagesComponent } from './document-pages.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {HealthDocument} from '@pd/contracts';
+import {DocumentPagesComponent} from './document-pages.component';
 
 /**
  * The original of a document, shown over the page, page by page. It stays inside the app — a
@@ -13,7 +22,12 @@ import { DocumentPagesComponent } from './document-pages.component';
 @Component({
   selector: 'pd-health-document-viewer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DocumentPagesComponent, MatButtonModule, MatDialogModule, TranslocoPipe],
+  imports: [
+    DocumentPagesComponent,
+    MatButtonModule,
+    MatDialogModule,
+    TranslocoPipe,
+  ],
   template: `
     <h2 mat-dialog-title>{{ document().name }}</h2>
     <mat-dialog-content class="original">

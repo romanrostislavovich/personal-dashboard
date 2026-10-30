@@ -1,8 +1,8 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { automationRules } from '../automations/automations.schema';
-import { DB, Database } from '../database/database.module';
-import { ProjectsService } from '../projects/projects.service';
-import { DemoService } from './demo.service';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {automationRules} from '../automations/automations.schema';
+import {DB, Database} from '../database/database.module';
+import {ProjectsService} from '../projects/projects.service';
+import {DemoService} from './demo.service';
 
 /**
  * The core's part of the demo data: the projects the sections hang their data on, and a rule
@@ -19,7 +19,7 @@ export class CoreDemo implements OnModuleInit {
   onModuleInit(): void {
     this.demo.register({
       module: 'core',
-      seed: async (context) => {
+      seed: async context => {
         const shop = await this.projects.create(context.userId, {
           name: 'Tea Shop',
           url: 'https://tea-shop.example.com',
@@ -39,9 +39,12 @@ export class CoreDemo implements OnModuleInit {
           userId: context.userId,
           name: 'A gift a week before a birthday',
           trigger: 'birthdays.upcoming',
-          triggerParams: { days: '7' },
+          triggerParams: {days: '7'},
           action: 'tasks.create',
-          actionParams: { title: 'Buy a gift: {{name}} ({{date}}) {{ideas}}', due: 'none' },
+          actionParams: {
+            title: 'Buy a gift: {{name}} ({{date}}) {{ideas}}',
+            due: 'none',
+          },
         });
       },
     });

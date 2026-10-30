@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,8 +7,8 @@ import {
   input,
   LOCALE_ID,
 } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { addDays, LocalDate, toLocalDate } from '@pd/contracts';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {addDays, LocalDate, toLocalDate} from '@pd/contracts';
 
 /** A day of the calendar: a number and the text shown on hover (the caller knows the unit). */
 export interface HeatmapDay {
@@ -40,7 +40,9 @@ const LEVELS = 4;
         class="grid"
         role="img"
         [attr.aria-label]="year()"
-        [style.grid-template-columns]="'repeat(' + weeks().length + ', minmax(0, 1fr))'"
+        [style.grid-template-columns]="
+          'repeat(' + weeks().length + ', minmax(0, 1fr))'
+        "
       >
         @for (week of weeks(); track $index) {
           <div class="week">
@@ -134,20 +136,23 @@ export class ContributionHeatmapComponent {
   readonly days = input.required<HeatmapDay[]>();
   readonly today = input<LocalDate | null>(null);
 
-  protected readonly levels = Array.from({ length: LEVELS + 1 }, (_, level) => level);
+  protected readonly levels = Array.from(
+    {length: LEVELS + 1},
+    (_, level) => level,
+  );
 
   private readonly datePipe = new DatePipe(inject(LOCALE_ID));
 
   /** Weeks of the year; cells outside the year are `null` so the first column starts on Monday. */
   protected readonly weeks = computed(() => {
     const year = this.year();
-    const byDay = new Map(this.days().map((day) => [day.day, day]));
-    const max = Math.max(0, ...this.days().map((day) => day.value));
+    const byDay = new Map(this.days().map(day => [day.day, day]));
+    const max = Math.max(0, ...this.days().map(day => day.value));
     const first = new Date(Date.UTC(year, 0, 1));
     const offset = (first.getUTCDay() + 6) % 7; // Monday = 0
-    const cells: (Cell | null)[] = Array.from({ length: offset }, () => null);
+    const cells: (Cell | null)[] = Array.from({length: offset}, () => null);
     for (let i = 0; ; i++) {
-      const parts = addDays({ year, month: 1, day: 1 }, i);
+      const parts = addDays({year, month: 1, day: 1}, i);
       if (parts.year !== year) {
         break;
       }

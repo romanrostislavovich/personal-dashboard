@@ -8,14 +8,14 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { errorStatus } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { FinanceApi } from './finance.api';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {errorStatus} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {FinanceApi} from './finance.api';
 
 /**
  * "Import a PKO statement": the history exported from iPKO (CSV or XML) becomes transactions —
@@ -41,7 +41,10 @@ import { FinanceApi } from './finance.api';
         (click)="picker.click()"
       >
         <mat-icon>upload_file</mat-icon>
-        {{ (busy() ? 'finance.statement.importing' : 'finance.statement.import') | transloco }}
+        {{
+          (busy() ? 'finance.statement.importing' : 'finance.statement.import')
+            | transloco
+        }}
       </button>
     }
   `,
@@ -54,7 +57,8 @@ export class StatementImportButton {
   readonly appearance = input<'text' | 'tonal' | 'outlined'>('tonal');
   /** No button of its own: a menu of the page opens the file picker (`open()`). */
   readonly bare = input(false);
-  private readonly picker = viewChild.required<ElementRef<HTMLInputElement>>('picker');
+  private readonly picker =
+    viewChild.required<ElementRef<HTMLInputElement>>('picker');
   /** Imported: the page reads its transactions again. */
   readonly imported = output<void>();
 
@@ -75,13 +79,20 @@ export class StatementImportButton {
     this.busy.set(true);
     try {
       const result = await firstValueFrom(this.api.importStatement(file));
-      this.snackBar.open(this.transloco.translate('finance.bank.syncResult', result), 'OK', {
-        duration: 6000,
-      });
+      this.snackBar.open(
+        this.transloco.translate('finance.bank.syncResult', result),
+        'OK',
+        {
+          duration: 6000,
+        },
+      );
       this.imported.emit();
     } catch (error) {
-      const key = errorStatus(error) === 400 ? 'finance.statement.notPko' : 'finance.bank.failed';
-      this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 8000 });
+      const key =
+        errorStatus(error) === 400
+          ? 'finance.statement.notPko'
+          : 'finance.bank.failed';
+      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 8000});
     } finally {
       this.busy.set(false);
     }

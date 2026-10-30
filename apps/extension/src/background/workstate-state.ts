@@ -1,4 +1,4 @@
-import type { WorkstateInput } from '@pd/contracts';
+import type {WorkstateInput} from '@pd/contracts';
 
 interface WorkstateDraft {
   input: WorkstateInput;
@@ -10,10 +10,11 @@ interface WorkstateDraft {
 }
 
 /** Memory only: a sleeping worker discards the preview rather than replaying it. */
-export const workstateState: { revision: number; draft: WorkstateDraft | null } = {
-  revision: 0,
-  draft: null,
-};
+export const workstateState: {revision: number; draft: WorkstateDraft | null} =
+  {
+    revision: 0,
+    draft: null,
+  };
 
 export function clearWorkstatePreview(): void {
   workstateState.revision++;

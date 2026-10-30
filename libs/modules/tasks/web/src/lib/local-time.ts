@@ -1,4 +1,4 @@
-import { LocalDate } from '@pd/contracts';
+import {LocalDate} from '@pd/contracts';
 
 // The browser is on the user's own clock, so local dates and times are simply the device's.
 

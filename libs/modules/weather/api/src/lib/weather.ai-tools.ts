@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, NO_PARAMETERS } from '@pd/api-core';
-import { WeatherService } from './weather.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AiService, NO_PARAMETERS} from '@pd/api-core';
+import {WeatherService} from './weather.service';
 
 /** AI access to the weather: today's forecast, the week ahead and what to wear. */
 @Injectable()
@@ -25,7 +25,7 @@ export class WeatherAiTools implements OnModuleInit {
         'questions about the coming days. ' +
         'null — no location set: the user chooses it on the Weather page.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.weather.forecast(userId),
+      handler: userId => this.weather.forecast(userId),
     });
   }
 }

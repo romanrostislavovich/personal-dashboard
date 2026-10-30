@@ -1,12 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   ICD_FILE_MAX_BYTES,
   ICD_LANGUAGES,
@@ -14,7 +20,7 @@ import {
   IcdImportInput,
   IcdSource,
 } from '@pd/contracts';
-import { HealthApi } from '../health.api';
+import {HealthApi} from '../health.api';
 
 /**
  * The ICD dictionary of Health, in Settings → Integrations. WHO does not let ICD-10 be shipped
@@ -38,27 +44,41 @@ import { HealthApi } from '../health.api';
       <mat-card-header>
         <mat-icon mat-card-avatar>menu_book</mat-icon>
         <mat-card-title>{{ 'health.icd.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'health.icd.subtitle' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'health.icd.subtitle' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content class="content">
-        @for (dictionary of loaded(); track dictionary.system + dictionary.language) {
+        @for (
+          dictionary of loaded();
+          track dictionary.system + dictionary.language
+        ) {
           <p class="ok">
             <mat-icon>check_circle</mat-icon>
             {{
               'health.icd.loaded'
                 | transloco
                   : {
-                      system: ('health.systems.' + dictionary.system | transloco),
-                      language: ('health.languages.' + dictionary.language | transloco),
+                      system:
+                        ('health.systems.' + dictionary.system | transloco),
+                      language:
+                        ('health.languages.' + dictionary.language | transloco),
                       count: dictionary.codes,
                     }
             }}
           </p>
         }
         <p class="hint">{{ 'health.icd.why' | transloco }}</p>
-        <mat-checkbox [checked]="accepted()" (change)="accepted.set($event.checked)">
+        <mat-checkbox
+          [checked]="accepted()"
+          (change)="accepted.set($event.checked)"
+        >
           {{ 'health.icd.accept' | transloco }}
-          <a href="https://icdcdn.who.int/icd10/index.html" target="_blank" rel="noopener">
+          <a
+            href="https://icdcdn.who.int/icd10/index.html"
+            target="_blank"
+            rel="noopener"
+          >
             WHO ICD-10
           </a>
         </mat-checkbox>
@@ -69,7 +89,10 @@ import { HealthApi } from '../health.api';
             (click)="load('who-icd10-en')"
           >
             <mat-icon>download</mat-icon>
-            {{ (loaded().length ? 'health.icd.reload' : 'health.icd.load') | transloco }}
+            {{
+              (loaded().length ? 'health.icd.reload' : 'health.icd.load')
+                | transloco
+            }}
           </button>
         </div>
 
@@ -78,29 +101,42 @@ import { HealthApi } from '../health.api';
         <div class="file">
           <mat-form-field subscriptSizing="dynamic">
             <mat-label>{{ 'health.icd.language' | transloco }}</mat-label>
-            <mat-select [value]="language()" (selectionChange)="language.set($event.value)">
+            <mat-select
+              [value]="language()"
+              (selectionChange)="language.set($event.value)"
+            >
               @for (code of languages; track code) {
-                <mat-option [value]="code">{{ 'health.languages.' + code | transloco }}</mat-option>
+                <mat-option [value]="code">{{
+                  'health.languages.' + code | transloco
+                }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
           <mat-form-field subscriptSizing="dynamic">
             <mat-label>{{ 'health.diagnosis.system' | transloco }}</mat-label>
-            <mat-select [value]="system()" (selectionChange)="system.set($event.value)">
+            <mat-select
+              [value]="system()"
+              (selectionChange)="system.set($event.value)"
+            >
               @for (code of systems; track code) {
-                <mat-option [value]="code">{{ 'health.systems.' + code | transloco }}</mat-option>
+                <mat-option [value]="code">{{
+                  'health.systems.' + code | transloco
+                }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
           <button matButton="tonal" [disabled]="busy()" (click)="input.click()">
-            <mat-icon>upload_file</mat-icon> {{ 'health.icd.chooseFile' | transloco }}
+            <mat-icon>upload_file</mat-icon>
+            {{ 'health.icd.chooseFile' | transloco }}
           </button>
           <input
             #input
             type="file"
             hidden
             accept=".csv,.txt,.xlsx"
-            (change)="importFile($any($event.target).files?.[0]); input.value = ''"
+            (change)="
+              importFile($any($event.target).files?.[0]); input.value = ''
+            "
           />
         </div>
 
@@ -175,7 +211,7 @@ export class IcdDictionaryIntegration {
 
   protected load(source: IcdSource): Promise<void> {
     return this.run('health.icd.failed', () =>
-      this.api.client.loadDictionary({ source, acceptTerms: true }),
+      this.api.client.loadDictionary({source, acceptTerms: true}),
     );
   }
 
@@ -189,14 +225,17 @@ export class IcdDictionaryIntegration {
     }
     return this.run('health.icd.noCodes', () =>
       this.api.client.importDictionary(
-        { language: this.language(), system: this.system() },
+        {language: this.language(), system: this.system()},
         file,
         file.name,
       ),
     );
   }
 
-  private async run(failure: string, request: () => Promise<IcdDictionary[]>): Promise<void> {
+  private async run(
+    failure: string,
+    request: () => Promise<IcdDictionary[]>,
+  ): Promise<void> {
     this.busy.set(true);
     this.error.set(null);
     try {

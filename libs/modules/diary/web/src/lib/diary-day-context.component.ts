@@ -1,11 +1,16 @@
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { LifeDay } from '@pd/contracts';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {LifeDay} from '@pd/contracts';
 
 /**
  * What the other sections know about the day being written about: the hours at the computer,
@@ -20,7 +25,9 @@ import { LifeDay } from '@pd/contracts';
     @if (events().length) {
       <mat-card appearance="outlined">
         <mat-card-header>
-          <mat-card-title>{{ 'diary.dayContext.title' | transloco }}</mat-card-title>
+          <mat-card-title>{{
+            'diary.dayContext.title' | transloco
+          }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <ul>
@@ -28,7 +35,9 @@ import { LifeDay } from '@pd/contracts';
               <li>
                 <mat-icon inline>{{ event.icon }}</mat-icon>
                 @if (event.link) {
-                  <a [routerLink]="event.link">{{ event.key | transloco: event.params ?? {} }}</a>
+                  <a [routerLink]="event.link">{{
+                    event.key | transloco: event.params ?? {}
+                  }}</a>
                 } @else {
                   <span>{{ event.key | transloco: event.params ?? {} }}</span>
                 }
@@ -70,8 +79,12 @@ export class DiaryDayContextComponent {
   /** The day of the entry, `YYYY-MM-DD`. */
   readonly day = input.required<string>();
 
-  private readonly timeline = httpResource<LifeDay>(() => CORE_READS.lifeDay(this.day()));
+  private readonly timeline = httpResource<LifeDay>(() =>
+    CORE_READS.lifeDay(this.day()),
+  );
   protected readonly events = computed(() =>
-    (this.timeline.value()?.events ?? []).filter((event) => event.module !== 'diary'),
+    (this.timeline.value()?.events ?? []).filter(
+      event => event.module !== 'diary',
+    ),
   );
 }

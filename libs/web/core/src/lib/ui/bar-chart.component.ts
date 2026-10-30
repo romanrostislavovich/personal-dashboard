@@ -1,5 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { CHART_TICKS, niceCeil } from './chart-scale';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
+import {CHART_TICKS, niceCeil} from './chart-scale';
 
 export interface Bar {
   /** Under the bar (a month, a day); may be empty to keep the axis readable. */
@@ -20,7 +26,11 @@ export interface Bar {
   selector: 'pd-bar-chart',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="plot" [class.with-scale]="!!format()" (pointerleave)="hovered.set(null)">
+    <div
+      class="plot"
+      [class.with-scale]="!!format()"
+      (pointerleave)="hovered.set(null)"
+    >
       @if (format(); as fmt) {
         <div class="grid" aria-hidden="true">
           @for (tick of ticks; track tick) {
@@ -40,7 +50,11 @@ export interface Bar {
             @if (values() && bar.display) {
               <span class="value">{{ bar.display }}</span>
             }
-            <span class="bar" [class.empty]="bar.value === 0" [style.height.%]="bar.percent"></span>
+            <span
+              class="bar"
+              [class.empty]="bar.value === 0"
+              [style.height.%]="bar.percent"
+            ></span>
           </div>
         }
       </div>
@@ -165,7 +179,7 @@ export class BarChartComponent {
 
   /** The top of the scale: a round number over the largest bar when there is a scale. */
   protected readonly top = computed(() => {
-    const max = Math.max(1, ...this.bars().map((bar) => bar.value));
+    const max = Math.max(1, ...this.bars().map(bar => bar.value));
     const unit = this.unit();
     return this.format() ? niceCeil(max / unit) * unit : max;
   });

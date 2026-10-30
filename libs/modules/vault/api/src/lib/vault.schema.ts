@@ -1,5 +1,12 @@
-import { users } from '@pd/api-core/schema';
-import { index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {users} from '@pd/api-core/schema';
+import {
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 /*
  * The password vault keeps only what the device encrypted: the server cannot read a password, a
@@ -11,13 +18,13 @@ import { index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-c
 export const vaultKeys = pgTable('vault_keys', {
   userId: uuid()
     .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   kdf: text().notNull(),
   iterations: integer().notNull(),
   salt: text().notNull(),
   wrappedByPassword: text().notNull(),
   wrappedByRecovery: text().notNull(),
-  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
 });
 
 /** An item: its ciphertext and when it changed — nothing else is known about it here. */
@@ -27,10 +34,10 @@ export const vaultItems = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     data: text().notNull(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );

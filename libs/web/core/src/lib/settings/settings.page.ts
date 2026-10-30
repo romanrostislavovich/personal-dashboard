@@ -1,33 +1,40 @@
-import { NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal, Type } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { MatTabsModule } from '@angular/material/tabs';
-import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { map } from 'rxjs';
-import { DASHBOARD_MODULES, DashboardIntegration } from '../dashboard-module';
-import { PasswordSettingsComponent } from './password-settings.component';
-import { ProfileSettingsComponent } from './profile-settings.component';
-import { SectionsSettingsComponent } from './sections-settings.component';
-import { SecuritySettingsComponent } from './security-settings.component';
-import { SyncSettingsComponent } from './sync-settings.component';
-import { McpSettingsComponent } from './mcp-settings.component';
-import { NotificationLogComponent } from './notification-log.component';
-import { NotificationKindsComponent } from './notification-kinds.component';
-import { SystemSettingsComponent } from './system-settings.component';
-import { CalmSettingsComponent } from './calm-settings.component';
-import { PushSettingsComponent } from './push-settings.component';
-import { TelegramSettingsComponent } from './telegram-settings.component';
-import { ThemeSettingsComponent } from './theme-settings.component';
-import { TrashSettingsComponent } from './trash-settings.component';
-import { DataSettingsComponent } from './data-settings.component';
-import { DeviceBackupSettingsComponent } from './device-backup-settings.component';
-import { DesktopNotificationsComponent } from './desktop-notifications.component';
-import { IntegrationStatusComponent } from './integration-status.component';
-import { AutomationsSettingsComponent } from '../automations/automations-settings.component';
-import { AppsSettingsComponent } from './apps-settings.component';
-import { PhoneSensorsComponent } from './phone-sensors.component';
-import { VoiceAssistantComponent } from './voice-assistant.component';
+import {NgComponentOutlet} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  Type,
+} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {MatTabsModule} from '@angular/material/tabs';
+import {ActivatedRoute, Router} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {map} from 'rxjs';
+import {DASHBOARD_MODULES, DashboardIntegration} from '../dashboard-module';
+import {PasswordSettingsComponent} from './password-settings.component';
+import {ProfileSettingsComponent} from './profile-settings.component';
+import {SectionsSettingsComponent} from './sections-settings.component';
+import {SecuritySettingsComponent} from './security-settings.component';
+import {SyncSettingsComponent} from './sync-settings.component';
+import {McpSettingsComponent} from './mcp-settings.component';
+import {NotificationLogComponent} from './notification-log.component';
+import {NotificationKindsComponent} from './notification-kinds.component';
+import {SystemSettingsComponent} from './system-settings.component';
+import {CalmSettingsComponent} from './calm-settings.component';
+import {PushSettingsComponent} from './push-settings.component';
+import {TelegramSettingsComponent} from './telegram-settings.component';
+import {ThemeSettingsComponent} from './theme-settings.component';
+import {TrashSettingsComponent} from './trash-settings.component';
+import {DataSettingsComponent} from './data-settings.component';
+import {DeviceBackupSettingsComponent} from './device-backup-settings.component';
+import {DesktopNotificationsComponent} from './desktop-notifications.component';
+import {IntegrationStatusComponent} from './integration-status.component';
+import {AutomationsSettingsComponent} from '../automations/automations-settings.component';
+import {AppsSettingsComponent} from './apps-settings.component';
+import {PhoneSensorsComponent} from './phone-sensors.component';
+import {VoiceAssistantComponent} from './voice-assistant.component';
 
 interface LoadedCard {
   id: string;
@@ -36,7 +43,10 @@ interface LoadedCard {
 
 function load(cards: DashboardIntegration[]): Promise<LoadedCard[]> {
   return Promise.all(
-    cards.map(async (card) => ({ id: card.id, component: await card.loadComponent() })),
+    cards.map(async card => ({
+      id: card.id,
+      component: await card.loadComponent(),
+    })),
   );
 }
 
@@ -115,7 +125,9 @@ const TABS = [
       </mat-tab>
 
       <mat-tab [label]="'core.settings.tabs.notifications' | transloco">
-        <p class="intro">{{ 'core.settings.notificationsIntro' | transloco }}</p>
+        <p class="intro">
+          {{ 'core.settings.notificationsIntro' | transloco }}
+        </p>
         <div class="grid">
           <pd-telegram-settings />
           <pd-push-settings />
@@ -204,7 +216,7 @@ export class SettingsPage {
   private readonly route = inject(ActivatedRoute);
 
   private readonly tab = toSignal(
-    this.route.queryParamMap.pipe(map((params) => params.get('tab'))),
+    this.route.queryParamMap.pipe(map(params => params.get('tab'))),
   );
   protected readonly tabIndex = computed(() =>
     Math.max(0, TABS.indexOf(this.tab() as (typeof TABS)[number])),
@@ -215,10 +227,10 @@ export class SettingsPage {
 
   constructor() {
     const modules = inject(DASHBOARD_MODULES);
-    void load(modules.flatMap((module) => module.integrations ?? [])).then((loaded) =>
-      this.integrations.set(loaded),
+    void load(modules.flatMap(module => module.integrations ?? [])).then(
+      loaded => this.integrations.set(loaded),
     );
-    void load(modules.flatMap((module) => module.devices ?? [])).then((loaded) =>
+    void load(modules.flatMap(module => module.devices ?? [])).then(loaded =>
       this.deviceCards.set(loaded),
     );
   }
@@ -226,7 +238,7 @@ export class SettingsPage {
   /** The tab goes to the address: a reload or a link opens the same one. */
   protected selectTab(index: number): void {
     void this.router.navigate([], {
-      queryParams: { tab: TABS[index] },
+      queryParams: {tab: TABS[index]},
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });

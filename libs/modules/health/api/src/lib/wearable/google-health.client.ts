@@ -1,5 +1,5 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { WearableDay } from '@pd/contracts';
+import {fetchWithTimeout} from '@pd/api-core';
+import {WearableDay} from '@pd/contracts';
 
 const AUTH = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN = 'https://oauth2.googleapis.com/token';
@@ -10,7 +10,7 @@ const SCOPES = [
   'activity_and_fitness.readonly',
   'health_metrics_and_measurements.readonly',
   'sleep.readonly',
-].map((scope) => `https://www.googleapis.com/auth/googlehealth.${scope}`);
+].map(scope => `https://www.googleapis.com/auth/googlehealth.${scope}`);
 
 /** Google lets a heart-rate or calories roll-up cover at most 14 days. */
 export const MAX_RANGE_DAYS = 14;
@@ -65,7 +65,10 @@ export class GoogleHealthClient {
   }
 
   refresh(refreshToken: string): Promise<GoogleTokens> {
-    return this.requestToken({ grant_type: 'refresh_token', refresh_token: refreshToken });
+    return this.requestToken({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    });
   }
 
   /**
@@ -80,15 +83,33 @@ export class GoogleHealthClient {
       this.rollUp(token, 'distance', from, end, parseDistance),
       this.rollUp(token, 'active-zone-minutes', from, end, parseZoneMinutes),
       this.rollUp(token, 'heart-rate', from, end, parseHeartRate),
-      this.daily(token, 'daily-resting-heart-rate', 'dailyRestingHeartRate', from, end),
-      this.daily(token, 'daily-heart-rate-variability', 'dailyHeartRateVariability', from, end),
-      this.daily(token, 'daily-oxygen-saturation', 'dailyOxygenSaturation', from, end),
+      this.daily(
+        token,
+        'daily-resting-heart-rate',
+        'dailyRestingHeartRate',
+        from,
+        end,
+      ),
+      this.daily(
+        token,
+        'daily-heart-rate-variability',
+        'dailyHeartRateVariability',
+        from,
+        end,
+      ),
+      this.daily(
+        token,
+        'daily-oxygen-saturation',
+        'dailyOxygenSaturation',
+        from,
+        end,
+      ),
       this.sleep(token, from, end),
     ]);
     const days: DayNumbers = new Map();
     for (const part of parts) {
       for (const [day, numbers] of part) {
-        days.set(day, { ...days.get(day), ...numbers });
+        days.set(day, {...days.get(day), ...numbers});
       }
     }
     return days;
@@ -101,10 +122,13 @@ export class GoogleHealthClient {
     end: string,
     parse: (points: RawRollup[]) => DayNumbers,
   ): Promise<DayNumbers> {
-    const data = await this.request<{ rollupDataPoints?: RawRollup[] }>(
+    const data = await this.request<{rollupDataPoints?: RawRollup[]}>(
       token,
       `${API}/${type}/dataPoints:dailyRollUp`,
-      { method: 'POST', body: JSON.stringify({ range: { start: civil(from), end: civil(end) } }) },
+      {
+        method: 'POST',
+        body: JSON.stringify({range: {start: civil(from), end: civil(end)}}),
+      },
     );
     return data ? parse(data.rollupDataPoints ?? []) : new Map();
   }
@@ -113,7 +137,10 @@ export class GoogleHealthClient {
   private async daily(
     token: string,
     type: string,
-    field: 'dailyRestingHeartRate' | 'dailyHeartRateVariability' | 'dailyOxygenSaturation',
+    field:
+      | 'dailyRestingHeartRate'
+      | 'dailyHeartRateVariability'
+      | 'dailyOxygenSaturation',
     from: string,
     end: string,
   ): Promise<DayNumbers> {
@@ -122,7 +149,11 @@ export class GoogleHealthClient {
     return parseDaily(points);
   }
 
-  private async sleep(token: string, from: string, end: string): Promise<DayNumbers> {
+  private async sleep(
+    token: string,
+    from: string,
+    end: string,
+  ): Promise<DayNumbers> {
     const filter = `sleep.interval.civil_end_time >= "${from}" AND sleep.interval.civil_end_time < "${end}"`;
     return parseSleep(await this.list(token, 'sleep', filter, SLEEP_PAGE));
   }
@@ -136,18 +167,17 @@ export class GoogleHealthClient {
     const points: RawDataPoint[] = [];
     let pageToken = '';
     do {
-      const params = new URLSearchParams({ filter });
+      const params = new URLSearchParams({filter});
       if (pageSize) {
         params.set('pageSize', String(pageSize));
       }
       if (pageToken) {
         params.set('pageToken', pageToken);
       }
-      const data = await this.request<{ dataPoints?: RawDataPoint[]; nextPageToken?: string }>(
-        token,
-        `${API}/${type}/dataPoints?${params}`,
-        { method: 'GET' },
-      );
+      const data = await this.request<{
+        dataPoints?: RawDataPoint[];
+        nextPageToken?: string;
+      }>(token, `${API}/${type}/dataPoints?${params}`, {method: 'GET'});
       if (!data) {
         return points;
       }
@@ -158,10 +188,17 @@ export class GoogleHealthClient {
   }
 
   /** `null` — the user did not allow this kind of data (403), so there is none to read. */
-  private async request<T>(token: string, url: string, init: RequestInit): Promise<T | null> {
+  private async request<T>(
+    token: string,
+    url: string,
+    init: RequestInit,
+  ): Promise<T | null> {
     const response = await fetchWithTimeout(url, {
       ...init,
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
     });
     if (response.status === 401) {
       throw new GoogleHealthAuthError('Google Health access token expired');
@@ -177,10 +214,12 @@ export class GoogleHealthClient {
     return (await response.json()) as T;
   }
 
-  private async requestToken(body: Record<string, string>): Promise<GoogleTokens> {
+  private async requestToken(
+    body: Record<string, string>,
+  ): Promise<GoogleTokens> {
     const response = await fetchWithTimeout(TOKEN, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: new URLSearchParams({
         ...body,
         client_id: this.clientId,
@@ -188,7 +227,9 @@ export class GoogleHealthClient {
       }),
     });
     if (response.status === 400 || response.status === 401) {
-      throw new GoogleHealthAuthError(`Google token request failed: ${await response.text()}`);
+      throw new GoogleHealthAuthError(
+        `Google token request failed: ${await response.text()}`,
+      );
     }
     if (!response.ok) {
       throw new Error(`Google OAuth ${response.status}`);
@@ -205,25 +246,29 @@ export class GoogleHealthClient {
 // --- the answers, read into day numbers (pure, tested on the documented shapes) ---
 
 export function parseSteps(points: RawRollup[]): DayNumbers {
-  return byDay(points, (point) => numberOf(point.steps?.countSum, (steps) => ({ steps })));
+  return byDay(points, point =>
+    numberOf(point.steps?.countSum, steps => ({steps})),
+  );
 }
 
 export function parseCalories(points: RawRollup[]): DayNumbers {
-  return byDay(points, (point) =>
-    numberOf(point.totalCalories?.kcalSum, (kcal) => ({ calories: Math.round(kcal) })),
+  return byDay(points, point =>
+    numberOf(point.totalCalories?.kcalSum, kcal => ({
+      calories: Math.round(kcal),
+    })),
   );
 }
 
 export function parseDistance(points: RawRollup[]): DayNumbers {
-  return byDay(points, (point) =>
-    numberOf(point.distance?.millimetersSum, (mm) => ({
+  return byDay(points, point =>
+    numberOf(point.distance?.millimetersSum, mm => ({
       distanceKm: Math.round(mm / 10_000) / 100,
     })),
   );
 }
 
 export function parseZoneMinutes(points: RawRollup[]): DayNumbers {
-  return byDay(points, (point) => {
+  return byDay(points, point => {
     const zones = point.activeZoneMinutes;
     if (!zones) {
       return null;
@@ -232,12 +277,12 @@ export function parseZoneMinutes(points: RawRollup[]): DayNumbers {
       Number(zones.sumInFatBurnHeartZone ?? 0) +
       Number(zones.sumInCardioHeartZone ?? 0) +
       Number(zones.sumInPeakHeartZone ?? 0);
-    return { activeZoneMinutes: minutes };
+    return {activeZoneMinutes: minutes};
   });
 }
 
 export function parseHeartRate(points: RawRollup[]): DayNumbers {
-  return byDay(points, (point) => {
+  return byDay(points, point => {
     const rate = point.heartRate;
     if (rate?.beatsPerMinuteAvg === undefined) {
       return null;
@@ -245,7 +290,9 @@ export function parseHeartRate(points: RawRollup[]): DayNumbers {
     return {
       heartRateAvg: Math.round(rate.beatsPerMinuteAvg),
       heartRateMax:
-        rate.beatsPerMinuteMax === undefined ? null : Math.round(rate.beatsPerMinuteMax),
+        rate.beatsPerMinuteMax === undefined
+          ? null
+          : Math.round(rate.beatsPerMinuteMax),
     };
   });
 }
@@ -256,21 +303,24 @@ export function parseDaily(points: RawDataPoint[]): DayNumbers {
   const put = (date: RawDate | undefined, numbers: Partial<WearableDay>) => {
     if (date) {
       const day = dayOf(date);
-      days.set(day, { ...days.get(day), ...numbers });
+      days.set(day, {...days.get(day), ...numbers});
     }
   };
   for (const point of points) {
     const resting = point.dailyRestingHeartRate;
     if (resting?.beatsPerMinute !== undefined) {
-      put(resting.date, { restingHeartRate: Number(resting.beatsPerMinute) });
+      put(resting.date, {restingHeartRate: Number(resting.beatsPerMinute)});
     }
     const hrv = point.dailyHeartRateVariability;
     if (hrv?.averageHeartRateVariabilityMilliseconds !== undefined) {
-      put(hrv.date, { hrvMs: Math.round(hrv.averageHeartRateVariabilityMilliseconds * 10) / 10 });
+      put(hrv.date, {
+        hrvMs:
+          Math.round(hrv.averageHeartRateVariabilityMilliseconds * 10) / 10,
+      });
     }
     const oxygen = point.dailyOxygenSaturation;
     if (oxygen?.averagePercentage !== undefined) {
-      put(oxygen.date, { spo2: Math.round(oxygen.averagePercentage * 10) / 10 });
+      put(oxygen.date, {spo2: Math.round(oxygen.averagePercentage * 10) / 10});
     }
   }
   return days;
@@ -281,7 +331,10 @@ export function parseDaily(points: RawDataPoint[]): DayNumbers {
  * its stages. "Asleep" of a band without stages counts as light sleep.
  */
 export function parseSleep(points: RawDataPoint[]): DayNumbers {
-  const longest = new Map<string, { asleep: number; numbers: Partial<WearableDay> }>();
+  const longest = new Map<
+    string,
+    {asleep: number; numbers: Partial<WearableDay>}
+  >();
   for (const point of points) {
     const sleep = point.sleep;
     const end = sleep?.interval?.civilEndTime;
@@ -290,7 +343,7 @@ export function parseSleep(points: RawDataPoint[]): DayNumbers {
     }
     const minutes = (type: string) =>
       (sleep.summary?.stagesSummary ?? [])
-        .filter((stage) => stage.type === type)
+        .filter(stage => stage.type === type)
         .reduce((sum, stage) => sum + Number(stage.minutes ?? 0), 0);
     const asleep = Number(sleep.summary?.minutesAsleep ?? 0);
     const day = dayOf(end.date);
@@ -304,14 +357,17 @@ export function parseSleep(points: RawDataPoint[]): DayNumbers {
         sleepMinutes: asleep,
         deepMinutes: staged ? minutes('DEEP') : null,
         remMinutes: staged ? minutes('REM') : null,
-        lightMinutes: staged ? minutes('LIGHT') : minutes('ASLEEP') + minutes('RESTLESS') || null,
-        awakeMinutes: Number(sleep.summary?.minutesAwake ?? 0) || minutes('AWAKE'),
+        lightMinutes: staged
+          ? minutes('LIGHT')
+          : minutes('ASLEEP') + minutes('RESTLESS') || null,
+        awakeMinutes:
+          Number(sleep.summary?.minutesAwake ?? 0) || minutes('AWAKE'),
         sleepStart: clockOf(sleep.interval?.civilStartTime),
         sleepEnd: clockOf(end),
       },
     });
   }
-  return new Map([...longest].map(([day, { numbers }]) => [day, numbers]));
+  return new Map([...longest].map(([day, {numbers}]) => [day, numbers]));
 }
 
 function byDay(
@@ -341,13 +397,15 @@ export function dayOf(date: RawDate): string {
 }
 
 function clockOf(time: RawCivilDateTime | undefined): string | null {
-  return time?.date ? `${pad(time.time?.hours ?? 0)}:${pad(time.time?.minutes ?? 0)}` : null;
+  return time?.date
+    ? `${pad(time.time?.hours ?? 0)}:${pad(time.time?.minutes ?? 0)}`
+    : null;
 }
 
 /** A day as Google's civil date-time: midnight of that day. */
 function civil(day: string): RawCivilDateTime {
   const [year, month, date] = day.split('-').map(Number);
-  return { date: { year, month, day: date } };
+  return {date: {year, month, day: date}};
 }
 
 export function nextDay(day: string): string {
@@ -372,15 +430,15 @@ interface RawDate {
 
 interface RawCivilDateTime {
   date?: RawDate;
-  time?: { hours?: number; minutes?: number };
+  time?: {hours?: number; minutes?: number};
 }
 
 export interface RawRollup {
   civilStartTime?: RawCivilDateTime;
   civilEndTime?: RawCivilDateTime;
-  steps?: { countSum?: string };
-  totalCalories?: { kcalSum?: number };
-  distance?: { millimetersSum?: string };
+  steps?: {countSum?: string};
+  totalCalories?: {kcalSum?: number};
+  distance?: {millimetersSum?: string};
   activeZoneMinutes?: {
     sumInFatBurnHeartZone?: string;
     sumInCardioHeartZone?: string;
@@ -394,16 +452,22 @@ export interface RawRollup {
 }
 
 export interface RawDataPoint {
-  dailyRestingHeartRate?: { date?: RawDate; beatsPerMinute?: string };
-  dailyHeartRateVariability?: { date?: RawDate; averageHeartRateVariabilityMilliseconds?: number };
-  dailyOxygenSaturation?: { date?: RawDate; averagePercentage?: number };
+  dailyRestingHeartRate?: {date?: RawDate; beatsPerMinute?: string};
+  dailyHeartRateVariability?: {
+    date?: RawDate;
+    averageHeartRateVariabilityMilliseconds?: number;
+  };
+  dailyOxygenSaturation?: {date?: RawDate; averagePercentage?: number};
   sleep?: {
     type?: 'CLASSIC' | 'STAGES';
-    interval?: { civilStartTime?: RawCivilDateTime; civilEndTime?: RawCivilDateTime };
+    interval?: {
+      civilStartTime?: RawCivilDateTime;
+      civilEndTime?: RawCivilDateTime;
+    };
     summary?: {
       minutesAsleep?: string;
       minutesAwake?: string;
-      stagesSummary?: { type?: string; minutes?: string }[];
+      stagesSummary?: {type?: string; minutes?: string}[];
     };
   };
 }

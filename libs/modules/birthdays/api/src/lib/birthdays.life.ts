@@ -1,9 +1,9 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LifeService } from '@pd/api-core';
-import { LifeEvent } from '@pd/contracts';
-import { and, eq } from 'drizzle-orm';
-import { AnyPgColumn } from 'drizzle-orm/pg-core';
-import { birthdays } from './birthdays.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, LifeService} from '@pd/api-core';
+import {LifeEvent} from '@pd/contracts';
+import {and, eq} from 'drizzle-orm';
+import {AnyPgColumn} from 'drizzle-orm/pg-core';
+import {birthdays} from './birthdays.schema';
 
 /** Whose birthday or day of memory a day is, in the life timeline. */
 @Injectable()
@@ -21,25 +21,37 @@ export class BirthdaysLife implements OnModuleInit {
         const names = async (monthOf: AnyPgColumn, dayOf: AnyPgColumn) =>
           (
             await this.db
-              .select({ name: birthdays.name })
+              .select({name: birthdays.name})
               .from(birthdays)
-              .where(and(eq(birthdays.userId, userId), eq(monthOf, month), eq(dayOf, date)))
+              .where(
+                and(
+                  eq(birthdays.userId, userId),
+                  eq(monthOf, month),
+                  eq(dayOf, date),
+                ),
+              )
           )
-            .map((row) => row.name)
+            .map(row => row.name)
             .join(', ');
         const born = await names(birthdays.month, birthdays.day);
         const died = await names(birthdays.deathMonth, birthdays.deathDay);
-        const event = (icon: string, key: string, people: string): LifeEvent => ({
+        const event = (
+          icon: string,
+          key: string,
+          people: string,
+        ): LifeEvent => ({
           module: 'birthdays',
           icon,
           key,
-          params: { names: people },
+          params: {names: people},
           at: null,
           link: '/birthdays',
         });
         return [
           ...(born ? [event('cake', 'birthdays.life.day', born)] : []),
-          ...(died ? [event('local_florist', 'birthdays.life.memorial', died)] : []),
+          ...(died
+            ? [event('local_florist', 'birthdays.life.memorial', died)]
+            : []),
         ];
       },
     });

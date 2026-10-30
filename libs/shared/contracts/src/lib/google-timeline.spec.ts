@@ -1,4 +1,4 @@
-import { parseGoogleTimeline } from './google-timeline';
+import {parseGoogleTimeline} from './google-timeline';
 
 describe('a Google Maps timeline', () => {
   it('reads the old Records.json', () => {
@@ -19,8 +19,18 @@ describe('a Google Maps timeline', () => {
       ],
     });
     expect(parsed.locations).toEqual([
-      { at: '2023-05-01T08:00:00.000Z', latitude: 52.2297, longitude: 21.0122, accuracy: 20 },
-      { at: '2023-05-01T08:01:00.000Z', latitude: 52.2298, longitude: 21.0123, accuracy: 15 },
+      {
+        at: '2023-05-01T08:00:00.000Z',
+        latitude: 52.2297,
+        longitude: 21.0122,
+        accuracy: 20,
+      },
+      {
+        at: '2023-05-01T08:01:00.000Z',
+        latitude: 52.2298,
+        longitude: 21.0123,
+        accuracy: 15,
+      },
     ]);
   });
 
@@ -29,7 +39,11 @@ describe('a Google Maps timeline', () => {
       timelineObjects: [
         {
           placeVisit: {
-            location: { latitudeE7: 522320366, longitudeE7: 210067166, name: 'Green Caffè Nero' },
+            location: {
+              latitudeE7: 522320366,
+              longitudeE7: 210067166,
+              name: 'Green Caffè Nero',
+            },
             duration: {
               startTimestamp: '2023-05-01T10:00:00Z',
               endTimestamp: '2023-05-01T10:30:00Z',
@@ -40,7 +54,7 @@ describe('a Google Maps timeline', () => {
     });
     expect(parsed.locations).toHaveLength(7);
     expect(parsed.names).toEqual([
-      { latitude: 52.2320366, longitude: 21.0067166, name: 'Green Caffè Nero' },
+      {latitude: 52.2320366, longitude: 21.0067166, name: 'Green Caffè Nero'},
     ]);
   });
 
@@ -50,12 +64,16 @@ describe('a Google Maps timeline', () => {
         {
           startTime: '2024-06-01T10:00:00.000+02:00',
           endTime: '2024-06-01T10:10:00.000+02:00',
-          visit: { topCandidate: { placeLocation: { latLng: '52.2297°, 21.0122°' } } },
+          visit: {
+            topCandidate: {placeLocation: {latLng: '52.2297°, 21.0122°'}},
+          },
         },
         {
           startTime: '2024-06-01T10:10:00.000+02:00',
           endTime: '2024-06-01T10:20:00.000+02:00',
-          timelinePath: [{ point: '52.23°, 21.013°', time: '2024-06-01T10:12:00.000+02:00' }],
+          timelinePath: [
+            {point: '52.23°, 21.013°', time: '2024-06-01T10:12:00.000+02:00'},
+          ],
         },
       ],
       rawSignals: [
@@ -68,7 +86,7 @@ describe('a Google Maps timeline', () => {
         },
       ],
     });
-    expect(parsed.locations.map((fix) => fix.at)).toEqual([
+    expect(parsed.locations.map(fix => fix.at)).toEqual([
       '2024-06-01T08:00:00.000Z',
       '2024-06-01T08:05:00.000Z',
       '2024-06-01T08:10:00.000Z',
@@ -82,15 +100,28 @@ describe('a Google Maps timeline', () => {
       {
         startTime: '2024-06-01T10:00:00.000Z',
         endTime: '2024-06-01T10:20:00.000Z',
-        timelinePath: [{ point: 'geo:52.2297,21.0122', durationMinutesOffsetFromStartTime: '5' }],
+        timelinePath: [
+          {
+            point: 'geo:52.2297,21.0122',
+            durationMinutesOffsetFromStartTime: '5',
+          },
+        ],
       },
     ]);
     expect(parsed.locations).toEqual([
-      { at: '2024-06-01T10:05:00.000Z', latitude: 52.2297, longitude: 21.0122, accuracy: 25 },
+      {
+        at: '2024-06-01T10:05:00.000Z',
+        latitude: 52.2297,
+        longitude: 21.0122,
+        accuracy: 25,
+      },
     ]);
   });
 
   it('a file of something else gives nothing', () => {
-    expect(parseGoogleTimeline({ hello: 'world' })).toEqual({ locations: [], names: [] });
+    expect(parseGoogleTimeline({hello: 'world'})).toEqual({
+      locations: [],
+      names: [],
+    });
   });
 });

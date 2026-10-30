@@ -1,5 +1,5 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { AccountAuthError } from '../accounts/account-source';
+import {fetchWithTimeout} from '@pd/api-core';
+import {AccountAuthError} from '../accounts/account-source';
 
 const API = 'https://api.bitbucket.org/2.0';
 const TIMEOUT_MS = 30_000;
@@ -27,14 +27,24 @@ export class BitbucketClient {
   }
 
   /** One object; `null` when Bitbucket answers 404 (a deleted or private repository). */
-  async get<T>(path: string, params: Record<string, string> = {}): Promise<T | null> {
+  async get<T>(
+    path: string,
+    params: Record<string, string> = {},
+  ): Promise<T | null> {
     const response = await this.request(url(path, params));
     return response ? ((await response.json()) as T) : null;
   }
 
   /** How many rows a list has, without reading them; `0` when there is no such list. */
-  async count(path: string, params: Record<string, string> = {}): Promise<number> {
-    const page = await this.get<Page<unknown>>(path, { ...params, pagelen: '1', fields: 'size' });
+  async count(
+    path: string,
+    params: Record<string, string> = {},
+  ): Promise<number> {
+    const page = await this.get<Page<unknown>>(path, {
+      ...params,
+      pagelen: '1',
+      fields: 'size',
+    });
     return page?.size ?? 0;
   }
 
@@ -48,7 +58,7 @@ export class BitbucketClient {
     stop: (row: T) => boolean = () => false,
   ): Promise<T[]> {
     const rows: T[] = [];
-    let next: string | undefined = url(path, { pagelen: '100', ...params });
+    let next: string | undefined = url(path, {pagelen: '100', ...params});
     for (let page = 0; next && page < MAX_PAGES; page++) {
       const response = await this.request(next);
       if (!response) {
@@ -80,15 +90,21 @@ export class BitbucketClient {
       return response;
     }
     if (response.status === 401) {
-      throw new AccountAuthError('Bitbucket did not accept the e-mail and the API token');
+      throw new AccountAuthError(
+        'Bitbucket did not accept the e-mail and the API token',
+      );
     }
     if (response.status === 404) {
       return null;
     }
     const path = address.replace(API, '').split('?')[0];
     // Bitbucket explains itself: a missing scope of the token, a rate limit.
-    const said = (await response.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200);
-    throw new Error(`Bitbucket ${response.status}: ${path}${said ? ` — ${said}` : ''}`);
+    const said = (await response.text().catch(() => ''))
+      .replace(/\s+/g, ' ')
+      .slice(0, 200);
+    throw new Error(
+      `Bitbucket ${response.status}: ${path}${said ? ` — ${said}` : ''}`,
+    );
   }
 }
 
@@ -105,7 +121,7 @@ export interface RawBitbucketUser {
   nickname?: string;
   username?: string;
   created_on: string;
-  links: { avatar?: { href: string }; html?: { href: string } };
+  links: {avatar?: {href: string}; html?: {href: string}};
 }
 
 export interface RawBitbucketRepo {
@@ -118,6 +134,6 @@ export interface RawBitbucketRepo {
   size?: number;
   updated_on: string | null;
   parent?: unknown;
-  owner?: { uuid?: string };
-  links: { html?: { href: string } };
+  owner?: {uuid?: string};
+  links: {html?: {href: string}};
 }

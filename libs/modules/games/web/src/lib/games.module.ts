@@ -1,11 +1,14 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /** Web part of the Games module. Plugged in at apps/web/src/app/modules.ts. */
 export const gamesModule: WebDashboardModule = {
   id: 'games',
-  nav: { labelKey: 'games.title', icon: 'sports_esports', group: 'leisure' },
+  nav: {labelKey: 'games.title', icon: 'sports_esports', group: 'leisure'},
   loadRoutes: async () => [
-    { path: '', loadComponent: () => import('./games.page').then((m) => m.GamesPage) },
+    {
+      path: '',
+      loadComponent: () => import('./games.page').then(m => m.GamesPage),
+    },
   ],
   translations: {
     en: () => import('./i18n/en.json'),
@@ -15,25 +18,29 @@ export const gamesModule: WebDashboardModule = {
     {
       id: 'games.summary',
       size: 'small',
-      loadComponent: () => import('./games.widget').then((m) => m.GamesWidget),
+      loadComponent: () => import('./games.widget').then(m => m.GamesWidget),
     },
   ],
   integrations: [
     {
       id: 'games.steam',
-      loadComponent: () => import('./steam.integration').then((m) => m.SteamIntegration),
+      loadComponent: () =>
+        import('./steam.integration').then(m => m.SteamIntegration),
     },
     {
       id: 'games.xbox',
-      loadComponent: () => import('./xbox.integration').then((m) => m.XboxIntegration),
+      loadComponent: () =>
+        import('./xbox.integration').then(m => m.XboxIntegration),
     },
     {
       id: 'games.battle-net',
-      loadComponent: () => import('./battle-net.integration').then((m) => m.BattleNetIntegration),
+      loadComponent: () =>
+        import('./battle-net.integration').then(m => m.BattleNetIntegration),
     },
     {
       id: 'games.opendota',
-      loadComponent: () => import('./opendota.integration').then((m) => m.OpenDotaIntegration),
+      loadComponent: () =>
+        import('./opendota.integration').then(m => m.OpenDotaIntegration),
     },
   ],
 };

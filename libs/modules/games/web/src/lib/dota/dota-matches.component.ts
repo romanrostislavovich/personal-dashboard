@@ -1,13 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { DOTA_MATCH_MODES, DotaHeroStats, DotaMatchMode } from '@pd/contracts';
-import { GamesApi } from '../games.api';
-import { DotaMatchListComponent } from './dota-match-list.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatPaginatorModule, PageEvent} from '@angular/material/paginator';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {DOTA_MATCH_MODES, DotaHeroStats, DotaMatchMode} from '@pd/contracts';
+import {GamesApi} from '../games.api';
+import {DotaMatchListComponent} from './dota-match-list.component';
 
 const PAGE_SIZE = 25;
 
@@ -31,18 +38,26 @@ type Result = 'win' | 'loss';
       <mat-form-field subscriptSizing="dynamic">
         <mat-label>{{ 'games.dota.table.hero' | transloco }}</mat-label>
         <mat-select [value]="heroId()" (valueChange)="setHero($event)">
-          <mat-option [value]="null">{{ 'games.dota.filters.anyHero' | transloco }}</mat-option>
+          <mat-option [value]="null">{{
+            'games.dota.filters.anyHero' | transloco
+          }}</mat-option>
           @for (h of heroesByName(); track h.hero.id) {
-            <mat-option [value]="h.hero.id">{{ h.hero.name }} ({{ h.matches }})</mat-option>
+            <mat-option [value]="h.hero.id"
+              >{{ h.hero.name }} ({{ h.matches }})</mat-option
+            >
           }
         </mat-select>
       </mat-form-field>
       <mat-form-field subscriptSizing="dynamic">
         <mat-label>{{ 'games.dota.filters.mode' | transloco }}</mat-label>
         <mat-select [value]="mode()" (valueChange)="setMode($event)">
-          <mat-option [value]="null">{{ 'games.dota.filters.anyMode' | transloco }}</mat-option>
+          <mat-option [value]="null">{{
+            'games.dota.filters.anyMode' | transloco
+          }}</mat-option>
           @for (m of modes; track m) {
-            <mat-option [value]="m">{{ 'games.dota.modes.' + m | transloco }}</mat-option>
+            <mat-option [value]="m">{{
+              'games.dota.modes.' + m | transloco
+            }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
@@ -54,8 +69,12 @@ type Result = 'win' | 'loss';
         <mat-button-toggle [value]="null">{{
           'games.dota.filters.all' | transloco
         }}</mat-button-toggle>
-        <mat-button-toggle value="win">{{ 'games.dota.win' | transloco }}</mat-button-toggle>
-        <mat-button-toggle value="loss">{{ 'games.dota.loss' | transloco }}</mat-button-toggle>
+        <mat-button-toggle value="win">{{
+          'games.dota.win' | transloco
+        }}</mat-button-toggle>
+        <mat-button-toggle value="loss">{{
+          'games.dota.loss' | transloco
+        }}</mat-button-toggle>
       </mat-button-toggle-group>
     </div>
 

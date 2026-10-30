@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SchedulerService } from '@pd/api-core';
-import { GameAccountsService } from './game-accounts.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {SchedulerService} from '@pd/api-core';
+import {GameAccountsService} from './game-accounts.service';
 
 /** Updates game accounts every half an hour: new Dota matches, WoW achievements. */
 @Injectable()

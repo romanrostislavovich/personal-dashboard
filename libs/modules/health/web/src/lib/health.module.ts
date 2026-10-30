@@ -1,4 +1,4 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /**
  * Web part of Health: one medical history across countries and clinics.
@@ -6,46 +6,55 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const healthModule: WebDashboardModule = {
   id: 'health',
-  nav: { labelKey: 'health.title', icon: 'medical_information', group: 'me' },
+  nav: {labelKey: 'health.title', icon: 'medical_information', group: 'me'},
   // The page holds the tabs; every subsection is its child route.
   loadRoutes: async () => [
     {
       path: '',
-      loadComponent: () => import('./health.page').then((m) => m.HealthPage),
+      loadComponent: () => import('./health.page').then(m => m.HealthPage),
       children: [
-        { path: '', pathMatch: 'full', redirectTo: 'history' },
+        {path: '', pathMatch: 'full', redirectTo: 'history'},
         {
           path: 'history',
-          loadComponent: () => import('./history/history.page').then((m) => m.HistoryPage),
+          loadComponent: () =>
+            import('./history/history.page').then(m => m.HistoryPage),
         },
         {
           path: 'profile',
-          loadComponent: () => import('./profile/profile.page').then((m) => m.ProfilePage),
+          loadComponent: () =>
+            import('./profile/profile.page').then(m => m.ProfilePage),
         },
         {
           path: 'conditions',
-          loadComponent: () => import('./conditions/conditions.page').then((m) => m.ConditionsPage),
+          loadComponent: () =>
+            import('./conditions/conditions.page').then(m => m.ConditionsPage),
         },
         {
           path: 'results',
-          loadComponent: () => import('./results/results.page').then((m) => m.ResultsPage),
+          loadComponent: () =>
+            import('./results/results.page').then(m => m.ResultsPage),
         },
         {
           path: 'band',
-          loadComponent: () => import('./wearable/band.page').then((m) => m.BandPage),
+          loadComponent: () =>
+            import('./wearable/band.page').then(m => m.BandPage),
         },
         {
           path: 'medications',
           loadComponent: () =>
-            import('./medications/medications.page').then((m) => m.MedicationsPage),
+            import('./medications/medications.page').then(
+              m => m.MedicationsPage,
+            ),
         },
         {
           path: 'summary',
-          loadComponent: () => import('./summary/summary.page').then((m) => m.SummaryPage),
+          loadComponent: () =>
+            import('./summary/summary.page').then(m => m.SummaryPage),
         },
         {
           path: 'doctors',
-          loadComponent: () => import('./doctors/doctors.page').then((m) => m.DoctorsPage),
+          loadComponent: () =>
+            import('./doctors/doctors.page').then(m => m.DoctorsPage),
         },
       ],
     },
@@ -58,7 +67,8 @@ export const healthModule: WebDashboardModule = {
     {
       id: 'health.band',
       size: 'small',
-      loadComponent: () => import('./wearable/band.widget').then((m) => m.BandWidget),
+      loadComponent: () =>
+        import('./wearable/band.widget').then(m => m.BandWidget),
     },
   ],
   commands: [
@@ -97,12 +107,16 @@ export const healthModule: WebDashboardModule = {
     {
       id: 'health.google-health',
       loadComponent: () =>
-        import('./wearable/google-health.integration').then((m) => m.GoogleHealthIntegration),
+        import('./wearable/google-health.integration').then(
+          m => m.GoogleHealthIntegration,
+        ),
     },
     {
       id: 'health.icd',
       loadComponent: () =>
-        import('./icd/icd-dictionary.integration').then((m) => m.IcdDictionaryIntegration),
+        import('./icd/icd-dictionary.integration').then(
+          m => m.IcdDictionaryIntegration,
+        ),
     },
   ],
 };

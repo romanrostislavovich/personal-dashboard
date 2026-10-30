@@ -10,7 +10,12 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
+import {
+  AuthUser,
+  CurrentUser,
+  ServerActions,
+  ZodValidationPipe,
+} from '@pd/api-core';
 import {
   SoundcloudConnectInput,
   soundcloudConnectSchema,
@@ -18,8 +23,8 @@ import {
   SoundcloudTrackUpdate,
   soundcloudTrackUpdateSchema,
 } from '@pd/contracts';
-import { SOUNDCLOUD_ACTIONS } from './soundcloud.server-actions';
-import { SoundcloudService } from './soundcloud.service';
+import {SOUNDCLOUD_ACTIONS} from './soundcloud.server-actions';
+import {SoundcloudService} from './soundcloud.service';
 
 /** The user's own tracks on SoundCloud. Whether it is connected comes with `/api/music/settings`. */
 @Controller('music/soundcloud')
@@ -40,7 +45,8 @@ export class SoundcloudController {
   @HttpCode(204)
   async connect(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(soundcloudConnectSchema)) input: SoundcloudConnectInput,
+    @Body(new ZodValidationPipe(soundcloudConnectSchema))
+    input: SoundcloudConnectInput,
   ): Promise<void> {
     await this.actions.run(user.id, SOUNDCLOUD_ACTIONS.connect, input);
   }
@@ -65,7 +71,8 @@ export class SoundcloudController {
   update(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(soundcloudTrackUpdateSchema)) update: SoundcloudTrackUpdate,
+    @Body(new ZodValidationPipe(soundcloudTrackUpdateSchema))
+    update: SoundcloudTrackUpdate,
   ): Promise<void> {
     return this.soundcloud.setNotify(user.id, id, update.notify);
   }

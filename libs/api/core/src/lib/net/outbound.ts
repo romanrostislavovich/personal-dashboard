@@ -1,5 +1,5 @@
-import { lookup } from 'node:dns/promises';
-import { isIP } from 'node:net';
+import {lookup} from 'node:dns/promises';
+import {isIP} from 'node:net';
 
 /**
  * Requests to addresses users give — a site to monitor, a page of a shop, an AI endpoint.
@@ -85,8 +85,8 @@ export async function assertPublicHost(hostname: string): Promise<void> {
     return;
   }
   // Every address the name has: one private among them is enough to refuse.
-  const addresses = await lookup(host, { all: true });
-  if (addresses.some(({ address }) => isPrivateAddress(address))) {
+  const addresses = await lookup(host, {all: true});
+  if (addresses.some(({address}) => isPrivateAddress(address))) {
     throw new OutboundBlockedError(hostname);
   }
 }
@@ -96,7 +96,12 @@ export async function assertPublicHost(hostname: string): Promise<void> {
  * first address — a public page must not lead into the private network.
  */
 /** Headers that prove who is asking: never sent to a host other than the one they were for. */
-const CREDENTIAL_HEADERS = ['authorization', 'cookie', 'proxy-authorization', 'x-api-key'];
+const CREDENTIAL_HEADERS = [
+  'authorization',
+  'cookie',
+  'proxy-authorization',
+  'x-api-key',
+];
 
 function withoutCredentials(headers: RequestInit['headers']): Headers {
   const result = new Headers(headers);
@@ -119,10 +124,16 @@ export function fetchWithTimeout(
   init: RequestInit = {},
   timeoutMs = OUTSIDE_TIMEOUT_MS,
 ): Promise<Response> {
-  return fetch(url, { ...init, signal: init.signal ?? AbortSignal.timeout(timeoutMs) });
+  return fetch(url, {
+    ...init,
+    signal: init.signal ?? AbortSignal.timeout(timeoutMs),
+  });
 }
 
-export async function safeFetch(url: string, init: RequestInit = {}): Promise<Response> {
+export async function safeFetch(
+  url: string,
+  init: RequestInit = {},
+): Promise<Response> {
   let current = new URL(url);
   let request: RequestInit = {
     ...init,
@@ -133,7 +144,10 @@ export async function safeFetch(url: string, init: RequestInit = {}): Promise<Re
       throw new OutboundBlockedError(current.protocol);
     }
     await assertPublicHost(current.hostname);
-    const response = await fetch(current.href, { ...request, redirect: 'manual' });
+    const response = await fetch(current.href, {
+      ...request,
+      redirect: 'manual',
+    });
     const location = response.headers.get('location');
     if (response.status < 300 || response.status >= 400 || !location) {
       return response;
@@ -148,12 +162,15 @@ export async function safeFetch(url: string, init: RequestInit = {}): Promise<Re
     const next = new URL(location, current);
     // As browsers do: the API key of an AI connection or a cookie is not carried to another host.
     if (next.origin !== current.origin) {
-      request = { ...request, headers: withoutCredentials(request.headers) };
+      request = {...request, headers: withoutCredentials(request.headers)};
     }
     current = next;
     // As browsers do: after "see other" (and after a POST moved) the next request is a GET.
-    if (response.status === 303 || (response.status < 303 && request.method === 'POST')) {
-      request = { ...request, method: 'GET', body: undefined };
+    if (
+      response.status === 303 ||
+      (response.status < 303 && request.method === 'POST')
+    ) {
+      request = {...request, method: 'GET', body: undefined};
     }
   }
 }

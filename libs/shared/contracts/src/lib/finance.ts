@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { ServiceUsage } from './links';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {ServiceUsage} from './links';
+import {LocalDate} from './local-date';
 
 export const TRANSACTION_KINDS = ['income', 'expense'] as const;
 export type TransactionKind = (typeof TRANSACTION_KINDS)[number];
@@ -120,7 +120,7 @@ export const recurringPaymentInputSchema = z
     isActive: z.boolean().default(true),
     ...contractTerms,
   })
-  .refine((input) => input.period !== 'year' || input.monthOfYear, {
+  .refine(input => input.period !== 'year' || input.monthOfYear, {
     message: 'A yearly payment needs its month',
     path: ['monthOfYear'],
   });
@@ -140,7 +140,7 @@ export interface RecurringPayment {
   isActive: boolean;
   lastChargedOn: LocalDate | null;
   /** The earlier prices, the newest first. */
-  priceHistory: { amount: number; changedOn: LocalDate }[];
+  priceHistory: {amount: number; changedOn: LocalDate}[];
   contractStartedOn: LocalDate | null;
   contractMonths: number | null;
   noticeDays: number | null;
@@ -164,7 +164,13 @@ export interface ContractDates {
 }
 
 /** A date of the payments worth knowing in advance, for the calendar of key dates. */
-export const KEY_DATE_KINDS = ['cancel-by', 'term-end', 'price-lock', 'trial', 'renewal'] as const;
+export const KEY_DATE_KINDS = [
+  'cancel-by',
+  'term-end',
+  'price-lock',
+  'trial',
+  'renewal',
+] as const;
 export type KeyDateKind = (typeof KEY_DATE_KINDS)[number];
 
 export interface KeyDate {
@@ -232,12 +238,12 @@ export interface MainCurrencyTotals extends FinanceConversion {
   income: number;
   expense: number;
   balance: number;
-  topExpenseCategories: { category: string; expense: number }[];
+  topExpenseCategories: {category: string; expense: number}[];
 }
 
 /** `GET /api/finance/cash-flow/main`: months in the main currency, and how they were converted. */
 export interface MainCashFlow extends FinanceConversion {
-  months: { month: string; income: number; expense: number }[];
+  months: {month: string; income: number; expense: number}[];
 }
 
 /** An ISO 4217 code: `EUR`, `PLN`. */
@@ -298,7 +304,7 @@ export interface CostSource {
   lastSyncedAt: string | null;
   lastError: string | null;
   /** Imported for the current month. */
-  currentMonth: { amount: number; currency: string } | null;
+  currentMonth: {amount: number; currency: string} | null;
 }
 
 // --- Budgets ---
@@ -314,7 +320,9 @@ export const budgetInputSchema = z.object({
 export type BudgetInput = z.infer<typeof budgetInputSchema>;
 
 /** `PUT /api/finance/budgets`: the whole set at once. */
-export const budgetsSchema = z.object({ budgets: z.array(budgetInputSchema).max(100) });
+export const budgetsSchema = z.object({
+  budgets: z.array(budgetInputSchema).max(100),
+});
 export type Budgets = z.infer<typeof budgetsSchema>;
 
 export interface Budget extends BudgetInput {
@@ -324,7 +332,9 @@ export interface Budget extends BudgetInput {
   currency: string;
 }
 
-export const budgetQuerySchema = z.object({ month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/) });
+export const budgetQuerySchema = z.object({
+  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+});
 export type BudgetQuery = z.infer<typeof budgetQuerySchema>;
 
 const monthKey = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
@@ -363,7 +373,13 @@ export interface Subscriptions {
   leaksPerYear: number;
 }
 
-export const LEAK_KINDS = ['rising', 'double', 'unused', 'hidden', 'renewal'] as const;
+export const LEAK_KINDS = [
+  'rising',
+  'double',
+  'unused',
+  'hidden',
+  'renewal',
+] as const;
 export type LeakKind = (typeof LEAK_KINDS)[number];
 
 /**
@@ -399,7 +415,9 @@ export interface SubscriptionUse {
   unused: boolean;
 }
 
-export const subscriptionDismissSchema = z.object({ key: z.string().trim().min(1).max(200) });
+export const subscriptionDismissSchema = z.object({
+  key: z.string().trim().min(1).max(200),
+});
 export type SubscriptionDismiss = z.infer<typeof subscriptionDismissSchema>;
 
 // --- The AI's report of a month ---
@@ -413,14 +431,14 @@ export interface FinanceReport {
   createdAt: string;
 }
 
-export const financeReportQuerySchema = z.object({ month: monthKey });
+export const financeReportQuerySchema = z.object({month: monthKey});
 export type FinanceReportQuery = z.infer<typeof financeReportQuerySchema>;
 
 // --- Wishlist ---
 
 export const wishInputSchema = z.object({
   /** The product's page in a shop: its price is read from there every day. */
-  url: z.url({ protocol: /^https?$/ }).max(2000),
+  url: z.url({protocol: /^https?$/}).max(2000),
   /** Empty — the name the page gives. */
   name: z.string().trim().max(200).nullish(),
   note: z.string().trim().max(500).nullish(),
@@ -429,7 +447,7 @@ export const wishInputSchema = z.object({
   currency: z.string().trim().length(3).toUpperCase().nullish(),
   /** The product's picture, when the browser extension read it from the page. */
   imageUrl: z
-    .url({ protocol: /^https?$/ })
+    .url({protocol: /^https?$/})
     .max(2000)
     .nullish(),
   /** Whom it is a gift for: a name as in Birthdays, where it shows as a gift idea. */
@@ -461,7 +479,7 @@ export interface Wish {
    * What is left of this month's budget of all expenses, and what buying the wish would leave
    * (negative — over the budget), in the main currency; `null` — no such budget or no price.
    */
-  budget: { left: number; afterBuying: number; currency: string } | null;
+  budget: {left: number; afterBuying: number; currency: string} | null;
 }
 
 /** The price of a wish on a day. */

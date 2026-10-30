@@ -23,7 +23,7 @@
 
     <nav class="nav">
       @for (item of mainNav(); track item.path) {
-        <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
+        <ng-container *ngTemplateOutlet="navLink; context: {$implicit: item}" />
       }
       @for (group of groups(); track group.id) {
         <button
@@ -37,12 +37,16 @@
           @if (!isOpen(group)) {
             <span class="count">{{ group.items.length }}</span>
           }
-          <mat-icon class="chevron">{{ isOpen(group) ? 'expand_less' : 'expand_more' }}</mat-icon>
+          <mat-icon class="chevron">{{
+            isOpen(group) ? 'expand_less' : 'expand_more'
+          }}</mat-icon>
         </button>
         @if (isOpen(group)) {
           <div class="nav-group-items">
             @for (item of group.items; track item.path) {
-              <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
+              <ng-container
+                *ngTemplateOutlet="navLink; context: {$implicit: item}"
+              />
             }
           </div>
         }
@@ -51,20 +55,22 @@
 
     <nav class="nav bottom-nav">
       @for (item of bottomNav(); track item.path) {
-        <ng-container *ngTemplateOutlet="navLink; context: { $implicit: item }" />
+        <ng-container *ngTemplateOutlet="navLink; context: {$implicit: item}" />
       }
     </nav>
 
     <!-- Without a connection, or with changes that have not reached the server yet. -->
     @if (!offline.online() || auth.offline() || offline.pending() > 0) {
       <div class="offline" role="status">
-        <mat-icon>{{ offline.pending() > 0 ? 'cloud_upload' : 'cloud_off' }}</mat-icon>
+        <mat-icon>{{
+          offline.pending() > 0 ? 'cloud_upload' : 'cloud_off'
+        }}</mat-icon>
         <span>
           @if (!offline.online() || auth.offline()) {
             {{ 'core.offline.offline' | transloco }}
           }
           @if (offline.pending() > 0) {
-            {{ 'core.offline.pending' | transloco: { count: offline.pending() } }}
+            {{ 'core.offline.pending' | transloco: {count: offline.pending()} }}
           }
         </span>
       </div>
@@ -93,7 +99,7 @@
         class="nav-item"
         [routerLink]="item.path"
         routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+        [routerLinkActiveOptions]="{exact: item.path === '/'}"
         (click)="isMobile() && sidenav.close()"
       >
         <mat-icon>{{ item.icon }}</mat-icon>
@@ -125,7 +131,8 @@
     <main class="content">
       @if (demo()) {
         <p class="demo-banner" role="note">
-          <mat-icon inline>science</mat-icon> {{ 'core.demo.banner' | transloco }}
+          <mat-icon inline>science</mat-icon>
+          {{ 'core.demo.banner' | transloco }}
         </p>
       }
       <router-outlet />

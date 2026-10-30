@@ -5,10 +5,10 @@ import {
   HttpRequest,
   HttpResponse,
 } from '@angular/common/http';
-import { isCacheable } from '@pd/client-core';
-import { Observable } from 'rxjs';
-import { mobileReadCache } from './idb-read-cache';
-import { apiBaseUrl, isMobileApp } from './mobile-app';
+import {isCacheable} from '@pd/client-core';
+import {Observable} from 'rxjs';
+import {mobileReadCache} from './idb-read-cache';
+import {apiBaseUrl, isMobileApp} from './mobile-app';
 
 /** A weak signal (a train) answers late: after this the kept answer is shown, if there is one. */
 const SLOW_MS = 8_000;
@@ -20,7 +20,11 @@ const SLOW_MS = 8_000;
  * kept just waits for the server. Elsewhere it does nothing.
  */
 export const offlineReadInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!isMobileApp() || request.method !== 'GET' || request.responseType !== 'json') {
+  if (
+    !isMobileApp() ||
+    request.method !== 'GET' ||
+    request.responseType !== 'json'
+  ) {
     return next(request);
   }
   const path = request.url.startsWith(apiBaseUrl())
@@ -38,9 +42,10 @@ function withKeptAnswer(
 ): Observable<HttpEvent<unknown>> {
   const cache = mobileReadCache();
   const key = request.urlWithParams;
-  const kept = (body: unknown) => new HttpResponse({ status: 200, body, url: key });
+  const kept = (body: unknown) =>
+    new HttpResponse({status: 200, body, url: key});
 
-  return new Observable<HttpEvent<unknown>>((subscriber) => {
+  return new Observable<HttpEvent<unknown>>(subscriber => {
     let answered = false;
     const answer = (event: HttpEvent<unknown>) => {
       if (!answered) {
@@ -51,12 +56,12 @@ function withKeptAnswer(
     };
 
     const slow = setTimeout(() => {
-      void cache.get(key).then((hit) => hit && answer(kept(hit.body)));
+      void cache.get(key).then(hit => hit && answer(kept(hit.body)));
     }, SLOW_MS);
 
     // Not cut off when the kept answer is shown: a late reply still updates what is kept.
     const subscription = network.subscribe({
-      next: (event) => {
+      next: event => {
         if (event instanceof HttpResponse) {
           clearTimeout(slow);
           if (event.ok) {
@@ -73,13 +78,14 @@ function withKeptAnswer(
           return;
         }
         // An error status is the server's answer; status 0 is no answer at all.
-        const unreachable = error instanceof HttpErrorResponse && error.status === 0;
+        const unreachable =
+          error instanceof HttpErrorResponse && error.status === 0;
         if (!unreachable) {
           answered = true;
           subscriber.error(error);
           return;
         }
-        void cache.get(key).then((hit) => {
+        void cache.get(key).then(hit => {
           if (hit) {
             answer(kept(hit.body));
           } else if (!answered) {

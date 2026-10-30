@@ -1,4 +1,4 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type {CapacitorConfig} from '@capacitor/cli';
 
 /**
  * The Android app: the same Angular app as the browser, packed inside (`webDir`) so it starts and
@@ -11,14 +11,14 @@ const config: CapacitorConfig = {
   appName: 'Personal Dashboard',
   webDir: '../../dist/apps/web/browser',
   // The page's origin is https://localhost: the server allows it in CORS (apps/api main.ts).
-  server: { androidScheme: 'https', hostname: 'localhost' },
+  server: {androidScheme: 'https', hostname: 'localhost'},
   // chrome://inspect sees the page of the release build too: a problem on the phone is looked
   // at, not guessed. Only a computer the phone allowed over USB debugging can connect.
-  android: { webContentsDebuggingEnabled: true },
+  android: {webContentsDebuggingEnabled: true},
   plugins: {
     // A push that comes while the app is open shows in the shade too: without "alert" the
     // plugin only hands it to the page, and a test sent from Settings seems lost.
-    PushNotifications: { presentationOptions: ['badge', 'sound', 'alert'] },
+    PushNotifications: {presentationOptions: ['badge', 'sound', 'alert']},
   },
 };
 

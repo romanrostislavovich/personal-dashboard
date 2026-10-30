@@ -20,11 +20,11 @@ import {
   pushAnswerSchema,
   PushAnswerInput,
 } from '@pd/contracts';
-import { Public } from '../auth/public.decorator';
-import { isPushAnswerToken } from './push/push.service';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
-import { NotificationInboxService } from './notification-inbox.service';
+import {Public} from '../auth/public.decorator';
+import {isPushAnswerToken} from './push/push.service';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
+import {NotificationInboxService} from './notification-inbox.service';
 
 /** The bell (see NotificationInboxService): the same on the web, the desktop and the phone. */
 @Controller('notifications/inbox')
@@ -52,13 +52,19 @@ export class NotificationInboxController {
   }
 
   @Get(':id')
-  get(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<InboxItem> {
+  get(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<InboxItem> {
     return this.inbox.get(user.id, id);
   }
 
   @Post(':id/read')
   @HttpCode(204)
-  read(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  read(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.inbox.markRead(user.id, id);
   }
 

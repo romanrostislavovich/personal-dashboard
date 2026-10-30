@@ -1,9 +1,9 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { LifeService, UsersService } from '@pd/api-core';
-import { LifeCard, LifeEvent } from '@pd/contracts';
-import { financeMessages } from './finance.messages';
-import { FinanceReportsService } from './reports/finance-reports.service';
-import { TransactionsService } from './transactions/transactions.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {LifeService, UsersService} from '@pd/api-core';
+import {LifeCard, LifeEvent} from '@pd/contracts';
+import {financeMessages} from './finance.messages';
+import {FinanceReportsService} from './reports/finance-reports.service';
+import {TransactionsService} from './transactions/transactions.service';
 
 /**
  * Finance in the life timeline (the money of a day), in the summaries (spent, earned) and in the
@@ -27,7 +27,10 @@ export class FinanceLife implements OnModuleInit {
         return summary ? financeMessages(locale).reportNote(summary) : null;
       },
       day: async (userId, day): Promise<LifeEvent[]> => {
-        const summary = await this.transactions.summary(userId, { from: day, to: day });
+        const summary = await this.transactions.summary(userId, {
+          from: day,
+          to: day,
+        });
         const main = summary.inMain;
         if (!main || (!main.expense && !main.income)) {
           return [];
@@ -40,7 +43,11 @@ export class FinanceLife implements OnModuleInit {
                   module: 'finance',
                   icon: 'payments',
                   key: 'finance.life.spent',
-                  params: { amount: main.expense.toFixed(2), currency: main.mainCurrency, top },
+                  params: {
+                    amount: main.expense.toFixed(2),
+                    currency: main.mainCurrency,
+                    top,
+                  },
                   at: null,
                   link: '/finance',
                 },
@@ -52,7 +59,10 @@ export class FinanceLife implements OnModuleInit {
                   module: 'finance',
                   icon: 'savings',
                   key: 'finance.life.earned',
-                  params: { amount: main.income.toFixed(2), currency: main.mainCurrency },
+                  params: {
+                    amount: main.income.toFixed(2),
+                    currency: main.mainCurrency,
+                  },
                   at: null,
                   link: '/finance',
                 },
@@ -75,7 +85,10 @@ export class FinanceLife implements OnModuleInit {
             format: 'money',
             currency: main.mainCurrency,
             ...(top
-              ? { detailKey: 'finance.life.topCategory', detailParams: { category: top.category } }
+              ? {
+                  detailKey: 'finance.life.topCategory',
+                  detailParams: {category: top.category},
+                }
               : {}),
           },
           {

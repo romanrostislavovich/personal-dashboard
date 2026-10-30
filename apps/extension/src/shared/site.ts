@@ -58,7 +58,9 @@ export function siteOf(url: string): Site | null {
   let parsed: URL;
   try {
     parsed = new URL(
-      /^[a-z][a-z\d+.-]*:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`,
+      /^[a-z][a-z\d+.-]*:\/\//i.test(url.trim())
+        ? url.trim()
+        : `https://${url.trim()}`,
     );
   } catch {
     return null;
@@ -83,7 +85,7 @@ export function sameSite(page: string, saved: string): boolean {
 
 /** Whether any of a login's addresses fits the page. */
 export function matchesPage(urls: readonly string[], page: string): boolean {
-  return urls.some((url) => sameSite(page, url));
+  return urls.some(url => sameSite(page, url));
 }
 
 /** A name for a site in a title or a message: the host without `www.`. */

@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SchedulerService } from '@pd/api-core';
-import { WishlistService } from './wishlist.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {SchedulerService} from '@pd/api-core';
+import {WishlistService} from './wishlist.service';
 
 /** Every morning reads the prices of the wishlist again; a changed one is reported. */
 @Injectable()

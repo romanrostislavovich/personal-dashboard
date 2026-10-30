@@ -1,4 +1,4 @@
-import { BUDGET_TOTAL } from '@pd/contracts';
+import {BUDGET_TOTAL} from '@pd/contracts';
 
 export interface BudgetRow {
   id: string;
@@ -18,13 +18,17 @@ export interface BudgetAlert {
 const BUDGET_WARN_SHARE = 0.8;
 
 /** What a category of a budget has spent: its own expenses, or all of them for the total. */
-export function spentOf(budget: { category: string }, spent: ReadonlyMap<string, number>): number {
+export function spentOf(
+  budget: {category: string},
+  spent: ReadonlyMap<string, number>,
+): number {
   if (budget.category === BUDGET_TOTAL) {
     return [...spent.values()].reduce((sum, value) => sum + value, 0);
   }
   const wanted = budget.category.toLowerCase();
   return [...spent].reduce(
-    (sum, [category, value]) => (category.toLowerCase() === wanted ? sum + value : sum),
+    (sum, [category, value]) =>
+      category.toLowerCase() === wanted ? sum + value : sum,
     0,
   );
 }
@@ -41,7 +45,7 @@ export function budgetAlerts(
   return budgets.flatMap((budget): BudgetAlert[] => {
     const used = spentOf(budget, spent);
     if (used >= budget.limit && budget.exceededMonth !== month) {
-      return [{ budget, level: 'exceeded', spent: used }];
+      return [{budget, level: 'exceeded', spent: used}];
     }
     if (
       used >= budget.limit * BUDGET_WARN_SHARE &&
@@ -49,7 +53,7 @@ export function budgetAlerts(
       budget.warnedMonth !== month &&
       budget.exceededMonth !== month
     ) {
-      return [{ budget, level: 'warned', spent: used }];
+      return [{budget, level: 'warned', spent: used}];
     }
     return [];
   });

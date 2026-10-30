@@ -1,10 +1,10 @@
-import { diaryPlainText } from './diary-text';
+import {diaryPlainText} from './diary-text';
 
 describe('diaryPlainText', () => {
   it('drops markdown markup but keeps text and mark emoji', () => {
-    expect(diaryPlainText('# Day\n**Bold** [link](https://x.y) ==🔥 hot==')).toBe(
-      'Day Bold link 🔥 hot',
-    );
+    expect(
+      diaryPlainText('# Day\n**Bold** [link](https://x.y) ==🔥 hot=='),
+    ).toBe('Day Bold link 🔥 hot');
   });
 
   it('drops photos, table borders and task checkboxes', () => {

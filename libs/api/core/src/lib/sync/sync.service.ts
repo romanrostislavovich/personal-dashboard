@@ -5,7 +5,7 @@ import {
   Logger,
   OnApplicationBootstrap,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {ConfigService} from '@nestjs/config';
 import {
   ReconcileResult,
   SyncMode,
@@ -15,13 +15,13 @@ import {
   SyncPushResponse,
   SyncStatus,
 } from '@pd/contracts';
-import { eq, sql } from 'drizzle-orm';
-import { randomUUID } from 'node:crypto';
-import { AppConfig } from '../config/env';
-import { DB, Database } from '../database/database.module';
-import { encryptionKeyCheck } from './sync-protocol';
-import { syncState } from './sync.schema';
-import { SyncStore } from './sync-store';
+import {eq, sql} from 'drizzle-orm';
+import {randomUUID} from 'node:crypto';
+import {AppConfig} from '../config/env';
+import {DB, Database} from '../database/database.module';
+import {encryptionKeyCheck} from './sync-protocol';
+import {syncState} from './sync.schema';
+import {SyncStore} from './sync-store';
 
 /** Keys of `sync.state`. */
 export const SYNC_STATE = {
@@ -64,7 +64,7 @@ export class SyncService implements OnApplicationBootstrap {
     @Inject(ConfigService) private readonly config: AppConfig,
     private readonly store: SyncStore,
   ) {
-    this.mode = config.get('SYNC_MODE', { infer: true });
+    this.mode = config.get('SYNC_MODE', {infer: true});
   }
 
   async onApplicationBootstrap(): Promise<void> {
@@ -76,10 +76,12 @@ export class SyncService implements OnApplicationBootstrap {
   }
 
   /** What both sides must agree on; sent with every request. */
-  async handshake(): Promise<{ schema: string; keyCheck: string }> {
+  async handshake(): Promise<{schema: string; keyCheck: string}> {
     return {
       schema: await this.schemaVersion(),
-      keyCheck: encryptionKeyCheck(this.config.get('ENCRYPTION_KEY', { infer: true })),
+      keyCheck: encryptionKeyCheck(
+        this.config.get('ENCRYPTION_KEY', {infer: true}),
+      ),
     };
   }
 
@@ -98,13 +100,19 @@ export class SyncService implements OnApplicationBootstrap {
     await this.verify(request);
     const origin = clientOrigin(request.peer);
     // The client's own changes are not sent back to it.
-    const batch = await this.store.changesSince(request.cursor, (from) => from !== origin);
+    const batch = await this.store.changesSince(
+      request.cursor,
+      from => from !== origin,
+    );
     await this.touchContact();
-    return { serverId: await this.serverId(), ...batch };
+    return {serverId: await this.serverId(), ...batch};
   }
 
   /** An action request is checked like push and pull (see ServerActions). */
-  async acceptAction(request: { schema: string; keyCheck: string }): Promise<void> {
+  async acceptAction(request: {
+    schema: string;
+    keyCheck: string;
+  }): Promise<void> {
     await this.verify(request);
     await this.touchContact();
   }
@@ -112,7 +120,10 @@ export class SyncService implements OnApplicationBootstrap {
   // --- State and status ---
 
   async getState(key: string): Promise<string | null> {
-    const [row] = await this.db.select().from(syncState).where(eq(syncState.key, key));
+    const [row] = await this.db
+      .select()
+      .from(syncState)
+      .where(eq(syncState.key, key));
     return row?.value ?? null;
   }
 
@@ -123,8 +134,8 @@ export class SyncService implements OnApplicationBootstrap {
     }
     await this.db
       .insert(syncState)
-      .values({ key, value })
-      .onConflictDoUpdate({ target: syncState.key, set: { value } });
+      .values({key, value})
+      .onConflictDoUpdate({target: syncState.key, set: {value}});
   }
 
   /** The status without backups: those are BackupService's (the controller joins both). */
@@ -133,22 +144,33 @@ export class SyncService implements OnApplicationBootstrap {
     const off = this.mode === 'off';
     return {
       mode: this.mode,
-      serverUrl: client ? (this.config.get('SYNC_SERVER_URL', { infer: true }) ?? null) : null,
+      serverUrl: client
+        ? (this.config.get('SYNC_SERVER_URL', {infer: true}) ?? null)
+        : null,
       lastSyncedAt: off
         ? null
-        : await this.getState(client ? SYNC_STATE.lastSyncedAt : SYNC_STATE.lastContact),
+        : await this.getState(
+            client ? SYNC_STATE.lastSyncedAt : SYNC_STATE.lastContact,
+          ),
       lastError: client ? await this.getState(SYNC_STATE.lastError) : null,
       pendingChanges: client
-        ? await this.store.pendingCount(await this.getState(SYNC_STATE.pushCursor))
+        ? await this.store.pendingCount(
+            await this.getState(SYNC_STATE.pushCursor),
+          )
         : 0,
-      ...(off ? { parked: 0, conflicts: 0 } : await this.store.problemCounts()),
+      ...(off ? {parked: 0, conflicts: 0} : await this.store.problemCounts()),
       reconcile: client
-        ? parseJson<ReconcileResult>(await this.getState(SYNC_STATE.reconcileResult))
+        ? parseJson<ReconcileResult>(
+            await this.getState(SYNC_STATE.reconcileResult),
+          )
         : null,
     };
   }
 
-  private async verify(request: { schema: string; keyCheck: string }): Promise<void> {
+  private async verify(request: {
+    schema: string;
+    keyCheck: string;
+  }): Promise<void> {
     const own = await this.handshake();
     if (request.schema !== own.schema) {
       // The usual reason is a deploy of one side only, so the message says how to finish it.
@@ -159,7 +181,9 @@ export class SyncService implements OnApplicationBootstrap {
       );
     }
     if (request.keyCheck !== own.keyCheck) {
-      throw new ConflictException('ENCRYPTION_KEY differs between the instances');
+      throw new ConflictException(
+        'ENCRYPTION_KEY differs between the instances',
+      );
     }
   }
 
@@ -179,7 +203,7 @@ export class SyncService implements OnApplicationBootstrap {
 
   /** The latest applied migration: both instances must be on the same one. */
   private async schemaVersion(): Promise<string> {
-    const { rows } = await this.db.execute<{ hash: string }>(
+    const {rows} = await this.db.execute<{hash: string}>(
       sql`SELECT hash FROM drizzle.__drizzle_migrations ORDER BY created_at DESC LIMIT 1`,
     );
     return rows[0]?.hash ?? 'none';

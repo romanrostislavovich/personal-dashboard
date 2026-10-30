@@ -1,5 +1,5 @@
-import { net } from 'electron';
-import { randomUUID } from 'node:crypto';
+import {net} from 'electron';
+import {randomUUID} from 'node:crypto';
 
 /** A time the server could not be reached (activityOutageSchema in contracts). */
 export interface Outage {
@@ -19,13 +19,16 @@ const CHECK_TIMEOUT_MS = 5000;
  * Windows uses itself. Precise to the minute of the uploads; a sleeping computer is not down.
  */
 export class OutageWatch {
-  private open: { kind: Outage['kind']; startedAt: number } | null = null;
+  private open: {kind: Outage['kind']; startedAt: number} | null = null;
 
   constructor(private readonly closed: (outage: Outage) => void) {}
 
   async failed(): Promise<void> {
     if (!this.open) {
-      this.open = { kind: (await internetWorks()) ? 'server' : 'internet', startedAt: Date.now() };
+      this.open = {
+        kind: (await internetWorks()) ? 'server' : 'internet',
+        startedAt: Date.now(),
+      };
     }
   }
 
@@ -53,7 +56,9 @@ async function internetWorks(): Promise<boolean> {
       cache: 'no-store',
       signal: AbortSignal.timeout(CHECK_TIMEOUT_MS),
     });
-    return response.ok && (await response.text()).includes('Microsoft Connect Test');
+    return (
+      response.ok && (await response.text()).includes('Microsoft Connect Test')
+    );
   } catch {
     return false;
   }

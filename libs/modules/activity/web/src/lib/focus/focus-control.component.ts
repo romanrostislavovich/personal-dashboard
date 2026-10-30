@@ -8,14 +8,19 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { desktopBridge, DesktopFocusStatus, pickableProjects, ProjectsApi } from '@pd/web-core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {
+  desktopBridge,
+  DesktopFocusStatus,
+  pickableProjects,
+  ProjectsApi,
+} from '@pd/web-core';
 
 /** The page asks the shell for the timer's state this often; the countdown runs between. */
 const POLL_MS = 5_000;
@@ -44,13 +49,20 @@ const POLL_MS = 5_000;
           } @else if (s.phase === 'idle') {
             <div class="start">
               <mat-form-field subscriptSizing="dynamic">
-                <mat-label>{{ 'activity.focus.project' | transloco }}</mat-label>
-                <mat-select [value]="projectId()" (valueChange)="projectId.set($event)">
+                <mat-label>{{
+                  'activity.focus.project' | transloco
+                }}</mat-label>
+                <mat-select
+                  [value]="projectId()"
+                  (valueChange)="projectId.set($event)"
+                >
                   <mat-option [value]="null">{{
                     'activity.focus.noProject' | transloco
                   }}</mat-option>
                   @for (project of pickable(); track project.id) {
-                    <mat-option [value]="project.id">{{ project.name }}</mat-option>
+                    <mat-option [value]="project.id">{{
+                      project.name
+                    }}</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
@@ -65,18 +77,23 @@ const POLL_MS = 5_000;
               </mat-form-field>
               <button matButton="filled" (click)="start()">
                 <mat-icon>play_arrow</mat-icon>
-                {{ 'activity.focus.start' | transloco: { minutes: focusMinutes() } }}
+                {{
+                  'activity.focus.start' | transloco: {minutes: focusMinutes()}
+                }}
               </button>
             </div>
           } @else {
             <div class="running" [class.break]="s.phase !== 'focus'">
-              <span class="phase">{{ 'activity.focus.phases.' + s.phase | transloco }}</span>
+              <span class="phase">{{
+                'activity.focus.phases.' + s.phase | transloco
+              }}</span>
               <span class="clock">{{ left() }}</span>
               @if (s.phase === 'focus') {
                 <span class="hint">
                   {{
                     'activity.focus.round'
-                      | transloco: { round: s.round + 1, rounds: s.roundsBeforeLongBreak }
+                      | transloco
+                        : {round: s.round + 1, rounds: s.roundsBeforeLongBreak}
                   }}
                   @if (s.note) {
                     · {{ s.note }}
@@ -84,10 +101,14 @@ const POLL_MS = 5_000;
                 </span>
               }
               <button matButton (click)="stop()">
-                <mat-icon>{{ s.phase === 'focus' ? 'stop' : 'skip_next' }}</mat-icon>
+                <mat-icon>{{
+                  s.phase === 'focus' ? 'stop' : 'skip_next'
+                }}</mat-icon>
                 {{
-                  (s.phase === 'focus' ? 'activity.focus.stop' : 'activity.focus.skipBreak')
-                    | transloco
+                  (s.phase === 'focus'
+                    ? 'activity.focus.stop'
+                    : 'activity.focus.skipBreak'
+                  ) | transloco
                 }}
               </button>
             </div>
@@ -141,7 +162,9 @@ export class FocusControlComponent {
 
   protected readonly focus = desktopBridge()?.focus ?? null;
   protected readonly projects = inject(ProjectsApi).list();
-  protected readonly pickable = computed(() => pickableProjects(this.projects.value()));
+  protected readonly pickable = computed(() =>
+    pickableProjects(this.projects.value()),
+  );
   protected readonly status = signal<DesktopFocusStatus | null>(null);
   protected readonly projectId = signal<string | null>(null);
   protected readonly note = signal('');
@@ -149,7 +172,9 @@ export class FocusControlComponent {
 
   protected readonly left = computed(() => {
     const endsAt = this.status()?.endsAt;
-    const seconds = endsAt ? Math.max(0, Math.round((Date.parse(endsAt) - this.now()) / 1000)) : 0;
+    const seconds = endsAt
+      ? Math.max(0, Math.round((Date.parse(endsAt) - this.now()) / 1000))
+      : 0;
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   });
 
@@ -167,7 +192,10 @@ export class FocusControlComponent {
   }
 
   protected async start(): Promise<void> {
-    await this.focus?.start({ projectId: this.projectId(), note: this.note() || null });
+    await this.focus?.start({
+      projectId: this.projectId(),
+      note: this.note() || null,
+    });
     await this.refresh();
   }
 

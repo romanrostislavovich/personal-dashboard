@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { GentleDayComponent } from './gentle-day.component';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {GentleDayComponent} from './gentle-day.component';
 
 /** Home widget: the gentle day, turned on and marked without leaving the home page. */
 @Component({
@@ -21,7 +21,9 @@ import { GentleDayComponent } from './gentle-day.component';
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>🌿 {{ 'psychology.gentle.title' | transloco }}</mat-card-title>
+        <mat-card-title
+          >🌿 {{ 'psychology.gentle.title' | transloco }}</mat-card-title
+        >
       </mat-card-header>
       <mat-card-content class="padded">
         <pd-gentle-day [compact]="true" />

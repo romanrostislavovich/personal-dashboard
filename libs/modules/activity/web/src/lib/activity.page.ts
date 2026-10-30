@@ -1,24 +1,30 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatTabsModule } from '@angular/material/tabs';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {MatTabsModule} from '@angular/material/tabs';
+import {RouterLink, RouterLinkActive, RouterOutlet} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 /** Subsections of Activity: each is a child route, so a tab has its own address. */
 const TABS = [
-  { path: 'overview', labelKey: 'activity.tabs.overview' },
-  { path: 'focus', labelKey: 'activity.tabs.focus' },
-  { path: 'workstates', labelKey: 'activity.workstates.title' },
-  { path: 'notifications', labelKey: 'activity.tabs.notifications' },
-  { path: 'places', labelKey: 'activity.tabs.places' },
-  { path: 'computers', labelKey: 'activity.tabs.computers' },
-  { path: 'settings', labelKey: 'activity.tabs.settings' },
+  {path: 'overview', labelKey: 'activity.tabs.overview'},
+  {path: 'focus', labelKey: 'activity.tabs.focus'},
+  {path: 'workstates', labelKey: 'activity.workstates.title'},
+  {path: 'notifications', labelKey: 'activity.tabs.notifications'},
+  {path: 'places', labelKey: 'activity.tabs.places'},
+  {path: 'computers', labelKey: 'activity.tabs.computers'},
+  {path: 'settings', labelKey: 'activity.tabs.settings'},
 ] as const;
 
 /** The Activity section: a title, the tabs and the subsection under them. */
 @Component({
   selector: 'pd-activity-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatTabsModule, RouterLink, RouterLinkActive, RouterOutlet, TranslocoPipe],
+  imports: [
+    MatTabsModule,
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    TranslocoPipe,
+  ],
   template: `
     <header class="page-header">
       <h1 class="page-title">{{ 'activity.title' | transloco }}</h1>

@@ -60,24 +60,24 @@
       const box = document.getElementById('box');
       let start = null;
 
-      window.desktop.region.image().then((url) => {
+      window.desktop.region.image().then(url => {
         if (url) shot.src = url;
         else window.desktop.region.done(null);
       });
 
-      const rect = (event) => ({
+      const rect = event => ({
         x: Math.min(start.x, event.clientX),
         y: Math.min(start.y, event.clientY),
         width: Math.abs(event.clientX - start.x),
         height: Math.abs(event.clientY - start.y),
       });
 
-      document.addEventListener('mousedown', (event) => {
-        start = { x: event.clientX, y: event.clientY };
+      document.addEventListener('mousedown', event => {
+        start = {x: event.clientX, y: event.clientY};
         shade.style.display = 'none';
         box.style.display = 'block';
       });
-      document.addEventListener('mousemove', (event) => {
+      document.addEventListener('mousemove', event => {
         if (!start) return;
         const r = rect(event);
         Object.assign(box.style, {
@@ -87,13 +87,13 @@
           height: r.height + 'px',
         });
       });
-      document.addEventListener('mouseup', (event) => {
+      document.addEventListener('mouseup', event => {
         if (!start) return;
         const r = rect(event);
         start = null;
         window.desktop.region.done(r);
       });
-      document.addEventListener('keydown', (event) => {
+      document.addEventListener('keydown', event => {
         if (event.key === 'Escape') window.desktop.region.done(null);
       });
     </script>

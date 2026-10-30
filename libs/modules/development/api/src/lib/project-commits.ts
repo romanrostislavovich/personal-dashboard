@@ -1,5 +1,5 @@
-import { BitbucketClient } from './bitbucket/bitbucket.client';
-import { GitlabClient, projectPath } from './gitlab/gitlab.client';
+import {BitbucketClient} from './bitbucket/bitbucket.client';
+import {GitlabClient, projectPath} from './gitlab/gitlab.client';
 
 /** A commit as the overview of a project and the incidents of its sites show it. */
 export interface RepoCommit {
@@ -31,7 +31,7 @@ export interface RawGitlabCommit {
 export interface RawBitbucketCommit {
   message?: string;
   date: string;
-  links?: { html?: { href?: string } };
+  links?: {html?: {href?: string}};
 }
 
 export function fromGitlab(raw: RawGitlabCommit): RepoCommit {
@@ -49,12 +49,12 @@ export function bitbucketBetween(
   until: Date,
 ): RepoCommit[] {
   return rows
-    .filter((raw) => {
+    .filter(raw => {
       const at = new Date(raw.date);
       return at >= since && at <= until;
     })
     .slice(0, COMMITS)
-    .map((raw) => ({
+    .map(raw => ({
       at: new Date(raw.date).toISOString(),
       title: commitTitle(raw.message ?? ''),
       url: raw.links?.html?.href ?? null,
@@ -68,9 +68,13 @@ export async function gitlabCommits(
   since: Date,
   until: Date,
 ): Promise<RepoCommit[]> {
-  const { rows } = await client.page<RawGitlabCommit>(
+  const {rows} = await client.page<RawGitlabCommit>(
     `${projectPath(fullName)}/repository/commits`,
-    { since: since.toISOString(), until: until.toISOString(), per_page: String(COMMITS) },
+    {
+      since: since.toISOString(),
+      until: until.toISOString(),
+      per_page: String(COMMITS),
+    },
   );
   return rows.map(fromGitlab);
 }
@@ -85,8 +89,8 @@ export async function bitbucketCommits(
   let seen = 0;
   const rows = await client.all<RawBitbucketCommit>(
     `/repositories/${fullName}/commits`,
-    { fields: 'next,values.message,values.date,values.links.html.href' },
-    (row) => new Date(row.date) < since || ++seen > BITBUCKET_LOOK_BACK,
+    {fields: 'next,values.message,values.date,values.links.html.href'},
+    row => new Date(row.date) < since || ++seen > BITBUCKET_LOOK_BACK,
   );
   return bitbucketBetween(rows, since, until);
 }

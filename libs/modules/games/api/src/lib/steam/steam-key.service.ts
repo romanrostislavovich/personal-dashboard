@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { SecretsService } from '@pd/api-core';
-import { SteamDotaClient } from './steam-dota.client';
-import { SteamClient, SteamKeyError } from './steam.client';
+import {BadRequestException, Injectable} from '@nestjs/common';
+import {SecretsService} from '@pd/api-core';
+import {SteamDotaClient} from './steam-dota.client';
+import {SteamClient, SteamKeyError} from './steam.client';
 
 const KEY_SECRET = 'games.steam-key';
 

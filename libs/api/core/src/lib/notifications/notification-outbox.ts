@@ -1,13 +1,13 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {Inject, Injectable} from '@nestjs/common';
 import {
   NOTIFICATION_DELIVERY_STATUSES,
   NotificationDeliveryStatus,
   NotificationLog,
 } from '@pd/contracts';
-import { and, desc, eq, gte, lt, ne, sql } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { keyedHash } from '../crypto/encrypted-columns';
-import { Notification } from './notification-channel';
+import {and, desc, eq, gte, lt, ne, sql} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {keyedHash} from '../crypto/encrypted-columns';
+import {Notification} from './notification-channel';
 import {
   NotificationOutboxRow,
   notificationOutbox,
@@ -19,7 +19,13 @@ const SAME_TEXT_MINUTES = 5;
 /** How long a send may take before the row counts as stuck (the process died in the middle). */
 const SENDING_LEASE_MS = 15 * 60 * 1000;
 /** The waits after the 1st, 2nd… failed try; after the last one it is given up. */
-const BACKOFF_MS = [60_000, 5 * 60_000, 30 * 60_000, 2 * 3_600_000, 6 * 3_600_000];
+const BACKOFF_MS = [
+  60_000,
+  5 * 60_000,
+  30 * 60_000,
+  2 * 3_600_000,
+  6 * 3_600_000,
+];
 /** How many are picked up by one run of the retry job. */
 const BATCH = 50;
 /** The log — and the bell's inbox — keep 90 days. */
@@ -47,13 +53,17 @@ export class NotificationOutbox {
     /** For `held`: the end of the quiet hours, when it goes out. */
     heldUntil: Date | null = null,
   ): Promise<NotificationOutboxRow | null> {
-    const { title, body, source, actions = [], dedupe, link } = notification;
+    const {title, body, source, actions = [], dedupe, link} = notification;
     const dedupeKey = keyedHash(dedupe?.key ?? `${source}\n${title}\n${body}`);
-    const since = new Date(Date.now() - (dedupe?.minutes ?? SAME_TEXT_MINUTES) * 60_000);
-    return this.db.transaction(async (tx) => {
-      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`outbox:${userId}`}))`);
+    const since = new Date(
+      Date.now() - (dedupe?.minutes ?? SAME_TEXT_MINUTES) * 60_000,
+    );
+    return this.db.transaction(async tx => {
+      await tx.execute(
+        sql`SELECT pg_advisory_xact_lock(hashtext(${`outbox:${userId}`}))`,
+      );
       const [seen] = await tx
-        .select({ id: notificationOutbox.id })
+        .select({id: notificationOutbox.id})
         .from(notificationOutbox)
         .where(
           and(
@@ -96,7 +106,7 @@ export class NotificationOutbox {
    */
   async claimDue(now = new Date()): Promise<NotificationOutboxRow[]> {
     const lease = new Date(now.getTime() + SENDING_LEASE_MS);
-    const { rows } = await this.db.execute<{ id: string }>(sql`
+    const {rows} = await this.db.execute<{id: string}>(sql`
       UPDATE ${notificationOutbox} SET status = 'sending', next_attempt_at = ${lease}
       WHERE id IN (
         SELECT id FROM ${notificationOutbox}
@@ -115,7 +125,7 @@ export class NotificationOutbox {
       .from(notificationOutbox)
       .where(
         sql`${notificationOutbox.id} IN (${sql.join(
-          rows.map((row) => sql`${row.id}`),
+          rows.map(row => sql`${row.id}`),
           sql`, `,
         )})`,
       );
@@ -127,7 +137,7 @@ export class NotificationOutbox {
    */
   async claimHeld(now = new Date()): Promise<NotificationOutboxRow[]> {
     const lease = new Date(now.getTime() + SENDING_LEASE_MS);
-    const { rows } = await this.db.execute<{ id: string }>(sql`
+    const {rows} = await this.db.execute<{id: string}>(sql`
       UPDATE ${notificationOutbox} SET status = 'sending', next_attempt_at = ${lease}
       WHERE id IN (
         SELECT id FROM ${notificationOutbox}
@@ -144,7 +154,7 @@ export class NotificationOutbox {
       .from(notificationOutbox)
       .where(
         sql`${notificationOutbox.id} IN (${sql.join(
-          rows.map((row) => sql`${row.id}`),
+          rows.map(row => sql`${row.id}`),
           sql`, `,
         )})`,
       )
@@ -152,10 +162,13 @@ export class NotificationOutbox {
   }
 
   /** The Telegram message a question became: its buttons go once it is answered elsewhere. */
-  async setTelegramMessage(id: string, message: TelegramMessageRef): Promise<void> {
+  async setTelegramMessage(
+    id: string,
+    message: TelegramMessageRef,
+  ): Promise<void> {
     await this.db
       .update(notificationOutbox)
-      .set({ telegramMessage: message })
+      .set({telegramMessage: message})
       .where(eq(notificationOutbox.id, id));
   }
 
@@ -163,7 +176,12 @@ export class NotificationOutbox {
   async delivered(id: string): Promise<void> {
     await this.db
       .update(notificationOutbox)
-      .set({ status: 'sent', channels: [], nextAttemptAt: null, sentAt: new Date() })
+      .set({
+        status: 'sent',
+        channels: [],
+        nextAttemptAt: null,
+        sentAt: new Date(),
+      })
       .where(eq(notificationOutbox.id, id));
   }
 
@@ -175,7 +193,10 @@ export class NotificationOutbox {
     row: NotificationOutboxRow,
     remaining: string[],
     error: string,
-    { retryAfterMs = 0, permanent = false }: { retryAfterMs?: number; permanent?: boolean },
+    {
+      retryAfterMs = 0,
+      permanent = false,
+    }: {retryAfterMs?: number; permanent?: boolean},
   ): Promise<void> {
     const attempts = row.attempts + 1;
     const wait = BACKOFF_MS[attempts - 1];
@@ -187,7 +208,9 @@ export class NotificationOutbox {
         channels: remaining,
         attempts,
         lastError: error.slice(0, 500),
-        nextAttemptAt: giveUp ? null : new Date(Date.now() + Math.max(wait, retryAfterMs)),
+        nextAttemptAt: giveUp
+          ? null
+          : new Date(Date.now() + Math.max(wait, retryAfterMs)),
       })
       .where(eq(notificationOutbox.id, row.id));
   }
@@ -201,28 +224,37 @@ export class NotificationOutbox {
       .orderBy(desc(notificationOutbox.createdAt))
       .limit(limit);
     const counts = await this.db
-      .select({ status: notificationOutbox.status, count: sql<number>`count(*)::int` })
+      .select({
+        status: notificationOutbox.status,
+        count: sql<number>`count(*)::int`,
+      })
       .from(notificationOutbox)
       .where(
         and(
           eq(notificationOutbox.userId, userId),
-          gte(notificationOutbox.createdAt, new Date(Date.now() - 7 * 86_400_000)),
+          gte(
+            notificationOutbox.createdAt,
+            new Date(Date.now() - 7 * 86_400_000),
+          ),
         ),
       )
       .groupBy(notificationOutbox.status);
     const week = Object.fromEntries(
-      NOTIFICATION_DELIVERY_STATUSES.map((status) => [status, 0]),
+      NOTIFICATION_DELIVERY_STATUSES.map(status => [status, 0]),
     ) as Record<NotificationDeliveryStatus, number>;
-    counts.forEach(({ status, count }) => (week[status] = count));
+    counts.forEach(({status, count}) => (week[status] = count));
     return {
-      items: rows.map((row) => ({
+      items: rows.map(row => ({
         id: row.id,
         source: row.source,
         title: row.title,
         status: row.status,
         attempts: row.attempts,
         lastError: row.lastError,
-        nextAttemptAt: row.status === 'pending' ? (row.nextAttemptAt?.toISOString() ?? null) : null,
+        nextAttemptAt:
+          row.status === 'pending'
+            ? (row.nextAttemptAt?.toISOString() ?? null)
+            : null,
         createdAt: row.createdAt.toISOString(),
         sentAt: row.sentAt?.toISOString() ?? null,
       })),
@@ -234,6 +266,11 @@ export class NotificationOutbox {
   async prune(now = new Date()): Promise<void> {
     await this.db
       .delete(notificationOutbox)
-      .where(lt(notificationOutbox.createdAt, new Date(now.getTime() - KEEP_DAYS * 86_400_000)));
+      .where(
+        lt(
+          notificationOutbox.createdAt,
+          new Date(now.getTime() - KEEP_DAYS * 86_400_000),
+        ),
+      );
   }
 }

@@ -1,42 +1,54 @@
-import { describe, expect, it } from 'vitest';
-import { sanitizeTelemetryText, sanitizeTelemetryUrl, telemetryBucketSchema } from './telemetry';
+import {describe, expect, it} from 'vitest';
+import {
+  sanitizeTelemetryText,
+  sanitizeTelemetryUrl,
+  telemetryBucketSchema,
+} from './telemetry';
 
 const bucket = {
   id: '00000000-0000-4000-8000-000000000001',
   source: 'desktop',
   startedAt: '2026-10-01T10:00:00Z',
   endedAt: '2026-10-01T10:05:00Z',
-  metrics: { inputCount: 100, contextSwitches: 5, focusSeconds: 250 },
+  metrics: {inputCount: 100, contextSwitches: 5, focusSeconds: 250},
 };
 
 describe('telemetry boundary', () => {
   it('accepts aggregates, rejects raw content and invalid durations', () => {
     expect(telemetryBucketSchema.safeParse(bucket).success).toBe(true);
-    expect(telemetryBucketSchema.safeParse({ ...bucket, text: 'private' }).success).toBe(false);
-    expect(telemetryBucketSchema.safeParse({ ...bucket, metrics: { key: 'a' } }).success).toBe(
-      false,
-    );
-    expect(telemetryBucketSchema.safeParse({ ...bucket, endedAt: bucket.startedAt }).success).toBe(
-      false,
-    );
     expect(
-      telemetryBucketSchema.safeParse({ ...bucket, endedAt: '2026-10-01T10:06:00Z' }).success,
+      telemetryBucketSchema.safeParse({...bucket, text: 'private'}).success,
+    ).toBe(false);
+    expect(
+      telemetryBucketSchema.safeParse({...bucket, metrics: {key: 'a'}}).success,
+    ).toBe(false);
+    expect(
+      telemetryBucketSchema.safeParse({...bucket, endedAt: bucket.startedAt})
+        .success,
+    ).toBe(false);
+    expect(
+      telemetryBucketSchema.safeParse({
+        ...bucket,
+        endedAt: '2026-10-01T10:06:00Z',
+      }).success,
     ).toBe(false);
   });
   it('rejects impossible and non-finite measurements', () => {
     for (const metrics of [
-      { inputCount: -1 },
-      { focusEntropy: Infinity },
-      { focusSeconds: 301 },
-      { terminalFailures: 2, terminalCommands: 1 },
+      {inputCount: -1},
+      {focusEntropy: Infinity},
+      {focusSeconds: 301},
+      {terminalFailures: 2, terminalCommands: 1},
     ]) {
-      expect(telemetryBucketSchema.safeParse({ ...bucket, metrics }).success).toBe(false);
+      expect(
+        telemetryBucketSchema.safeParse({...bucket, metrics}).success,
+      ).toBe(false);
     }
   });
   it('strips URL queries and fragments and rejects private resources', () => {
-    expect(sanitizeTelemetryUrl('https://docs.example.com/guide?q=secret#token')).toBe(
-      'https://docs.example.com/guide',
-    );
+    expect(
+      sanitizeTelemetryUrl('https://docs.example.com/guide?q=secret#token'),
+    ).toBe('https://docs.example.com/guide');
     for (const url of [
       'file:///private',
       'javascript:alert(1)',
@@ -60,14 +72,16 @@ describe('telemetry boundary', () => {
     ]) {
       expect(sanitizeTelemetryText(text)).toBeNull();
     }
-    expect(sanitizeTelemetryText(' TypeScript\n guide ')).toBe('TypeScript guide');
+    expect(sanitizeTelemetryText(' TypeScript\n guide ')).toBe(
+      'TypeScript guide',
+    );
   });
   it('does not accept unsanitized browser URLs', () => {
     expect(
       telemetryBucketSchema.safeParse({
         ...bucket,
         source: 'browser',
-        page: { url: 'https://example.com/?token=abc' },
+        page: {url: 'https://example.com/?token=abc'},
       }).success,
     ).toBe(false);
   });

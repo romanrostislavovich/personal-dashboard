@@ -1,21 +1,34 @@
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { automationsApi, CORE_READS } from '@pd/client-core';
-import { AutomationCatalog, AutomationRule, AutomationRuleInput } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { AutomationRuleData, AutomationRuleDialog } from './automation-rule.dialog';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatDialog} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {automationsApi, CORE_READS} from '@pd/client-core';
+import {
+  AutomationCatalog,
+  AutomationRule,
+  AutomationRuleInput,
+} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {
+  AutomationRuleData,
+  AutomationRuleDialog,
+} from './automation-rule.dialog';
 
 /**
  * Settings → Automations: the rules "if X, then Y" of the user, made by hand or described in a
@@ -39,8 +52,12 @@ import { AutomationRuleData, AutomationRuleDialog } from './automation-rule.dial
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'core.automations.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'core.automations.intro' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'core.automations.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'core.automations.intro' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <form class="compose" (ngSubmit)="compose()">
@@ -54,14 +71,17 @@ import { AutomationRuleData, AutomationRuleDialog } from './automation-rule.dial
               (ngModelChange)="text.set($event)"
               [placeholder]="'core.automations.describePlaceholder' | transloco"
             />
-            <mat-hint>{{ 'core.automations.composeHint' | transloco }}</mat-hint>
+            <mat-hint>{{
+              'core.automations.composeHint' | transloco
+            }}</mat-hint>
           </mat-form-field>
           <button
             matButton="tonal"
             type="submit"
             [disabled]="composing() || text().trim().length < 5"
           >
-            <mat-icon>auto_awesome</mat-icon> {{ 'core.automations.compose' | transloco }}
+            <mat-icon>auto_awesome</mat-icon>
+            {{ 'core.automations.compose' | transloco }}
           </button>
           <button matButton type="button" (click)="open()">
             <mat-icon>add</mat-icon> {{ 'core.automations.add' | transloco }}
@@ -71,7 +91,9 @@ import { AutomationRuleData, AutomationRuleDialog } from './automation-rule.dial
           <mat-progress-bar mode="indeterminate" />
         }
         @if (composeError(); as error) {
-          <p class="error">{{ 'core.automations.composeError' | transloco }}: {{ error }}</p>
+          <p class="error">
+            {{ 'core.automations.composeError' | transloco }}: {{ error }}
+          </p>
         }
 
         <ul class="rules">
@@ -85,7 +107,8 @@ import { AutomationRuleData, AutomationRuleDialog } from './automation-rule.dial
               <div class="body">
                 <b>{{ rule.name }}</b>
                 <span class="flow">
-                  {{ label(rule.trigger, 'trigger') }} → {{ label(rule.action, 'action') }}
+                  {{ label(rule.trigger, 'trigger') }} →
+                  {{ label(rule.action, 'action') }}
                 </span>
                 <span class="meta">
                   @if (rule.lastFiredAt) {
@@ -103,7 +126,10 @@ import { AutomationRuleData, AutomationRuleDialog } from './automation-rule.dial
                 </span>
                 @if (rule.lastError) {
                   <span class="error">
-                    {{ 'core.automations.error' | transloco: { error: rule.lastError } }}
+                    {{
+                      'core.automations.error'
+                        | transloco: {error: rule.lastError}
+                    }}
                   </span>
                 }
               </div>
@@ -181,14 +207,19 @@ export class AutomationsSettingsComponent {
   private readonly dialog = inject(MatDialog);
   private readonly transloco = inject(TranslocoService);
 
-  protected readonly rules = httpResource<AutomationRule[]>(() => CORE_READS.automations(), {
-    defaultValue: [],
-  });
-  private readonly catalog = httpResource<AutomationCatalog>(() => CORE_READS.automationsCatalog());
+  protected readonly rules = httpResource<AutomationRule[]>(
+    () => CORE_READS.automations(),
+    {
+      defaultValue: [],
+    },
+  );
+  private readonly catalog = httpResource<AutomationCatalog>(() =>
+    CORE_READS.automationsCatalog(),
+  );
   private readonly labels = computed(() => {
     const catalog = this.catalog.value();
     return new Map(
-      [...(catalog?.triggers ?? []), ...(catalog?.actions ?? [])].map((item) => [
+      [...(catalog?.triggers ?? []), ...(catalog?.actions ?? [])].map(item => [
         item.id,
         item.labelKey,
       ]),
@@ -220,16 +251,22 @@ export class AutomationsSettingsComponent {
   }
 
   /** Opens the editor; `true` — a rule was saved. */
-  protected async open(rule?: AutomationRule, draft?: AutomationRuleInput): Promise<boolean> {
+  protected async open(
+    rule?: AutomationRule,
+    draft?: AutomationRuleInput,
+  ): Promise<boolean> {
     const catalog = this.catalog.value();
     if (!catalog) {
       return false;
     }
     const input = await firstValueFrom(
       this.dialog
-        .open<AutomationRuleDialog, AutomationRuleData, AutomationRuleInput>(AutomationRuleDialog, {
-          data: { catalog, rule: rule ?? draft ?? null },
-        })
+        .open<AutomationRuleDialog, AutomationRuleData, AutomationRuleInput>(
+          AutomationRuleDialog,
+          {
+            data: {catalog, rule: rule ?? draft ?? null},
+          },
+        )
         .afterClosed(),
     );
     if (!input) {
@@ -240,14 +277,26 @@ export class AutomationsSettingsComponent {
     return true;
   }
 
-  protected async toggle(rule: AutomationRule, isActive: boolean): Promise<void> {
-    const { name, trigger, triggerParams, action, actionParams } = rule;
-    await this.api.save({ name, trigger, triggerParams, action, actionParams, isActive }, rule.id);
+  protected async toggle(
+    rule: AutomationRule,
+    isActive: boolean,
+  ): Promise<void> {
+    const {name, trigger, triggerParams, action, actionParams} = rule;
+    await this.api.save(
+      {name, trigger, triggerParams, action, actionParams, isActive},
+      rule.id,
+    );
     this.rules.reload();
   }
 
   protected async remove(rule: AutomationRule): Promise<void> {
-    if (confirm(this.transloco.translate('core.automations.confirmDelete', { name: rule.name }))) {
+    if (
+      confirm(
+        this.transloco.translate('core.automations.confirmDelete', {
+          name: rule.name,
+        }),
+      )
+    ) {
       await this.api.remove(rule.id);
       this.rules.reload();
     }
@@ -256,7 +305,7 @@ export class AutomationsSettingsComponent {
 
 /** The server's message ("AI is not configured", why the AI could not make a rule). */
 function errorText(error: unknown): string {
-  const body = (error as { body?: { message?: unknown } })?.body;
+  const body = (error as {body?: {message?: unknown}})?.body;
   const message = body?.message ?? (error as Error)?.message;
   return typeof message === 'string' ? message : String(message ?? error);
 }

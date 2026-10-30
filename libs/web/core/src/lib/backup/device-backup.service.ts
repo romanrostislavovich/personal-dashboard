@@ -1,9 +1,13 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { dataApi } from '@pd/client-core';
-import { AuthService } from '../auth/auth.service';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { DeviceBackup, DeviceBackupStatus, desktopBridge } from '../realtime/desktop-bridge';
-import { copyDue, copyName } from './backup-schedule';
+import {inject, Injectable, signal} from '@angular/core';
+import {dataApi} from '@pd/client-core';
+import {AuthService} from '../auth/auth.service';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {
+  DeviceBackup,
+  DeviceBackupStatus,
+  desktopBridge,
+} from '../realtime/desktop-bridge';
+import {copyDue, copyName} from './backup-schedule';
 
 /** How often the app looks whether a copy is due (a cheap look at a folder). */
 const CHECK_EVERY_MS = 3_600_000;
@@ -17,7 +21,7 @@ const FIRST_CHECK_MS = 60_000;
  * through "Import" into any dashboard. The device only stores files (`DeviceBackup`), so a new
  * one needs nothing but its own bridge.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class DeviceBackupService {
   private readonly auth = inject(AuthService);
   private readonly data = dataApi(inject(DASHBOARD_CLIENT).api);

@@ -6,8 +6,8 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database } from '@pd/api-core';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database} from '@pd/api-core';
 import {
   addDays,
   DateParts,
@@ -17,19 +17,19 @@ import {
   TrackedRepo,
   trackedRepoUpdateSchema,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gte, inArray } from 'drizzle-orm';
-import { z } from 'zod';
+import {and, asc, desc, eq, gte, inArray} from 'drizzle-orm';
+import {z} from 'zod';
 import {
   repoDailyStats,
   RepoDailyStatsRow,
   TrackedRepoRow,
   trackedRepos,
 } from './open-source.schema';
-import { planRepoList } from './repo-list-plan';
-import { RepoSnapshot, RepoSource } from './repo-source';
-import { RepoSourcesService } from './repo-sources.service';
-import { RepoSyncEvents, RepoSyncService } from './repo-sync.service';
-import { starsDelta } from './star-stats';
+import {planRepoList} from './repo-list-plan';
+import {RepoSnapshot, RepoSource} from './repo-source';
+import {RepoSourcesService} from './repo-sources.service';
+import {RepoSyncEvents, RepoSyncService} from './repo-sync.service';
+import {starsDelta} from './star-stats';
 
 const HISTORY_DAYS = 30;
 
@@ -71,7 +71,7 @@ export class ReposService {
         and(
           inArray(
             repoDailyStats.repoId,
-            repos.map((repo) => repo.id),
+            repos.map(repo => repo.id),
           ),
           gte(repoDailyStats.day, historyFrom),
         ),
@@ -82,12 +82,16 @@ export class ReposService {
       byRepo.set(point.repoId, [...(byRepo.get(point.repoId) ?? []), point]);
     }
 
-    return repos.map((repo) => toTrackedRepo(repo, byRepo.get(repo.id) ?? [], today));
+    return repos.map(repo =>
+      toTrackedRepo(repo, byRepo.get(repo.id) ?? [], today),
+    );
   }
 
   /** The open source shown by default: public, without the hidden ones. */
   async visible(userId: string): Promise<TrackedRepo[]> {
-    return (await this.list(userId)).filter((repo) => !repo.hidden && !repo.isPrivate);
+    return (await this.list(userId)).filter(
+      repo => !repo.hidden && !repo.isPrivate,
+    );
   }
 
   /** Adds a repository by hand — one the account does not bring — and loads it right away. */
@@ -127,7 +131,7 @@ export class ReposService {
 
   /** Hides or shows a repository, switches its notifications, sets its npm package. */
   async update(userId: string, id: string, update: RepoUpdate): Promise<void> {
-    const { npmPackage, ...flags } = update;
+    const {npmPackage, ...flags} = update;
     const [row] = await this.db
       .update(trackedRepos)
       .set({
@@ -135,7 +139,7 @@ export class ReposService {
         // The downloads of another package are not this one's: they come with the next sync.
         ...(npmPackage === undefined
           ? {}
-          : { npmPackage, npmPackageManual: true, npmWeeklyDownloads: null }),
+          : {npmPackage, npmPackageManual: true, npmWeeklyDownloads: null}),
       })
       .where(and(eq(trackedRepos.id, id), eq(trackedRepos.userId, userId)))
       .returning();
@@ -154,7 +158,9 @@ export class ReposService {
       return;
     }
     if (repo.relation !== 'manual') {
-      throw new BadRequestException('A repository of the account cannot be removed: hide it');
+      throw new BadRequestException(
+        'A repository of the account cannot be removed: hide it',
+      );
     }
     await this.db
       .delete(trackedRepos)
@@ -174,7 +180,9 @@ export class ReposService {
         events.push(...(await this.syncSource(userId, source)));
       } catch (error) {
         // One service being down or its token revoked must not stop the others.
-        this.logger.warn(`Repository sync with ${source.provider} failed: ${error}`);
+        this.logger.warn(
+          `Repository sync with ${source.provider} failed: ${error}`,
+        );
         failure ??= error;
       }
     }
@@ -185,31 +193,39 @@ export class ReposService {
   }
 
   /** The repositories of one service: a few requests for all of them on GitHub. */
-  private async syncSource(userId: string, source: RepoSource): Promise<RepoSyncEvents[]> {
+  private async syncSource(
+    userId: string,
+    source: RepoSource,
+  ): Promise<RepoSyncEvents[]> {
     const rows = await this.db
       .select()
       .from(trackedRepos)
-      .where(and(eq(trackedRepos.userId, userId), eq(trackedRepos.provider, source.provider)));
+      .where(
+        and(
+          eq(trackedRepos.userId, userId),
+          eq(trackedRepos.provider, source.provider),
+        ),
+      );
     const plan = planRepoList(rows, await source.listAccount());
 
     if (plan.removed.length > 0) {
       await this.db.delete(trackedRepos).where(
         inArray(
           trackedRepos.id,
-          plan.removed.map((row) => row.id),
+          plan.removed.map(row => row.id),
         ),
       );
     }
-    const fresh: { row: TrackedRepoRow; snapshot: RepoSnapshot }[] = [];
-    for (const { row, repo } of plan.matched) {
+    const fresh: {row: TrackedRepoRow; snapshot: RepoSnapshot}[] = [];
+    for (const {row, repo} of plan.matched) {
       // One added by hand earlier turned out to be the account's own.
       if (row.relation !== repo.relation) {
         await this.db
           .update(trackedRepos)
-          .set({ relation: repo.relation })
+          .set({relation: repo.relation})
           .where(eq(trackedRepos.id, row.id));
       }
-      fresh.push({ row, snapshot: repo });
+      fresh.push({row, snapshot: repo});
     }
     for (const repo of plan.added) {
       const [row] = await this.db
@@ -225,21 +241,21 @@ export class ReposService {
         .onConflictDoNothing()
         .returning();
       if (row) {
-        fresh.push({ row, snapshot: repo });
+        fresh.push({row, snapshot: repo});
       }
     }
-    const manual = await source.getMany(plan.manual.map((row) => row.fullName));
+    const manual = await source.getMany(plan.manual.map(row => row.fullName));
     for (const [index, row] of plan.manual.entries()) {
       const snapshot = manual[index];
       if (snapshot) {
-        fresh.push({ row, snapshot });
+        fresh.push({row, snapshot});
       } else {
         await this.repoSync.markFailed(row, new Error('Repository not found'));
       }
     }
 
     const events: RepoSyncEvents[] = [];
-    for (const { row, snapshot } of fresh) {
+    for (const {row, snapshot} of fresh) {
       try {
         const result = await this.repoSync.apply(row, snapshot, source);
         if (result) {
@@ -255,7 +271,7 @@ export class ReposService {
   }
 
   private today(): DateParts {
-    return todayIn(this.config.get('APP_TIMEZONE', { infer: true }));
+    return todayIn(this.config.get('APP_TIMEZONE', {infer: true}));
   }
 }
 
@@ -286,7 +302,10 @@ function toTrackedRepo(
     npmWeeklyDownloads: repo.npmWeeklyDownloads,
     latestRelease:
       repo.latestReleaseTag && repo.latestReleaseAt
-        ? { tag: repo.latestReleaseTag, publishedAt: repo.latestReleaseAt.toISOString() }
+        ? {
+            tag: repo.latestReleaseTag,
+            publishedAt: repo.latestReleaseAt.toISOString(),
+          }
         : null,
     pushedAt: repo.pushedAt?.toISOString() ?? null,
     lastSyncedAt: repo.lastSyncedAt?.toISOString() ?? null,
@@ -295,7 +314,7 @@ function toTrackedRepo(
       week: starsDelta(history, repo.stars, today, 7),
       month: starsDelta(history, repo.stars, today, 30),
     },
-    history: history.map((point) => ({
+    history: history.map(point => ({
       day: point.day,
       stars: point.stars,
       npmWeeklyDownloads: point.npmWeeklyDownloads,

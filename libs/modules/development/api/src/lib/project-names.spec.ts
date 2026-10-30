@@ -1,7 +1,10 @@
-import { belongsTo, namesOf } from './project-names';
+import {belongsTo, namesOf} from './project-names';
 
 describe('belongsTo', () => {
-  const names = namesOf({ name: 'Personal Dashboard', aliases: ['roma/personal-dashboard', 'pd'] });
+  const names = namesOf({
+    name: 'Personal Dashboard',
+    aliases: ['roma/personal-dashboard', 'pd'],
+  });
 
   it('knows a repository by its full name or by the part after the owner', () => {
     expect(belongsTo('Roma/Personal-Dashboard', names)).toBe(true);

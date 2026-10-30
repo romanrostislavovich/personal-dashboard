@@ -1,4 +1,11 @@
-import { pgSchema, primaryKey, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  pgSchema,
+  primaryKey,
+  real,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 /**
  * The index of search by meaning lives in its own schema, so it is not synced (docs/sync.md):
@@ -22,7 +29,7 @@ export const recallVectors = searchSchema.table(
     /** Of the indexed text: a changed item is indexed again, an unchanged one is not. */
     hash: text().notNull(),
     vector: real().array().notNull(),
-    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.module, table.itemId] })],
+  table => [primaryKey({columns: [table.userId, table.module, table.itemId]})],
 );

@@ -20,7 +20,10 @@
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(120px, 160px)) repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(3, minmax(120px, 160px)) repeat(
+      auto-fit,
+      minmax(260px, 1fr)
+    );
   align-items: start;
   gap: 12px;
   margin-bottom: 16px;

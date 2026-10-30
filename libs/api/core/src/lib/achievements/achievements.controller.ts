@@ -1,8 +1,8 @@
-import { Controller, Get, HttpCode, Post } from '@nestjs/common';
-import { Achievement } from '@pd/contracts';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { ServerActions } from '../sync/server-actions';
-import { AchievementsService, RECOUNT_ACTION } from './achievements.service';
+import {Controller, Get, HttpCode, Post} from '@nestjs/common';
+import {Achievement} from '@pd/contracts';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {ServerActions} from '../sync/server-actions';
+import {AchievementsService, RECOUNT_ACTION} from './achievements.service';
 
 @Controller('achievements')
 export class AchievementsController {

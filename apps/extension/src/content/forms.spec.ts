@@ -39,12 +39,18 @@ describe('login forms', () => {
   });
 
   it('fills both fields and tells the page, as typing would', () => {
-    const doc = page(`<form><input name="user"><input type="password"></form>`);
+    const doc = page('<form><input name="user"><input type="password"></form>');
     const events: string[] = [];
-    doc.querySelector('input')?.addEventListener('input', () => events.push('input'));
+    doc
+      .querySelector('input')
+      ?.addEventListener('input', () => events.push('input'));
     expect(fillLogin(doc, 'me@example.com', 'secret')).toBe(true);
-    expect(doc.querySelector<HTMLInputElement>('input[name=user]')?.value).toBe('me@example.com');
-    expect(doc.querySelector<HTMLInputElement>('input[type=password]')?.value).toBe('secret');
+    expect(doc.querySelector<HTMLInputElement>('input[name=user]')?.value).toBe(
+      'me@example.com',
+    );
+    expect(
+      doc.querySelector<HTMLInputElement>('input[type=password]')?.value,
+    ).toBe('secret');
     expect(events).toEqual(['input']);
   });
 
@@ -52,26 +58,32 @@ describe('login forms', () => {
     const doc = page(`
       <form id="header"><input name="user"><input type="password"></form>
       <form id="dialog"><input type="email" name="login"><input type="password"></form>`);
-    const value = (selector: string) => doc.querySelector<HTMLInputElement>(selector)?.value;
+    const value = (selector: string) =>
+      doc.querySelector<HTMLInputElement>(selector)?.value;
     const login = doc.querySelector<HTMLInputElement>('#dialog [name=login]');
     expect(fillLogin(doc, 'me@example.com', 'secret', login)).toBe(true);
-    expect([value('#dialog [name=login]'), value('#dialog [type=password]')]).toEqual([
-      'me@example.com',
-      'secret',
-    ]);
-    expect([value('#header [name=user]'), value('#header [type=password]')]).toEqual(['', '']);
+    expect([
+      value('#dialog [name=login]'),
+      value('#dialog [type=password]'),
+    ]).toEqual(['me@example.com', 'secret']);
+    expect([
+      value('#header [name=user]'),
+      value('#header [type=password]'),
+    ]).toEqual(['', '']);
 
-    const password = doc.querySelector<HTMLInputElement>('#header [type=password]');
+    const password = doc.querySelector<HTMLInputElement>(
+      '#header [type=password]',
+    );
     expect(fillLogin(doc, 'you@example.com', 'other', password)).toBe(true);
-    expect([value('#header [name=user]'), value('#header [type=password]')]).toEqual([
-      'you@example.com',
-      'other',
-    ]);
+    expect([
+      value('#header [name=user]'),
+      value('#header [type=password]'),
+    ]).toEqual(['you@example.com', 'other']);
   });
 
   it('fills the field itself on a first step the guess would miss', () => {
     // No field is named like a login: the guess takes none, the menu's field is the one.
-    const doc = page(`<input name="q"><form><input name="who"></form>`);
+    const doc = page('<input name="q"><form><input name="who"></form>');
     const who = doc.querySelector<HTMLInputElement>('[name=who]');
     expect(fillLogin(doc, 'me@example.com', 'secret', who)).toBe(true);
     expect(who?.value).toBe('me@example.com');
@@ -79,9 +91,11 @@ describe('login forms', () => {
   });
 
   it('fills the login alone on the first step of a two-step sign-in', () => {
-    const doc = page(`<form><input type="email" name="identifier"></form>`);
+    const doc = page('<form><input type="email" name="identifier"></form>');
     expect(fillLogin(doc, 'me@example.com', 'secret')).toBe(true);
-    expect(fillLogin(page(`<form><input name="q"></form>`), 'me', 'secret')).toBe(false);
+    expect(
+      fillLogin(page('<form><input name="q"></form>'), 'me', 'secret'),
+    ).toBe(false);
   });
 
   it('puts a new password into the new and the repeat fields, not the current one', () => {
@@ -92,8 +106,13 @@ describe('login forms', () => {
         <input type="password" autocomplete="new-password" id="repeat">
       </form>`);
     expect(fillNewPassword(doc, 'n3w')).toBe(true);
-    const value = (id: string) => doc.querySelector<HTMLInputElement>(`#${id}`)?.value;
-    expect([value('current'), value('new'), value('repeat')]).toEqual(['', 'n3w', 'n3w']);
+    const value = (id: string) =>
+      doc.querySelector<HTMLInputElement>(`#${id}`)?.value;
+    expect([value('current'), value('new'), value('repeat')]).toEqual([
+      '',
+      'n3w',
+      'n3w',
+    ]);
   });
 
   it('reads what is sent: the login and the last password typed', () => {
@@ -103,17 +122,23 @@ describe('login forms', () => {
         <input type="password" value="old"><input type="password" value="new">
       </form>`);
     const form = doc.querySelector('form') as HTMLFormElement;
-    expect(readSubmitted(form, doc)).toEqual({ username: 'me', password: 'new' });
+    expect(readSubmitted(form, doc)).toEqual({username: 'me', password: 'new'});
   });
 
   it('reads the first step of a two-step sign-in, and nothing from a search form', () => {
-    const step = page(`<form><input type="email" value="me@example.com"></form>`);
-    expect(readSubmitted(step.querySelector('form') as HTMLFormElement, step)).toEqual({
+    const step = page(
+      '<form><input type="email" value="me@example.com"></form>',
+    );
+    expect(
+      readSubmitted(step.querySelector('form') as HTMLFormElement, step),
+    ).toEqual({
       username: 'me@example.com',
       password: '',
     });
-    const search = page(`<form><input name="q" value="cats"></form>`);
-    expect(readSubmitted(search.querySelector('form') as HTMLFormElement, search)).toBeNull();
+    const search = page('<form><input name="q" value="cats"></form>');
+    expect(
+      readSubmitted(search.querySelector('form') as HTMLFormElement, search),
+    ).toBeNull();
   });
 
   it('tells a sign-in from a sign-up and a change of password', () => {
@@ -123,11 +148,11 @@ describe('login forms', () => {
     const signIn = page(`
       <input name="q" placeholder="Search">
       <form><input name="email"><input type="password" id="p"><button>Sign in</button></form>`);
-    expect([kind(signIn, '[name=email]'), kind(signIn, '#p'), kind(signIn, '[name=q]')]).toEqual([
-      'username',
-      'password',
-      null,
-    ]);
+    expect([
+      kind(signIn, '[name=email]'),
+      kind(signIn, '#p'),
+      kind(signIn, '[name=q]'),
+    ]).toEqual(['username', 'password', null]);
 
     const signUp = page(`
       <form>
@@ -144,26 +169,28 @@ describe('login forms', () => {
 
     const change = page(`
       <form><input type="password" id="old"><input type="password" id="new"><input type="password" id="again"></form>`);
-    expect([kind(change, '#old'), kind(change, '#new'), kind(change, '#again')]).toEqual([
-      'password',
-      'new-password',
-      'new-password',
-    ]);
+    expect([
+      kind(change, '#old'),
+      kind(change, '#new'),
+      kind(change, '#again'),
+    ]).toEqual(['password', 'new-password', 'new-password']);
   });
 
   it('knows a sign-up by its button even with one password field', () => {
     const doc = page(
-      `<form><input name="login"><input type="password" id="p"><button>Регистрация</button></form>`,
+      '<form><input name="login"><input type="password" id="p"><button>Регистрация</button></form>',
     );
-    expect(classifyField(doc.querySelector('#p') as HTMLInputElement, doc)).toBe('new-password');
-    expect(classifyField(doc.querySelector('[name=login]') as HTMLInputElement, doc)).toBe(
-      'signup-username',
-    );
+    expect(
+      classifyField(doc.querySelector('#p') as HTMLInputElement, doc),
+    ).toBe('new-password');
+    expect(
+      classifyField(doc.querySelector('[name=login]') as HTMLInputElement, doc),
+    ).toBe('signup-username');
   });
 
   it('reads the login typed into a sign-up', () => {
     const doc = page(
-      `<form><input type="email" value=" me@example.com "><input type="password"></form>`,
+      '<form><input type="email" value=" me@example.com "><input type="password"></form>',
     );
     expect(typedLogin(doc)).toBe('me@example.com');
   });

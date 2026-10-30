@@ -1,9 +1,9 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MovieTitle } from '@pd/contracts';
-import { DurationPipe } from '@pd/web-core';
+import {DatePipe} from '@angular/common';
+import {ChangeDetectionStrategy, Component, input, output} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MovieTitle} from '@pd/contracts';
+import {DurationPipe} from '@pd/web-core';
 
 /** A film or a show as a card: the poster, the title, what was seen of it, the rating. */
 @Component({
@@ -14,7 +14,12 @@ import { DurationPipe } from '@pd/web-core';
     @let t = title();
     <button type="button" class="card" (click)="open.emit()">
       @if (t.posterUrl) {
-        <img class="poster" [src]="t.posterUrl" [alt]="t.title" loading="lazy" />
+        <img
+          class="poster"
+          [src]="t.posterUrl"
+          [alt]="t.title"
+          loading="lazy"
+        />
       } @else {
         <div class="poster empty">
           <mat-icon>{{ t.kind === 'tv' ? 'tv' : 'movie' }}</mat-icon>
@@ -30,18 +35,21 @@ import { DurationPipe } from '@pd/web-core';
       @if (t.lastEpisode) {
         <span class="line"
           >{{ 'movies.lastEpisode' | transloco: t.lastEpisode }} ·
-          {{ 'movies.episodes' | transloco: { count: t.episodes } }}</span
+          {{ 'movies.episodes' | transloco: {count: t.episodes} }}</span
         >
       }
       @if (t.watchedOn) {
         <span class="line seen">
-          <mat-icon inline>check_circle</mat-icon> {{ t.watchedOn | date: 'd MMM y' }}
+          <mat-icon inline>check_circle</mat-icon>
+          {{ t.watchedOn | date: 'd MMM y' }}
         </span>
       } @else if (t.watchedSeconds) {
         <span class="line">{{ t.watchedSeconds | pdDuration }}</span>
       }
       @if (t.rating) {
-        <span class="rating"><mat-icon inline>star</mat-icon> {{ t.rating }}/10</span>
+        <span class="rating"
+          ><mat-icon inline>star</mat-icon> {{ t.rating }}/10</span
+        >
       }
     </button>
   `,

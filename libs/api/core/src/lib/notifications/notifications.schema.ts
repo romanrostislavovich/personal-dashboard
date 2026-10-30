@@ -1,8 +1,22 @@
-import type { InboxAnswerChannel, NotificationDeliveryStatus } from '@pd/contracts';
-import { index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { encryptedText, registerEncryptedTables } from '../crypto/encrypted-columns';
-import { users } from '../users/users.schema';
-import type { NotificationAction } from './notification-channel';
+import type {
+  InboxAnswerChannel,
+  NotificationDeliveryStatus,
+} from '@pd/contracts';
+import {
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import {
+  encryptedText,
+  registerEncryptedTables,
+} from '../crypto/encrypted-columns';
+import {users} from '../users/users.schema';
+import type {NotificationAction} from './notification-channel';
 
 /** The message a notification became in Telegram: its buttons go once it is answered elsewhere. */
 export interface TelegramMessageRef {
@@ -23,7 +37,7 @@ export const notificationOutbox = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     source: text().notNull(),
     title: encryptedText().notNull(),
     body: encryptedText().notNull(),
@@ -37,19 +51,19 @@ export const notificationOutbox = pgTable(
     channels: text().array().notNull().default([]),
     attempts: integer().notNull().default(0),
     /** The next try of a pending one; of one being sent — when it counts as stuck. */
-    nextAttemptAt: timestamp({ withTimezone: true }),
+    nextAttemptAt: timestamp({withTimezone: true}),
     lastError: text(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    sentAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    sentAt: timestamp({withTimezone: true}),
     /** Seen in the bell (or answered). */
-    readAt: timestamp({ withTimezone: true }),
-    answeredAt: timestamp({ withTimezone: true }),
+    readAt: timestamp({withTimezone: true}),
+    answeredAt: timestamp({withTimezone: true}),
     /** The button pressed, and the words written after it. */
     answer: encryptedText(),
     answeredVia: text().$type<InboxAnswerChannel>(),
     telegramMessage: jsonb().$type<TelegramMessageRef>(),
   },
-  (table) => [
+  table => [
     index().on(table.userId, table.createdAt),
     index().on(table.userId, table.dedupeKey, table.createdAt),
     index().on(table.status, table.nextAttemptAt),

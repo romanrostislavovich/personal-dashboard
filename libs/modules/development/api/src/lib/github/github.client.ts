@@ -1,5 +1,5 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { githubTokenExpiry } from '../token-expiry';
+import {fetchWithTimeout} from '@pd/api-core';
+import {githubTokenExpiry} from '../token-expiry';
 
 const API = 'https://api.github.com';
 
@@ -21,14 +21,17 @@ export class GithubClient {
   constructor(private readonly token: string | null) {}
 
   /** Issues and PRs created after `since`. */
-  async listCreatedSince(fullName: string, since: Date): Promise<GithubIssue[]> {
+  async listCreatedSince(
+    fullName: string,
+    since: Date,
+  ): Promise<GithubIssue[]> {
     // GitHub's `since` parameter filters by update date, so we also filter by created_at.
     const issues = await this.get<RawIssue[]>(
       `/repos/${fullName}/issues?state=all&sort=created&direction=desc&per_page=30&since=${since.toISOString()}`,
     );
     return issues
-      .filter((issue) => new Date(issue.created_at) > since)
-      .map((issue) => ({
+      .filter(issue => new Date(issue.created_at) > since)
+      .map(issue => ({
         title: issue.title,
         htmlUrl: issue.html_url,
         author: issue.user?.login ?? 'unknown',
@@ -42,12 +45,15 @@ export class GithubClient {
     fullName: string,
     since: Date,
     until: Date,
-  ): Promise<{ at: string; title: string; url: string | null }[]> {
+  ): Promise<{at: string; title: string; url: string | null}[]> {
     const commits = await this.get<RawCommit[]>(
       `/repos/${fullName}/commits?per_page=30&since=${since.toISOString()}&until=${until.toISOString()}`,
     );
-    return commits.map((raw) => ({
-      at: raw.commit.committer?.date ?? raw.commit.author?.date ?? until.toISOString(),
+    return commits.map(raw => ({
+      at:
+        raw.commit.committer?.date ??
+        raw.commit.author?.date ??
+        until.toISOString(),
       // The first line of the message is its title.
       title: raw.commit.message.split('\n')[0].slice(0, 200),
       url: raw.html_url ?? null,
@@ -58,12 +64,14 @@ export class GithubClient {
   async tokenExpiry(): Promise<Date | null> {
     const response = await this.request('/user');
     await response.body?.cancel();
-    return githubTokenExpiry(response.headers.get('github-authentication-token-expiration'));
+    return githubTokenExpiry(
+      response.headers.get('github-authentication-token-expiration'),
+    );
   }
 
   /** Token check: returns the owner's login. */
   async getViewerLogin(): Promise<string> {
-    return (await this.get<{ login: string }>('/user')).login;
+    return (await this.get<{login: string}>('/user')).login;
   }
 
   private async get<T>(path: string): Promise<T> {
@@ -76,14 +84,17 @@ export class GithubClient {
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
         'User-Agent': 'personal-dashboard',
-        ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+        ...(this.token ? {Authorization: `Bearer ${this.token}`} : {}),
       },
     });
     if (response.status === 401) {
       throw new GithubAuthError('GitHub token is invalid');
     }
     if (!response.ok) {
-      const reset = response.headers.get('x-ratelimit-remaining') === '0' ? ' (rate limit)' : '';
+      const reset =
+        response.headers.get('x-ratelimit-remaining') === '0'
+          ? ' (rate limit)'
+          : '';
       throw new Error(`GitHub ${response.status}${reset}: ${path}`);
     }
     return response;
@@ -96,7 +107,7 @@ interface RawIssue {
   title: string;
   html_url: string;
   created_at: string;
-  user: { login: string } | null;
+  user: {login: string} | null;
   pull_request?: unknown;
 }
 
@@ -104,7 +115,7 @@ interface RawCommit {
   html_url?: string;
   commit: {
     message: string;
-    author?: { date?: string };
-    committer?: { date?: string };
+    author?: {date?: string};
+    committer?: {date?: string};
   };
 }

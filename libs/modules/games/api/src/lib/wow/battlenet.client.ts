@@ -1,6 +1,6 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { WowDetails, WowRegion, WowVersion } from '@pd/contracts';
-import { fetchDetails } from './wow-details.fetch';
+import {fetchWithTimeout} from '@pd/api-core';
+import {WowDetails, WowRegion, WowVersion} from '@pd/contracts';
+import {fetchDetails} from './wow-details.fetch';
 
 export class BattlenetAuthError extends Error {}
 export class WowCharacterNotFoundError extends Error {}
@@ -47,7 +47,9 @@ export function findRealm(realms: WowRealm[], text: string): WowRealm | null {
   const wanted = text.trim().toLowerCase();
   return (
     realms.find(
-      (realm) => realm.slug === wanted || realm.names.some((name) => name.toLowerCase() === wanted),
+      realm =>
+        realm.slug === wanted ||
+        realm.names.some(name => name.toLowerCase() === wanted),
     ) ?? null
   );
 }
@@ -77,7 +79,12 @@ export interface WowCompletedAchievement {
 }
 
 /** Response language: Russian for the European region. */
-const LOCALES: Record<WowRegion, string> = { eu: 'ru_RU', us: 'en_US', kr: 'ko_KR', tw: 'zh_TW' };
+const LOCALES: Record<WowRegion, string> = {
+  eu: 'ru_RU',
+  us: 'en_US',
+  kr: 'ko_KR',
+  tw: 'zh_TW',
+};
 
 /**
  * Battle.net API (World of Warcraft Profile API). Access with app keys
@@ -85,7 +92,7 @@ const LOCALES: Record<WowRegion, string> = { eu: 'ru_RU', us: 'en_US', kr: 'ko_K
  * character data is public.
  */
 export class BattlenetClient {
-  private token: { value: string; expiresAt: number } | null = null;
+  private token: {value: string; expiresAt: number} | null = null;
 
   constructor(
     private readonly clientId: string,
@@ -101,34 +108,46 @@ export class BattlenetClient {
    * The character with everything about it: the summary (a missing character fails here) and
    * the details, where a part Blizzard does not have is left empty.
    */
-  async getCharacter(ref: WowCharacterRef): Promise<{ profile: WowProfile; details: WowDetails }> {
+  async getCharacter(
+    ref: WowCharacterRef,
+  ): Promise<{profile: WowProfile; details: WowDetails}> {
     const [summary, media] = await Promise.all([
       this.get<RawCharacter>(ref, ''),
       this.get<RawMedia>(ref, '/character-media').catch(() => null),
     ]);
-    const asset = (key: string) => media?.assets?.find((a) => a.key === key)?.value ?? null;
+    const asset = (key: string) =>
+      media?.assets?.find(a => a.key === key)?.value ?? null;
     const details = await fetchDetails(
       {
-        part: (path) => this.get<never>(ref, path).catch(() => null),
-        href: (href) => this.getHref<never>(ref.region, href).catch(() => null),
+        part: path => this.get<never>(ref, path).catch(() => null),
+        href: href => this.getHref<never>(ref.region, href).catch(() => null),
       },
       {
         name: summary.name,
-        title: summary.active_title?.display_string?.replace('{name}', summary.name) ?? null,
+        title:
+          summary.active_title?.display_string?.replace(
+            '{name}',
+            summary.name,
+          ) ?? null,
         faction: summary.faction?.name ?? null,
         renderUrl: asset('main-raw') ?? asset('main') ?? asset('inset'),
         guild: summary.guild
-          ? { name: summary.guild.name, href: summary.guild.key?.href ?? null }
+          ? {name: summary.guild.name, href: summary.guild.key?.href ?? null}
           : null,
       },
     );
-    return { profile: this.toProfile(ref, summary, asset('avatar')), details };
+    return {profile: this.toProfile(ref, summary, asset('avatar')), details};
   }
 
   /** The price of the WoW Token in gold, as the auction house of the region has it now. */
-  async getTokenPrice(region: WowRegion): Promise<{ price: number; updatedAt: Date } | null> {
-    const query = new URLSearchParams({ namespace: `dynamic-${region}` });
-    const raw = await this.getHref<{ price?: number; last_updated_timestamp?: number }>(
+  async getTokenPrice(
+    region: WowRegion,
+  ): Promise<{price: number; updatedAt: Date} | null> {
+    const query = new URLSearchParams({namespace: `dynamic-${region}`});
+    const raw = await this.getHref<{
+      price?: number;
+      last_updated_timestamp?: number;
+    }>(
       region,
       `https://${region}.api.blizzard.com/data/wow/token/index?${query}`,
     ).catch(() => null);
@@ -173,16 +192,23 @@ export class BattlenetClient {
    * Completed achievements only (incomplete ones have no completed_timestamp). A Classic version
    * without achievements answers 404 — that is "none", not a missing character.
    */
-  async getCompletedAchievements(ref: WowCharacterRef): Promise<WowCompletedAchievement[]> {
-    const data = await this.get<RawAchievements>(ref, '/achievements').catch((error) => {
-      if (ref.version !== 'retail' && error instanceof WowCharacterNotFoundError) {
-        return { achievements: [] };
-      }
-      throw error;
-    });
+  async getCompletedAchievements(
+    ref: WowCharacterRef,
+  ): Promise<WowCompletedAchievement[]> {
+    const data = await this.get<RawAchievements>(ref, '/achievements').catch(
+      error => {
+        if (
+          ref.version !== 'retail' &&
+          error instanceof WowCharacterNotFoundError
+        ) {
+          return {achievements: []};
+        }
+        throw error;
+      },
+    );
     return (data.achievements ?? [])
-      .filter((a) => a.completed_timestamp)
-      .map((a) => ({
+      .filter(a => a.completed_timestamp)
+      .map(a => ({
         id: a.id,
         name: a.achievement.name,
         completedAt: new Date(a.completed_timestamp as number),
@@ -196,31 +222,41 @@ export class BattlenetClient {
   async resolveRealm(
     ref: Pick<WowCharacterRef, 'region' | 'version'>,
     text: string,
-  ): Promise<{ slug: string; name: string }> {
+  ): Promise<{slug: string; name: string}> {
     // Without a locale Blizzard gives the name in every language at once.
-    const query = new URLSearchParams({ namespace: namespace('dynamic', ref) });
+    const query = new URLSearchParams({namespace: namespace('dynamic', ref)});
     const url = `https://${ref.region}.api.blizzard.com/data/wow/realm/index?${query}`;
     const response = await fetchWithTimeout(url, {
-      headers: { Authorization: `Bearer ${await this.accessToken()}` },
+      headers: {Authorization: `Bearer ${await this.accessToken()}`},
     });
     if (!response.ok) {
       throw new Error(`Battle.net API ${response.status}: realm index`);
     }
-    const { realms } = (await response.json()) as RawRealmIndex;
+    const {realms} = (await response.json()) as RawRealmIndex;
     const language = LOCALES[ref.region];
-    const known = realms.map((realm) => ({
+    const known = realms.map(realm => ({
       slug: realm.slug,
-      names: typeof realm.name === 'string' ? [realm.name] : Object.values(realm.name),
-      shown: typeof realm.name === 'string' ? realm.name : (realm.name[language] ?? realm.slug),
+      names:
+        typeof realm.name === 'string'
+          ? [realm.name]
+          : Object.values(realm.name),
+      shown:
+        typeof realm.name === 'string'
+          ? realm.name
+          : (realm.name[language] ?? realm.slug),
     }));
     const found = findRealm(known, text);
     if (!found) {
-      const names = known.map((realm) => realm.shown).sort((a, b) => a.localeCompare(b));
-      throw new WowRealmNotFoundError(`No realm "${text}" here. Realms: ${names.join(', ')}`);
+      const names = known
+        .map(realm => realm.shown)
+        .sort((a, b) => a.localeCompare(b));
+      throw new WowRealmNotFoundError(
+        `No realm "${text}" here. Realms: ${names.join(', ')}`,
+      );
     }
     return {
       slug: found.slug,
-      name: known.find((r) => r.slug === found.slug)?.shown ?? found.slug,
+      name: known.find(r => r.slug === found.slug)?.shown ?? found.slug,
     };
   }
 
@@ -229,7 +265,7 @@ export class BattlenetClient {
     const url = new URL(href);
     url.searchParams.set('locale', LOCALES[region]);
     const response = await fetchWithTimeout(url, {
-      headers: { Authorization: `Bearer ${await this.accessToken()}` },
+      headers: {Authorization: `Bearer ${await this.accessToken()}`},
     });
     if (!response.ok) {
       throw new Error(`Battle.net API ${response.status}: ${url.pathname}`);
@@ -245,13 +281,17 @@ export class BattlenetClient {
     });
     const url = `https://${ref.region}.api.blizzard.com/profile/wow/character/${ref.realm}/${name}${path}?${query}`;
     const response = await fetchWithTimeout(url, {
-      headers: { Authorization: `Bearer ${await this.accessToken()}` },
+      headers: {Authorization: `Bearer ${await this.accessToken()}`},
     });
     if (response.status === 404) {
-      throw new WowCharacterNotFoundError(`Character ${ref.name}-${ref.realm} not found`);
+      throw new WowCharacterNotFoundError(
+        `Character ${ref.name}-${ref.realm} not found`,
+      );
     }
     if (!response.ok) {
-      throw new Error(`Battle.net API ${response.status}: ${path || 'character'}`);
+      throw new Error(
+        `Battle.net API ${response.status}: ${path || 'character'}`,
+      );
     }
     return (await response.json()) as T;
   }
@@ -266,7 +306,7 @@ export class BattlenetClient {
         'Content-Type': 'application/x-www-form-urlencoded',
         Authorization: `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`,
       },
-      body: new URLSearchParams({ grant_type: 'client_credentials' }),
+      body: new URLSearchParams({grant_type: 'client_credentials'}),
     });
     if (response.status === 400 || response.status === 401) {
       throw new BattlenetAuthError('Invalid Battle.net client credentials');
@@ -274,7 +314,10 @@ export class BattlenetClient {
     if (!response.ok) {
       throw new Error(`Battle.net OAuth ${response.status}`);
     }
-    const data = (await response.json()) as { access_token: string; expires_in: number };
+    const data = (await response.json()) as {
+      access_token: string;
+      expires_in: number;
+    };
     // Refresh the token a minute before it expires.
     this.token = {
       value: data.access_token,
@@ -289,31 +332,31 @@ export class BattlenetClient {
 interface RawCharacter {
   name: string;
   level: number;
-  realm: { name: string };
-  character_class: { id: number; name: string };
-  race: { name: string };
-  active_spec?: { name: string };
-  guild?: { name: string; key?: { href?: string } };
-  faction?: { name?: string };
+  realm: {name: string};
+  character_class: {id: number; name: string};
+  race: {name: string};
+  active_spec?: {name: string};
+  guild?: {name: string; key?: {href?: string}};
+  faction?: {name?: string};
   /** `{name} the Patient` */
-  active_title?: { display_string?: string };
+  active_title?: {display_string?: string};
   equipped_item_level?: number;
   achievement_points?: number;
   last_login_timestamp?: number;
 }
 
 interface RawMedia {
-  assets?: { key: string; value: string }[];
+  assets?: {key: string; value: string}[];
 }
 
 interface RawRealmIndex {
-  realms: { slug: string; name: string | Record<string, string> }[];
+  realms: {slug: string; name: string | Record<string, string>}[];
 }
 
 interface RawAchievements {
   achievements?: {
     id: number;
-    achievement: { name: string };
+    achievement: {name: string};
     completed_timestamp?: number;
   }[];
 }

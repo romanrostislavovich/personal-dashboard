@@ -1,10 +1,15 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 // Rules "if X, then Y" across the modules: a module tells the core what can happen in it
 // (a trigger) and what it can do (an action); the user joins them into rules.
 // Labels are translation keys of the modules: the server knows no language for them.
 
-const AUTOMATION_PARAM_TYPES = ['text', 'number', 'time', 'select'] as const;
+export const AUTOMATION_PARAM_TYPES = [
+  'text',
+  'number',
+  'time',
+  'select',
+] as const;
 export type AutomationParamType = (typeof AUTOMATION_PARAM_TYPES)[number];
 
 /** A field of a trigger or an action. */
@@ -13,7 +18,7 @@ export interface AutomationParamDef {
   type: AutomationParamType;
   labelKey: string;
   /** For `select`: the values with their translation keys. */
-  options?: { value: string; labelKey: string }[];
+  options?: {value: string; labelKey: string}[];
   required?: boolean;
   /** For `text`: `{{site}}`-style placeholders filled from the event are allowed. */
   template?: boolean;
@@ -69,5 +74,9 @@ export interface AutomationRule {
 }
 
 /** "If a site goes down, make a task": the AI fills in a rule to check and save. */
-export const automationDraftRequestSchema = z.object({ text: z.string().trim().min(5).max(500) });
-export type AutomationDraftRequest = z.infer<typeof automationDraftRequestSchema>;
+export const automationDraftRequestSchema = z.object({
+  text: z.string().trim().min(5).max(500),
+});
+export type AutomationDraftRequest = z.infer<
+  typeof automationDraftRequestSchema
+>;

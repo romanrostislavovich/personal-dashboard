@@ -8,3 +8,7 @@
 .nx/self-healing
 # Written by apps/web/fonts.mjs
 apps/web/public/fonts
+# Written by drizzle-kit (npm run db:generate)
+apps/api/migrations/meta
+# The Android project: its own build files and the copy of the built web app
+apps/mobile/android

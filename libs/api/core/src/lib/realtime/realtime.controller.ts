@@ -1,6 +1,6 @@
-import { Controller, Sse } from '@nestjs/common';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { RealtimeService } from './realtime.service';
+import {Controller, Sse} from '@nestjs/common';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {RealtimeService} from './realtime.service';
 
 /**
  * `GET /api/events` — Server-Sent Events for the open dashboard.

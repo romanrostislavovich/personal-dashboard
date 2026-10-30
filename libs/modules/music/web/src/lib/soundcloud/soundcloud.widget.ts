@@ -1,17 +1,23 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { RouterLink } from '@angular/router';
-import { needsSetup } from '@pd/web-core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MusicApi } from '../music.api';
+import {DecimalPipe} from '@angular/common';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {RouterLink} from '@angular/router';
+import {needsSetup} from '@pd/web-core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MusicApi} from '../music.api';
 
 /** Home widget: plays of the user's SoundCloud tracks, their growth over the week, followers. */
 @Component({
   selector: 'pd-soundcloud-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, MatCardModule, MatButtonModule, TranslocoPipe],
+  imports: [
+    DecimalPipe,
+    RouterLink,
+    MatCardModule,
+    MatButtonModule,
+    TranslocoPipe,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
@@ -20,17 +26,23 @@ import { MusicApi } from '../music.api';
       <mat-card-content class="content">
         @if (stats.value(); as s) {
           <div class="stat">
-            <span class="label">{{ 'music.soundcloud.plays' | transloco }}</span>
+            <span class="label">{{
+              'music.soundcloud.plays' | transloco
+            }}</span>
             <span class="value">{{ s.totals.plays | number }}</span>
             <span class="sub">
-              +{{ s.playsDelta.week | number }} {{ 'music.soundcloud.perWeek' | transloco }}
+              +{{ s.playsDelta.week | number }}
+              {{ 'music.soundcloud.perWeek' | transloco }}
             </span>
           </div>
           <div class="stat">
-            <span class="label">{{ 'music.soundcloud.followers' | transloco }}</span>
+            <span class="label">{{
+              'music.soundcloud.followers' | transloco
+            }}</span>
             <span class="value">{{ s.followers | number }}</span>
             <span class="sub">
-              +{{ s.followersWeek | number }} {{ 'music.soundcloud.perWeek' | transloco }}
+              +{{ s.followersWeek | number }}
+              {{ 'music.soundcloud.perWeek' | transloco }}
             </span>
           </div>
         } @else if (!stats.isLoading()) {
@@ -38,7 +50,9 @@ import { MusicApi } from '../music.api';
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/music/soundcloud">{{ 'music.widget.open' | transloco }}</a>
+        <a matButton routerLink="/music/soundcloud">{{
+          'music.widget.open' | transloco
+        }}</a>
       </mat-card-actions>
     </mat-card>
   `,

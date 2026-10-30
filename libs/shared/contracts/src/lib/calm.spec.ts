@@ -1,7 +1,7 @@
-import { quietMinutesLeft } from './calm';
+import {quietMinutesLeft} from './calm';
 
 describe('quiet hours', () => {
-  const night = { from: '21:00', to: '09:00' };
+  const night = {from: '21:00', to: '09:00'};
   const at = (clock: string) => {
     const [h, m] = clock.split(':').map(Number);
     return h * 60 + m;
@@ -20,7 +20,9 @@ describe('quiet hours', () => {
   });
 
   it('works within one day too', () => {
-    expect(quietMinutesLeft({ from: '13:00', to: '14:00' }, at('13:15'))).toBe(45);
-    expect(quietMinutesLeft({ from: '13:00', to: '14:00' }, at('14:00'))).toBe(0);
+    expect(quietMinutesLeft({from: '13:00', to: '14:00'}, at('13:15'))).toBe(
+      45,
+    );
+    expect(quietMinutesLeft({from: '13:00', to: '14:00'}, at('14:00'))).toBe(0);
   });
 });

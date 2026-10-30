@@ -5,7 +5,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { DB, Database, decodeText } from '@pd/api-core';
+import {DB, Database, decodeText} from '@pd/api-core';
 import {
   IcdDictionary,
   IcdEntry,
@@ -14,15 +14,18 @@ import {
   IcdSource,
   IcdSystem,
 } from '@pd/contracts';
-import { and, asc, count, eq, ilike, or, sql } from 'drizzle-orm';
-import { unzipSync } from 'fflate';
-import { healthIcdCodes } from '../health.schema';
+import {and, asc, count, eq, ilike, or, sql} from 'drizzle-orm';
+import {unzipSync} from 'fflate';
+import {healthIcdCodes} from '../health.schema';
 import readXlsxFile from 'read-excel-file/node';
-import { ClamlCode, clamlCodes } from './claml';
-import { csvRows, icdTable } from './icd-table';
+import {ClamlCode, clamlCodes} from './claml';
+import {csvRows, icdTable} from './icd-table';
 
 /** Where each source is downloaded from, and what it holds. */
-const SOURCES: Record<IcdSource, { url: string; system: IcdSystem; language: string }> = {
+const SOURCES: Record<
+  IcdSource,
+  {url: string; system: IcdSystem; language: string}
+> = {
   // ICD-10, 2019, the English ClaML of WHO (https://icdcdn.who.int/icd10/index.html).
   'who-icd10-en': {
     url: 'https://icdcdn.who.int/icd10/claml/icd102019en.xml.zip',
@@ -55,15 +58,17 @@ export class IcdDictionaryService {
       .from(healthIcdCodes)
       .where(eq(healthIcdCodes.userId, userId))
       .groupBy(healthIcdCodes.system, healthIcdCodes.language);
-    return rows.map((row) => ({ ...row, codes: Number(row.codes) }));
+    return rows.map(row => ({...row, codes: Number(row.codes)}));
   }
 
   /** Downloads a source and replaces the codes of its system and language. */
   async load(userId: string, source: IcdSource): Promise<IcdDictionary[]> {
-    const { url, system, language } = SOURCES[source];
+    const {url, system, language} = SOURCES[source];
     const codes = [...clamlCodes(await this.download(url))];
     if (!codes.length) {
-      throw new BadGatewayException('The dictionary has no codes: the file may have changed');
+      throw new BadGatewayException(
+        'The dictionary has no codes: the file may have changed',
+      );
     }
     await this.replace(userId, system, language, codes);
     this.logger.log(`ICD ${source}: ${codes.length} codes loaded`);
@@ -76,18 +81,22 @@ export class IcdDictionaryService {
    */
   async import(
     userId: string,
-    { system, language }: IcdImportInput,
-    file: { name: string; data: Buffer },
+    {system, language}: IcdImportInput,
+    file: {name: string; data: Buffer},
   ): Promise<IcdDictionary[]> {
     const rows = file.name.toLowerCase().endsWith('.xlsx')
-      ? (await readXlsxFile(file.data)).flatMap((sheet) => sheet.data)
+      ? (await readXlsxFile(file.data)).flatMap(sheet => sheet.data)
       : csvRows(decodeText(file.data));
     const codes = icdTable(rows);
     if (!codes.length) {
-      throw new BadRequestException('No column of ICD codes was found in the file');
+      throw new BadRequestException(
+        'No column of ICD codes was found in the file',
+      );
     }
     await this.replace(userId, system, language, codes);
-    this.logger.log(`ICD ${system}/${language}: ${codes.length} codes imported from a file`);
+    this.logger.log(
+      `ICD ${system}/${language}: ${codes.length} codes imported from a file`,
+    );
     return this.dictionaries(userId);
   }
 
@@ -97,7 +106,7 @@ export class IcdDictionaryService {
     language: string,
     codes: ClamlCode[],
   ): Promise<void> {
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       await tx
         .delete(healthIcdCodes)
         .where(
@@ -111,9 +120,13 @@ export class IcdDictionaryService {
         await tx
           .insert(healthIcdCodes)
           .values(
-            codes
-              .slice(start, start + ROWS_AT_A_TIME)
-              .map(({ code, title }) => ({ userId, system, language, code, title })),
+            codes.slice(start, start + ROWS_AT_A_TIME).map(({code, title}) => ({
+              userId,
+              system,
+              language,
+              code,
+              title,
+            })),
           )
           .onConflictDoNothing();
       }
@@ -121,8 +134,11 @@ export class IcdDictionaryService {
   }
 
   /** By the start of a code (`F41`) or by a word of the title, codes first. */
-  async search(userId: string, { q, limit }: IcdSearchQuery): Promise<IcdEntry[]> {
-    const pattern = q.replace(/[\\%_]/g, (char) => `\\${char}`);
+  async search(
+    userId: string,
+    {q, limit}: IcdSearchQuery,
+  ): Promise<IcdEntry[]> {
+    const pattern = q.replace(/[\\%_]/g, char => `\\${char}`);
     return this.db
       .select({
         system: healthIcdCodes.system,
@@ -149,7 +165,11 @@ export class IcdDictionaryService {
   }
 
   /** The titles a code has in the loaded dictionaries, one a language. */
-  async titles(userId: string, system: IcdSystem, code: string): Promise<IcdEntry[]> {
+  async titles(
+    userId: string,
+    system: IcdSystem,
+    code: string,
+  ): Promise<IcdEntry[]> {
     return this.db
       .select({
         system: healthIcdCodes.system,
@@ -170,7 +190,9 @@ export class IcdDictionaryService {
   private async download(url: string): Promise<string> {
     let archive: Uint8Array;
     try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS) });
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+      });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -179,10 +201,14 @@ export class IcdDictionaryService {
       this.logger.warn(`ICD download from ${url} failed: ${error}`);
       throw new BadGatewayException('The dictionary could not be downloaded');
     }
-    const files = unzipSync(archive, { filter: (file) => file.name.endsWith('.xml') });
+    const files = unzipSync(archive, {
+      filter: file => file.name.endsWith('.xml'),
+    });
     const xml = Object.values(files)[0];
     if (!xml) {
-      throw new BadGatewayException('The archive has no XML: the file may have changed');
+      throw new BadGatewayException(
+        'The archive has no XML: the file may have changed',
+      );
     }
     return new TextDecoder().decode(xml);
   }

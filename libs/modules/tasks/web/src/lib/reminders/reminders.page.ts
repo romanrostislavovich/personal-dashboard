@@ -1,14 +1,19 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Reminder, ReminderStatus } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { TasksApi } from '../tasks.api';
-import { ReminderDialogData, ReminderFormDialog } from './reminder-form.dialog';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {Reminder, ReminderStatus} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {TasksApi} from '../tasks.api';
+import {ReminderDialogData, ReminderFormDialog} from './reminder-form.dialog';
 
 interface Group {
   status: ReminderStatus;
@@ -25,23 +30,33 @@ const GROUPS: ReminderStatus[] = ['fired', 'scheduled', 'done'];
 @Component({
   selector: 'pd-reminders-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, MatButtonModule, MatIconModule, MatTooltipModule, TranslocoPipe],
+  imports: [
+    DatePipe,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    TranslocoPipe,
+  ],
   template: `
     <div class="toolbar">
-      <button matButton="filled" (click)="open({ mode: 'new' })">
-        <mat-icon>add_alert</mat-icon> {{ 'tasks.reminders.dialog.new' | transloco }}
+      <button matButton="filled" (click)="open({mode: 'new'})">
+        <mat-icon>add_alert</mat-icon>
+        {{ 'tasks.reminders.dialog.new' | transloco }}
       </button>
     </div>
 
     @for (group of groups(); track group.status) {
       <section>
         <h3>
-          {{ 'tasks.reminders.groups.' + group.status | transloco }} · {{ group.items.length }}
+          {{ 'tasks.reminders.groups.' + group.status | transloco }} ·
+          {{ group.items.length }}
         </h3>
         <ul>
           @for (reminder of group.items; track reminder.id) {
             <li [class]="reminder.status">
-              <span class="when">{{ reminder.remindAt | date: 'd MMM, HH:mm' }}</span>
+              <span class="when">{{
+                reminder.remindAt | date: 'd MMM, HH:mm'
+              }}</span>
               <span class="text">
                 {{ reminder.text }}
                 @if (reminder.repeat; as repeat) {
@@ -60,17 +75,19 @@ const GROUPS: ReminderStatus[] = ['fired', 'scheduled', 'done'];
               </span>
               @if (reminder.status === 'fired') {
                 <button matButton (click)="done(reminder)">
-                  <mat-icon>check</mat-icon> {{ 'tasks.reminders.done' | transloco }}
+                  <mat-icon>check</mat-icon>
+                  {{ 'tasks.reminders.done' | transloco }}
                 </button>
-                <button matButton (click)="open({ mode: 'snooze', reminder })">
-                  <mat-icon>snooze</mat-icon> {{ 'tasks.reminders.snooze' | transloco }}
+                <button matButton (click)="open({mode: 'snooze', reminder})">
+                  <mat-icon>snooze</mat-icon>
+                  {{ 'tasks.reminders.snooze' | transloco }}
                 </button>
               } @else if (reminder.status === 'scheduled') {
                 <button
                   matIconButton
                   [matTooltip]="'core.actions.edit' | transloco"
                   [attr.aria-label]="'core.actions.edit' | transloco"
-                  (click)="open({ mode: 'edit', reminder })"
+                  (click)="open({mode: 'edit', reminder})"
                 >
                   <mat-icon>edit</mat-icon>
                 </button>
@@ -164,18 +181,24 @@ export class RemindersPage {
   protected readonly reminders = this.api.reminders();
 
   protected readonly groups = computed<Group[]>(() =>
-    GROUPS.map((status) => ({
+    GROUPS.map(status => ({
       status,
       items: this.reminders
         .value()
-        .filter((reminder) => reminder.status === status)
+        .filter(reminder => reminder.status === status)
         // Answered ones: the latest first; the others come nearest first from the server.
-        .sort((a, b) => (status === 'done' ? b.remindAt.localeCompare(a.remindAt) : 0)),
-    })).filter((group) => group.items.length > 0),
+        .sort((a, b) =>
+          status === 'done' ? b.remindAt.localeCompare(a.remindAt) : 0,
+        ),
+    })).filter(group => group.items.length > 0),
   );
 
   protected async open(data: ReminderDialogData): Promise<void> {
-    if (await firstValueFrom(this.dialog.open(ReminderFormDialog, { data }).afterClosed())) {
+    if (
+      await firstValueFrom(
+        this.dialog.open(ReminderFormDialog, {data}).afterClosed(),
+      )
+    ) {
       this.reminders.reload();
     }
   }
@@ -189,7 +212,7 @@ export class RemindersPage {
     const key = reminder.repeat
       ? 'tasks.reminders.confirmDeleteSeries'
       : 'tasks.reminders.confirmDelete';
-    if (confirm(this.transloco.translate(key, { text: reminder.text }))) {
+    if (confirm(this.transloco.translate(key, {text: reminder.text}))) {
       await firstValueFrom(this.api.removeReminder(reminder.id));
       this.reminders.reload();
     }

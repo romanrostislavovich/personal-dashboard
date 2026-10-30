@@ -7,17 +7,17 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { AiMemory, AiPreferences, AiSettings } from '@pd/contracts';
-import { errorStatus } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { AiApi } from './ai.api';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {AiMemory, AiPreferences, AiSettings} from '@pd/contracts';
+import {errorStatus} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {AiApi} from './ai.api';
 
 /**
  * What the assistant knows besides the sections: the facts it was asked to remember, and the
@@ -76,9 +76,11 @@ import { AiApi } from './ai.api';
         <mat-label>{{ 'ai.speech.connection' | transloco }}</mat-label>
         <mat-select
           [value]="settings().embeddingConnectionId"
-          (selectionChange)="save.emit({ embeddingConnectionId: $event.value })"
+          (selectionChange)="save.emit({embeddingConnectionId: $event.value})"
         >
-          <mat-option [value]="null">{{ 'ai.recall.auto' | transloco }}</mat-option>
+          <mat-option [value]="null">{{
+            'ai.recall.auto' | transloco
+          }}</mat-option>
           @for (c of settings().connections; track c.id) {
             <mat-option [value]="c.id">{{ c.name }}</mat-option>
           }
@@ -146,7 +148,9 @@ export class AiKnowledgeComponent {
     if (error) {
       return this.transloco.translate(`ai.recall.${error}`);
     }
-    return count === null ? '' : this.transloco.translate('ai.recall.indexed', { count });
+    return count === null
+      ? ''
+      : this.transloco.translate('ai.recall.indexed', {count});
   });
 
   private readonly transloco = inject(TranslocoService);
@@ -171,7 +175,7 @@ export class AiKnowledgeComponent {
 
   saveModel(model: string): void {
     if (model.trim()) {
-      this.save.emit({ embeddingModel: model.trim() });
+      this.save.emit({embeddingModel: model.trim()});
     }
   }
 
@@ -181,17 +185,21 @@ export class AiKnowledgeComponent {
     try {
       this.indexed.set((await firstValueFrom(this.api.recallIndex())).indexed);
     } catch (error) {
-      this.indexError.set(errorStatus(error) === 400 ? 'no-connection' : 'failed');
+      this.indexError.set(
+        errorStatus(error) === 400 ? 'no-connection' : 'failed',
+      );
     } finally {
       this.indexing.set(false);
     }
   }
 
   private async load(): Promise<void> {
-    this.memories.set(await firstValueFrom(this.api.memories()).catch(() => []));
+    this.memories.set(
+      await firstValueFrom(this.api.memories()).catch(() => []),
+    );
     this.indexed.set(
       await firstValueFrom(this.api.recallStatus()).then(
-        (status) => status.indexed,
+        status => status.indexed,
         () => null,
       ),
     );

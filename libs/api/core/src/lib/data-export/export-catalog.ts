@@ -1,6 +1,6 @@
-import { sql, SQL } from 'drizzle-orm';
-import { Database } from '../database/database.module';
-import { dependencyOrder } from '../sync/sync-catalog';
+import {sql, SQL} from 'drizzle-orm';
+import {Database} from '../database/database.module';
+import {dependencyOrder} from '../sync/sync-catalog';
 
 /** A reference of a table to another one by a single column. */
 export interface ExportReference {
@@ -45,8 +45,10 @@ const NOT_EXPORTED = new Set([
 export const USER_COLUMN = 'user_id';
 
 /** Every table of `public` with a primary key, referenced ones first. */
-export async function readExportTables(db: Pick<Database, 'execute'>): Promise<ExportTable[]> {
-  const { rows } = await db.execute<{
+export async function readExportTables(
+  db: Pick<Database, 'execute'>,
+): Promise<ExportTable[]> {
+  const {rows} = await db.execute<{
     name: string;
     columns: string[];
     primary_key: string[] | null;
@@ -75,8 +77,8 @@ export async function readExportTables(db: Pick<Database, 'execute'>): Promise<E
     WHERE n.nspname = 'public' AND c.relkind = 'r'
   `);
   const tables = rows
-    .filter((row) => row.primary_key?.length)
-    .map((row) => ({
+    .filter(row => row.primary_key?.length)
+    .map(row => ({
       name: row.name,
       columns: row.columns,
       primaryKey: row.primary_key ?? [],
@@ -84,8 +86,11 @@ export async function readExportTables(db: Pick<Database, 'execute'>): Promise<E
       binary: row.binary ?? [],
     }));
   return dependencyOrder(
-    tables.map((table) => ({ ...table, references: table.references.map((ref) => ref.table) })),
-  ).map(({ name }) => tables.find((table) => table.name === name) as ExportTable);
+    tables.map(table => ({
+      ...table,
+      references: table.references.map(ref => ref.table),
+    })),
+  ).map(({name}) => tables.find(table => table.name === name) as ExportTable);
 }
 
 /**
@@ -94,7 +99,8 @@ export async function readExportTables(db: Pick<Database, 'execute'>): Promise<E
  * `null` — nothing leads to a user: such a table is not exported.
  */
 export type Ownership =
-  { kind: 'direct' } | { kind: 'through'; reference: ExportReference; parent: Ownership };
+  | {kind: 'direct'}
+  | {kind: 'through'; reference: ExportReference; parent: Ownership};
 
 export function ownership(
   table: ExportTable,
@@ -105,34 +111,42 @@ export function ownership(
     return null;
   }
   if (table.columns.includes(USER_COLUMN)) {
-    return { kind: 'direct' };
+    return {kind: 'direct'};
   }
   for (const reference of table.references) {
     const parent = tables.get(reference.table);
-    const owned = parent && ownership(parent, tables, new Set([...path, table.name]));
+    const owned =
+      parent && ownership(parent, tables, new Set([...path, table.name]));
     if (owned) {
-      return { kind: 'through', reference, parent: owned };
+      return {kind: 'through', reference, parent: owned};
     }
   }
   return null;
 }
 
 /** The tables an archive holds, with how each one's rows are told to be a user's. */
-export function exportable(tables: ExportTable[]): { table: ExportTable; owned: Ownership }[] {
-  const byName = new Map(tables.map((table) => [table.name, table]));
-  return tables.flatMap((table) => {
+export function exportable(
+  tables: ExportTable[],
+): {table: ExportTable; owned: Ownership}[] {
+  const byName = new Map(tables.map(table => [table.name, table]));
+  return tables.flatMap(table => {
     const owned = ownership(table, byName);
-    return owned ? [{ table, owned }] : [];
+    return owned ? [{table, owned}] : [];
   });
 }
 
 /** SQL condition "the row `alias` is the user's". */
-export function ownedBy(owned: Ownership, alias: string, userId: string, depth = 0): SQL {
+export function ownedBy(
+  owned: Ownership,
+  alias: string,
+  userId: string,
+  depth = 0,
+): SQL {
   if (owned.kind === 'direct') {
     return sql`${sql.identifier(alias)}.${sql.identifier(USER_COLUMN)} = ${userId}`;
   }
   const parent = `o${depth}`;
-  const { column, table, target } = owned.reference;
+  const {column, table, target} = owned.reference;
   return sql`EXISTS (SELECT 1 FROM ${sql.identifier(table)} ${sql.identifier(parent)}
     WHERE ${sql.identifier(parent)}.${sql.identifier(target)} = ${sql.identifier(alias)}.${sql.identifier(column)}
       AND ${ownedBy(owned.parent, parent, userId, depth + 1)})`;

@@ -7,9 +7,10 @@ import {
   NativeImage,
   screen,
 } from 'electron';
-import { join } from 'node:path';
+import {join} from 'node:path';
 
-export type Captured = { kind: 'text'; text: string } | { kind: 'image'; base64: string };
+export type Captured =
+  {kind: 'text'; text: string} | {kind: 'image'; base64: string};
 
 /** Ctrl+Alt+C — the copied text; Ctrl+Alt+S — a piece of the screen. */
 const TEXT_SHORTCUT = 'Control+Alt+C';
@@ -24,7 +25,7 @@ export class Capture {
   private pending: Captured | null = null;
   private window: BrowserWindow | null = null;
   private overlay: BrowserWindow | null = null;
-  private screenshot: { image: NativeImage; scale: number } | null = null;
+  private screenshot: {image: NativeImage; scale: number} | null = null;
   /** The piece of the screen in the editor (assets/annotate.html). */
   private editor: BrowserWindow | null = null;
   private piece: NativeImage | null = null;
@@ -41,7 +42,10 @@ export class Capture {
     const taken = [
       [TEXT_SHORTCUT, () => void this.captureText()],
       [SCREEN_SHORTCUT, () => void this.captureScreen()],
-    ].filter(([keys, handler]) => !globalShortcut.register(keys as string, handler as () => void));
+    ].filter(
+      ([keys, handler]) =>
+        !globalShortcut.register(keys as string, handler as () => void),
+    );
     if (taken.length) {
       this.notify(
         'Сочетание клавиш занято',
@@ -69,7 +73,9 @@ export class Capture {
   }
 
   /** The overlay is done: a rectangle in its own (CSS) pixels, or `null` — cancelled. */
-  regionDone(rect: { x: number; y: number; width: number; height: number } | null): void {
+  regionDone(
+    rect: {x: number; y: number; width: number; height: number} | null,
+  ): void {
     const shot = this.screenshot;
     this.overlay?.close();
     this.overlay = null;
@@ -96,19 +102,27 @@ export class Capture {
    * clipboard: a copied screenshot is kept too, so it is never lost with the next copy;
    * `actions` — the same, then the window that makes it a task or a diary photo.
    */
-  async editorDone(png: Buffer, action: 'save' | 'actions' | 'copy'): Promise<void> {
+  async editorDone(
+    png: Buffer,
+    action: 'save' | 'actions' | 'copy',
+  ): Promise<void> {
     // The clipboard of Electron follows the browser's: a PNG goes in as an item.
     await clipboard.write([
-      new ClipboardItem({ 'image/png': new Blob([new Uint8Array(png)], { type: 'image/png' }) }),
+      new ClipboardItem({
+        'image/png': new Blob([new Uint8Array(png)], {type: 'image/png'}),
+      }),
     ]);
     this.editor?.close();
     try {
       await this.keep(png);
     } catch (error) {
-      this.notify('Скриншот не сохранён', error instanceof Error ? error.message : String(error));
+      this.notify(
+        'Скриншот не сохранён',
+        error instanceof Error ? error.message : String(error),
+      );
     }
     if (action === 'actions') {
-      this.open({ kind: 'image', base64: png.toString('base64') });
+      this.open({kind: 'image', base64: png.toString('base64')});
     }
   }
 
@@ -120,11 +134,19 @@ export class Capture {
   private async openEditor(piece: NativeImage, scale: number): Promise<void> {
     this.editor?.close();
     this.piece = piece;
-    const area = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workAreaSize;
-    const { width, height } = piece.getSize();
+    const area = screen.getDisplayNearestPoint(
+      screen.getCursorScreenPoint(),
+    ).workAreaSize;
+    const {width, height} = piece.getSize();
     this.editor = new BrowserWindow({
-      width: Math.min(area.width, Math.max(720, Math.round(width / scale) + 40)),
-      height: Math.min(area.height, Math.max(420, Math.round(height / scale) + 110)),
+      width: Math.min(
+        area.width,
+        Math.max(720, Math.round(width / scale) + 40),
+      ),
+      height: Math.min(
+        area.height,
+        Math.max(420, Math.round(height / scale) + 110),
+      ),
       alwaysOnTop: true,
       autoHideMenuBar: true,
       title: 'Скриншот — Personal Dashboard',
@@ -146,10 +168,13 @@ export class Capture {
   private async captureText(): Promise<void> {
     const text = (await clipboard.readText()).trim();
     if (!text) {
-      this.notify('Буфер обмена пуст', 'Скопируйте текст и нажмите Ctrl+Alt+C ещё раз.');
+      this.notify(
+        'Буфер обмена пуст',
+        'Скопируйте текст и нажмите Ctrl+Alt+C ещё раз.',
+      );
       return;
     }
-    this.open({ kind: 'text', text: text.slice(0, 5000) });
+    this.open({kind: 'text', text: text.slice(0, 5000)});
   }
 
   /** A picture of the screen under the mouse, shown full-screen to draw the rectangle on. */
@@ -157,18 +182,28 @@ export class Capture {
     if (this.overlay) {
       return;
     }
-    const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+    const display = screen.getDisplayNearestPoint(
+      screen.getCursorScreenPoint(),
+    );
     const size = {
       width: Math.round(display.size.width * display.scaleFactor),
       height: Math.round(display.size.height * display.scaleFactor),
     };
-    const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: size });
-    const source = sources.find((item) => item.display_id === String(display.id)) ?? sources[0];
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: size,
+    });
+    const source =
+      sources.find(item => item.display_id === String(display.id)) ??
+      sources[0];
     if (!source) {
       return;
     }
     const image = source.thumbnail;
-    this.screenshot = { image, scale: image.getSize().width / display.bounds.width };
+    this.screenshot = {
+      image,
+      scale: image.getSize().width / display.bounds.width,
+    };
     this.overlay = new BrowserWindow({
       ...display.bounds,
       frame: false,

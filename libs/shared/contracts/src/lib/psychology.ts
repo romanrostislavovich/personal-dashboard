@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 const day = z.iso.date();
 
@@ -27,20 +27,40 @@ export const psychologyEventInputSchema = z
     /** The last age of it; `null` — within one year of life. */
     ageTo: age.nullish(),
     feeling: z
-      .union([z.literal(-2), z.literal(-1), z.literal(0), z.literal(1), z.literal(2)])
+      .union([
+        z.literal(-2),
+        z.literal(-1),
+        z.literal(0),
+        z.literal(1),
+        z.literal(2),
+      ])
       .default(0),
   })
-  .refine((event) => Boolean(event.startedOn) !== (event.ageFrom != null), {
-    message: 'An event has either dates or an age',
-    path: ['startedOn'],
-  })
-  .refine((event) => !event.endedOn || (event.startedOn && event.endedOn >= event.startedOn), {
-    message: 'The end is before the start',
-    path: ['endedOn'],
-  })
   .refine(
-    (event) => event.ageTo == null || (event.ageFrom != null && event.ageTo >= event.ageFrom),
-    { message: 'The end is before the start', path: ['ageTo'] },
+    event =>
+      Boolean(event.startedOn) !==
+      (event.ageFrom !== null && event.ageFrom !== undefined),
+    {
+      message: 'An event has either dates or an age',
+      path: ['startedOn'],
+    },
+  )
+  .refine(
+    event =>
+      !event.endedOn || (event.startedOn && event.endedOn >= event.startedOn),
+    {
+      message: 'The end is before the start',
+      path: ['endedOn'],
+    },
+  )
+  .refine(
+    event =>
+      event.ageTo === null ||
+      event.ageTo === undefined ||
+      (event.ageFrom !== null &&
+        event.ageFrom !== undefined &&
+        event.ageTo >= event.ageFrom),
+    {message: 'The end is before the start', path: ['ageTo']},
   );
 export type PsychologyEventInput = z.input<typeof psychologyEventInputSchema>;
 
@@ -58,7 +78,10 @@ export interface PsychologyEvent {
   createdAt: string;
 }
 
-type EventTime = Pick<PsychologyEvent, 'startedOn' | 'endedOn' | 'ageFrom' | 'ageTo'>;
+type EventTime = Pick<
+  PsychologyEvent,
+  'startedOn' | 'endedOn' | 'ageFrom' | 'ageTo'
+>;
 
 /**
  * The days an event covers. One told by age covers the calendar years the user was that old
@@ -68,11 +91,16 @@ type EventTime = Pick<PsychologyEvent, 'startedOn' | 'endedOn' | 'ageFrom' | 'ag
 export function eventSpan(
   event: EventTime,
   birthYear: number | null,
-): { from: LocalDate; to: LocalDate } | null {
+): {from: LocalDate; to: LocalDate} | null {
   if (event.startedOn) {
-    return { from: event.startedOn, to: event.endedOn ?? event.startedOn };
+    return {from: event.startedOn, to: event.endedOn ?? event.startedOn};
   }
-  if (event.ageFrom == null || birthYear == null) {
+  if (
+    event.ageFrom === null ||
+    event.ageFrom === undefined ||
+    birthYear === null ||
+    birthYear === undefined
+  ) {
     return null;
   }
   return {
@@ -85,7 +113,7 @@ export function eventSpan(
 export function eventTouches(
   event: EventTime,
   birthYear: number | null,
-  period: { from?: string; to?: string },
+  period: {from?: string; to?: string},
 ): boolean {
   if (!period.from && !period.to) {
     return true;
@@ -104,16 +132,25 @@ export function eventTouches(
  */
 export function compareEvents(
   birthYear: number | null,
-): (a: EventTime & { createdAt: string }, b: EventTime & { createdAt: string }) => number {
+): (
+  a: EventTime & {createdAt: string},
+  b: EventTime & {createdAt: string},
+) => number {
   return (a, b) => {
     const [spanA, spanB] = [eventSpan(a, birthYear), eventSpan(b, birthYear)];
     if (spanA && spanB) {
-      return spanB.from.localeCompare(spanA.from) || b.createdAt.localeCompare(a.createdAt);
+      return (
+        spanB.from.localeCompare(spanA.from) ||
+        b.createdAt.localeCompare(a.createdAt)
+      );
     }
     if (spanA || spanB) {
       return spanA ? -1 : 1;
     }
-    return (b.ageFrom ?? 0) - (a.ageFrom ?? 0) || b.createdAt.localeCompare(a.createdAt);
+    return (
+      (b.ageFrom ?? 0) - (a.ageFrom ?? 0) ||
+      b.createdAt.localeCompare(a.createdAt)
+    );
   };
 }
 
@@ -147,7 +184,7 @@ export interface Questionnaire {
   scale: number;
   /** `true` — a higher sum is better (well-being); `false` — worse (anxiety, low mood). */
   higherIsBetter: boolean;
-  bands: { from: number; key: string }[];
+  bands: {from: number; key: string}[];
   /** An item an answer above zero to which is told apart: thoughts of self-harm. */
   careItem?: number;
 }
@@ -160,8 +197,8 @@ export const QUESTIONNAIRES: Questionnaire[] = [
     scale: 4,
     higherIsBetter: true,
     bands: [
-      { from: 0, key: 'low' },
-      { from: 13, key: 'fine' },
+      {from: 0, key: 'low'},
+      {from: 13, key: 'fine'},
     ],
   },
   {
@@ -171,10 +208,10 @@ export const QUESTIONNAIRES: Questionnaire[] = [
     scale: 1,
     higherIsBetter: false,
     bands: [
-      { from: 0, key: 'minimal' },
-      { from: 5, key: 'mild' },
-      { from: 10, key: 'moderate' },
-      { from: 15, key: 'severe' },
+      {from: 0, key: 'minimal'},
+      {from: 5, key: 'mild'},
+      {from: 10, key: 'moderate'},
+      {from: 15, key: 'severe'},
     ],
   },
   {
@@ -184,11 +221,11 @@ export const QUESTIONNAIRES: Questionnaire[] = [
     scale: 1,
     higherIsBetter: false,
     bands: [
-      { from: 0, key: 'minimal' },
-      { from: 5, key: 'mild' },
-      { from: 10, key: 'moderate' },
-      { from: 15, key: 'moderatelySevere' },
-      { from: 20, key: 'severe' },
+      {from: 0, key: 'minimal'},
+      {from: 5, key: 'mild'},
+      {from: 10, key: 'moderate'},
+      {from: 15, key: 'moderatelySevere'},
+      {from: 20, key: 'severe'},
     ],
     careItem: 9,
   },
@@ -197,8 +234,13 @@ export const QUESTIONNAIRES: Questionnaire[] = [
 export type QuestionnaireId = Questionnaire['id'];
 
 /** The band a sum falls into. */
-export function questionnaireBand(questionnaire: Questionnaire, sum: number): string {
-  return [...questionnaire.bands].reverse().find((band) => sum >= band.from)?.key ?? '';
+export function questionnaireBand(
+  questionnaire: Questionnaire,
+  sum: number,
+): string {
+  return (
+    [...questionnaire.bands].reverse().find(band => sum >= band.from)?.key ?? ''
+  );
 }
 
 export const psychologyAssessmentInputSchema = z
@@ -208,14 +250,24 @@ export const psychologyAssessmentInputSchema = z
     answers: z.array(z.number().int().min(0).max(5)).min(1).max(20),
   })
   .superRefine((input, ctx) => {
-    const questionnaire = QUESTIONNAIRES.find((item) => item.id === input.test);
+    const questionnaire = QUESTIONNAIRES.find(item => item.id === input.test);
     if (!questionnaire || input.answers.length !== questionnaire.items) {
-      ctx.addIssue({ code: 'custom', path: ['answers'], message: 'Every item needs an answer' });
-    } else if (input.answers.some((answer) => answer > questionnaire.maxAnswer)) {
-      ctx.addIssue({ code: 'custom', path: ['answers'], message: 'An answer is off the scale' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['answers'],
+        message: 'Every item needs an answer',
+      });
+    } else if (input.answers.some(answer => answer > questionnaire.maxAnswer)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['answers'],
+        message: 'An answer is off the scale',
+      });
     }
   });
-export type PsychologyAssessmentInput = z.infer<typeof psychologyAssessmentInputSchema>;
+export type PsychologyAssessmentInput = z.infer<
+  typeof psychologyAssessmentInputSchema
+>;
 
 export interface PsychologyAssessment {
   id: string;
@@ -242,7 +294,7 @@ export const psychologySettingsSchema = z.object({
   reminderEveryDays: z
     .number()
     .int()
-    .refine((days) => (REMINDER_PERIODS as readonly number[]).includes(days))
+    .refine(days => (REMINDER_PERIODS as readonly number[]).includes(days))
     .optional(),
   reminderAt: z
     .string()
@@ -255,8 +307,11 @@ export const psychologySettingsSchema = z.object({
     .string()
     .trim()
     .max(80)
-    .refine((value) => telegramContact(value) !== null, 'A Telegram username or phone number')
-    .transform((value) => telegramContact(value) as string)
+    .refine(
+      value => telegramContact(value) !== null,
+      'A Telegram username or phone number',
+    )
+    .transform(value => telegramContact(value) as string)
     .nullable()
     .optional(),
 });
@@ -293,8 +348,10 @@ export interface PsychologySettings {
 
 // --- Patterns: the mood over time ---
 
-export const psychologyPatternsQuerySchema = z.object({ from: day, to: day });
-export type PsychologyPatternsQuery = z.infer<typeof psychologyPatternsQuerySchema>;
+export const psychologyPatternsQuerySchema = z.object({from: day, to: day});
+export type PsychologyPatternsQuery = z.infer<
+  typeof psychologyPatternsQuerySchema
+>;
 
 export interface PsychologyPatterns {
   from: LocalDate;
@@ -303,13 +360,19 @@ export interface PsychologyPatterns {
   days: number;
   average: number | null;
   /** Monday first; `null` — no mood on that day of the week. */
-  byWeekday: { weekday: number; average: number | null; days: number }[];
+  byWeekday: {weekday: number; average: number | null; days: number}[];
   /** The average of every week (its Monday), oldest first. */
-  weeks: { week: LocalDate; average: number; days: number }[];
+  weeks: {week: LocalDate; average: number; days: number}[];
   /** The longest run of days in a row with a low mood (1–2), and when it began. */
-  longestLowRun: { days: number; from: LocalDate } | null;
+  longestLowRun: {days: number; from: LocalDate} | null;
   /** The events of the period with the average mood during each; `null` — no mood then. */
-  events: { id: string; title: string; from: LocalDate; to: LocalDate; mood: number | null }[];
+  events: {
+    id: string;
+    title: string;
+    from: LocalDate;
+    to: LocalDate;
+    mood: number | null;
+  }[];
   /**
    * What other sections tell lasted over the period — the treatment of Health — with the
    * average mood during each; `to` `null` — still going on.
@@ -331,7 +394,13 @@ export interface PsychologyPatterns {
  * What became of a step. Every state is as good as "done": "smaller" — the smaller version
  * was taken, "notToday" — put off without a reason, "rest" — rest instead.
  */
-export const GENTLE_STEP_STATES = ['open', 'done', 'smaller', 'notToday', 'rest'] as const;
+export const GENTLE_STEP_STATES = [
+  'open',
+  'done',
+  'smaller',
+  'notToday',
+  'rest',
+] as const;
 export type GentleStepState = (typeof GENTLE_STEP_STATES)[number];
 
 /** No more than three steps a day: a short list is the point. */
@@ -367,7 +436,7 @@ export const gentleDayInputSchema = z.object({
 });
 export type GentleDayInput = z.input<typeof gentleDayInputSchema>;
 
-export const gentleDayQuerySchema = z.object({ date: day });
+export const gentleDayQuerySchema = z.object({date: day});
 
 export interface GentleDayStep {
   text: string;
@@ -403,7 +472,7 @@ export const appointmentBriefInputSchema = z
     questions: z.array(z.string().trim().min(1).max(500)).max(50).default([]),
     notes: longText.default(''),
   })
-  .refine((brief) => brief.to >= brief.from, {
+  .refine(brief => brief.to >= brief.from, {
     message: 'The end is before the start',
     path: ['to'],
   });

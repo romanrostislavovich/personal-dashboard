@@ -1,9 +1,29 @@
-import { pickMessages } from '@pd/api-core';
-import { WowNews } from './wow/wow-news';
+import {pickMessages} from '@pd/api-core';
+import {WowNews} from './wow/wow-news';
 
 const MEDALS = {
-  en: ['', 'Herald', 'Guardian', 'Crusader', 'Archon', 'Legend', 'Ancient', 'Divine', 'Immortal'],
-  ru: ['', 'Рекрут', 'Страж', 'Рыцарь', 'Герой', 'Легенда', 'Властелин', 'Божество', 'Титан'],
+  en: [
+    '',
+    'Herald',
+    'Guardian',
+    'Crusader',
+    'Archon',
+    'Legend',
+    'Ancient',
+    'Divine',
+    'Immortal',
+  ],
+  ru: [
+    '',
+    'Рекрут',
+    'Страж',
+    'Рыцарь',
+    'Герой',
+    'Легенда',
+    'Властелин',
+    'Божество',
+    'Титан',
+  ],
 };
 
 /** Module notification texts; the language is picked by `user.locale`. */
@@ -72,7 +92,11 @@ interface WowNewsLabels {
 }
 
 /** One line of a notification about a WoW character. */
-function wowNewsLine(character: string, news: WowNews, t: WowNewsLabels): string {
+function wowNewsLine(
+  character: string,
+  news: WowNews,
+  t: WowNewsLabels,
+): string {
   switch (news.kind) {
     case 'mythic':
       return `🗝️ ${character}: ${t.mythic} ${news.from} → ${news.to}`;

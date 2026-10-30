@@ -1,4 +1,4 @@
-import { ClamlCode } from './claml';
+import {ClamlCode} from './claml';
 
 /**
  * Reads codes and titles out of a table the user downloaded themselves — the Russian ICD-10 of
@@ -7,20 +7,27 @@ import { ClamlCode } from './claml';
  * longest text next to it. A header, chapters (`A00-B99`) and repeated codes are skipped.
  */
 export function icdTable(rows: readonly (readonly unknown[])[]): ClamlCode[] {
-  const cells = rows.map((row) => row.map((cell) => (cell == null ? '' : String(cell).trim())));
-  const width = Math.max(0, ...cells.map((row) => row.length));
-  const filled = cells.filter((row) => row.some(Boolean));
+  const cells = rows.map(row =>
+    row.map(cell =>
+      cell === null || cell === undefined ? '' : String(cell).trim(),
+    ),
+  );
+  const width = Math.max(0, ...cells.map(row => row.length));
+  const filled = cells.filter(row => row.some(Boolean));
   if (!width || !filled.length) {
     return [];
   }
 
-  const codeColumn = bestColumn(width, (column) =>
-    share(filled, (row) => isCode(row[column] ?? '')),
+  const codeColumn = bestColumn(width, column =>
+    share(filled, row => isCode(row[column] ?? '')),
   );
-  if (codeColumn === null || share(filled, (row) => isCode(row[codeColumn] ?? '')) < 0.5) {
+  if (
+    codeColumn === null ||
+    share(filled, row => isCode(row[codeColumn] ?? '')) < 0.5
+  ) {
     return [];
   }
-  const titleColumn = bestColumn(width, (column) =>
+  const titleColumn = bestColumn(width, column =>
     column === codeColumn ? -1 : averageTextLength(filled, column),
   );
   if (titleColumn === null) {
@@ -34,7 +41,7 @@ export function icdTable(rows: readonly (readonly unknown[])[]): ClamlCode[] {
     const title = (row[titleColumn] ?? '').replace(/\s+/g, ' ');
     if (isCode(code) && title && !seen.has(code)) {
       seen.add(code);
-      codes.push({ code, title });
+      codes.push({code, title});
     }
   }
   return codes;
@@ -58,14 +65,17 @@ function share(rows: string[][], test: (row: string[]) => boolean): number {
 /** Text, not numbers or dates (an id, a version, a parent id). */
 function averageTextLength(rows: string[][], column: number): number {
   const texts = rows
-    .map((row) => row[column] ?? '')
-    .filter((cell) => /\p{L}{2}/u.test(cell) && !isCode(cell));
+    .map(row => row[column] ?? '')
+    .filter(cell => /\p{L}{2}/u.test(cell) && !isCode(cell));
   return texts.length < rows.length / 2
     ? 0
     : texts.reduce((sum, text) => sum + text.length, 0) / texts.length;
 }
 
-function bestColumn(width: number, score: (column: number) => number): number | null {
+function bestColumn(
+  width: number,
+  score: (column: number) => number,
+): number | null {
   let best: number | null = null;
   let bestScore = 0;
   for (let column = 0; column < width; column++) {
@@ -82,7 +92,9 @@ function bestColumn(width: number, score: (column: number) => number): number | 
 export function csvRows(text: string): string[][] {
   const firstLine = text.slice(0, text.indexOf('\n') >>> 0);
   const delimiter = [';', '\t', ','].reduce((best, candidate) =>
-    firstLine.split(candidate).length > firstLine.split(best).length ? candidate : best,
+    firstLine.split(candidate).length > firstLine.split(best).length
+      ? candidate
+      : best,
   );
   const rows: string[][] = [];
   let row: string[] = [];

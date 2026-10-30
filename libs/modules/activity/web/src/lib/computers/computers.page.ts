@@ -1,8 +1,14 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { desktopBridge } from '@pd/web-core';
-import { ActivityApi } from '../activity.api';
-import { ComputerCardComponent } from './computer-card.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {desktopBridge} from '@pd/web-core';
+import {ActivityApi} from '../activity.api';
+import {ComputerCardComponent} from './computer-card.component';
 
 const REFRESH_MS = 60_000;
 
@@ -49,6 +55,6 @@ export class ComputersPage {
     inject(DestroyRef).onDestroy(() => clearInterval(refresh));
     void desktopBridge()
       ?.activity?.status()
-      .then((status) => this.thisDevice.set(status.deviceId));
+      .then(status => this.thisDevice.set(status.deviceId));
   }
 }

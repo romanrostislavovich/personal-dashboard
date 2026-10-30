@@ -1,13 +1,18 @@
 <mat-card appearance="outlined">
   <mat-card-header>
     <mat-card-title>{{ 'health.summary.title' | transloco }}</mat-card-title>
-    <mat-card-subtitle>{{ 'health.summary.about' | transloco }}</mat-card-subtitle>
+    <mat-card-subtitle>{{
+      'health.summary.about' | transloco
+    }}</mat-card-subtitle>
   </mat-card-header>
   <mat-card-content class="content">
     <div class="row">
       <mat-form-field subscriptSizing="dynamic">
         <mat-label>{{ 'health.summary.language' | transloco }}</mat-label>
-        <mat-select [value]="language()" (selectionChange)="language.set($event.value)">
+        <mat-select
+          [value]="language()"
+          (selectionChange)="language.set($event.value)"
+        >
           @for (code of languages; track code) {
             <mat-option [value]="code">{{
               'health.summary.languages.' + code | transloco
@@ -27,7 +32,10 @@
       </mat-form-field>
     </div>
 
-    <mat-slide-toggle [checked]="translate()" (change)="translate.set($event.checked)">
+    <mat-slide-toggle
+      [checked]="translate()"
+      (change)="translate.set($event.checked)"
+    >
       {{ 'health.summary.translate' | transloco }}
     </mat-slide-toggle>
     <p class="hint">{{ 'health.summary.translateHint' | transloco }}</p>
@@ -35,7 +43,10 @@
     <h3 class="section">{{ 'health.summary.include' | transloco }}</h3>
     <div class="checks">
       @for (section of sections; track section) {
-        <mat-checkbox [checked]="included()[section]" (change)="set(section, $event.checked)">
+        <mat-checkbox
+          [checked]="included()[section]"
+          (change)="set(section, $event.checked)"
+        >
           {{ 'health.summary.sections.' + section | transloco }}
         </mat-checkbox>
       }
@@ -65,7 +76,9 @@
       </button>
     </div>
     @if (failed()) {
-      <p class="error" role="alert">{{ 'health.summary.failed' | transloco }}</p>
+      <p class="error" role="alert">
+        {{ 'health.summary.failed' | transloco }}
+      </p>
     }
   </mat-card-content>
 </mat-card>
@@ -73,7 +86,9 @@
 <mat-card appearance="outlined">
   <mat-card-header>
     <mat-card-title>{{ 'health.summary.link' | transloco }}</mat-card-title>
-    <mat-card-subtitle>{{ 'health.summary.linkAbout' | transloco }}</mat-card-subtitle>
+    <mat-card-subtitle>{{
+      'health.summary.linkAbout' | transloco
+    }}</mat-card-subtitle>
   </mat-card-header>
   <mat-card-content class="content">
     <div class="row">
@@ -91,7 +106,7 @@
         <mat-select [value]="days()" (selectionChange)="days.set($event.value)">
           @for (count of shareDays; track count) {
             <mat-option [value]="count">{{
-              'health.summary.daysCount' | transloco: { count }
+              'health.summary.daysCount' | transloco: {count}
             }}</mat-option>
           }
         </mat-select>
@@ -106,7 +121,10 @@
         <code>{{ url }}</code>
         <button matButton="tonal" (click)="copy(url)">
           <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
-          {{ (copied() ? 'health.summary.copied' : 'health.summary.copy') | transloco }}
+          {{
+            (copied() ? 'health.summary.copied' : 'health.summary.copy')
+              | transloco
+          }}
         </button>
         <p class="hint">{{ 'health.summary.onlyOnce' | transloco }}</p>
       </div>
@@ -115,14 +133,18 @@
     @for (share of shareList(); track share.id) {
       <div class="share" [class.inactive]="state(share) !== 'active'">
         <span class="body">
-          <b>{{ share.note || ('health.summary.languages.' + share.language | transloco) }}</b>
+          <b>{{
+            share.note ||
+              ('health.summary.languages.' + share.language | transloco)
+          }}</b>
           <span class="hint">
             {{ 'health.summary.states.' + state(share) | transloco }}
             ·
             {{
-              'health.summary.until' | transloco: { day: (share.expiresAt | date: 'd MMM, HH:mm') }
+              'health.summary.until'
+                | transloco: {day: (share.expiresAt | date: 'd MMM, HH:mm')}
             }}
-            · {{ 'health.summary.opened' | transloco: { count: share.opened } }}
+            · {{ 'health.summary.opened' | transloco: {count: share.opened} }}
             @if (share.lastOpenedAt) {
               ({{ share.lastOpenedAt | date: 'd MMM, HH:mm' }})
             }

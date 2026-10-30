@@ -1,14 +1,27 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { pickableProjects } from '@pd/web-core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { COST_PROVIDERS, CostProvider, CostSourceInput, Project } from '@pd/contracts';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {pickableProjects} from '@pd/web-core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {
+  COST_PROVIDERS,
+  CostProvider,
+  CostSourceInput,
+  Project,
+} from '@pd/contracts';
 
 export interface CostSourceFormData {
   projects: Project[];
@@ -16,9 +29,12 @@ export interface CostSourceFormData {
 }
 
 /** Defaults for each service — the user can change them. */
-const PROVIDER_DEFAULTS: Record<CostProvider, { name: string; category: string }> = {
-  hetzner: { name: 'Hetzner Cloud', category: 'Хостинг' },
-  deepseek: { name: 'DeepSeek API', category: 'AI API' },
+const PROVIDER_DEFAULTS: Record<
+  CostProvider,
+  {name: string; category: string}
+> = {
+  hetzner: {name: 'Hetzner Cloud', category: 'Хостинг'},
+  deepseek: {name: 'DeepSeek API', category: 'AI API'},
 };
 
 @Component({
@@ -38,23 +54,35 @@ const PROVIDER_DEFAULTS: Record<CostProvider, { name: string; category: string }
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
         <mat-form-field>
-          <mat-label>{{ 'finance.costSources.provider' | transloco }}</mat-label>
+          <mat-label>{{
+            'finance.costSources.provider' | transloco
+          }}</mat-label>
           <mat-select formControlName="provider">
             @for (provider of providers; track provider) {
               <mat-option [value]="provider">
-                {{ 'finance.costSources.providers.' + provider + '.title' | transloco }}
+                {{
+                  'finance.costSources.providers.' + provider + '.title'
+                    | transloco
+                }}
               </mat-option>
             }
           </mat-select>
         </mat-form-field>
 
         <p class="hint">
-          {{ 'finance.costSources.providers.' + provider() + '.hint' | transloco }}
+          {{
+            'finance.costSources.providers.' + provider() + '.hint' | transloco
+          }}
         </p>
 
         <mat-form-field>
           <mat-label>{{ 'finance.costSources.token' | transloco }}</mat-label>
-          <input matInput type="password" formControlName="apiToken" autocomplete="off" />
+          <input
+            matInput
+            type="password"
+            formControlName="apiToken"
+            autocomplete="off"
+          />
           <mat-hint>{{ 'finance.costSources.tokenHint' | transloco }}</mat-hint>
         </mat-form-field>
 
@@ -73,7 +101,9 @@ const PROVIDER_DEFAULTS: Record<CostProvider, { name: string; category: string }
           <mat-label>{{ 'finance.wallet' | transloco }}</mat-label>
           <mat-select formControlName="projectId">
             <!-- "Personal" = empty string: mat-select treats null as no selection. -->
-            <mat-option value="">{{ 'finance.scope.personal' | transloco }}</mat-option>
+            <mat-option value="">{{
+              'finance.scope.personal' | transloco
+            }}</mat-option>
             @for (project of projects; track project.id) {
               <mat-option [value]="project.id">{{ project.name }}</mat-option>
             }
@@ -117,7 +147,9 @@ export class CostSourceFormDialog {
     this.data.projects,
     this.data.defaultProjectId ?? null,
   );
-  private readonly dialogRef = inject(MatDialogRef<CostSourceFormDialog, CostSourceInput>);
+  private readonly dialogRef = inject(
+    MatDialogRef<CostSourceFormDialog, CostSourceInput>,
+  );
 
   protected readonly providers = COST_PROVIDERS;
   protected readonly form = inject(NonNullableFormBuilder).group({
@@ -128,19 +160,22 @@ export class CostSourceFormDialog {
     projectId: [this.data.defaultProjectId ?? ''],
   });
 
-  protected readonly provider = toSignal(this.form.controls.provider.valueChanges, {
-    initialValue: this.form.controls.provider.value,
-  });
+  protected readonly provider = toSignal(
+    this.form.controls.provider.valueChanges,
+    {
+      initialValue: this.form.controls.provider.value,
+    },
+  );
 
   constructor() {
     // When the service changes, fill in its name and category.
-    this.form.controls.provider.valueChanges.subscribe((provider) =>
+    this.form.controls.provider.valueChanges.subscribe(provider =>
       this.form.patchValue(PROVIDER_DEFAULTS[provider]),
     );
   }
 
   save(): void {
     const value = this.form.getRawValue();
-    this.dialogRef.close({ ...value, projectId: value.projectId || null });
+    this.dialogRef.close({...value, projectId: value.projectId || null});
   }
 }

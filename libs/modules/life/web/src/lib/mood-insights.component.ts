@@ -1,12 +1,12 @@
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { MoodInsight, MoodInsights } from '@pd/contracts';
+import {CurrencyPipe, DecimalPipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {ChangeDetectionStrategy, Component, signal} from '@angular/core';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {MoodInsight, MoodInsights} from '@pd/contracts';
 
 const PERIODS = [90, 180, 365] as const;
 
@@ -35,7 +35,9 @@ function localDate(date: Date): string {
       <mat-card-header>
         <mat-icon mat-card-avatar>mood</mat-icon>
         <mat-card-title>{{ 'life.mood.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'life.mood.hint' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'life.mood.hint' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <mat-button-toggle-group
@@ -46,7 +48,7 @@ function localDate(date: Date): string {
         >
           @for (option of periods; track option) {
             <mat-button-toggle [value]="option">
-              {{ 'life.mood.days' | transloco: { days: option } }}
+              {{ 'life.mood.days' | transloco: {days: option} }}
             </mat-button-toggle>
           }
         </mat-button-toggle-group>
@@ -54,11 +56,17 @@ function localDate(date: Date): string {
         @if (insights.value(); as data) {
           @if (!data.enough) {
             <p class="hint">
-              {{ 'life.mood.few' | transloco: { good: data.goodDays, bad: data.badDays } }}
+              {{
+                'life.mood.few'
+                  | transloco: {good: data.goodDays, bad: data.badDays}
+              }}
             </p>
           } @else {
             <p class="hint">
-              {{ 'life.mood.of' | transloco: { good: data.goodDays, bad: data.badDays } }}
+              {{
+                'life.mood.of'
+                  | transloco: {good: data.goodDays, bad: data.badDays}
+              }}
             </p>
             <div class="rows">
               <span class="head"></span>
@@ -67,14 +75,22 @@ function localDate(date: Date): string {
               <span class="head"></span>
               @for (item of data.insights; track item.key) {
                 <span>{{ item.label ?? (item.labelKey | transloco) }}</span>
-                @for (value of [item.onGoodDays, item.onBadDays]; track $index) {
+                @for (
+                  value of [item.onGoodDays, item.onBadDays];
+                  track $index
+                ) {
                   <span class="number">
                     @switch (item.unit) {
                       @case ('money') {
-                        {{ value | currency: item.currency : 'symbol' : '1.0-0' }}
+                        {{
+                          value | currency: item.currency : 'symbol' : '1.0-0'
+                        }}
                       }
                       @case ('hours') {
-                        {{ 'life.hours' | transloco: { value: (value | number: '1.0-1') } }}
+                        {{
+                          'life.hours'
+                            | transloco: {value: (value | number: '1.0-1')}
+                        }}
                       }
                       @case ('degrees') {
                         {{ value | number: '1.0-1' }}°
@@ -95,11 +111,14 @@ function localDate(date: Date): string {
                   @if (item.reading) {
                     {{ difference(item) }}
                   } @else {
-                    {{ item.differencePercent > 0 ? '+' : '' }}{{ item.differencePercent }}%
+                    {{ item.differencePercent > 0 ? '+' : ''
+                    }}{{ item.differencePercent }}%
                   }
                 </span>
               } @empty {
-                <span class="hint wide">{{ 'life.mood.same' | transloco }}</span>
+                <span class="hint wide">{{
+                  'life.mood.same' | transloco
+                }}</span>
               }
             </div>
           }
@@ -160,7 +179,8 @@ export class MoodInsightsComponent {
       const minutes = Math.round(value * 60);
       return `${sign}${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`;
     }
-    const suffix = item.unit === 'degrees' ? '°' : item.unit === 'percent' ? '%' : '';
+    const suffix =
+      item.unit === 'degrees' ? '°' : item.unit === 'percent' ? '%' : '';
     return `${sign}${Math.round(value * 10) / 10}${suffix}`;
   }
 

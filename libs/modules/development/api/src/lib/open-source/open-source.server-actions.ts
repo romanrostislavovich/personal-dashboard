@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ServerActions } from '@pd/api-core';
-import { trackedRepoInputSchema } from '@pd/contracts';
-import { ReposService } from './repos.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {ServerActions} from '@pd/api-core';
+import {trackedRepoInputSchema} from '@pd/contracts';
+import {ReposService} from './repos.service';
 
 /** Requests to GitHub, GitLab, Bitbucket and npm run on the server (see ServerActions). */
 export const OPEN_SOURCE_ACTIONS = {
@@ -19,10 +19,15 @@ export class OpenSourceServerActions implements OnModuleInit {
   onModuleInit(): void {
     this.actions.register(OPEN_SOURCE_ACTIONS.addRepo, (userId, args) => {
       const input = trackedRepoInputSchema.parse(args);
-      return this.repos.add(userId, input.provider, input.repo, input.npmPackage ?? null);
+      return this.repos.add(
+        userId,
+        input.provider,
+        input.repo,
+        input.npmPackage ?? null,
+      );
     });
     // The events are for the hourly job's notifications; a manual refresh returns nothing.
-    this.actions.register(OPEN_SOURCE_ACTIONS.syncAll, async (userId) => {
+    this.actions.register(OPEN_SOURCE_ACTIONS.syncAll, async userId => {
       await this.repos.syncAll(userId);
     });
   }

@@ -1,4 +1,4 @@
-import { projects, users } from '@pd/api-core/schema';
+import {projects, users} from '@pd/api-core/schema';
 import {
   ActivityCategory,
   ActivityFocusSessionInput,
@@ -45,22 +45,25 @@ export const activityDevices = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     name: text().notNull(),
     platform: text().$type<ActivityPlatform>().notNull(),
     /** SHA-256 of the token the device reports with; the token itself is shown once. */
     tokenHash: text().notNull().unique(),
-    lastSeenAt: timestamp({ withTimezone: true }),
+    lastSeenAt: timestamp({withTimezone: true}),
     /**
      * The day each warning about the computer was last sent (a disk running out of space or
      * failing, overheating, no restart for long): once a day is enough.
      */
-    alertedOn: jsonb().$type<Partial<Record<ComputerAlert, LocalDate>>>().notNull().default({}),
+    alertedOn: jsonb()
+      .$type<Partial<Record<ComputerAlert, LocalDate>>>()
+      .notNull()
+      .default({}),
     /** A focus session runs on it until then (the browser extension closes distracting sites). */
-    focusUntil: timestamp({ withTimezone: true }),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    focusUntil: timestamp({withTimezone: true}),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 /**
@@ -73,20 +76,20 @@ export const activitySpans = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     deviceId: uuid()
       .notNull()
-      .references(() => activityDevices.id, { onDelete: 'cascade' }),
+      .references(() => activityDevices.id, {onDelete: 'cascade'}),
     /** The name of the process, lower case: what a program is recognized by. */
     app: text().notNull(),
     /** The name people know it by; the process name when the system gave none. */
     appName: text().notNull(),
     title: text().notNull(),
-    startedAt: timestamp({ withTimezone: true }).notNull(),
-    endedAt: timestamp({ withTimezone: true }).notNull(),
+    startedAt: timestamp({withTimezone: true}).notNull(),
+    endedAt: timestamp({withTimezone: true}).notNull(),
     seconds: integer().notNull(),
   },
-  (table) => [
+  table => [
     // A batch sent twice (the answer was lost) does not double the time.
     unique().on(table.deviceId, table.startedAt),
     index().on(table.userId, table.startedAt),
@@ -99,13 +102,13 @@ export const activityApps = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     app: text().notNull(),
     /** `null` — the default one (see `defaultActivityCategory`). */
     category: text().$type<ActivityCategory>(),
     excluded: boolean().notNull().default(false),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.app] })],
+  table => [primaryKey({columns: [table.userId, table.app]})],
 );
 
 /** Time whose window title contains the pattern belongs to the project. */
@@ -115,13 +118,13 @@ export const activityProjectRules = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     projectId: uuid()
       .notNull()
-      .references(() => projects.id, { onDelete: 'cascade' }),
+      .references(() => projects.id, {onDelete: 'cascade'}),
     pattern: text().notNull(),
   },
-  (table) => [
+  table => [
     unique().on(table.userId, table.projectId, table.pattern),
     index().on(table.projectId),
   ],
@@ -130,7 +133,7 @@ export const activityProjectRules = pgTable(
 export const activitySettings = pgTable('activity_settings', {
   userId: uuid()
     .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   /** No input for this long means the user is away. */
   idleMinutes: integer().notNull().default(5),
   /** Remind to take a break after this long without one; `0` — never. */
@@ -144,7 +147,7 @@ export const activitySettings = pgTable('activity_settings', {
   /** The summary of the day: when (`HH:mm`, the user's own clock; `null` — never)... */
   summaryTime: text().default('21:00'),
   /** ...and the last day it was handled (sent, or there was nothing to sum up). */
-  summarySentOn: date({ mode: 'string' }),
+  summarySentOn: date({mode: 'string'}),
   /** Computers of other services (WakaTime) whose time is not added (see other-computers.ts). */
   skippedComputers: text().array().notNull().default([]),
   /** Minutes a task done today adds to the limit of games (the tasks come through the core). */
@@ -166,13 +169,13 @@ export const activitySiteVisits = pgTable(
     id: uuid().primaryKey(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     site: text().notNull(),
-    startedAt: timestamp({ withTimezone: true }).notNull(),
-    endedAt: timestamp({ withTimezone: true }).notNull(),
+    startedAt: timestamp({withTimezone: true}).notNull(),
+    endedAt: timestamp({withTimezone: true}).notNull(),
     seconds: integer().notNull(),
   },
-  (table) => [index().on(table.userId, table.startedAt)],
+  table => [index().on(table.userId, table.startedAt)],
 );
 
 /**
@@ -185,18 +188,18 @@ export const activityRuleSuggestions = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     projectId: uuid()
       .notNull()
-      .references(() => projects.id, { onDelete: 'cascade' }),
+      .references(() => projects.id, {onDelete: 'cascade'}),
     pattern: text().notNull(),
     kind: text().$type<'window' | 'site'>().notNull(),
     seconds: integer().notNull(),
     reason: text(),
     rejected: boolean().notNull().default(false),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [
+  table => [
     unique().on(table.userId, table.projectId, table.pattern),
     index().on(table.projectId),
   ],
@@ -209,15 +212,15 @@ export const activityLimits = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     kind: text().$type<ActivityLimitKind>().notNull(),
     /** The program of an `app` limit. */
     app: text(),
     minutes: integer().notNull(),
     /** The day the limit was last reported as reached: once a day. */
-    notifiedOn: date({ mode: 'string' }),
+    notifiedOn: date({mode: 'string'}),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 /** A focus session (Pomodoro) of a desktop app: its work part, and what distracted from it. */
@@ -228,20 +231,22 @@ export const activityFocusSessions = pgTable(
     id: uuid().primaryKey(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     deviceId: uuid()
       .notNull()
-      .references(() => activityDevices.id, { onDelete: 'cascade' }),
-    projectId: uuid().references(() => projects.id, { onDelete: 'set null' }),
+      .references(() => activityDevices.id, {onDelete: 'cascade'}),
+    projectId: uuid().references(() => projects.id, {onDelete: 'set null'}),
     note: text(),
-    startedAt: timestamp({ withTimezone: true }).notNull(),
-    endedAt: timestamp({ withTimezone: true }).notNull(),
+    startedAt: timestamp({withTimezone: true}).notNull(),
+    endedAt: timestamp({withTimezone: true}).notNull(),
     plannedMinutes: integer().notNull(),
     focusSeconds: integer().notNull(),
     completed: boolean().notNull(),
-    distractions: jsonb().$type<ActivityFocusSessionInput['distractions']>().notNull(),
+    distractions: jsonb()
+      .$type<ActivityFocusSessionInput['distractions']>()
+      .notNull(),
   },
-  (table) => [
+  table => [
     index().on(table.userId, table.startedAt),
     index().on(table.deviceId),
     index().on(table.projectId),
@@ -254,20 +259,23 @@ export const activityHealth = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     deviceId: uuid()
       .notNull()
-      .references(() => activityDevices.id, { onDelete: 'cascade' }),
-    at: timestamp({ withTimezone: true }).notNull(),
+      .references(() => activityDevices.id, {onDelete: 'cascade'}),
+    at: timestamp({withTimezone: true}).notNull(),
     cpu: real().notNull(),
-    memoryUsed: bigint({ mode: 'number' }).notNull(),
-    memoryTotal: bigint({ mode: 'number' }).notNull(),
+    memoryUsed: bigint({mode: 'number'}).notNull(),
+    memoryTotal: bigint({mode: 'number'}).notNull(),
     uptimeSeconds: integer().notNull(),
     disks: jsonb().$type<ActivityHealthInput['disks']>().notNull(),
     /** Temperature, battery, network, the system… — what the computer told beyond the basics. */
     system: jsonb().$type<ActivitySystem>(),
   },
-  (table) => [primaryKey({ columns: [table.deviceId, table.at] }), index().on(table.userId)],
+  table => [
+    primaryKey({columns: [table.deviceId, table.at]}),
+    index().on(table.userId),
+  ],
 );
 
 export type ActivityDeviceRow = typeof activityDevices.$inferSelect;
@@ -281,13 +289,16 @@ export const activityOutages = pgTable(
     id: uuid().primaryKey(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     deviceId: uuid()
       .notNull()
-      .references(() => activityDevices.id, { onDelete: 'cascade' }),
+      .references(() => activityDevices.id, {onDelete: 'cascade'}),
     kind: text().$type<'internet' | 'server'>().notNull(),
-    startedAt: timestamp({ withTimezone: true }).notNull(),
-    endedAt: timestamp({ withTimezone: true }).notNull(),
+    startedAt: timestamp({withTimezone: true}).notNull(),
+    endedAt: timestamp({withTimezone: true}).notNull(),
   },
-  (table) => [index().on(table.deviceId, table.startedAt), index().on(table.userId)],
+  table => [
+    index().on(table.deviceId, table.startedAt),
+    index().on(table.userId),
+  ],
 );

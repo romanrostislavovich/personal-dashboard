@@ -1,4 +1,4 @@
-import { WowDetails, WowGuild, WowPvp } from '@pd/contracts';
+import {WowDetails, WowGuild, WowPvp} from '@pd/contracts';
 import {
   bracketName,
   currentSeasonId,
@@ -36,7 +36,7 @@ export interface CharacterBasics {
   title: string | null;
   faction: string | null;
   renderUrl: string | null;
-  guild: { name: string; href: string | null } | null;
+  guild: {name: string; href: string | null} | null;
 }
 
 /**
@@ -71,12 +71,12 @@ export async function fetchDetails(
     reader.part<RawMythicProfile>('/mythic-keystone-profile'),
     reader.part<RawRaids>('/encounters/raids'),
     reader.part<RawPvpSummary>('/pvp-summary'),
-    reader.part<{ mounts?: unknown }>('/collections/mounts'),
-    reader.part<{ pets?: unknown }>('/collections/pets'),
-    reader.part<{ toys?: unknown }>('/collections/toys'),
-    reader.part<{ heirlooms?: unknown }>('/collections/heirlooms'),
-    reader.part<{ titles?: unknown }>('/titles'),
-    reader.part<{ quests?: unknown }>('/quests/completed'),
+    reader.part<{mounts?: unknown}>('/collections/mounts'),
+    reader.part<{pets?: unknown}>('/collections/pets'),
+    reader.part<{toys?: unknown}>('/collections/toys'),
+    reader.part<{heirlooms?: unknown}>('/collections/heirlooms'),
+    reader.part<{titles?: unknown}>('/titles'),
+    reader.part<{quests?: unknown}>('/quests/completed'),
     reader.part<RawReputations>('/reputations'),
     reader.part<RawProfessions>('/professions'),
     fetchGuild(reader, basics),
@@ -85,7 +85,9 @@ export async function fetchDetails(
   // The best runs of the season are a request of their own, by the season's id.
   const seasonId = currentSeasonId(mythicProfile);
   const season = seasonId
-    ? await reader.part<RawMythicSeason>(`/mythic-keystone-profile/season/${seasonId}`)
+    ? await reader.part<RawMythicSeason>(
+        `/mythic-keystone-profile/season/${seasonId}`,
+      )
     : null;
 
   return {
@@ -98,7 +100,14 @@ export async function fetchDetails(
     mythic: parseMythic(mythicProfile, season),
     raids: parseRaids(raids),
     pvp: await fetchPvp(reader, pvpSummary),
-    collections: parseCollections({ mounts, pets, toys, heirlooms, titles, quests }),
+    collections: parseCollections({
+      mounts,
+      pets,
+      toys,
+      heirlooms,
+      titles,
+      quests,
+    }),
     reputations: parseReputations(reputations),
     professions: parseProfessions(professions),
     guild,
@@ -108,7 +117,7 @@ export async function fetchDetails(
 interface RawPvpSummary {
   honor_level?: number;
   honorable_kills?: number;
-  brackets?: { href?: string }[];
+  brackets?: {href?: string}[];
 }
 
 /** The rated brackets the character played this season: an address each. */
@@ -119,14 +128,18 @@ async function fetchPvp(
   if (!summary) {
     return null;
   }
-  const hrefs = (summary.brackets ?? []).flatMap((bracket) => bracket.href ?? []);
+  const hrefs = (summary.brackets ?? []).flatMap(bracket => bracket.href ?? []);
   const brackets = await Promise.all(
-    hrefs.map(async (href) => parseBracket(bracketName(href), await reader.href<RawBracket>(href))),
+    hrefs.map(async href =>
+      parseBracket(bracketName(href), await reader.href<RawBracket>(href)),
+    ),
   );
   return {
     honorLevel: summary.honor_level ?? null,
     honorableKills: summary.honorable_kills ?? null,
-    brackets: brackets.filter((bracket) => bracket !== null).sort((a, b) => b.rating - a.rating),
+    brackets: brackets
+      .filter(bracket => bracket !== null)
+      .sort((a, b) => b.rating - a.rating),
   };
 }
 
@@ -137,7 +150,7 @@ interface RawGuild {
 }
 
 interface RawRoster {
-  members?: { character?: { name?: string }; rank?: number }[];
+  members?: {character?: {name?: string}; rank?: number}[];
 }
 
 /** The guild in a few numbers and the character's own rank in it — not the whole roster. */
@@ -156,7 +169,8 @@ async function fetchGuild(
       ])
     : [null, null];
   const own = roster?.members?.find(
-    (member) => member.character?.name?.toLowerCase() === basics.name.toLowerCase(),
+    member =>
+      member.character?.name?.toLowerCase() === basics.name.toLowerCase(),
   );
   return {
     name: guild?.name ?? basics.guild.name,

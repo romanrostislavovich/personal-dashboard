@@ -1,9 +1,9 @@
-import { findRealm, namespace } from './battlenet.client';
-import { parseRef, toWowExternalId } from './wow.service';
+import {findRealm, namespace} from './battlenet.client';
+import {parseRef, toWowExternalId} from './wow.service';
 
 const realms = [
-  { slug: 'gordunni', names: ['Gordunni', 'Гордунни'] },
-  { slug: 'howling-fjord', names: ['Howling Fjord', 'Ревущий фьорд'] },
+  {slug: 'gordunni', names: ['Gordunni', 'Гордунни']},
+  {slug: 'howling-fjord', names: ['Howling Fjord', 'Ревущий фьорд']},
 ];
 
 describe('findRealm', () => {
@@ -21,12 +21,16 @@ describe('findRealm', () => {
 
 describe('namespace', () => {
   it('names the part of the API of each version of the game', () => {
-    expect(namespace('profile', { region: 'eu', version: 'retail' })).toBe('profile-eu');
-    expect(namespace('profile', { region: 'eu', version: 'anniversary' })).toBe(
+    expect(namespace('profile', {region: 'eu', version: 'retail'})).toBe(
+      'profile-eu',
+    );
+    expect(namespace('profile', {region: 'eu', version: 'anniversary'})).toBe(
       'profile-classicann-eu',
     );
-    expect(namespace('dynamic', { region: 'us', version: 'era' })).toBe('dynamic-classic1x-us');
-    expect(namespace('dynamic', { region: 'eu', version: 'progression' })).toBe(
+    expect(namespace('dynamic', {region: 'us', version: 'era'})).toBe(
+      'dynamic-classic1x-us',
+    );
+    expect(namespace('dynamic', {region: 'eu', version: 'progression'})).toBe(
       'dynamic-classic-eu',
     );
   });
@@ -34,13 +38,23 @@ describe('namespace', () => {
 
 describe('the external id of a character', () => {
   it('stays as it was for the current game', () => {
-    const ref = { region: 'eu', version: 'retail', realm: 'gordunni', name: 'Вася' } as const;
+    const ref = {
+      region: 'eu',
+      version: 'retail',
+      realm: 'gordunni',
+      name: 'Вася',
+    } as const;
     expect(toWowExternalId(ref)).toBe('eu/gordunni/вася');
-    expect(parseRef('eu/gordunni/вася')).toEqual({ ...ref, name: 'вася' });
+    expect(parseRef('eu/gordunni/вася')).toEqual({...ref, name: 'вася'});
   });
 
   it('carries the version of a Classic character', () => {
-    const ref = { region: 'eu', version: 'anniversary', realm: 'x', name: 'катализатор' } as const;
+    const ref = {
+      region: 'eu',
+      version: 'anniversary',
+      realm: 'x',
+      name: 'катализатор',
+    } as const;
     expect(toWowExternalId(ref)).toBe('eu/x/катализатор/anniversary');
     expect(parseRef('eu/x/катализатор/anniversary')).toEqual(ref);
   });

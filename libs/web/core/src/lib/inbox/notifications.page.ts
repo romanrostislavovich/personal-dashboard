@@ -1,13 +1,18 @@
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { InboxItem } from '@pd/contracts';
-import { EmptyStateComponent } from '../ui/empty-state.component';
-import { InboxListComponent } from './inbox-list.component';
-import { InboxStore } from './inbox.store';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {InboxItem} from '@pd/contracts';
+import {EmptyStateComponent} from '../ui/empty-state.component';
+import {InboxListComponent} from './inbox-list.component';
+import {InboxStore} from './inbox.store';
 
 /** How many a page of the list holds; "more" reads the next one. */
 const PAGE = 50;
@@ -38,7 +43,9 @@ const PAGE = 50;
       (change)="filter.set($event.value)"
       [attr.aria-label]="'core.inbox.title' | transloco"
     >
-      <mat-button-toggle value="all">{{ 'core.inbox.filterAll' | transloco }}</mat-button-toggle>
+      <mat-button-toggle value="all">{{
+        'core.inbox.filterAll' | transloco
+      }}</mat-button-toggle>
       <mat-button-toggle value="questions">
         {{ 'core.inbox.questions' | transloco }}
         @if (store.summary().waiting) {
@@ -58,7 +65,10 @@ const PAGE = 50;
       <pd-empty-state
         icon="notifications_none"
         [title]="
-          (filter() === 'questions' ? 'core.inbox.noQuestions' : 'core.inbox.empty') | transloco
+          (filter() === 'questions'
+            ? 'core.inbox.noQuestions'
+            : 'core.inbox.empty'
+          ) | transloco
         "
       />
     }
@@ -88,9 +98,12 @@ export class NotificationsPage {
   protected readonly items = httpResource<InboxItem[]>(
     () => {
       this.store.version();
-      return CORE_READS.inbox({ filter: this.filter(), limit: Math.min(this.limit(), 500) });
+      return CORE_READS.inbox({
+        filter: this.filter(),
+        limit: Math.min(this.limit(), 500),
+      });
     },
-    { defaultValue: [] },
+    {defaultValue: []},
   );
 
   constructor() {

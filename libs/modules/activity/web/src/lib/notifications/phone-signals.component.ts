@@ -1,11 +1,16 @@
-import { DecimalPipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { ACTIVITY_READS } from '@pd/client-core';
-import { PhoneSignalsDay } from '@pd/contracts';
+import {DecimalPipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {ACTIVITY_READS} from '@pd/client-core';
+import {PhoneSignalsDay} from '@pd/contracts';
 
 type Field = Exclude<keyof PhoneSignalsDay, 'day'>;
 
@@ -17,25 +22,25 @@ interface Tile {
 }
 
 const TILES: Tile[] = [
-  { field: 'firstUse', icon: 'wb_twilight', as: 'clock' },
-  { field: 'lastUse', icon: 'bedtime', as: 'clock' },
-  { field: 'restHours', icon: 'hotel', as: 'hours' },
-  { field: 'steps', icon: 'directions_walk', as: 'number' },
-  { field: 'mediaHours', icon: 'music_note', as: 'hours' },
-  { field: 'headphonesHours', icon: 'headphones', as: 'hours' },
-  { field: 'carHours', icon: 'directions_car', as: 'hours' },
-  { field: 'dndHours', icon: 'do_not_disturb_on', as: 'hours' },
-  { field: 'calls', icon: 'call', as: 'number' },
-  { field: 'callMinutes', icon: 'timer', as: 'number' },
-  { field: 'people', icon: 'group', as: 'number' },
-  { field: 'photos', icon: 'photo_camera', as: 'number' },
-  { field: 'mobileMegabytes', icon: 'signal_cellular_alt', as: 'number' },
-  { field: 'noiseDb', icon: 'graphic_eq', as: 'number' },
-  { field: 'daylightHours', icon: 'wb_sunny', as: 'hours' },
-  { field: 'alarm', icon: 'alarm', as: 'clock' },
-  { field: 'notificationsOpened', icon: 'touch_app', as: 'number' },
-  { field: 'secondsToOpen', icon: 'hourglass_bottom', as: 'number' },
-  { field: 'batteryMaxC', icon: 'thermostat', as: 'number' },
+  {field: 'firstUse', icon: 'wb_twilight', as: 'clock'},
+  {field: 'lastUse', icon: 'bedtime', as: 'clock'},
+  {field: 'restHours', icon: 'hotel', as: 'hours'},
+  {field: 'steps', icon: 'directions_walk', as: 'number'},
+  {field: 'mediaHours', icon: 'music_note', as: 'hours'},
+  {field: 'headphonesHours', icon: 'headphones', as: 'hours'},
+  {field: 'carHours', icon: 'directions_car', as: 'hours'},
+  {field: 'dndHours', icon: 'do_not_disturb_on', as: 'hours'},
+  {field: 'calls', icon: 'call', as: 'number'},
+  {field: 'callMinutes', icon: 'timer', as: 'number'},
+  {field: 'people', icon: 'group', as: 'number'},
+  {field: 'photos', icon: 'photo_camera', as: 'number'},
+  {field: 'mobileMegabytes', icon: 'signal_cellular_alt', as: 'number'},
+  {field: 'noiseDb', icon: 'graphic_eq', as: 'number'},
+  {field: 'daylightHours', icon: 'wb_sunny', as: 'hours'},
+  {field: 'alarm', icon: 'alarm', as: 'clock'},
+  {field: 'notificationsOpened', icon: 'touch_app', as: 'number'},
+  {field: 'secondsToOpen', icon: 'hourglass_bottom', as: 'number'},
+  {field: 'batteryMaxC', icon: 'thermostat', as: 'number'},
 ];
 
 function hoursOf(clock: string): number {
@@ -62,21 +67,28 @@ function clockOf(hours: number): string {
     @if (tiles().length) {
       <mat-card appearance="outlined">
         <mat-card-header>
-          <mat-card-title>{{ 'activity.phone.signals.title' | transloco }}</mat-card-title>
-          <mat-card-subtitle>{{ 'activity.phone.signals.hint' | transloco }}</mat-card-subtitle>
+          <mat-card-title>{{
+            'activity.phone.signals.title' | transloco
+          }}</mat-card-title>
+          <mat-card-subtitle>{{
+            'activity.phone.signals.hint' | transloco
+          }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content class="tiles">
           @for (tile of tiles(); track tile.field) {
             <div class="tile">
               <mat-icon>{{ tile.icon }}</mat-icon>
-              <span class="label">{{ 'activity.phone.signals.' + tile.field | transloco }}</span>
+              <span class="label">{{
+                'activity.phone.signals.' + tile.field | transloco
+              }}</span>
               <span class="value">
                 @switch (tile.as) {
                   @case ('clock') {
                     {{ tile.text }}
                   }
                   @case ('hours') {
-                    {{ tile.value | number: '1.0-1' }} {{ 'activity.phone.signals.h' | transloco }}
+                    {{ tile.value | number: '1.0-1' }}
+                    {{ 'activity.phone.signals.h' | transloco }}
                   }
                   @default {
                     {{ tile.value | number: '1.0-0' }}
@@ -84,7 +96,7 @@ function clockOf(hours: number): string {
                 }
               </span>
               <span class="days">{{
-                'activity.phone.signals.days' | transloco: { count: tile.days }
+                'activity.phone.signals.days' | transloco: {count: tile.days}
               }}</span>
             </div>
           }
@@ -118,26 +130,30 @@ function clockOf(hours: number): string {
   `,
 })
 export class PhoneSignalsComponent {
-  readonly period = input.required<{ from: string; to: string }>();
+  readonly period = input.required<{from: string; to: string}>();
 
   private readonly days = httpResource<PhoneSignalsDay[]>(
     () => ACTIVITY_READS.phoneSignals(this.period()),
-    { defaultValue: [] },
+    {defaultValue: []},
   );
 
   /** Each number's average over the days it was told; a number never told is left out. */
   protected readonly tiles = computed(() =>
-    TILES.flatMap((tile) => {
+    TILES.flatMap(tile => {
       const told = this.days
         .value()
-        .map((day) => day[tile.field])
+        .map(day => day[tile.field])
         .filter((value): value is number | string => value !== null);
       if (!told.length) {
         return [];
       }
-      const numbers = told.map((value) => (typeof value === 'string' ? hoursOf(value) : value));
+      const numbers = told.map(value =>
+        typeof value === 'string' ? hoursOf(value) : value,
+      );
       const average = numbers.reduce((sum, n) => sum + n, 0) / numbers.length;
-      return [{ ...tile, value: average, text: clockOf(average), days: told.length }];
+      return [
+        {...tile, value: average, text: clockOf(average), days: told.length},
+      ];
     }),
   );
 }

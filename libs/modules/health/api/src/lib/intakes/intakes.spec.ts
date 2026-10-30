@@ -1,4 +1,4 @@
-import { dueTimes } from './intakes.service';
+import {dueTimes} from './intakes.service';
 
 describe('dueTimes', () => {
   it('gives the times that have come within the last half an hour', () => {

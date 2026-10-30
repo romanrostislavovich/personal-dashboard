@@ -6,13 +6,13 @@ import {
   OnApplicationShutdown,
   OnModuleInit,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { join } from 'node:path';
-import { Pool } from 'pg';
-import { AppConfig } from '../config/env';
-import { configureFieldEncryption } from '../crypto/encrypted-columns';
+import {ConfigService} from '@nestjs/config';
+import {drizzle, NodePgDatabase} from 'drizzle-orm/node-postgres';
+import {migrate} from 'drizzle-orm/node-postgres/migrator';
+import {join} from 'node:path';
+import {Pool} from 'pg';
+import {AppConfig} from '../config/env';
+import {configureFieldEncryption} from '../crypto/encrypted-columns';
 
 /** Injection token: `constructor(@Inject(DB) private readonly db: Database)`. */
 export const DB = Symbol('DB');
@@ -32,16 +32,16 @@ const PG_POOL = Symbol('PG_POOL');
       provide: PG_POOL,
       inject: [ConfigService],
       useFactory: (config: AppConfig) =>
-        new Pool({ connectionString: config.get('DATABASE_URL', { infer: true }) }),
+        new Pool({connectionString: config.get('DATABASE_URL', {infer: true})}),
     },
     {
       provide: DB,
       inject: [PG_POOL, ConfigService],
       useFactory: (pool: Pool, config: AppConfig) => {
         // Before any row is read: encrypted columns need the key (see encrypted-columns.ts).
-        configureFieldEncryption(config.get('ENCRYPTION_KEY', { infer: true }));
+        configureFieldEncryption(config.get('ENCRYPTION_KEY', {infer: true}));
         // snake_case: the `passwordHash` field in code = the `password_hash` column in the database.
-        return drizzle({ client: pool, casing: 'snake_case' });
+        return drizzle({client: pool, casing: 'snake_case'});
       },
     },
   ],
@@ -57,7 +57,7 @@ export class DatabaseModule implements OnModuleInit, OnApplicationShutdown {
 
   async onModuleInit(): Promise<void> {
     // The migrations folder is copied next to main.js during the build (see apps/api/webpack.config.js).
-    await migrate(this.db, { migrationsFolder: join(__dirname, 'migrations') });
+    await migrate(this.db, {migrationsFolder: join(__dirname, 'migrations')});
     this.logger.log('Database migrations applied');
   }
 

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 import {
   activityFocusSessionSchema,
   ActivityFocusSettings,
@@ -6,8 +6,8 @@ import {
   activityHealthSchema,
   activityOutageSchema,
 } from './activity-wellbeing';
-import { siteDomainSchema } from './activity-sites';
-import { LocalDate } from './local-date';
+import {siteDomainSchema} from './activity-sites';
+import {LocalDate} from './local-date';
 
 /** What a program is for: the groups the Activity section adds time up by. */
 export const ACTIVITY_CATEGORIES = [
@@ -25,7 +25,13 @@ export const ACTIVITY_CATEGORIES = [
 export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
 
 /** Where a tracker runs: the desktop shell today, a phone later. */
-export const ACTIVITY_PLATFORMS = ['windows', 'macos', 'linux', 'android', 'ios'] as const;
+export const ACTIVITY_PLATFORMS = [
+  'windows',
+  'macos',
+  'linux',
+  'android',
+  'ios',
+] as const;
 export type ActivityPlatform = (typeof ACTIVITY_PLATFORMS)[number];
 
 /** The category of a well-known program, by the name of its process (lower case). */
@@ -103,7 +109,15 @@ const KNOWN_APPS: Record<ActivityCategory, string[]> = {
     'acrord32',
     'soffice',
   ],
-  design: ['figma', 'photoshop', 'illustrator', 'blender', 'afterfx', 'premiere pro', 'gimp-2.10'],
+  design: [
+    'figma',
+    'photoshop',
+    'illustrator',
+    'blender',
+    'afterfx',
+    'premiere pro',
+    'gimp-2.10',
+  ],
   games: [
     'wow',
     'wowclassic',
@@ -163,7 +177,7 @@ const KNOWN_APPS: Record<ActivityCategory, string[]> = {
  * (The desktop app has the same rule in activity/meetings.ts: it keeps quiet during a call.)
  */
 export function isMeetingTitle(title: string): boolean {
-  return MEETING_TITLES.some((pattern) => pattern.test(title));
+  return MEETING_TITLES.some(pattern => pattern.test(title));
 }
 
 const MEETING_TITLES = [
@@ -175,14 +189,21 @@ const MEETING_TITLES = [
 ];
 
 const CATEGORY_OF = new Map(
-  ACTIVITY_CATEGORIES.flatMap((category) => KNOWN_APPS[category].map((app) => [app, category])),
+  ACTIVITY_CATEGORIES.flatMap(category =>
+    KNOWN_APPS[category].map(app => [app, category]),
+  ),
 );
 
 /** Categories where a full-screen window without input is still the user at it: a film. */
-export const ACTIVITY_WATCH_CATEGORIES: readonly ActivityCategory[] = ['media', 'browsing'];
+export const ACTIVITY_WATCH_CATEGORIES: readonly ActivityCategory[] = [
+  'media',
+  'browsing',
+];
 
 /** The well-known programs of a category (process names, lower case). */
-export function knownActivityApps(category: ActivityCategory): readonly string[] {
+export function knownActivityApps(
+  category: ActivityCategory,
+): readonly string[] {
   return KNOWN_APPS[category];
 }
 
@@ -200,11 +221,13 @@ export const activityDeviceInputSchema = z.object({
 });
 export type ActivityDeviceInput = z.infer<typeof activityDeviceInputSchema>;
 
-export const activityDeviceUpdateSchema = z.object({ name: z.string().trim().min(1).max(60) });
+export const activityDeviceUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+});
 export type ActivityDeviceUpdate = z.infer<typeof activityDeviceUpdateSchema>;
 
 /** The device whose records the merged one hands over before it is removed. */
-export const activityDeviceMergeSchema = z.object({ into: z.uuid() });
+export const activityDeviceMergeSchema = z.object({into: z.uuid()});
 export type ActivityDeviceMerge = z.infer<typeof activityDeviceMergeSchema>;
 
 export interface ActivityDevice {
@@ -223,7 +246,7 @@ export interface ActivityDeviceCreated extends ActivityDevice {
 
 // --- What a tracker sends ---
 
-const moment = z.iso.datetime({ offset: true });
+const moment = z.iso.datetime({offset: true});
 
 /** The longest window title kept; what a tracker sends beyond it is cut, not refused. */
 export const ACTIVITY_TITLE_MAX = 500;
@@ -232,7 +255,7 @@ export const ACTIVITY_TITLE_MAX = 500;
  * Text cut to a length instead of being refused: one long window title must not stop a
  * tracker's whole queue (it would send the same batch again and again).
  */
-const cut = (max: number) => z.string().transform((text) => text.slice(0, max));
+const cut = (max: number) => z.string().transform(text => text.slice(0, max));
 
 /** A stretch of time one window was in front. */
 export const activitySpanSchema = z
@@ -245,7 +268,7 @@ export const activitySpanSchema = z
     startedAt: moment,
     endedAt: moment,
   })
-  .refine((span) => span.endedAt > span.startedAt, 'A span ends after it starts');
+  .refine(span => span.endedAt > span.startedAt, 'A span ends after it starts');
 export type ActivitySpanInput = z.infer<typeof activitySpanSchema>;
 
 export const activityIngestSchema = z.object({
@@ -322,7 +345,9 @@ export type ActivitySettings = z.infer<typeof activitySettingsSchema>;
 
 /** `PUT /api/activity/settings`: only the fields sent change. */
 export const activitySettingsUpdateSchema = activitySettingsSchema.partial();
-export type ActivitySettingsUpdate = z.infer<typeof activitySettingsUpdateSchema>;
+export type ActivitySettingsUpdate = z.infer<
+  typeof activitySettingsUpdateSchema
+>;
 
 /** Categories whose programs count as a distraction during a focus session. */
 export const ACTIVITY_DISTRACTING_CATEGORIES: readonly ActivityCategory[] = [
@@ -344,7 +369,9 @@ export const activityProjectRuleInputSchema = z.object({
   projectId: z.uuid(),
   pattern: z.string().trim().min(2).max(100),
 });
-export type ActivityProjectRuleInput = z.infer<typeof activityProjectRuleInputSchema>;
+export type ActivityProjectRuleInput = z.infer<
+  typeof activityProjectRuleInputSchema
+>;
 
 export interface ActivityProjectRule {
   id: string;
@@ -391,10 +418,10 @@ export interface ActivityAppUsage {
 export interface ActivityStats {
   totalSeconds: number;
   /** Every day of the period, days without activity included. */
-  days: { day: LocalDate; seconds: number }[];
+  days: {day: LocalDate; seconds: number}[];
   /** The most used first. */
   apps: ActivityAppUsage[];
-  categories: { category: ActivityCategory; seconds: number }[];
+  categories: {category: ActivityCategory; seconds: number}[];
   /**
    * Time of each project: its windows and sites (its name or a rule), its IDE time and what
    * lay in work on it. The statistics of one device count only window titles.
@@ -404,17 +431,17 @@ export interface ActivityStats {
     name: string;
     seconds: number;
     /** The days it had time on. */
-    days: { day: LocalDate; seconds: number }[];
+    days: {day: LocalDate; seconds: number}[];
   }[];
-  devices: { id: string; name: string; seconds: number }[];
+  devices: {id: string; name: string; seconds: number}[];
   /** The window titles that took the most time. */
-  titles: { app: string; name: string; title: string; seconds: number }[];
+  titles: {app: string; name: string; title: string; seconds: number}[];
   /**
    * Computers without the desktop app whose time another service knows (WakaTime: a work laptop,
    * only the time in an IDE). Their time is already in `totalSeconds`, `days` and the
    * development category — as the least that was worked there, not all of it.
    */
-  otherComputers: { computer: string; source: string; seconds: number }[];
+  otherComputers: {computer: string; source: string; seconds: number}[];
 }
 
 /** A computer another service knows, as the settings list it. */
@@ -470,19 +497,32 @@ export type PhoneNotificationInput = z.infer<typeof phoneNotificationSchema>;
 export const phoneNotificationIngestSchema = z.object({
   notifications: z.array(phoneNotificationSchema).max(500),
 });
-export type PhoneNotificationIngest = z.infer<typeof phoneNotificationIngestSchema>;
+export type PhoneNotificationIngest = z.infer<
+  typeof phoneNotificationIngestSchema
+>;
 
-export const phoneNotificationsQuerySchema = z.object({ from: LOCAL_DATE, to: LOCAL_DATE });
-export type PhoneNotificationsQuery = z.infer<typeof phoneNotificationsQuerySchema>;
+export const phoneNotificationsQuerySchema = z.object({
+  from: LOCAL_DATE,
+  to: LOCAL_DATE,
+});
+export type PhoneNotificationsQuery = z.infer<
+  typeof phoneNotificationsQuerySchema
+>;
 
 /** Activity → Phone: what interrupts, how often and when (the user's own hours). */
 export interface PhoneNotificationsSummary {
   total: number;
   /** Most first. */
-  byApp: { app: string; appName: string; count: number }[];
+  byApp: {app: string; appName: string; count: number}[];
   /** 24 numbers: how many came in each hour of the day. */
   byHour: number[];
-  byDay: { day: LocalDate; count: number }[];
+  byDay: {day: LocalDate; count: number}[];
   /** The latest ones with their text, newest first. */
-  latest: { app: string; appName: string; title: string; text: string; postedAt: string }[];
+  latest: {
+    app: string;
+    appName: string;
+    title: string;
+    text: string;
+    postedAt: string;
+  }[];
 }

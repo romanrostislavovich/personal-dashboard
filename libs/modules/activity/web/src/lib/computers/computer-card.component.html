@@ -7,8 +7,10 @@
     <mat-card-title>{{ c.name }}</mat-card-title>
     <mat-card-subtitle>
       @if (latest(); as l) {
-        {{ 'activity.computers.measuredAt' | transloco }} {{ l.at | date: 'd MMM, HH:mm' }} ·
-        {{ 'activity.computers.uptime' | transloco }} {{ l.uptimeSeconds | pdDuration }}
+        {{ 'activity.computers.measuredAt' | transloco }}
+        {{ l.at | date: 'd MMM, HH:mm' }} ·
+        {{ 'activity.computers.uptime' | transloco }}
+        {{ l.uptimeSeconds | pdDuration }}
         @if (s?.os; as os) {
           <br />{{ os.name }} ({{ os.build }})
         }
@@ -28,15 +30,23 @@
             <span class="sub">
               {{
                 'activity.computers.speed'
-                  | transloco: { percent: (s?.cpuPerformance | number: '1.0-0') }
+                  | transloco: {percent: (s?.cpuPerformance | number: '1.0-0')}
               }}
             </span>
           }
-          <pd-sparkline [points]="charts().cpu" [min]="0" [max]="100" unit="%" dateFormat="HH:mm" />
+          <pd-sparkline
+            [points]="charts().cpu"
+            [min]="0"
+            [max]="100"
+            unit="%"
+            dateFormat="HH:mm"
+          />
         </div>
 
         <div class="meter">
-          <span class="label">{{ 'activity.computers.memory' | transloco }}</span>
+          <span class="label">{{
+            'activity.computers.memory' | transloco
+          }}</span>
           <span class="value">
             {{
               'activity.computers.memoryUsed'
@@ -58,7 +68,9 @@
 
         @if (s?.gpuLoad !== undefined) {
           <div class="meter">
-            <span class="label">{{ 'activity.computers.gpu' | transloco }}</span>
+            <span class="label">{{
+              'activity.computers.gpu' | transloco
+            }}</span>
             <span class="value">{{ s?.gpuLoad | number: '1.0-0' }}%</span>
             <span class="sub">{{ s?.gpuName }}</span>
             <pd-sparkline
@@ -73,33 +85,50 @@
 
         @if (heat(); as h) {
           <div class="meter">
-            <span class="label">{{ 'activity.computers.temperature' | transloco }}</span>
+            <span class="label">{{
+              'activity.computers.temperature' | transloco
+            }}</span>
             <span class="value" [class.warn]="h.throttling"
               >{{ h.celsius | number: '1.0-0' }} °C</span
             >
             <span class="sub" [class.warn]="h.throttling">
               {{
-                (h.throttling ? 'activity.computers.throttling' : 'activity.computers.boardSensor')
-                  | transloco
+                (h.throttling
+                  ? 'activity.computers.throttling'
+                  : 'activity.computers.boardSensor'
+                ) | transloco
               }}
             </span>
-            <pd-sparkline [points]="charts().celsius" unit=" °C" dateFormat="HH:mm" />
+            <pd-sparkline
+              [points]="charts().celsius"
+              unit=" °C"
+              dateFormat="HH:mm"
+            />
           </div>
         }
 
         @if (s?.battery; as b) {
           <div class="meter">
-            <span class="label">{{ 'activity.computers.battery' | transloco }}</span>
+            <span class="label">{{
+              'activity.computers.battery' | transloco
+            }}</span>
             <span class="value">
               {{ b.charge }}%
               <mat-icon inline>{{ b.onAc ? 'power' : 'battery_std' }}</mat-icon>
             </span>
             <span class="sub">
               {{
-                (b.onAc ? 'activity.computers.onAc' : 'activity.computers.onBattery') | transloco
+                (b.onAc
+                  ? 'activity.computers.onAc'
+                  : 'activity.computers.onBattery'
+                ) | transloco
               }}
               @if (batteryHealth(); as health) {
-                · {{ 'activity.computers.batteryHealth' | transloco: { percent: health } }}
+                ·
+                {{
+                  'activity.computers.batteryHealth'
+                    | transloco: {percent: health}
+                }}
               }
             </span>
             <pd-sparkline
@@ -120,7 +149,10 @@
             <li [class.low]="disk.free / disk.total < lowShare">
               <span class="mount">{{ disk.mount }}</span>
               <span class="track">
-                <span class="fill" [style.width.%]="(1 - disk.free / disk.total) * 100"></span>
+                <span
+                  class="fill"
+                  [style.width.%]="(1 - disk.free / disk.total) * 100"
+                ></span>
               </span>
               <span class="free">
                 {{
@@ -137,8 +169,12 @@
                   matIconButton
                   class="analyze"
                   [disabled]="advisor.busy()"
-                  [matTooltip]="'activity.disk.analyze' | transloco: { mount: disk.mount }"
-                  [attr.aria-label]="'activity.disk.analyze' | transloco: { mount: disk.mount }"
+                  [matTooltip]="
+                    'activity.disk.analyze' | transloco: {mount: disk.mount}
+                  "
+                  [attr.aria-label]="
+                    'activity.disk.analyze' | transloco: {mount: disk.mount}
+                  "
                   (click)="advisor.scan(disk.mount)"
                 >
                   <mat-icon>troubleshoot</mat-icon>
@@ -147,7 +183,11 @@
             </li>
           }
         </ul>
-        <pd-activity-disk-advisor #advisor="diskAdvisor" [disks]="l.disks" [active]="isThis()" />
+        <pd-activity-disk-advisor
+          #advisor="diskAdvisor"
+          [disks]="l.disks"
+          [active]="isThis()"
+        />
         @if (s?.physicalDisks?.length) {
           <ul class="facts">
             @for (disk of s?.physicalDisks; track disk.name) {
@@ -169,7 +209,7 @@
           <p class="sub">
             {{
               'activity.computers.outagesWeek'
-                | transloco: { count: c.outages.length, minutes: outageMinutes() }
+                | transloco: {count: c.outages.length, minutes: outageMinutes()}
             }}
           </p>
           <ul class="facts">
@@ -178,7 +218,9 @@
                 <mat-icon inline>{{
                   outage.kind === 'internet' ? 'wifi_off' : 'cloud_off'
                 }}</mat-icon>
-                {{ outage.startedAt | date: 'd MMM, HH:mm' }}–{{ outage.endedAt | date: 'HH:mm' }}
+                {{ outage.startedAt | date: 'd MMM, HH:mm' }}–{{
+                  outage.endedAt | date: 'HH:mm'
+                }}
                 <span class="sub">
                   {{ 'activity.computers.outage.' + outage.kind | transloco }}
                 </span>
@@ -197,7 +239,8 @@
               <span class="sub">
                 {{
                   'activity.computers.signal'
-                    | transloco: { signal: n.signal, rate: (n.rateMbps | number: '1.0-0') }
+                    | transloco
+                      : {signal: n.signal, rate: (n.rateMbps | number: '1.0-0')}
                 }}
               </span>
             </span>
@@ -214,7 +257,10 @@
                 ) | transloco
               }}
               <span class="sub">
-                {{ 'activity.computers.signatures' | transloco: { days: d.signatureAgeDays } }}
+                {{
+                  'activity.computers.signatures'
+                    | transloco: {days: d.signatureAgeDays}
+                }}
               </span>
             </span>
           }
@@ -229,7 +275,9 @@
               @for (process of s?.topCpu; track process.name) {
                 <li>
                   {{ process.name }}
-                  <span class="sub">{{ process.percent | number: '1.0-1' }}%</span>
+                  <span class="sub"
+                    >{{ process.percent | number: '1.0-1' }}%</span
+                  >
                 </li>
               }
             </ol>

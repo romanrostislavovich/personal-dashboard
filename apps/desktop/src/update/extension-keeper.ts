@@ -1,4 +1,4 @@
-import { app, net } from 'electron';
+import {app, net} from 'electron';
 import {
   existsSync,
   mkdirSync,
@@ -9,9 +9,9 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-import { sha512 } from './bundle-store';
-import { secureOrigin } from './updater';
+import {dirname, join, relative} from 'node:path';
+import {sha512} from './bundle-store';
+import {secureOrigin} from './updater';
 
 /*
  * The browser extension's folder, kept equal to what the server hands out
@@ -48,7 +48,7 @@ export class ExtensionKeeper {
   constructor(private readonly serverUrl: () => string | null) {}
 
   status(): ExtensionStatus {
-    return { folder: this.folder, version: this.local()?.version ?? null };
+    return {folder: this.folder, version: this.local()?.version ?? null};
   }
 
   start(): void {
@@ -73,7 +73,9 @@ export class ExtensionKeeper {
   }
 
   private async update(base: string): Promise<void> {
-    const answer = await net.fetch(`${base}/${MANIFEST_FILE}`, { cache: 'no-store' });
+    const answer = await net.fetch(`${base}/${MANIFEST_FILE}`, {
+      cache: 'no-store',
+    });
     if (!answer.ok) {
       return; // A server without the extension (run from the sources).
     }
@@ -100,20 +102,23 @@ export class ExtensionKeeper {
    * manifest last but one and `bundle.json` last: the extension reloads when its manifest
    * changes, and by then the code it loads is all there.
    */
-  private replace(manifest: ExtensionManifest, files: Map<string, Buffer>): void {
-    mkdirSync(this.folder, { recursive: true });
+  private replace(
+    manifest: ExtensionManifest,
+    files: Map<string, Buffer>,
+  ): void {
+    mkdirSync(this.folder, {recursive: true});
     const order = [...files.keys()].sort(
       (a, b) => Number(a === 'manifest.json') - Number(b === 'manifest.json'),
     );
     for (const name of order) {
       const target = join(this.folder, name);
-      mkdirSync(dirname(target), { recursive: true });
+      mkdirSync(dirname(target), {recursive: true});
       writeFileSync(`${target}.tmp`, files.get(name) as Buffer);
       renameSync(`${target}.tmp`, target);
     }
     for (const name of listFiles(this.folder)) {
       if (name !== MANIFEST_FILE && !files.has(name)) {
-        rmSync(join(this.folder, name), { force: true });
+        rmSync(join(this.folder, name), {force: true});
       }
     }
     const bundle = join(this.folder, MANIFEST_FILE);
@@ -124,12 +129,15 @@ export class ExtensionKeeper {
   /** The manifest of the folder if every file is what it says; `null` otherwise. */
   private local(): ExtensionManifest | null {
     try {
-      const manifest: unknown = JSON.parse(readFileSync(join(this.folder, MANIFEST_FILE), 'utf8'));
+      const manifest: unknown = JSON.parse(
+        readFileSync(join(this.folder, MANIFEST_FILE), 'utf8'),
+      );
       if (!isManifest(manifest)) {
         return null;
       }
       const intact = Object.entries(manifest.files).every(
-        ([name, hash]) => sha512(readFileSync(join(this.folder, name))) === hash,
+        ([name, hash]) =>
+          sha512(readFileSync(join(this.folder, name))) === hash,
       );
       return intact ? manifest : null;
     } catch {
@@ -138,7 +146,7 @@ export class ExtensionKeeper {
   }
 
   private async download(url: string): Promise<Buffer> {
-    const response = await net.fetch(url, { cache: 'no-store' });
+    const response = await net.fetch(url, {cache: 'no-store'});
     if (!response.ok) {
       throw new Error(`${url}: ${response.status}`);
     }
@@ -159,7 +167,10 @@ function isManifest(value: unknown): value is ExtensionManifest {
     typeof manifest.files === 'object' &&
     typeof manifest.files['manifest.json'] === 'string' &&
     Object.entries(manifest.files).every(
-      ([name, hash]) => SAFE_NAME.test(name) && name !== MANIFEST_FILE && typeof hash === 'string',
+      ([name, hash]) =>
+        SAFE_NAME.test(name) &&
+        name !== MANIFEST_FILE &&
+        typeof hash === 'string',
     )
   );
 }
@@ -170,9 +181,11 @@ function listFiles(dir: string): string[] {
     return [];
   }
   const walk = (at: string): string[] =>
-    readdirSync(at).flatMap((name) => {
+    readdirSync(at).flatMap(name => {
       const path = join(at, name);
-      return statSync(path).isDirectory() ? walk(path) : [relative(dir, path).replace(/\\/g, '/')];
+      return statSync(path).isDirectory()
+        ? walk(path)
+        : [relative(dir, path).replace(/\\/g, '/')];
     });
   return walk(dir);
 }

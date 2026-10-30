@@ -3,7 +3,7 @@
   <mat-icon>devices</mat-icon>
   <span>
     {{ 'activity.setup.devicesMoved' | transloco }}
-    <a routerLink="/settings" [queryParams]="{ tab: 'devices' }">{{
+    <a routerLink="/settings" [queryParams]="{tab: 'devices'}">{{
       'activity.setup.devicesLink' | transloco
     }}</a>
   </span>
@@ -19,10 +19,13 @@
     @if (settings.value(); as current) {
       <mat-form-field subscriptSizing="dynamic" class="narrow">
         <mat-label>{{ 'activity.idle.label' | transloco }}</mat-label>
-        <mat-select [value]="current.idleMinutes" (valueChange)="setIdle($event)">
+        <mat-select
+          [value]="current.idleMinutes"
+          (valueChange)="setIdle($event)"
+        >
           @for (minutes of idleOptions; track minutes) {
             <mat-option [value]="minutes">
-              {{ 'activity.idle.minutes' | transloco: { count: minutes } }}
+              {{ 'activity.idle.minutes' | transloco: {count: minutes} }}
             </mat-option>
           }
         </mat-select>
@@ -48,7 +51,10 @@
       <form class="rule-form" (submit)="$event.preventDefault(); addRule()">
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'activity.rules.project' | transloco }}</mat-label>
-          <mat-select [value]="ruleProject()" (valueChange)="ruleProject.set($event)">
+          <mat-select
+            [value]="ruleProject()"
+            (valueChange)="ruleProject.set($event)"
+          >
             @for (project of pickable(); track project.id) {
               <mat-option [value]="project.id">{{ project.name }}</mat-option>
             }

@@ -1,5 +1,10 @@
-import { users } from '@pd/api-core/schema';
-import type { BandPointKind, BandSessionKind, ReactionFeeling, SleepStage } from '@pd/contracts';
+import {users} from '@pd/api-core/schema';
+import type {
+  BandPointKind,
+  BandSessionKind,
+  ReactionFeeling,
+  SleepStage,
+} from '@pd/contracts';
 import {
   date,
   doublePrecision,
@@ -21,8 +26,8 @@ import {
 const userId = () =>
   uuid()
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' });
-const moment = () => timestamp({ withTimezone: true }).notNull();
+    .references(() => users.id, {onDelete: 'cascade'});
+const moment = () => timestamp({withTimezone: true}).notNull();
 
 /** The pulse and the steps of a minute; a minute the band did not tell is not there. */
 export const healthBandMinutes = pgTable(
@@ -36,7 +41,7 @@ export const healthBandMinutes = pgTable(
     bpmMax: integer(),
     steps: integer(),
   },
-  (table) => [unique().on(table.userId, table.at)],
+  table => [unique().on(table.userId, table.at)],
 );
 
 /** An hour's activity (Health Connect's own sums, other apps' duplicates removed). */
@@ -51,7 +56,7 @@ export const healthBandHours = pgTable(
     distanceM: doublePrecision(),
     floors: doublePrecision(),
   },
-  (table) => [unique().on(table.userId, table.at)],
+  table => [unique().on(table.userId, table.at)],
 );
 
 /** A reading at a moment: HRV (RMSSD, ms), skin temperature (°C against the band's baseline)… */
@@ -64,7 +69,7 @@ export const healthBandPoints = pgTable(
     at: moment(),
     value: doublePrecision().notNull(),
   },
-  (table) => [unique().on(table.userId, table.kind, table.at)],
+  table => [unique().on(table.userId, table.kind, table.at)],
 );
 
 /** A sleep with its stages, an exercise, a mindfulness session. */
@@ -80,13 +85,13 @@ export const healthBandSessions = pgTable(
     type: integer(),
     title: text(),
     stages: jsonb()
-      .$type<{ startAt: string; endAt: string; stage: SleepStage }[]>()
+      .$type<{startAt: string; endAt: string; stage: SleepStage}[]>()
       .notNull()
       .default([]),
     /** `phone` — Health Connect (replaced by the next window); `dashboard` — made here. */
     source: text().$type<'phone' | 'dashboard'>().notNull().default('phone'),
   },
-  (table) => [unique().on(table.userId, table.kind, table.startAt)],
+  table => [unique().on(table.userId, table.kind, table.startAt)],
 );
 
 /** The stress index of an hour, counted from its minutes at rest. */
@@ -99,7 +104,7 @@ export const healthBandStressHours = pgTable(
     score: integer().notNull(),
     restMinutes: integer().notNull(),
   },
-  (table) => [unique().on(table.userId, table.at)],
+  table => [unique().on(table.userId, table.at)],
 );
 
 /** A reaction of the body: the pulse well above the owner's own at rest, without moving. */
@@ -115,9 +120,9 @@ export const healthBandReactions = pgTable(
     score: integer().notNull(),
     /** What the owner said it was (the notification's buttons). */
     feeling: text().$type<ReactionFeeling>(),
-    notifiedAt: timestamp({ withTimezone: true }),
+    notifiedAt: timestamp({withTimezone: true}),
   },
-  (table) => [unique().on(table.userId, table.startAt)],
+  table => [unique().on(table.userId, table.startAt)],
 );
 
 /**
@@ -130,7 +135,7 @@ export const healthBandDays = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     userId: userId(),
-    day: date({ mode: 'string' }).notNull(),
+    day: date({mode: 'string'}).notNull(),
     steps: integer(),
     calories: integer(),
     distanceKm: doublePrecision(),
@@ -153,10 +158,10 @@ export const healthBandDays = pgTable(
     reactions: integer(),
     mindfulnessMinutes: integer(),
     skinTempDelta: doublePrecision(),
-    updatedAt: timestamp({ withTimezone: true })
+    updatedAt: timestamp({withTimezone: true})
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
   },
-  (table) => [unique().on(table.userId, table.day)],
+  table => [unique().on(table.userId, table.day)],
 );

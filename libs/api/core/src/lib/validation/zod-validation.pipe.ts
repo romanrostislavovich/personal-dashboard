@@ -1,5 +1,5 @@
-import { BadRequestException, PipeTransform } from '@nestjs/common';
-import { z } from 'zod';
+import {BadRequestException, PipeTransform} from '@nestjs/common';
+import {z} from 'zod';
 
 /**
  * Validates input with a schema from `@pd/contracts` —
@@ -7,7 +7,10 @@ import { z } from 'zod';
  *
  * Example: `create(@Body(new ZodValidationPipe(birthdayInputSchema)) input: BirthdayInput)`
  */
-export class ZodValidationPipe<T extends z.ZodType> implements PipeTransform<unknown, z.output<T>> {
+export class ZodValidationPipe<T extends z.ZodType> implements PipeTransform<
+  unknown,
+  z.output<T>
+> {
   constructor(private readonly schema: T) {}
 
   transform(value: unknown): z.output<T> {

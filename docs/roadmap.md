@@ -245,16 +245,7 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
 
 #### Bugs
 
-- **Voice assistant: too many false alarms** — in a real room «Люцифер» woke up on ordinary
-  speech (2026-10-26, 20:07: a bit of a conversation was sent as a question); the owner switched
-  it off. The test of the wake word used synthesized phrases, which a room does not sound like:
-  record real samples (the owner's voice, TV, a conversation) for the test set, then try a
-  confirmation step (the name heard twice, or with a minimum confidence), a stricter gain, or
-  only while the screen is on or the phone charges
-- **Voice assistant: dry answers and the voice** — the answers of «Люцифер» sound flat: make them
-  livelier (the spoken prompt: a person's tone, a short reaction, not a report), and let the voice
-  be chosen — Android's TextToSpeech voices of the language (male/female, speed, pitch) in Settings
-  → Devices → Voice assistant, or a server voice (OpenAI TTS) sent back as audio
+None written down now (the voice assistant's two went to [On hold](#on-hold)).
 
 #### Quick wins
 
@@ -783,6 +774,24 @@ assistant as a tutor that knows the materials of the courses.
 - **Security agent: more** — a phone once there is a mobile app; scans of the Docker image;
   suspicious changes in the database; macOS and Linux computers; the hosting's own firewall
   (the scan of the server sees only the one on the host)
+
+### On hold
+
+Set aside until there is time for them (the owner's decision, 2026-10-30); nothing here is worked
+on now.
+
+- **The phone's voice assistant «Люцифер»** — built and deployed 2026-10-26
+  (docs/proposals/mobile-app.md, stage 4) and switched off. Before it comes back:
+  - **Voice assistant: too many false alarms** — in a real room «Люцифер» woke up on ordinary
+    speech (2026-10-26, 20:07: a bit of a conversation was sent as a question); the owner switched
+    it off. The test of the wake word used synthesized phrases, which a room does not sound like:
+    record real samples (the owner's voice, TV, a conversation) for the test set, then try a
+    confirmation step (the name heard twice, or with a minimum confidence), a stricter gain, or
+    only while the screen is on or the phone charges
+  - **Voice assistant: dry answers and the voice** — the answers of «Люцифер» sound flat: make them
+    livelier (the spoken prompt: a person's tone, a short reaction, not a report), and let the voice
+    be chosen — Android's TextToSpeech voices of the language (male/female, speed, pitch) in Settings
+    → Devices → Voice assistant, or a server voice (OpenAI TTS) sent back as audio
 
 ### Ideas
 

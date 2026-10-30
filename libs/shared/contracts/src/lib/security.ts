@@ -1,7 +1,13 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /** How much a finding matters, the worst first. */
-export const SECURITY_SEVERITIES = ['critical', 'high', 'medium', 'low', 'info'] as const;
+export const SECURITY_SEVERITIES = [
+  'critical',
+  'high',
+  'medium',
+  'low',
+  'info',
+] as const;
 export type SecuritySeverity = (typeof SECURITY_SEVERITIES)[number];
 
 /**
@@ -9,7 +15,13 @@ export type SecuritySeverity = (typeof SECURITY_SEVERITIES)[number];
  * dependencies), the server it runs on, the computers with the desktop app, the accounts and
  * repositories of the connected code hostings (GitHub, GitLab, Bitbucket).
  */
-export const SECURITY_AREAS = ['app', 'host', 'desktop', 'phone', 'repo'] as const;
+export const SECURITY_AREAS = [
+  'app',
+  'host',
+  'desktop',
+  'phone',
+  'repo',
+] as const;
 export type SecurityArea = (typeof SECURITY_AREAS)[number];
 
 /** `ignored` — the user knows and accepts it: it is not reported again. */
@@ -40,7 +52,7 @@ export interface SecurityFinding {
    */
   coveredBy: string | null;
   /** The rules' findings an AI finding is shown instead of. */
-  covers: { id: string; title: string; severity: SecuritySeverity }[];
+  covers: {id: string; title: string; severity: SecuritySeverity}[];
   firstSeenAt: string;
   lastSeenAt: string;
   resolvedAt: string | null;
@@ -80,8 +92,10 @@ export interface SecurityStatus {
   /** The agent has a model to ask (its own connection or the assistant's). */
   aiAvailable: boolean;
   /** The AI connections to choose the agent's own from. */
-  connections: { id: string; name: string }[];
+  connections: {id: string; name: string}[];
 }
 
-export const findingStatusSchema = z.object({ status: z.enum(['open', 'ignored']) });
+export const findingStatusSchema = z.object({
+  status: z.enum(['open', 'ignored']),
+});
 export type FindingStatusChange = z.infer<typeof findingStatusSchema>;

@@ -1,4 +1,4 @@
-import { effect, inject, Injectable, signal } from '@angular/core';
+import {effect, inject, Injectable, signal} from '@angular/core';
 
 /**
  * Whether a home widget has anything to show yet: one given to every widget of the home page.
@@ -15,7 +15,7 @@ export class WidgetSetup {
  * condition is followed as it changes; outside the home page (no WidgetSetup) it does nothing.
  */
 export function needsSetup(condition: () => boolean): void {
-  const setup = inject(WidgetSetup, { optional: true });
+  const setup = inject(WidgetSetup, {optional: true});
   if (setup) {
     effect(() => setup.needed.set(condition()));
   }

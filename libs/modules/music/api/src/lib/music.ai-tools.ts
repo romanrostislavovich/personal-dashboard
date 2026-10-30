@@ -1,10 +1,23 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, NO_PARAMETERS, PERIOD_PARAMETERS, ServerActions } from '@pd/api-core';
-import { moodInsightsQuerySchema, MUSIC_TOP_PERIODS, MusicTopPeriod } from '@pd/contracts';
-import { LastfmService } from './lastfm.service';
-import { HISTORY_GROUPS, historyTopSchema, MusicHistoryQueryService } from './music-history.query';
-import { MusicLinks } from './music.links';
-import { MUSIC_ACTIONS } from './music.server-actions';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  AiService,
+  NO_PARAMETERS,
+  PERIOD_PARAMETERS,
+  ServerActions,
+} from '@pd/api-core';
+import {
+  moodInsightsQuerySchema,
+  MUSIC_TOP_PERIODS,
+  MusicTopPeriod,
+} from '@pd/contracts';
+import {LastfmService} from './lastfm.service';
+import {
+  HISTORY_GROUPS,
+  historyTopSchema,
+  MusicHistoryQueryService,
+} from './music-history.query';
+import {MusicLinks} from './music.links';
+import {MUSIC_ACTIONS} from './music.server-actions';
 
 /**
  * AI access to music: Last.fm statistics and tops, questions to the stored play history;
@@ -38,9 +51,10 @@ export class MusicAiTools implements OnModuleInit {
     this.ai.registerTool({
       name: 'music_stats',
       module: 'music',
-      description: 'Plays: today, per day over 30 days, total scrobbles, the last 10 tracks.',
+      description:
+        'Plays: today, per day over 30 days, total scrobbles, the last 10 tracks.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.lastfm.stats(userId),
+      handler: userId => this.lastfm.stats(userId),
     });
 
     this.ai.registerTool({
@@ -52,11 +66,13 @@ export class MusicAiTools implements OnModuleInit {
         'use music_history_top.',
       parameters: {
         type: 'object',
-        properties: { period: { type: 'string', enum: [...MUSIC_TOP_PERIODS] } },
+        properties: {period: {type: 'string', enum: [...MUSIC_TOP_PERIODS]}},
         required: ['period'],
       },
       handler: (userId, args) => {
-        const period = MUSIC_TOP_PERIODS.includes(args['period'] as MusicTopPeriod)
+        const period = MUSIC_TOP_PERIODS.includes(
+          args['period'] as MusicTopPeriod,
+        )
           ? (args['period'] as MusicTopPeriod)
           : '7day';
         return this.lastfm.tops(userId, period);
@@ -78,25 +94,31 @@ export class MusicAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          by: { type: 'string', enum: [...HISTORY_GROUPS], description: 'Default: track' },
-          artist: { type: 'string' },
-          track: { type: 'string' },
-          album: { type: 'string' },
-          from: { type: 'string', description: 'YYYY-MM-DD' },
-          to: { type: 'string', description: 'YYYY-MM-DD' },
-          limit: { type: 'number', description: '1–50, default 10' },
+          by: {
+            type: 'string',
+            enum: [...HISTORY_GROUPS],
+            description: 'Default: track',
+          },
+          artist: {type: 'string'},
+          track: {type: 'string'},
+          album: {type: 'string'},
+          from: {type: 'string', description: 'YYYY-MM-DD'},
+          to: {type: 'string', description: 'YYYY-MM-DD'},
+          limit: {type: 'number', description: '1–50, default 10'},
         },
       },
-      handler: (userId, args) => this.history.top(userId, historyTopSchema.parse(args)),
+      handler: (userId, args) =>
+        this.history.top(userId, historyTopSchema.parse(args)),
     });
 
     this.ai.registerTool({
       name: 'music_sync',
       module: 'music',
       writes: true,
-      description: 'Loads the latest plays from Last.fm now instead of waiting for the sync.',
+      description:
+        'Loads the latest plays from Last.fm now instead of waiting for the sync.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) => {
+      handler: async userId => {
         await this.actions.run(userId, MUSIC_ACTIONS.syncLastfm);
         return this.lastfm.stats(userId);
       },

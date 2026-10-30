@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /*
  * The password vault. Everything is encrypted on the device (the browser, the extension) with a
@@ -42,7 +42,9 @@ export interface VaultKeysState extends VaultKeys {
 }
 
 /** An item as the server keeps it: its id, its ciphertext and when it changed. */
-export const vaultItemInputSchema = z.object({ data: base64(VAULT_ITEM_MAX_LENGTH) });
+export const vaultItemInputSchema = z.object({
+  data: base64(VAULT_ITEM_MAX_LENGTH),
+});
 export type VaultItemInput = z.infer<typeof vaultItemInputSchema>;
 
 export interface VaultItemRecord {
@@ -68,7 +70,7 @@ export interface VaultItem {
   /** Marked by the user: shown first. */
   favorite: boolean;
   /** Where it came from when imported (`1password`), for a second import. */
-  source?: { app: string; id: string };
+  source?: {app: string; id: string};
 }
 
 /** An item opened on the device: its record and what it holds. */

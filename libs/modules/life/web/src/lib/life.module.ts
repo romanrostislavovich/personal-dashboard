@@ -1,4 +1,4 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /**
  * Web part of the Life section: a day across every module, the summaries of a month or a year
@@ -7,31 +7,38 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const lifeModule: WebDashboardModule = {
   id: 'life',
-  nav: { labelKey: 'life.title', icon: 'auto_stories' },
+  nav: {labelKey: 'life.title', icon: 'auto_stories'},
   loadRoutes: async () => [
     {
       path: '',
-      loadComponent: () => import('./life.page').then((m) => m.LifePage),
+      loadComponent: () => import('./life.page').then(m => m.LifePage),
       children: [
-        { path: '', pathMatch: 'full', redirectTo: 'day' },
-        { path: 'day', loadComponent: () => import('./day.page').then((m) => m.DayPage) },
+        {path: '', pathMatch: 'full', redirectTo: 'day'},
+        {
+          path: 'day',
+          loadComponent: () => import('./day.page').then(m => m.DayPage),
+        },
         {
           path: 'chronicle',
           loadComponent: () =>
-            import('./lifelog-narrative.component').then((m) => m.LifelogNarrativeComponent),
+            import('./lifelog-narrative.component').then(
+              m => m.LifelogNarrativeComponent,
+            ),
         },
         {
           path: 'summary',
-          loadComponent: () => import('./summary.page').then((m) => m.SummaryPage),
+          loadComponent: () =>
+            import('./summary.page').then(m => m.SummaryPage),
         },
         {
           path: 'links',
-          loadComponent: () => import('./links/links.page').then((m) => m.LinksPage),
+          loadComponent: () =>
+            import('./links/links.page').then(m => m.LinksPage),
         },
         // The goals of a year are gone: an old link opens the summary.
-        { path: 'goals', redirectTo: 'summary' },
+        {path: 'goals', redirectTo: 'summary'},
         // "Ask" was a question to the AI about one's own life: the assistant answers it now.
-        { path: 'ask', redirectTo: '/ai' },
+        {path: 'ask', redirectTo: '/ai'},
       ],
     },
   ],
@@ -46,7 +53,17 @@ export const lifeModule: WebDashboardModule = {
       icon: 'auto_stories',
       url: '/life/chronicle',
     },
-    { id: 'life.summary', labelKey: 'life.tabs.summary', icon: 'redeem', url: '/life/summary' },
-    { id: 'life.links', labelKey: 'life.tabs.links', icon: 'hub', url: '/life/links' },
+    {
+      id: 'life.summary',
+      labelKey: 'life.tabs.summary',
+      icon: 'redeem',
+      url: '/life/summary',
+    },
+    {
+      id: 'life.links',
+      labelKey: 'life.tabs.links',
+      icon: 'hub',
+      url: '/life/links',
+    },
   ],
 };

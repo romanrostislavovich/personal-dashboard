@@ -1,6 +1,6 @@
-import { HttpErrorResponse } from '@angular/common/http';
-import { ApiError } from '@pd/client-core';
-import { defer, Observable } from 'rxjs';
+import {HttpErrorResponse} from '@angular/common/http';
+import {ApiError} from '@pd/client-core';
+import {defer, Observable} from 'rxjs';
 
 /**
  * A request of the client core as an Observable, sent on subscribe like an `HttpClient` one —

@@ -1,4 +1,9 @@
-import { DeviceKind, DeviceMessage, DeviceToolSpec, ServerToDevice } from '@pd/contracts';
+import {
+  DeviceKind,
+  DeviceMessage,
+  DeviceToolSpec,
+  ServerToDevice,
+} from '@pd/contracts';
 
 /** A tool of this device: what the server is told, and what runs when it is called. */
 export interface DeviceTool extends DeviceToolSpec {
@@ -63,12 +68,12 @@ export class DeviceLink {
 
   /** The tools changed (switched on or off in the settings). */
   toolsChanged(): void {
-    this.send({ type: 'tools', tools: this.specs() });
+    this.send({type: 'tools', tools: this.specs()});
   }
 
   /** The user is at this device now. */
   active(): void {
-    this.send({ type: 'active' });
+    this.send({type: 'active'});
   }
 
   private connect(): void {
@@ -83,7 +88,7 @@ export class DeviceLink {
     }
     this.socket = socket;
     socket.onopen = () => void this.hello();
-    socket.onmessage = (event) => void this.onMessage(String(event.data));
+    socket.onmessage = event => void this.onMessage(String(event.data));
     socket.onclose = () => {
       if (this.ping) {
         clearInterval(this.ping);
@@ -124,7 +129,7 @@ export class DeviceLink {
       case 'welcome':
         this.wait = RETRY_FIRST_MS;
         this.reauthorized = false;
-        this.ping ??= setInterval(() => this.send({ type: 'ping' }), PING_MS);
+        this.ping ??= setInterval(() => this.send({type: 'ping'}), PING_MS);
         break;
       case 'unauthorized':
         // An access token lives 15 minutes: one more try with a fresh one, then a break.
@@ -141,14 +146,22 @@ export class DeviceLink {
     }
   }
 
-  private async run(id: string, name: string, args: Record<string, unknown>): Promise<void> {
-    const tool = this.options.tools().find((one) => one.name === name);
+  private async run(
+    id: string,
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<void> {
+    const tool = this.options.tools().find(one => one.name === name);
     if (!tool) {
-      this.send({ type: 'error', id, message: `${name} is switched off on this device` });
+      this.send({
+        type: 'error',
+        id,
+        message: `${name} is switched off on this device`,
+      });
       return;
     }
     try {
-      this.send({ type: 'result', id, value: (await tool.run(args)) ?? null });
+      this.send({type: 'result', id, value: (await tool.run(args)) ?? null});
     } catch (error) {
       this.send({
         type: 'error',
@@ -159,12 +172,14 @@ export class DeviceLink {
   }
 
   private specs(): DeviceToolSpec[] {
-    return this.options.tools().map(({ name, description, inputSchema, writes }) => ({
-      name,
-      description,
-      inputSchema,
-      writes,
-    }));
+    return this.options
+      .tools()
+      .map(({name, description, inputSchema, writes}) => ({
+        name,
+        description,
+        inputSchema,
+        writes,
+      }));
   }
 
   private send(message: DeviceMessage): void {

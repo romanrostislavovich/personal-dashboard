@@ -1,15 +1,28 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HEALTH_SPECIALITIES, HealthClinic, HealthDoctor } from '@pd/contracts';
-import { HealthApi } from '../health.api';
-import { orNull, SpecialityPipe } from '../health-labels';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {HEALTH_SPECIALITIES, HealthClinic, HealthDoctor} from '@pd/contracts';
+import {HealthApi} from '../health.api';
+import {orNull, SpecialityPipe} from '../health-labels';
 
 export interface DoctorDialogData {
   clinics: HealthClinic[];
@@ -36,7 +49,9 @@ export interface DoctorDialogData {
   ],
   template: `
     <h2 mat-dialog-title>
-      {{ (data.doctor ? 'health.doctor.edit' : 'health.doctor.add') | transloco }}
+      {{
+        (data.doctor ? 'health.doctor.edit' : 'health.doctor.add') | transloco
+      }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
@@ -52,7 +67,10 @@ export interface DoctorDialogData {
             formControlName="speciality"
             [matAutocomplete]="specialities"
           />
-          <mat-autocomplete #specialities="matAutocomplete" [displayWith]="specialityName">
+          <mat-autocomplete
+            #specialities="matAutocomplete"
+            [displayWith]="specialityName"
+          >
             @for (key of keys; track key) {
               <mat-option [value]="key">{{ key | pdSpeciality }}</mat-option>
             }
@@ -69,17 +87,28 @@ export interface DoctorDialogData {
         </mat-form-field>
         <mat-form-field>
           <mat-label>{{ 'health.contacts' | transloco }}</mat-label>
-          <textarea matInput rows="2" maxlength="1000" formControlName="contacts"></textarea>
+          <textarea
+            matInput
+            rows="2"
+            maxlength="1000"
+            formControlName="contacts"
+          ></textarea>
         </mat-form-field>
         @if (error()) {
-          <p class="error" role="alert">{{ 'health.errors.save' | transloco }}</p>
+          <p class="error" role="alert">
+            {{ 'health.errors.save' | transloco }}
+          </p>
         }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}
         </button>
-        <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+        <button
+          matButton="filled"
+          type="submit"
+          [disabled]="form.invalid || busy()"
+        >
           {{ 'core.actions.save' | transloco }}
         </button>
       </mat-dialog-actions>
@@ -106,7 +135,8 @@ export class DoctorDialog {
   protected readonly keys = HEALTH_SPECIALITIES;
   protected readonly busy = signal(false);
   protected readonly error = signal(false);
-  protected readonly specialityName = (value: string | null) => this.speciality.transform(value);
+  protected readonly specialityName = (value: string | null) =>
+    this.speciality.transform(value);
 
   private readonly doctor = this.data.doctor;
   protected readonly form = inject(NonNullableFormBuilder).group({

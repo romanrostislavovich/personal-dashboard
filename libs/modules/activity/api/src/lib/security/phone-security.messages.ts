@@ -1,4 +1,4 @@
-import { pickMessages } from '@pd/api-core';
+import {pickMessages} from '@pd/api-core';
 
 const list = (apps: string[]) => apps.join(', ');
 
@@ -7,7 +7,8 @@ const messages = {
   en: {
     silent: (name: string, days: number) => ({
       title: `${name}: no security report for ${days} days`,
-      details: 'The Android app has not told anything about the phone: its state is unknown.',
+      details:
+        'The Android app has not told anything about the phone: its state is unknown.',
       fix: 'Open the dashboard app on the phone; if it is gone, remove the phone in Settings → Devices.',
     }),
     oldPatch: (name: string, patch: string, release: string) => ({
@@ -23,12 +24,14 @@ const messages = {
     }),
     notEncrypted: (name: string) => ({
       title: `${name}: the storage is not encrypted`,
-      details: 'The data can be read from the memory without unlocking the phone.',
+      details:
+        'The data can be read from the memory without unlocking the phone.',
       fix: 'Set a screen lock (it turns encryption on); on older phones: Settings → Security → Encrypt phone.',
     }),
     rooted: (name: string) => ({
       title: `${name}: the phone is rooted`,
-      details: "An app with root rights can read and change everything, the other apps' data too.",
+      details:
+        "An app with root rights can read and change everything, the other apps' data too.",
       fix: 'If you did not root it yourself, back up and reset the phone. If you did, ignore this finding.',
     }),
     deviceAdmins: (name: string, apps: string[]) => ({
@@ -57,7 +60,8 @@ const messages = {
   ru: {
     silent: (name: string, days: number) => ({
       title: `${name}: нет отчёта о безопасности ${days} дн.`,
-      details: 'Приложение на Android ничего не сообщало о телефоне: его состояние неизвестно.',
+      details:
+        'Приложение на Android ничего не сообщало о телефоне: его состояние неизвестно.',
       fix: 'Откройте приложение дашборда на телефоне; если телефона больше нет — удалите его в «Настройки → Устройства».',
     }),
     oldPatch: (name: string, patch: string, release: string) => ({

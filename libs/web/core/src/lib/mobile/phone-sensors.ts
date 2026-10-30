@@ -1,5 +1,5 @@
-import { registerPlugin } from '@capacitor/core';
-import { isMobileApp } from './mobile-app';
+import {registerPlugin} from '@capacitor/core';
+import {isMobileApp} from './mobile-app';
 
 /** What Android has allowed the app, and whether the collection is on. */
 export interface PhoneSensorsStatus {
@@ -41,11 +41,12 @@ export interface VoiceStatus {
 }
 
 /** The optional signals of the phone, each a permission of its own. */
-export type PhoneExtra = 'steps' | 'calls' | 'photos' | 'microphone' | 'bluetooth' | 'health';
+export type PhoneExtra =
+  'steps' | 'calls' | 'photos' | 'microphone' | 'bluetooth' | 'health';
 
 interface PhoneSensorsPlugin {
   status(): Promise<PhoneSensorsStatus>;
-  configure(options: { server: string; token: string }): Promise<void>;
+  configure(options: {server: string; token: string}): Promise<void>;
   disable(): Promise<void>;
   syncNow(): Promise<void>;
   openUsageAccess(): Promise<void>;
@@ -54,11 +55,14 @@ interface PhoneSensorsPlugin {
   /** Android's question about the location, or the app's settings once it was asked. */
   openLocation(): Promise<void>;
   /** Android's question about one optional signal, or the app's settings once it was asked. */
-  allow(options: { kind: PhoneExtra }): Promise<void>;
+  allow(options: {kind: PhoneExtra}): Promise<void>;
   openAutostart(): Promise<void>;
   /** Missing in an APK built before the voice assistant. */
   voiceStatus?(): Promise<VoiceStatus>;
-  voiceConfigure?(options: { enabled: boolean; name: string }): Promise<VoiceStatus>;
+  voiceConfigure?(options: {
+    enabled: boolean;
+    name: string;
+  }): Promise<VoiceStatus>;
   voiceTry?(): Promise<void>;
 }
 
@@ -74,7 +78,8 @@ let registered: PhoneSensorsPlugin | undefined;
  * `then` too, so an async function returning it bare waits for good on a `then` nobody answers.
  */
 export type PhoneSensorsCheck =
-  { plugin: PhoneSensorsPlugin; error: null } | { plugin: null; error: string | null };
+  | {plugin: PhoneSensorsPlugin; error: null}
+  | {plugin: null; error: string | null};
 
 /**
  * The phone as a sensor (PhoneSensorsPlugin in apps/mobile): its own collection in the
@@ -84,7 +89,7 @@ export type PhoneSensorsCheck =
  */
 export async function checkPhoneSensors(): Promise<PhoneSensorsCheck> {
   if (!isMobileApp()) {
-    return { plugin: null, error: null };
+    return {plugin: null, error: null};
   }
   registered ??= registerPlugin<PhoneSensorsPlugin>('PhoneSensors');
   const plugin = registered;
@@ -92,11 +97,17 @@ export async function checkPhoneSensors(): Promise<PhoneSensorsCheck> {
     await Promise.race([
       plugin.status(),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`No answer in ${ANSWER_MS / 1000} s`)), ANSWER_MS),
+        setTimeout(
+          () => reject(new Error(`No answer in ${ANSWER_MS / 1000} s`)),
+          ANSWER_MS,
+        ),
       ),
     ]);
-    return { plugin, error: null };
+    return {plugin, error: null};
   } catch (error) {
-    return { plugin: null, error: error instanceof Error ? error.message : String(error) };
+    return {
+      plugin: null,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }

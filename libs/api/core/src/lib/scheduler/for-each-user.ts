@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import {Logger} from '@nestjs/common';
 
 /**
  * Runs `work` for every user in turn. An error of one user is logged and the others go on —
@@ -9,7 +9,7 @@ import { Logger } from '@nestjs/common';
  *
  * `users` — user ids, or rows with an `id`.
  */
-export async function forEachUser<T extends string | { id: string }>(
+export async function forEachUser<T extends string | {id: string}>(
   job: string,
   users: readonly T[],
   work: (user: T) => Promise<unknown>,

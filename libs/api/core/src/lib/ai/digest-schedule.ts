@@ -1,4 +1,4 @@
-import { LocalDate } from '@pd/contracts';
+import {LocalDate} from '@pd/contracts';
 
 export interface DigestSchedule {
   /** When the user wants the digest, `HH:mm`. */
@@ -12,6 +12,10 @@ export interface DigestSchedule {
  * yet. The job checks every few minutes, so a server that was off at the chosen time still sends
  * the digest when it is back — once.
  */
-export function isDigestDue(schedule: DigestSchedule, today: LocalDate, now: string): boolean {
+export function isDigestDue(
+  schedule: DigestSchedule,
+  today: LocalDate,
+  now: string,
+): boolean {
   return schedule.lastDay !== today && now >= schedule.time;
 }

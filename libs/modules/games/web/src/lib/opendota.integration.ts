@@ -1,14 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { IntegrationGuideComponent, errorStatus } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { GamesApi } from './games.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {IntegrationGuideComponent, errorStatus} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {GamesApi} from './games.api';
 
 /**
  * OpenDota API keys (optional, for Dota 2), in Settings → Integrations (see `integrations` in
@@ -31,7 +37,9 @@ import { GamesApi } from './games.api';
       <mat-card-header>
         <mat-icon mat-card-avatar>sports_esports</mat-icon>
         <mat-card-title>OpenDota</mat-card-title>
-        <mat-card-subtitle>{{ 'games.opendota.title' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'games.opendota.title' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <p class="hint">{{ 'games.opendota.hint' | transloco }}</p>
@@ -40,9 +48,14 @@ import { GamesApi } from './games.api';
             <span class="name">{{ account.displayName }}</span>
             @if (account.hasKey) {
               <span class="ok">
-                <mat-icon inline>check_circle</mat-icon> {{ 'games.opendota.saved' | transloco }}
+                <mat-icon inline>check_circle</mat-icon>
+                {{ 'games.opendota.saved' | transloco }}
               </span>
-              <button matButton [disabled]="busy()" (click)="remove(account.id)">
+              <button
+                matButton
+                [disabled]="busy()"
+                (click)="remove(account.id)"
+              >
                 {{ 'games.opendota.remove' | transloco }}
               </button>
             } @else {
@@ -111,8 +124,8 @@ export class OpenDotaIntegration {
     const withKey = new Set(this.settings.value()?.openDotaKeyAccounts ?? []);
     return this.accounts
       .value()
-      .filter((account) => account.game === 'dota2')
-      .map(({ id, displayName }) => ({ id, displayName, hasKey: withKey.has(id) }));
+      .filter(account => account.game === 'dota2')
+      .map(({id, displayName}) => ({id, displayName, hasKey: withKey.has(id)}));
   });
 
   /** The key is checked and the account is re-read with it — a few seconds. */
@@ -125,8 +138,11 @@ export class OpenDotaIntegration {
       await firstValueFrom(this.api.saveOpenDotaKey(accountId, apiKey.trim()));
       this.settings.reload();
     } catch (error) {
-      const key = errorStatus(error) === 400 ? 'games.opendota.invalid' : 'games.errors.generic';
-      this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });
+      const key =
+        errorStatus(error) === 400
+          ? 'games.opendota.invalid'
+          : 'games.errors.generic';
+      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 6000});
     } finally {
       this.busy.set(false);
     }

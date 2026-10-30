@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import {createHmac, randomBytes, timingSafeEqual} from 'node:crypto';
 
 /**
  * Time-based one-time passwords (RFC 6238) — what Google Authenticator, 1Password, Aegis and the
@@ -16,9 +16,18 @@ export function newTotpSecret(): string {
 }
 
 /** `otpauth://` — the link and the QR code an authenticator app reads. */
-export function totpUrl(secret: string, account: string, issuer: string): string {
+export function totpUrl(
+  secret: string,
+  account: string,
+  issuer: string,
+): string {
   const label = encodeURIComponent(`${issuer}:${account}`);
-  const params = new URLSearchParams({ secret, issuer, algorithm: 'SHA1', digits: String(DIGITS) });
+  const params = new URLSearchParams({
+    secret,
+    issuer,
+    algorithm: 'SHA1',
+    digits: String(DIGITS),
+  });
   return `otpauth://totp/${label}?${params}`;
 }
 
@@ -27,7 +36,11 @@ export function totpCode(secret: string, timeMs: number): string {
 }
 
 /** Whether `code` is the current one (± one step). */
-export function verifyTotp(secret: string, code: string, timeMs = Date.now()): boolean {
+export function verifyTotp(
+  secret: string,
+  code: string,
+  timeMs = Date.now(),
+): boolean {
   const digits = code.replace(/\s/g, '');
   if (!/^\d{6}$/.test(digits)) {
     return false;

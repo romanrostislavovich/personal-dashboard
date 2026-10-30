@@ -1,4 +1,4 @@
-import { defineConfig } from 'drizzle-kit';
+import {defineConfig} from 'drizzle-kit';
 
 /**
  * Table schemas live next to the module code (`*.schema.ts`).

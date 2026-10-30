@@ -1,8 +1,13 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { FinanceApi } from '../finance.api';
+import {CurrencyPipe, DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {FinanceApi} from '../finance.api';
 
 /**
  * What is on the bank accounts now, as the bank said at its latest import: a tile per imported
@@ -11,7 +16,7 @@ import { FinanceApi } from '../finance.api';
 @Component({
   selector: 'pd-bank-balances',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.none]': '!accounts().length' },
+  host: {'[class.none]': '!accounts().length'},
   imports: [CurrencyPipe, DatePipe, MatIconModule, TranslocoPipe],
   template: `
     @for (account of accounts(); track account.id) {
@@ -28,7 +33,8 @@ import { FinanceApi } from '../finance.api';
           @if (account.at) {
             ·
             {{
-              'finance.bank.balanceAt' | transloco: { date: (account.at | date: 'd MMM, HH:mm') }
+              'finance.bank.balanceAt'
+                | transloco: {date: (account.at | date: 'd MMM, HH:mm')}
             }}
           }
         </span>
@@ -76,12 +82,15 @@ export class BankBalancesComponent {
   private readonly state = inject(FinanceApi).bank();
 
   protected readonly accounts = computed(() =>
-    (this.state.value()?.connections ?? []).flatMap((connection) =>
+    (this.state.value()?.connections ?? []).flatMap(connection =>
       connection.accounts
-        .filter((account) => account.enabled && account.balance)
-        .map((account) => ({
+        .filter(account => account.enabled && account.balance)
+        .map(account => ({
           id: account.id,
-          label: [connection.bank, account.ibanEnd ? `••${account.ibanEnd}` : null]
+          label: [
+            connection.bank,
+            account.ibanEnd ? `••${account.ibanEnd}` : null,
+          ]
             .filter(Boolean)
             .join(' '),
           amount: account.balance?.amount ?? 0,

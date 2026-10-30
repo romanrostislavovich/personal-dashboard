@@ -1,5 +1,5 @@
-import { pickMessages } from '@pd/api-core';
-import { RepoSyncEvents } from './repo-sync.service';
+import {pickMessages} from '@pd/api-core';
+import {RepoSyncEvents} from './repo-sync.service';
 
 interface Labels {
   stars: (n: number) => string;
@@ -12,12 +12,17 @@ interface Labels {
 /** One message for all events of all repositories per sync. */
 function body(events: RepoSyncEvents[], t: Labels): string {
   return events
-    .map((repo) => {
+    .map(repo => {
       const lines = [
         repo.starMilestone && `⭐ ${t.stars(repo.starMilestone)}`,
-        repo.newRelease && `🚀 ${t.release} ${repo.newRelease.tag}: ${repo.newRelease.htmlUrl}`,
-        ...repo.newIssues.map((i) => `📥 ${t.issue} ${t.by} ${i.author}: ${i.title}\n${i.htmlUrl}`),
-        ...repo.newPulls.map((p) => `🔀 ${t.pull} ${t.by} ${p.author}: ${p.title}\n${p.htmlUrl}`),
+        repo.newRelease &&
+          `🚀 ${t.release} ${repo.newRelease.tag}: ${repo.newRelease.htmlUrl}`,
+        ...repo.newIssues.map(
+          i => `📥 ${t.issue} ${t.by} ${i.author}: ${i.title}\n${i.htmlUrl}`,
+        ),
+        ...repo.newPulls.map(
+          p => `🔀 ${t.pull} ${t.by} ${p.author}: ${p.title}\n${p.htmlUrl}`,
+        ),
       ].filter(Boolean);
       return `${repo.fullName}\n${lines.join('\n')}`;
     })
@@ -30,7 +35,7 @@ const messages = {
     title: '📦 Open Source',
     body: (events: RepoSyncEvents[]) =>
       body(events, {
-        stars: (n) => `${n} stars!`,
+        stars: n => `${n} stars!`,
         release: 'Release',
         issue: 'Issue',
         pull: 'PR',
@@ -41,7 +46,7 @@ const messages = {
     title: '📦 Open Source',
     body: (events: RepoSyncEvents[]) =>
       body(events, {
-        stars: (n) => `${n} звёзд!`,
+        stars: n => `${n} звёзд!`,
         release: 'Релиз',
         issue: 'Issue',
         pull: 'PR',

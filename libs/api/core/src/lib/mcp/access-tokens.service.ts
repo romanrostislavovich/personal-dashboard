@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {Inject, Injectable, NotFoundException} from '@nestjs/common';
 import {
   ACCESS_TOKEN_PREFIX,
   AccessToken,
@@ -6,10 +6,10 @@ import {
   AccessTokenInput,
   AccessTokenScope,
 } from '@pd/contracts';
-import { and, desc, eq } from 'drizzle-orm';
-import { createHash, randomBytes } from 'node:crypto';
-import { DB, Database } from '../database/database.module';
-import { AccessTokenRow, accessTokens } from './access-tokens.schema';
+import {and, desc, eq} from 'drizzle-orm';
+import {createHash, randomBytes} from 'node:crypto';
+import {DB, Database} from '../database/database.module';
+import {AccessTokenRow, accessTokens} from './access-tokens.schema';
 
 /** The time of the last use is written at most this often (a client calls many times a minute). */
 const TOUCH_EVERY_MS = 60_000;
@@ -21,7 +21,8 @@ export interface TokenOwner {
   tokenId: string;
 }
 
-const hashOf = (token: string) => createHash('sha256').update(token).digest('hex');
+const hashOf = (token: string) =>
+  createHash('sha256').update(token).digest('hex');
 
 /** Access tokens of the outside AI clients (see `accessTokens`). */
 @Injectable()
@@ -40,7 +41,10 @@ export class AccessTokensService {
   }
 
   /** A new token: the answer carries it once, the server keeps only its hash. */
-  async create(userId: string, input: AccessTokenInput): Promise<AccessTokenCreated> {
+  async create(
+    userId: string,
+    input: AccessTokenInput,
+  ): Promise<AccessTokenCreated> {
     const token = `${ACCESS_TOKEN_PREFIX}${randomBytes(32).toString('base64url')}`;
     const [row] = await this.db
       .insert(accessTokens)
@@ -52,21 +56,23 @@ export class AccessTokensService {
         hint: token.slice(0, ACCESS_TOKEN_PREFIX.length + 4),
       })
       .returning();
-    return { ...toAccessToken(row), token };
+    return {...toAccessToken(row), token};
   }
 
   async revoke(userId: string, id: string): Promise<void> {
     const removed = await this.db
       .delete(accessTokens)
       .where(and(eq(accessTokens.id, id), eq(accessTokens.userId, userId)))
-      .returning({ id: accessTokens.id });
+      .returning({id: accessTokens.id});
     if (!removed.length) {
       throw new NotFoundException('Access token not found');
     }
   }
 
   /** The owner of `Authorization: Bearer pd_…`; `null` — not a token of ours, or revoked. */
-  async authenticate(authorization: string | undefined): Promise<TokenOwner | null> {
+  async authenticate(
+    authorization: string | undefined,
+  ): Promise<TokenOwner | null> {
     const [type, token] = (authorization ?? '').split(' ');
     if (type !== 'Bearer' || !token?.startsWith(ACCESS_TOKEN_PREFIX)) {
       return null;
@@ -79,7 +85,7 @@ export class AccessTokensService {
       return null;
     }
     await this.touch(row.id);
-    return { userId: row.userId, scope: row.scope, tokenId: row.id };
+    return {userId: row.userId, scope: row.scope, tokenId: row.id};
   }
 
   private async touch(id: string): Promise<void> {
@@ -90,7 +96,7 @@ export class AccessTokensService {
     this.touched.set(id, now);
     await this.db
       .update(accessTokens)
-      .set({ lastUsedAt: new Date(now) })
+      .set({lastUsedAt: new Date(now)})
       .where(eq(accessTokens.id, id));
   }
 }

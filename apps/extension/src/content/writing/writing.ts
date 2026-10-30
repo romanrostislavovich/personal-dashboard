@@ -1,6 +1,10 @@
-import type { WritingCheckResult, WritingIssue, WritingRewriteMode } from '@pd/contracts';
-import { ask, WritingState } from '../../shared/messages';
-import { rectsOf, visibleBox } from './field-rects';
+import type {
+  WritingCheckResult,
+  WritingIssue,
+  WritingRewriteMode,
+} from '@pd/contracts';
+import {ask, WritingState} from '../../shared/messages';
+import {rectsOf, visibleBox} from './field-rects';
 import {
   caretOffset,
   checkableField,
@@ -40,11 +44,11 @@ const MIN_LENGTH = 3;
 /** Whether to check is asked again after this long (the settings may have changed). */
 const STATE_TTL_MS = 60_000;
 const t = (key: string) => chrome.i18n.getMessage(key) || key;
-const OFF: WritingState = { check: false, rewrite: false };
+const OFF: WritingState = {check: false, rewrite: false};
 
-let state: { value: WritingState; at: number } | null = null;
+let state: {value: WritingState; at: number} | null = null;
 let field: TextField | null = null;
-let read: FieldText = { text: '', segments: null };
+let read: FieldText = {text: '', segments: null};
 let issues: WritingIssue[] = [];
 /** The text is with the server; and whether `issues` are of a finished check of the text. */
 let checking = false;
@@ -71,8 +75,8 @@ async function writingState(): Promise<WritingState> {
     return state.value;
   }
   try {
-    const value = await ask<WritingState>({ type: 'writing-state' });
-    state = { value, at: Date.now() };
+    const value = await ask<WritingState>({type: 'writing-state'});
+    state = {value, at: Date.now()};
     return value;
   } catch {
     return OFF;
@@ -80,11 +84,19 @@ async function writingState(): Promise<WritingState> {
 }
 
 export function setupWriting(): void {
-  document.addEventListener('focusin', (event) => void onFocus(event.target), true);
-  document.addEventListener('focusout', () => setTimeout(onFocusLeft, 200), true);
+  document.addEventListener(
+    'focusin',
+    event => void onFocus(event.target),
+    true,
+  );
+  document.addEventListener(
+    'focusout',
+    () => setTimeout(onFocusLeft, 200),
+    true,
+  );
   document.addEventListener(
     'input',
-    (event) => {
+    event => {
       // Only what the person types: a page's own changes of a field are not theirs to check.
       if (field && event.isTrusted && field.contains(event.target as Node)) {
         changed();
@@ -94,7 +106,7 @@ export function setupWriting(): void {
   );
   document.addEventListener(
     'click',
-    (event) => {
+    event => {
       // A click in a card of ours is the card's; one in the field may open a mistake's card.
       if (field && (event.target as Element | null)?.tagName !== 'PD-WRITING') {
         setTimeout(openAtCaret, 0);
@@ -104,7 +116,7 @@ export function setupWriting(): void {
   );
   document.addEventListener(
     'keyup',
-    (event) => {
+    event => {
       if (event.key === 'Escape') {
         hideCard();
       } else if (field && event.key.startsWith('Arrow')) {
@@ -135,7 +147,11 @@ async function onFocus(target: EventTarget | null): Promise<void> {
 }
 
 function onFocusLeft(): void {
-  if (field && !field.contains(document.activeElement) && document.activeElement !== field) {
+  if (
+    field &&
+    !field.contains(document.activeElement) &&
+    document.activeElement !== field
+  ) {
     field = null;
     issues = [];
     hideAll();
@@ -169,9 +185,16 @@ async function check(): Promise<void> {
   }
   checking = true;
   redraw();
-  const result = await ask<WritingCheckResult>({ type: 'writing-check', text }).catch(() => null);
+  const result = await ask<WritingCheckResult>({
+    type: 'writing-check',
+    text,
+  }).catch(() => null);
   // Only the answer to the latest check, about the text as it still is, counts.
-  if (number !== checkNumber || current !== field || readField(current).text !== text) {
+  if (
+    number !== checkNumber ||
+    current !== field ||
+    readField(current).text !== text
+  ) {
     return;
   }
   checking = false;
@@ -207,10 +230,13 @@ function redraw(): void {
     const rects = rectsOf(
       field,
       read,
-      issues.map((issue) => ({ start: issue.offset, end: issue.offset + issue.length })),
+      issues.map(issue => ({
+        start: issue.offset,
+        end: issue.offset + issue.length,
+      })),
     );
     drawMarks(
-      issues.map((issue, index) => ({ issue, rects: rects[index] })),
+      issues.map((issue, index) => ({issue, rects: rects[index]})),
       box,
     );
     drawBadge(box, badgeStatus(), issues.length, openPanel);
@@ -227,7 +253,9 @@ function openAtCaret(): void {
   const issue =
     caret === null
       ? undefined
-      : issues.find((one) => caret >= one.offset && caret <= one.offset + one.length);
+      : issues.find(
+          one => caret >= one.offset && caret <= one.offset + one.length,
+        );
   if (!issue) {
     if (cardShown()) hideCard();
     return;
@@ -241,17 +269,19 @@ function openIssue(issue: WritingIssue): void {
     return;
   }
   read = readField(field);
-  const [rects] = rectsOf(field, read, [{ start: issue.offset, end: issue.offset + issue.length }]);
+  const [rects] = rectsOf(field, read, [
+    {start: issue.offset, end: issue.offset + issue.length},
+  ]);
   const at = rects[0] ?? visibleBox(field);
   const word = read.text.slice(issue.offset, issue.offset + issue.length);
   showIssueCard(issue, word, at, {
-    fix: (replacement) => {
+    fix: replacement => {
       hideCard();
       replace(issue.offset, issue.offset + issue.length, replacement);
       accepted(1);
     },
-    addWord: () => void ignore({ word }),
-    neverShow: () => void ignore({ ruleId: issue.ruleId }),
+    addWord: () => void ignore({word}),
+    neverShow: () => void ignore({ruleId: issue.ruleId}),
   });
 }
 
@@ -261,31 +291,33 @@ async function openPanel(): Promise<void> {
   if (!current) {
     return;
   }
-  const { rewrite: canRewrite } = await writingState();
+  const {rewrite: canRewrite} = await writingState();
   if (field !== current) {
     return;
   }
   read = readField(current);
-  const fixable = issues.filter((issue) => issue.replacements.length);
+  const fixable = issues.filter(issue => issue.replacements.length);
   showPanel(
     badgeBox(current),
     badgeStatus(),
-    issues.map((issue) => ({
+    issues.map(issue => ({
       issue,
       word: read.text.slice(issue.offset, issue.offset + issue.length),
     })),
     {
-      open: (issue) => {
+      open: issue => {
         hideCard();
         openIssue(issue);
       },
       fixAll: fixable.length > 1 ? () => fixAll(fixable) : null,
       rewrite:
-        canRewrite && read.text.trim().length >= MIN_LENGTH ? (mode) => void rewrite(mode) : null,
+        canRewrite && read.text.trim().length >= MIN_LENGTH
+          ? mode => void rewrite(mode)
+          : null,
       offHere: () => void offHere(),
       settings: () => {
         hideCard();
-        void ask({ type: 'writing-settings' }).catch(() => undefined);
+        void ask({type: 'writing-settings'}).catch(() => undefined);
       },
     },
   );
@@ -313,7 +345,8 @@ function fixAll(fixable: WritingIssue[]): void {
       break;
     }
     const replacement = issue.replacements[0];
-    expected = expected.slice(0, issue.offset) + replacement + expected.slice(end);
+    expected =
+      expected.slice(0, issue.offset) + replacement + expected.slice(end);
     read = readField(field);
     replace(issue.offset, end, replacement);
     before = issue.offset;
@@ -329,7 +362,7 @@ async function offHere(): Promise<void> {
     return;
   }
   try {
-    await ask({ type: 'writing-off-here' });
+    await ask({type: 'writing-off-here'});
   } catch {
     // Not kept (no connection, or an address that is not a site): the field stays checked.
     showError(badgeBox(current), t('writingOffFailed'));
@@ -338,7 +371,7 @@ async function offHere(): Promise<void> {
   hideAll();
   field = null;
   issues = [];
-  state = { value: OFF, at: Date.now() };
+  state = {value: OFF, at: Date.now()};
 }
 
 async function rewrite(mode: WritingRewriteMode): Promise<void> {
@@ -350,7 +383,7 @@ async function rewrite(mode: WritingRewriteMode): Promise<void> {
   const text = readField(current).text;
   showBusy(box);
   try {
-    const proposal = await ask<string>({ type: 'writing-rewrite', text, mode });
+    const proposal = await ask<string>({type: 'writing-rewrite', text, mode});
     showProposal(box, proposal, () => {
       hideCard();
       if (field === current && readField(current).text === text) {
@@ -365,13 +398,13 @@ async function rewrite(mode: WritingRewriteMode): Promise<void> {
 /** Fixes taken are counted for the achievements; nothing waits for it. */
 function accepted(count: number): void {
   if (count > 0) {
-    void ask({ type: 'writing-accepted', count }).catch(() => undefined);
+    void ask({type: 'writing-accepted', count}).catch(() => undefined);
   }
 }
 
-async function ignore(what: { word?: string; ruleId?: string }): Promise<void> {
+async function ignore(what: {word?: string; ruleId?: string}): Promise<void> {
   hideCard();
-  await ask({ type: 'writing-ignore', ...what }).catch(() => undefined);
+  await ask({type: 'writing-ignore', ...what}).catch(() => undefined);
   void check();
 }
 
@@ -388,7 +421,9 @@ function replace(start: number, end: number, text: string): void {
     field.setSelectionRange(start, end);
     if (!document.execCommand('insertText', false, text)) {
       field.setRangeText(text, start, end, 'end');
-      field.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+      field.dispatchEvent(
+        new InputEvent('input', {bubbles: true, inputType: 'insertText'}),
+      );
     }
   } else {
     const range = read.segments ? domRange(read.segments, start, end) : null;

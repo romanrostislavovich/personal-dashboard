@@ -1,6 +1,6 @@
-import { app } from 'electron';
-import { join } from 'node:path';
-import { BundleStore, readBundle } from './update/bundle-store';
+import {app} from 'electron';
+import {join} from 'node:path';
+import {BundleStore, readBundle} from './update/bundle-store';
 
 /**
  * The entry point of the installed app (main.js): picks the code to run and hands over to it.

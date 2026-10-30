@@ -30,7 +30,7 @@ export function* clamlCodes(xml: string): Generator<ClamlCode> {
         .replace(/\s+/g, ' ')
         .trim();
       if (title) {
-        yield { code, title };
+        yield {code, title};
       }
     }
   }
@@ -40,16 +40,25 @@ function attribute(attributes: string, name: string): string | undefined {
   return new RegExp(`\\b${name}="([^"]*)"`).exec(attributes)?.[1];
 }
 
-const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+const NAMED: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+};
 
 export function decodeEntities(text: string): string {
-  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, name: string) => {
-    if (name.startsWith('#x') || name.startsWith('#X')) {
-      return String.fromCodePoint(parseInt(name.slice(2), 16));
-    }
-    if (name.startsWith('#')) {
-      return String.fromCodePoint(parseInt(name.slice(1), 10));
-    }
-    return NAMED[name.toLowerCase()] ?? entity;
-  });
+  return text.replace(
+    /&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,
+    (entity, name: string) => {
+      if (name.startsWith('#x') || name.startsWith('#X')) {
+        return String.fromCodePoint(parseInt(name.slice(2), 16));
+      }
+      if (name.startsWith('#')) {
+        return String.fromCodePoint(parseInt(name.slice(1), 10));
+      }
+      return NAMED[name.toLowerCase()] ?? entity;
+    },
+  );
 }

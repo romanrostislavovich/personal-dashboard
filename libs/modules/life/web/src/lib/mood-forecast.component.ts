@@ -1,11 +1,11 @@
-import { DecimalPipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { MoodForecast } from '@pd/contracts';
+import {DecimalPipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {ChangeDetectionStrategy, Component, computed} from '@angular/core';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {MoodForecast} from '@pd/contracts';
 
 /**
  * Today's mood, forecast from yesterday's numbers by a model of the user's own days, and what
@@ -20,8 +20,12 @@ import { MoodForecast } from '@pd/contracts';
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-icon mat-card-avatar>insights</mat-icon>
-          <mat-card-title>{{ 'life.forecast.title' | transloco }}</mat-card-title>
-          <mat-card-subtitle>{{ 'life.forecast.hint' | transloco }}</mat-card-subtitle>
+          <mat-card-title>{{
+            'life.forecast.title' | transloco
+          }}</mat-card-title>
+          <mat-card-subtitle>{{
+            'life.forecast.hint' | transloco
+          }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           @if (data.trusted && data.mood !== null) {
@@ -43,15 +47,23 @@ import { MoodForecast } from '@pd/contracts';
             <ul>
               @for (driver of data.drivers; track driver.key) {
                 <li>
-                  <span>{{ driver.label ?? (driver.labelKey | transloco) }}</span>
-                  <b [class.up]="driver.effect > 0" [class.down]="driver.effect < 0">
-                    {{ driver.effect > 0 ? '↑' : '↓' }} {{ abs(driver.effect) | number: '1.1-2' }}
+                  <span>{{
+                    driver.label ?? (driver.labelKey | transloco)
+                  }}</span>
+                  <b
+                    [class.up]="driver.effect > 0"
+                    [class.down]="driver.effect < 0"
+                  >
+                    {{ driver.effect > 0 ? '↑' : '↓' }}
+                    {{ abs(driver.effect) | number: '1.1-2' }}
                   </b>
                 </li>
               }
             </ul>
           } @else if (data.days < 40) {
-            <p class="hint">{{ 'life.forecast.few' | transloco: { days: data.days } }}</p>
+            <p class="hint">
+              {{ 'life.forecast.few' | transloco: {days: data.days} }}
+            </p>
           } @else {
             <p class="hint">{{ 'life.forecast.notBetter' | transloco }}</p>
           }
@@ -94,7 +106,9 @@ import { MoodForecast } from '@pd/contracts';
   `,
 })
 export class MoodForecastComponent {
-  private readonly resource = httpResource<MoodForecast>(() => CORE_READS.moodForecast());
+  private readonly resource = httpResource<MoodForecast>(() =>
+    CORE_READS.moodForecast(),
+  );
 
   protected readonly forecast = computed(() =>
     this.resource.hasValue() ? this.resource.value() : null,

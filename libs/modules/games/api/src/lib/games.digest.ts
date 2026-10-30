@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService } from '@pd/api-core';
-import { GameAccount } from '@pd/contracts';
-import { GameAccountsService } from './game-accounts.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService} from '@pd/api-core';
+import {GameAccount} from '@pd/contracts';
+import {GameAccountsService} from './game-accounts.service';
 
 /** WoW achievements the digest looks at: enough to spot the new ones between two mornings. */
 const RECENT_ACHIEVEMENTS = 5;
@@ -26,8 +26,10 @@ export class GamesDigest implements OnModuleInit {
         'unlocked. Tell about new records, a new medal, new achievements, a higher ilvl, a new ' +
         'hundred of hours.',
       // Match counts and win rates change with every game, so only milestones are compared.
-      collect: async (userId) => {
-        const accounts = (await this.accounts.list(userId)).filter((account) => account.summary);
+      collect: async userId => {
+        const accounts = (await this.accounts.list(userId)).filter(
+          account => account.summary,
+        );
         return accounts.length > 0 ? accounts.map(progress) : null;
       },
     });
@@ -44,7 +46,9 @@ function progress(account: GameAccount) {
       game: 'steam',
       account: summary.personaName,
       level: summary.level,
-      hoursMilestone: Math.floor(summary.totals.minutes / 60 / STEAM_HOURS_STEP) * STEAM_HOURS_STEP,
+      hoursMilestone:
+        Math.floor(summary.totals.minutes / 60 / STEAM_HOURS_STEP) *
+        STEAM_HOURS_STEP,
       achievements: summary.totals.achievements,
     };
   }
@@ -63,7 +67,11 @@ function progress(account: GameAccount) {
       account: account.displayName,
       rankTier: summary.rankTier,
       leaderboardRank: summary.leaderboardRank,
-      records: summary.records.map(({ kind, value, hero }) => ({ kind, value, hero: hero.name })),
+      records: summary.records.map(({kind, value, hero}) => ({
+        kind,
+        value,
+        hero: hero.name,
+      })),
     };
   }
   return {
@@ -76,13 +84,13 @@ function progress(account: GameAccount) {
     mythicRating: summary.details?.mythic
       ? Math.floor(summary.details.mythic.rating / 100) * 100
       : null,
-    raids: (summary.details?.raids ?? []).slice(0, 2).map((raid) => ({
+    raids: (summary.details?.raids ?? []).slice(0, 2).map(raid => ({
       raid: raid.name,
-      killed: Math.max(0, ...raid.modes.map((mode) => mode.killed)),
+      killed: Math.max(0, ...raid.modes.map(mode => mode.killed)),
     })),
     mounts: summary.details?.collections.mounts ?? null,
     latestAchievements: summary.recentAchievements
       .slice(0, RECENT_ACHIEVEMENTS)
-      .map((achievement) => achievement.name),
+      .map(achievement => achievement.name),
   };
 }

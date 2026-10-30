@@ -1,7 +1,7 @@
-import { CurrencyPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CurrencyTotals } from '@pd/contracts';
+import {CurrencyPipe} from '@angular/common';
+import {ChangeDetectionStrategy, Component, input} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CurrencyTotals} from '@pd/contracts';
 
 /** Income / expenses / balance — one row per currency. */
 @Component({
@@ -13,11 +13,15 @@ import { CurrencyTotals } from '@pd/contracts';
       <div class="totals">
         <div class="item">
           <span class="label">{{ 'finance.kind.income' | transloco }}</span>
-          <span class="value income">{{ total.income | currency: total.currency }}</span>
+          <span class="value income">{{
+            total.income | currency: total.currency
+          }}</span>
         </div>
         <div class="item">
           <span class="label">{{ 'finance.kind.expense' | transloco }}</span>
-          <span class="value expense">{{ total.expense | currency: total.currency }}</span>
+          <span class="value expense">{{
+            total.expense | currency: total.currency
+          }}</span>
         </div>
         <div class="item">
           <span class="label">{{ 'finance.balance' | transloco }}</span>

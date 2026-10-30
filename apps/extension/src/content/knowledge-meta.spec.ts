@@ -1,5 +1,5 @@
-import { knowledgeMetadata } from './knowledge-meta';
-import { safeKnowledgeMetadata } from '../shared/knowledge-meta';
+import {knowledgeMetadata} from './knowledge-meta';
+import {safeKnowledgeMetadata} from '../shared/knowledge-meta';
 
 describe('knowledge metadata allowlist', () => {
   it('extracts only page type and exact technology names', () => {
@@ -16,9 +16,16 @@ describe('knowledge metadata allowlist', () => {
       '<script type="application/ld+json">{"@type":"Person","name":"Jane","email":"jane@example.com","knowsAbout":"Python"}</script>';
     document.body.innerHTML =
       '<div itemscope itemtype="https://schema.org/TechArticle"><span itemprop="author">Jane</span></div>';
-    expect(knowledgeMetadata(document)).toEqual({ type: 'tech-article', technologies: [] });
-    document.body.innerHTML = '<div itemscope itemtype="https://evil.example/Article"></div>';
-    expect(knowledgeMetadata(document)).toEqual({ type: undefined, technologies: [] });
+    expect(knowledgeMetadata(document)).toEqual({
+      type: 'tech-article',
+      technologies: [],
+    });
+    document.body.innerHTML =
+      '<div itemscope itemtype="https://evil.example/Article"></div>';
+    expect(knowledgeMetadata(document)).toEqual({
+      type: undefined,
+      technologies: [],
+    });
   });
 
   it('rechecks content metadata at the trust boundary', () => {
@@ -29,8 +36,10 @@ describe('knowledge metadata allowlist', () => {
         email: 'jane@example.com',
         technologies: ['React', 'Jane Doe', 'Python token=123'],
       }),
-    ).toEqual({ technologies: ['React'] });
-    expect(safeKnowledgeMetadata({ type: '__proto__', technologies: 'React' })).toEqual({});
+    ).toEqual({technologies: ['React']});
+    expect(
+      safeKnowledgeMetadata({type: '__proto__', technologies: 'React'}),
+    ).toEqual({});
     expect(safeKnowledgeMetadata(null)).toEqual({});
   });
 });

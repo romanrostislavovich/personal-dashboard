@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AutomationsService, LinksService } from '@pd/api-core';
-import { BirthdaysService } from './birthdays.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AutomationsService, LinksService} from '@pd/api-core';
+import {BirthdaysService} from './birthdays.service';
 
 /** The trigger does not fire before this time of the user: a task at midnight helps nobody. */
 const NOT_BEFORE = '08:00';
@@ -27,33 +27,44 @@ export class BirthdaysAutomations implements OnModuleInit {
         'A birthday of somebody alive is exactly `days` days away (7 by default); for several ' +
         'people on the same day the names come together; `ideas` — their gift ideas from the ' +
         'wishlist',
-      params: [{ name: 'days', type: 'number', labelKey: 'birthdays.automations.days' }],
+      params: [
+        {name: 'days', type: 'number', labelKey: 'birthdays.automations.days'},
+      ],
       variables: ['name', 'date', 'days', 'age', 'ideas'],
       check: async (userId, params, now) => {
         if (now.time < NOT_BEFORE) {
           return null;
         }
-        const days = Math.max(0, Math.round(Number(params['days'] ?? DEFAULT_DAYS)) || 0);
+        const days = Math.max(
+          0,
+          Math.round(Number(params['days'] ?? DEFAULT_DAYS)) || 0,
+        );
         const people = (await this.birthdays.list(userId)).filter(
           // A birthday of somebody who died needs no gift.
-          (person) => person.daysUntil === days && person.deathMonth === null,
+          person => person.daysUntil === days && person.deathMonth === null,
         );
         if (!people.length) {
           return null;
         }
         return {
-          name: people.map((person) => person.name).join(', '),
+          name: people.map(person => person.name).join(', '),
           date: people[0].nextDate ?? '',
           days: String(days),
           age: people.length === 1 ? String(people[0].turningAge ?? '') : '',
           // The gift ideas of the wishlist, to put into the task.
-          ideas: people.flatMap((person) => person.giftIdeas.map((idea) => idea.title)).join(', '),
+          ideas: people
+            .flatMap(person => person.giftIdeas.map(idea => idea.title))
+            .join(', '),
         };
       },
     });
 
     this.links.registerPages([
-      { module: 'birthdays', path: '/birthdays', description: 'birthdays and days of memory' },
+      {
+        module: 'birthdays',
+        path: '/birthdays',
+        description: 'birthdays and days of memory',
+      },
     ]);
   }
 }

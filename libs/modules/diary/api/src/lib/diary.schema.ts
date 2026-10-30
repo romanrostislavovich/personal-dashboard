@@ -1,5 +1,10 @@
-import { encryptedBytes, encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
-import { DiaryMark } from '@pd/contracts';
+import {
+  encryptedBytes,
+  encryptedText,
+  registerEncryptedTables,
+  users,
+} from '@pd/api-core/schema';
+import {DiaryMark} from '@pd/contracts';
 import {
   boolean,
   date,
@@ -27,8 +32,8 @@ export const diaryEntries = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    day: date({ mode: 'string' }).notNull(),
+      .references(() => users.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
     content: encryptedText().notNull().default(''),
     /** Counted when the entry is saved: the database cannot count the words of ciphertext. */
     words: integer().notNull().default(0),
@@ -37,16 +42,16 @@ export const diaryEntries = pgTable(
     tags: text().array().notNull().default([]),
     /** Emoji marks from the text (`==🔥 text==`) — for filtering by emoji. */
     marks: jsonb().$type<DiaryMark[]>().notNull().default([]),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [unique().on(table.userId, table.day)],
+  table => [unique().on(table.userId, table.day)],
 );
 
 export const diarySettings = pgTable('diary_settings', {
   userId: uuid()
     .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   eveningReminder: boolean().notNull().default(false),
   weeklySummary: boolean().notNull().default(false),
   template: encryptedText(),
@@ -62,15 +67,15 @@ export const diaryPhotos = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    day: date({ mode: 'string' }).notNull(),
+      .references(() => users.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
     mimeType: text().notNull(),
     size: integer().notNull(),
     caption: encryptedText(),
     data: encryptedBytes().notNull(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId, table.day)],
+  table => [index().on(table.userId, table.day)],
 );
 
 registerEncryptedTables(diaryEntries, diarySettings, diaryPhotos);

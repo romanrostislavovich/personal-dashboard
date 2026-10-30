@@ -67,14 +67,23 @@
     <form id="form">
       <h1>Подключение к дашборду</h1>
       <p>
-        Укажи адрес сервера, где запущен Personal Dashboard: свой сервер или локальный API на этом
-        компьютере.
+        Укажи адрес сервера, где запущен Personal Dashboard: свой сервер или
+        локальный API на этом компьютере.
       </p>
       <p id="error" class="error" hidden></p>
-      <input id="url" type="url" required placeholder="https://dashboard.example.com" />
+      <input
+        id="url"
+        type="url"
+        required
+        placeholder="https://dashboard.example.com"
+      />
       <p class="examples">
-        <button type="button" data-url="http://localhost:3300">Локально (Docker)</button>
-        <button type="button" data-url="http://localhost:4200">Разработка</button>
+        <button type="button" data-url="http://localhost:3300">
+          Локально (Docker)
+        </button>
+        <button type="button" data-url="http://localhost:4200">
+          Разработка
+        </button>
       </p>
       <button type="submit">Подключиться</button>
     </form>
@@ -85,19 +94,24 @@
       if (error) {
         const el = document.getElementById('error');
         el.textContent =
-          'Не удалось открыть ' + error + '. Проверь, что сервер запущен и адрес верный.';
+          'Не удалось открыть ' +
+          error +
+          '. Проверь, что сервер запущен и адрес верный.';
         el.hidden = false;
       }
 
-      window.desktop.getServerUrl().then((url) => (input.value = url ?? ''));
+      window.desktop.getServerUrl().then(url => (input.value = url ?? ''));
 
       document
         .querySelectorAll('[data-url]')
-        .forEach((button) =>
-          button.addEventListener('click', () => (input.value = button.dataset.url)),
+        .forEach(button =>
+          button.addEventListener(
+            'click',
+            () => (input.value = button.dataset.url),
+          ),
         );
 
-      document.getElementById('form').addEventListener('submit', (event) => {
+      document.getElementById('form').addEventListener('submit', event => {
         event.preventDefault();
         window.desktop.saveServerUrl(input.value.trim().replace(/\/+$/, ''));
       });

@@ -35,7 +35,9 @@ export function readProductPage(html: string): ProductInfo {
     name: clean(text(product?.['name']) ?? tags.get('og:title') ?? title(html)),
     price,
     currency:
-      price !== null && currency && /^[A-Za-z]{3}$/.test(currency) ? currency.toUpperCase() : null,
+      price !== null && currency && /^[A-Za-z]{3}$/.test(currency)
+        ? currency.toUpperCase()
+        : null,
     image: imageUrl(product?.['image']) ?? tags.get('og:image') ?? null,
   };
 }
@@ -61,12 +63,17 @@ export function parsePrice(value: unknown): number | null {
   let normalized: string;
   if (lastDot >= 0 && lastComma >= 0) {
     const decimal = lastDot > lastComma ? '.' : ',';
-    normalized = digits.replaceAll(decimal === '.' ? ',' : '.', '').replace(',', '.');
+    normalized = digits
+      .replaceAll(decimal === '.' ? ',' : '.', '')
+      .replace(',', '.');
   } else if (lastComma >= 0) {
     const thousands = digits.split(',').length > 2 || /,\d{3}$/.test(digits);
-    normalized = thousands ? digits.replaceAll(',', '') : digits.replace(',', '.');
+    normalized = thousands
+      ? digits.replaceAll(',', '')
+      : digits.replace(',', '.');
   } else {
-    normalized = digits.split('.').length > 2 ? digits.replaceAll('.', '') : digits;
+    normalized =
+      digits.split('.').length > 2 ? digits.replaceAll('.', '') : digits;
   }
   return valid(Number(normalized));
 }
@@ -74,7 +81,9 @@ export function parsePrice(value: unknown): number | null {
 /** The page as plain text, for the AI: no scripts, styles or tags. */
 export function pageText(html: string, limit: number): string {
   return decodeEntities(
-    html.replace(/<(script|style|noscript|svg)\b[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' '),
+    html
+      .replace(/<(script|style|noscript|svg)\b[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<[^>]+>/g, ' '),
   )
     .replace(/\s+/g, ' ')
     .trim()
@@ -82,17 +91,21 @@ export function pageText(html: string, limit: number): string {
 }
 
 /** The AI's answer about a page's text, checked: no price — nothing usable. */
-export function parseAiProduct(answer: string): Pick<ProductInfo, 'price' | 'currency'> | null {
+export function parseAiProduct(
+  answer: string,
+): Pick<ProductInfo, 'price' | 'currency'> | null {
   let raw: Json;
   try {
-    raw = JSON.parse(answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1));
+    raw = JSON.parse(
+      answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1),
+    );
   } catch {
     return null;
   }
   const price = parsePrice(raw['price']);
   const currency = String(raw['currency'] ?? '');
   return price !== null && /^[A-Za-z]{3}$/.test(currency)
-    ? { price, currency: currency.toUpperCase() }
+    ? {price, currency: currency.toUpperCase()}
     : null;
 }
 
@@ -119,13 +132,17 @@ function jsonLdProduct(html: string): Json | null {
       // A broken block: the page may have another one.
     }
   }
-  return products.find((product) => cheapestOffer(product['offers'])) ?? products[0] ?? null;
+  return (
+    products.find(product => cheapestOffer(product['offers'])) ??
+    products[0] ??
+    null
+  );
 }
 
 /** Products may be nested: in `@graph`, as the page's `mainEntity`, as variants of a group. */
 function collectProducts(node: unknown, found: Json[]): void {
   if (Array.isArray(node)) {
-    node.forEach((item) => collectProducts(item, found));
+    node.forEach(item => collectProducts(item, found));
     return;
   }
   if (!isObject(node)) {
@@ -141,8 +158,10 @@ function collectProducts(node: unknown, found: Json[]): void {
 }
 
 /** The lowest price among the offers: a product with variants costs "from". */
-function cheapestOffer(offers: unknown): { price: number; currency: string | null } | null {
-  let best: { price: number; currency: string | null } | null = null;
+function cheapestOffer(
+  offers: unknown,
+): {price: number; currency: string | null} | null {
+  let best: {price: number; currency: string | null} | null = null;
   for (const offer of [offers].flat()) {
     if (!isObject(offer)) {
       continue;
@@ -155,7 +174,9 @@ function cheapestOffer(offers: unknown): { price: number; currency: string | nul
     if (price !== null && (!best || price < best.price)) {
       best = {
         price,
-        currency: text(offer['priceCurrency']) ?? text(specification?.['priceCurrency']),
+        currency:
+          text(offer['priceCurrency']) ??
+          text(specification?.['priceCurrency']),
       };
     }
   }
@@ -168,14 +189,19 @@ function cheapestOffer(offers: unknown): { price: number; currency: string | nul
  */
 function contentTags(html: string): Map<string, string> {
   const tags = new Map<string, string>();
-  for (const [tag] of html.matchAll(/<[a-z][a-z0-9]*\b[^>]*\bcontent\s*=[^>]*>/gi)) {
+  for (const [tag] of html.matchAll(
+    /<[a-z][a-z0-9]*\b[^>]*\bcontent\s*=[^>]*>/gi,
+  )) {
     const attributes = new Map<string, string>();
     for (const [, name, , double, single] of tag.matchAll(
       /([\w:-]+)\s*=\s*("([^"]*)"|'([^']*)')/g,
     )) {
       attributes.set(name.toLowerCase(), double ?? single ?? '');
     }
-    const key = attributes.get('property') ?? attributes.get('name') ?? attributes.get('itemprop');
+    const key =
+      attributes.get('property') ??
+      attributes.get('name') ??
+      attributes.get('itemprop');
     const content = attributes.get('content');
     if (key && content && !tags.has(key.toLowerCase())) {
       tags.set(key.toLowerCase(), decodeEntities(content));
@@ -201,7 +227,9 @@ function text(value: unknown): string | null {
 
 /** Shops escape names even inside JSON-LD. */
 function clean(name: string | null | undefined): string | null {
-  return name ? decodeEntities(name).replace(/\s+/g, ' ').trim().slice(0, 200) || null : null;
+  return name
+    ? decodeEntities(name).replace(/\s+/g, ' ').trim().slice(0, 200) || null
+    : null;
 }
 
 function isObject(value: unknown): value is Json {
@@ -218,12 +246,19 @@ const ENTITIES: Record<string, string> = {
 };
 
 function decodeEntities(value: string): string {
-  return value.replace(/&(#x[\da-f]+|#\d+|[a-z]+);/gi, (entity, code: string) => {
-    if (code[0] !== '#') {
-      return ENTITIES[code.toLowerCase()] ?? entity;
-    }
-    const point =
-      code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : Number(code.slice(1));
-    return point > 0 && point <= 0x10ffff ? String.fromCodePoint(point) : entity;
-  });
+  return value.replace(
+    /&(#x[\da-f]+|#\d+|[a-z]+);/gi,
+    (entity, code: string) => {
+      if (code[0] !== '#') {
+        return ENTITIES[code.toLowerCase()] ?? entity;
+      }
+      const point =
+        code[1].toLowerCase() === 'x'
+          ? parseInt(code.slice(2), 16)
+          : Number(code.slice(1));
+      return point > 0 && point <= 0x10ffff
+        ? String.fromCodePoint(point)
+        : entity;
+    },
+  );
 }

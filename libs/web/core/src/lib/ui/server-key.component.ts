@@ -1,10 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { errorStatus } from '../client/core-requests';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {errorStatus} from '../client/core-requests';
 
 /** A field of a server key: a token, a Client ID, an address. */
 export interface ServerKeyField {
@@ -26,7 +33,13 @@ export interface ServerKeyField {
 @Component({
   selector: 'pd-server-key',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, TranslocoPipe],
+  imports: [
+    MatButtonModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    TranslocoPipe,
+  ],
   template: `
     <section>
       <p class="title">
@@ -44,7 +57,9 @@ export interface ServerKeyField {
           <p class="error">{{ problem() }}</p>
         }
         <div class="actions">
-          <button matButton (click)="edit()">{{ 'core.serverKey.change' | transloco }}</button>
+          <button matButton (click)="edit()">
+            {{ 'core.serverKey.change' | transloco }}
+          </button>
           <button matButton (click)="clear()" [disabled]="busy()">
             {{ 'core.serverKey.remove' | transloco }}
           </button>
@@ -82,8 +97,15 @@ export interface ServerKeyField {
             <p class="error">{{ 'core.serverKey.' + failure | transloco }}</p>
           }
           <div class="actions">
-            <button matButton="filled" type="submit" [disabled]="busy() || !complete()">
-              {{ (busy() ? 'core.serverKey.checking' : 'core.serverKey.save') | transloco }}
+            <button
+              matButton="filled"
+              type="submit"
+              [disabled]="busy() || !complete()"
+            >
+              {{
+                (busy() ? 'core.serverKey.checking' : 'core.serverKey.save')
+                  | transloco
+              }}
             </button>
             @if (set()) {
               <button matButton type="button" (click)="editing.set(false)">
@@ -139,7 +161,8 @@ export class ServerKeyComponent {
   readonly problem = input<string | null>(null);
   /** The fields that are not secret, as saved. */
   readonly initial = input<Record<string, string | null>>({});
-  readonly save = input.required<(values: Record<string, string>) => Promise<unknown>>();
+  readonly save =
+    input.required<(values: Record<string, string>) => Promise<unknown>>();
   readonly remove = input.required<() => Promise<unknown>>();
   /** Saved or removed: the card reads its state again. */
   readonly changed = output<void>();
@@ -153,7 +176,7 @@ export class ServerKeyComponent {
     ...this.typed(),
   }));
   protected readonly complete = computed(() =>
-    this.fields().every((field) => this.values()[field.name]?.trim()),
+    this.fields().every(field => this.values()[field.name]?.trim()),
   );
 
   protected edit(): void {
@@ -163,14 +186,18 @@ export class ServerKeyComponent {
   }
 
   protected type(name: string, event: Event): void {
-    const value = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
-    this.typed.update((typed) => ({ ...typed, [name]: value }));
+    const value = (event.target as HTMLInputElement | HTMLTextAreaElement)
+      .value;
+    this.typed.update(typed => ({...typed, [name]: value}));
   }
 
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();
     const values = Object.fromEntries(
-      this.fields().map((field) => [field.name, (this.values()[field.name] ?? '').trim()]),
+      this.fields().map(field => [
+        field.name,
+        (this.values()[field.name] ?? '').trim(),
+      ]),
     );
     await this.run(() => this.save()(values));
   }
@@ -195,9 +222,13 @@ export class ServerKeyComponent {
     }
   }
 
-  private nonEmpty(values: Record<string, string | null>): Record<string, string> {
+  private nonEmpty(
+    values: Record<string, string | null>,
+  ): Record<string, string> {
     return Object.fromEntries(
-      Object.entries(values).filter((entry): entry is [string, string] => Boolean(entry[1])),
+      Object.entries(values).filter((entry): entry is [string, string] =>
+        Boolean(entry[1]),
+      ),
     );
   }
 }

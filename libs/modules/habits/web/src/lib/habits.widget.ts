@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { RouterLink } from '@angular/router';
-import { needsSetup } from '@pd/web-core';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Habit, isBuilding } from '@pd/contracts';
-import { habitIcon, HabitsApi } from './habits.api';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {RouterLink} from '@angular/router';
+import {needsSetup} from '@pd/web-core';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {Habit, isBuilding} from '@pd/contracts';
+import {habitIcon, HabitsApi} from './habits.api';
 
 /** Home widget: the run of clean days of every habit. */
 @Component({
@@ -23,7 +23,10 @@ import { habitIcon, HabitsApi } from './habits.api';
             <span class="icon">{{ icon(habit) }}</span>
             <span class="name">{{ name(habit) }}</span>
             <span class="days">
-              {{ 'habits.widget.days' | transloco: { days: habit.stats.currentStreak } }}
+              {{
+                'habits.widget.days'
+                  | transloco: {days: habit.stats.currentStreak}
+              }}
             </span>
           </div>
         } @empty {
@@ -31,7 +34,9 @@ import { habitIcon, HabitsApi } from './habits.api';
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/habits">{{ 'habits.widget.all' | transloco }}</a>
+        <a matButton routerLink="/habits">{{
+          'habits.widget.all' | transloco
+        }}</a>
       </mat-card-actions>
     </mat-card>
   `,

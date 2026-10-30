@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import {DatePipe, DecimalPipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,22 +7,35 @@ import {
   LOCALE_ID,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { CODE_PROVIDERS } from '@pd/contracts';
-import { Bar, BarChartComponent, INTEGRATIONS_LINK, Share, ShareListComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { ContributionHeatmapComponent, HeatmapDay } from '../ui/contribution-heatmap.component';
-import { AccountsApi } from './accounts.api';
-import { PROVIDER_NAMES } from './providers';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {CODE_PROVIDERS} from '@pd/contracts';
+import {
+  Bar,
+  BarChartComponent,
+  INTEGRATIONS_LINK,
+  Share,
+  ShareListComponent,
+} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {
+  ContributionHeatmapComponent,
+  HeatmapDay,
+} from '../ui/contribution-heatmap.component';
+import {AccountsApi} from './accounts.api';
+import {PROVIDER_NAMES} from './providers';
 
 /** The services' own colours — for the shares of a year. */
-const PROVIDER_COLORS = { github: '#8b949e', gitlab: '#fc6d26', bitbucket: '#2684ff' };
+const PROVIDER_COLORS = {
+  github: '#8b949e',
+  gitlab: '#fc6d26',
+  bitbucket: '#2684ff',
+};
 
 /**
  * All connected accounts as one: a common calendar where a day counts what was done on GitHub,
@@ -60,12 +73,16 @@ export class SummaryPage {
 
   /** The year of the calendar; the current one until the user picks another. */
   private readonly pickedYear = signal<number | null>(null);
-  protected readonly year = computed(() => this.pickedYear() ?? new Date().getFullYear());
+  protected readonly year = computed(
+    () => this.pickedYear() ?? new Date().getFullYear(),
+  );
   protected readonly contributions = this.api.summaryContributions(this.year);
   protected readonly today = new Date().toLocaleDateString('en-CA');
 
   protected readonly yearTotals = computed(
-    () => this.summary.value()?.years.find((totals) => totals.year === this.year()) ?? null,
+    () =>
+      this.summary.value()?.years.find(totals => totals.year === this.year()) ??
+      null,
   );
 
   /** How much of the chosen year each service gave. */
@@ -74,7 +91,7 @@ export class SummaryPage {
     if (!totals) {
       return [];
     }
-    return CODE_PROVIDERS.flatMap((provider) => {
+    return CODE_PROVIDERS.flatMap(provider => {
       const value = totals.byProvider[provider];
       return value === undefined
         ? []
@@ -90,10 +107,13 @@ export class SummaryPage {
   });
 
   protected readonly heatmapDays = computed<HeatmapDay[]>(() =>
-    this.contributions.value().map(({ day, count }) => ({
+    this.contributions.value().map(({day, count}) => ({
       day,
       value: count,
-      label: this.transloco.translate('development.account.contributionsCount', { count }),
+      label: this.transloco.translate(
+        'development.account.contributionsCount',
+        {count},
+      ),
     })),
   );
 
@@ -102,8 +122,8 @@ export class SummaryPage {
   protected readonly count = (value: number) => String(Math.round(value));
 
   protected readonly months = computed<Bar[]>(() => {
-    const totals = Array.from({ length: 12 }, () => 0);
-    for (const { day, count } of this.contributions.value()) {
+    const totals = Array.from({length: 12}, () => 0);
+    for (const {day, count} of this.contributions.value()) {
       totals[Number(day.slice(5, 7)) - 1] += count;
     }
     return totals.map((value, month) => {
@@ -126,7 +146,7 @@ export class SummaryPage {
   async syncAll(): Promise<void> {
     this.busy.set(true);
     try {
-      for (const { provider } of this.summary.value()?.accounts ?? []) {
+      for (const {provider} of this.summary.value()?.accounts ?? []) {
         // The error is saved with the account and shown on its card.
         await firstValueFrom(this.api.sync(provider)).catch(() => undefined);
       }

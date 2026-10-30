@@ -1,7 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MonitorStatus } from '@pd/contracts';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MonitorStatus} from '@pd/contracts';
 
 const ICONS: Record<MonitorStatus, string> = {
   up: 'check_circle',

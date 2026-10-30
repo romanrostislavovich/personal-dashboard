@@ -1,4 +1,4 @@
-import type { SleepStage } from '@pd/contracts';
+import type {SleepStage} from '@pd/contracts';
 
 /**
  * What the dashboard counts from the band's minutes (docs/telemetry.md, "The band"). Plain
@@ -38,15 +38,20 @@ const REACTION_SCORE = 85;
 const REACTION_MINUTES = 5;
 const REACTION_GAP = 2;
 
-const inside = (at: number, spans: Span[]) => spans.some((s) => at >= s.start && at < s.end);
+const inside = (at: number, spans: Span[]) =>
+  spans.some(s => at >= s.start && at < s.end);
 
 /**
  * The minutes at rest: a pulse known, no steps for a while, not in an exercise and not asleep
  * (the night has its own numbers). `minutes` must be sorted by time.
  */
-export function restMinutes(minutes: Minute[], exercises: Span[], sleeps: Span[]): Minute[] {
-  const stepsAt = new Map(minutes.map((m) => [m.at, m.steps ?? 0]));
-  return minutes.filter((m) => {
+export function restMinutes(
+  minutes: Minute[],
+  exercises: Span[],
+  sleeps: Span[],
+): Minute[] {
+  const stepsAt = new Map(minutes.map(m => [m.at, m.steps ?? 0]));
+  return minutes.filter(m => {
     if (m.bpm === null || inside(m.at, exercises) || inside(m.at, sleeps)) {
       return false;
     }
@@ -63,17 +68,25 @@ export function restMinutes(minutes: Minute[], exercises: Span[], sleeps: Span[]
  * The resting pulse of a day: the lowest half-hour of the night's sleep; without a night, the
  * 10th percentile of the day's minutes at rest (an hour of them at least).
  */
-export function restingHeartRate(sleepMinutes: Minute[], rest: Minute[]): number | null {
+export function restingHeartRate(
+  sleepMinutes: Minute[],
+  rest: Minute[],
+): number | null {
   const night = lowestRollingMean(sleepMinutes, 30);
   if (night !== null) {
     return Math.round(night);
   }
-  const values = rest.map((m) => m.bpm as number).sort((a, b) => a - b);
-  return values.length >= 60 ? Math.round(values[Math.floor(values.length * 0.1)]) : null;
+  const values = rest.map(m => m.bpm as number).sort((a, b) => a - b);
+  return values.length >= 60
+    ? Math.round(values[Math.floor(values.length * 0.1)])
+    : null;
 }
 
 /** The lowest mean of `window` minutes in a row that the band told (gaps break the run). */
-export function lowestRollingMean(minutes: Minute[], window: number): number | null {
+export function lowestRollingMean(
+  minutes: Minute[],
+  window: number,
+): number | null {
   let lowest: number | null = null;
   let run: number[] = [];
   let last = -Infinity;
@@ -128,11 +141,14 @@ export function minuteStress(bpm: number, baseline: number): number {
 export function hourlyStress(
   rest: Minute[],
   baseline: number,
-): { at: number; score: number; restMinutes: number }[] {
+): {at: number; score: number; restMinutes: number}[] {
   const hours = new Map<number, number[]>();
   for (const m of rest) {
     const hour = Math.floor(m.at / (60 * MINUTE)) * 60 * MINUTE;
-    hours.set(hour, [...(hours.get(hour) ?? []), minuteStress(m.bpm as number, baseline)]);
+    hours.set(hour, [
+      ...(hours.get(hour) ?? []),
+      minuteStress(m.bpm as number, baseline),
+    ]);
   }
   return [...hours]
     .filter(([, scores]) => scores.length >= MIN_REST_MINUTES_PER_HOUR)
@@ -145,10 +161,14 @@ export function hourlyStress(
 }
 
 /** The day's index: its hours', each as much as it had minutes at rest. */
-export function dayStress(hours: { score: number; restMinutes: number }[]): number | null {
+export function dayStress(
+  hours: {score: number; restMinutes: number}[],
+): number | null {
   const minutes = hours.reduce((sum, h) => sum + h.restMinutes, 0);
   return minutes
-    ? Math.round(hours.reduce((sum, h) => sum + h.score * h.restMinutes, 0) / minutes)
+    ? Math.round(
+        hours.reduce((sum, h) => sum + h.score * h.restMinutes, 0) / minutes,
+      )
     : null;
 }
 
@@ -165,11 +185,11 @@ export function reactions(rest: Minute[], baseline: number): Reaction[] {
   let run: Minute[] = [];
   const close = () => {
     if (run.length >= REACTION_MINUTES) {
-      const scores = run.map((m) => minuteStress(m.bpm as number, baseline));
+      const scores = run.map(m => minuteStress(m.bpm as number, baseline));
       found.push({
         start: run[0].at,
         end: run[run.length - 1].at + MINUTE,
-        peakBpm: Math.round(Math.max(...run.map((m) => m.bpm as number))),
+        peakBpm: Math.round(Math.max(...run.map(m => m.bpm as number))),
         score: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
       });
     }
@@ -197,7 +217,7 @@ export function stageMinutes(stages: Stage[]): {
   light: number;
   awake: number;
 } {
-  const sum = { asleep: 0, deep: 0, rem: 0, light: 0, awake: 0 };
+  const sum = {asleep: 0, deep: 0, rem: 0, light: 0, awake: 0};
   for (const s of stages) {
     const minutes = Math.round((s.end - s.start) / MINUTE);
     if (s.stage === 'awake') {
@@ -218,7 +238,7 @@ export function stageMinutes(stages: Stage[]): {
  * and the pulse falling at night against the day's resting pulse).
  */
 export function sleepScore(
-  night: { asleep: number; deep: number; rem: number; awake: number },
+  night: {asleep: number; deep: number; rem: number; awake: number},
   nightPulse: number | null,
   restingBaseline: number | null,
 ): number | null {
@@ -233,7 +253,10 @@ export function sleepScore(
   const calm = 1 - Math.min(1, night.awake / 60);
   const dip =
     nightPulse !== null && restingBaseline
-      ? Math.max(0, Math.min(1, (restingBaseline - nightPulse) / restingBaseline / 0.1))
+      ? Math.max(
+          0,
+          Math.min(1, (restingBaseline - nightPulse) / restingBaseline / 0.1),
+        )
       : null;
   const restful = dip === null ? 25 * calm : 12.5 * calm + 12.5 * dip;
   return Math.round(length + stages + restful);
@@ -246,11 +269,14 @@ export function median(values: number[], least = 3): number | null {
   }
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+  return sorted.length % 2
+    ? sorted[middle]
+    : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
 function spread(values: number[], center: number): number {
-  const variance = values.reduce((sum, v) => sum + (v - center) ** 2, 0) / values.length;
+  const variance =
+    values.reduce((sum, v) => sum + (v - center) ** 2, 0) / values.length;
   // Never less than a tenth of the baseline: a few calm weeks must not make a small change loud.
   return Math.max(Math.sqrt(variance), Math.abs(center) * 0.1);
 }
@@ -262,7 +288,7 @@ function spread(values: number[], center: number): number {
 export function nightStress(
   hrv: number | null,
   resting: number | null,
-  history: { hrv: number[]; resting: number[] },
+  history: {hrv: number[]; resting: number[]},
 ): number | null {
   const parts: number[] = [];
   const hrvBase = median(history.hrv, 5);
@@ -281,7 +307,10 @@ export function nightStress(
 }
 
 /** The day's index: the waking hours' and the night's together, whichever there is. */
-export function combinedStress(day: number | null, night: number | null): number | null {
+export function combinedStress(
+  day: number | null,
+  night: number | null,
+): number | null {
   if (day !== null && night !== null) {
     return Math.round(day * 0.6 + night * 0.4);
   }
@@ -303,6 +332,7 @@ export function resilience(
   if (!recoveryParts.length || load === null) {
     return null;
   }
-  const recovery = recoveryParts.reduce((a, b) => a + b, 0) / recoveryParts.length;
+  const recovery =
+    recoveryParts.reduce((a, b) => a + b, 0) / recoveryParts.length;
   return Math.round(Math.max(0, Math.min(100, 50 + (recovery - load) / 2)));
 }

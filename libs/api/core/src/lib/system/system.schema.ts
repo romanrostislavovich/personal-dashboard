@@ -1,5 +1,12 @@
-import { SystemLogLevel } from '@pd/contracts';
-import { bigserial, index, integer, pgSchema, text, timestamp } from 'drizzle-orm/pg-core';
+import {SystemLogLevel} from '@pd/contracts';
+import {
+  bigserial,
+  index,
+  integer,
+  pgSchema,
+  text,
+  timestamp,
+} from 'drizzle-orm/pg-core';
 
 /**
  * How this instance itself is doing lives in its own schema, so it is neither synced
@@ -11,7 +18,7 @@ export const systemSchema = pgSchema('system');
 export const systemLog = systemSchema.table(
   'log',
   {
-    id: bigserial({ mode: 'number' }).primaryKey(),
+    id: bigserial({mode: 'number'}).primaryKey(),
     level: text().$type<SystemLogLevel>().notNull(),
     /** The logger's context: a service or a job. */
     source: text().notNull(),
@@ -19,21 +26,21 @@ export const systemLog = systemSchema.table(
     /** The stack trace, if there was one. */
     details: text(),
     count: integer().notNull().default(1),
-    firstAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    lastAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    firstAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    lastAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.lastAt)],
+  table => [index().on(table.lastAt)],
 );
 
 /** The last runs of every background job. */
 export const systemJobRuns = systemSchema.table('job_runs', {
   name: text().primaryKey(),
   cron: text().notNull(),
-  lastStartedAt: timestamp({ withTimezone: true }),
-  lastFinishedAt: timestamp({ withTimezone: true }),
+  lastStartedAt: timestamp({withTimezone: true}),
+  lastFinishedAt: timestamp({withTimezone: true}),
   lastDurationMs: integer(),
   /** Failed runs in a row; 0 — the last run went well. */
   failures: integer().notNull().default(0),
   lastError: text(),
-  lastErrorAt: timestamp({ withTimezone: true }),
+  lastErrorAt: timestamp({withTimezone: true}),
 });

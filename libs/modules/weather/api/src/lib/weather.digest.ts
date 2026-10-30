@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService } from '@pd/api-core';
-import { WeatherService } from './weather.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService} from '@pd/api-core';
+import {WeatherService} from './weather.service';
 
 /** The weather opens every morning digest, changed or not. */
 @Injectable()
@@ -19,9 +19,9 @@ export class WeatherDigest implements OnModuleInit {
         "Today's weather (°C, km/h, mm, %) and clothing advice: `outfit` by the coldest " +
         'feels-like temperature of the day and `extras` to take (umbrella, gloves, sunscreen…).',
       // The digest is about today: the week ahead would only change the facts every morning.
-      collect: async (userId) => {
+      collect: async userId => {
         const forecast = await this.weather.forecast(userId);
-        return forecast && { ...forecast, days: undefined };
+        return forecast && {...forecast, days: undefined};
       },
     });
   }

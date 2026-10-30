@@ -1,15 +1,22 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { BUDGET_TOTAL, BudgetInput } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { FinanceApi } from '../finance.api';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {BUDGET_TOTAL, BudgetInput} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {FinanceApi} from '../finance.api';
 
 /** A limit is "almost spent" from this share (the same as the server's warning). */
 const WARN_SHARE = 0.8;
@@ -34,13 +41,23 @@ const WARN_SHARE = 0.8;
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'finance.budgets.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'finance.budgets.subtitle' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'finance.budgets.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'finance.budgets.subtitle' | transloco
+        }}</mat-card-subtitle>
         <span class="spacer"></span>
         <button
           matIconButton
-          [matTooltip]="(editing() ? 'core.actions.cancel' : 'core.actions.edit') | transloco"
-          [attr.aria-label]="(editing() ? 'core.actions.cancel' : 'core.actions.edit') | transloco"
+          [matTooltip]="
+            (editing() ? 'core.actions.cancel' : 'core.actions.edit')
+              | transloco
+          "
+          [attr.aria-label]="
+            (editing() ? 'core.actions.cancel' : 'core.actions.edit')
+              | transloco
+          "
           (click)="toggleEdit()"
         >
           <mat-icon>{{ editing() ? 'close' : 'edit' }}</mat-icon>
@@ -51,16 +68,23 @@ const WARN_SHARE = 0.8;
           <ul class="budgets">
             @for (budget of budgets.value(); track budget.id) {
               @let share = budget.spent / budget.limit;
-              <li [class.warn]="share >= warnShare && share < 1" [class.over]="share >= 1">
+              <li
+                [class.warn]="share >= warnShare && share < 1"
+                [class.over]="share >= 1"
+              >
                 <div class="head">
                   <span class="name">{{ nameOf(budget.category) }}</span>
                   <span class="numbers">
-                    {{ budget.spent | number: '1.0-0' }} / {{ budget.limit | number: '1.0-0' }}
+                    {{ budget.spent | number: '1.0-0' }} /
+                    {{ budget.limit | number: '1.0-0' }}
                     {{ budget.currency }}
                   </span>
                 </div>
                 <span class="track">
-                  <span class="fill" [style.width.%]="share * 100 > 100 ? 100 : share * 100"></span>
+                  <span
+                    class="fill"
+                    [style.width.%]="share * 100 > 100 ? 100 : share * 100"
+                  ></span>
                 </span>
               </li>
             } @empty {
@@ -72,26 +96,34 @@ const WARN_SHARE = 0.8;
             @for (row of draft(); track $index) {
               <li>
                 <mat-form-field subscriptSizing="dynamic">
-                  <mat-label>{{ 'finance.budgets.category' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'finance.budgets.category' | transloco
+                  }}</mat-label>
                   <input
                     matInput
                     maxlength="50"
                     [attr.list]="'pd-budget-categories'"
                     [value]="
-                      row.category === total ? ('finance.budgets.total' | transloco) : row.category
+                      row.category === total
+                        ? ('finance.budgets.total' | transloco)
+                        : row.category
                     "
                     [disabled]="row.category === total"
                     (input)="setCategory($index, $any($event.target).value)"
                   />
                 </mat-form-field>
                 <mat-form-field subscriptSizing="dynamic" class="limit">
-                  <mat-label>{{ 'finance.budgets.limit' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'finance.budgets.limit' | transloco
+                  }}</mat-label>
                   <input
                     matInput
                     type="number"
                     min="1"
                     [value]="row.limit || ''"
-                    (input)="setLimit($index, $any($event.target).valueAsNumber)"
+                    (input)="
+                      setLimit($index, $any($event.target).valueAsNumber)
+                    "
                   />
                 </mat-form-field>
                 <button
@@ -115,7 +147,8 @@ const WARN_SHARE = 0.8;
             </button>
             @if (!hasTotal()) {
               <button matButton (click)="addRow(total)">
-                <mat-icon>add</mat-icon> {{ 'finance.budgets.addTotal' | transloco }}
+                <mat-icon>add</mat-icon>
+                {{ 'finance.budgets.addTotal' | transloco }}
               </button>
             }
             <span class="spacer"></span>
@@ -213,45 +246,51 @@ export class BudgetsCardComponent {
   protected readonly draft = signal<BudgetInput[]>([]);
 
   protected readonly hasTotal = computed(() =>
-    this.draft().some((row) => row.category === BUDGET_TOTAL),
+    this.draft().some(row => row.category === BUDGET_TOTAL),
   );
   protected readonly valid = computed(() =>
-    this.draft().every((row) => row.category.trim() && row.limit > 0),
+    this.draft().every(row => row.category.trim() && row.limit > 0),
   );
 
   protected nameOf(category: string): string {
-    return category === BUDGET_TOTAL ? this.transloco.translate('finance.budgets.total') : category;
+    return category === BUDGET_TOTAL
+      ? this.transloco.translate('finance.budgets.total')
+      : category;
   }
 
   protected toggleEdit(): void {
     if (!this.editing()) {
-      this.draft.set(this.budgets.value().map(({ category, limit }) => ({ category, limit })));
+      this.draft.set(
+        this.budgets.value().map(({category, limit}) => ({category, limit})),
+      );
     }
-    this.editing.update((editing) => !editing);
+    this.editing.update(editing => !editing);
   }
 
   protected addRow(category: string): void {
-    this.draft.update((rows) => [...rows, { category, limit: 0 }]);
+    this.draft.update(rows => [...rows, {category, limit: 0}]);
   }
 
   protected removeRow(index: number): void {
-    this.draft.update((rows) => rows.filter((_, i) => i !== index));
+    this.draft.update(rows => rows.filter((_, i) => i !== index));
   }
 
   protected setCategory(index: number, category: string): void {
-    this.draft.update((rows) => rows.map((row, i) => (i === index ? { ...row, category } : row)));
+    this.draft.update(rows =>
+      rows.map((row, i) => (i === index ? {...row, category} : row)),
+    );
   }
 
   protected setLimit(index: number, limit: number): void {
-    this.draft.update((rows) =>
+    this.draft.update(rows =>
       rows.map((row, i) =>
-        i === index ? { ...row, limit: Number.isFinite(limit) ? limit : 0 } : row,
+        i === index ? {...row, limit: Number.isFinite(limit) ? limit : 0} : row,
       ),
     );
   }
 
   protected async save(): Promise<void> {
-    const budgets = this.draft().map((row) => ({
+    const budgets = this.draft().map(row => ({
       category: row.category.trim(),
       limit: row.limit,
     }));

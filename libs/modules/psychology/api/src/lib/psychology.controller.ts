@@ -11,7 +11,7 @@ import {
   Query,
   StreamableFile,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
   PsychologyAssessmentInput,
   psychologyAssessmentInputSchema,
@@ -23,7 +23,7 @@ import {
   PsychologySettingsInput,
   psychologySettingsSchema,
 } from '@pd/contracts';
-import { PsychologyService, ValidEventInput } from './psychology.service';
+import {PsychologyService, ValidEventInput} from './psychology.service';
 
 /** Psychology: patterns of the mood, check-ups and events. */
 @Controller('psychology')
@@ -33,7 +33,8 @@ export class PsychologyController {
   @Get('patterns')
   patterns(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(psychologyPatternsQuerySchema)) query: PsychologyPatternsQuery,
+    @Query(new ZodValidationPipe(psychologyPatternsQuerySchema))
+    query: PsychologyPatternsQuery,
   ) {
     return this.psychology.patterns(user.id, query);
   }
@@ -49,9 +50,14 @@ export class PsychologyController {
   @Get('events/export')
   async exportEvents(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(psychologyEventExportSchema)) query: PsychologyEventExport,
+    @Query(new ZodValidationPipe(psychologyEventExportSchema))
+    query: PsychologyEventExport,
   ): Promise<StreamableFile> {
-    const { file, name, type } = await this.psychology.exportEvents(user.id, query.format, query);
+    const {file, name, type} = await this.psychology.exportEvents(
+      user.id,
+      query.format,
+      query,
+    );
     return new StreamableFile(file, {
       type,
       length: file.length,
@@ -62,7 +68,8 @@ export class PsychologyController {
   @Post('events')
   addEvent(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(psychologyEventInputSchema)) input: ValidEventInput,
+    @Body(new ZodValidationPipe(psychologyEventInputSchema))
+    input: ValidEventInput,
   ) {
     return this.psychology.addEvent(user.id, input);
   }
@@ -71,14 +78,18 @@ export class PsychologyController {
   updateEvent(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(psychologyEventInputSchema)) input: ValidEventInput,
+    @Body(new ZodValidationPipe(psychologyEventInputSchema))
+    input: ValidEventInput,
   ) {
     return this.psychology.updateEvent(user.id, id, input);
   }
 
   @Delete('events/:id')
   @HttpCode(204)
-  removeEvent(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeEvent(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.psychology.removeEvent(user.id, id);
   }
 
@@ -92,14 +103,18 @@ export class PsychologyController {
   @Post('assessments')
   addAssessment(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(psychologyAssessmentInputSchema)) input: PsychologyAssessmentInput,
+    @Body(new ZodValidationPipe(psychologyAssessmentInputSchema))
+    input: PsychologyAssessmentInput,
   ) {
     return this.psychology.addAssessment(user.id, input);
   }
 
   @Delete('assessments/:id')
   @HttpCode(204)
-  removeAssessment(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeAssessment(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.psychology.removeAssessment(user.id, id);
   }
 
@@ -112,7 +127,8 @@ export class PsychologyController {
   @HttpCode(204)
   saveSettings(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(psychologySettingsSchema)) settings: PsychologySettingsInput,
+    @Body(new ZodValidationPipe(psychologySettingsSchema))
+    settings: PsychologySettingsInput,
   ) {
     return this.psychology.saveSettings(user.id, settings);
   }

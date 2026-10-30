@@ -1,7 +1,11 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { NotificationsService, SchedulerService, UsersService } from '@pd/api-core';
-import { openSourceMessages, hasNews } from './open-source.messages';
-import { ReposService } from './repos.service';
+import {Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {
+  NotificationsService,
+  SchedulerService,
+  UsersService,
+} from '@pd/api-core';
+import {openSourceMessages, hasNews} from './open-source.messages';
+import {ReposService} from './repos.service';
 
 /**
  * Hourly: re-reads the account's public repositories, updates the statistics of all of them
@@ -30,8 +34,8 @@ export class RepoSyncJob implements OnModuleInit {
     for (const user of await this.users.findAll()) {
       // One user's revoked token must not stop the others.
       const news = await this.repos.syncAll(user.id).then(
-        (events) => events.filter(hasNews),
-        (error) => {
+        events => events.filter(hasNews),
+        error => {
           this.logger.warn(`Repository sync for ${user.id} failed: ${error}`);
           return [];
         },

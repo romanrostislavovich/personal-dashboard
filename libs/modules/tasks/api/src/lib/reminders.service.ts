@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {Inject, Injectable, Logger, NotFoundException} from '@nestjs/common';
 import {
   BotActionReply,
   DB,
@@ -20,11 +20,11 @@ import {
   zonedDateTime,
   zonedToUtc,
 } from '@pd/contracts';
-import { and, asc, eq, gt, inArray, lte, or } from 'drizzle-orm';
-import { z } from 'zod';
-import { ReminderRow, reminders, tasks } from './tasks.schema';
-import { formatWhen, tasksMessages } from './tasks.messages';
-import { DEFAULT_TIME, parseWhen } from './when';
+import {and, asc, eq, gt, inArray, lte, or} from 'drizzle-orm';
+import {z} from 'zod';
+import {ReminderRow, reminders, tasks} from './tasks.schema';
+import {formatWhen, tasksMessages} from './tasks.messages';
+import {DEFAULT_TIME, parseWhen} from './when';
 
 /** The name of the bot action: a button carries `rem:<what>:<reminder id>`. */
 export const REMINDER_ACTION = 'rem';
@@ -63,7 +63,10 @@ export class RemindersService {
           eq(reminders.userId, userId),
           or(
             inArray(reminders.status, ['scheduled', 'fired']),
-            gt(reminders.firedAt, new Date(Date.now() - DONE_SHOWN_DAYS * DAY_MS)),
+            gt(
+              reminders.firedAt,
+              new Date(Date.now() - DONE_SHOWN_DAYS * DAY_MS),
+            ),
           ),
         ),
       )
@@ -96,27 +99,35 @@ export class RemindersService {
   }
 
   /** A new time puts an answered or sent reminder back to waiting. */
-  async update(userId: string, id: string, changes: ValidReminderUpdate): Promise<void> {
+  async update(
+    userId: string,
+    id: string,
+    changes: ValidReminderUpdate,
+  ): Promise<void> {
     await this.find(userId, id);
-    const { remindAt, ...rest } = changes;
+    const {remindAt, ...rest} = changes;
     await this.db
       .update(reminders)
       .set({
         ...rest,
-        ...(remindAt ? { remindAt: new Date(remindAt), status: 'scheduled' as const } : {}),
+        ...(remindAt
+          ? {remindAt: new Date(remindAt), status: 'scheduled' as const}
+          : {}),
       })
       .where(eq(reminders.id, id));
   }
 
   async remove(userId: string, id: string): Promise<void> {
-    await this.db.delete(reminders).where(and(eq(reminders.id, id), eq(reminders.userId, userId)));
+    await this.db
+      .delete(reminders)
+      .where(and(eq(reminders.id, id), eq(reminders.userId, userId)));
   }
 
   async done(userId: string, id: string): Promise<void> {
     await this.find(userId, id);
     await this.db
       .update(reminders)
-      .set({ status: 'done' })
+      .set({status: 'done'})
       .where(and(eq(reminders.id, id), eq(reminders.userId, userId)));
   }
 
@@ -125,7 +136,7 @@ export class RemindersService {
     await this.find(userId, id);
     await this.db
       .update(reminders)
-      .set({ remindAt: at, status: 'scheduled' })
+      .set({remindAt: at, status: 'scheduled'})
       .where(and(eq(reminders.id, id), eq(reminders.userId, userId)));
   }
 
@@ -142,12 +153,14 @@ export class RemindersService {
     const due = await this.db
       .select()
       .from(reminders)
-      .where(and(eq(reminders.status, 'scheduled'), lte(reminders.remindAt, now)))
+      .where(
+        and(eq(reminders.status, 'scheduled'), lte(reminders.remindAt, now)),
+      )
       .orderBy(asc(reminders.remindAt))
       .limit(FIRED_PER_RUN);
     for (const reminder of due) {
       // One reminder failing (a user without channels, Telegram down) must not hold the others.
-      await this.fire(reminder, now).catch((error) =>
+      await this.fire(reminder, now).catch(error =>
         this.logger.warn(`Reminder ${reminder.id} was not sent: ${error}`),
       );
     }
@@ -178,7 +191,9 @@ export class RemindersService {
       case 't': {
         const today = zonedDateTime(new Date(), timeZone).date;
         const tomorrow = toLocalDate(addDays(parseLocalDate(today), 1));
-        return snoozeTo(zonedToUtc({ date: tomorrow, time: DEFAULT_TIME }, timeZone));
+        return snoozeTo(
+          zonedToUtc({date: tomorrow, time: DEFAULT_TIME}, timeZone),
+        );
       }
       default:
         return {
@@ -197,7 +212,12 @@ export class RemindersService {
       return;
     }
     const sent = reminder.repeat
-      ? await this.advanceSeries(reminder, reminder.repeat, now, this.users.timeZoneOf(user))
+      ? await this.advanceSeries(
+          reminder,
+          reminder.repeat,
+          now,
+          this.users.timeZoneOf(user),
+        )
       : await this.markFired(reminder, now);
     // Another run took it in the meantime.
     if (!sent) {
@@ -222,11 +242,16 @@ export class RemindersService {
   }
 
   /** `scheduled` → `fired`, unless another run did it first. */
-  private async markFired(reminder: ReminderRow, now: Date): Promise<ReminderRow | undefined> {
+  private async markFired(
+    reminder: ReminderRow,
+    now: Date,
+  ): Promise<ReminderRow | undefined> {
     const [row] = await this.db
       .update(reminders)
-      .set({ status: 'fired', firedAt: now })
-      .where(and(eq(reminders.id, reminder.id), eq(reminders.status, 'scheduled')))
+      .set({status: 'fired', firedAt: now})
+      .where(
+        and(eq(reminders.id, reminder.id), eq(reminders.status, 'scheduled')),
+      )
       .returning();
     return row;
   }
@@ -246,14 +271,19 @@ export class RemindersService {
     let next = series.remindAt;
     while (next <= now) {
       date = addRepeat(date, repeat);
-      next = zonedToUtc({ date, time: local.time }, timeZone);
+      next = zonedToUtc({date, time: local.time}, timeZone);
     }
-    return this.db.transaction(async (tx) => {
+    return this.db.transaction(async tx => {
       const [moved] = await tx
         .update(reminders)
-        .set({ remindAt: next, firedAt: now })
+        .set({remindAt: next, firedAt: now})
         // Still at the time this run saw: nobody moved it meanwhile.
-        .where(and(eq(reminders.id, series.id), eq(reminders.remindAt, series.remindAt)))
+        .where(
+          and(
+            eq(reminders.id, series.id),
+            eq(reminders.remindAt, series.remindAt),
+          ),
+        )
         .returning();
       if (!moved) {
         return undefined;

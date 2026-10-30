@@ -1,6 +1,6 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, DemoContext, DemoService } from '@pd/api-core';
-import { BUDGET_TOTAL } from '@pd/contracts';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, DemoContext, DemoService} from '@pd/api-core';
+import {BUDGET_TOTAL} from '@pd/contracts';
 import {
   financeAssets,
   financeBudgets,
@@ -36,11 +36,14 @@ export class FinanceDemo implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.demo.register({ module: 'finance', seed: (context) => this.seed(context) });
+    this.demo.register({
+      module: 'finance',
+      seed: context => this.seed(context),
+    });
   }
 
-  private async seed({ userId, daysAgo, projects }: DemoContext): Promise<void> {
-    const money = { userId, currency: EUR };
+  private async seed({userId, daysAgo, projects}: DemoContext): Promise<void> {
+    const money = {userId, currency: EUR};
     await this.db.insert(transactions).values([
       {
         ...money,
@@ -82,12 +85,12 @@ export class FinanceDemo implements OnModuleInit {
     ]);
 
     await this.db.insert(financeBudgets).values([
-      { userId, category: BUDGET_TOTAL, limit: 2200 },
-      { userId, category: 'Groceries', limit: 400 },
-      { userId, category: 'Eating out', limit: 150 },
+      {userId, category: BUDGET_TOTAL, limit: 2200},
+      {userId, category: 'Groceries', limit: 400},
+      {userId, category: 'Eating out', limit: 150},
     ]);
 
-    const subscription = { ...money, isActive: true, period: 'month' as const };
+    const subscription = {...money, isActive: true, period: 'month' as const};
     await this.db.insert(recurringPayments).values([
       {
         ...subscription,
@@ -96,7 +99,13 @@ export class FinanceDemo implements OnModuleInit {
         category: 'Subscriptions',
         dayOfMonth: 12,
       },
-      { ...subscription, name: 'Gym', amount: 35, category: 'Sport', dayOfMonth: 3 },
+      {
+        ...subscription,
+        name: 'Gym',
+        amount: 35,
+        category: 'Sport',
+        dayOfMonth: 3,
+      },
       {
         ...subscription,
         name: 'Home internet',
@@ -128,20 +137,50 @@ export class FinanceDemo implements OnModuleInit {
     ]);
 
     await this.db.insert(financeAssets).values([
-      { ...money, name: 'Cash', kind: 'cash' as const, amount: 320, liquid: true },
-      { ...money, name: 'Savings deposit', kind: 'deposit' as const, amount: 6500, liquid: true },
-      { ...money, name: 'ETF portfolio', kind: 'investment' as const, amount: 4800, liquid: false },
-      { ...money, name: 'Car loan', kind: 'debt' as const, amount: 3200, liquid: false },
+      {
+        ...money,
+        name: 'Cash',
+        kind: 'cash' as const,
+        amount: 320,
+        liquid: true,
+      },
+      {
+        ...money,
+        name: 'Savings deposit',
+        kind: 'deposit' as const,
+        amount: 6500,
+        liquid: true,
+      },
+      {
+        ...money,
+        name: 'ETF portfolio',
+        kind: 'investment' as const,
+        amount: 4800,
+        liquid: false,
+      },
+      {
+        ...money,
+        name: 'Car loan',
+        kind: 'debt' as const,
+        amount: 3200,
+        liquid: false,
+      },
     ]);
     // Half a year of the worth, a point a week, growing a little.
     await this.db.insert(netWorthDays).values(
-      Array.from({ length: 26 }, (_, week) => {
+      Array.from({length: 26}, (_, week) => {
         const total = 6900 + week * 55 + (week % 4 === 0 ? -120 : 0);
-        return { userId, day: daysAgo((26 - week) * 7), total, liquid: total, currency: EUR };
+        return {
+          userId,
+          day: daysAgo((26 - week) * 7),
+          total,
+          liquid: total,
+          currency: EUR,
+        };
       }),
     );
 
-    const wish = { userId, currency: EUR, checkedAt: new Date() };
+    const wish = {userId, currency: EUR, checkedAt: new Date()};
     const [watch] = await this.db
       .insert(wishes)
       .values([

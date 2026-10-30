@@ -1,6 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { fetchWithTimeout } from '@pd/api-core';
-import { CostMeasurement, CostProviderAdapter, CostProviderAuthError } from '../cost-provider';
+import {Injectable} from '@nestjs/common';
+import {fetchWithTimeout} from '@pd/api-core';
+import {
+  CostMeasurement,
+  CostProviderAdapter,
+  CostProviderAuthError,
+} from '../cost-provider';
 import {
   estimateHetznerMonthlyCost,
   HetznerPricing,
@@ -26,7 +30,7 @@ export class HetznerCostProvider implements CostProviderAdapter {
 
   async measure(token: string): Promise<CostMeasurement> {
     const [pricing, servers, primaryIps, volumes] = await Promise.all([
-      this.get<{ pricing: HetznerPricing }>(token, '/pricing'),
+      this.get<{pricing: HetznerPricing}>(token, '/pricing'),
       this.getAll<HetznerServer>(token, '/servers', 'servers'),
       this.getAll<HetznerPrimaryIp>(token, '/primary_ips', 'primary_ips'),
       this.getAll<HetznerVolume>(token, '/volumes', 'volumes'),
@@ -37,18 +41,29 @@ export class HetznerCostProvider implements CostProviderAdapter {
       primaryIps,
       volumes,
     });
-    return { kind: 'monthTotal', amount: estimate.total, currency: estimate.currency };
+    return {
+      kind: 'monthTotal',
+      amount: estimate.total,
+      currency: estimate.currency,
+    };
   }
 
   /** Hetzner API lists are paginated; one page of 50 is enough for a small project. */
-  private async getAll<T>(token: string, path: string, key: string): Promise<T[]> {
-    const response = await this.get<Record<string, T[]>>(token, `${path}?per_page=50`);
+  private async getAll<T>(
+    token: string,
+    path: string,
+    key: string,
+  ): Promise<T[]> {
+    const response = await this.get<Record<string, T[]>>(
+      token,
+      `${path}?per_page=50`,
+    );
     return response[key] ?? [];
   }
 
   private async get<T>(token: string, path: string): Promise<T> {
     const response = await fetchWithTimeout(API + path, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {Authorization: `Bearer ${token}`},
     });
     if (response.status === 401) {
       throw new CostProviderAuthError('Hetzner token is invalid');

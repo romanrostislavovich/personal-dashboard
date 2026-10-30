@@ -1,5 +1,5 @@
-import { CODE_PROVIDERS } from '@pd/contracts';
-import { WebDashboardModule } from '@pd/web-core';
+import {CODE_PROVIDERS} from '@pd/contracts';
+import {WebDashboardModule} from '@pd/web-core';
 
 /**
  * Web part of the Development section: repositories, open source and private (GitHub, GitLab,
@@ -9,34 +9,40 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const developmentModule: WebDashboardModule = {
   id: 'development',
-  nav: { labelKey: 'development.title', icon: 'code', group: 'work' },
+  nav: {labelKey: 'development.title', icon: 'code', group: 'work'},
   // The page holds the tabs; every subsection is its child route.
   loadRoutes: async () => [
     {
       path: '',
-      loadComponent: () => import('./development.page').then((m) => m.DevelopmentPage),
+      loadComponent: () =>
+        import('./development.page').then(m => m.DevelopmentPage),
       children: [
-        { path: '', pathMatch: 'full', redirectTo: 'repositories' },
+        {path: '', pathMatch: 'full', redirectTo: 'repositories'},
         // The tab was "Open Source" once: old links and bookmarks still open it.
-        { path: 'open-source', pathMatch: 'full', redirectTo: 'repositories' },
+        {path: 'open-source', pathMatch: 'full', redirectTo: 'repositories'},
         {
           path: 'summary',
-          loadComponent: () => import('./accounts/summary.page').then((m) => m.SummaryPage),
+          loadComponent: () =>
+            import('./accounts/summary.page').then(m => m.SummaryPage),
         },
         {
           path: 'repositories',
           loadComponent: () =>
-            import('./open-source/open-source.page').then((m) => m.OpenSourcePage),
+            import('./open-source/open-source.page').then(
+              m => m.OpenSourcePage,
+            ),
         },
         // One page for every service: which one comes with the route.
-        ...CODE_PROVIDERS.map((provider) => ({
+        ...CODE_PROVIDERS.map(provider => ({
           path: provider,
-          data: { provider },
-          loadComponent: () => import('./accounts/account.page').then((m) => m.AccountPage),
+          data: {provider},
+          loadComponent: () =>
+            import('./accounts/account.page').then(m => m.AccountPage),
         })),
         {
           path: 'wakatime',
-          loadComponent: () => import('./wakatime/wakatime.page').then((m) => m.WakatimePage),
+          loadComponent: () =>
+            import('./wakatime/wakatime.page').then(m => m.WakatimePage),
         },
       ],
     },
@@ -81,35 +87,46 @@ export const developmentModule: WebDashboardModule = {
     {
       id: 'development.summary',
       size: 'small',
-      loadComponent: () => import('./development.widget').then((m) => m.DevelopmentWidget),
+      loadComponent: () =>
+        import('./development.widget').then(m => m.DevelopmentWidget),
     },
     {
       id: 'development.open-source',
       size: 'medium',
       loadComponent: () =>
-        import('./open-source/open-source.widget').then((m) => m.OpenSourceWidget),
+        import('./open-source/open-source.widget').then(
+          m => m.OpenSourceWidget,
+        ),
     },
   ],
   integrations: [
     {
       id: 'development.github-token',
       loadComponent: () =>
-        import('./github/github-token.integration').then((m) => m.GithubTokenIntegration),
+        import('./github/github-token.integration').then(
+          m => m.GithubTokenIntegration,
+        ),
     },
     {
       id: 'development.gitlab-token',
       loadComponent: () =>
-        import('./accounts/gitlab-token.integration').then((m) => m.GitlabTokenIntegration),
+        import('./accounts/gitlab-token.integration').then(
+          m => m.GitlabTokenIntegration,
+        ),
     },
     {
       id: 'development.bitbucket-token',
       loadComponent: () =>
-        import('./accounts/bitbucket-token.integration').then((m) => m.BitbucketTokenIntegration),
+        import('./accounts/bitbucket-token.integration').then(
+          m => m.BitbucketTokenIntegration,
+        ),
     },
     {
       id: 'development.wakatime-key',
       loadComponent: () =>
-        import('./wakatime/wakatime.integration').then((m) => m.WakatimeIntegration),
+        import('./wakatime/wakatime.integration').then(
+          m => m.WakatimeIntegration,
+        ),
     },
   ],
 };

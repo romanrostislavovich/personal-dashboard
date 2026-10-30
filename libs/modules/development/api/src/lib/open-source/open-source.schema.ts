@@ -1,5 +1,5 @@
-import { users } from '@pd/api-core/schema';
-import { RepoProvider, RepoRelation } from '@pd/contracts';
+import {users} from '@pd/api-core/schema';
+import {RepoProvider, RepoRelation} from '@pd/contracts';
 import {
   boolean,
   date,
@@ -22,7 +22,7 @@ export const trackedRepos = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     provider: text().$type<RepoProvider>().notNull().default('github'),
     /** How it got here: the account's own, an organization's, or added by hand. */
     relation: text().$type<RepoRelation>().notNull().default('manual'),
@@ -50,14 +50,14 @@ export const trackedRepos = pgTable(
     openPulls: integer().notNull().default(0),
     npmWeeklyDownloads: integer(),
     latestReleaseTag: text(),
-    latestReleaseAt: timestamp({ withTimezone: true }),
-    pushedAt: timestamp({ withTimezone: true }),
+    latestReleaseAt: timestamp({withTimezone: true}),
+    pushedAt: timestamp({withTimezone: true}),
 
-    lastSyncedAt: timestamp({ withTimezone: true }),
+    lastSyncedAt: timestamp({withTimezone: true}),
     syncError: text(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [unique().on(table.userId, table.provider, table.fullName)],
+  table => [unique().on(table.userId, table.provider, table.fullName)],
 );
 
 /** Daily history: one row per repository per day (the last value of the day). */
@@ -66,15 +66,15 @@ export const repoDailyStats = pgTable(
   {
     repoId: uuid()
       .notNull()
-      .references(() => trackedRepos.id, { onDelete: 'cascade' }),
-    day: date({ mode: 'string' }).notNull(),
+      .references(() => trackedRepos.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
     stars: integer().notNull(),
     forks: integer().notNull(),
     openIssues: integer().notNull(),
     openPulls: integer().notNull(),
     npmWeeklyDownloads: integer(),
   },
-  (table) => [primaryKey({ columns: [table.repoId, table.day] })],
+  table => [primaryKey({columns: [table.repoId, table.day]})],
 );
 
 export type TrackedRepoRow = typeof trackedRepos.$inferSelect;

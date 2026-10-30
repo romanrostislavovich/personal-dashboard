@@ -13,7 +13,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, Public, ZodValidationPipe } from '@pd/api-core';
+import {AuthUser, CurrentUser, Public, ZodValidationPipe} from '@pd/api-core';
 import {
   FoundPlaceName,
   GoogleKeysInput,
@@ -33,11 +33,11 @@ import {
   PlaceUpdate,
   placeUpdateSchema,
 } from '@pd/contracts';
-import { DevicesService } from '../devices.service';
-import { z } from 'zod';
-import { PlaceNamesService } from './place-names.service';
-import { PlacesAutomations } from './places.automations';
-import { PlacesService } from './places.service';
+import {DevicesService} from '../devices.service';
+import {z} from 'zod';
+import {PlaceNamesService} from './place-names.service';
+import {PlacesAutomations} from './places.automations';
+import {PlacesService} from './places.service';
 
 /**
  * The phone's location: the Android app sends its fixes with its device token, like its
@@ -56,13 +56,14 @@ export class PlacesController {
   @Post('device/locations')
   async ingest(
     @Headers('authorization') authorization: string | undefined,
-    @Body(new ZodValidationPipe(phoneLocationIngestSchema)) body: PhoneLocationIngest,
-  ): Promise<{ saved: number }> {
+    @Body(new ZodValidationPipe(phoneLocationIngestSchema))
+    body: PhoneLocationIngest,
+  ): Promise<{saved: number}> {
     const device = await this.devices.authenticate(authorization);
     const saved = await this.places.ingest(device, body.locations);
     // Came to a place, left it: in the background, the phone need not wait for the rules.
     void this.automations.check(device.userId);
-    return { saved };
+    return {saved};
   }
 
   @Get('places')
@@ -76,7 +77,7 @@ export class PlacesController {
   @Get('places/settings')
   async settings(@CurrentUser() user: AuthUser): Promise<PlacesSettings> {
     const keys = await this.names.googleKeys(user.id);
-    return { googlePlaces: keys.places, googleMapsKey: keys.mapsKey };
+    return {googlePlaces: keys.places, googleMapsKey: keys.mapsKey};
   }
 
   @Put('places/google')
@@ -90,7 +91,10 @@ export class PlacesController {
 
   @Delete('places/google/:which')
   @HttpCode(204)
-  removeGoogle(@CurrentUser() user: AuthUser, @Param('which') which: string): Promise<void> {
+  removeGoogle(
+    @CurrentUser() user: AuthUser,
+    @Param('which') which: string,
+  ): Promise<void> {
     if (which !== 'places' && which !== 'maps') {
       throw new BadRequestException('places or maps');
     }
@@ -110,11 +114,12 @@ export class PlacesController {
   @Post('places/import')
   async import(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(placesImportSchema)) body: z.output<typeof placesImportSchema>,
-  ): Promise<{ saved: number }> {
+    @Body(new ZodValidationPipe(placesImportSchema))
+    body: z.output<typeof placesImportSchema>,
+  ): Promise<{saved: number}> {
     const saved = await this.places.importTimeline(user.id, body.locations);
     await this.names.importNames(user.id, body.names);
-    return { saved };
+    return {saved};
   }
 
   @Post('places')
@@ -137,7 +142,10 @@ export class PlacesController {
 
   @Delete('places/:id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.places.removePlace(user.id, id);
   }
 }

@@ -1,4 +1,4 @@
-import { SaveOffer } from '../shared/messages';
+import {SaveOffer} from '../shared/messages';
 
 /*
  * The bar that offers to save a login typed into the page. It lives in a closed shadow root:
@@ -12,7 +12,8 @@ export interface SaveBarActions {
   open(): void;
 }
 
-const t = (key: string, ...substitutions: string[]) => chrome.i18n.getMessage(key, substitutions);
+const t = (key: string, ...substitutions: string[]) =>
+  chrome.i18n.getMessage(key, substitutions);
 
 const STYLE = `
   :host { all: initial; }
@@ -39,7 +40,7 @@ let host: HTMLElement | null = null;
 export function showSaveBar(offer: SaveOffer, actions: SaveBarActions): void {
   hideSaveBar();
   host = document.createElement('pd-vault-save');
-  const root = host.attachShadow({ mode: 'closed' });
+  const root = host.attachShadow({mode: 'closed'});
   const style = document.createElement('style');
   style.textContent = STYLE;
   const bar = element('div', 'bar');
@@ -64,14 +65,18 @@ export function showSaveBar(offer: SaveOffer, actions: SaveBarActions): void {
   if (mode === 'locked' || mode === 'signed-out') {
     // Shown again with "Save" once the vault is unlocked in the popup.
     buttons.append(
-      button(t(mode === 'locked' ? 'saveBarUnlockButton' : 'saveBarSignInButton'), 'primary', () =>
-        close(() => actions.open()),
+      button(
+        t(mode === 'locked' ? 'saveBarUnlockButton' : 'saveBarSignInButton'),
+        'primary',
+        () => close(() => actions.open()),
       ),
     );
   } else {
     buttons.append(
-      button(t(mode === 'update' ? 'saveBarUpdateButton' : 'saveBarSaveButton'), 'primary', () =>
-        close(() => actions.save(mode)),
+      button(
+        t(mode === 'update' ? 'saveBarUpdateButton' : 'saveBarSaveButton'),
+        'primary',
+        () => close(() => actions.save(mode)),
       ),
     );
   }
@@ -99,7 +104,11 @@ function element(tag: string, className: string, text?: string): HTMLElement {
   return node;
 }
 
-function button(text: string, className: string, onClick: () => void): HTMLButtonElement {
+function button(
+  text: string,
+  className: string,
+  onClick: () => void,
+): HTMLButtonElement {
   const node = element('button', className, text) as HTMLButtonElement;
   node.type = 'button';
   node.addEventListener('click', onClick);

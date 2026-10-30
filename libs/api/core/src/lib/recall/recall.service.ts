@@ -1,16 +1,22 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AiRecallHit } from '@pd/contracts';
-import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
-import { AiConnectionsService } from '../ai/ai-connections.service';
-import { aiConnections } from '../ai/ai.schema';
-import { embed } from '../ai/openai-compatible.client';
-import { DB, Database } from '../database/database.module';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { UsersService } from '../users/users.service';
-import { documentText, hashOf, nearest, RecallItem, withTask } from './recall-math';
-import { recallVectors } from './recall.schema';
+import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {AiRecallHit} from '@pd/contracts';
+import {and, eq, inArray, notInArray, sql} from 'drizzle-orm';
+import {AiConnectionsService} from '../ai/ai-connections.service';
+import {aiConnections} from '../ai/ai.schema';
+import {embed} from '../ai/openai-compatible.client';
+import {DB, Database} from '../database/database.module';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {UsersService} from '../users/users.service';
+import {
+  documentText,
+  hashOf,
+  nearest,
+  RecallItem,
+  withTask,
+} from './recall-math';
+import {recallVectors} from './recall.schema';
 
-export type { RecallItem } from './recall-math';
+export type {RecallItem} from './recall-math';
 
 /**
  * A section's part of search by meaning: its items as text (decrypted where the section
@@ -79,7 +85,7 @@ export class RecallService implements OnModuleInit {
         visible.length
           ? sql`(${notInArray(
               recallVectors.module,
-              visible.map((s) => s.module),
+              visible.map(s => s.module),
             )} OR ${recallVectors.model} <> ${model})`
           : sql`true`,
       ),
@@ -91,20 +97,25 @@ export class RecallService implements OnModuleInit {
       const known = new Map(
         (
           await this.db
-            .select({ itemId: recallVectors.itemId, hash: recallVectors.hash })
+            .select({itemId: recallVectors.itemId, hash: recallVectors.hash})
             .from(recallVectors)
-            .where(and(eq(recallVectors.userId, userId), eq(recallVectors.module, source.module)))
-        ).map((row) => [row.itemId, row.hash]),
+            .where(
+              and(
+                eq(recallVectors.userId, userId),
+                eq(recallVectors.module, source.module),
+              ),
+            )
+        ).map(row => [row.itemId, row.hash]),
       );
       const stale = items
-        .map((item) => ({ item, text: documentText(item) }))
-        .map((one) => ({ ...one, hash: hashOf(one.text) }))
-        .filter((one) => known.get(one.item.id) !== one.hash);
+        .map(item => ({item, text: documentText(item)}))
+        .map(one => ({...one, hash: hashOf(one.text)}))
+        .filter(one => known.get(one.item.id) !== one.hash);
       for (let at = 0; at < stale.length; at += BATCH) {
         const batch = stale.slice(at, at + BATCH);
         const vectors = await embed(
           connection,
-          batch.map((one) => withTask(model, 'document', one.text)),
+          batch.map(one => withTask(model, 'document', one.text)),
         );
         await this.db
           .insert(recallVectors)
@@ -119,7 +130,11 @@ export class RecallService implements OnModuleInit {
             })),
           )
           .onConflictDoUpdate({
-            target: [recallVectors.userId, recallVectors.module, recallVectors.itemId],
+            target: [
+              recallVectors.userId,
+              recallVectors.module,
+              recallVectors.itemId,
+            ],
             set: {
               model: sql`excluded.model`,
               hash: sql`excluded.hash`,
@@ -128,7 +143,7 @@ export class RecallService implements OnModuleInit {
             },
           });
       }
-      const ids = items.map((item) => item.id);
+      const ids = items.map(item => item.id);
       await this.db
         .delete(recallVectors)
         .where(
@@ -149,19 +164,19 @@ export class RecallService implements OnModuleInit {
   async search(
     userId: string,
     question: string,
-    { count = 8, module }: { count?: number; module?: string } = {},
+    {count = 8, module}: {count?: number; module?: string} = {},
   ): Promise<AiRecallHit[] | null> {
     const connection = await this.connections.embedding(userId);
     if (!connection) {
       return null;
     }
     const visible = (await this.visibleSources(userId)).filter(
-      (source) => !module || source.module === module,
+      source => !module || source.module === module,
     );
     if (!visible.length) {
       return [];
     }
-    const modules = visible.map((source) => source.module);
+    const modules = visible.map(source => source.module);
     const load = () =>
       this.db
         .select({
@@ -182,16 +197,20 @@ export class RecallService implements OnModuleInit {
       await this.index(userId);
       rows = await load();
     }
-    const [query] = await embed(connection, [withTask(connection.model, 'query', question)]);
+    const [query] = await embed(connection, [
+      withTask(connection.model, 'query', question),
+    ]);
     const found = nearest(query, rows, count, MIN_SCORE);
     // The text is read from the section itself: the index keeps no text.
     const hits: AiRecallHit[] = [];
     for (const source of visible) {
-      const wanted = found.filter((hit) => hit.module === source.module);
+      const wanted = found.filter(hit => hit.module === source.module);
       if (!wanted.length) {
         continue;
       }
-      const items = new Map((await source.items(userId)).map((item) => [item.id, item]));
+      const items = new Map(
+        (await source.items(userId)).map(item => [item.id, item]),
+      );
       for (const hit of wanted) {
         const item = items.get(hit.itemId);
         if (item) {
@@ -213,7 +232,7 @@ export class RecallService implements OnModuleInit {
   /** How many items the user's index holds. */
   async indexed(userId: string): Promise<number> {
     const [row] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({count: sql<number>`count(*)::int`})
       .from(recallVectors)
       .where(eq(recallVectors.userId, userId));
     return row?.count ?? 0;
@@ -221,10 +240,14 @@ export class RecallService implements OnModuleInit {
 
   /** Every hour: the index of each user with a connection that can make vectors. */
   private async indexAll(): Promise<void> {
-    const rows = await this.db.selectDistinct({ userId: aiConnections.userId }).from(aiConnections);
-    for (const { userId } of rows) {
-      await this.index(userId).catch((error) =>
-        this.logger.warn(`Search by meaning: indexing failed for ${userId}: ${error}`),
+    const rows = await this.db
+      .selectDistinct({userId: aiConnections.userId})
+      .from(aiConnections);
+    for (const {userId} of rows) {
+      await this.index(userId).catch(error =>
+        this.logger.warn(
+          `Search by meaning: indexing failed for ${userId}: ${error}`,
+        ),
       );
     }
   }
@@ -239,6 +262,6 @@ export class RecallService implements OnModuleInit {
       ...(await this.connections.hiddenFromShared(userId)),
       ...this.users.hiddenSections(await this.users.findById(userId)),
     ]);
-    return this.sources.filter((source) => !hidden.has(source.module));
+    return this.sources.filter(source => !hidden.has(source.module));
   }
 }

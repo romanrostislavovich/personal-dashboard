@@ -63,7 +63,7 @@ const ROLES = [
 
 /** `surfaceContainerLow` → `surface-container-low` */
 export function tokenName(role: string): string {
-  return role.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+  return role.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
 }
 
 /**
@@ -73,20 +73,29 @@ export function tokenName(role: string): string {
  * the accent stays close to grey. The library is loaded only when a palette is asked for: the
  * built-in theme needs none.
  */
-export async function generatePalette(seed: string, neutral = false): Promise<ThemePalette> {
-  const { argbFromHex, hexFromArgb, Hct, MaterialDynamicColors, SchemeFidelity, SchemeNeutral } =
-    await import('@material/material-color-utilities');
+export async function generatePalette(
+  seed: string,
+  neutral = false,
+): Promise<ThemePalette> {
+  const {
+    argbFromHex,
+    hexFromArgb,
+    Hct,
+    MaterialDynamicColors,
+    SchemeFidelity,
+    SchemeNeutral,
+  } = await import('@material/material-color-utilities');
   const source = Hct.fromInt(argbFromHex(seed));
   const palette = (dark: boolean): Palette => {
     const scheme = neutral
       ? new SchemeNeutral(source, dark, 0)
       : new SchemeFidelity(source, dark, 0);
     return Object.fromEntries(
-      ROLES.map((role) => [
+      ROLES.map(role => [
         tokenName(role),
         hexFromArgb(MaterialDynamicColors[role].getArgb(scheme)),
       ]),
     );
   };
-  return { light: palette(false), dark: palette(true) };
+  return {light: palette(false), dark: palette(true)};
 }

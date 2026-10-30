@@ -1,6 +1,9 @@
-import { AchievementMetric, AchievementTier } from './achievement-metric';
+import {AchievementMetric, AchievementTier} from './achievement-metric';
 
-export function achievementId(metric: AchievementMetric, tier: AchievementTier): string {
+export function achievementId(
+  metric: AchievementMetric,
+  tier: AchievementTier,
+): string {
   return `${metric.id}.${tier.goal}`;
 }
 
@@ -11,6 +14,7 @@ export function newlyUnlockedTiers(
   alreadyUnlocked: ReadonlySet<string>,
 ): AchievementTier[] {
   return metric.tiers.filter(
-    (tier) => value >= tier.goal && !alreadyUnlocked.has(achievementId(metric, tier)),
+    tier =>
+      value >= tier.goal && !alreadyUnlocked.has(achievementId(metric, tier)),
   );
 }

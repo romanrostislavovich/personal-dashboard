@@ -1,10 +1,15 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
-import { AccessPayload } from './auth.service';
-import { AuthUser } from './current-user.decorator';
-import { IS_PUBLIC } from './public.decorator';
-import { SessionsService } from './sessions.service';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import {Reflector} from '@nestjs/core';
+import {JwtService} from '@nestjs/jwt';
+import {AccessPayload} from './auth.service';
+import {AuthUser} from './current-user.decorator';
+import {IS_PUBLIC} from './public.decorator';
+import {SessionsService} from './sessions.service';
 
 /**
  * Global guard: checks `Authorization: Bearer <access token>` on every request — a valid token of
@@ -33,7 +38,9 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    const payload = await this.jwt.verifyAsync<AccessPayload>(token).catch(() => null);
+    const payload = await this.jwt
+      .verifyAsync<AccessPayload>(token)
+      .catch(() => null);
     // A token without a session is an old 30-day one (before sessions): sign in again.
     if (!payload?.sid || !(await this.sessions.isAlive(payload.sid))) {
       throw new UnauthorizedException();

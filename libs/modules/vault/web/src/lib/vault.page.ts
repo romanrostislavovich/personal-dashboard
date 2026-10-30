@@ -6,24 +6,24 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { OpenVaultItem } from '@pd/contracts';
-import { ToastService } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { VaultItemDialog } from './vault-item.dialog';
-import { VaultMasterDialog } from './vault-master.dialog';
-import { VaultSession } from './vault-session.service';
-import { VaultSetupComponent } from './vault-setup.component';
-import { VaultUnlockComponent } from './vault-unlock.component';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatDialog} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {OpenVaultItem} from '@pd/contracts';
+import {ToastService} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {VaultItemDialog} from './vault-item.dialog';
+import {VaultMasterDialog} from './vault-master.dialog';
+import {VaultSession} from './vault-session.service';
+import {VaultSetupComponent} from './vault-setup.component';
+import {VaultUnlockComponent} from './vault-unlock.component';
 
 /**
  * The password vault: set up, locked, or open with its items. What the vault holds is only ever
@@ -51,7 +51,8 @@ import { VaultUnlockComponent } from './vault-unlock.component';
       @if (state() === 'open') {
         <span class="spacer"></span>
         <button matButton (click)="changeMaster()">
-          <mat-icon>password</mat-icon> {{ 'vault.list.changeMaster' | transloco }}
+          <mat-icon>password</mat-icon>
+          {{ 'vault.list.changeMaster' | transloco }}
         </button>
         <button matButton="tonal" (click)="session.lock()">
           <mat-icon>lock</mat-icon> {{ 'vault.list.lock' | transloco }}
@@ -75,7 +76,11 @@ import { VaultUnlockComponent } from './vault-unlock.component';
           <mat-form-field subscriptSizing="dynamic" class="search">
             <mat-icon matPrefix>search</mat-icon>
             <mat-label>{{ 'vault.list.search' | transloco }}</mat-label>
-            <input matInput [ngModel]="query()" (ngModelChange)="query.set($event)" />
+            <input
+              matInput
+              [ngModel]="query()"
+              (ngModelChange)="query.set($event)"
+            />
           </mat-form-field>
           <button matButton="filled" (click)="edit(null)">
             <mat-icon>add</mat-icon> {{ 'vault.list.add' | transloco }}
@@ -83,12 +88,16 @@ import { VaultUnlockComponent } from './vault-unlock.component';
         </div>
         <p class="hint">{{ 'vault.list.autoLock' | transloco }}</p>
         @if (session.unreadable(); as count) {
-          <p class="error">{{ 'vault.list.unreadable' | transloco: { count } }}</p>
+          <p class="error">
+            {{ 'vault.list.unreadable' | transloco: {count} }}
+          </p>
         }
         <div class="items">
           @for (item of shown(); track item.id) {
             <mat-card appearance="outlined" class="item">
-              <mat-icon class="kind">{{ item.kind === 'note' ? 'sticky_note_2' : 'key' }}</mat-icon>
+              <mat-icon class="kind">{{
+                item.kind === 'note' ? 'sticky_note_2' : 'key'
+              }}</mat-icon>
               <div class="body">
                 <b>
                   @if (item.favorite) {
@@ -96,7 +105,9 @@ import { VaultUnlockComponent } from './vault-unlock.component';
                   }
                   {{ item.title }}
                 </b>
-                <span class="hint">{{ item.username || item.urls[0] || '' }}</span>
+                <span class="hint">{{
+                  item.username || item.urls[0] || ''
+                }}</span>
               </div>
               @if (item.kind === 'login') {
                 <button
@@ -135,7 +146,10 @@ import { VaultUnlockComponent } from './vault-unlock.component';
             </mat-card>
           } @empty {
             <p class="hint">
-              {{ (query() ? 'vault.list.nothing' : 'vault.list.empty') | transloco }}
+              {{
+                (query() ? 'vault.list.nothing' : 'vault.list.empty')
+                  | transloco
+              }}
             </p>
           }
         </div>
@@ -229,9 +243,9 @@ export class VaultPage {
     return this.session
       .sorted()
       .filter(
-        (item) =>
+        item =>
           !words ||
-          [item.title, item.username, item.notes, ...item.urls].some((text) =>
+          [item.title, item.username, item.notes, ...item.urls].some(text =>
             text.toLowerCase().includes(words),
           ),
       );
@@ -262,12 +276,17 @@ export class VaultPage {
   }
 
   protected edit(item: OpenVaultItem | null): void {
-    this.dialog.open(VaultItemDialog, { data: item, autoFocus: 'first-tabbable' });
+    this.dialog.open(VaultItemDialog, {
+      data: item,
+      autoFocus: 'first-tabbable',
+    });
   }
 
   protected changeMaster(): void {
-    const ref = this.dialog.open(VaultMasterDialog, { autoFocus: 'first-tabbable' });
-    void firstValueFrom(ref.afterClosed()).then((changed) => {
+    const ref = this.dialog.open(VaultMasterDialog, {
+      autoFocus: 'first-tabbable',
+    });
+    void firstValueFrom(ref.afterClosed()).then(changed => {
       if (changed) {
         this.toasts.show({
           icon: 'lock_reset',
@@ -278,7 +297,13 @@ export class VaultPage {
   }
 
   protected async remove(item: OpenVaultItem): Promise<void> {
-    if (confirm(this.transloco.translate('vault.list.confirmDelete', { title: item.title }))) {
+    if (
+      confirm(
+        this.transloco.translate('vault.list.confirmDelete', {
+          title: item.title,
+        }),
+      )
+    ) {
       await this.session.remove(item.id);
     }
   }

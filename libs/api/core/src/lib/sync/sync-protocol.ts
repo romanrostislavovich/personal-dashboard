@@ -1,7 +1,7 @@
-import { createHash, timingSafeEqual } from 'node:crypto';
-import { IncomingMessage } from 'node:http';
-import { promisify } from 'node:util';
-import { gunzip, gzip } from 'node:zlib';
+import {createHash, timingSafeEqual} from 'node:crypto';
+import {IncomingMessage} from 'node:http';
+import {promisify} from 'node:util';
+import {gunzip, gzip} from 'node:zlib';
 
 /**
  * Sync requests and responses are gzipped JSON with their own content type: the global JSON
@@ -23,7 +23,9 @@ export async function decodeSyncBody(data: Buffer): Promise<unknown> {
 }
 
 /** Reads the raw request body (it is not parsed by Nest for our content type). */
-export async function readRequestBody(request: IncomingMessage): Promise<Buffer> {
+export async function readRequestBody(
+  request: IncomingMessage,
+): Promise<Buffer> {
   const chunks: Buffer[] = [];
   let size = 0;
   for await (const chunk of request) {
@@ -37,8 +39,13 @@ export async function readRequestBody(request: IncomingMessage): Promise<Buffer>
 }
 
 /** Constant-time comparison of `Authorization: Bearer <token>` with SYNC_TOKEN. */
-export function isValidSyncToken(header: string | undefined, token: string): boolean {
-  const given = header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : '';
+export function isValidSyncToken(
+  header: string | undefined,
+  token: string,
+): boolean {
+  const given = header?.startsWith('Bearer ')
+    ? header.slice('Bearer '.length)
+    : '';
   const hash = (value: string) => createHash('sha256').update(value).digest();
   return timingSafeEqual(hash(given), hash(token));
 }
@@ -48,5 +55,8 @@ export function isValidSyncToken(header: string | undefined, token: string): boo
  * must use the same key; the key itself never leaves the instance.
  */
 export function encryptionKeyCheck(encryptionKey: string): string {
-  return createHash('sha256').update(`pd-sync:${encryptionKey}`).digest('hex').slice(0, 16);
+  return createHash('sha256')
+    .update(`pd-sync:${encryptionKey}`)
+    .digest('hex')
+    .slice(0, 16);
 }

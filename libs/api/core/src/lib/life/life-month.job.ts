@@ -1,17 +1,22 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { addDays, parseLocalDate, toLocalDate, zonedDateTime } from '@pd/contracts';
-import { eq } from 'drizzle-orm';
-import { AppConfig } from '../config/env';
-import { DB, Database } from '../database/database.module';
-import { coreMessages } from '../i18n/core.messages';
-import { NotificationsService } from '../notifications/notifications.service';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { users } from '../users/users.schema';
-import { UsersService } from '../users/users.service';
-import { LifeStoriesService, periodRange } from './life-stories.service';
-import { lifeMonths } from './life.schema';
-import { LifeService } from './life.service';
+import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {
+  addDays,
+  parseLocalDate,
+  toLocalDate,
+  zonedDateTime,
+} from '@pd/contracts';
+import {eq} from 'drizzle-orm';
+import {AppConfig} from '../config/env';
+import {DB, Database} from '../database/database.module';
+import {coreMessages} from '../i18n/core.messages';
+import {NotificationsService} from '../notifications/notifications.service';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {users} from '../users/users.schema';
+import {UsersService} from '../users/users.service';
+import {LifeStoriesService, periodRange} from './life-stories.service';
+import {lifeMonths} from './life.schema';
+import {LifeService} from './life.service';
 
 /** The summaries come on the 1st, from this hour of the user's own clock. */
 const SEND_FROM = '10:00';
@@ -36,7 +41,9 @@ export class LifeMonthJob implements OnModuleInit {
     private readonly notifications: NotificationsService,
     private readonly usersService: UsersService,
   ) {
-    this.publicUrl = config.get('PUBLIC_URL', { infer: true }).replace(/\/+$/, '');
+    this.publicUrl = config
+      .get('PUBLIC_URL', {infer: true})
+      .replace(/\/+$/, '');
   }
 
   onModuleInit(): void {
@@ -48,8 +55,8 @@ export class LifeMonthJob implements OnModuleInit {
   }
 
   private async runAll(): Promise<void> {
-    for (const { id } of await this.db.select({ id: users.id }).from(users)) {
-      await this.run(id).catch((error) =>
+    for (const {id} of await this.db.select({id: users.id}).from(users)) {
+      await this.run(id).catch(error =>
         this.logger.error(`Life summary failed for ${id}: ${error}`),
       );
     }
@@ -65,24 +72,39 @@ export class LifeMonthJob implements OnModuleInit {
     const last = toLocalDate(addDays(parseLocalDate(now.date), -1));
     const month = last.slice(0, 7);
     const year = last.slice(0, 4);
-    const [sent] = await this.db.select().from(lifeMonths).where(eq(lifeMonths.userId, userId));
+    const [sent] = await this.db
+      .select()
+      .from(lifeMonths)
+      .where(eq(lifeMonths.userId, userId));
     const monthDue = sent?.month !== month;
     const yearDue = now.date.endsWith('-01-01') && sent?.year !== year;
     if (!monthDue && !yearDue) {
       return;
     }
     // Marked first: one attempt each, whatever happens next.
-    const marks = { month, year: yearDue ? year : (sent?.year ?? null) };
+    const marks = {month, year: yearDue ? year : (sent?.year ?? null)};
     await this.db
       .insert(lifeMonths)
-      .values({ userId, ...marks })
-      .onConflictDoUpdate({ target: lifeMonths.userId, set: marks });
+      .values({userId, ...marks})
+      .onConflictDoUpdate({target: lifeMonths.userId, set: marks});
 
     if (monthDue) {
-      await this.send(userId, month, text.lifeMonthTitle(month), `summary?month=${month}`, true);
+      await this.send(
+        userId,
+        month,
+        text.lifeMonthTitle(month),
+        `summary?month=${month}`,
+        true,
+      );
     }
     if (yearDue) {
-      await this.send(userId, year, text.lifeYearTitle(year), `summary?year=${year}`, false);
+      await this.send(
+        userId,
+        year,
+        text.lifeYearTitle(year),
+        `summary?year=${year}`,
+        false,
+      );
     }
   }
 
@@ -93,7 +115,9 @@ export class LifeMonthJob implements OnModuleInit {
     page: string,
     withNotes: boolean,
   ): Promise<void> {
-    const text = coreMessages((await this.usersService.findById(userId))?.locale);
+    const text = coreMessages(
+      (await this.usersService.findById(userId))?.locale,
+    );
     const story = await this.stories.write(userId, period).catch(() => null);
     const notes = withNotes ? await this.life.monthNotes(userId, period) : [];
     if (!story && !notes.length && !(await this.hasNumbers(userId, period))) {

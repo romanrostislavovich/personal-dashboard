@@ -1,4 +1,4 @@
-import { DigestSection } from './digest-section';
+import {DigestSection} from './digest-section';
 
 export interface CollectedSection {
   section: DigestSection;
@@ -22,10 +22,14 @@ export function digestChanges(
   lastSent: ReadonlyMap<string, unknown>,
 ): DigestChange[] {
   return collected
-    .filter(({ facts }) => facts !== null && facts !== undefined)
-    .map(({ section, facts }) => ({ section, facts, previous: lastSent.get(section.id) ?? null }))
+    .filter(({facts}) => facts !== null && facts !== undefined)
+    .map(({section, facts}) => ({
+      section,
+      facts,
+      previous: lastSent.get(section.id) ?? null,
+    }))
     .filter(
-      ({ section, facts, previous }) =>
+      ({section, facts, previous}) =>
         section.always || canonicalJson(facts) !== canonicalJson(previous),
     );
 }
@@ -38,7 +42,9 @@ export function canonicalJson(value: unknown): string {
   return JSON.stringify(value, (_key, item: unknown) =>
     item && typeof item === 'object' && !Array.isArray(item)
       ? Object.fromEntries(
-          Object.entries(item as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)),
+          Object.entries(item as Record<string, unknown>).sort(([a], [b]) =>
+            a.localeCompare(b),
+          ),
         )
       : item,
   );

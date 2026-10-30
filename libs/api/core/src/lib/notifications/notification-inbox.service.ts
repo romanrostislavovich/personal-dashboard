@@ -13,21 +13,21 @@ import {
   InboxQueryParsed,
   InboxSummary,
 } from '@pd/contracts';
-import { and, desc, eq, gt, isNull, lt, ne, sql, SQL } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { coreMessages } from '../i18n/core.messages';
-import { RealtimeService } from '../realtime/realtime.service';
-import { UserRow } from '../users/users.schema';
-import { UsersService } from '../users/users.service';
-import { ActionResult, NotificationActions } from './notification-actions';
-import { linkOf } from './notification-link';
+import {and, desc, eq, gt, isNull, lt, ne, sql, SQL} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {coreMessages} from '../i18n/core.messages';
+import {RealtimeService} from '../realtime/realtime.service';
+import {UserRow} from '../users/users.schema';
+import {UsersService} from '../users/users.service';
+import {ActionResult, NotificationActions} from './notification-actions';
+import {linkOf} from './notification-link';
 import {
   NotificationOutboxRow,
   notificationOutbox,
   TelegramMessageRef,
 } from './notifications.schema';
-import { PushService } from './push/push.service';
-import { TelegramBotService } from './telegram/telegram-bot.service';
+import {PushService} from './push/push.service';
+import {TelegramBotService} from './telegram/telegram-bot.service';
 
 /** A question unanswered for longer no longer waits: the day it asked about has passed. */
 export const QUESTION_WAITS_DAYS = 3;
@@ -54,13 +54,20 @@ export class NotificationInboxService implements OnModuleInit {
 
   onModuleInit(): void {
     this.telegram.useAnswers({
-      button: (user, message, action) => this.answerTelegramButton(user, message, action),
+      button: (user, message, action) =>
+        this.answerTelegramButton(user, message, action),
       text: (user, text) =>
-        this.answerWords(user, text, 'telegram').then((done) => done?.reply ?? null),
+        this.answerWords(user, text, 'telegram').then(
+          done => done?.reply ?? null,
+        ),
     });
   }
 
-  async list(userId: string, query: InboxQueryParsed, now = new Date()): Promise<InboxItem[]> {
+  async list(
+    userId: string,
+    query: InboxQueryParsed,
+    now = new Date(),
+  ): Promise<InboxItem[]> {
     const conditions: SQL[] = [this.mine(userId)];
     if (query.filter === 'questions') {
       conditions.push(this.waiting(now));
@@ -74,7 +81,7 @@ export class NotificationInboxService implements OnModuleInit {
       .where(and(...conditions))
       .orderBy(desc(notificationOutbox.createdAt))
       .limit(query.limit);
-    return rows.map((row) => toItem(row, now));
+    return rows.map(row => toItem(row, now));
   }
 
   async summary(userId: string, now = new Date()): Promise<InboxSummary> {
@@ -85,7 +92,7 @@ export class NotificationInboxService implements OnModuleInit {
       })
       .from(notificationOutbox)
       .where(this.mine(userId));
-    return { unread: counts?.unread ?? 0, waiting: counts?.waiting ?? 0 };
+    return {unread: counts?.unread ?? 0, waiting: counts?.waiting ?? 0};
   }
 
   /** One notification, and whether the words its answer asked for are awaited now. */
@@ -102,20 +109,20 @@ export class NotificationInboxService implements OnModuleInit {
    */
   async answerFromPush(id: string, action: string): Promise<InboxAnswerResult> {
     const [row] = await this.db
-      .select({ userId: notificationOutbox.userId })
+      .select({userId: notificationOutbox.userId})
       .from(notificationOutbox)
       .where(eq(notificationOutbox.id, id));
     if (!row) {
       throw new NotFoundException();
     }
-    return this.answer(row.userId, id, { action }, 'push');
+    return this.answer(row.userId, id, {action}, 'push');
   }
 
   /** Seen: one, or all of them ("read all"). */
   async markRead(userId: string, id?: string): Promise<void> {
     await this.db
       .update(notificationOutbox)
-      .set({ readAt: new Date() })
+      .set({readAt: new Date()})
       .where(
         and(
           this.mine(userId),
@@ -123,7 +130,7 @@ export class NotificationInboxService implements OnModuleInit {
           ...(id ? [eq(notificationOutbox.id, id)] : []),
         ),
       );
-    this.realtime.emit(userId, { type: 'inbox' });
+    this.realtime.emit(userId, {type: 'inbox'});
   }
 
   /** A press of a button, or the words it asked for — from the bell or the phone. */
@@ -141,12 +148,18 @@ export class NotificationInboxService implements OnModuleInit {
     if ('text' in input) {
       const done = await this.answerWords(user, input.text, via, id);
       if (!done) {
-        throw new BadRequestException(coreMessages(user.locale).inboxNoWordsAwaited);
+        throw new BadRequestException(
+          coreMessages(user.locale).inboxNoWordsAwaited,
+        );
       }
-      return { reply: done.reply, expectsText: false, item: await this.get(userId, id) };
+      return {
+        reply: done.reply,
+        expectsText: false,
+        item: await this.get(userId, id),
+      };
     }
     const result = await this.press(user, row, input.action, via);
-    return { ...result, item: await this.get(userId, id) };
+    return {...result, item: await this.get(userId, id)};
   }
 
   /**
@@ -159,7 +172,7 @@ export class NotificationInboxService implements OnModuleInit {
     action: string,
     via: InboxAnswerChannel,
   ): Promise<ActionResult> {
-    const button = row.actions.find((one) => one.action === action);
+    const button = row.actions.find(one => one.action === action);
     if (!button) {
       throw new BadRequestException('Not a button of this notification');
     }
@@ -167,15 +180,28 @@ export class NotificationInboxService implements OnModuleInit {
     const now = new Date();
     const [taken] = await this.db
       .update(notificationOutbox)
-      .set({ answeredAt: now, answer: button.label, answeredVia: via, readAt: row.readAt ?? now })
-      .where(and(eq(notificationOutbox.id, row.id), isNull(notificationOutbox.answeredAt)))
-      .returning({ id: notificationOutbox.id });
+      .set({
+        answeredAt: now,
+        answer: button.label,
+        answeredVia: via,
+        readAt: row.readAt ?? now,
+      })
+      .where(
+        and(
+          eq(notificationOutbox.id, row.id),
+          isNull(notificationOutbox.answeredAt),
+        ),
+      )
+      .returning({id: notificationOutbox.id});
     if (!taken) {
       const [answered] = await this.db
-        .select({ answer: notificationOutbox.answer })
+        .select({answer: notificationOutbox.answer})
         .from(notificationOutbox)
         .where(eq(notificationOutbox.id, row.id));
-      return { reply: text.inboxAlreadyAnswered(answered?.answer ?? ''), expectsText: false };
+      return {
+        reply: text.inboxAlreadyAnswered(answered?.answer ?? ''),
+        expectsText: false,
+      };
     }
     let result: ActionResult | null;
     try {
@@ -184,14 +210,14 @@ export class NotificationInboxService implements OnModuleInit {
       // The section could not take it: the question waits again.
       await this.db
         .update(notificationOutbox)
-        .set({ answeredAt: null, answer: null, answeredVia: null })
+        .set({answeredAt: null, answer: null, answeredVia: null})
         .where(eq(notificationOutbox.id, row.id));
       throw error;
     }
     if (!result) {
       await this.db
         .update(notificationOutbox)
-        .set({ answeredAt: null, answer: null, answeredVia: null })
+        .set({answeredAt: null, answer: null, answeredVia: null})
         .where(eq(notificationOutbox.id, row.id));
       throw new BadRequestException('No section takes this button');
     }
@@ -205,7 +231,7 @@ export class NotificationInboxService implements OnModuleInit {
     if (via !== 'push') {
       await this.push.close(user.id, row.id);
     }
-    this.realtime.emit(user.id, { type: 'inbox' });
+    this.realtime.emit(user.id, {type: 'inbox'});
     return result;
   }
 
@@ -215,7 +241,7 @@ export class NotificationInboxService implements OnModuleInit {
     words: string,
     via: InboxAnswerChannel,
     notificationId?: string,
-  ): Promise<{ reply: string } | null> {
+  ): Promise<{reply: string} | null> {
     const done = await this.actions.answerText(user, words, notificationId);
     if (!done) {
       return null;
@@ -227,12 +253,17 @@ export class NotificationInboxService implements OnModuleInit {
           telegramMessage: notificationOutbox.telegramMessage,
         })
         .from(notificationOutbox)
-        .where(and(this.mine(user.id), eq(notificationOutbox.id, done.notificationId)));
+        .where(
+          and(
+            this.mine(user.id),
+            eq(notificationOutbox.id, done.notificationId),
+          ),
+        );
       if (row) {
         const answer = row.answer ? `${row.answer} · ${words}` : words;
         await this.db
           .update(notificationOutbox)
-          .set({ answer })
+          .set({answer})
           .where(eq(notificationOutbox.id, done.notificationId));
         if (via !== 'telegram' && row.telegramMessage) {
           await this.telegram.closeMessage(
@@ -240,10 +271,10 @@ export class NotificationInboxService implements OnModuleInit {
             coreMessages(user.locale).inboxAnsweredElsewhere(answer),
           );
         }
-        this.realtime.emit(user.id, { type: 'inbox' });
+        this.realtime.emit(user.id, {type: 'inbox'});
       }
     }
-    return { reply: done.reply };
+    return {reply: done.reply};
   }
 
   /** A press in Telegram: a notification's button answers it here; `null` — not a notification. */
@@ -263,13 +294,16 @@ export class NotificationInboxService implements OnModuleInit {
         ),
       )
       .limit(1);
-    if (!row || !row.actions.some((one) => one.action === action)) {
+    if (!row || !row.actions.some(one => one.action === action)) {
       return null;
     }
     return this.press(user, row, action, 'telegram');
   }
 
-  private async row(userId: string, id: string): Promise<NotificationOutboxRow> {
+  private async row(
+    userId: string,
+    id: string,
+  ): Promise<NotificationOutboxRow> {
     const [row] = await this.db
       .select()
       .from(notificationOutbox)
@@ -292,18 +326,24 @@ export class NotificationInboxService implements OnModuleInit {
     return and(
       sql`jsonb_array_length(${notificationOutbox.actions}) > 0`,
       isNull(notificationOutbox.answeredAt),
-      gt(notificationOutbox.createdAt, new Date(now.getTime() - QUESTION_WAITS_DAYS * DAY_MS)),
+      gt(
+        notificationOutbox.createdAt,
+        new Date(now.getTime() - QUESTION_WAITS_DAYS * DAY_MS),
+      ),
     ) as SQL;
   }
 }
 
-export function toItem(row: NotificationOutboxRow, now = new Date()): InboxItem {
+export function toItem(
+  row: NotificationOutboxRow,
+  now = new Date(),
+): InboxItem {
   return {
     id: row.id,
     source: row.source,
     title: row.title,
     body: row.body,
-    link: linkOf({ source: row.source, link: row.link ?? undefined }),
+    link: linkOf({source: row.source, link: row.link ?? undefined}),
     actions: row.actions,
     createdAt: row.createdAt.toISOString(),
     readAt: row.readAt?.toISOString() ?? null,

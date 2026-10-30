@@ -1,20 +1,30 @@
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { automationsApi, CORE_READS } from '@pd/client-core';
-import { AutomationRule, BirthdayInput, daysUntilNearest, UpcomingBirthday } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { BirthdayFormDialog } from './birthday-form.dialog';
-import { BirthdayWhenComponent } from './birthday-when.component';
-import { BirthdaysApi } from './birthdays.api';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatListModule} from '@angular/material/list';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {automationsApi, CORE_READS} from '@pd/client-core';
+import {
+  AutomationRule,
+  BirthdayInput,
+  daysUntilNearest,
+  UpcomingBirthday,
+} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {BirthdayFormDialog} from './birthday-form.dialog';
+import {BirthdayWhenComponent} from './birthday-when.component';
+import {BirthdaysApi} from './birthdays.api';
 
 const GIFT_TRIGGER = 'birthdays.upcoming';
 
@@ -46,8 +56,10 @@ const GIFT_TRIGGER = 'birthdays.upcoming';
       >
         <mat-icon>redeem</mat-icon>
         {{
-          (hasGiftRule() ? 'birthdays.automations.giftOn' : 'birthdays.automations.gift')
-            | transloco
+          (hasGiftRule()
+            ? 'birthdays.automations.giftOn'
+            : 'birthdays.automations.gift'
+          ) | transloco
         }}
       </button>
       <button matButton="filled" (click)="openForm()">
@@ -59,7 +71,9 @@ const GIFT_TRIGGER = 'birthdays.upcoming';
       <mat-list>
         @for (birthday of birthdays.value(); track birthday.id) {
           <mat-list-item [lines]="lines(birthday)">
-            <mat-icon matListItemIcon>{{ birthday.memorial ? 'local_florist' : 'cake' }}</mat-icon>
+            <mat-icon matListItemIcon>{{
+              birthday.memorial ? 'local_florist' : 'cake'
+            }}</mat-icon>
             <span matListItemTitle>{{ birthday.name }}</span>
             @if (birthday.nextDate) {
               <span matListItemLine>
@@ -70,8 +84,10 @@ const GIFT_TRIGGER = 'birthdays.upcoming';
                 @if (birthday.turningAge) {
                   ·
                   {{
-                    (birthday.memorial ? 'birthdays.wouldTurn' : 'birthdays.turning')
-                      | transloco: { age: birthday.turningAge }
+                    (birthday.memorial
+                      ? 'birthdays.wouldTurn'
+                      : 'birthdays.turning'
+                    ) | transloco: {age: birthday.turningAge}
                   }}
                 }
                 @if (birthday.note && !birthday.memorial) {
@@ -84,7 +100,10 @@ const GIFT_TRIGGER = 'birthdays.upcoming';
                 {{ 'birthdays.memorialOn' | transloco }}
                 {{ memorial.nextDate | date: 'd MMMM' }}
                 @if (memorial.years) {
-                  · {{ 'birthdays.yearsSince' | transloco: { years: memorial.years } }}
+                  ·
+                  {{
+                    'birthdays.yearsSince' | transloco: {years: memorial.years}
+                  }}
                 }
                 @if (birthday.note) {
                   · {{ birthday.note }}
@@ -96,9 +115,12 @@ const GIFT_TRIGGER = 'birthdays.upcoming';
                 <mat-icon inline>redeem</mat-icon>
                 @for (idea of birthday.giftIdeas; track idea.title) {
                   @if (idea.link) {
-                    <a [href]="idea.link" target="_blank" rel="noopener noreferrer">{{
-                      idea.title
-                    }}</a>
+                    <a
+                      [href]="idea.link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >{{ idea.title }}</a
+                    >
                   } @else {
                     {{ idea.title }}
                   }
@@ -110,9 +132,16 @@ const GIFT_TRIGGER = 'birthdays.upcoming';
               </span>
             }
             <div matListItemMeta class="meta">
-              <pd-birthday-when [daysUntil]="nearest(birthday)" [quiet]="!!birthday.memorial" />
-              <button matIconButton (click)="openForm(birthday)"><mat-icon>edit</mat-icon></button>
-              <button matIconButton (click)="remove(birthday)"><mat-icon>delete</mat-icon></button>
+              <pd-birthday-when
+                [daysUntil]="nearest(birthday)"
+                [quiet]="!!birthday.memorial"
+              />
+              <button matIconButton (click)="openForm(birthday)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button matIconButton (click)="remove(birthday)">
+                <mat-icon>delete</mat-icon>
+              </button>
             </div>
           </mat-list-item>
         } @empty {
@@ -142,12 +171,15 @@ export class BirthdaysPage {
   private readonly transloco = inject(TranslocoService);
 
   private readonly automations = automationsApi(inject(DASHBOARD_CLIENT).api);
-  private readonly rules = httpResource<AutomationRule[]>(() => CORE_READS.automations(), {
-    defaultValue: [],
-  });
+  private readonly rules = httpResource<AutomationRule[]>(
+    () => CORE_READS.automations(),
+    {
+      defaultValue: [],
+    },
+  );
   /** A rule on the coming birthday is there already (made here or in the settings). */
   protected readonly hasGiftRule = computed(() =>
-    this.rules.value().some((rule) => rule.trigger === GIFT_TRIGGER),
+    this.rules.value().some(rule => rule.trigger === GIFT_TRIGGER),
   );
 
   protected readonly birthdays = this.api.list();
@@ -167,15 +199,20 @@ export class BirthdaysPage {
   async openForm(birthday?: UpcomingBirthday): Promise<void> {
     const input = await firstValueFrom(
       this.dialog
-        .open<BirthdayFormDialog, UpcomingBirthday | null, BirthdayInput>(BirthdayFormDialog, {
-          data: birthday ?? null,
-        })
+        .open<BirthdayFormDialog, UpcomingBirthday | null, BirthdayInput>(
+          BirthdayFormDialog,
+          {
+            data: birthday ?? null,
+          },
+        )
         .afterClosed(),
     );
     if (!input) {
       return;
     }
-    await firstValueFrom(birthday ? this.api.update(birthday.id, input) : this.api.create(input));
+    await firstValueFrom(
+      birthday ? this.api.update(birthday.id, input) : this.api.create(input),
+    );
     this.birthdays.reload();
   }
 
@@ -187,7 +224,7 @@ export class BirthdaysPage {
     await this.automations.save({
       name: this.transloco.translate('birthdays.automations.giftRule'),
       trigger: GIFT_TRIGGER,
-      triggerParams: { days: '7' },
+      triggerParams: {days: '7'},
       action: 'tasks.create',
       // The braces are the rule's own variables, filled in when it runs.
       actionParams: {
@@ -204,7 +241,13 @@ export class BirthdaysPage {
   }
 
   async remove(birthday: UpcomingBirthday): Promise<void> {
-    if (confirm(this.transloco.translate('birthdays.confirmDelete', { name: birthday.name }))) {
+    if (
+      confirm(
+        this.transloco.translate('birthdays.confirmDelete', {
+          name: birthday.name,
+        }),
+      )
+    ) {
       await firstValueFrom(this.api.remove(birthday.id));
       this.birthdays.reload();
     }

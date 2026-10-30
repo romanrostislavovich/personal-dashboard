@@ -1,12 +1,19 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { GameAccount, XboxSummary } from '@pd/contracts';
-import { TimeAgoPipe } from '../time-ago.pipe';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {GameAccount, XboxSummary} from '@pd/contracts';
+import {TimeAgoPipe} from '../time-ago.pipe';
 
 interface Profile {
   account: GameAccount;
@@ -37,9 +44,13 @@ interface Profile {
           }
           <div class="who">
             @if (profile.summary; as s) {
-              <a class="name" [href]="s.profileUrl" target="_blank" rel="noopener">{{
-                s.gamertag
-              }}</a>
+              <a
+                class="name"
+                [href]="s.profileUrl"
+                target="_blank"
+                rel="noopener"
+                >{{ s.gamertag }}</a
+              >
               @if (s.tier) {
                 <span class="muted">{{ s.tier }}</span>
               }
@@ -86,7 +97,9 @@ interface Profile {
               <span class="value">{{ s.totals.games | number }}</span>
             </div>
             <div class="tile">
-              <span class="label">{{ 'games.xbox.achievements' | transloco }}</span>
+              <span class="label">{{
+                'games.xbox.achievements' | transloco
+              }}</span>
               <span class="value">{{ s.totals.achievements | number }}</span>
             </div>
           </div>
@@ -101,8 +114,12 @@ interface Profile {
                 <tr>
                   <th>{{ 'games.xbox.game' | transloco }}</th>
                   <th class="numeric">Gamerscore</th>
-                  <th class="numeric">{{ 'games.xbox.achievements' | transloco }}</th>
-                  <th class="numeric">{{ 'games.xbox.lastPlayed' | transloco }}</th>
+                  <th class="numeric">
+                    {{ 'games.xbox.achievements' | transloco }}
+                  </th>
+                  <th class="numeric">
+                    {{ 'games.xbox.lastPlayed' | transloco }}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -110,24 +127,38 @@ interface Profile {
                   <tr>
                     <td class="game">
                       @if (game.imageUrl; as src) {
-                        <img [src]="src" alt="" width="24" height="24" loading="lazy" />
+                        <img
+                          [src]="src"
+                          alt=""
+                          width="24"
+                          height="24"
+                          loading="lazy"
+                        />
                       }
                       <span>{{ game.name }}</span>
                     </td>
                     <td class="numeric">
                       {{
-                        game.totalGamerscore ? game.gamerscore + ' / ' + game.totalGamerscore : '—'
+                        game.totalGamerscore
+                          ? game.gamerscore + ' / ' + game.totalGamerscore
+                          : '—'
                       }}
                     </td>
                     <td class="numeric">
                       {{
                         game.achievements
-                          ? game.achievements.unlocked + ' / ' + (game.achievements.total ?? '—')
+                          ? game.achievements.unlocked +
+                            ' / ' +
+                            (game.achievements.total ?? '—')
                           : '—'
                       }}
                     </td>
                     <td class="numeric muted">
-                      {{ game.lastPlayedAt ? (game.lastPlayedAt | timeAgo: lang()) : '—' }}
+                      {{
+                        game.lastPlayedAt
+                          ? (game.lastPlayedAt | timeAgo: lang())
+                          : '—'
+                      }}
                     </td>
                   </tr>
                 }
@@ -263,7 +294,7 @@ export class XboxDashboardComponent {
   });
 
   protected readonly profiles = computed<Profile[]>(() =>
-    this.accounts().map((account) => ({
+    this.accounts().map(account => ({
       account,
       summary: account.summary?.game === 'xbox' ? account.summary : null,
     })),

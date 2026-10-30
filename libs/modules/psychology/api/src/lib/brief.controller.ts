@@ -10,9 +10,9 @@ import {
   Put,
   StreamableFile,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
-import { appointmentBriefInputSchema } from '@pd/contracts';
-import { BriefService, ValidBriefInput } from './brief.service';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
+import {appointmentBriefInputSchema} from '@pd/contracts';
+import {BriefService, ValidBriefInput} from './brief.service';
 
 /** Briefs for an appointment with a specialist. */
 @Controller('psychology/briefs')
@@ -27,7 +27,8 @@ export class BriefController {
   @Post()
   add(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(appointmentBriefInputSchema)) input: ValidBriefInput,
+    @Body(new ZodValidationPipe(appointmentBriefInputSchema))
+    input: ValidBriefInput,
   ) {
     return this.briefs.add(user.id, input);
   }
@@ -36,14 +37,18 @@ export class BriefController {
   update(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(appointmentBriefInputSchema)) input: ValidBriefInput,
+    @Body(new ZodValidationPipe(appointmentBriefInputSchema))
+    input: ValidBriefInput,
   ) {
     return this.briefs.update(user.id, id, input);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.briefs.remove(user.id, id);
   }
 
@@ -53,7 +58,7 @@ export class BriefController {
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<StreamableFile> {
-    const { file, name, type } = await this.briefs.export(user.id, id);
+    const {file, name, type} = await this.briefs.export(user.id, id);
     return new StreamableFile(file, {
       type,
       length: file.length,

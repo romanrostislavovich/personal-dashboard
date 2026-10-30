@@ -1,21 +1,26 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, NO_PARAMETERS, PERIOD_PARAMETERS, UsersService } from '@pd/api-core';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  AiService,
+  NO_PARAMETERS,
+  PERIOD_PARAMETERS,
+  UsersService,
+} from '@pd/api-core';
 import {
   activityDaySchema,
   activityPeriodSchema,
   activitySettingsUpdateSchema,
   workstateQuerySchema,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { ActivityLinks } from './activity.links';
-import { ActivityService } from './activity.service';
-import { digestTimeline } from './timeline-digest';
-import { SitesService } from './sites.service';
-import { WellbeingService } from './wellbeing.service';
-import { activitySettings } from './activity.schema';
-import { WorkstateService } from './workstate.service';
-import { TelemetrySummaryService } from './telemetry-summary.service';
-import { ProjectTimeService } from './project-time.service';
+import {z} from 'zod';
+import {ActivityLinks} from './activity.links';
+import {ActivityService} from './activity.service';
+import {digestTimeline} from './timeline-digest';
+import {SitesService} from './sites.service';
+import {WellbeingService} from './wellbeing.service';
+import {activitySettings} from './activity.schema';
+import {WorkstateService} from './workstate.service';
+import {TelemetrySummaryService} from './telemetry-summary.service';
+import {ProjectTimeService} from './project-time.service';
 
 const TIME = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const timelineArgs = activityDaySchema.extend({
@@ -65,20 +70,41 @@ export class ActivityAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          search: { type: 'string', description: 'Text to find in saved context' },
-          context: { type: 'string', description: 'App, project path or branch to match' },
-          from: { type: 'string', description: 'Earliest capture, ISO datetime with offset' },
-          to: { type: 'string', description: 'Latest capture, ISO datetime with offset' },
-          limit: { type: 'integer', minimum: 1, maximum: 100 },
-          before: { type: 'string', description: 'nextCursor.before; requires beforeId' },
-          beforeId: { type: 'string', description: 'nextCursor.beforeId; requires before' },
+          search: {
+            type: 'string',
+            description: 'Text to find in saved context',
+          },
+          context: {
+            type: 'string',
+            description: 'App, project path or branch to match',
+          },
+          from: {
+            type: 'string',
+            description: 'Earliest capture, ISO datetime with offset',
+          },
+          to: {
+            type: 'string',
+            description: 'Latest capture, ISO datetime with offset',
+          },
+          limit: {type: 'integer', minimum: 1, maximum: 100},
+          before: {
+            type: 'string',
+            description: 'nextCursor.before; requires beforeId',
+          },
+          beforeId: {
+            type: 'string',
+            description: 'nextCursor.beforeId; requires before',
+          },
         },
         additionalProperties: false,
       },
       handler: async (userId, args) => {
-        const page = await this.workstates.list(userId, workstateQuerySchema.parse(args));
+        const page = await this.workstates.list(
+          userId,
+          workstateQuerySchema.parse(args),
+        );
         return {
-          items: page.items.map(({ id, capturedAt, capture }) => ({
+          items: page.items.map(({id, capturedAt, capture}) => ({
             id,
             capturedAt,
             activeApp: capture.activeApp,
@@ -99,7 +125,10 @@ export class ActivityAiTools implements OnModuleInit {
         'installed or counts nothing.',
       parameters: PERIOD_PARAMETERS,
       handler: async (userId, args) =>
-        this.sites.times(userId, activityPeriodSchema.omit({ deviceId: true }).parse(args)),
+        this.sites.times(
+          userId,
+          activityPeriodSchema.omit({deviceId: true}).parse(args),
+        ),
     });
 
     this.ai.registerTool({
@@ -112,9 +141,12 @@ export class ActivityAiTools implements OnModuleInit {
         'earned so far. Useful for "how long may I still play today" together with ' +
         'activity_stats of today.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) => ({
+      handler: async userId => ({
         limits: await this.wellbeing.limits(userId),
-        gamesBonus: await this.wellbeing.gamesBonus(userId, await this.activity.today(userId)),
+        gamesBonus: await this.wellbeing.gamesBonus(
+          userId,
+          await this.activity.today(userId),
+        ),
       }),
     });
 
@@ -129,15 +161,15 @@ export class ActivityAiTools implements OnModuleInit {
         'the settings of Activity.',
       parameters: {
         type: 'object',
-        properties: { minutes: { type: 'number', description: '0–120 per task' } },
+        properties: {minutes: {type: 'number', description: '0–120 per task'}},
         required: ['minutes'],
       },
       handler: async (userId, args) => {
-        const { gamesMinutesPerTask } = activitySettingsUpdateSchema.parse({
+        const {gamesMinutesPerTask} = activitySettingsUpdateSchema.parse({
           gamesMinutesPerTask: args['minutes'],
         });
-        await this.activity.saveSettings(userId, { gamesMinutesPerTask });
-        return { gamesMinutesPerTask };
+        await this.activity.saveSettings(userId, {gamesMinutesPerTask});
+        return {gamesMinutesPerTask};
       },
     });
 
@@ -151,7 +183,8 @@ export class ActivityAiTools implements OnModuleInit {
         'played in the most sessions; `byProject` — who played while working on each project. Useful for "what do I listen to when I work", "do I ' +
         'focus better with music". A difference between the two is not a proof of the cause.',
       parameters: PERIOD_PARAMETERS,
-      handler: (userId, args) => this.links.focusMusic(userId, activityPeriodSchema.parse(args)),
+      handler: (userId, args) =>
+        this.links.focusMusic(userId, activityPeriodSchema.parse(args)),
     });
 
     this.ai.registerTool({
@@ -190,19 +223,25 @@ export class ActivityAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          day: { type: 'string', description: 'The day, YYYY-MM-DD' },
-          fromTime: { type: 'string', description: 'HH:mm — only what was open from this time' },
-          toTime: { type: 'string', description: 'HH:mm — only what was open up to this time' },
-          limit: { type: 'number', description: '1–200, default 80' },
+          day: {type: 'string', description: 'The day, YYYY-MM-DD'},
+          fromTime: {
+            type: 'string',
+            description: 'HH:mm — only what was open from this time',
+          },
+          toTime: {
+            type: 'string',
+            description: 'HH:mm — only what was open up to this time',
+          },
+          limit: {type: 'number', description: '1–200, default 80'},
         },
         required: ['day'],
       },
       handler: async (userId, args) => {
-        const { fromTime, toTime, limit, ...day } = timelineArgs.parse(args);
+        const {fromTime, toTime, limit, ...day} = timelineArgs.parse(args);
         return digestTimeline(
           await this.activity.timeline(userId, day),
           this.users.timeZoneOf(await this.users.findById(userId)),
-          { fromTime, toTime, limit },
+          {fromTime, toTime, limit},
         );
       },
     });

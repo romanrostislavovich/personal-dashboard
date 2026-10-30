@@ -22,11 +22,15 @@ const MAX_TERMS = 1200;
 
 /** `months` later; the 31st becomes the last day of a shorter month. */
 export function addMonths(date: LocalDate, months: number): LocalDate {
-  const { year, month, day } = parseLocalDate(date);
+  const {year, month, day} = parseLocalDate(date);
   const index = year * 12 + (month - 1) + months;
   const y = Math.floor(index / 12);
   const m = (index % 12) + 1;
-  return toLocalDate({ year: y, month: m, day: Math.min(day, daysInMonth(y, m)) });
+  return toLocalDate({
+    year: y,
+    month: m,
+    day: Math.min(day, daysInMonth(y, m)),
+  });
 }
 
 function minusDays(date: LocalDate, days: number): LocalDate {
@@ -49,7 +53,10 @@ export function contractDates(
   }
   let term = 1;
   if (terms.autoRenews) {
-    while (term < MAX_TERMS && addMonths(startedOn, term * terms.contractMonths) <= today) {
+    while (
+      term < MAX_TERMS &&
+      addMonths(startedOn, term * terms.contractMonths) <= today
+    ) {
       term++;
     }
   }
@@ -65,14 +72,20 @@ export function contractDates(
 }
 
 /** The last day to give notice that is still ahead: the next term's when this one's has passed. */
-export function nextCancelBy(terms: ContractTerms, dates: ContractDates): LocalDate | null {
+export function nextCancelBy(
+  terms: ContractTerms,
+  dates: ContractDates,
+): LocalDate | null {
   if (!dates.tooLate) {
     return dates.cancelBy;
   }
   if (!terms.autoRenews || !terms.contractMonths) {
     return null;
   }
-  return minusDays(addMonths(dates.termEndsOn, terms.contractMonths), terms.noticeDays ?? 0);
+  return minusDays(
+    addMonths(dates.termEndsOn, terms.contractMonths),
+    terms.noticeDays ?? 0,
+  );
 }
 
 export interface DatedPayment extends ContractTerms {
@@ -97,10 +110,13 @@ export function nextYearlyCharge(
   if (!payment.monthOfYear) {
     return null;
   }
-  const { year } = parseLocalDate(today);
+  const {year} = parseLocalDate(today);
   for (const y of [year, year + 1]) {
-    const day = Math.min(payment.dayOfMonth, daysInMonth(y, payment.monthOfYear));
-    const date = toLocalDate({ year: y, month: payment.monthOfYear, day });
+    const day = Math.min(
+      payment.dayOfMonth,
+      daysInMonth(y, payment.monthOfYear),
+    );
+    const date = toLocalDate({year: y, month: payment.monthOfYear, day});
     if (date >= today) {
       return date;
     }
@@ -113,14 +129,18 @@ export function nextYearlyCharge(
  * nearest first: the last day to give notice, the end of a term that does not renew, the end of
  * a price lock or a free trial, a yearly charge.
  */
-export function keyDates(payments: DatedPayment[], today: LocalDate, horizon = 365): KeyDate[] {
+export function keyDates(
+  payments: DatedPayment[],
+  today: LocalDate,
+  horizon = 365,
+): KeyDate[] {
   const until = toLocalDate(addDays(parseLocalDate(today), horizon));
   const found: KeyDate[] = [];
-  for (const payment of payments.filter((one) => one.isActive)) {
+  for (const payment of payments.filter(one => one.isActive)) {
     const add = (kind: KeyDateKind, date: LocalDate | null) => {
       if (date && date >= today && date <= until) {
-        const { id, name, amount, currency } = payment;
-        found.push({ paymentId: id, name, kind, date, amount, currency });
+        const {id, name, amount, currency} = payment;
+        found.push({paymentId: id, name, kind, date, amount, currency});
       }
     };
     if (payment.contract) {
@@ -135,7 +155,9 @@ export function keyDates(payments: DatedPayment[], today: LocalDate, horizon = 3
       add('renewal', nextYearlyCharge(payment, today));
     }
   }
-  return found.sort((a, b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name));
+  return found.sort(
+    (a, b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name),
+  );
 }
 
 /** How many days ahead a key date is reminded of; the trial has its own reminder. */
@@ -152,7 +174,7 @@ export function datesToRemind(
   notified: Map<string, string[]>,
   today: LocalDate,
 ): KeyDate[] {
-  return dates.filter((date) => {
+  return dates.filter(date => {
     const days = REMIND_DAYS[date.kind];
     return (
       days !== undefined &&

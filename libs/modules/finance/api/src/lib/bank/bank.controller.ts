@@ -14,8 +14,8 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthUser, CurrentUser, Public, ZodValidationPipe } from '@pd/api-core';
+import {FileInterceptor} from '@nestjs/platform-express';
+import {AuthUser, CurrentUser, Public, ZodValidationPipe} from '@pd/api-core';
 import {
   BankAccountUpdate,
   bankAccountUpdateSchema,
@@ -29,13 +29,15 @@ import {
   BankState,
   BankSyncResult,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { BankImportService } from './bank-import.service';
-import { BankService } from './bank.service';
+import {z} from 'zod';
+import {BankImportService} from './bank-import.service';
+import {BankService} from './bank.service';
 
 /** A history of a year of operations is well under a megabyte. */
 const STATEMENT_MAX_BYTES = 10 * 1024 * 1024;
-const upload = FileInterceptor('file', { limits: { fileSize: STATEMENT_MAX_BYTES } });
+const upload = FileInterceptor('file', {
+  limits: {fileSize: STATEMENT_MAX_BYTES},
+});
 
 /**
  * The bank directly (open banking): the owner's application, the user's connections — and a
@@ -71,7 +73,8 @@ export class BankController {
 
   @Get('banks')
   banks(
-    @Query(new ZodValidationPipe(bankBanksQuerySchema)) query: z.infer<typeof bankBanksQuerySchema>,
+    @Query(new ZodValidationPipe(bankBanksQuerySchema))
+    query: z.infer<typeof bankBanksQuerySchema>,
   ): Promise<BankOption[]> {
     return this.bank.banks(query.country);
   }
@@ -80,8 +83,9 @@ export class BankController {
   @Post('connect')
   connect(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(bankConnectInputSchema)) input: BankConnectInput,
-  ): Promise<{ url: string }> {
+    @Body(new ZodValidationPipe(bankConnectInputSchema))
+    input: BankConnectInput,
+  ): Promise<{url: string}> {
     return this.bank.connect(user.id, input);
   }
 
@@ -94,7 +98,7 @@ export class BankController {
     @Query('state') state?: string,
     @Query('error') error?: string,
   ) {
-    return { url: await this.bank.handleCallback(code, state, error) };
+    return {url: await this.bank.handleCallback(code, state, error)};
   }
 
   @Put('accounts/:id')
@@ -102,7 +106,8 @@ export class BankController {
   setAccount(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(bankAccountUpdateSchema)) input: BankAccountUpdate,
+    @Body(new ZodValidationPipe(bankAccountUpdateSchema))
+    input: BankAccountUpdate,
   ): Promise<void> {
     return this.bank.setAccount(user.id, id, input.enabled);
   }
@@ -123,7 +128,10 @@ export class BankController {
 
   @Delete('connections/:id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.bank.remove(user.id, id);
   }
 
@@ -132,7 +140,7 @@ export class BankController {
   @UseInterceptors(upload)
   importStatement(
     @CurrentUser() user: AuthUser,
-    @UploadedFile() file: { buffer: Buffer } | undefined,
+    @UploadedFile() file: {buffer: Buffer} | undefined,
   ): Promise<BankSyncResult> {
     if (!file?.buffer?.length) {
       throw new BadRequestException('No file');

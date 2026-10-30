@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import {CurrencyPipe, DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,20 +9,25 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { LocalDate, toLocalDate, Transaction, TransactionKind } from '@pd/contracts';
-import { todayLocalDate } from '@pd/web-core';
-import { FinanceApi } from '../finance.api';
-import { categoryIcon } from '../overview/category-icon';
-import { CategoryFilter, groupByDay } from '../overview/finance-stats';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatMenuModule} from '@angular/material/menu';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {
+  LocalDate,
+  toLocalDate,
+  Transaction,
+  TransactionKind,
+} from '@pd/contracts';
+import {todayLocalDate} from '@pd/web-core';
+import {FinanceApi} from '../finance.api';
+import {categoryIcon} from '../overview/category-icon';
+import {CategoryFilter, groupByDay} from '../overview/finance-stats';
 
 /**
  * Transactions grouped by day, like a bank app: a day header with its total, then the rows.
@@ -76,8 +81,10 @@ export class TransactionListComponent {
     const category = this.category();
     const kind = this.kind();
     const list = this.transactions().filter(
-      (t) =>
-        (!category || (category.kind === t.kind && category.categories.includes(t.category))) &&
+      t =>
+        (!category ||
+          (category.kind === t.kind &&
+            category.categories.includes(t.category))) &&
         (!kind || t.kind === kind) &&
         (!query ||
           t.category.toLowerCase().includes(query) ||
@@ -116,5 +123,9 @@ function shiftDay(day: LocalDate, delta: number): LocalDate {
   // Noon: a daylight saving shift cannot move the date.
   const date = new Date(`${day}T12:00:00`);
   date.setDate(date.getDate() + delta);
-  return toLocalDate({ year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() });
+  return toLocalDate({
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+  });
 }

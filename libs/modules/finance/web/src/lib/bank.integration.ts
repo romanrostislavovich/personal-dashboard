@@ -1,16 +1,22 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { ActivatedRoute } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { BankConnection } from '@pd/contracts';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {ActivatedRoute} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {BankConnection} from '@pd/contracts';
 import {
   errorBody,
   errorStatus,
@@ -18,10 +24,10 @@ import {
   ServerKeyComponent,
   ServerKeyField,
 } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { FinanceApi } from './finance.api';
-import { StatementImportButton } from './statement-import.button';
-import { CategoryModelComponent } from './category-model.component';
+import {firstValueFrom} from 'rxjs';
+import {FinanceApi} from './finance.api';
+import {StatementImportButton} from './statement-import.button';
+import {CategoryModelComponent} from './category-model.component';
 
 /** The countries Enable Banking reaches, the user's own first. */
 const COUNTRIES = [
@@ -76,8 +82,12 @@ const SOON_DAYS = 7;
       <mat-card appearance="outlined" id="pd-bank">
         <mat-card-header>
           <mat-icon mat-card-avatar>account_balance</mat-icon>
-          <mat-card-title>{{ 'finance.bank.title' | transloco }}</mat-card-title>
-          <mat-card-subtitle>{{ 'finance.bank.hint' | transloco }}</mat-card-subtitle>
+          <mat-card-title>{{
+            'finance.bank.title' | transloco
+          }}</mat-card-title>
+          <mat-card-subtitle>{{
+            'finance.bank.hint' | transloco
+          }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           @if (!s.available) {
@@ -85,17 +95,26 @@ const SOON_DAYS = 7;
           }
 
           @for (connection of s.connections; track connection.id) {
-            <section class="connection" [class.chosen]="connection.id === justConnected()">
+            <section
+              class="connection"
+              [class.chosen]="connection.id === justConnected()"
+            >
               <div class="head">
                 <span class="name">{{ connection.bank }}</span>
                 <span class="meta">
                   @if (connection.expired) {
-                    <span class="error">{{ 'finance.bank.expired' | transloco }}</span>
+                    <span class="error">{{
+                      'finance.bank.expired' | transloco
+                    }}</span>
                   } @else if (connection.validUntil) {
                     <span [class.warn]="soon(connection)">
                       {{
                         'finance.bank.validUntil'
-                          | transloco: { date: (connection.validUntil | date: 'mediumDate') }
+                          | transloco
+                            : {
+                                date:
+                                  (connection.validUntil | date: 'mediumDate'),
+                              }
                       }}
                     </span>
                   }
@@ -106,7 +125,11 @@ const SOON_DAYS = 7;
                 </span>
                 <span class="actions">
                   @if (connection.expired || soon(connection)) {
-                    <button matButton="tonal" [disabled]="busy()" (click)="renew(connection)">
+                    <button
+                      matButton="tonal"
+                      [disabled]="busy()"
+                      (click)="renew(connection)"
+                    >
                       {{ 'finance.bank.renew' | transloco }}
                     </button>
                   }
@@ -131,7 +154,9 @@ const SOON_DAYS = 7;
               @if (connection.lastError) {
                 <p class="error">{{ connection.lastError }}</p>
               }
-              @if (connection.id === justConnected() && !anyEnabled(connection)) {
+              @if (
+                connection.id === justConnected() && !anyEnabled(connection)
+              ) {
                 <p class="choose">
                   <mat-icon inline>touch_app</mat-icon>
                   {{ 'finance.bank.choose' | transloco }}
@@ -155,7 +180,9 @@ const SOON_DAYS = 7;
                     </mat-slide-toggle>
                   </li>
                 } @empty {
-                  <li class="hint">{{ 'finance.bank.noAccounts' | transloco }}</li>
+                  <li class="hint">
+                    {{ 'finance.bank.noAccounts' | transloco }}
+                  </li>
                 }
               </ul>
             </section>
@@ -165,7 +192,10 @@ const SOON_DAYS = 7;
             <div class="connect">
               <mat-form-field subscriptSizing="dynamic" class="country">
                 <mat-label>{{ 'finance.bank.country' | transloco }}</mat-label>
-                <mat-select [value]="country()" (selectionChange)="choose($event.value)">
+                <mat-select
+                  [value]="country()"
+                  (selectionChange)="choose($event.value)"
+                >
                   @for (code of countries; track code) {
                     <mat-option [value]="code">{{ code }}</mat-option>
                   }
@@ -173,17 +203,27 @@ const SOON_DAYS = 7;
               </mat-form-field>
               <mat-form-field subscriptSizing="dynamic" class="bank">
                 <mat-label>{{ 'finance.bank.bank' | transloco }}</mat-label>
-                <mat-select [value]="bank()" (selectionChange)="bank.set($event.value)">
+                <mat-select
+                  [value]="bank()"
+                  (selectionChange)="bank.set($event.value)"
+                >
                   @for (option of banks.value(); track option.name) {
-                    <mat-option [value]="option.name">{{ option.name }}</mat-option>
+                    <mat-option [value]="option.name">{{
+                      option.name
+                    }}</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
               @if (banks.error(); as error) {
                 <p class="hint error">{{ failure(error) }}</p>
               }
-              <button matButton="filled" [disabled]="busy() || !bank()" (click)="connect()">
-                <mat-icon>add_link</mat-icon> {{ 'finance.bank.connect' | transloco }}
+              <button
+                matButton="filled"
+                [disabled]="busy() || !bank()"
+                (click)="connect()"
+              >
+                <mat-icon>add_link</mat-icon>
+                {{ 'finance.bank.connect' | transloco }}
               </button>
             </div>
             <p class="hint">{{ 'finance.bank.consent' | transloco }}</p>
@@ -197,9 +237,12 @@ const SOON_DAYS = 7;
           @if (s.connections.length) {
             <div class="statement">
               <button matButton="tonal" [disabled]="busy()" (click)="resort()">
-                <mat-icon>category</mat-icon> {{ 'finance.bank.resort' | transloco }}
+                <mat-icon>category</mat-icon>
+                {{ 'finance.bank.resort' | transloco }}
               </button>
-              <span class="hint">{{ 'finance.bank.resortHint' | transloco }}</span>
+              <span class="hint">{{
+                'finance.bank.resortHint' | transloco
+              }}</span>
             </div>
           }
 
@@ -208,13 +251,14 @@ const SOON_DAYS = 7;
               [fields]="fields"
               [set]="s.available"
               [summary]="app.appId || null"
-              [initial]="{ appId: app.appId || null }"
+              [initial]="{appId: app.appId || null}"
               [save]="save"
               [remove]="removeApp"
               (changed)="state.reload()"
             />
             <p class="hint">
-              {{ 'finance.bank.redirect' | transloco }} <code>{{ app.redirectUrl }}</code>
+              {{ 'finance.bank.redirect' | transloco }}
+              <code>{{ app.redirectUrl }}</code>
             </p>
             <pd-integration-guide
               guide="finance.bank.guide"
@@ -349,16 +393,19 @@ export class BankIntegration {
   ];
   protected readonly save = (values: Record<string, string>) =>
     firstValueFrom(
-      this.api.setBankApp({ appId: values['appId'], privateKey: values['privateKey'] }),
+      this.api.setBankApp({
+        appId: values['appId'],
+        privateKey: values['privateKey'],
+      }),
     );
   protected readonly removeApp = () => firstValueFrom(this.api.removeBankApp());
 
   private readonly enabledByConnection = computed(
     () =>
       new Map(
-        (this.state.value()?.connections ?? []).map((connection) => [
+        (this.state.value()?.connections ?? []).map(connection => [
           connection.id,
-          connection.accounts.some((account) => account.enabled),
+          connection.accounts.some(account => account.enabled),
         ]),
       ),
   );
@@ -374,15 +421,20 @@ export class BankIntegration {
           : result === 'renewed'
             ? 'finance.bank.renewed'
             : 'finance.bank.connected';
-      this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 8000 });
-      setTimeout(() => document.getElementById('pd-bank')?.scrollIntoView({ block: 'start' }), 300);
+      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 8000});
+      setTimeout(
+        () =>
+          document.getElementById('pd-bank')?.scrollIntoView({block: 'start'}),
+        300,
+      );
     }
   }
 
   protected soon(connection: BankConnection): boolean {
     return (
       !!connection.validUntil &&
-      new Date(connection.validUntil).getTime() - Date.now() < SOON_DAYS * 24 * 60 * 60 * 1000
+      new Date(connection.validUntil).getTime() - Date.now() <
+        SOON_DAYS * 24 * 60 * 60 * 1000
     );
   }
 
@@ -395,13 +447,21 @@ export class BankIntegration {
     this.bank.set(null);
   }
 
-  protected async connect(connectionId?: string, bank = this.bank(), country = this.country()) {
+  protected async connect(
+    connectionId?: string,
+    bank = this.bank(),
+    country = this.country(),
+  ) {
     if (!bank) {
       return;
     }
     await this.run(async () => {
-      const { url } = await firstValueFrom(
-        this.api.connectBank({ bank, country, ...(connectionId ? { connectionId } : {}) }),
+      const {url} = await firstValueFrom(
+        this.api.connectBank({
+          bank,
+          country,
+          ...(connectionId ? {connectionId} : {}),
+        }),
       );
       // The bank's own page: the user signs in there and comes back to the callback.
       window.location.href = url;
@@ -419,9 +479,13 @@ export class BankIntegration {
   protected async sync(connection: BankConnection): Promise<void> {
     await this.run(async () => {
       const result = await firstValueFrom(this.api.syncBank(connection.id));
-      this.snackBar.open(this.transloco.translate('finance.bank.syncResult', result), 'OK', {
-        duration: 6000,
-      });
+      this.snackBar.open(
+        this.transloco.translate('finance.bank.syncResult', result),
+        'OK',
+        {
+          duration: 6000,
+        },
+      );
     });
   }
 
@@ -429,15 +493,23 @@ export class BankIntegration {
   protected async resort(): Promise<void> {
     await this.run(async () => {
       const result = await firstValueFrom(this.api.resortBank());
-      this.snackBar.open(this.transloco.translate('finance.bank.resortResult', result), 'OK', {
-        duration: 8000,
-      });
+      this.snackBar.open(
+        this.transloco.translate('finance.bank.resortResult', result),
+        'OK',
+        {
+          duration: 8000,
+        },
+      );
     });
   }
 
   protected async remove(connection: BankConnection): Promise<void> {
     if (
-      confirm(this.transloco.translate('finance.bank.confirmDelete', { bank: connection.bank }))
+      confirm(
+        this.transloco.translate('finance.bank.confirmDelete', {
+          bank: connection.bank,
+        }),
+      )
     ) {
       await this.run(() => firstValueFrom(this.api.removeBank(connection.id)));
     }
@@ -446,9 +518,9 @@ export class BankIntegration {
   /** A refusal (400) with the provider's own words; anything else — the plain text. */
   protected failure(error: unknown): string {
     const status = errorStatus(error);
-    const said = (errorBody(error) as { message?: unknown } | null)?.message;
+    const said = (errorBody(error) as {message?: unknown} | null)?.message;
     if (status === 400 && typeof said === 'string') {
-      return this.transloco.translate('finance.bank.refused', { message: said });
+      return this.transloco.translate('finance.bank.refused', {message: said});
     }
     return this.transloco.translate(
       status === 503 ? 'finance.bank.unreachable' : 'finance.bank.failed',
@@ -461,7 +533,7 @@ export class BankIntegration {
       await action();
       this.state.reload();
     } catch (error) {
-      this.snackBar.open(this.failure(error), 'OK', { duration: 10000 });
+      this.snackBar.open(this.failure(error), 'OK', {duration: 10000});
     } finally {
       this.busy.set(false);
     }

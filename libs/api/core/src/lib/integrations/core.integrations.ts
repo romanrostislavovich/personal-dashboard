@@ -1,15 +1,15 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
-import { aiConnections, aiSettings } from '../ai/ai.schema';
-import { AiService } from '../ai/ai.service';
-import { NO_PARAMETERS } from '../ai/ai-tool';
-import { DB, Database } from '../database/database.module';
-import { LinksService } from '../links/links.service';
-import { pushDevices } from '../notifications/push/push.schema';
-import { PUSH_KEY } from '../notifications/push/push.service';
-import { ServerKeysService } from '../server-keys/server-keys.service';
-import { users } from '../users/users.schema';
-import { IntegrationsService } from './integrations.service';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {eq} from 'drizzle-orm';
+import {aiConnections, aiSettings} from '../ai/ai.schema';
+import {AiService} from '../ai/ai.service';
+import {NO_PARAMETERS} from '../ai/ai-tool';
+import {DB, Database} from '../database/database.module';
+import {LinksService} from '../links/links.service';
+import {pushDevices} from '../notifications/push/push.schema';
+import {PUSH_KEY} from '../notifications/push/push.service';
+import {ServerKeysService} from '../server-keys/server-keys.service';
+import {users} from '../users/users.schema';
+import {IntegrationsService} from './integrations.service';
 
 /**
  * The core's own connections in the list of integrations — Telegram and the AI — and the
@@ -31,13 +31,13 @@ export class CoreIntegrations implements OnModuleInit {
       module: 'core',
       name: 'Telegram',
       settingsTab: 'notifications',
-      reports: async (userId) => {
+      reports: async userId => {
         const [user] = await this.db
-          .select({ chatId: users.telegramChatId })
+          .select({chatId: users.telegramChatId})
           .from(users)
           .where(eq(users.id, userId));
         // A bot does not refresh: it is connected or it is not.
-        return user?.chatId ? [{ name: 'Telegram' }] : [];
+        return user?.chatId ? [{name: 'Telegram'}] : [];
       },
     });
 
@@ -47,17 +47,24 @@ export class CoreIntegrations implements OnModuleInit {
       name: 'Firebase',
       settingsTab: 'notifications',
       // The server's Firebase key, then each phone of the Android app that takes notifications.
-      reports: async (userId) => {
+      reports: async userId => {
         if ((await this.keys.get(PUSH_KEY)) === null) {
           return [];
         }
         const phones = await this.db
-          .select({ name: pushDevices.name })
+          .select({name: pushDevices.name})
           .from(pushDevices)
           .where(eq(pushDevices.userId, userId));
         return [
-          { name: 'Firebase', detail: phones.length ? null : 'no phone takes push yet' },
-          ...phones.map((phone, i) => ({ key: String(i), name: 'Push', detail: phone.name })),
+          {
+            name: 'Firebase',
+            detail: phones.length ? null : 'no phone takes push yet',
+          },
+          ...phones.map((phone, i) => ({
+            key: String(i),
+            name: 'Push',
+            detail: phone.name,
+          })),
         ];
       },
     });
@@ -66,18 +73,21 @@ export class CoreIntegrations implements OnModuleInit {
       id: 'core.ai',
       module: 'ai',
       name: 'AI',
-      reports: async (userId) => {
+      reports: async userId => {
         const connections = await this.db
           .select()
           .from(aiConnections)
           .where(eq(aiConnections.userId, userId));
         const [settings] = await this.db
-          .select({ active: aiSettings.activeConnectionId })
+          .select({active: aiSettings.activeConnectionId})
           .from(aiSettings)
           .where(eq(aiSettings.userId, userId));
         const active =
-          connections.find((connection) => connection.id === settings?.active) ?? connections[0];
-        return active ? [{ name: 'AI', detail: `${active.name} · ${active.model}` }] : [];
+          connections.find(connection => connection.id === settings?.active) ??
+          connections[0];
+        return active
+          ? [{name: 'AI', detail: `${active.name} · ${active.model}`}]
+          : [];
       },
     });
 
@@ -93,7 +103,7 @@ export class CoreIntegrations implements OnModuleInit {
         'last successful refresh. Useful for "why is my music not updating", "is everything ' +
         'connected", "which tokens expire soon". Tokens are renewed in Settings → Integrations.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.integrations.statuses(userId),
+      handler: userId => this.integrations.statuses(userId),
     });
     this.links.registerPages([
       {

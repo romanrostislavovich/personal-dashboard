@@ -1,10 +1,10 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 // The parts of the Activity section that look after the user rather than count time:
 // focus sessions (Pomodoro), daily limits and the health of the computers.
 
-const moment = z.iso.datetime({ offset: true });
+const moment = z.iso.datetime({offset: true});
 
 // --- Focus sessions ---
 
@@ -41,7 +41,9 @@ export const activityFocusSessionSchema = z.object({
     )
     .max(20),
 });
-export type ActivityFocusSessionInput = z.infer<typeof activityFocusSessionSchema>;
+export type ActivityFocusSessionInput = z.infer<
+  typeof activityFocusSessionSchema
+>;
 
 export interface ActivityFocusSession extends ActivityFocusSessionInput {
   /** The project's name, when the session belongs to one. */
@@ -56,10 +58,10 @@ export interface ActivityFocusStats {
   completed: number;
   distractedSeconds: number;
   /** Every day of the period. */
-  days: { day: LocalDate; seconds: number }[];
-  projects: { projectId: string | null; name: string | null; seconds: number }[];
+  days: {day: LocalDate; seconds: number}[];
+  projects: {projectId: string | null; name: string | null; seconds: number}[];
   /** Days in a row with a completed session, up to today, and the most ever. */
-  streak: { current: number; longest: number };
+  streak: {current: number; longest: number};
 }
 
 /** Focus sessions of one kind (with music, without): how they went. */
@@ -77,9 +79,9 @@ export interface ActivityFocusMusic {
   withMusic: ActivityFocusMusicGroup;
   withoutMusic: ActivityFocusMusicGroup;
   /** The artists that played in the most sessions. */
-  artists: { artist: string; sessions: number; plays: number }[];
+  artists: {artist: string; sessions: number; plays: number}[];
   /** What played while working on each project (`null` — without one), the most sessions first. */
-  byProject: { project: string | null; sessions: number; artists: string[] }[];
+  byProject: {project: string | null; sessions: number; artists: string[]}[];
 }
 
 /** The timer of the focus sessions, set in the dashboard and followed by every desktop app. */
@@ -116,13 +118,15 @@ export const activityLimitSchema = z
       .max(24 * 60),
   })
   .refine(
-    (limit) => (limit.kind === 'app' || limit.kind === 'site') === !!limit.app,
+    limit => (limit.kind === 'app' || limit.kind === 'site') === !!limit.app,
     'Only a limit of a program or a site names one',
   );
 export type ActivityLimitInput = z.infer<typeof activityLimitSchema>;
 
 /** `PUT /api/activity/limits`: the whole set at once. */
-export const activityLimitsSchema = z.object({ limits: z.array(activityLimitSchema).max(50) });
+export const activityLimitsSchema = z.object({
+  limits: z.array(activityLimitSchema).max(50),
+});
 export type ActivityLimits = z.infer<typeof activityLimitsSchema>;
 
 export interface ActivityLimit extends ActivityLimitInput {
@@ -164,13 +168,17 @@ export const activitySystemSchema = z.object({
     })
     .optional(),
   network: z
-    .object({ ssid: name, signal: z.number().min(0).max(100), rateMbps: z.number().min(0) })
+    .object({
+      ssid: name,
+      signal: z.number().min(0).max(100),
+      rateMbps: z.number().min(0),
+    })
     .optional(),
   physicalDisks: z
-    .array(z.object({ name, media: name, health: name }))
+    .array(z.object({name, media: name, health: name}))
     .max(20)
     .optional(),
-  os: z.object({ name, build: name, bootedAt: moment }).optional(),
+  os: z.object({name, build: name, bootedAt: moment}).optional(),
   defender: z
     .object({
       enabled: z.boolean(),
@@ -182,7 +190,7 @@ export const activitySystemSchema = z.object({
   protection: z
     .object({
       /** The profiles of the Windows firewall: Domain, Private, Public. */
-      firewall: z.array(z.object({ profile: name, enabled: z.boolean() })).max(5),
+      firewall: z.array(z.object({profile: name, enabled: z.boolean()})).max(5),
       /** The system disk is encrypted (BitLocker or device encryption). */
       diskEncrypted: z.boolean(),
       daysSinceUpdate: z.number().int().min(0).max(100_000),
@@ -195,11 +203,11 @@ export const activitySystemSchema = z.object({
     .partial()
     .optional(),
   topCpu: z
-    .array(z.object({ name, percent: z.number().min(0) }))
+    .array(z.object({name, percent: z.number().min(0)}))
     .max(10)
     .optional(),
   topMemory: z
-    .array(z.object({ name, bytes: z.number().min(0) }))
+    .array(z.object({name, bytes: z.number().min(0)}))
     .max(10)
     .optional(),
 });

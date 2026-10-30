@@ -17,12 +17,12 @@ import {
   pushKeySchema,
   PushStatus,
 } from '@pd/contracts';
-import { AuthUser, CurrentUser } from '../../auth/current-user.decorator';
-import { coreMessages } from '../../i18n/core.messages';
-import { ServerKeysService } from '../../server-keys/server-keys.service';
-import { UsersService } from '../../users/users.service';
-import { ZodValidationPipe } from '../../validation/zod-validation.pipe';
-import { PushService } from './push.service';
+import {AuthUser, CurrentUser} from '../../auth/current-user.decorator';
+import {coreMessages} from '../../i18n/core.messages';
+import {ServerKeysService} from '../../server-keys/server-keys.service';
+import {UsersService} from '../../users/users.service';
+import {ZodValidationPipe} from '../../validation/zod-validation.pipe';
+import {PushService} from './push.service';
 
 /**
  * Push notifications on phones: the Android app registers its token (`devices`), the owner sets
@@ -53,13 +53,16 @@ export class PushController {
 
   @Delete('devices/:id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.push.remove(user.id, id);
   }
 
   /** To every phone of the user now, past the outbox: whether the chain works. */
   @Post('test')
-  async test(@CurrentUser() user: AuthUser): Promise<{ sent: number }> {
+  async test(@CurrentUser() user: AuthUser): Promise<{sent: number}> {
     const row = await this.users.findById(user.id);
     if (!row) {
       throw new NotFoundException();
@@ -71,7 +74,7 @@ export class PushController {
       // A tap brings the user back to where the test was sent from.
       link: '/settings?tab=notifications',
     });
-    return { sent };
+    return {sent};
   }
 
   @Put('key')

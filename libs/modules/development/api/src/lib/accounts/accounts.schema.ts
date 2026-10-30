@@ -1,5 +1,5 @@
-import { users } from '@pd/api-core/schema';
-import { GithubLanguageShare, GithubTopRepo, TokenProvider } from '@pd/contracts';
+import {users} from '@pd/api-core/schema';
+import {GithubLanguageShare, GithubTopRepo, TokenProvider} from '@pd/contracts';
 import {
   date,
   integer,
@@ -20,13 +20,13 @@ export const codeAccounts = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     provider: text().$type<TokenProvider>().notNull(),
     login: text().notNull(),
     name: text(),
     avatarUrl: text(),
     htmlUrl: text().notNull(),
-    joinedAt: timestamp({ withTimezone: true }).notNull(),
+    joinedAt: timestamp({withTimezone: true}).notNull(),
     /** `null` — the service has no such thing (Bitbucket: followers and stars). */
     followers: integer(),
     following: integer(),
@@ -35,10 +35,10 @@ export const codeAccounts = pgTable(
     totalStars: integer(),
     languages: jsonb().$type<GithubLanguageShare[]>().notNull(),
     topRepos: jsonb().$type<GithubTopRepo[]>().notNull(),
-    lastSyncedAt: timestamp({ withTimezone: true }),
+    lastSyncedAt: timestamp({withTimezone: true}),
     syncError: text(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.provider] })],
+  table => [primaryKey({columns: [table.userId, table.provider]})],
 );
 
 /**
@@ -50,9 +50,9 @@ export const codeAccountDays = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     provider: text().$type<TokenProvider>().notNull(),
-    day: date({ mode: 'string' }).notNull(),
+    day: date({mode: 'string'}).notNull(),
     /** Contributions of the day, as the calendar shows them. */
     count: integer().notNull(),
     commits: integer().notNull().default(0),
@@ -60,7 +60,7 @@ export const codeAccountDays = pgTable(
     reviews: integer().notNull().default(0),
     issues: integer().notNull().default(0),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.provider, table.day] })],
+  table => [primaryKey({columns: [table.userId, table.provider, table.day]})],
 );
 
 export type CodeAccountRow = typeof codeAccounts.$inferSelect;

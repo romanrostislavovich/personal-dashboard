@@ -1,5 +1,5 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { GithubAuthError } from './github.client';
+import {fetchWithTimeout} from '@pd/api-core';
+import {GithubAuthError} from './github.client';
 
 const GRAPHQL_URL = 'https://api.github.com/graphql';
 
@@ -16,7 +16,7 @@ export async function githubGraphql<T>(
   token: string,
   query: string,
   variables: Record<string, unknown> = {},
-  { allowPartial = false }: GraphqlOptions = {},
+  {allowPartial = false}: GraphqlOptions = {},
 ): Promise<T> {
   const response = await fetchWithTimeout(GRAPHQL_URL, {
     method: 'POST',
@@ -25,7 +25,7 @@ export async function githubGraphql<T>(
       'Content-Type': 'application/json',
       'User-Agent': 'personal-dashboard',
     },
-    body: JSON.stringify({ query, variables }),
+    body: JSON.stringify({query, variables}),
   });
   if (response.status === 401) {
     throw new GithubAuthError('GitHub token is invalid');
@@ -34,9 +34,14 @@ export async function githubGraphql<T>(
     throw new Error(`GitHub GraphQL ${response.status}`);
   }
   // GraphQL reports its errors (a missing permission, a rate limit) with status 200.
-  const body = (await response.json()) as { data?: T; errors?: { message: string }[] };
+  const body = (await response.json()) as {
+    data?: T;
+    errors?: {message: string}[];
+  };
   if (!body.data || (body.errors?.length && !allowPartial)) {
-    throw new Error(`GitHub: ${body.errors?.map((error) => error.message).join('; ')}`);
+    throw new Error(
+      `GitHub: ${body.errors?.map(error => error.message).join('; ')}`,
+    );
   }
   return body.data;
 }

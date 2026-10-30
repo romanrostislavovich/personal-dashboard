@@ -1,5 +1,9 @@
-import { digestRequest, evalAnswer, MORNING_DIGEST_INSTRUCTION } from '@pd/api-core';
-import { MUSIC_DIGEST_DESCRIPTION } from './music.digest';
+import {
+  digestRequest,
+  evalAnswer,
+  MORNING_DIGEST_INSTRUCTION,
+} from '@pd/api-core';
+import {MUSIC_DIGEST_DESCRIPTION} from './music.digest';
 
 /*
  * Evals of the music in the morning digest, with the real instruction and description: the
@@ -15,7 +19,13 @@ const weather = {
       'feels-like temperature of the day and `extras` to take (umbrella, gloves, sunscreen…).',
     collect: async () => null,
   },
-  facts: { min: 6, max: 11, rainMm: 4, outfit: 'a warm jacket', extras: ['umbrella'] },
+  facts: {
+    min: 6,
+    max: 11,
+    rainMm: 4,
+    outfit: 'a warm jacket',
+    extras: ['umbrella'],
+  },
   previous: null,
 };
 
@@ -31,14 +41,17 @@ const music = (facts: object, previous: object | null) => ({
 });
 
 const digest = (changes: ReturnType<typeof music>[]) =>
-  evalAnswer(MORNING_DIGEST_INSTRUCTION, digestRequest('2026-10-21', [weather, ...changes]));
+  evalAnswer(
+    MORNING_DIGEST_INSTRUCTION,
+    digestRequest('2026-10-21', [weather, ...changes]),
+  );
 
 describe('the morning digest — music', () => {
   it("never tells last week's artist as this week's news", async () => {
     const reply = await digest([
       music(
-        { scrobbleMilestone: 25000, artistOfTheWeek: null },
-        { scrobbleMilestone: 24000, artistOfTheWeek: 'Evanescence' },
+        {scrobbleMilestone: 25000, artistOfTheWeek: null},
+        {scrobbleMilestone: 24000, artistOfTheWeek: 'Evanescence'},
       ),
     ]);
     expect(reply).not.toMatch(/evanescence/i);
@@ -48,8 +61,8 @@ describe('the morning digest — music', () => {
   it('tells a new artist of the week, and only them', async () => {
     const reply = await digest([
       music(
-        { scrobbleMilestone: 24000, artistOfTheWeek: 'Muse' },
-        { scrobbleMilestone: 24000, artistOfTheWeek: 'Evanescence' },
+        {scrobbleMilestone: 24000, artistOfTheWeek: 'Muse'},
+        {scrobbleMilestone: 24000, artistOfTheWeek: 'Evanescence'},
       ),
     ]);
     expect(reply).toMatch(/muse/i);

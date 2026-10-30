@@ -1,5 +1,5 @@
-import { WritingIssue } from './writing';
-import { applyFix, pieces } from './writing-text';
+import {WritingIssue} from './writing';
+import {applyFix, pieces} from './writing-text';
 
 const issue = (offset: number, length: number): WritingIssue => ({
   offset,
@@ -14,7 +14,7 @@ describe('issue text', () => {
   it('cuts the text at the mistakes', () => {
     const text = 'я хачу чаю и кофэ';
     const parts = pieces(text, [issue(13, 4), issue(2, 4)]);
-    expect(parts.map((part) => [part.text, !!part.issue])).toEqual([
+    expect(parts.map(part => [part.text, !!part.issue])).toEqual([
       ['я ', false],
       ['хачу', true],
       [' чаю и ', false],
@@ -29,6 +29,6 @@ describe('issue text', () => {
     const touched = issue(4, 4);
     const fixed = applyFix(text, [first, touched, last], first, 'хочу очень');
     expect(fixed.text).toBe('я хочу очень чаю и кофэ');
-    expect(fixed.issues).toEqual([{ ...last, offset: 19 }]);
+    expect(fixed.issues).toEqual([{...last, offset: 19}]);
   });
 });

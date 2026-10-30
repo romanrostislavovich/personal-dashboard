@@ -1,4 +1,4 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /**
  * Web part of Movies: what was watched (the browser extension notes it on any site that plays a
@@ -6,28 +6,32 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const moviesModule: WebDashboardModule = {
   id: 'movies',
-  nav: { labelKey: 'movies.title', icon: 'movie', group: 'leisure' },
+  nav: {labelKey: 'movies.title', icon: 'movie', group: 'leisure'},
   // The page holds the tabs; every subsection is its child route.
   loadRoutes: async () => [
     {
       path: '',
-      loadComponent: () => import('./movies.page').then((m) => m.MoviesPage),
+      loadComponent: () => import('./movies.page').then(m => m.MoviesPage),
       children: [
-        { path: '', pathMatch: 'full', redirectTo: 'history' },
+        {path: '', pathMatch: 'full', redirectTo: 'history'},
         {
           path: 'history',
-          loadComponent: () => import('./history.page').then((m) => m.HistoryPage),
+          loadComponent: () =>
+            import('./history.page').then(m => m.HistoryPage),
         },
-        { path: 'want', loadComponent: () => import('./want.page').then((m) => m.WantPage) },
+        {
+          path: 'want',
+          loadComponent: () => import('./want.page').then(m => m.WantPage),
+        },
         {
           path: 'unknown',
-          data: { kind: 'unknown' },
-          loadComponent: () => import('./views.page').then((m) => m.ViewsPage),
+          data: {kind: 'unknown'},
+          loadComponent: () => import('./views.page').then(m => m.ViewsPage),
         },
         {
           path: 'videos',
-          data: { kind: 'video' },
-          loadComponent: () => import('./views.page').then((m) => m.ViewsPage),
+          data: {kind: 'video'},
+          loadComponent: () => import('./views.page').then(m => m.ViewsPage),
         },
       ],
     },
@@ -37,19 +41,25 @@ export const moviesModule: WebDashboardModule = {
     ru: () => import('./i18n/ru.json'),
   },
   commands: [
-    { id: 'movies.want', labelKey: 'movies.tabs.want', icon: 'bookmark', url: '/movies/want' },
+    {
+      id: 'movies.want',
+      labelKey: 'movies.tabs.want',
+      icon: 'bookmark',
+      url: '/movies/want',
+    },
     {
       // A film's name or link shared from another app (or copied on the desktop).
       id: 'movies.search',
       labelKey: 'movies.commands.search',
       icon: 'movie',
-      loadAction: () => import('./movies.commands').then((m) => m.searchToWatch),
+      loadAction: () => import('./movies.commands').then(m => m.searchToWatch),
     },
   ],
   integrations: [
     {
       id: 'movies.tmdb',
-      loadComponent: () => import('./movies.integration').then((m) => m.MoviesIntegration),
+      loadComponent: () =>
+        import('./movies.integration').then(m => m.MoviesIntegration),
     },
   ],
 };

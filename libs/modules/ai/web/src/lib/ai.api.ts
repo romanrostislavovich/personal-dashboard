@@ -1,14 +1,19 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { AI_READS, aiApi } from '@pd/client-core';
-import { AiChatRequest, AiConnectionInput, AiPreferences, AiSettings } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {AI_READS, aiApi} from '@pd/client-core';
+import {
+  AiChatRequest,
+  AiConnectionInput,
+  AiPreferences,
+  AiSettings,
+} from '@pd/contracts';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /**
  * The AI requests of the client core (`@pd/client-core`) for Angular: reads as `httpResource`,
  * the rest as Observables. The AI gateway lives in the server core; modules add tools to it.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class AiApi {
   private readonly ai = aiApi(inject(DASHBOARD_CLIENT).api);
 

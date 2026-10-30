@@ -1,7 +1,7 @@
-import { DeviceLink, DeviceTool } from '@pd/client-core';
-import { PageSnapshot } from '../shared/messages';
-import { signedInClient, serverUrl } from './account';
-import { readJson, writeJson } from './storage';
+import {DeviceLink, DeviceTool} from '@pd/client-core';
+import {PageSnapshot} from '../shared/messages';
+import {signedInClient, serverUrl} from './account';
+import {readJson, writeJson} from './storage';
 
 /*
  * This browser as a device of the dashboard: while it is online, the assistant (in the
@@ -38,14 +38,18 @@ let toldActiveAt = 0;
 export async function deviceSettings(): Promise<DeviceToolSettings> {
   return {
     ...DEFAULTS,
-    ...(await readJson<Partial<DeviceToolSettings>>(chrome.storage.local, SETTINGS_KEY, {})),
+    ...(await readJson<Partial<DeviceToolSettings>>(
+      chrome.storage.local,
+      SETTINGS_KEY,
+      {},
+    )),
   };
 }
 
 export async function saveDeviceSettings(
   update: Partial<DeviceToolSettings>,
 ): Promise<DeviceToolSettings> {
-  settings = { ...(await deviceSettings()), ...update };
+  settings = {...(await deviceSettings()), ...update};
   await writeJson(chrome.storage.local, SETTINGS_KEY, settings);
   link?.toolsChanged();
   return settings;
@@ -106,31 +110,38 @@ function tools(): DeviceTool[] {
       inputSchema: {
         type: 'object',
         properties: settings.pageText
-          ? { withText: { type: 'boolean', description: 'Also the text of the page' } }
+          ? {
+              withText: {
+                type: 'boolean',
+                description: 'Also the text of the page',
+              },
+            }
           : {},
       },
-      run: (args) => currentPage(settings.pageText && args['withText'] === true),
+      run: args => currentPage(settings.pageText && args['withText'] === true),
     });
   }
   if (settings.openTabs) {
     list.push({
       name: 'browser_open_tabs',
-      description: "The tabs open in the user's browser (title, address, which is in front).",
-      inputSchema: { type: 'object', properties: {} },
+      description:
+        "The tabs open in the user's browser (title, address, which is in front).",
+      inputSchema: {type: 'object', properties: {}},
       run: openTabs,
     });
   }
   if (settings.openUrl) {
     list.push({
       name: 'browser_open_url',
-      description: "Opens an address (http or https) in a new tab of the user's browser.",
+      description:
+        "Opens an address (http or https) in a new tab of the user's browser.",
       inputSchema: {
         type: 'object',
-        properties: { url: { type: 'string', description: 'https://…' } },
+        properties: {url: {type: 'string', description: 'https://…'}},
         required: ['url'],
       },
       writes: true,
-      run: (args) => openUrl(String(args['url'] ?? '')),
+      run: args => openUrl(String(args['url'] ?? '')),
     });
   }
   return list;
@@ -138,47 +149,51 @@ function tools(): DeviceTool[] {
 
 async function currentPage(withText: boolean): Promise<unknown> {
   // A browser window, not the popup or a window of the extension's own pages.
-  const window = await chrome.windows.getLastFocused({ windowTypes: ['normal'] }).catch(() => null);
+  const window = await chrome.windows
+    .getLastFocused({windowTypes: ['normal']})
+    .catch(() => null);
   if (!window?.id || window.incognito) {
-    return { page: null, note: 'No normal browser window in front' };
+    return {page: null, note: 'No normal browser window in front'};
   }
-  const [tab] = await chrome.tabs.query({ active: true, windowId: window.id });
+  const [tab] = await chrome.tabs.query({active: true, windowId: window.id});
   if (!tab?.id || !tab.url || !/^https?:/.test(tab.url)) {
-    return { page: null, note: 'The tab in front is not a web page' };
+    return {page: null, note: 'The tab in front is not a web page'};
   }
   const shown = (await chrome.tabs
-    .sendMessage(tab.id, { type: 'snapshot', withText })
+    .sendMessage(tab.id, {type: 'snapshot', withText})
     .catch(() => null)) as PageSnapshot | null;
   return {
     url: tab.url,
     title: tab.title ?? '',
     selection: shown?.selection ?? '',
-    ...(withText ? { text: shown?.text ?? null } : {}),
+    ...(withText ? {text: shown?.text ?? null} : {}),
   };
 }
 
 async function openTabs(): Promise<unknown> {
   const tabs = await chrome.tabs.query({});
   return tabs
-    .filter((tab) => !tab.incognito && tab.url && /^https?:/.test(tab.url))
+    .filter(tab => !tab.incognito && tab.url && /^https?:/.test(tab.url))
     .slice(0, 100)
-    .map((tab) => ({ title: tab.title ?? '', url: tab.url, active: tab.active }));
+    .map(tab => ({title: tab.title ?? '', url: tab.url, active: tab.active}));
 }
 
 async function openUrl(url: string): Promise<unknown> {
   if (!/^https?:\/\//i.test(url)) {
     throw new Error('Only http and https addresses are opened');
   }
-  const tab = await chrome.tabs.create({ url });
-  return { opened: tab.url ?? url };
+  const tab = await chrome.tabs.create({url});
+  return {opened: tab.url ?? url};
 }
 
 /** "Chrome on Windows": what the user sees in the list of their devices. */
 function browserName(): string {
-  const brands = (navigator as { userAgentData?: { brands?: { brand: string }[] } }).userAgentData
-    ?.brands;
+  const brands = (navigator as {userAgentData?: {brands?: {brand: string}[]}})
+    .userAgentData?.brands;
   const brand =
-    brands?.map((one) => one.brand).find((one) => !/Not.?A.?Brand|Chromium/i.test(one)) ?? 'Chrome';
+    brands
+      ?.map(one => one.brand)
+      .find(one => !/Not.?A.?Brand|Chromium/i.test(one)) ?? 'Chrome';
   const os = /Windows/i.test(navigator.userAgent)
     ? 'Windows'
     : /Mac/i.test(navigator.userAgent)

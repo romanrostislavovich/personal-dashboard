@@ -1,9 +1,9 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService, UsersService } from '@pd/api-core';
-import { zonedDateTime } from '@pd/contracts';
-import { BudgetsService } from './budgets/budgets.service';
-import { RecurringPaymentsService } from './recurring/recurring-payments.service';
-import { WishlistService } from './wishlist/wishlist.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService, UsersService} from '@pd/api-core';
+import {zonedDateTime} from '@pd/contracts';
+import {BudgetsService} from './budgets/budgets.service';
+import {RecurringPaymentsService} from './recurring/recurring-payments.service';
+import {WishlistService} from './wishlist/wishlist.service';
 
 /**
  * The morning digest: recurring payments charged, added or changed, the budgets of the month and
@@ -27,7 +27,7 @@ export class FinanceDigest implements OnModuleInit {
         'Budgets of this month: `category` (`*` — all expenses), `limit`, `spent`, `currency`, ' +
         'and how many days are left in the month. Mention only the ones past 80% or spent, ' +
         'and how much is left a day for the rest of the month.',
-      collect: async (userId) => {
+      collect: async userId => {
         const today = zonedDateTime(
           new Date(),
           this.users.timeZoneOf(await this.users.findById(userId)),
@@ -37,10 +37,11 @@ export class FinanceDigest implements OnModuleInit {
           return null;
         }
         const [year, month, day] = today.split('-').map(Number);
-        const daysLeft = new Date(Date.UTC(year, month, 0)).getUTCDate() - day + 1;
+        const daysLeft =
+          new Date(Date.UTC(year, month, 0)).getUTCDate() - day + 1;
         return {
           daysLeft,
-          budgets: budgets.map(({ category, limit, spent, currency }) => ({
+          budgets: budgets.map(({category, limit, spent, currency}) => ({
             category,
             limit,
             spent,
@@ -57,10 +58,10 @@ export class FinanceDigest implements OnModuleInit {
         'Tell which were charged since the previous digest (a newer `lastChargedOn`), ' +
         'added, changed or stopped.',
       // Monthly spending totals are left out: imported costs change them every day.
-      collect: async (userId) =>
+      collect: async userId =>
         (await this.recurring.list(userId))
-          .filter((payment) => payment.isActive)
-          .map(({ name, amount, currency, dayOfMonth, lastChargedOn }) => ({
+          .filter(payment => payment.isActive)
+          .map(({name, amount, currency, dayOfMonth, lastChargedOn}) => ({
             name,
             amount,
             currency,
@@ -74,12 +75,12 @@ export class FinanceDigest implements OnModuleInit {
       description:
         'The wishlist: products the user wants to buy with their current price in a shop. ' +
         'Tell whose price went down or up since the previous digest and by how much.',
-      collect: async (userId) => {
+      collect: async userId => {
         const wanted = (await this.wishlist.list(userId)).filter(
-          (wish) => !wish.boughtAt && wish.price !== null,
+          wish => !wish.boughtAt && wish.price !== null,
         );
         return wanted.length
-          ? wanted.map(({ name, price, currency }) => ({ name, price, currency }))
+          ? wanted.map(({name, price, currency}) => ({name, price, currency}))
           : null;
       },
     });

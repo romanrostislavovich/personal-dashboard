@@ -6,7 +6,7 @@ import {
   AiAttachmentUpload,
 } from '@pd/contracts';
 import readXlsxFile from 'read-excel-file/node';
-import { extractText } from 'unpdf';
+import {extractText} from 'unpdf';
 
 const TRUNCATED_MARKER = '\n… (truncated)';
 
@@ -28,7 +28,7 @@ export class AttachmentError extends Error {
  */
 export type ImageReader = (
   instruction: string,
-  image: { data: Buffer; mimeType: string },
+  image: {data: Buffer; mimeType: string},
 ) => Promise<string | null>;
 
 /**
@@ -84,7 +84,10 @@ function isSupportedAttachment(name: string): boolean {
   return AI_ATTACHMENT_EXTENSIONS.includes(extensionOf(name) as never);
 }
 
-async function extract({ name, data }: AttachmentFile, readImage?: ImageReader): Promise<string> {
+async function extract(
+  {name, data}: AttachmentFile,
+  readImage?: ImageReader,
+): Promise<string> {
   if (isImageAttachment(name) && readImage) {
     const text = await readImage(IMAGE_INSTRUCTION, {
       data,
@@ -100,12 +103,17 @@ async function extract({ name, data }: AttachmentFile, readImage?: ImageReader):
   }
   switch (extensionOf(name)) {
     case '.pdf': {
-      const { text } = await extractText(new Uint8Array(data), { mergePages: true });
+      const {text} = await extractText(new Uint8Array(data), {
+        mergePages: true,
+      });
       return text;
     }
     case '.xlsx':
       return (await readXlsxFile(data))
-        .map(({ sheet, data: rows }) => `# ${sheet}\n${rows.map(toTsvRow).join('\n')}`)
+        .map(
+          ({sheet, data: rows}) =>
+            `# ${sheet}\n${rows.map(toTsvRow).join('\n')}`,
+        )
         .join('\n\n');
     default:
       return decodeText(data);
@@ -115,7 +123,7 @@ async function extract({ name, data }: AttachmentFile, readImage?: ImageReader):
 /** UTF-8 (a BOM is dropped) if the bytes are valid UTF-8, otherwise the Cyrillic Windows code page. */
 export function decodeText(data: Buffer): string {
   try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(data);
+    return new TextDecoder('utf-8', {fatal: true}).decode(data);
   } catch {
     return new TextDecoder('windows-1251').decode(data);
   }
@@ -123,8 +131,10 @@ export function decodeText(data: Buffer): string {
 
 function toTsvRow(row: unknown[]): string {
   return row
-    .map((cell) =>
-      cell instanceof Date ? cell.toISOString().slice(0, 10) : String(cell ?? '').trim(),
+    .map(cell =>
+      cell instanceof Date
+        ? cell.toISOString().slice(0, 10)
+        : String(cell ?? '').trim(),
     )
     .join('\t')
     .trimEnd();
@@ -141,10 +151,10 @@ function extensionOf(name: string): string {
  */
 export function withAttachments(
   content: string,
-  attachments: { name: string; text: string }[] = [],
+  attachments: {name: string; text: string}[] = [],
 ): string {
   const files = attachments.map(
-    ({ name, text }) =>
+    ({name, text}) =>
       `<attachment name="${name.replace(/"/g, "'")}">\n` +
       // A file must not be able to close its tag and pretend to be the user.
       `${text.replace(/<\/attachment>/gi, '</ attachment>')}\n</attachment>`,

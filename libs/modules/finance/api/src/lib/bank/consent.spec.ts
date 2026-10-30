@@ -1,4 +1,4 @@
-import { consentUntil } from './bank.service';
+import {consentUntil} from './bank.service';
 
 const DAY = 24 * 60 * 60 * 1000;
 const NOW = Date.UTC(2026, 9, 18);

@@ -1,15 +1,21 @@
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CORE_READS, systemApi } from '@pd/client-core';
-import { SystemJob, SystemLogLevel, SystemStatus } from '@pd/contracts';
-import { errorStatus } from '../client/core-requests';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CORE_READS, systemApi} from '@pd/client-core';
+import {SystemJob, SystemLogLevel, SystemStatus} from '@pd/contracts';
+import {errorStatus} from '../client/core-requests';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
 
 type LevelFilter = SystemLogLevel | 'all';
 
@@ -34,7 +40,9 @@ type LevelFilter = SystemLogLevel | 'all';
     } @else if (status.value(); as s) {
       <mat-card appearance="outlined">
         <mat-card-header>
-          <mat-card-title>⚙️ {{ 'core.settings.system.jobs' | transloco }}</mat-card-title>
+          <mat-card-title
+            >⚙️ {{ 'core.settings.system.jobs' | transloco }}</mat-card-title
+          >
           <mat-card-subtitle>
             {{
               (s.jobsRunHere
@@ -47,7 +55,9 @@ type LevelFilter = SystemLogLevel | 'all';
         <mat-card-content>
           @for (job of s.jobs; track job.name) {
             <div class="job" [class.failed]="job.failures > 0">
-              <mat-icon class="state">{{ job.failures > 0 ? 'error' : 'check_circle' }}</mat-icon>
+              <mat-icon class="state">{{
+                job.failures > 0 ? 'error' : 'check_circle'
+              }}</mat-icon>
               <span class="body">
                 <span class="name">{{ job.name }}</span>
                 <span class="meta">
@@ -62,7 +72,10 @@ type LevelFilter = SystemLogLevel | 'all';
                 </span>
                 @if (job.failures > 0) {
                   <span class="problem">
-                    {{ 'core.settings.system.failedRuns' | transloco: { count: job.failures } }}:
+                    {{
+                      'core.settings.system.failedRuns'
+                        | transloco: {count: job.failures}
+                    }}:
                     {{ job.lastError }}
                   </span>
                 }
@@ -76,8 +89,12 @@ type LevelFilter = SystemLogLevel | 'all';
 
       <mat-card appearance="outlined">
         <mat-card-header>
-          <mat-card-title>🧾 {{ 'core.settings.system.log' | transloco }}</mat-card-title>
-          <mat-card-subtitle>{{ 'core.settings.system.logHint' | transloco }}</mat-card-subtitle>
+          <mat-card-title
+            >🧾 {{ 'core.settings.system.log' | transloco }}</mat-card-title
+          >
+          <mat-card-subtitle>{{
+            'core.settings.system.logHint' | transloco
+          }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <div class="toolbar">
@@ -90,25 +107,31 @@ type LevelFilter = SystemLogLevel | 'all';
                 {{ 'core.settings.system.levels.all' | transloco }}
               </mat-button-toggle>
               <mat-button-toggle value="error">
-                {{ 'core.settings.system.levels.error' | transloco }} · {{ count('error') }}
+                {{ 'core.settings.system.levels.error' | transloco }} ·
+                {{ count('error') }}
               </mat-button-toggle>
               <mat-button-toggle value="warn">
-                {{ 'core.settings.system.levels.warn' | transloco }} · {{ count('warn') }}
+                {{ 'core.settings.system.levels.warn' | transloco }} ·
+                {{ count('warn') }}
               </mat-button-toggle>
             </mat-button-toggle-group>
             <span class="spacer"></span>
             <button matButton (click)="status.reload()">
-              <mat-icon>refresh</mat-icon> {{ 'core.settings.system.refresh' | transloco }}
+              <mat-icon>refresh</mat-icon>
+              {{ 'core.settings.system.refresh' | transloco }}
             </button>
             <button matButton [disabled]="!s.log.length" (click)="clear()">
-              <mat-icon>delete_sweep</mat-icon> {{ 'core.settings.system.clear' | transloco }}
+              <mat-icon>delete_sweep</mat-icon>
+              {{ 'core.settings.system.clear' | transloco }}
             </button>
           </div>
 
           @for (entry of entries(); track entry.id) {
             <details class="entry" [class.error]="entry.level === 'error'">
               <summary>
-                <span class="when">{{ entry.lastAt | date: 'd MMM, HH:mm' }}</span>
+                <span class="when">{{
+                  entry.lastAt | date: 'd MMM, HH:mm'
+                }}</span>
                 <span class="source">{{ entry.source }}</span>
                 @if (entry.count > 1) {
                   <span class="times">×{{ entry.count }}</span>
@@ -126,7 +149,9 @@ type LevelFilter = SystemLogLevel | 'all';
               </div>
             </details>
           } @empty {
-            <p class="hint">{{ 'core.settings.system.logEmpty' | transloco }}</p>
+            <p class="hint">
+              {{ 'core.settings.system.logEmpty' | transloco }}
+            </p>
           }
         </mat-card-content>
       </mat-card>
@@ -227,20 +252,26 @@ type LevelFilter = SystemLogLevel | 'all';
 export class SystemSettingsComponent {
   private readonly system = systemApi(inject(DASHBOARD_CLIENT).api);
 
-  protected readonly status = httpResource<SystemStatus>(() => CORE_READS.systemStatus());
+  protected readonly status = httpResource<SystemStatus>(() =>
+    CORE_READS.systemStatus(),
+  );
   protected readonly level = signal<LevelFilter>('all');
 
   /** Somebody who is not the owner opened the tab. */
-  protected readonly forbidden = computed(() => errorStatus(this.status.error()) === 403);
+  protected readonly forbidden = computed(
+    () => errorStatus(this.status.error()) === 403,
+  );
 
   protected readonly entries = computed(() => {
     const level = this.level();
     const log = this.status.value()?.log ?? [];
-    return level === 'all' ? log : log.filter((entry) => entry.level === level);
+    return level === 'all' ? log : log.filter(entry => entry.level === level);
   });
 
   protected count(level: SystemLogLevel): number {
-    return (this.status.value()?.log ?? []).filter((entry) => entry.level === level).length;
+    return (this.status.value()?.log ?? []).filter(
+      entry => entry.level === level,
+    ).length;
   }
 
   /** When the job last finished, or — if it never has — when it last started. */

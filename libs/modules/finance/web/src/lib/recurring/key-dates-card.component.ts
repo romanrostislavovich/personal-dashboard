@@ -1,10 +1,15 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { KeyDate, KeyDateKind } from '@pd/contracts';
-import { todayLocalDate } from '@pd/web-core';
+import {CurrencyPipe, DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {KeyDate, KeyDateKind} from '@pd/contracts';
+import {todayLocalDate} from '@pd/web-core';
 
 const ICONS: Record<KeyDateKind, string> = {
   'cancel-by': 'edit_document',
@@ -24,13 +29,23 @@ const SOON_DAYS = 14;
 @Component({
   selector: 'pd-key-dates-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.none]': '!dates().length' },
-  imports: [CurrencyPipe, DatePipe, MatCardModule, MatIconModule, TranslocoPipe],
+  host: {'[class.none]': '!dates().length'},
+  imports: [
+    CurrencyPipe,
+    DatePipe,
+    MatCardModule,
+    MatIconModule,
+    TranslocoPipe,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'finance.keyDates.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'finance.keyDates.hint' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'finance.keyDates.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'finance.keyDates.hint' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @for (month of months(); track month.key) {
@@ -41,9 +56,12 @@ const SOON_DAYS = 14;
                 <span class="day">{{ date.date | date: 'd MMM' }}</span>
                 <mat-icon aria-hidden="true">{{ icons[date.kind] }}</mat-icon>
                 <span class="what">
-                  <b>{{ date.name }}</b> · {{ 'finance.keyDates.kind.' + date.kind | transloco }}
+                  <b>{{ date.name }}</b> ·
+                  {{ 'finance.keyDates.kind.' + date.kind | transloco }}
                 </span>
-                <span class="amount">{{ date.amount | currency: date.currency }}</span>
+                <span class="amount">{{
+                  date.amount | currency: date.currency
+                }}</span>
               </li>
             }
           </ul>
@@ -98,7 +116,9 @@ export class KeyDatesCardComponent {
   readonly dates = input.required<KeyDate[]>();
 
   protected readonly icons = ICONS;
-  protected readonly soon = new Date(Date.parse(todayLocalDate()) + SOON_DAYS * 86_400_000)
+  protected readonly soon = new Date(
+    Date.parse(todayLocalDate()) + SOON_DAYS * 86_400_000,
+  )
     .toISOString()
     .slice(0, 10);
 
@@ -108,6 +128,10 @@ export class KeyDatesCardComponent {
       const key = date.date.slice(0, 7);
       byMonth.set(key, [...(byMonth.get(key) ?? []), date]);
     }
-    return [...byMonth].map(([key, dates]) => ({ key, date: `${key}-01`, dates }));
+    return [...byMonth].map(([key, dates]) => ({
+      key,
+      date: `${key}-01`,
+      dates,
+    }));
   });
 }

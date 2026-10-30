@@ -1,11 +1,11 @@
-import { Controller, Get, Inject, OnModuleInit, Query } from '@nestjs/common';
-import { SearchHit, searchQuerySchema } from '@pd/contracts';
-import { and, desc, eq, or } from 'drizzle-orm';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { DB, Database } from '../database/database.module';
-import { projects } from '../projects/projects.schema';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
-import { contains, SEARCH_LIMIT, SearchService } from './search.service';
+import {Controller, Get, Inject, OnModuleInit, Query} from '@nestjs/common';
+import {SearchHit, searchQuerySchema} from '@pd/contracts';
+import {and, desc, eq, or} from 'drizzle-orm';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {DB, Database} from '../database/database.module';
+import {projects} from '../projects/projects.schema';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
+import {contains, SEARCH_LIMIT, SearchService} from './search.service';
 
 /** Search across all modules — for the command palette. */
 @Controller('search')
@@ -35,7 +35,7 @@ export class SearchController implements OnModuleInit {
           )
           .orderBy(desc(projects.createdAt))
           .limit(SEARCH_LIMIT);
-        return rows.map((row) => ({
+        return rows.map(row => ({
           module: 'projects',
           kind: 'project',
           title: row.name,

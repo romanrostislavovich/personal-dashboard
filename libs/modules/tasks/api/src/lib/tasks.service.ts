@@ -1,6 +1,17 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DB, Database, isUniqueViolation, LinksService, UsersService } from '@pd/api-core';
-import { projects } from '@pd/api-core/schema';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  DB,
+  Database,
+  isUniqueViolation,
+  LinksService,
+  UsersService,
+} from '@pd/api-core';
+import {projects} from '@pd/api-core/schema';
 import {
   computeStreaks,
   LocalDate,
@@ -12,9 +23,20 @@ import {
   taskUpdateSchema,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gt, inArray, isNull, min, or, sql } from 'drizzle-orm';
-import { z } from 'zod';
-import { reminders, taskLists, TaskRow, tasks } from './tasks.schema';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNull,
+  min,
+  or,
+  sql,
+} from 'drizzle-orm';
+import {z} from 'zod';
+import {reminders, taskLists, TaskRow, tasks} from './tasks.schema';
 
 /** The highest of TASK_PRIORITIES. */
 const TOP_PRIORITY = 3;
@@ -55,25 +77,31 @@ export class TasksService {
   async createList(userId: string, name: string): Promise<void> {
     await this.db
       .insert(taskLists)
-      .values({ userId, name })
+      .values({userId, name})
       .catch((error: unknown) => {
-        throw isUniqueViolation(error) ? new BadRequestException('Such a list exists') : error;
+        throw isUniqueViolation(error)
+          ? new BadRequestException('Such a list exists')
+          : error;
       });
   }
 
   async renameList(userId: string, id: string, name: string): Promise<void> {
     await this.db
       .update(taskLists)
-      .set({ name })
+      .set({name})
       .where(and(eq(taskLists.id, id), eq(taskLists.userId, userId)))
       .catch((error: unknown) => {
-        throw isUniqueViolation(error) ? new BadRequestException('Such a list exists') : error;
+        throw isUniqueViolation(error)
+          ? new BadRequestException('Such a list exists')
+          : error;
       });
   }
 
   /** The tasks of a deleted list go back to the inbox (see the foreign key). */
   async removeList(userId: string, id: string): Promise<void> {
-    await this.db.delete(taskLists).where(and(eq(taskLists.id, id), eq(taskLists.userId, userId)));
+    await this.db
+      .delete(taskLists)
+      .where(and(eq(taskLists.id, id), eq(taskLists.userId, userId)));
   }
 
   // --- Tasks ---
@@ -88,7 +116,10 @@ export class TasksService {
           eq(tasks.userId, userId),
           or(
             isNull(tasks.completedAt),
-            gt(tasks.completedAt, new Date(Date.now() - DONE_SHOWN_DAYS * DAY_MS)),
+            gt(
+              tasks.completedAt,
+              new Date(Date.now() - DONE_SHOWN_DAYS * DAY_MS),
+            ),
           ),
         ),
       )
@@ -99,13 +130,13 @@ export class TasksService {
         desc(tasks.priority),
         asc(tasks.createdAt),
       );
-    const reminderAt = await this.nearestReminders(rows.map((row) => row.id));
+    const reminderAt = await this.nearestReminders(rows.map(row => row.id));
     // The focus sessions belong to another section: the core tells the time of each title.
     const spent = await this.links.timeSpentOn(
       userId,
-      rows.map((row) => row.title),
+      rows.map(row => row.title),
     );
-    return rows.map((row) => {
+    return rows.map(row => {
       const time = spent.get(row.title.trim().toLowerCase());
       return {
         ...toTask(row, reminderAt.get(row.id) ?? null),
@@ -130,16 +161,22 @@ export class TasksService {
     await this.checkOwnership(userId, input);
     const [row] = await this.db
       .insert(tasks)
-      .values({ userId, ...input })
+      .values({userId, ...input})
       .returning();
     return toTask(row, null);
   }
 
-  async update(userId: string, id: string, changes: ValidTaskUpdate): Promise<void> {
+  async update(
+    userId: string,
+    id: string,
+    changes: ValidTaskUpdate,
+  ): Promise<void> {
     const current = await this.find(userId, id);
     await this.checkOwnership(userId, changes);
-    const dueDate = changes.dueDate === undefined ? current.dueDate : changes.dueDate;
-    const repeat = changes.repeat === undefined ? current.repeat : changes.repeat;
+    const dueDate =
+      changes.dueDate === undefined ? current.dueDate : changes.dueDate;
+    const repeat =
+      changes.repeat === undefined ? current.repeat : changes.repeat;
     if (repeat && !dueDate) {
       throw new BadRequestException('A repeating task needs a due date');
     }
@@ -162,21 +199,31 @@ export class TasksService {
       new Date(),
       this.users.timeZoneOf(await this.users.findById(userId)),
     ).date;
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       await tx
         .update(tasks)
-        .set({ completedAt: new Date() })
+        .set({completedAt: new Date()})
         .where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
       await tx
         .update(reminders)
-        .set({ status: 'done' })
-        .where(and(eq(reminders.taskId, id), inArray(reminders.status, ['scheduled', 'fired'])));
+        .set({status: 'done'})
+        .where(
+          and(
+            eq(reminders.taskId, id),
+            inArray(reminders.status, ['scheduled', 'fired']),
+          ),
+        );
       if (task.repeat && task.dueDate) {
-        const { id: _id, completedAt: _completedAt, createdAt: _createdAt, ...copy } = task;
+        const {
+          id: _id,
+          completedAt: _completedAt,
+          createdAt: _createdAt,
+          ...copy
+        } = task;
         await tx.insert(tasks).values({
           ...copy,
           dueDate: nextRepeat(task.dueDate, task.repeat, today),
-          checklist: task.checklist.map((item) => ({ ...item, done: false })),
+          checklist: task.checklist.map(item => ({...item, done: false})),
         });
       }
     });
@@ -187,12 +234,14 @@ export class TasksService {
     await this.find(userId, id);
     await this.db
       .update(tasks)
-      .set({ completedAt: null })
+      .set({completedAt: null})
       .where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
   }
 
   async remove(userId: string, id: string): Promise<void> {
-    await this.db.delete(tasks).where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
+    await this.db
+      .delete(tasks)
+      .where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
   }
 
   /** How many tasks the user has done in total — for the achievements. */
@@ -207,7 +256,9 @@ export class TasksService {
    * Done tasks by their horizon — for the achievements: long-running ones, and short ones done on
    * the day they were added (by the user's own calendar).
    */
-  async horizonRecords(userId: string): Promise<{ long: number; shortSameDay: number }> {
+  async horizonRecords(
+    userId: string,
+  ): Promise<{long: number; shortSameDay: number}> {
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const [row] = await this.db
       .select({
@@ -217,14 +268,19 @@ export class TasksService {
             = (${tasks.createdAt} AT TIME ZONE ${timeZone})::date)::int`,
       })
       .from(tasks)
-      .where(and(eq(tasks.userId, userId), sql`${tasks.completedAt} IS NOT NULL`));
-    return { long: row?.long ?? 0, shortSameDay: row?.shortSameDay ?? 0 };
+      .where(
+        and(eq(tasks.userId, userId), sql`${tasks.completedAt} IS NOT NULL`),
+      );
+    return {long: row?.long ?? 0, shortSameDay: row?.shortSameDay ?? 0};
   }
 
   /** Done tasks by the user's own days — for the achievements. */
-  async completionRecords(
-    userId: string,
-  ): Promise<{ bestDay: number; longestStreak: number; onTime: number; urgent: number }> {
+  async completionRecords(userId: string): Promise<{
+    bestDay: number;
+    longestStreak: number;
+    onTime: number;
+    urgent: number;
+  }> {
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const local = sql`(${tasks.completedAt} AT TIME ZONE ${timeZone})`;
     const rows = await this.db
@@ -236,13 +292,15 @@ export class TasksService {
         urgent: sql<number>`count(*) filter (where ${tasks.priority} = ${TOP_PRIORITY})::int`,
       })
       .from(tasks)
-      .where(and(eq(tasks.userId, userId), sql`${tasks.completedAt} IS NOT NULL`))
+      .where(
+        and(eq(tasks.userId, userId), sql`${tasks.completedAt} IS NOT NULL`),
+      )
       .groupBy(sql`1`);
     const today = zonedDateTime(new Date(), timeZone).date;
     return {
-      bestDay: Math.max(0, ...rows.map((row) => row.done)),
+      bestDay: Math.max(0, ...rows.map(row => row.done)),
       longestStreak: computeStreaks(
-        rows.map((row) => row.day),
+        rows.map(row => row.day),
         parseLocalDate(today),
       ).longest,
       onTime: rows.reduce((sum, row) => sum + row.onTime, 0),
@@ -253,7 +311,7 @@ export class TasksService {
   /** A list or a project of somebody else must not be attached to a task. */
   private async checkOwnership(
     userId: string,
-    { listId, projectId }: { listId?: string | null; projectId?: string | null },
+    {listId, projectId}: {listId?: string | null; projectId?: string | null},
   ): Promise<void> {
     if (
       listId &&
@@ -275,17 +333,26 @@ export class TasksService {
     }
   }
 
-  private async nearestReminders(taskIds: string[]): Promise<Map<string, string>> {
+  private async nearestReminders(
+    taskIds: string[],
+  ): Promise<Map<string, string>> {
     if (taskIds.length === 0) {
       return new Map();
     }
     const rows = await this.db
-      .select({ taskId: reminders.taskId, at: min(reminders.remindAt) })
+      .select({taskId: reminders.taskId, at: min(reminders.remindAt)})
       .from(reminders)
-      .where(and(inArray(reminders.taskId, taskIds), eq(reminders.status, 'scheduled')))
+      .where(
+        and(
+          inArray(reminders.taskId, taskIds),
+          eq(reminders.status, 'scheduled'),
+        ),
+      )
       .groupBy(reminders.taskId);
     return new Map(
-      rows.flatMap((row) => (row.taskId && row.at ? [[row.taskId, row.at.toISOString()]] : [])),
+      rows.flatMap(row =>
+        row.taskId && row.at ? [[row.taskId, row.at.toISOString()]] : [],
+      ),
     );
   }
 }

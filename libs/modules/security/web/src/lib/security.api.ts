@@ -1,11 +1,11 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { CORE_READS, securityApi } from '@pd/client-core';
-import { SecuritySettings, SecurityStatus } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {CORE_READS, securityApi} from '@pd/client-core';
+import {SecuritySettings, SecurityStatus} from '@pd/contracts';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The security agent's requests of the client core (`@pd/client-core`) for Angular. */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class SecurityApi {
   private readonly security = securityApi(inject(DASHBOARD_CLIENT).api);
 

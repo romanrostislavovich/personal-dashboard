@@ -1,8 +1,13 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { LocalDate, WakatimeBreakdown } from '@pd/contracts';
-import { parseDurations, RawDuration, WakatimeDuration, WakatimeSlice } from './wakatime-durations';
+import {fetchWithTimeout} from '@pd/api-core';
+import {LocalDate, WakatimeBreakdown} from '@pd/contracts';
+import {
+  parseDurations,
+  RawDuration,
+  WakatimeDuration,
+  WakatimeSlice,
+} from './wakatime-durations';
 
-export type { WakatimeDuration, WakatimeSlice } from './wakatime-durations';
+export type {WakatimeDuration, WakatimeSlice} from './wakatime-durations';
 
 const API = 'https://wakatime.com/api/v1';
 
@@ -13,7 +18,7 @@ export class WakatimePlanError extends Error {}
 export interface WakatimeSummaryDay {
   day: LocalDate;
   totalSeconds: number;
-  breakdown: { kind: WakatimeBreakdown; name: string; seconds: number }[];
+  breakdown: {kind: WakatimeBreakdown; name: string; seconds: number}[];
 }
 
 /** Fields of a WakaTime summary and the breakdown each is saved as. */
@@ -32,15 +37,18 @@ export class WakatimeClient {
 
   /** Key check: returns the account's name. */
   async getUsername(): Promise<string> {
-    const { data } = await this.get<{ data: { username: string | null; display_name: string } }>(
-      '/users/current',
-    );
+    const {data} = await this.get<{
+      data: {username: string | null; display_name: string};
+    }>('/users/current');
     return data.username ?? data.display_name;
   }
 
   /** Coding time of every day in the range (both ends included), in the account's time zone. */
-  async getSummaries(start: LocalDate, end: LocalDate): Promise<WakatimeSummaryDay[]> {
-    const { data } = await this.get<{ data: RawSummary[] }>(
+  async getSummaries(
+    start: LocalDate,
+    end: LocalDate,
+  ): Promise<WakatimeSummaryDay[]> {
+    const {data} = await this.get<{data: RawSummary[]}>(
       `/users/current/summaries?start=${start}&end=${end}`,
     );
     return data.map(parseSummary);
@@ -55,7 +63,7 @@ export class WakatimeClient {
     slice: WakatimeSlice,
     machineNames: ReadonlyMap<string, string> = new Map(),
   ): Promise<WakatimeDuration[]> {
-    const { data } = await this.get<{ data: RawDuration[] }>(
+    const {data} = await this.get<{data: RawDuration[]}>(
       `/users/current/durations?date=${day}&slice_by=${slice}`,
     );
     return parseDurations(data, slice, machineNames);
@@ -63,10 +71,10 @@ export class WakatimeClient {
 
   /** The account's computers: the id of each name, as a stretch by computer gives it. */
   async getMachineNames(): Promise<Map<string, string>> {
-    const { data } = await this.get<{ data: { id: string; name: string }[] }>(
+    const {data} = await this.get<{data: {id: string; name: string}[]}>(
       '/users/current/machine_names',
     );
-    return new Map(data.map((machine) => [machine.id, machine.name]));
+    return new Map(data.map(machine => [machine.id, machine.name]));
   }
 
   private async get<T>(path: string): Promise<T> {
@@ -97,9 +105,13 @@ export function parseSummary(raw: RawSummary): WakatimeSummaryDay {
     totalSeconds: Math.round(raw.grand_total.total_seconds),
     breakdown: BREAKDOWN_FIELDS.flatMap(([field, kind]) =>
       ((raw[field] as RawItem[] | undefined) ?? [])
-        .map((item) => ({ kind, name: item.name, seconds: Math.round(item.total_seconds) }))
+        .map(item => ({
+          kind,
+          name: item.name,
+          seconds: Math.round(item.total_seconds),
+        }))
         // Heartbeats shorter than a second round to nothing.
-        .filter((item) => item.name && item.seconds > 0),
+        .filter(item => item.name && item.seconds > 0),
     ),
   };
 }
@@ -112,8 +124,8 @@ interface RawItem {
 }
 
 export interface RawSummary {
-  range: { date: string };
-  grand_total: { total_seconds: number };
+  range: {date: string};
+  grand_total: {total_seconds: number};
   projects?: RawItem[];
   languages?: RawItem[];
   editors?: RawItem[];

@@ -1,5 +1,5 @@
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,15 +9,15 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { SCREENSHOTS_READS, screenshotsApi } from '@pd/client-core';
-import { Screenshot } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '@pd/web-core';
-import { ScreenshotSyncService } from './screenshot-sync.service';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {SCREENSHOTS_READS, screenshotsApi} from '@pd/client-core';
+import {Screenshot} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '@pd/web-core';
+import {ScreenshotSyncService} from './screenshot-sync.service';
 
 /** Thumbnails fetched at a time; "Show more" fetches the next ones. */
 const PAGE = 48;
@@ -29,7 +29,7 @@ const PAGE = 48;
 @Component({
   selector: 'pd-screenshots-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(document:keydown.escape)': 'close()' },
+  host: {'(document:keydown.escape)': 'close()'},
   imports: [
     DatePipe,
     MatButtonModule,
@@ -54,7 +54,9 @@ const PAGE = 48;
               } @else if (sync.busy()) {
                 {{ 'screenshots.syncing' | transloco }}
               } @else if (sync.lastSync(); as at) {
-                {{ 'screenshots.synced' | transloco: { at: (at | date: 'HH:mm') } }}
+                {{
+                  'screenshots.synced' | transloco: {at: (at | date: 'HH:mm')}
+                }}
               }
             </span>
           </span>
@@ -83,11 +85,18 @@ const PAGE = 48;
       <h2>{{ month.date | date: 'LLLL y' }}</h2>
       <div class="grid">
         @for (shot of month.shots; track shot.id) {
-          <button type="button" class="shot" (click)="open(shot)" [title]="fileName(shot)">
+          <button
+            type="button"
+            class="shot"
+            (click)="open(shot)"
+            [title]="fileName(shot)"
+          >
             @if (thumbnails()[shot.id]; as url) {
               <img [src]="url" [alt]="fileName(shot)" loading="lazy" />
             }
-            <span class="caption">{{ shot.createdAt | date: 'd MMM, HH:mm' }}</span>
+            <span class="caption">{{
+              shot.createdAt | date: 'd MMM, HH:mm'
+            }}</span>
           </button>
         }
       </div>
@@ -97,7 +106,11 @@ const PAGE = 48;
       }
     }
     @if (shown() < list.value().length) {
-      <button matButton="tonal" class="more" (click)="shown.set(shown() + page)">
+      <button
+        matButton="tonal"
+        class="more"
+        (click)="shown.set(shown() + page)"
+      >
         {{ 'screenshots.more' | transloco }}
       </button>
     }
@@ -114,12 +127,15 @@ const PAGE = 48;
         <div class="viewer-bar">
           <span>{{ view.shot.name }}</span>
           <a matButton [href]="view.url" [download]="fileName(view.shot)">
-            <mat-icon>download</mat-icon> {{ 'screenshots.download' | transloco }}
+            <mat-icon>download</mat-icon>
+            {{ 'screenshots.download' | transloco }}
           </a>
           <button matButton (click)="remove(view.shot)">
             <mat-icon>delete</mat-icon> {{ 'core.actions.delete' | transloco }}
           </button>
-          <button matButton (click)="close()">{{ 'screenshots.close' | transloco }}</button>
+          <button matButton (click)="close()">
+            {{ 'screenshots.close' | transloco }}
+          </button>
         </div>
       </div>
     }
@@ -132,12 +148,17 @@ export class ScreenshotsPage {
   protected readonly sync = inject(ScreenshotSyncService);
   protected readonly page = PAGE;
 
-  protected readonly list = httpResource<Screenshot[]>(() => SCREENSHOTS_READS.list(), {
-    defaultValue: [],
-  });
+  protected readonly list = httpResource<Screenshot[]>(
+    () => SCREENSHOTS_READS.list(),
+    {
+      defaultValue: [],
+    },
+  );
   protected readonly shown = signal(PAGE);
   protected readonly thumbnails = signal<Record<string, string>>({});
-  protected readonly opened = signal<{ shot: Screenshot; url: string } | null>(null);
+  protected readonly opened = signal<{shot: Screenshot; url: string} | null>(
+    null,
+  );
   protected readonly folderPath = signal('');
 
   protected readonly months = computed(() => {
@@ -146,7 +167,11 @@ export class ScreenshotsPage {
       const month = shot.createdAt.slice(0, 7);
       groups.set(month, [...(groups.get(month) ?? []), shot]);
     }
-    return [...groups].map(([name, shots]) => ({ name, date: `${name}-01`, shots }));
+    return [...groups].map(([name, shots]) => ({
+      name,
+      date: `${name}-01`,
+      shots,
+    }));
   });
 
   constructor() {
@@ -164,20 +189,22 @@ export class ScreenshotsPage {
           const key = `${shot.id}:${shot.hash}`;
           if (!urls.has(key)) {
             urls.set(key, '');
-            void this.api.thumbnail(shot.id).then((blob) => {
+            void this.api.thumbnail(shot.id).then(blob => {
               const url = URL.createObjectURL(blob);
               urls.set(key, url);
-              this.thumbnails.update((all) => ({ ...all, [shot.id]: url }));
+              this.thumbnails.update(all => ({...all, [shot.id]: url}));
             });
           }
         }
       }
     });
     inject(DestroyRef).onDestroy(() => {
-      urls.forEach((url) => url && URL.revokeObjectURL(url));
+      urls.forEach(url => url && URL.revokeObjectURL(url));
       this.close();
     });
-    void this.sync.folder?.status().then(({ folder }) => this.folderPath.set(folder));
+    void this.sync.folder
+      ?.status()
+      .then(({folder}) => this.folderPath.set(folder));
   }
 
   protected fileName(shot: Screenshot): string {
@@ -187,7 +214,7 @@ export class ScreenshotsPage {
   protected async open(shot: Screenshot): Promise<void> {
     const url = URL.createObjectURL(await this.api.file(shot.id));
     this.close();
-    this.opened.set({ shot, url });
+    this.opened.set({shot, url});
   }
 
   protected close(): void {

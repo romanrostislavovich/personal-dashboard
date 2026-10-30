@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { SyncClient } from './sync-client.service';
-import { SyncService } from './sync.service';
+import {Injectable, NotFoundException} from '@nestjs/common';
+import {SyncClient} from './sync-client.service';
+import {SyncService} from './sync.service';
 
 export type ServerActionHandler = (
   userId: string,
@@ -33,18 +33,26 @@ export class ServerActions {
     this.handlers.set(name, handler);
   }
 
-  async run<T = void>(userId: string, name: string, args: object = {}): Promise<T> {
+  async run<T = void>(
+    userId: string,
+    name: string,
+    args: object = {},
+  ): Promise<T> {
     if (this.sync.mode !== 'client') {
-      return (await this.execute(userId, name, { ...args })) as T;
+      return (await this.execute(userId, name, {...args})) as T;
     }
     await this.client.pushFresh();
-    const result = await this.client.runOnServer(userId, name, { ...args });
+    const result = await this.client.runOnServer(userId, name, {...args});
     await this.client.pullSoon();
     return result as T;
   }
 
   /** The server side of `run` (see SyncController). */
-  execute(userId: string, name: string, args: Record<string, unknown>): Promise<unknown> {
+  execute(
+    userId: string,
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<unknown> {
     const handler = this.handlers.get(name);
     if (!handler) {
       throw new NotFoundException(`Unknown server action ${name}`);

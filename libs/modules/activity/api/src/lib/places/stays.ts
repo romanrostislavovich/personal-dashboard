@@ -1,4 +1,4 @@
-import { TripMode } from '@pd/contracts';
+import {TripMode} from '@pd/contracts';
 
 /** A fix of the phone's location; `at` in milliseconds. */
 export interface Fix {
@@ -30,7 +30,7 @@ export interface Trip {
   path: Point[];
 }
 
-export type Entry = ({ kind: 'stay' } & Stay) | ({ kind: 'trip' } & Trip);
+export type Entry = ({kind: 'stay'} & Stay) | ({kind: 'trip'} & Trip);
 
 /** Fixes farther than this from a place's middle are elsewhere. */
 export const PLACE_RADIUS_M = 200;
@@ -45,7 +45,10 @@ const REACH_MIN_M = 50;
 const REACH_PER_ACCURACY = 1.5;
 
 function reachOf(fix: Fix): number {
-  return Math.min(PLACE_RADIUS_M, Math.max(REACH_MIN_M, fix.accuracy * REACH_PER_ACCURACY));
+  return Math.min(
+    PLACE_RADIUS_M,
+    Math.max(REACH_MIN_M, fix.accuracy * REACH_PER_ACCURACY),
+  );
 }
 
 /** On the move the phone takes GPS fixes this sure: the way goes by them, not the rough ones. */
@@ -75,7 +78,9 @@ export function distanceM(a: Point, b: Point): number {
   const dLon = (b.longitude - a.longitude) * rad;
   const h =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos(a.latitude * rad) * Math.cos(b.latitude * rad) * Math.sin(dLon / 2) ** 2;
+    Math.cos(a.latitude * rad) *
+      Math.cos(b.latitude * rad) *
+      Math.sin(dLon / 2) ** 2;
   return 2 * EARTH_M * Math.asin(Math.sqrt(h));
 }
 
@@ -85,9 +90,12 @@ function middle(fixes: Fix[]): Point {
       latitude: acc.latitude + fix.latitude,
       longitude: acc.longitude + fix.longitude,
     }),
-    { latitude: 0, longitude: 0 },
+    {latitude: 0, longitude: 0},
   );
-  return { latitude: sum.latitude / fixes.length, longitude: sum.longitude / fixes.length };
+  return {
+    latitude: sum.latitude / fixes.length,
+    longitude: sum.longitude / fixes.length,
+  };
 }
 
 /**
@@ -97,10 +105,12 @@ function middle(fixes: Fix[]): Point {
  * everything between two stays.
  */
 export function entriesOf(input: Fix[]): Entry[] {
-  const fixes = input.filter((fix) => fix.accuracy <= MAX_ACCURACY_M).sort((a, b) => a.at - b.at);
+  const fixes = input
+    .filter(fix => fix.accuracy <= MAX_ACCURACY_M)
+    .sort((a, b) => a.at - b.at);
 
   // Groups of fixes in a row near one middle; a group long enough is a stay.
-  const groups: { fixes: Fix[]; middle: Point }[] = [];
+  const groups: {fixes: Fix[]; middle: Point}[] = [];
   // The first fix away from the last group since the last one near it; -1 — none.
   let away = -1;
   for (let i = 0; i < fixes.length; i++) {
@@ -116,16 +126,17 @@ export function entriesOf(input: Fix[]): Entry[] {
     if (away < 0) {
       away = i;
     }
-    const left = !last || fix.at - fixes[away].at >= LEFT_MS || i === fixes.length - 1;
+    const left =
+      !last || fix.at - fixes[away].at >= LEFT_MS || i === fixes.length - 1;
     if (left) {
       // A new group from the first fix away; the fixes after it are read again against it.
-      groups.push({ fixes: [fixes[away]], middle: fixes[away] });
+      groups.push({fixes: [fixes[away]], middle: fixes[away]});
       i = away;
       away = -1;
     }
   }
 
-  const stays: (Stay & { fixes: Fix[] })[] = [];
+  const stays: (Stay & {fixes: Fix[]})[] = [];
   const onTheWay: Fix[][] = [[]];
   for (const group of groups) {
     const start = group.fixes[0].at;
@@ -138,11 +149,11 @@ export function entriesOf(input: Fix[]): Entry[] {
     if (previous && distanceM(previous, group.middle) <= PLACE_RADIUS_M) {
       // Back at the same place: whatever was between was noise, not a trip.
       previous.fixes.push(...group.fixes);
-      Object.assign(previous, middle(previous.fixes), { end });
+      Object.assign(previous, middle(previous.fixes), {end});
       onTheWay[onTheWay.length - 1] = [];
       continue;
     }
-    stays.push({ ...group.middle, start, end, fixes: [...group.fixes] });
+    stays.push({...group.middle, start, end, fixes: [...group.fixes]});
     onTheWay.push([]);
   }
 
@@ -151,8 +162,12 @@ export function entriesOf(input: Fix[]): Entry[] {
     if (i > 0) {
       const from = stays[i - 1];
       const way = onTheWay[i];
-      const precise = way.filter((fix) => fix.accuracy <= PRECISE_M);
-      const path: Point[] = [from, ...(precise.length ? precise : way), stay].map((point) => ({
+      const precise = way.filter(fix => fix.accuracy <= PRECISE_M);
+      const path: Point[] = [
+        from,
+        ...(precise.length ? precise : way),
+        stay,
+      ].map(point => ({
         latitude: point.latitude,
         longitude: point.longitude,
       }));
@@ -183,13 +198,13 @@ export function entriesOf(input: Fix[]): Entry[] {
 /** The entries inside `[from, to)`: a stay over midnight counts on each day by its part. */
 export function clip(entries: Entry[], from: number, to: number): Entry[] {
   return entries
-    .filter((entry) => entry.end > from && entry.start < to)
-    .map((entry) => ({
+    .filter(entry => entry.end > from && entry.start < to)
+    .map(entry => ({
       ...entry,
       start: Math.max(entry.start, from),
       end: Math.min(entry.end, to),
     }))
-    .filter((entry) => entry.kind === 'trip' || entry.end > entry.start);
+    .filter(entry => entry.kind === 'trip' || entry.end > entry.start);
 }
 
 /** By the average speed; a trip of no time (fixes a moment apart) is on foot. */
@@ -209,7 +224,7 @@ export function stayNow(fixes: Fix[]): Stay | null {
   if (!fixes.length) {
     return null;
   }
-  const last = Math.max(...fixes.map((fix) => fix.at));
+  const last = Math.max(...fixes.map(fix => fix.at));
   const entries = entriesOf(fixes);
   const stay = entries[entries.length - 1];
   return stay?.kind === 'stay' && last - stay.end <= NOW_MS ? stay : null;

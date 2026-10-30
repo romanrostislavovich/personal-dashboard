@@ -1,10 +1,17 @@
-import { addDays, DailyMetric, parseLocalDate, TimelinePeriod, toLocalDate } from '@pd/contracts';
-import { beforeAfter, eventsOf } from './before-after';
+import {
+  addDays,
+  DailyMetric,
+  parseLocalDate,
+  TimelinePeriod,
+  toLocalDate,
+} from '@pd/contracts';
+import {beforeAfter, eventsOf} from './before-after';
 
 const FROM = '2025-01-01';
 const DAYS = 400;
-const day = (index: number) => toLocalDate(addDays(parseLocalDate(FROM), index));
-const range = { from: FROM, to: day(DAYS - 1) };
+const day = (index: number) =>
+  toLocalDate(addDays(parseLocalDate(FROM), index));
+const range = {from: FROM, to: day(DAYS - 1)};
 
 function noise(seed: number): () => number {
   let state = seed;
@@ -14,13 +21,17 @@ function noise(seed: number): () => number {
   };
 }
 
-function metric(key: string, values: number[], unit: DailyMetric['unit'] = 'hours'): DailyMetric {
+function metric(
+  key: string,
+  values: number[],
+  unit: DailyMetric['unit'] = 'hours',
+): DailyMetric {
   return {
     key,
     module: key.split('.')[0],
     labelKey: key,
     unit,
-    days: values.map((value, index) => ({ day: day(index), value })),
+    days: values.map((value, index) => ({day: day(index), value})),
   };
 }
 
@@ -36,17 +47,17 @@ const period = (from: string, to: string | null = null): TimelinePeriod => ({
 const random = noise(5);
 const EVENT = 300;
 // After the event: games late at night go up; the coding stays as it was.
-const lateGames = Array.from({ length: DAYS }, (_, i) =>
+const lateGames = Array.from({length: DAYS}, (_, i) =>
   Math.max(0, (i >= EVENT ? 2.5 : 0.8) + random()),
 );
-const coding = Array.from({ length: DAYS }, () => 4 + 2 * random());
+const coding = Array.from({length: DAYS}, () => 4 + 2 * random());
 // The music follows the seasons only.
 const music = Array.from(
-  { length: DAYS },
+  {length: DAYS},
   (_, i) => 20 + 6 * Math.sin((2 * Math.PI * i) / 365) + 8 * random(),
 );
 const temperature = Array.from(
-  { length: DAYS },
+  {length: DAYS},
   (_, i) => 10 + 10 * Math.sin((2 * Math.PI * i) / 365),
 );
 
@@ -62,7 +73,7 @@ const result = beforeAfter(
   4,
 );
 const [around] = result.results;
-const change = (key: string) => around.changes.find((one) => one.key === key);
+const change = (key: string) => around.changes.find(one => one.key === key);
 
 describe('beforeAfter', () => {
   it('finds a number that changed at the event', () => {
@@ -94,14 +105,20 @@ describe('beforeAfter', () => {
       range,
       4,
     );
-    expect(recent.results[0]).toMatchObject({ enough: false, daysAfter: 3, changes: [] });
+    expect(recent.results[0]).toMatchObject({
+      enough: false,
+      daysAfter: 3,
+      changes: [],
+    });
   });
 
   it('cannot tell without a history of ordinary dates', () => {
     // Only the weeks around the event: no ordinary dates to compare with.
     const around = {
       ...metric('activity.lateGames', []),
-      days: lateGames.slice(260, 340).map((value, i) => ({ day: day(260 + i), value })),
+      days: lateGames
+        .slice(260, 340)
+        .map((value, i) => ({day: day(260 + i), value})),
     };
     const short = beforeAfter([around], [period(day(EVENT))], range, 4);
     expect(short.results[0].changes[0]?.p).toBeNull();
@@ -114,11 +131,11 @@ describe('eventsOf', () => {
     const events = eventsOf(
       [
         period('2026-01-10', '2026-03-01'),
-        { ...period('2026-05-01', '2027-01-01'), kind: 'medication', title: 'X' },
+        {...period('2026-05-01', '2027-01-01'), kind: 'medication', title: 'X'},
       ],
       '2026-10-18',
     );
-    expect(events.map((event) => [event.on, event.edge])).toEqual([
+    expect(events.map(event => [event.on, event.edge])).toEqual([
       ['2026-05-01', 'start'],
       ['2026-03-01', 'end'],
       ['2026-01-10', 'start'],

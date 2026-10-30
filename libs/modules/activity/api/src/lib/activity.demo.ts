@@ -1,6 +1,6 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, DemoService } from '@pd/api-core';
-import { randomUUID } from 'node:crypto';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, DemoService} from '@pd/api-core';
+import {randomUUID} from 'node:crypto';
 import {
   activityApps,
   activityDevices,
@@ -37,7 +37,7 @@ export class ActivityDemo implements OnModuleInit {
   onModuleInit(): void {
     this.demo.register({
       module: 'activity',
-      seed: async ({ userId, projects }) => {
+      seed: async ({userId, projects}) => {
         const now = Date.now();
         const [device] = await this.db
           .insert(activityDevices)
@@ -50,24 +50,43 @@ export class ActivityDemo implements OnModuleInit {
             lastSeenAt: new Date(now),
           })
           .returning();
-        await this.db.insert(activitySettings).values({ userId, gamesMinutesPerTask: 15 });
-        await this.db.insert(activityApps).values({ userId, app: 'hades.exe', category: 'games' });
-        await this.db.insert(activityLimits).values({ userId, kind: 'games', minutes: 90 });
+        await this.db
+          .insert(activitySettings)
+          .values({userId, gamesMinutesPerTask: 15});
+        await this.db
+          .insert(activityApps)
+          .values({userId, app: 'hades.exe', category: 'games'});
+        await this.db
+          .insert(activityLimits)
+          .values({userId, kind: 'games', minutes: 90});
 
         const spans = [];
         for (let day = 0; day < DAYS; day++) {
           // The day starts at eight in the morning of the server; an evening of games on some.
-          const start = now - day * DAY_MS - (day === 0 ? 5 * HOUR_MS : 9 * HOUR_MS);
+          const start =
+            now - day * DAY_MS - (day === 0 ? 5 * HOUR_MS : 9 * HOUR_MS);
           const programs: [string, string, string, number][] = [
             ...DAY_OF_WORK,
             ...(day % 3 === 1
-              ? [['hades.exe', 'Hades', 'Hades', 80] as [string, string, string, number]]
+              ? [
+                  ['hades.exe', 'Hades', 'Hades', 80] as [
+                    string,
+                    string,
+                    string,
+                    number,
+                  ],
+                ]
               : []),
           ];
           let at = start;
           for (const [app, appName, title, minutes] of programs) {
             // A weekend of a kind on every sixth and seventh day; today is only half over.
-            const share = day === 0 ? 0.55 : day % 7 >= 5 ? 0.3 : 1 - ((day * 7) % 20) / 100;
+            const share =
+              day === 0
+                ? 0.55
+                : day % 7 >= 5
+                  ? 0.3
+                  : 1 - ((day * 7) % 20) / 100;
             const seconds = Math.round(minutes * 60 * share);
             spans.push({
               userId,
@@ -95,7 +114,9 @@ export class ActivityDemo implements OnModuleInit {
           plannedMinutes: 25,
           focusSeconds: completed ? 1500 : 700,
           completed,
-          distractions: completed ? [] : [{ app: 'chrome.exe', name: 'Chrome', seconds: 240 }],
+          distractions: completed
+            ? []
+            : [{app: 'chrome.exe', name: 'Chrome', seconds: 240}],
         });
         await this.db
           .insert(activityFocusSessions)

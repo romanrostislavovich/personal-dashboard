@@ -1,7 +1,7 @@
-import { RealtimeEvent } from '@pd/contracts';
-import { ApiClient } from './api-client';
-import { API_PATHS } from './core-api';
-import { Session } from './session';
+import {RealtimeEvent} from '@pd/contracts';
+import {ApiClient} from './api-client';
+import {API_PATHS} from './core-api';
+import {Session} from './session';
 
 const RETRY_MIN_MS = 2_000;
 const RETRY_MAX_MS = 30_000;
@@ -61,7 +61,7 @@ export class RealtimeConnection {
     this.abort = abort;
     try {
       const response = await this.fetch(this.api.url(API_PATHS.events), {
-        headers: { ...this.api.headers(), Accept: 'text/event-stream' },
+        headers: {...this.api.headers(), Accept: 'text/event-stream'},
         signal: abort.signal,
       });
       if (response.status === 401) {
@@ -90,13 +90,13 @@ export class RealtimeConnection {
     const reader = body.getReader();
     const parser = new SseParser();
     for (;;) {
-      const { value, done } = await reader.read();
+      const {value, done} = await reader.read();
       if (done) {
         return;
       }
       for (const event of parser.push(value)) {
         if (event.type !== 'ping') {
-          this.listeners.forEach((listener) => listener(event));
+          this.listeners.forEach(listener => listener(event));
         }
       }
     }
@@ -121,15 +121,15 @@ export class SseParser {
   private buffer = '';
 
   push(chunk: Uint8Array): RealtimeEvent[] {
-    this.buffer += this.decoder.decode(chunk, { stream: true });
+    this.buffer += this.decoder.decode(chunk, {stream: true});
     const events: RealtimeEvent[] = [];
     let separator = this.buffer.indexOf('\n\n');
     while (separator !== -1) {
       const data = this.buffer
         .slice(0, separator)
         .split('\n')
-        .filter((line) => line.startsWith('data:'))
-        .map((line) => line.slice(5).trim())
+        .filter(line => line.startsWith('data:'))
+        .map(line => line.slice(5).trim())
         .join('\n');
       if (data) {
         events.push(JSON.parse(data) as RealtimeEvent);

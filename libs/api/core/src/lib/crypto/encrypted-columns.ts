@@ -1,6 +1,12 @@
-import { toSnakeCase } from 'drizzle-orm/casing';
-import { customType, getTableConfig, PgTable } from 'drizzle-orm/pg-core';
-import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes } from 'node:crypto';
+import {toSnakeCase} from 'drizzle-orm/casing';
+import {customType, getTableConfig, PgTable} from 'drizzle-orm/pg-core';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHmac,
+  hkdfSync,
+  randomBytes,
+} from 'node:crypto';
 
 /**
  * Columns stored encrypted (the diagnoses of Health, its scans): AES-256-GCM with a key derived
@@ -24,8 +30,18 @@ let hashKey: Buffer | null = null;
 
 /** Called once on start; a key of its own, apart from the one of SecretsService. */
 export function configureFieldEncryption(secret: string): void {
-  key = Buffer.from(hkdfSync('sha256', secret, 'personal-dashboard', 'encrypted-columns.v1', 32));
-  hashKey = Buffer.from(hkdfSync('sha256', secret, 'personal-dashboard', 'keyed-hash.v1', 32));
+  key = Buffer.from(
+    hkdfSync(
+      'sha256',
+      secret,
+      'personal-dashboard',
+      'encrypted-columns.v1',
+      32,
+    ),
+  );
+  hashKey = Buffer.from(
+    hkdfSync('sha256', secret, 'personal-dashboard', 'keyed-hash.v1', 32),
+  );
 }
 
 /**
@@ -41,7 +57,9 @@ export function keyedHash(text: string): string {
 
 function requireKey(): Buffer {
   if (!key) {
-    throw new Error('Encrypted columns are used before configureFieldEncryption()');
+    throw new Error(
+      'Encrypted columns are used before configureFieldEncryption()',
+    );
   }
   return key;
 }
@@ -59,7 +77,10 @@ function open(sealed: Buffer): Buffer {
   const tag = sealed.subarray(IV_BYTES, IV_BYTES + TAG_BYTES);
   const decipher = createDecipheriv(ALGORITHM, requireKey(), iv);
   decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(sealed.subarray(IV_BYTES + TAG_BYTES)), decipher.final()]);
+  return Buffer.concat([
+    decipher.update(sealed.subarray(IV_BYTES + TAG_BYTES)),
+    decipher.final(),
+  ]);
 }
 
 export const isEncryptedText = (value: string) => value.startsWith(TEXT_PREFIX);
@@ -75,27 +96,33 @@ export function encryptText(plain: string): string {
 
 export function decryptText(stored: string): string {
   return isEncryptedText(stored)
-    ? open(Buffer.from(stored.slice(TEXT_PREFIX.length), 'base64')).toString('utf8')
+    ? open(Buffer.from(stored.slice(TEXT_PREFIX.length), 'base64')).toString(
+        'utf8',
+      )
     : stored;
 }
 
 export function encryptBytes(plain: Buffer): Buffer {
-  return isEncryptedBytes(plain) ? plain : Buffer.concat([BYTES_MAGIC, seal(plain)]);
+  return isEncryptedBytes(plain)
+    ? plain
+    : Buffer.concat([BYTES_MAGIC, seal(plain)]);
 }
 
 export function decryptBytes(stored: Buffer): Buffer {
-  return isEncryptedBytes(stored) ? open(stored.subarray(BYTES_MAGIC.length)) : stored;
+  return isEncryptedBytes(stored)
+    ? open(stored.subarray(BYTES_MAGIC.length))
+    : stored;
 }
 
 /** Text stored encrypted; it cannot be searched or sorted by the database. */
-export const encryptedText = customType<{ data: string; driverData: string }>({
+export const encryptedText = customType<{data: string; driverData: string}>({
   dataType: () => 'text',
   toDriver: encryptText,
   fromDriver: decryptText,
 });
 
 /** A file (a scan, a PDF) stored encrypted. */
-export const encryptedBytes = customType<{ data: Buffer; driverData: Buffer }>({
+export const encryptedBytes = customType<{data: Buffer; driverData: Buffer}>({
   dataType: () => 'bytea',
   toDriver: encryptBytes,
   fromDriver: decryptBytes,
@@ -119,24 +146,37 @@ export function registerEncryptedTables(...tables: PgTable[]): void {
     const named = (mapper: unknown) =>
       new Set(
         config.columns
-          .filter((column) => (column as { mapTo?: unknown }).mapTo === mapper)
-          .map((column) => (column.keyAsName ? toSnakeCase(column.name) : column.name)),
+          .filter(column => (column as {mapTo?: unknown}).mapTo === mapper)
+          .map(column =>
+            column.keyAsName ? toSnakeCase(column.name) : column.name,
+          ),
       );
-    registry.set(config.name, { text: named(encryptText), bytes: named(encryptBytes) });
+    registry.set(config.name, {
+      text: named(encryptText),
+      bytes: named(encryptBytes),
+    });
   }
 }
 
-export function encryptedColumnsOf(table: string): EncryptedColumns | undefined {
+export function encryptedColumnsOf(
+  table: string,
+): EncryptedColumns | undefined {
   return registry.get(table);
 }
 
 /** A row as the database holds it, with its encrypted text columns read (the export). */
-export function decryptedRow(table: string, row: Record<string, unknown>): Record<string, unknown> {
+export function decryptedRow(
+  table: string,
+  row: Record<string, unknown>,
+): Record<string, unknown> {
   return mapText(table, row, decryptText);
 }
 
 /** A row of an archive, with its encrypted text columns sealed with this key (the import). */
-export function encryptedRow(table: string, row: Record<string, unknown>): Record<string, unknown> {
+export function encryptedRow(
+  table: string,
+  row: Record<string, unknown>,
+): Record<string, unknown> {
   return mapText(table, row, encryptText);
 }
 
@@ -149,7 +189,7 @@ function mapText(
   if (!columns?.size) {
     return row;
   }
-  const result = { ...row };
+  const result = {...row};
   for (const column of columns) {
     const value = result[column];
     if (typeof value === 'string') {

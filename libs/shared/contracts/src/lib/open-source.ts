@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 /** An npm package name, with its scope if it has one: `ngx-translate-lint`, `@scope/name`. */
 const NPM_NAME = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
@@ -10,18 +10,24 @@ const NPM_NAME = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
  */
 export function npmPackageName(value: string): string {
   const trimmed = value.trim();
-  const page = trimmed.match(/^(?:https?:\/\/)?(?:www\.)?npmjs\.com\/package\/(.+)$/i);
+  const page = trimmed.match(
+    /^(?:https?:\/\/)?(?:www\.)?npmjs\.com\/package\/(.+)$/i,
+  );
   if (!page) {
     return trimmed;
   }
   const [first, second] = page[1].split(/[?#]/)[0].split('/');
-  return decodeURIComponent(first.startsWith('@') && second ? `${first}/${second}` : first);
+  return decodeURIComponent(
+    first.startsWith('@') && second ? `${first}/${second}` : first,
+  );
 }
 
 const npmPackageSchema = z
   .string()
   .transform(npmPackageName)
-  .pipe(z.string().min(1).max(214).regex(NPM_NAME, 'Expected an npm package name'));
+  .pipe(
+    z.string().min(1).max(214).regex(NPM_NAME, 'Expected an npm package name'),
+  );
 
 /** Where repositories come from. */
 export const REPO_PROVIDERS = ['github', 'gitlab', 'bitbucket'] as const;
@@ -46,8 +52,10 @@ const REPO_PATH: Record<RepoProvider, RegExp> = {
 export function parseRepoReference(
   value: string,
   provider: RepoProvider = 'github',
-): { provider: RepoProvider; repo: string } | null {
-  const link = value.trim().match(/^(?:https?:\/\/)?(?:www\.)?([a-z.]+\.[a-z]+)\/(.+)$/i);
+): {provider: RepoProvider; repo: string} | null {
+  const link = value
+    .trim()
+    .match(/^(?:https?:\/\/)?(?:www\.)?([a-z.]+\.[a-z]+)\/(.+)$/i);
   const host = link ? REPO_HOSTS[link[1].toLowerCase()] : undefined;
   if (link && !host) {
     return null;
@@ -59,7 +67,7 @@ export function parseRepoReference(
     .replace(/\/+$/, '')
     .replace(/\.git$/i, '');
   const found = host ?? provider;
-  return REPO_PATH[found].test(repo) ? { provider: found, repo } : null;
+  return REPO_PATH[found].test(repo) ? {provider: found, repo} : null;
 }
 
 /**
@@ -83,10 +91,14 @@ export const trackedRepoInputSchema = z
   .transform((input, context) => {
     const reference = parseRepoReference(input.repo, input.provider);
     if (!reference) {
-      context.addIssue({ code: 'custom', path: ['repo'], message: 'Expected owner/name' });
+      context.addIssue({
+        code: 'custom',
+        path: ['repo'],
+        message: 'Expected owner/name',
+      });
       return z.NEVER;
     }
-    return { ...input, ...reference };
+    return {...input, ...reference};
   });
 export type TrackedRepoInput = z.input<typeof trackedRepoInputSchema>;
 
@@ -142,13 +154,13 @@ export interface TrackedRepo {
   openIssues: number;
   openPulls: number;
   npmWeeklyDownloads: number | null;
-  latestRelease: { tag: string; publishedAt: string } | null;
+  latestRelease: {tag: string; publishedAt: string} | null;
   pushedAt: string | null;
   lastSyncedAt: string | null;
   /** Text of the last sync error (for example, the repository was deleted). */
   syncError: string | null;
   /** Star growth over 7 and 30 days (from the saved history). */
-  starsDelta: { week: number; month: number };
+  starsDelta: {week: number; month: number};
   /** History for the last 30 days for the chart. */
   history: RepoStatsPoint[];
 }

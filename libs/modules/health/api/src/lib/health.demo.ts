@@ -1,8 +1,8 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { DemoService } from '@pd/api-core';
-import { HealthService } from './health.service';
-import { LabsService } from './labs.service';
-import { ProfileService } from './profile/profile.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {DemoService} from '@pd/api-core';
+import {HealthService} from './health.service';
+import {LabsService} from './labs.service';
+import {ProfileService} from './profile/profile.service';
 
 /**
  * The demo data of Health: a made-up history across two countries — a family doctor in Kyiv,
@@ -21,12 +21,15 @@ export class HealthDemo implements OnModuleInit {
   onModuleInit(): void {
     this.demo.register({
       module: 'health',
-      seed: (context) => this.seed(context.userId, context.daysAgo),
+      seed: context => this.seed(context.userId, context.daysAgo),
     });
   }
 
-  private async seed(userId: string, daysAgo: (days: number) => string): Promise<void> {
-    await this.profiles.saveProfile(userId, { bloodType: 'A+' });
+  private async seed(
+    userId: string,
+    daysAgo: (days: number) => string,
+  ): Promise<void> {
+    await this.profiles.saveProfile(userId, {bloodType: 'A+'});
     await this.profiles.saveAllergy(userId, {
       substance: 'Пеніцилін',
       reaction: 'Кропив’янка',
@@ -98,7 +101,8 @@ export class HealthDemo implements OnModuleInit {
       doctorId: gastro.id,
       complaints: 'Ból w nadbrzuszu po posiłkach od miesiąca.',
       findings: 'Brzuch miękki, tkliwy w nadbrzuszu.',
-      recommendations: 'Pantoprazol 20 mg rano przez 4 tygodnie.\nUSG jamy brzusznej.',
+      recommendations:
+        'Pantoprazol 20 mg rano przez 4 tygodnie.\nUSG jamy brzusznej.',
       nextVisitOn: daysAgo(-10),
       language: 'pl',
     });
@@ -142,7 +146,14 @@ export class HealthDemo implements OnModuleInit {
           refLow: 130,
           refHigh: 170,
         },
-        { name: 'ТТГ', analyte: 'tsh', value: 2.1, unit: 'мМО/л', refLow: 0.4, refHigh: 4 },
+        {
+          name: 'ТТГ',
+          analyte: 'tsh',
+          value: 2.1,
+          unit: 'мМО/л',
+          refLow: 0.4,
+          refHigh: 4,
+        },
       ],
     });
     await this.labs.savePanel(userId, {
@@ -151,7 +162,14 @@ export class HealthDemo implements OnModuleInit {
       country: 'PL',
       visitId: recent.id,
       values: [
-        { name: 'Glukoza', analyte: 'glucose', value: 97, unit: 'mg/dl', refLow: 70, refHigh: 99 },
+        {
+          name: 'Glukoza',
+          analyte: 'glucose',
+          value: 97,
+          unit: 'mg/dl',
+          refLow: 70,
+          refHigh: 99,
+        },
         {
           name: 'Hemoglobina',
           analyte: 'hemoglobin',
@@ -160,7 +178,7 @@ export class HealthDemo implements OnModuleInit {
           refLow: 13.5,
           refHigh: 17.5,
         },
-        { name: 'CRP', analyte: 'crp', value: 6.2, unit: 'mg/l', refHigh: 5 },
+        {name: 'CRP', analyte: 'crp', value: 6.2, unit: 'mg/l', refHigh: 5},
       ],
     });
     await this.labs.saveStudy(userId, {

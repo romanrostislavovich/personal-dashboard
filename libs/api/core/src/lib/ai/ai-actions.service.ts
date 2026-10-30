@@ -1,9 +1,9 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { AiAction, AiActionOutcome } from '@pd/contracts';
-import { and, desc, eq, lt } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { aiActions } from './ai.schema';
-import { UndoData } from './ai-undo';
+import {Inject, Injectable, Logger, NotFoundException} from '@nestjs/common';
+import {AiAction, AiActionOutcome} from '@pd/contracts';
+import {and, desc, eq, lt} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {aiActions} from './ai.schema';
+import {UndoData} from './ai-undo';
 
 /** The log shows this many recent actions… */
 const LIST_LIMIT = 200;
@@ -39,7 +39,10 @@ export class AiActionsService {
         userId,
         tool: action.tool,
         module: action.module,
-        args: args.length > MAX_ARGS_CHARS ? `${args.slice(0, MAX_ARGS_CHARS)}…` : args,
+        args:
+          args.length > MAX_ARGS_CHARS
+            ? `${args.slice(0, MAX_ARGS_CHARS)}…`
+            : args,
         outcome: action.outcome,
         error: action.error?.slice(0, 500) ?? null,
         undo: action.undo ?? null,
@@ -53,14 +56,19 @@ export class AiActionsService {
   async list(userId: string): Promise<AiAction[]> {
     await this.db
       .delete(aiActions)
-      .where(lt(aiActions.createdAt, new Date(Date.now() - KEEP_DAYS * 24 * 60 * 60 * 1000)));
+      .where(
+        lt(
+          aiActions.createdAt,
+          new Date(Date.now() - KEEP_DAYS * 24 * 60 * 60 * 1000),
+        ),
+      );
     const rows = await this.db
       .select()
       .from(aiActions)
       .where(eq(aiActions.userId, userId))
       .orderBy(desc(aiActions.createdAt))
       .limit(LIST_LIMIT);
-    return rows.map((row) => ({
+    return rows.map(row => ({
       id: row.id,
       tool: row.tool,
       module: row.module,
@@ -76,7 +84,13 @@ export class AiActionsService {
   async undoable(
     userId: string,
     id: string,
-  ): Promise<{ id: string; tool: string; module: string; undo: UndoData; createdAt: Date }> {
+  ): Promise<{
+    id: string;
+    tool: string;
+    module: string;
+    undo: UndoData;
+    createdAt: Date;
+  }> {
     const [row] = await this.db
       .select()
       .from(aiActions)
@@ -96,18 +110,24 @@ export class AiActionsService {
   /** The latest change that can still be undone, if any. */
   async lastUndoable(userId: string): Promise<string | null> {
     const rows = await this.db
-      .select({ id: aiActions.id, outcome: aiActions.outcome, undo: aiActions.undo })
+      .select({
+        id: aiActions.id,
+        outcome: aiActions.outcome,
+        undo: aiActions.undo,
+      })
       .from(aiActions)
       .where(eq(aiActions.userId, userId))
       .orderBy(desc(aiActions.createdAt))
       .limit(20);
-    return rows.find((row) => row.outcome === 'done' && row.undo !== null)?.id ?? null;
+    return (
+      rows.find(row => row.outcome === 'done' && row.undo !== null)?.id ?? null
+    );
   }
 
   async markUndone(userId: string, id: string): Promise<void> {
     await this.db
       .update(aiActions)
-      .set({ outcome: 'undone' })
+      .set({outcome: 'undone'})
       .where(and(eq(aiActions.id, id), eq(aiActions.userId, userId)));
   }
 }

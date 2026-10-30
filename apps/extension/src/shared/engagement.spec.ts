@@ -1,4 +1,4 @@
-import { readingMilliseconds, scrollDepth } from './engagement';
+import {readingMilliseconds, scrollDepth} from './engagement';
 
 describe('active reading aggregates', () => {
   it('counts only the active portion of a visible focused interval', () => {

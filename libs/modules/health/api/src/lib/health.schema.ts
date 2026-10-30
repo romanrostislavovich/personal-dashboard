@@ -1,4 +1,9 @@
-import { encryptedBytes, encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
+import {
+  encryptedBytes,
+  encryptedText,
+  registerEncryptedTables,
+  users,
+} from '@pd/api-core/schema';
 import {
   AllergySeverity,
   BloodType,
@@ -31,10 +36,10 @@ import {
 const owner = () =>
   uuid()
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' });
-const created = () => timestamp({ withTimezone: true }).notNull().defaultNow();
+    .references(() => users.id, {onDelete: 'cascade'});
+const created = () => timestamp({withTimezone: true}).notNull().defaultNow();
 const updated = () =>
-  timestamp({ withTimezone: true })
+  timestamp({withTimezone: true})
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date());
@@ -52,7 +57,7 @@ export const healthClinics = pgTable(
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 export const healthDoctors = pgTable(
@@ -63,12 +68,12 @@ export const healthDoctors = pgTable(
     name: text().notNull(),
     /** A key of HEALTH_SPECIALITIES or as written. */
     speciality: text(),
-    clinicId: uuid().references(() => healthClinics.id, { onDelete: 'set null' }),
+    clinicId: uuid().references(() => healthClinics.id, {onDelete: 'set null'}),
     contacts: encryptedText(),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId), index().on(table.clinicId)],
+  table => [index().on(table.userId), index().on(table.clinicId)],
 );
 
 export const healthVisits = pgTable(
@@ -76,21 +81,21 @@ export const healthVisits = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     userId: owner(),
-    visitedOn: date({ mode: 'string' }).notNull(),
-    clinicId: uuid().references(() => healthClinics.id, { onDelete: 'set null' }),
-    doctorId: uuid().references(() => healthDoctors.id, { onDelete: 'set null' }),
+    visitedOn: date({mode: 'string'}).notNull(),
+    clinicId: uuid().references(() => healthClinics.id, {onDelete: 'set null'}),
+    doctorId: uuid().references(() => healthDoctors.id, {onDelete: 'set null'}),
     speciality: text(),
     country: text(),
     complaints: encryptedText(),
     findings: encryptedText(),
     recommendations: encryptedText(),
     notes: encryptedText(),
-    nextVisitOn: date({ mode: 'string' }),
+    nextVisitOn: date({mode: 'string'}),
     language: text(),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [
+  table => [
     index().on(table.userId, table.visitedOn),
     index().on(table.clinicId),
     index().on(table.doctorId),
@@ -111,13 +116,13 @@ export const healthDiagnoses = pgTable(
     code: text(),
     title: encryptedText().notNull(),
     status: text().$type<DiagnosisStatus>().notNull(),
-    diagnosedOn: date({ mode: 'string' }).notNull(),
-    visitId: uuid().references(() => healthVisits.id, { onDelete: 'set null' }),
+    diagnosedOn: date({mode: 'string'}).notNull(),
+    visitId: uuid().references(() => healthVisits.id, {onDelete: 'set null'}),
     notes: encryptedText(),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId, table.code), index().on(table.visitId)],
+  table => [index().on(table.userId, table.code), index().on(table.visitId)],
 );
 
 export const healthMedications = pgTable(
@@ -129,17 +134,17 @@ export const healthMedications = pgTable(
     substance: encryptedText(),
     dose: encryptedText(),
     schedule: encryptedText(),
-    startedOn: date({ mode: 'string' }),
-    stoppedOn: date({ mode: 'string' }),
+    startedOn: date({mode: 'string'}),
+    stoppedOn: date({mode: 'string'}),
     stopReason: encryptedText(),
-    visitId: uuid().references(() => healthVisits.id, { onDelete: 'set null' }),
+    visitId: uuid().references(() => healthVisits.id, {onDelete: 'set null'}),
     notes: encryptedText(),
     /** `HH:mm` on the user's clock to be reminded at; empty — no reminders. */
     reminderTimes: text().array().notNull().default([]),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId), index().on(table.visitId)],
+  table => [index().on(table.userId), index().on(table.visitId)],
 );
 
 /**
@@ -153,15 +158,15 @@ export const healthIntakes = pgTable(
     userId: owner(),
     medicationId: uuid()
       .notNull()
-      .references(() => healthMedications.id, { onDelete: 'cascade' }),
-    day: date({ mode: 'string' }).notNull(),
+      .references(() => healthMedications.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
     time: text().notNull(),
     status: text().$type<IntakeStatus>().notNull().default('pending'),
-    answeredAt: timestamp({ withTimezone: true }),
+    answeredAt: timestamp({withTimezone: true}),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [
+  table => [
     unique().on(table.medicationId, table.day, table.time),
     index().on(table.userId, table.day),
   ],
@@ -171,7 +176,7 @@ export const healthIntakes = pgTable(
 export const healthProfiles = pgTable('health_profiles', {
   userId: uuid()
     .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   bloodType: text().$type<BloodType>(),
   notes: encryptedText(),
   /** The contacts of the ICE card, as JSON (see emergencyContactSchema): encrypted too. */
@@ -187,11 +192,11 @@ export const healthAllergies = pgTable(
     substance: encryptedText().notNull(),
     reaction: encryptedText(),
     severity: text().$type<AllergySeverity>(),
-    since: date({ mode: 'string' }),
+    since: date({mode: 'string'}),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 export const healthVaccinations = pgTable(
@@ -201,14 +206,14 @@ export const healthVaccinations = pgTable(
     userId: owner(),
     vaccine: encryptedText().notNull(),
     dose: encryptedText(),
-    givenOn: date({ mode: 'string' }).notNull(),
+    givenOn: date({mode: 'string'}).notNull(),
     country: text(),
-    nextDueOn: date({ mode: 'string' }),
+    nextDueOn: date({mode: 'string'}),
     notes: encryptedText(),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 export const healthOperations = pgTable(
@@ -217,13 +222,13 @@ export const healthOperations = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: owner(),
     title: encryptedText().notNull(),
-    performedOn: date({ mode: 'string' }).notNull(),
+    performedOn: date({mode: 'string'}).notNull(),
     clinic: encryptedText(),
     notes: encryptedText(),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 /** A scan, a photo or a PDF of a document; the original is always kept. */
@@ -234,8 +239,8 @@ export const healthDocuments = pgTable(
     userId: owner(),
     name: encryptedText().notNull(),
     kind: text().$type<HealthDocumentKind>().notNull(),
-    documentedOn: date({ mode: 'string' }),
-    visitId: uuid().references(() => healthVisits.id, { onDelete: 'set null' }),
+    documentedOn: date({mode: 'string'}),
+    visitId: uuid().references(() => healthVisits.id, {onDelete: 'set null'}),
     /** The export names the file by it (see data-archive.ts). */
     mimeType: text().notNull(),
     size: integer().notNull(),
@@ -245,7 +250,7 @@ export const healthDocuments = pgTable(
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId), index().on(table.visitId)],
+  table => [index().on(table.userId), index().on(table.visitId)],
 );
 
 /**
@@ -259,7 +264,7 @@ export const healthDocumentPages = pgTable(
     userId: owner(),
     documentId: uuid()
       .notNull()
-      .references(() => healthDocuments.id, { onDelete: 'cascade' }),
+      .references(() => healthDocuments.id, {onDelete: 'cascade'}),
     /** 2 for the second page, and so on. */
     page: integer().notNull(),
     mimeType: text().notNull(),
@@ -267,7 +272,10 @@ export const healthDocumentPages = pgTable(
     data: encryptedBytes().notNull(),
     createdAt: created(),
   },
-  (table) => [unique().on(table.documentId, table.page), index().on(table.userId)],
+  table => [
+    unique().on(table.documentId, table.page),
+    index().on(table.userId),
+  ],
 );
 
 /** A lab report: the day the samples were taken, the laboratory, and its lines. */
@@ -276,16 +284,18 @@ export const healthLabPanels = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     userId: owner(),
-    takenOn: date({ mode: 'string' }).notNull(),
+    takenOn: date({mode: 'string'}).notNull(),
     laboratory: encryptedText(),
     country: text(),
-    visitId: uuid().references(() => healthVisits.id, { onDelete: 'set null' }),
-    documentId: uuid().references(() => healthDocuments.id, { onDelete: 'set null' }),
+    visitId: uuid().references(() => healthVisits.id, {onDelete: 'set null'}),
+    documentId: uuid().references(() => healthDocuments.id, {
+      onDelete: 'set null',
+    }),
     notes: encryptedText(),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [
+  table => [
     index().on(table.userId, table.takenOn),
     index().on(table.visitId),
     index().on(table.documentId),
@@ -303,7 +313,7 @@ export const healthLabValues = pgTable(
     userId: owner(),
     panelId: uuid()
       .notNull()
-      .references(() => healthLabPanels.id, { onDelete: 'cascade' }),
+      .references(() => healthLabPanels.id, {onDelete: 'cascade'}),
     /** The order of the report. */
     position: integer().notNull(),
     name: encryptedText().notNull(),
@@ -317,7 +327,7 @@ export const healthLabValues = pgTable(
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.panelId), index().on(table.userId, table.analyte)],
+  table => [index().on(table.panelId), index().on(table.userId, table.analyte)],
 );
 
 /** Ultrasound, MRI, ECG and the like, as their conclusions. */
@@ -328,15 +338,17 @@ export const healthStudies = pgTable(
     userId: owner(),
     kind: text().$type<HealthStudyKind>().notNull(),
     area: encryptedText(),
-    performedOn: date({ mode: 'string' }).notNull(),
+    performedOn: date({mode: 'string'}).notNull(),
     conclusion: encryptedText(),
-    visitId: uuid().references(() => healthVisits.id, { onDelete: 'set null' }),
-    documentId: uuid().references(() => healthDocuments.id, { onDelete: 'set null' }),
+    visitId: uuid().references(() => healthVisits.id, {onDelete: 'set null'}),
+    documentId: uuid().references(() => healthDocuments.id, {
+      onDelete: 'set null',
+    }),
     notes: encryptedText(),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [
+  table => [
     index().on(table.userId, table.performedOn),
     index().on(table.visitId),
     index().on(table.documentId),
@@ -358,14 +370,14 @@ export const healthShares = pgTable(
     language: text().$type<SummaryLanguage>().notNull(),
     /** The HTML of the summary, as it was made. */
     page: encryptedText().notNull(),
-    expiresAt: timestamp({ withTimezone: true }).notNull(),
-    revokedAt: timestamp({ withTimezone: true }),
+    expiresAt: timestamp({withTimezone: true}).notNull(),
+    revokedAt: timestamp({withTimezone: true}),
     opened: integer().notNull().default(0),
-    lastOpenedAt: timestamp({ withTimezone: true }),
+    lastOpenedAt: timestamp({withTimezone: true}),
     createdAt: created(),
     updatedAt: updated(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 /**
@@ -381,7 +393,11 @@ export const healthIcdCodes = pgTable(
     code: text().notNull(),
     title: text().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.system, table.language, table.code] })],
+  table => [
+    primaryKey({
+      columns: [table.userId, table.system, table.language, table.code],
+    }),
+  ],
 );
 
 registerEncryptedTables(

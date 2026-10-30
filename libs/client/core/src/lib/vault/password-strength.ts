@@ -21,10 +21,13 @@ const COMMON = [
  * power of its length, less for repeats and sequences and nothing for a common word. Rough on
  * purpose — enough to tell "change it" from "fine", not a cracking estimate.
  */
-export function passwordStrength(password: string): { strength: PasswordStrength; bits: number } {
+export function passwordStrength(password: string): {
+  strength: PasswordStrength;
+  bits: number;
+} {
   const lower = password.toLowerCase();
-  if (!password || COMMON.some((word) => lower.includes(word))) {
-    return { strength: 'weak', bits: 0 };
+  if (!password || COMMON.some(word => lower.includes(word))) {
+    return {strength: 'weak', bits: 0};
   }
   let alphabet = 0;
   if (/[a-z]/.test(password)) alphabet += 26;
@@ -36,9 +39,10 @@ export function passwordStrength(password: string): { strength: PasswordStrength
   // A character repeated or continuing a run (aaa, abc, 123) adds little.
   let length = 0;
   for (let i = 0; i < password.length; i++) {
-    const step = i > 0 ? password.charCodeAt(i) - password.charCodeAt(i - 1) : 99;
+    const step =
+      i > 0 ? password.charCodeAt(i) - password.charCodeAt(i - 1) : 99;
     length += Math.abs(step) <= 1 ? 0.25 : 1;
   }
   const bits = Math.round(length * Math.log2(Math.max(alphabet, 1)));
-  return { strength: bits >= 80 ? 'strong' : bits >= 50 ? 'fair' : 'weak', bits };
+  return {strength: bits >= 80 ? 'strong' : bits >= 50 ? 'fair' : 'weak', bits};
 }

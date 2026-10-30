@@ -1,12 +1,12 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { LeakKind, SubscriptionLeak, Subscriptions } from '@pd/contracts';
+import {CurrencyPipe, DatePipe} from '@angular/common';
+import {ChangeDetectionStrategy, Component, input, output} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatListModule} from '@angular/material/list';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {LeakKind, SubscriptionLeak, Subscriptions} from '@pd/contracts';
 
 const ICONS: Record<LeakKind, string> = {
   rising: 'trending_up',
@@ -43,7 +43,11 @@ const ICONS: Record<LeakKind, string> = {
             {{
               'finance.leaks.perYear'
                 | transloco
-                  : { amount: (subs.leaksPerYear | currency: subs.currency : 'symbol' : '1.0-0') }
+                  : {
+                      amount:
+                        (subs.leaksPerYear
+                        | currency: subs.currency : 'symbol' : '1.0-0'),
+                    }
             }}
           } @else if (subs.leaks.length) {
             {{ 'finance.leaks.onlyDates' | transloco }}
@@ -56,9 +60,11 @@ const ICONS: Record<LeakKind, string> = {
         <mat-list>
           @for (leak of subs.leaks; track $index) {
             <mat-list-item>
-              <mat-icon matListItemIcon [class.warn]="leak.kind !== 'renewal'">{{
-                icons[leak.kind]
-              }}</mat-icon>
+              <mat-icon
+                matListItemIcon
+                [class.warn]="leak.kind !== 'renewal'"
+                >{{ icons[leak.kind] }}</mat-icon
+              >
               <span matListItemTitle>{{ leak.name }}</span>
               <span matListItemLine>{{
                 line(leak)
@@ -72,9 +78,14 @@ const ICONS: Record<LeakKind, string> = {
               }}</span>
               <div matListItemMeta class="meta">
                 @if (leak.perYear) {
-                  <span class="amount" [matTooltip]="'finance.leaks.perYearHint' | transloco">{{
-                    leak.perYear | currency: subs.currency : 'symbol' : '1.0-0'
-                  }}</span>
+                  <span
+                    class="amount"
+                    [matTooltip]="'finance.leaks.perYearHint' | transloco"
+                    >{{
+                      leak.perYear
+                        | currency: subs.currency : 'symbol' : '1.0-0'
+                    }}</span
+                  >
                 }
                 @if (leak.kind === 'hidden' && leak.key) {
                   <button matButton (click)="add.emit(leak.key)">
@@ -82,8 +93,12 @@ const ICONS: Record<LeakKind, string> = {
                   </button>
                   <button
                     matIconButton
-                    [matTooltip]="'finance.recurring.notSubscription' | transloco"
-                    [attr.aria-label]="'finance.recurring.notSubscription' | transloco"
+                    [matTooltip]="
+                      'finance.recurring.notSubscription' | transloco
+                    "
+                    [attr.aria-label]="
+                      'finance.recurring.notSubscription' | transloco
+                    "
                     (click)="dismiss.emit(leak.key)"
                   >
                     <mat-icon>close</mat-icon>

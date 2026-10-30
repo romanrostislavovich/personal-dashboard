@@ -1,4 +1,8 @@
-import { SECURITY_SEVERITIES, SecurityFinding, SecuritySeverity } from '@pd/contracts';
+import {
+  SECURITY_SEVERITIES,
+  SecurityFinding,
+  SecuritySeverity,
+} from '@pd/contracts';
 
 /** The part of a stored finding that coverage is worked out from. */
 export interface CoverageRow {
@@ -12,7 +16,10 @@ export interface CoverageRow {
   covers: string[];
 }
 
-export type Coverage = Pick<SecurityFinding, 'severity' | 'coveredBy' | 'covers'>;
+export type Coverage = Pick<
+  SecurityFinding,
+  'severity' | 'coveredBy' | 'covers'
+>;
 
 const worse = (a: SecuritySeverity, b: SecuritySeverity): SecuritySeverity =>
   SECURITY_SEVERITIES.indexOf(a) <= SECURITY_SEVERITIES.indexOf(b) ? a : b;
@@ -29,19 +36,28 @@ const worse = (a: SecuritySeverity, b: SecuritySeverity): SecuritySeverity =>
  */
 export function coverage(rows: CoverageRow[]): Map<string, Coverage> {
   const result = new Map<string, Coverage>(
-    rows.map((row) => [row.id, { severity: row.severity, coveredBy: null, covers: [] }]),
+    rows.map(row => [
+      row.id,
+      {severity: row.severity, coveredBy: null, covers: []},
+    ]),
   );
-  const standing = rows.filter((row) => row.status !== 'resolved');
-  for (const ai of standing.filter((row) => row.origin === 'ai' && row.covers.length)) {
+  const standing = rows.filter(row => row.status !== 'resolved');
+  for (const ai of standing.filter(
+    row => row.origin === 'ai' && row.covers.length,
+  )) {
     const own = result.get(ai.id) as Coverage;
-    for (const rule of standing.filter((row) => row.origin === 'rules')) {
+    for (const rule of standing.filter(row => row.origin === 'rules')) {
       const covered = result.get(rule.id) as Coverage;
       // A finding of the rules folds under one AI finding: the first that named it.
       if (!ai.covers.includes(rule.key) || covered.coveredBy) {
         continue;
       }
       covered.coveredBy = ai.id;
-      own.covers.push({ id: rule.id, title: rule.title, severity: rule.severity });
+      own.covers.push({
+        id: rule.id,
+        title: rule.title,
+        severity: rule.severity,
+      });
       own.severity = worse(own.severity, rule.severity);
     }
   }
@@ -55,9 +71,13 @@ export function coverage(rows: CoverageRow[]): Map<string, Coverage> {
  * only. One that covers nothing, or a finding not found, is left to the AI to judge.
  */
 export function settledByRules(rows: CoverageRow[]): string[] {
-  const byKey = new Map(rows.map((row) => [row.key, row]));
+  const byKey = new Map(rows.map(row => [row.key, row]));
   return rows
-    .filter((row) => row.origin === 'ai' && row.status === 'open' && row.covers.length)
-    .filter((row) => row.covers.every((key) => byKey.get(key)?.status === 'resolved'))
-    .map((row) => row.id);
+    .filter(
+      row => row.origin === 'ai' && row.status === 'open' && row.covers.length,
+    )
+    .filter(row =>
+      row.covers.every(key => byKey.get(key)?.status === 'resolved'),
+    )
+    .map(row => row.id);
 }

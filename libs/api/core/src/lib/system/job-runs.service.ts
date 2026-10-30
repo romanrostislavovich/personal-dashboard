@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { SystemJob } from '@pd/contracts';
-import { asc, eq, sql } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { systemJobRuns } from './system.schema';
+import {Inject, Injectable} from '@nestjs/common';
+import {SystemJob} from '@pd/contracts';
+import {asc, eq, sql} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {systemJobRuns} from './system.schema';
 
 const MAX_ERROR = 1000;
 
@@ -15,14 +15,20 @@ export class JobRunsService {
    * Runs a job and records the outcome. The error is thrown on, so the queue still sees the run
    * as failed; a bookkeeping failure never breaks the job itself.
    */
-  async track(job: { name: string; cron: string }, run: () => Promise<void>): Promise<void> {
+  async track(
+    job: {name: string; cron: string},
+    run: () => Promise<void>,
+  ): Promise<void> {
     const startedAt = new Date();
-    await this.save(job, { lastStartedAt: startedAt });
+    await this.save(job, {lastStartedAt: startedAt});
     try {
       await run();
     } catch (error) {
       await this.save(job, {
-        lastError: (error instanceof Error ? error.message : String(error)).slice(0, MAX_ERROR),
+        lastError: (error instanceof Error
+          ? error.message
+          : String(error)
+        ).slice(0, MAX_ERROR),
         lastErrorAt: new Date(),
         failures: sql`${systemJobRuns.failures} + 1`,
       });
@@ -37,8 +43,11 @@ export class JobRunsService {
   }
 
   async list(): Promise<SystemJob[]> {
-    const rows = await this.db.select().from(systemJobRuns).orderBy(asc(systemJobRuns.name));
-    return rows.map((row) => ({
+    const rows = await this.db
+      .select()
+      .from(systemJobRuns)
+      .orderBy(asc(systemJobRuns.name));
+    return rows.map(row => ({
       name: row.name,
       cron: row.cron,
       lastStartedAt: row.lastStartedAt?.toISOString() ?? null,
@@ -52,21 +61,31 @@ export class JobRunsService {
 
   /** Jobs that are no longer registered (renamed, removed) leave the list. */
   async forget(exceptNames: string[]): Promise<void> {
-    for (const row of await this.db.select({ name: systemJobRuns.name }).from(systemJobRuns)) {
+    for (const row of await this.db
+      .select({name: systemJobRuns.name})
+      .from(systemJobRuns)) {
       if (!exceptNames.includes(row.name)) {
-        await this.db.delete(systemJobRuns).where(eq(systemJobRuns.name, row.name));
+        await this.db
+          .delete(systemJobRuns)
+          .where(eq(systemJobRuns.name, row.name));
       }
     }
   }
 
   private async save(
-    job: { name: string; cron: string },
-    values: Partial<typeof systemJobRuns.$inferInsert> | Record<string, unknown>,
+    job: {name: string; cron: string},
+    values:
+      Partial<typeof systemJobRuns.$inferInsert> | Record<string, unknown>,
   ): Promise<void> {
     await this.db
       .insert(systemJobRuns)
-      .values({ name: job.name, cron: job.cron })
-      .onConflictDoUpdate({ target: systemJobRuns.name, set: { cron: job.cron, ...values } })
-      .catch((error) => console.error('[system] a job run was not recorded:', error));
+      .values({name: job.name, cron: job.cron})
+      .onConflictDoUpdate({
+        target: systemJobRuns.name,
+        set: {cron: job.cron, ...values},
+      })
+      .catch(error =>
+        console.error('[system] a job run was not recorded:', error),
+      );
   }
 }

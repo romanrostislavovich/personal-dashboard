@@ -1,5 +1,5 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { compressImage, Database, DB } from '@pd/api-core';
+import {BadRequestException, Inject, Injectable} from '@nestjs/common';
+import {compressImage, Database, DB} from '@pd/api-core';
 import {
   HEALTH_DOCUMENT_MAX_PAGES,
   HEALTH_DOCUMENT_TYPES,
@@ -18,9 +18,9 @@ import {
   healthVisitInputSchema,
   isHealthPageType,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gt, max, sql } from 'drizzle-orm';
-import { PgTable } from 'drizzle-orm/pg-core';
-import { z } from 'zod';
+import {and, asc, desc, eq, gt, max, sql} from 'drizzle-orm';
+import {PgTable} from 'drizzle-orm/pg-core';
+import {z} from 'zod';
 import {
   HealthClinicRow,
   healthClinics,
@@ -36,10 +36,10 @@ import {
   HealthVisitRow,
   healthVisits,
 } from './health.schema';
-import { recentIntakes } from './intakes/intakes.service';
-import { LabsService } from './labs.service';
-import { found, removeOwned } from './owned';
-import { readProfile } from './profile/profile.service';
+import {recentIntakes} from './intakes/intakes.service';
+import {LabsService} from './labs.service';
+import {found, removeOwned} from './owned';
+import {readProfile} from './profile/profile.service';
 
 /** How far back the reminders and their answers are read. */
 const INTAKE_DAYS = 30;
@@ -66,30 +66,49 @@ export class HealthService {
   ) {}
 
   async record(userId: string): Promise<HealthRecord> {
-    const [clinics, doctors, visits, diagnoses, medications, documents, labPanels, studies] =
-      await Promise.all([
-        this.db.select().from(healthClinics).where(eq(healthClinics.userId, userId)),
-        this.db.select().from(healthDoctors).where(eq(healthDoctors.userId, userId)),
-        this.db
-          .select()
-          .from(healthVisits)
-          .where(eq(healthVisits.userId, userId))
-          .orderBy(desc(healthVisits.visitedOn), desc(healthVisits.createdAt)),
-        this.db
-          .select()
-          .from(healthDiagnoses)
-          .where(eq(healthDiagnoses.userId, userId))
-          .orderBy(desc(healthDiagnoses.diagnosedOn)),
-        this.db.select().from(healthMedications).where(eq(healthMedications.userId, userId)),
-        this.db
-          .select(documentColumns)
-          .from(healthDocuments)
-          .where(eq(healthDocuments.userId, userId))
-          .orderBy(desc(healthDocuments.createdAt)),
-        this.labs.panels(userId),
-        this.labs.studies(userId),
-      ]);
-    const since = new Date(Date.now() - INTAKE_DAYS * 86_400_000).toISOString().slice(0, 10);
+    const [
+      clinics,
+      doctors,
+      visits,
+      diagnoses,
+      medications,
+      documents,
+      labPanels,
+      studies,
+    ] = await Promise.all([
+      this.db
+        .select()
+        .from(healthClinics)
+        .where(eq(healthClinics.userId, userId)),
+      this.db
+        .select()
+        .from(healthDoctors)
+        .where(eq(healthDoctors.userId, userId)),
+      this.db
+        .select()
+        .from(healthVisits)
+        .where(eq(healthVisits.userId, userId))
+        .orderBy(desc(healthVisits.visitedOn), desc(healthVisits.createdAt)),
+      this.db
+        .select()
+        .from(healthDiagnoses)
+        .where(eq(healthDiagnoses.userId, userId))
+        .orderBy(desc(healthDiagnoses.diagnosedOn)),
+      this.db
+        .select()
+        .from(healthMedications)
+        .where(eq(healthMedications.userId, userId)),
+      this.db
+        .select(documentColumns)
+        .from(healthDocuments)
+        .where(eq(healthDocuments.userId, userId))
+        .orderBy(desc(healthDocuments.createdAt)),
+      this.labs.panels(userId),
+      this.labs.studies(userId),
+    ]);
+    const since = new Date(Date.now() - INTAKE_DAYS * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
     const [profile, intakes] = await Promise.all([
       readProfile(this.db, userId),
       recentIntakes(this.db, userId, since),
@@ -111,7 +130,11 @@ export class HealthService {
 
   // --- Clinics ---
 
-  async saveClinic(userId: string, input: ValidClinicInput, id?: string): Promise<HealthClinic> {
+  async saveClinic(
+    userId: string,
+    input: ValidClinicInput,
+    id?: string,
+  ): Promise<HealthClinic> {
     const values = {
       name: input.name,
       country: input.country ?? null,
@@ -122,11 +145,13 @@ export class HealthService {
       ? await this.db
           .update(healthClinics)
           .set(values)
-          .where(and(eq(healthClinics.id, id), eq(healthClinics.userId, userId)))
+          .where(
+            and(eq(healthClinics.id, id), eq(healthClinics.userId, userId)),
+          )
           .returning()
       : await this.db
           .insert(healthClinics)
-          .values({ userId, ...values })
+          .values({userId, ...values})
           .returning();
     return toClinic(found(row, 'Clinic'));
   }
@@ -137,7 +162,11 @@ export class HealthService {
 
   // --- Doctors ---
 
-  async saveDoctor(userId: string, input: ValidDoctorInput, id?: string): Promise<HealthDoctor> {
+  async saveDoctor(
+    userId: string,
+    input: ValidDoctorInput,
+    id?: string,
+  ): Promise<HealthDoctor> {
     await this.assertOwned(userId, healthClinics, input.clinicId, 'Clinic');
     const values = {
       name: input.name,
@@ -149,11 +178,13 @@ export class HealthService {
       ? await this.db
           .update(healthDoctors)
           .set(values)
-          .where(and(eq(healthDoctors.id, id), eq(healthDoctors.userId, userId)))
+          .where(
+            and(eq(healthDoctors.id, id), eq(healthDoctors.userId, userId)),
+          )
           .returning()
       : await this.db
           .insert(healthDoctors)
-          .values({ userId, ...values })
+          .values({userId, ...values})
           .returning();
     return toDoctor(found(row, 'Doctor'));
   }
@@ -165,9 +196,23 @@ export class HealthService {
   // --- Visits ---
 
   /** The speciality and the country, when not given, come from the doctor and the clinic. */
-  async saveVisit(userId: string, input: ValidVisitInput, id?: string): Promise<HealthVisit> {
-    const clinic = await this.assertOwned(userId, healthClinics, input.clinicId, 'Clinic');
-    const doctor = await this.assertOwned(userId, healthDoctors, input.doctorId, 'Doctor');
+  async saveVisit(
+    userId: string,
+    input: ValidVisitInput,
+    id?: string,
+  ): Promise<HealthVisit> {
+    const clinic = await this.assertOwned(
+      userId,
+      healthClinics,
+      input.clinicId,
+      'Clinic',
+    );
+    const doctor = await this.assertOwned(
+      userId,
+      healthDoctors,
+      input.doctorId,
+      'Doctor',
+    );
     const values = {
       visitedOn: input.visitedOn,
       clinicId: input.clinicId ?? null,
@@ -189,7 +234,7 @@ export class HealthService {
           .returning()
       : await this.db
           .insert(healthVisits)
-          .values({ userId, ...values })
+          .values({userId, ...values})
           .returning();
     return toVisit(found(row, 'Visit'));
   }
@@ -220,11 +265,13 @@ export class HealthService {
       ? await this.db
           .update(healthDiagnoses)
           .set(values)
-          .where(and(eq(healthDiagnoses.id, id), eq(healthDiagnoses.userId, userId)))
+          .where(
+            and(eq(healthDiagnoses.id, id), eq(healthDiagnoses.userId, userId)),
+          )
           .returning()
       : await this.db
           .insert(healthDiagnoses)
-          .values({ userId, ...values })
+          .values({userId, ...values})
           .returning();
     return toDiagnosis(found(row, 'Diagnosis'));
   }
@@ -257,11 +304,16 @@ export class HealthService {
       ? await this.db
           .update(healthMedications)
           .set(values)
-          .where(and(eq(healthMedications.id, id), eq(healthMedications.userId, userId)))
+          .where(
+            and(
+              eq(healthMedications.id, id),
+              eq(healthMedications.userId, userId),
+            ),
+          )
           .returning()
       : await this.db
           .insert(healthMedications)
-          .values({ userId, ...values })
+          .values({userId, ...values})
           .returning();
     return toMedication(found(row, 'Medication'));
   }
@@ -275,14 +327,16 @@ export class HealthService {
   async addDocument(
     userId: string,
     input: ValidDocumentInput,
-    file: { data: Buffer; mimeType: string },
+    file: {data: Buffer; mimeType: string},
   ): Promise<HealthDocument> {
     if (!(HEALTH_DOCUMENT_TYPES as readonly string[]).includes(file.mimeType)) {
-      throw new BadRequestException('Expected a PDF or an image (JPEG, PNG, WebP)');
+      throw new BadRequestException(
+        'Expected a PDF or an image (JPEG, PNG, WebP)',
+      );
     }
     await this.assertOwned(userId, healthVisits, input.visitId, 'Visit');
     // A photographed page is made small before it is encrypted; a PDF stays as it is.
-    const { data, mimeType } = await compressImage(file);
+    const {data, mimeType} = await compressImage(file);
     const [row] = await this.db
       .insert(healthDocuments)
       .values({
@@ -313,7 +367,9 @@ export class HealthService {
         documentedOn: input.documentedOn ?? null,
         visitId: input.visitId ?? null,
       })
-      .where(and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)))
+      .where(
+        and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)),
+      )
       .returning(documentColumns);
     return toDocument(found(row, 'Document'));
   }
@@ -323,10 +379,13 @@ export class HealthService {
     userId: string,
     id: string,
     page = 1,
-  ): Promise<{ data: Buffer; mimeType: string }> {
+  ): Promise<{data: Buffer; mimeType: string}> {
     if (page > 1) {
       const [row] = await this.db
-        .select({ data: healthDocumentPages.data, mimeType: healthDocumentPages.mimeType })
+        .select({
+          data: healthDocumentPages.data,
+          mimeType: healthDocumentPages.mimeType,
+        })
         .from(healthDocumentPages)
         .where(
           and(
@@ -338,19 +397,32 @@ export class HealthService {
       return found(row, 'Page');
     }
     const [row] = await this.db
-      .select({ data: healthDocuments.data, mimeType: healthDocuments.mimeType })
+      .select({data: healthDocuments.data, mimeType: healthDocuments.mimeType})
       .from(healthDocuments)
-      .where(and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)));
+      .where(
+        and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)),
+      );
     return found(row, 'Document');
   }
 
   /** Every page, in order: what the AI reads. */
-  async documentPages(userId: string, id: string): Promise<{ data: Buffer; mimeType: string }[]> {
+  async documentPages(
+    userId: string,
+    id: string,
+  ): Promise<{data: Buffer; mimeType: string}[]> {
     const first = await this.documentFile(userId, id);
     const rest = await this.db
-      .select({ data: healthDocumentPages.data, mimeType: healthDocumentPages.mimeType })
+      .select({
+        data: healthDocumentPages.data,
+        mimeType: healthDocumentPages.mimeType,
+      })
       .from(healthDocumentPages)
-      .where(and(eq(healthDocumentPages.documentId, id), eq(healthDocumentPages.userId, userId)))
+      .where(
+        and(
+          eq(healthDocumentPages.documentId, id),
+          eq(healthDocumentPages.userId, userId),
+        ),
+      )
       .orderBy(asc(healthDocumentPages.page));
     return [first, ...rest];
   }
@@ -359,12 +431,14 @@ export class HealthService {
   async addPage(
     userId: string,
     id: string,
-    file: { data: Buffer; mimeType: string },
+    file: {data: Buffer; mimeType: string},
   ): Promise<HealthDocument> {
     const [document] = await this.db
-      .select({ mimeType: healthDocuments.mimeType })
+      .select({mimeType: healthDocuments.mimeType})
       .from(healthDocuments)
-      .where(and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)));
+      .where(
+        and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)),
+      );
     if (
       !isHealthPageType(found(document, 'Document').mimeType) ||
       !isHealthPageType(file.mimeType)
@@ -375,9 +449,11 @@ export class HealthService {
     }
     const pages = await this.pageCount(id);
     if (pages >= HEALTH_DOCUMENT_MAX_PAGES) {
-      throw new BadRequestException(`A document has ${HEALTH_DOCUMENT_MAX_PAGES} pages at most`);
+      throw new BadRequestException(
+        `A document has ${HEALTH_DOCUMENT_MAX_PAGES} pages at most`,
+      );
     }
-    const { data, mimeType } = await compressImage(file);
+    const {data, mimeType} = await compressImage(file);
     await this.db.insert(healthDocumentPages).values({
       userId,
       documentId: id,
@@ -390,11 +466,17 @@ export class HealthService {
   }
 
   /** A page taken out; the ones after it move up. The first page is the document itself. */
-  async removePage(userId: string, id: string, page: number): Promise<HealthDocument> {
+  async removePage(
+    userId: string,
+    id: string,
+    page: number,
+  ): Promise<HealthDocument> {
     if (page < 2) {
-      throw new BadRequestException('The first page goes only with the whole document');
+      throw new BadRequestException(
+        'The first page goes only with the whole document',
+      );
     }
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       const [removed] = await tx
         .delete(healthDocumentPages)
         .where(
@@ -404,18 +486,23 @@ export class HealthService {
             eq(healthDocumentPages.page, page),
           ),
         )
-        .returning({ id: healthDocumentPages.id });
+        .returning({id: healthDocumentPages.id});
       found(removed, 'Page');
       // One by one, up from the next: (document, page) stays unique on every step.
       const later = await tx
-        .select({ id: healthDocumentPages.id, page: healthDocumentPages.page })
+        .select({id: healthDocumentPages.id, page: healthDocumentPages.page})
         .from(healthDocumentPages)
-        .where(and(eq(healthDocumentPages.documentId, id), gt(healthDocumentPages.page, page)))
+        .where(
+          and(
+            eq(healthDocumentPages.documentId, id),
+            gt(healthDocumentPages.page, page),
+          ),
+        )
         .orderBy(asc(healthDocumentPages.page));
       for (const row of later) {
         await tx
           .update(healthDocumentPages)
-          .set({ page: row.page - 1 })
+          .set({page: row.page - 1})
           .where(eq(healthDocumentPages.id, row.id));
       }
     });
@@ -426,13 +513,15 @@ export class HealthService {
     const [row] = await this.db
       .select(documentColumns)
       .from(healthDocuments)
-      .where(and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)));
+      .where(
+        and(eq(healthDocuments.id, id), eq(healthDocuments.userId, userId)),
+      );
     return toDocument(found(row, 'Document'));
   }
 
   private async pageCount(id: string): Promise<number> {
     const [row] = await this.db
-      .select({ last: max(healthDocumentPages.page) })
+      .select({last: max(healthDocumentPages.page)})
       .from(healthDocumentPages)
       .where(eq(healthDocumentPages.documentId, id));
     return row?.last ?? 1;
@@ -463,7 +552,11 @@ export class HealthService {
 
   private remove(
     userId: string,
-    table: Owned | typeof healthDiagnoses | typeof healthMedications | typeof healthDocuments,
+    table:
+      | Owned
+      | typeof healthDiagnoses
+      | typeof healthMedications
+      | typeof healthDocuments,
     id: string,
     what: string,
   ): Promise<void> {
@@ -486,7 +579,8 @@ const documentColumns = {
   createdAt: healthDocuments.createdAt,
 };
 
-const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
+const byName = (a: {name: string}, b: {name: string}) =>
+  a.name.localeCompare(b.name);
 
 /** Still taken first, then by the start, the latest first. */
 function byStart(a: HealthMedication, b: HealthMedication): number {

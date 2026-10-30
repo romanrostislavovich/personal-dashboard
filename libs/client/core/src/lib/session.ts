@@ -1,4 +1,4 @@
-import { KeyValueStore } from './platform';
+import {KeyValueStore} from './platform';
 
 /** Where an app keeps its refresh token (the web keeps it in an httpOnly cookie instead). */
 const REFRESH_KEY = 'pd.refreshToken';
@@ -36,7 +36,9 @@ export class Session {
 
   /** The saved refresh token (an app); a browser has it in the cookie, `null` here. */
   refreshToken(): Promise<string | null> {
-    return this.keepsRefreshToken ? this.storage.get(REFRESH_KEY) : Promise.resolve(null);
+    return this.keepsRefreshToken
+      ? this.storage.get(REFRESH_KEY)
+      : Promise.resolve(null);
   }
 
   /** After signing in or refreshing: a new access token, and a new refresh token if one came. */
@@ -66,6 +68,6 @@ export class Session {
       return;
     }
     this.current = token;
-    this.listeners.forEach((listener) => listener(token));
+    this.listeners.forEach(listener => listener(token));
   }
 }

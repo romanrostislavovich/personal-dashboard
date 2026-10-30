@@ -1,4 +1,4 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /**
  * Web part of the Tasks section: the TODO list and reminders.
@@ -6,18 +6,22 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const tasksModule: WebDashboardModule = {
   id: 'tasks',
-  nav: { labelKey: 'tasks.title', icon: 'task_alt', group: 'things' },
+  nav: {labelKey: 'tasks.title', icon: 'task_alt', group: 'things'},
   // The page holds the tabs; every subsection is its child route.
   loadRoutes: async () => [
     {
       path: '',
-      loadComponent: () => import('./tasks.page').then((m) => m.TasksPage),
+      loadComponent: () => import('./tasks.page').then(m => m.TasksPage),
       children: [
-        { path: '', pathMatch: 'full', redirectTo: 'todo' },
-        { path: 'todo', loadComponent: () => import('./todo/todo.page').then((m) => m.TodoPage) },
+        {path: '', pathMatch: 'full', redirectTo: 'todo'},
+        {
+          path: 'todo',
+          loadComponent: () => import('./todo/todo.page').then(m => m.TodoPage),
+        },
         {
           path: 'reminders',
-          loadComponent: () => import('./reminders/reminders.page').then((m) => m.RemindersPage),
+          loadComponent: () =>
+            import('./reminders/reminders.page').then(m => m.RemindersPage),
         },
       ],
     },
@@ -31,13 +35,13 @@ export const tasksModule: WebDashboardModule = {
       id: 'tasks.add',
       labelKey: 'tasks.commands.add',
       icon: 'add_task',
-      loadAction: () => import('./tasks.commands').then((m) => m.addTask),
+      loadAction: () => import('./tasks.commands').then(m => m.addTask),
     },
     {
       id: 'tasks.remind-in-hour',
       labelKey: 'tasks.commands.remindInHour',
       icon: 'alarm',
-      loadAction: () => import('./tasks.commands').then((m) => m.remindInHour),
+      loadAction: () => import('./tasks.commands').then(m => m.remindInHour),
     },
     {
       id: 'tasks.reminders',
@@ -50,7 +54,7 @@ export const tasksModule: WebDashboardModule = {
     {
       id: 'tasks.today',
       size: 'small',
-      loadComponent: () => import('./tasks.widget').then((m) => m.TasksWidget),
+      loadComponent: () => import('./tasks.widget').then(m => m.TasksWidget),
     },
   ],
 };

@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SchedulerService } from '@pd/api-core';
-import { CostSourcesService } from './cost-sources.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {SchedulerService} from '@pd/api-core';
+import {CostSourcesService} from './cost-sources.service';
 
 /**
  * Updates costs from connected services once a day.

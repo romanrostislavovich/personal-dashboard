@@ -1,5 +1,5 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
+import {Inject, Injectable, NotFoundException} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
 import {
   GentleDay,
   GentleDayStep,
@@ -8,9 +8,9 @@ import {
   GentleStepInput,
   LocalDate,
 } from '@pd/contracts';
-import { and, asc, eq } from 'drizzle-orm';
-import { z } from 'zod';
-import { psychologyGentleDays, psychologyGentleSteps } from './psychology.schema';
+import {and, asc, eq} from 'drizzle-orm';
+import {z} from 'zod';
+import {psychologyGentleDays, psychologyGentleSteps} from './psychology.schema';
 
 type ValidGentleDay = z.output<typeof gentleDayInputSchema>;
 
@@ -31,33 +31,51 @@ export class GentleDayService {
       .from(psychologyGentleSteps)
       .where(eq(psychologyGentleSteps.userId, userId))
       .orderBy(asc(psychologyGentleSteps.createdAt));
-    return rows.map((row) => ({ id: row.id, text: row.text, smaller: row.smaller }));
+    return rows.map(row => ({
+      id: row.id,
+      text: row.text,
+      smaller: row.smaller,
+    }));
   }
 
   async addStep(userId: string, input: GentleStepInput): Promise<GentleStep> {
     const [row] = await this.db
       .insert(psychologyGentleSteps)
-      .values({ userId, text: input.text, smaller: input.smaller || null })
+      .values({userId, text: input.text, smaller: input.smaller || null})
       .returning();
-    return { id: row.id, text: row.text, smaller: row.smaller };
+    return {id: row.id, text: row.text, smaller: row.smaller};
   }
 
-  async updateStep(userId: string, id: string, input: GentleStepInput): Promise<GentleStep> {
+  async updateStep(
+    userId: string,
+    id: string,
+    input: GentleStepInput,
+  ): Promise<GentleStep> {
     const [row] = await this.db
       .update(psychologyGentleSteps)
-      .set({ text: input.text, smaller: input.smaller || null })
-      .where(and(eq(psychologyGentleSteps.id, id), eq(psychologyGentleSteps.userId, userId)))
+      .set({text: input.text, smaller: input.smaller || null})
+      .where(
+        and(
+          eq(psychologyGentleSteps.id, id),
+          eq(psychologyGentleSteps.userId, userId),
+        ),
+      )
       .returning();
     if (!row) {
       throw new NotFoundException();
     }
-    return { id: row.id, text: row.text, smaller: row.smaller };
+    return {id: row.id, text: row.text, smaller: row.smaller};
   }
 
   async removeStep(userId: string, id: string): Promise<void> {
     await this.db
       .delete(psychologyGentleSteps)
-      .where(and(eq(psychologyGentleSteps.id, id), eq(psychologyGentleSteps.userId, userId)));
+      .where(
+        and(
+          eq(psychologyGentleSteps.id, id),
+          eq(psychologyGentleSteps.userId, userId),
+        ),
+      );
   }
 
   // --- The day ---
@@ -67,26 +85,31 @@ export class GentleDayService {
       .select()
       .from(psychologyGentleDays)
       .where(
-        and(eq(psychologyGentleDays.userId, userId), eq(psychologyGentleDays.localDate, date)),
+        and(
+          eq(psychologyGentleDays.userId, userId),
+          eq(psychologyGentleDays.localDate, date),
+        ),
       );
-    return row ? { date, on: true, steps: parseSteps(row.steps) } : { date, on: false, steps: [] };
+    return row
+      ? {date, on: true, steps: parseSteps(row.steps)}
+      : {date, on: false, steps: []};
   }
 
   /** Turns the mode on for the day, or changes its steps and their states. */
   async saveDay(userId: string, input: ValidGentleDay): Promise<GentleDay> {
-    const steps: GentleDayStep[] = input.steps.map((step) => ({
+    const steps: GentleDayStep[] = input.steps.map(step => ({
       text: step.text,
       smaller: step.smaller || null,
       state: step.state,
     }));
     await this.db
       .insert(psychologyGentleDays)
-      .values({ userId, localDate: input.date, steps: JSON.stringify(steps) })
+      .values({userId, localDate: input.date, steps: JSON.stringify(steps)})
       .onConflictDoUpdate({
         target: [psychologyGentleDays.userId, psychologyGentleDays.localDate],
-        set: { steps: JSON.stringify(steps), updatedAt: new Date() },
+        set: {steps: JSON.stringify(steps), updatedAt: new Date()},
       });
-    return { date: input.date as LocalDate, on: true, steps };
+    return {date: input.date as LocalDate, on: true, steps};
   }
 
   /** Leaving the mode: the plan of the day is gone, nothing else changes. */
@@ -94,7 +117,10 @@ export class GentleDayService {
     await this.db
       .delete(psychologyGentleDays)
       .where(
-        and(eq(psychologyGentleDays.userId, userId), eq(psychologyGentleDays.localDate, date)),
+        and(
+          eq(psychologyGentleDays.userId, userId),
+          eq(psychologyGentleDays.localDate, date),
+        ),
       );
   }
 }

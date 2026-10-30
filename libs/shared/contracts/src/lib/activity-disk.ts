@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 // Disk cleanup advice: the desktop app scans a disk, the server (with the AI) says what can go.
 
@@ -42,20 +42,28 @@ export const diskReportSchema = z.object({
         path: diskPath,
         bytes,
         files: z.number().int().min(0),
-        modifiedAt: z.iso.datetime({ offset: true }).nullable(),
+        modifiedAt: z.iso.datetime({offset: true}).nullable(),
       }),
     )
     .max(200),
   /** The biggest single files. */
   files: z
     .array(
-      z.object({ path: diskPath, bytes, modifiedAt: z.iso.datetime({ offset: true }).nullable() }),
+      z.object({
+        path: diskPath,
+        bytes,
+        modifiedAt: z.iso.datetime({offset: true}).nullable(),
+      }),
     )
     .max(60),
-  known: z.array(z.object({ place: z.enum(DISK_KNOWN_PLACES), path: diskPath, bytes })).max(60),
+  known: z
+    .array(z.object({place: z.enum(DISK_KNOWN_PLACES), path: diskPath, bytes}))
+    .max(60),
   /** The other disks of the computer: where a big program or game could move. */
   otherDisks: z
-    .array(z.object({ mount: z.string().min(1).max(20), total: bytes, free: bytes }))
+    .array(
+      z.object({mount: z.string().min(1).max(20), total: bytes, free: bytes}),
+    )
     .max(30)
     .optional(),
 });

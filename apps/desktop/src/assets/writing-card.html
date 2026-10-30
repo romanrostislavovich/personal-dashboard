@@ -92,7 +92,8 @@
         other: ['Другое', '#9e9e9e'],
       };
       const card = document.getElementById('card');
-      const choose = (action, value) => window.desktop.writingCard.choose({ action, value });
+      const choose = (action, value) =>
+        window.desktop.writingCard.choose({action, value});
       const button = (text, className, onClick) => {
         const node = document.createElement('button');
         node.textContent = text;
@@ -101,7 +102,7 @@
         return node;
       };
 
-      window.desktop.writingCard.onShow(({ issue, word }) => {
+      window.desktop.writingCard.onShow(({issue, word}) => {
         const [label, colour] = KINDS[issue.kind] ?? KINDS.other;
         const kind = document.createElement('div');
         kind.className = 'kind';
@@ -113,17 +114,29 @@
         const fixes = document.createElement('div');
         fixes.className = 'row';
         for (const replacement of issue.replacements) {
-          fixes.append(button(replacement || '(удалить)', 'fix', () => choose('fix', replacement)));
+          fixes.append(
+            button(replacement || '(удалить)', 'fix', () =>
+              choose('fix', replacement),
+            ),
+          );
         }
         const more = document.createElement('div');
         more.className = 'row';
         if (issue.kind === 'spelling') {
-          more.append(button(`«${word}» в словарь`, '', () => choose('word', word)));
+          more.append(
+            button(`«${word}» в словарь`, '', () => choose('word', word)),
+          );
         }
-        more.append(button('Больше не показывать', '', () => choose('rule', issue.ruleId)));
+        more.append(
+          button('Больше не показывать', '', () =>
+            choose('rule', issue.ruleId),
+          ),
+        );
         more.append(button('✕', '', () => choose('close')));
         card.replaceChildren(kind, message, fixes, more);
-        window.desktop.writingCard.height(Math.ceil(document.body.scrollHeight));
+        window.desktop.writingCard.height(
+          Math.ceil(document.body.scrollHeight),
+        );
       });
     </script>
   </body>

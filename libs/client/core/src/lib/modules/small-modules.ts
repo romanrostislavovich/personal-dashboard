@@ -8,7 +8,7 @@ import {
   WeatherLocationInput,
   WeatherPreferences,
 } from '@pd/contracts';
-import { ApiClient, apiRequest } from '../api-client';
+import {ApiClient, apiRequest} from '../api-client';
 
 // Modules with a handful of requests each: birthdays, monitoring, weather.
 
@@ -22,7 +22,8 @@ export const BIRTHDAYS_READS = {
 export function birthdaysApi(api: ApiClient) {
   return {
     list: () => api.read<UpcomingBirthday[]>(BIRTHDAYS_READS.list()),
-    create: (input: BirthdayInput) => api.post<UpcomingBirthday>('/api/birthdays', input),
+    create: (input: BirthdayInput) =>
+      api.post<UpcomingBirthday>('/api/birthdays', input),
     update: (id: string, input: BirthdayInput) =>
       api.put<UpcomingBirthday>(`/api/birthdays/${id}`, input),
     remove: (id: string) => api.delete(`/api/birthdays/${id}`),
@@ -38,7 +39,8 @@ export const MONITORING_READS = {
 export function monitoringApi(api: ApiClient) {
   return {
     monitors: () => api.read<Monitor[]>(MONITORING_READS.monitors()),
-    add: (input: MonitorInput) => api.post<void>('/api/monitoring/monitors', input),
+    add: (input: MonitorInput) =>
+      api.post<void>('/api/monitoring/monitors', input),
     remove: (id: string) => api.delete(`/api/monitoring/monitors/${id}`),
   };
 }
@@ -48,10 +50,10 @@ export function monitoringApi(api: ApiClient) {
 export const WEATHER_READS = {
   /** Today in detail and the week ahead; `null` until a location is chosen. */
   forecast: () => apiRequest('/api/weather'),
-  places: (q: string) => apiRequest('/api/weather/places', { q }),
+  places: (q: string) => apiRequest('/api/weather/places', {q}),
   /** The place at the device's location. */
   placeAt: (latitude: number, longitude: number) =>
-    apiRequest('/api/weather/places/at', { latitude, longitude }),
+    apiRequest('/api/weather/places/at', {latitude, longitude}),
 };
 
 export function weatherApi(api: ApiClient) {

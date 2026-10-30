@@ -1,12 +1,19 @@
-import { z } from 'zod';
-import { siteDomainSchema } from './activity-sites';
+import {z} from 'zod';
+import {siteDomainSchema} from './activity-sites';
 
 // Writing: a text checked for spelling, grammar and punctuation (LanguageTool on the server)
 // and rewritten by the AI on request — on the Writing page, in the browser extension and in
 // the desktop app.
 
 /** `auto` — told by the text itself; the others are LanguageTool's codes. */
-export const WRITING_LANGUAGES = ['auto', 'ru-RU', 'uk-UA', 'en-US', 'en-GB', 'pl-PL'] as const;
+export const WRITING_LANGUAGES = [
+  'auto',
+  'ru-RU',
+  'uk-UA',
+  'en-US',
+  'en-GB',
+  'pl-PL',
+] as const;
 export type WritingLanguage = (typeof WRITING_LANGUAGES)[number];
 
 /** The longest text checked at once: a client sends the paragraphs around the change. */
@@ -50,7 +57,13 @@ export interface WritingCheckResult {
 }
 
 /** What the AI does with a text. */
-export const WRITING_REWRITE_MODES = ['fix', 'shorter', 'polite', 'formal', 'friendly'] as const;
+export const WRITING_REWRITE_MODES = [
+  'fix',
+  'shorter',
+  'polite',
+  'formal',
+  'friendly',
+] as const;
 export type WritingRewriteMode = (typeof WRITING_REWRITE_MODES)[number];
 
 export const writingRewriteSchema = z.object({
@@ -80,7 +93,9 @@ export const writingSettingsSchema = z.object({
   /** Sites the extension leaves alone. */
   ignoredSites: z.array(siteDomainSchema).max(200),
   /** Programs the desktop app leaves alone (process names, lower case). */
-  ignoredApps: z.array(z.string().trim().toLowerCase().min(1).max(120)).max(200),
+  ignoredApps: z
+    .array(z.string().trim().toLowerCase().min(1).max(120))
+    .max(200),
 });
 export type WritingSettings = z.infer<typeof writingSettingsSchema>;
 
@@ -95,14 +110,16 @@ export interface WritingConfig extends WritingSettings {
   /** An AI connection is set up and Writing is not switched off for it. */
   canRewrite: boolean;
   /** For the owner, who sets the LanguageTool server; `null` for the others. */
-  languageTool: { url: string | null } | null;
+  languageTool: {url: string | null} | null;
 }
 
 /**
  * `PUT /api/writing/language-tool`: the address of a LanguageTool server —
  * `http://languagetool:8010` for the one in docker compose.
  */
-export const languageToolInputSchema = z.object({ url: z.url({ protocol: /^https?$/ }) });
+export const languageToolInputSchema = z.object({
+  url: z.url({protocol: /^https?$/}),
+});
 export type LanguageToolInput = z.infer<typeof languageToolInputSchema>;
 
 export const DEFAULT_WRITING_SETTINGS: WritingSettings = {
@@ -118,11 +135,13 @@ export const DEFAULT_WRITING_SETTINGS: WritingSettings = {
 
 /** Adding one word or rule without sending the whole list (the card of a mistake). */
 export const writingIgnoreSchema = z.union([
-  z.object({ word }),
-  z.object({ ruleId: z.string().trim().min(1).max(200) }),
+  z.object({word}),
+  z.object({ruleId: z.string().trim().min(1).max(200)}),
 ]);
 export type WritingIgnore = z.infer<typeof writingIgnoreSchema>;
 
 /** Fixes taken from the suggestions (one, or "fix all" of a field) — for the achievements. */
-export const writingAcceptedSchema = z.object({ count: z.number().int().min(1).max(500) });
+export const writingAcceptedSchema = z.object({
+  count: z.number().int().min(1).max(500),
+});
 export type WritingAccepted = z.infer<typeof writingAcceptedSchema>;

@@ -15,7 +15,7 @@ export class NotifyThrottle {
 
   /** `true` — send it (and count it as sent). */
   allow(problem: string, now: number = Date.now()): boolean {
-    this.recent = this.recent.filter((at) => now - at < HOUR_MS);
+    this.recent = this.recent.filter(at => now - at < HOUR_MS);
     const last = this.lastSent.get(problem);
     if (
       (last !== undefined && now - last < SAME_PROBLEM_MS) ||

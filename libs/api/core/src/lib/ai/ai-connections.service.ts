@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   AiConnection,
   AiConnectionInput,
@@ -12,14 +17,14 @@ import {
   LocalDate,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, asc, eq } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { SecretsService } from '../secrets/secrets.service';
-import { users } from '../users/users.schema';
-import { UsersService } from '../users/users.service';
-import { AiConnectionRow, aiConnections, aiSettings } from './ai.schema';
-import { AiUsageService } from './ai-usage.service';
-import { isDigestDue } from './digest-schedule';
+import {and, asc, eq} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {SecretsService} from '../secrets/secrets.service';
+import {users} from '../users/users.schema';
+import {UsersService} from '../users/users.service';
+import {AiConnectionRow, aiConnections, aiSettings} from './ai.schema';
+import {AiUsageService} from './ai-usage.service';
+import {isDigestDue} from './digest-schedule';
 import {
   AiRequestError,
   ChatConnection,
@@ -27,7 +32,7 @@ import {
   embed,
   SpeechConnection,
 } from './openai-compatible.client';
-import { OutboundBlockedError } from '../net/outbound';
+import {OutboundBlockedError} from '../net/outbound';
 
 /** The API key of a connection in SecretsService. */
 const apiKeySecret = (connectionId: string) => `ai.connection.${connectionId}`;
@@ -63,15 +68,21 @@ export class AiConnectionsService {
 
   async settings(userId: string): Promise<AiSettings> {
     const rows = await this.rows(userId);
-    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    const [settings] = await this.db
+      .select()
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
     // Oldest first: the order of the Telegram `/model` list.
     const usage = await this.usage.summary(userId, rows);
-    const connections = await Promise.all(rows.map((row) => this.toConnection(userId, row, usage)));
+    const connections = await Promise.all(
+      rows.map(row => this.toConnection(userId, row, usage)),
+    );
     // A user who never saved the settings has the defaults of the table.
     const stored = settings ?? defaultSettings(userId);
     return {
       configured: rows.length > 0,
-      activeConnectionId: activeRow(rows, stored.activeConnectionId)?.id ?? null,
+      activeConnectionId:
+        activeRow(rows, stored.activeConnectionId)?.id ?? null,
       connections,
       morningDigest: stored.morningDigest,
       morningDigestTime: stored.morningDigestTime,
@@ -92,7 +103,7 @@ export class AiConnectionsService {
   /** Modules whose data the AI must not get. */
   async disabledModules(userId: string): Promise<string[]> {
     const [settings] = await this.db
-      .select({ disabledModules: aiSettings.disabledModules })
+      .select({disabledModules: aiSettings.disabledModules})
       .from(aiSettings)
       .where(eq(aiSettings.userId, userId));
     return settings?.disabledModules ?? [];
@@ -103,8 +114,14 @@ export class AiConnectionsService {
    * and the ones with a connection of their own (unless it is the active one anyway).
    */
   async hiddenFromShared(userId: string): Promise<string[]> {
-    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
-    const activeId = activeRow(await this.rows(userId), settings?.activeConnectionId)?.id;
+    const [settings] = await this.db
+      .select()
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
+    const activeId = activeRow(
+      await this.rows(userId),
+      settings?.activeConnectionId,
+    )?.id;
     return hiddenFromShared(settings ?? {}, activeId);
   }
 
@@ -113,10 +130,13 @@ export class AiConnectionsService {
    * ones with a connection of their own unless the user let MCP clients read them.
    */
   async hiddenFromOutside(userId: string): Promise<string[]> {
-    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    const [settings] = await this.db
+      .select()
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
     const allowed = new Set(settings?.mcpModules ?? []);
     const own = Object.keys(settings?.moduleConnections ?? {}).filter(
-      (module) => !allowed.has(module),
+      module => !allowed.has(module),
     );
     return [...new Set([...(settings?.disabledModules ?? []), ...own])];
   }
@@ -126,9 +146,12 @@ export class AiConnectionsService {
    * connection that is gone is an error, never a quiet fall back to the shared one: the user
    * chose it to keep the data away from there.
    */
-  async ofModule(userId: string, module: string): Promise<ChatConnection | null> {
+  async ofModule(
+    userId: string,
+    module: string,
+  ): Promise<ChatConnection | null> {
     const [settings] = await this.db
-      .select({ moduleConnections: aiSettings.moduleConnections })
+      .select({moduleConnections: aiSettings.moduleConnections})
       .from(aiSettings)
       .where(eq(aiSettings.userId, userId));
     const id = settings?.moduleConnections[module];
@@ -145,7 +168,7 @@ export class AiConnectionsService {
   /** Opt-in sections of the morning digest the user switched on. */
   async digestOptIns(userId: string): Promise<string[]> {
     const [settings] = await this.db
-      .select({ digestOptIns: aiSettings.digestOptIns })
+      .select({digestOptIns: aiSettings.digestOptIns})
       .from(aiSettings)
       .where(eq(aiSettings.userId, userId));
     return settings?.digestOptIns ?? [];
@@ -157,7 +180,7 @@ export class AiConnectionsService {
     await verify(toChatConnection(input, apiKey));
     const [row] = await this.db
       .insert(aiConnections)
-      .values({ userId, ...connectionFields(input) })
+      .values({userId, ...connectionFields(input)})
       .returning();
     if (apiKey) {
       await this.secrets.set(userId, apiKeySecret(row.id), apiKey);
@@ -169,9 +192,14 @@ export class AiConnectionsService {
   }
 
   /** Changes a connection; an empty key keeps the saved one. */
-  async update(userId: string, id: string, input: AiConnectionInput): Promise<AiSettings> {
+  async update(
+    userId: string,
+    id: string,
+    input: AiConnectionInput,
+  ): Promise<AiSettings> {
     await this.find(userId, id);
-    const apiKey = input.apiKey || (await this.secrets.get(userId, apiKeySecret(id)));
+    const apiKey =
+      input.apiKey || (await this.secrets.get(userId, apiKeySecret(id)));
     await verify(toChatConnection(input, apiKey));
     await this.db
       .update(aiConnections)
@@ -191,13 +219,15 @@ export class AiConnectionsService {
       .where(and(eq(aiConnections.id, id), eq(aiConnections.userId, userId)));
     await this.secrets.delete(userId, apiKeySecret(id));
     // A section that had this connection is not left pointing at nothing.
-    const { moduleConnections } = await this.settings(userId);
+    const {moduleConnections} = await this.settings(userId);
     if (Object.values(moduleConnections).includes(id)) {
       await this.db
         .update(aiSettings)
         .set({
           moduleConnections: Object.fromEntries(
-            Object.entries(moduleConnections).filter(([, connectionId]) => connectionId !== id),
+            Object.entries(moduleConnections).filter(
+              ([, connectionId]) => connectionId !== id,
+            ),
           ),
         })
         .where(eq(aiSettings.userId, userId));
@@ -213,7 +243,10 @@ export class AiConnectionsService {
   }
 
   /** Only the fields sent change (Drizzle skips `undefined` ones). */
-  async savePreferences(userId: string, preferences: AiPreferences): Promise<AiSettings> {
+  async savePreferences(
+    userId: string,
+    preferences: AiPreferences,
+  ): Promise<AiSettings> {
     if (preferences.speechConnectionId) {
       await this.find(userId, preferences.speechConnectionId);
     }
@@ -231,8 +264,8 @@ export class AiConnectionsService {
     }
     await this.db
       .insert(aiSettings)
-      .values({ userId, ...preferences })
-      .onConflictDoUpdate({ target: aiSettings.userId, set: preferences });
+      .values({userId, ...preferences})
+      .onConflictDoUpdate({target: aiSettings.userId, set: preferences});
     return this.settings(userId);
   }
 
@@ -241,11 +274,14 @@ export class AiConnectionsService {
    * `null` — none (DeepSeek, for one, has no speech recognition).
    */
   async speech(userId: string): Promise<SpeechConnection | null> {
-    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    const [settings] = await this.db
+      .select()
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
     const rows = await this.rows(userId);
     const row =
-      rows.find((r) => r.id === settings?.speechConnectionId) ??
-      rows.find((r) => r.provider === 'openai');
+      rows.find(r => r.id === settings?.speechConnectionId) ??
+      rows.find(r => r.provider === 'openai');
     if (!row) {
       return null;
     }
@@ -261,18 +297,21 @@ export class AiConnectionsService {
    * OpenAI one; `null` — none (DeepSeek, for one, sees no pictures).
    */
   async vision(userId: string): Promise<ChatConnection | null> {
-    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    const [settings] = await this.db
+      .select()
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
     const rows = await this.rows(userId);
     const row =
-      rows.find((r) => r.id === settings?.visionConnectionId) ??
-      rows.find((r) => r.provider === 'openai');
+      rows.find(r => r.id === settings?.visionConnectionId) ??
+      rows.find(r => r.provider === 'openai');
     if (!row) {
       return null;
     }
     const apiKey = await this.secrets.get(userId, apiKeySecret(row.id));
     // The connection's own model is swapped for the vision one, and with it what it accepts.
     return toChatConnection(
-      { ...row, model: settings?.visionModel ?? DEFAULT_VISION_MODEL },
+      {...row, model: settings?.visionModel ?? DEFAULT_VISION_MODEL},
       apiKey,
     );
   }
@@ -282,8 +321,13 @@ export class AiConnectionsService {
    * none chosen, the active one does it.
    */
   async light(userId: string): Promise<ChatConnection | null> {
-    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
-    return settings?.lightConnectionId ? this.connection(userId, settings.lightConnectionId) : null;
+    const [settings] = await this.db
+      .select()
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
+    return settings?.lightConnectionId
+      ? this.connection(userId, settings.lightConnectionId)
+      : null;
   }
 
   /**
@@ -292,13 +336,16 @@ export class AiConnectionsService {
    * small embedding model); `null` — none, search by meaning is off.
    */
   async embedding(userId: string): Promise<ChatConnection | null> {
-    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
+    const [settings] = await this.db
+      .select()
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
     const rows = await this.rows(userId);
-    const chosen = rows.find((r) => r.id === settings?.embeddingConnectionId);
+    const chosen = rows.find(r => r.id === settings?.embeddingConnectionId);
     const row =
       chosen ??
-      rows.find((r) => r.provider === 'ollama') ??
-      rows.find((r) => r.provider === 'openai');
+      rows.find(r => r.provider === 'ollama') ??
+      rows.find(r => r.provider === 'openai');
     if (!row) {
       return null;
     }
@@ -307,24 +354,33 @@ export class AiConnectionsService {
         ? (settings?.embeddingModel ?? DEFAULT_EMBEDDING_MODEL)
         : OPENAI_EMBEDDING_MODEL;
     return toChatConnection(
-      { ...row, model },
+      {...row, model},
       await this.secrets.get(userId, apiKeySecret(row.id)),
     );
   }
 
   /** One saved connection by its id (the security agent may have its own); null — gone. */
   async connection(userId: string, id: string): Promise<ChatConnection | null> {
-    const row = (await this.rows(userId)).find((item) => item.id === id);
+    const row = (await this.rows(userId)).find(item => item.id === id);
     if (!row) {
       return null;
     }
-    return toChatConnection(row, await this.secrets.get(userId, apiKeySecret(row.id)));
+    return toChatConnection(
+      row,
+      await this.secrets.get(userId, apiKeySecret(row.id)),
+    );
   }
 
   /** The connection AI requests go through; null — AI is not configured. */
   async active(userId: string): Promise<ChatConnection | null> {
-    const [settings] = await this.db.select().from(aiSettings).where(eq(aiSettings.userId, userId));
-    const row = activeRow(await this.rows(userId), settings?.activeConnectionId);
+    const [settings] = await this.db
+      .select()
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId));
+    const row = activeRow(
+      await this.rows(userId),
+      settings?.activeConnectionId,
+    );
     if (!row) {
       return null;
     }
@@ -336,7 +392,9 @@ export class AiConnectionsService {
    * Users whose morning digest is due: it is on, their time has come on their own clock,
    * today's is not handled. `today` is the user's day — the one to mark as handled.
    */
-  async usersWithDigestDue(at: Date = new Date()): Promise<{ userId: string; today: LocalDate }[]> {
+  async usersWithDigestDue(
+    at: Date = new Date(),
+  ): Promise<{userId: string; today: LocalDate}[]> {
     const rows = await this.db
       .select({
         userId: aiSettings.userId,
@@ -347,9 +405,11 @@ export class AiConnectionsService {
       .from(aiSettings)
       .innerJoin(users, eq(users.id, aiSettings.userId))
       .where(eq(aiSettings.morningDigest, true));
-    return rows.flatMap((row) => {
+    return rows.flatMap(row => {
       const now = zonedDateTime(at, this.users.timeZoneOf(row));
-      return isDigestDue(row, now.date, now.time) ? [{ userId: row.userId, today: now.date }] : [];
+      return isDigestDue(row, now.date, now.time)
+        ? [{userId: row.userId, today: now.date}]
+        : [];
     });
   }
 
@@ -357,7 +417,7 @@ export class AiConnectionsService {
   async markDigestDay(userId: string, day: LocalDate): Promise<void> {
     await this.db
       .update(aiSettings)
-      .set({ morningDigestDay: day })
+      .set({morningDigestDay: day})
       .where(eq(aiSettings.userId, userId));
   }
 
@@ -370,7 +430,7 @@ export class AiConnectionsService {
   }
 
   private async find(userId: string, id: string): Promise<AiConnectionRow> {
-    const row = (await this.rows(userId)).find((r) => r.id === id);
+    const row = (await this.rows(userId)).find(r => r.id === id);
     if (!row) {
       throw new NotFoundException('AI connection not found');
     }
@@ -380,8 +440,11 @@ export class AiConnectionsService {
   private async setActive(userId: string, id: string): Promise<void> {
     await this.db
       .insert(aiSettings)
-      .values({ userId, activeConnectionId: id })
-      .onConflictDoUpdate({ target: aiSettings.userId, set: { activeConnectionId: id } });
+      .values({userId, activeConnectionId: id})
+      .onConflictDoUpdate({
+        target: aiSettings.userId,
+        set: {activeConnectionId: id},
+      });
   }
 
   private async toConnection(
@@ -389,7 +452,13 @@ export class AiConnectionsService {
     row: AiConnectionRow,
     usage: Awaited<ReturnType<AiUsageService['summary']>>,
   ): Promise<AiConnection> {
-    const none = { requests: 0, promptTokens: 0, completionTokens: 0, cachedTokens: 0, cost: null };
+    const none = {
+      requests: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      cachedTokens: 0,
+      cost: null,
+    };
     return {
       id: row.id,
       name: row.name,
@@ -400,7 +469,7 @@ export class AiConnectionsService {
       priceInput: row.priceInput,
       priceOutput: row.priceOutput,
       monthlyLimit: row.monthlyLimit,
-      usage: usage.get(row.id) ?? { today: none, month: none },
+      usage: usage.get(row.id) ?? {today: none, month: none},
     };
   }
 
@@ -408,11 +477,19 @@ export class AiConnectionsService {
    * A local model (Ollama) to do the background work (summaries, extraction) when the chosen
    * connection's monthly limit is spent; null — there is none besides `exceptId`.
    */
-  async localFallback(userId: string, exceptId?: string): Promise<ChatConnection | null> {
+  async localFallback(
+    userId: string,
+    exceptId?: string,
+  ): Promise<ChatConnection | null> {
     const row = (await this.rows(userId)).find(
-      (one) => one.provider === 'ollama' && one.id !== exceptId,
+      one => one.provider === 'ollama' && one.id !== exceptId,
     );
-    return row ? toChatConnection(row, await this.secrets.get(userId, apiKeySecret(row.id))) : null;
+    return row
+      ? toChatConnection(
+          row,
+          await this.secrets.get(userId, apiKeySecret(row.id)),
+        )
+      : null;
   }
 }
 
@@ -421,7 +498,10 @@ export class AiConnectionsService {
  * active one: their data never goes to the shared connection.
  */
 export function hiddenFromShared(
-  settings: { disabledModules?: string[]; moduleConnections?: Record<string, string> },
+  settings: {
+    disabledModules?: string[];
+    moduleConnections?: Record<string, string>;
+  },
   activeId: string | undefined,
 ): string[] {
   const own = Object.entries(settings.moduleConnections ?? {})
@@ -435,11 +515,11 @@ function activeRow(
   rows: AiConnectionRow[],
   activeId: string | null | undefined,
 ): AiConnectionRow | undefined {
-  return rows.find((row) => row.id === activeId) ?? rows[0];
+  return rows.find(row => row.id === activeId) ?? rows[0];
 }
 
 function connectionFields(input: AiConnectionInput) {
-  const { name, provider, baseUrl, model } = input;
+  const {name, provider, baseUrl, model} = input;
   return {
     name,
     provider,
@@ -479,7 +559,7 @@ function toChatConnection(
     provider,
     baseUrl,
     model,
-  }: { id?: string; provider: string; baseUrl: string; model: string },
+  }: {id?: string; provider: string; baseUrl: string; model: string},
   apiKey: string | null,
 ): ChatConnection {
   return {
@@ -488,7 +568,9 @@ function toChatConnection(
     model,
     apiKey,
     // OpenAI GPT-6 calls tools in Chat Completions only without reasoning (see the client).
-    ...(acceptsReasoningEffort(provider, model) ? { reasoningEffort: 'none' as const } : {}),
+    ...(acceptsReasoningEffort(provider, model)
+      ? {reasoningEffort: 'none' as const}
+      : {}),
   };
 }
 
@@ -496,7 +578,10 @@ function toChatConnection(
  * Whether the model takes `reasoning_effort`. The older OpenAI models do not and answer 400 to
  * a request that has it — gpt-4o-mini, the default model for pictures, among them.
  */
-export function acceptsReasoningEffort(provider: string, model: string): boolean {
+export function acceptsReasoningEffort(
+  provider: string,
+  model: string,
+): boolean {
   return provider === 'openai' && !/^(chatgpt-|gpt-3|gpt-4)/i.test(model);
 }
 
@@ -507,14 +592,16 @@ export function acceptsReasoningEffort(provider: string, model: string): boolean
  */
 async function verify(connection: ChatConnection): Promise<void> {
   try {
-    await chatCompletion(connection, [{ role: 'user', content: 'ping' }]).catch(async (error) => {
-      if (!(error instanceof AiRequestError)) {
-        throw error;
-      }
-      await embed(connection, ['ping']).catch(() => {
-        throw error;
-      });
-    });
+    await chatCompletion(connection, [{role: 'user', content: 'ping'}]).catch(
+      async error => {
+        if (!(error instanceof AiRequestError)) {
+          throw error;
+        }
+        await embed(connection, ['ping']).catch(() => {
+          throw error;
+        });
+      },
+    );
   } catch (error) {
     throw new BadRequestException(
       error instanceof AiRequestError

@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SchedulerService, TelegramBotService } from '@pd/api-core';
-import { INTAKE_ACTION, IntakesService } from './intakes.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {SchedulerService, TelegramBotService} from '@pd/api-core';
+import {INTAKE_ACTION, IntakesService} from './intakes.service';
 
 /** The reminders to take medications go out every minute; the buttons under them answer. */
 @Injectable()

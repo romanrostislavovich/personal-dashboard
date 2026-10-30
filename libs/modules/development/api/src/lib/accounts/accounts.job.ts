@@ -1,8 +1,8 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { SchedulerService, UsersService } from '@pd/api-core';
-import { TOKEN_PROVIDERS } from '@pd/contracts';
-import { AccountTokensService } from './account-tokens.service';
-import { CodeAccountsService } from './code-accounts.service';
+import {Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {SchedulerService, UsersService} from '@pd/api-core';
+import {TOKEN_PROVIDERS} from '@pd/contracts';
+import {AccountTokensService} from './account-tokens.service';
+import {CodeAccountsService} from './code-accounts.service';
 
 /**
  * Refreshes the GitLab and Bitbucket accounts of every user who connected them, once an hour:
@@ -37,8 +37,10 @@ export class AccountsJob implements OnModuleInit {
         // One bad token must not stop the rest; the error is saved for the page.
         await this.accounts
           .sync(user.id, provider)
-          .catch((error) =>
-            this.logger.warn(`${provider} account sync for ${user.id} failed: ${error}`),
+          .catch(error =>
+            this.logger.warn(
+              `${provider} account sync for ${user.id} failed: ${error}`,
+            ),
           );
       }
     }

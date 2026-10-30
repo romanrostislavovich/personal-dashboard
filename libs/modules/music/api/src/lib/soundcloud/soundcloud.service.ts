@@ -5,8 +5,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database, SecretsService } from '@pd/api-core';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database, SecretsService} from '@pd/api-core';
 import {
   addDays,
   DateParts,
@@ -18,8 +18,8 @@ import {
   todayIn,
   toLocalDate,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gte, inArray, notInArray, sql } from 'drizzle-orm';
-import { growth, trackNews, TrackNews } from './soundcloud-news';
+import {and, asc, desc, eq, gte, inArray, notInArray, sql} from 'drizzle-orm';
+import {growth, trackNews, TrackNews} from './soundcloud-news';
 import {
   SoundcloudAuthError,
   SoundcloudClient,
@@ -73,9 +73,9 @@ export class SoundcloudService {
 
   async connectedUserIds(): Promise<string[]> {
     const rows = await this.db
-      .select({ userId: soundcloudAccounts.userId })
+      .select({userId: soundcloudAccounts.userId})
       .from(soundcloudAccounts);
-    return rows.map((row) => row.userId);
+    return rows.map(row => row.userId);
   }
 
   /** Finds the profile, checks the token against it and loads the tracks right away. */
@@ -91,10 +91,15 @@ export class SoundcloudService {
       user = await client.resolveUser(username);
       // Private tracks are listed only for their owner: the token must be of this profile.
       if (token && (await client.me()).id !== user.id) {
-        throw new BadRequestException('The token belongs to another SoundCloud account');
+        throw new BadRequestException(
+          'The token belongs to another SoundCloud account',
+        );
       }
     } catch (error) {
-      if (error instanceof SoundcloudNotFoundError || error instanceof SoundcloudAuthError) {
+      if (
+        error instanceof SoundcloudNotFoundError ||
+        error instanceof SoundcloudAuthError
+      ) {
         throw new BadRequestException(error.message);
       }
       throw error;
@@ -110,8 +115,8 @@ export class SoundcloudService {
     };
     await this.db
       .insert(soundcloudAccounts)
-      .values({ userId, ...account })
-      .onConflictDoUpdate({ target: soundcloudAccounts.userId, set: account });
+      .values({userId, ...account})
+      .onConflictDoUpdate({target: soundcloudAccounts.userId, set: account});
     if (token) {
       await this.secrets.set(userId, TOKEN_KEY, token);
     } else {
@@ -123,19 +128,34 @@ export class SoundcloudService {
   /** Forgets the profile, its tracks and their history. */
   async disconnect(userId: string): Promise<void> {
     await this.secrets.delete(userId, TOKEN_KEY);
-    await this.db.transaction(async (tx) => {
-      await tx.delete(soundcloudTracks).where(eq(soundcloudTracks.userId, userId));
-      await tx.delete(soundcloudAccountDays).where(eq(soundcloudAccountDays.userId, userId));
-      await tx.delete(soundcloudAccounts).where(eq(soundcloudAccounts.userId, userId));
+    await this.db.transaction(async tx => {
+      await tx
+        .delete(soundcloudTracks)
+        .where(eq(soundcloudTracks.userId, userId));
+      await tx
+        .delete(soundcloudAccountDays)
+        .where(eq(soundcloudAccountDays.userId, userId));
+      await tx
+        .delete(soundcloudAccounts)
+        .where(eq(soundcloudAccounts.userId, userId));
     });
   }
 
-  async setNotify(userId: string, trackId: string, notify: boolean): Promise<void> {
+  async setNotify(
+    userId: string,
+    trackId: string,
+    notify: boolean,
+  ): Promise<void> {
     const [row] = await this.db
       .update(soundcloudTracks)
-      .set({ notify })
-      .where(and(eq(soundcloudTracks.id, trackId), eq(soundcloudTracks.userId, userId)))
-      .returning({ id: soundcloudTracks.id });
+      .set({notify})
+      .where(
+        and(
+          eq(soundcloudTracks.id, trackId),
+          eq(soundcloudTracks.userId, userId),
+        ),
+      )
+      .returning({id: soundcloudTracks.id});
     if (!row) {
       throw new NotFoundException('Track not found');
     }
@@ -154,23 +174,29 @@ export class SoundcloudService {
       throw new BadRequestException('SoundCloud is not connected');
     }
     try {
-      const client = new SoundcloudClient(await this.secrets.get(userId, TOKEN_KEY));
+      const client = new SoundcloudClient(
+        await this.secrets.get(userId, TOKEN_KEY),
+      );
       const user = await client.getUser(account.soundcloudId);
       const tracks = await client.listTracks(account.soundcloudId);
       const news = await this.save(userId, user, tracks);
       return {
         tracks: news,
         // The first sync has no earlier number to compare with.
-        newFollowers: account.lastSyncedAt ? Math.max(0, user.followers - account.followers) : 0,
+        newFollowers: account.lastSyncedAt
+          ? Math.max(0, user.followers - account.followers)
+          : 0,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       await this.db
         .update(soundcloudAccounts)
-        .set({ lastError: message })
+        .set({lastError: message})
         .where(eq(soundcloudAccounts.userId, userId));
       // The page shows SoundCloud's own explanation (an expired token, a changed site).
-      throw error instanceof HttpException ? error : new BadRequestException(message);
+      throw error instanceof HttpException
+        ? error
+        : new BadRequestException(message);
     }
   }
 
@@ -198,7 +224,7 @@ export class SoundcloudService {
             and(
               inArray(
                 soundcloudTrackDays.trackId,
-                rows.map((row) => row.id),
+                rows.map(row => row.id),
               ),
               gte(soundcloudTrackDays.day, from),
             ),
@@ -209,14 +235,21 @@ export class SoundcloudService {
     for (const day of days) {
       byTrack.set(day.trackId, [...(byTrack.get(day.trackId) ?? []), day]);
     }
-    const tracks = rows.map((row) => toTrack(row, byTrack.get(row.id) ?? [], today));
+    const tracks = rows.map(row =>
+      toTrack(row, byTrack.get(row.id) ?? [], today),
+    );
     const followerDays = await this.db
       .select()
       .from(soundcloudAccountDays)
-      .where(and(eq(soundcloudAccountDays.userId, userId), gte(soundcloudAccountDays.day, from)))
+      .where(
+        and(
+          eq(soundcloudAccountDays.userId, userId),
+          gte(soundcloudAccountDays.day, from),
+        ),
+      )
       .orderBy(asc(soundcloudAccountDays.day));
     const [since] = await this.db
-      .select({ day: sql<string | null>`min(${soundcloudAccountDays.day})` })
+      .select({day: sql<string | null>`min(${soundcloudAccountDays.day})`})
       .from(soundcloudAccountDays)
       .where(eq(soundcloudAccountDays.userId, userId));
 
@@ -227,7 +260,7 @@ export class SoundcloudService {
       permalinkUrl: account.permalinkUrl,
       followers: account.followers,
       followersWeek: growth(
-        followerDays.map((day) => ({ day: day.day, value: day.followers })),
+        followerDays.map(day => ({day: day.day, value: day.followers})),
         account.followers,
         today,
         7,
@@ -240,7 +273,10 @@ export class SoundcloudService {
       },
       playsDelta: {
         week: tracks.reduce((total, track) => total + track.playsDelta.week, 0),
-        month: tracks.reduce((total, track) => total + track.playsDelta.month, 0),
+        month: tracks.reduce(
+          (total, track) => total + track.playsDelta.month,
+          0,
+        ),
       },
       history: totalHistory(days),
       tracks,
@@ -260,10 +296,10 @@ export class SoundcloudService {
       .select()
       .from(soundcloudTracks)
       .where(eq(soundcloudTracks.userId, userId));
-    const bySoundcloudId = new Map(saved.map((row) => [row.soundcloudId, row]));
+    const bySoundcloudId = new Map(saved.map(row => [row.soundcloudId, row]));
     const news: TrackNews[] = [];
 
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       await tx
         .update(soundcloudAccounts)
         .set({
@@ -278,10 +314,10 @@ export class SoundcloudService {
         .where(eq(soundcloudAccounts.userId, userId));
       await tx
         .insert(soundcloudAccountDays)
-        .values({ userId, day, followers: user.followers })
+        .values({userId, day, followers: user.followers})
         .onConflictDoUpdate({
           target: [soundcloudAccountDays.userId, soundcloudAccountDays.day],
-          set: { followers: user.followers },
+          set: {followers: user.followers},
           // Read every hour: a day that did not change stays untouched, otherwise the row
           // would be sent again by the sync between instances.
           setWhere: sql`${soundcloudAccountDays.followers} <> excluded.followers`,
@@ -289,7 +325,7 @@ export class SoundcloudService {
 
       // A track that is gone from the profile (deleted) goes with its history. An empty list
       // is more likely SoundCloud's hiccup than every track deleted at once: nothing is removed.
-      const kept = tracks.map((track) => track.id);
+      const kept = tracks.map(track => track.id);
       if (kept.length > 0) {
         await tx
           .delete(soundcloudTracks)
@@ -302,8 +338,8 @@ export class SoundcloudService {
       }
 
       for (const track of tracks) {
-        const { id: soundcloudId, publishedAt, ...fields } = track;
-        const values = { ...fields, publishedAt: new Date(publishedAt) };
+        const {id: soundcloudId, publishedAt, ...fields} = track;
+        const values = {...fields, publishedAt: new Date(publishedAt)};
         const previous = bySoundcloudId.get(soundcloudId);
         // Read every hour: a track that did not change is not written again, otherwise each
         // row would be sent by the sync between instances.
@@ -313,12 +349,15 @@ export class SoundcloudService {
             : (
                 await tx
                   .insert(soundcloudTracks)
-                  .values({ userId, soundcloudId, ...values })
+                  .values({userId, soundcloudId, ...values})
                   .onConflictDoUpdate({
-                    target: [soundcloudTracks.userId, soundcloudTracks.soundcloudId],
+                    target: [
+                      soundcloudTracks.userId,
+                      soundcloudTracks.soundcloudId,
+                    ],
                     set: values,
                   })
-                  .returning({ id: soundcloudTracks.id })
+                  .returning({id: soundcloudTracks.id})
               )[0];
         const counters = {
           plays: track.plays,
@@ -329,7 +368,7 @@ export class SoundcloudService {
         const d = soundcloudTrackDays;
         await tx
           .insert(d)
-          .values({ trackId: row.id, day, ...counters })
+          .values({trackId: row.id, day, ...counters})
           .onConflictDoUpdate({
             target: [d.trackId, d.day],
             set: counters,
@@ -348,29 +387,34 @@ export class SoundcloudService {
   }
 
   private today(): DateParts {
-    return todayIn(this.config.get('APP_TIMEZONE', { infer: true }));
+    return todayIn(this.config.get('APP_TIMEZONE', {infer: true}));
   }
 }
 
-type TrackValues = Omit<SoundcloudTrackSnapshot, 'id' | 'publishedAt'> & { publishedAt: Date };
+type TrackValues = Omit<SoundcloudTrackSnapshot, 'id' | 'publishedAt'> & {
+  publishedAt: Date;
+};
 
 function sameTrack(row: SoundcloudTrackRow, values: TrackValues): boolean {
-  return (Object.keys(values) as (keyof TrackValues)[]).every((key) =>
+  return (Object.keys(values) as (keyof TrackValues)[]).every(key =>
     key === 'publishedAt'
       ? row.publishedAt.getTime() === values.publishedAt.getTime()
       : row[key] === values[key],
   );
 }
 
-function sum(tracks: SoundcloudTrack[], field: 'plays' | 'likes' | 'reposts' | 'comments') {
+function sum(
+  tracks: SoundcloudTrack[],
+  field: 'plays' | 'likes' | 'reposts' | 'comments',
+) {
   return tracks.reduce((total, track) => total + track[field], 0);
 }
 
 /** The counters of all tracks per day. A track without a row that day is not in the sum. */
 function totalHistory(days: TrackDay[]) {
-  const totals = new Map<string, { day: string; plays: number; likes: number }>();
-  for (const { day, plays, likes } of days) {
-    const total = totals.get(day) ?? { day, plays: 0, likes: 0 };
+  const totals = new Map<string, {day: string; plays: number; likes: number}>();
+  for (const {day, plays, likes} of days) {
+    const total = totals.get(day) ?? {day, plays: 0, likes: 0};
     total.plays += plays;
     total.likes += likes;
     totals.set(day, total);
@@ -378,8 +422,12 @@ function totalHistory(days: TrackDay[]) {
   return [...totals.values()].sort((a, b) => a.day.localeCompare(b.day));
 }
 
-function toTrack(row: SoundcloudTrackRow, days: TrackDay[], today: DateParts): SoundcloudTrack {
-  const plays = days.map((day) => ({ day: day.day, value: day.plays }));
+function toTrack(
+  row: SoundcloudTrackRow,
+  days: TrackDay[],
+  today: DateParts,
+): SoundcloudTrack {
+  const plays = days.map(day => ({day: day.day, value: day.plays}));
   return {
     id: row.id,
     title: row.title,
@@ -399,6 +447,10 @@ function toTrack(row: SoundcloudTrackRow, days: TrackDay[], today: DateParts): S
       week: growth(plays, row.plays, today, 7),
       month: growth(plays, row.plays, today, 30),
     },
-    history: days.map((day) => ({ day: day.day, plays: day.plays, likes: day.likes })),
+    history: days.map(day => ({
+      day: day.day,
+      plays: day.plays,
+      likes: day.likes,
+    })),
   };
 }

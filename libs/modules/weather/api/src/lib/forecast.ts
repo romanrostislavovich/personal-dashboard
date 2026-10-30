@@ -5,9 +5,9 @@ import {
   WeatherForecast,
   WeatherLocation,
 } from '@pd/contracts';
-import { clothingAdvice } from './clothing-advice';
-import { RawForecast } from './open-meteo.client';
-import { weatherCondition } from './weather-code';
+import {clothingAdvice} from './clothing-advice';
+import {RawForecast} from './open-meteo.client';
+import {weatherCondition} from './weather-code';
 
 /** Hours shown on the page, local time. */
 const FIRST_SHOWN_HOUR = 6;
@@ -26,17 +26,17 @@ export function toForecast(
   location: WeatherLocation,
   thermalFeel: ThermalFeel = 0,
 ): WeatherForecast {
-  const { current, daily } = raw;
+  const {current, daily} = raw;
   const allHours = hourlyRows(raw);
   const days = daily.time.map((date, index) =>
     toDay(
       raw,
       index,
-      allHours.filter((h) => h.date === date),
+      allHours.filter(h => h.date === date),
       thermalFeel,
     ),
   );
-  const todayHours = allHours.filter((h) => h.date === daily.time[0]);
+  const todayHours = allHours.filter(h => h.date === daily.time[0]);
 
   return {
     location,
@@ -62,8 +62,8 @@ export function toForecast(
       sunset: clock(daily.sunset[0]),
     },
     hours: todayHours
-      .filter((h) => h.hour >= FIRST_SHOWN_HOUR)
-      .map((h) => ({
+      .filter(h => h.hour >= FIRST_SHOWN_HOUR)
+      .map(h => ({
         time: h.time,
         temperature: round(h.temperature),
         apparentTemperature: round(h.apparentTemperature),
@@ -83,7 +83,7 @@ function toDay(
   hours: HourRow[],
   thermalFeel: ThermalFeel,
 ): WeatherDay {
-  const { daily } = raw;
+  const {daily} = raw;
   return {
     date: daily.time[index],
     condition: weatherCondition(num(daily.weather_code[index])),
@@ -98,15 +98,17 @@ function toDay(
 
 /** What to wear on a day, by the hours you are likely to be outside. */
 function dayAdvice(
-  { daily }: RawForecast,
+  {daily}: RawForecast,
   index: number,
   hours: HourRow[],
   thermalFeel: ThermalFeel,
 ): ClothingAdvice {
-  const daytime = hours.filter((h) => h.hour >= DAYTIME_FROM && h.hour <= DAYTIME_TO);
+  const daytime = hours.filter(
+    h => h.hour >= DAYTIME_FROM && h.hour <= DAYTIME_TO,
+  );
   // A model without hourly data for the day: fall back to the daily numbers.
   const outside = daytime.length > 0 ? daytime : hours;
-  const apparent = outside.map((h) => h.apparentTemperature);
+  const apparent = outside.map(h => h.apparentTemperature);
 
   return clothingAdvice(
     {
@@ -117,19 +119,19 @@ function dayAdvice(
         ? Math.max(...apparent)
         : num(daily.apparent_temperature_max[index]),
       precipitationProbability: outside.length
-        ? Math.max(0, ...outside.map((h) => h.precipitationProbability))
+        ? Math.max(0, ...outside.map(h => h.precipitationProbability))
         : num(daily.precipitation_probability_max[index]),
       precipitation: outside.length
         ? outside.reduce((sum, h) => sum + h.precipitation, 0)
         : num(daily.precipitation_sum[index]),
       windSpeedMax: outside.length
-        ? Math.max(0, ...outside.map((h) => h.windSpeed))
+        ? Math.max(0, ...outside.map(h => h.windSpeed))
         : num(daily.wind_speed_10m_max[index]),
       uvIndexMax: outside.length
-        ? Math.max(0, ...outside.map((h) => h.uvIndex))
+        ? Math.max(0, ...outside.map(h => h.uvIndex))
         : num(daily.uv_index_max[index]),
       conditions: outside.length
-        ? outside.map((h) => weatherCondition(h.weatherCode))
+        ? outside.map(h => weatherCondition(h.weatherCode))
         : [weatherCondition(num(daily.weather_code[index]))],
     },
     thermalFeel,
@@ -137,11 +139,16 @@ function dayAdvice(
 }
 
 /** Hourly series as rows; hours without a temperature are dropped. */
-function hourlyRows({ hourly }: RawForecast) {
+function hourlyRows({hourly}: RawForecast) {
   return hourly.time.flatMap((time, i) => {
     const temperature = hourly.temperature_2m[i];
     const apparentTemperature = hourly.apparent_temperature[i];
-    if (temperature == null || apparentTemperature == null) {
+    if (
+      temperature === null ||
+      temperature === undefined ||
+      apparentTemperature === null ||
+      apparentTemperature === undefined
+    ) {
       return [];
     }
     return [

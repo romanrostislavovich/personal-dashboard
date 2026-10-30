@@ -1,7 +1,11 @@
 <header class="page-header">
   <h1 class="page-title">{{ 'diary.title' | transloco }}</h1>
   <div class="header-actions">
-    <button matButton="tonal" (click)="summarizeWeek()" [disabled]="summary()?.loading">
+    <button
+      matButton="tonal"
+      (click)="summarizeWeek()"
+      [disabled]="summary()?.loading"
+    >
       <mat-icon>auto_awesome</mat-icon> {{ 'diary.summary.button' | transloco }}
     </button>
     <!-- What is set once and rarely touched, and the one thing that cannot be undone. -->
@@ -16,20 +20,32 @@
     <mat-menu #diaryMenu="matMenu" xPosition="before">
       <button
         mat-menu-item
-        (click)="updateSettings({ eveningReminder: !(settings.value()?.eveningReminder ?? false) })"
+        (click)="
+          updateSettings({
+            eveningReminder: !(settings.value()?.eveningReminder ?? false),
+          })
+        "
       >
         <mat-icon>{{
-          settings.value()?.eveningReminder ? 'check_box' : 'check_box_outline_blank'
+          settings.value()?.eveningReminder
+            ? 'check_box'
+            : 'check_box_outline_blank'
         }}</mat-icon>
         {{ 'diary.eveningReminder' | transloco }}
       </button>
       <button
         mat-menu-item
         class="wrap"
-        (click)="updateSettings({ weeklySummary: !(settings.value()?.weeklySummary ?? false) })"
+        (click)="
+          updateSettings({
+            weeklySummary: !(settings.value()?.weeklySummary ?? false),
+          })
+        "
       >
         <mat-icon>{{
-          settings.value()?.weeklySummary ? 'check_box' : 'check_box_outline_blank'
+          settings.value()?.weeklySummary
+            ? 'check_box'
+            : 'check_box_outline_blank'
         }}</mat-icon>
         {{ 'diary.weeklySummary' | transloco }}
       </button>
@@ -38,7 +54,8 @@
       </button>
       <mat-divider />
       <button mat-menu-item class="delete-all" (click)="deleteAll()">
-        <mat-icon>delete_forever</mat-icon> {{ 'diary.deleteAll.button' | transloco }}
+        <mat-icon>delete_forever</mat-icon>
+        {{ 'diary.deleteAll.button' | transloco }}
       </button>
     </mat-menu>
   </div>
@@ -48,7 +65,9 @@
 @if (summary(); as s) {
   <mat-card appearance="outlined" class="summary" [class.error]="s.error">
     <mat-card-header>
-      <mat-card-title>✨ {{ 'diary.summary.title' | transloco }}</mat-card-title>
+      <mat-card-title
+        >✨ {{ 'diary.summary.title' | transloco }}</mat-card-title
+      >
     </mat-card-header>
     <mat-card-content>
       @if (s.loading) {
@@ -58,7 +77,9 @@
       }
     </mat-card-content>
     <mat-card-actions align="end">
-      <button matButton (click)="summary.set(null)">{{ 'diary.summary.close' | transloco }}</button>
+      <button matButton (click)="summary.set(null)">
+        {{ 'diary.summary.close' | transloco }}
+      </button>
     </mat-card-actions>
   </mat-card>
 }
@@ -83,7 +104,10 @@
         <span class="label">{{ 'diary.stats.tags' | transloco }}</span>
         <mat-chip-listbox [attr.aria-label]="'diary.stats.tags' | transloco">
           @for (t of s.topTags; track t.tag) {
-            <mat-chip-option [selected]="tag() === t.tag" (click)="toggleTag(t.tag)">
+            <mat-chip-option
+              [selected]="tag() === t.tag"
+              (click)="toggleTag(t.tag)"
+            >
               #{{ t.tag }} · {{ t.count }}
             </mat-chip-option>
           }
@@ -131,8 +155,14 @@
     </label>
 
     <!-- Every emoji of the palette, even unused ones, so the filter is always there to find -->
-    <div class="mark-filter" role="group" [attr.aria-label]="'diary.marks.filter' | transloco">
-      <span class="mark-filter-label">{{ 'diary.marks.filter' | transloco }}</span>
+    <div
+      class="mark-filter"
+      role="group"
+      [attr.aria-label]="'diary.marks.filter' | transloco"
+    >
+      <span class="mark-filter-label">{{
+        'diary.marks.filter' | transloco
+      }}</span>
       @for (m of markFilters(); track m.emoji) {
         <button
           type="button"
@@ -140,7 +170,7 @@
           [class.selected]="markEmoji() === m.emoji"
           [class.unused]="!m.count"
           [attr.aria-pressed]="markEmoji() === m.emoji"
-          [matTooltip]="'diary.marks.count' | transloco: { count: m.count }"
+          [matTooltip]="'diary.marks.count' | transloco: {count: m.count}"
           (click)="toggleMark(m.emoji)"
         >
           {{ m.emoji }}
@@ -155,7 +185,10 @@
       @case ('search') {
         <!-- Search results over all entries -->
         <span class="panel-title">
-          {{ 'diary.search.results' | transloco: { count: searchResults.value().length } }}
+          {{
+            'diary.search.results'
+              | transloco: {count: searchResults.value().length}
+          }}
         </span>
         @for (hit of searchResults.value(); track hit.day) {
           <button
@@ -191,7 +224,7 @@
         <!-- Fragments with one mark across all entries -->
         <div class="panel-head">
           <span class="panel-title">
-            {{ 'diary.marks.fragments' | transloco: { emoji: markEmoji() } }}
+            {{ 'diary.marks.fragments' | transloco: {emoji: markEmoji()} }}
           </span>
           <button matButton (click)="markEmoji.set(null)">
             <mat-icon>close</mat-icon> {{ 'diary.marks.close' | transloco }}
@@ -204,7 +237,9 @@
             [class.active]="hit.day === selectedDay()"
             (click)="selectDay(hit.day)"
           >
-            <span class="entry-date small">{{ hit.day | date: 'd MMMM y' }}</span>
+            <span class="entry-date small">{{
+              hit.day | date: 'd MMMM y'
+            }}</span>
             <span class="fragment-text">{{ hit.emoji }} {{ hit.text }}</span>
           </button>
         } @empty {
@@ -217,9 +252,13 @@
       @default {
         <!-- Entries of the month -->
         <div class="month">
-          <button matIconButton (click)="shiftMonth(-1)"><mat-icon>chevron_left</mat-icon></button>
+          <button matIconButton (click)="shiftMonth(-1)">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
           <span class="month-label">{{ monthDate() | date: 'LLLL yyyy' }}</span>
-          <button matIconButton (click)="shiftMonth(1)"><mat-icon>chevron_right</mat-icon></button>
+          <button matIconButton (click)="shiftMonth(1)">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
         </div>
 
         @if (tag(); as activeTag) {
@@ -246,7 +285,9 @@
               (click)="selectDay(entry.day)"
             >
               <span class="entry-head">
-                <span class="entry-date">{{ entry.day | date: 'd MMMM, EEE' }}</span>
+                <span class="entry-date">{{
+                  entry.day | date: 'd MMMM, EEE'
+                }}</span>
                 <span class="entry-icons">
                   @for (mark of entry.marks.slice(0, 3); track $index) {
                     <span>{{ mark.emoji }}</span>
@@ -288,10 +329,15 @@
     @if (insights.value(); as data) {
       <mat-card appearance="outlined" class="insights">
         <mat-card-header>
-          <mat-card-title>{{ 'diary.insights.title' | transloco }}</mat-card-title>
+          <mat-card-title>{{
+            'diary.insights.title' | transloco
+          }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <pd-diary-insights [insights]="data" (tagSelect)="toggleTag($event)" />
+          <pd-diary-insights
+            [insights]="data"
+            (tagSelect)="toggleTag($event)"
+          />
         </mat-card-content>
       </mat-card>
     }

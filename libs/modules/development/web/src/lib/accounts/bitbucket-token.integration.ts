@@ -1,15 +1,24 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { IntegrationGuideComponent, errorStatus } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { AccountsApi } from './accounts.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {IntegrationGuideComponent, errorStatus} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {AccountsApi} from './accounts.api';
 
 /**
  * The Bitbucket credentials, in Settings → Integrations: Bitbucket signs in with the e-mail of
@@ -33,7 +42,9 @@ import { AccountsApi } from './accounts.api';
       <mat-card-header>
         <mat-icon mat-card-avatar>source</mat-icon>
         <mat-card-title>Bitbucket</mat-card-title>
-        <mat-card-subtitle>{{ 'development.bitbucket.token.title' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'development.bitbucket.token.title' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (settings.value()?.bitbucket) {
@@ -45,17 +56,37 @@ import { AccountsApi } from './accounts.api';
             {{ 'development.github.token.remove' | transloco }}
           </button>
         } @else {
-          <p class="hint">{{ 'development.bitbucket.token.hint' | transloco }}</p>
+          <p class="hint">
+            {{ 'development.bitbucket.token.hint' | transloco }}
+          </p>
           <form class="form" [formGroup]="form" (ngSubmit)="save()">
             <mat-form-field subscriptSizing="dynamic">
-              <mat-label>{{ 'development.bitbucket.token.email' | transloco }}</mat-label>
-              <input matInput type="email" formControlName="email" autocomplete="off" />
+              <mat-label>{{
+                'development.bitbucket.token.email' | transloco
+              }}</mat-label>
+              <input
+                matInput
+                type="email"
+                formControlName="email"
+                autocomplete="off"
+              />
             </mat-form-field>
             <mat-form-field subscriptSizing="dynamic">
-              <mat-label>{{ 'development.bitbucket.token.label' | transloco }}</mat-label>
-              <input matInput type="password" formControlName="token" autocomplete="off" />
+              <mat-label>{{
+                'development.bitbucket.token.label' | transloco
+              }}</mat-label>
+              <input
+                matInput
+                type="password"
+                formControlName="token"
+                autocomplete="off"
+              />
             </mat-form-field>
-            <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+            <button
+              matButton="filled"
+              type="submit"
+              [disabled]="form.invalid || busy()"
+            >
               {{ 'core.actions.save' | transloco }}
             </button>
           </form>
@@ -85,7 +116,9 @@ export class BitbucketTokenIntegration {
   async save(): Promise<void> {
     this.busy.set(true);
     try {
-      await firstValueFrom(this.api.saveBitbucketToken(this.form.getRawValue()));
+      await firstValueFrom(
+        this.api.saveBitbucketToken(this.form.getRawValue()),
+      );
       this.form.reset();
       this.settings.reload();
     } catch (error) {
@@ -93,9 +126,13 @@ export class BitbucketTokenIntegration {
         errorStatus(error) === 400
           ? 'development.errors.tokenRejected'
           : 'development.errors.generic';
-      this.snackBar.open(this.transloco.translate(key, { service: 'Bitbucket' }), 'OK', {
-        duration: 6000,
-      });
+      this.snackBar.open(
+        this.transloco.translate(key, {service: 'Bitbucket'}),
+        'OK',
+        {
+          duration: 6000,
+        },
+      );
     } finally {
       this.busy.set(false);
     }

@@ -1,14 +1,23 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MovieTitle, MovieTitleUpdate } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { MoviesApi } from './movies.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MovieTitle, MovieTitleUpdate} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {MoviesApi} from './movies.api';
 
 const RATINGS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -49,7 +58,11 @@ function today(): string {
         <p class="sub">{{ t.genres.join(', ') }}</p>
       }
       <p class="label">{{ 'movies.dialog.rating' | transloco }}</p>
-      <div class="ratings" role="radiogroup" [attr.aria-label]="'movies.dialog.rating' | transloco">
+      <div
+        class="ratings"
+        role="radiogroup"
+        [attr.aria-label]="'movies.dialog.rating' | transloco"
+      >
         @for (n of ratings; track n) {
           <button
             type="button"
@@ -65,22 +78,32 @@ function today(): string {
       </div>
       <mat-form-field class="note" subscriptSizing="dynamic">
         <mat-label>{{ 'movies.dialog.note' | transloco }}</mat-label>
-        <textarea matInput rows="4" maxlength="2000" [(ngModel)]="note"></textarea>
+        <textarea
+          matInput
+          rows="4"
+          maxlength="2000"
+          [(ngModel)]="note"
+        ></textarea>
       </mat-form-field>
       <div class="actions">
         @if (t.watchedOn) {
-          <button matButton (click)="patch({ watchedOn: null })">
+          <button matButton (click)="patch({watchedOn: null})">
             <mat-icon>undo</mat-icon> {{ 'movies.dialog.notSeen' | transloco }}
           </button>
         } @else {
-          <button matButton="tonal" (click)="patch({ watchedOn: today })">
+          <button matButton="tonal" (click)="patch({watchedOn: today})">
             <mat-icon>check</mat-icon> {{ 'movies.dialog.seen' | transloco }}
           </button>
         }
         @if (!t.watchedOn) {
-          <button matButton (click)="patch({ wanted: !t.wantedAt })">
-            <mat-icon>{{ t.wantedAt ? 'bookmark_remove' : 'bookmark_add' }}</mat-icon>
-            {{ (t.wantedAt ? 'movies.dialog.unwant' : 'movies.dialog.want') | transloco }}
+          <button matButton (click)="patch({wanted: !t.wantedAt})">
+            <mat-icon>{{
+              t.wantedAt ? 'bookmark_remove' : 'bookmark_add'
+            }}</mat-icon>
+            {{
+              (t.wantedAt ? 'movies.dialog.unwant' : 'movies.dialog.want')
+                | transloco
+            }}
           </button>
         }
         <button matButton class="danger" (click)="remove()">
@@ -89,7 +112,9 @@ function today(): string {
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button matButton mat-dialog-close>{{ 'core.actions.cancel' | transloco }}</button>
+      <button matButton mat-dialog-close>
+        {{ 'core.actions.cancel' | transloco }}
+      </button>
       <button matButton="filled" [disabled]="busy()" (click)="save()">
         {{ 'core.actions.save' | transloco }}
       </button>
@@ -151,13 +176,15 @@ export class TitleDialog {
   protected readonly busy = signal(false);
 
   async patch(patch: MovieTitleUpdate): Promise<void> {
-    this.title.set(await firstValueFrom(this.api.update(this.title().id, patch)));
+    this.title.set(
+      await firstValueFrom(this.api.update(this.title().id, patch)),
+    );
   }
 
   async save(): Promise<void> {
     this.busy.set(true);
     try {
-      await this.patch({ rating: this.rating(), note: this.note.trim() || null });
+      await this.patch({rating: this.rating(), note: this.note.trim() || null});
       this.ref.close();
     } finally {
       this.busy.set(false);

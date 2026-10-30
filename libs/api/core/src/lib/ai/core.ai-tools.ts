@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {Injectable, OnModuleInit} from '@nestjs/common';
 import {
   aiMemoryInputSchema,
   lifeDayQuerySchema,
@@ -8,33 +8,40 @@ import {
   projectInputSchema,
   projectOverviewQuerySchema,
 } from '@pd/contracts';
-import { AchievementsService } from '../achievements/achievements.service';
-import { LifeService } from '../life/life.service';
-import { LinksService } from '../links/links.service';
-import { ProjectOverviewService } from '../links/project-overview.service';
-import { ProjectsService } from '../projects/projects.service';
-import { changedFields, findById, idParameters, NO_PARAMETERS, PERIOD_PARAMETERS } from './ai-tool';
-import { AiActionsService } from './ai-actions.service';
-import { AiMemoryService } from './ai-memory.service';
-import { aiMemories } from './ai.schema';
-import { RecallService } from '../recall/recall.service';
-import { AiService } from './ai.service';
-import { projects } from '../projects/projects.schema';
+import {AchievementsService} from '../achievements/achievements.service';
+import {LifeService} from '../life/life.service';
+import {LinksService} from '../links/links.service';
+import {ProjectOverviewService} from '../links/project-overview.service';
+import {ProjectsService} from '../projects/projects.service';
+import {
+  changedFields,
+  findById,
+  idParameters,
+  NO_PARAMETERS,
+  PERIOD_PARAMETERS,
+} from './ai-tool';
+import {AiActionsService} from './ai-actions.service';
+import {AiMemoryService} from './ai-memory.service';
+import {aiMemories} from './ai.schema';
+import {RecallService} from '../recall/recall.service';
+import {AiService} from './ai.service';
+import {projects} from '../projects/projects.schema';
 
 const PROJECT_FIELDS = {
-  name: { type: 'string' },
-  url: { type: 'string', description: 'https://…' },
-  description: { type: 'string' },
+  name: {type: 'string'},
+  url: {type: 'string', description: 'https://…'},
+  description: {type: 'string'},
   aliases: {
     type: 'array',
-    items: { type: 'string' },
+    items: {type: 'string'},
     description:
       'Other names of the project in the sections: its repository (owner/name), its project ' +
       'in WakaTime. Replaces the whole list.',
   },
   closedOn: {
     type: 'string',
-    description: 'YYYY-MM-DD: the day the project was finished; null — it is still going.',
+    description:
+      'YYYY-MM-DD: the day the project was finished; null — it is still going.',
   },
 } as const;
 
@@ -62,7 +69,7 @@ export class CoreAiTools implements OnModuleInit {
         'names in the other sections), closedOn (the day it was finished; null — still going). ' +
         'The page of one is /projects/<id>.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.projects.list(userId),
+      handler: userId => this.projects.list(userId),
     });
     this.registerLinkTools();
     this.registerProjectWriteTools();
@@ -74,13 +81,15 @@ export class CoreAiTools implements OnModuleInit {
         'for what the sections know together: a project known to several sections, a project ' +
         'that pays for its hours, what goes with a good day, focus with music, gift ideas.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) =>
-        (await this.achievements.list(userId)).map(({ title, progress, goal, unlockedAt }) => ({
-          title,
-          progress,
-          goal,
-          unlockedAt,
-        })),
+      handler: async userId =>
+        (await this.achievements.list(userId)).map(
+          ({title, progress, goal, unlockedAt}) => ({
+            title,
+            progress,
+            goal,
+            unlockedAt,
+          }),
+        ),
     });
   }
 
@@ -99,7 +108,7 @@ export class CoreAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Project id from core_projects' },
+          id: {type: 'string', description: 'Project id from core_projects'},
           ...PERIOD_PARAMETERS.properties,
         },
         required: ['id', 'from', 'to'],
@@ -108,7 +117,10 @@ export class CoreAiTools implements OnModuleInit {
         this.overviews.overview(
           userId,
           String(args['id']),
-          projectOverviewQuerySchema.parse({ from: args['from'], to: args['to'] }),
+          projectOverviewQuerySchema.parse({
+            from: args['from'],
+            to: args['to'],
+          }),
         ),
     });
     this.ai.registerTool({
@@ -123,14 +135,14 @@ export class CoreAiTools implements OnModuleInit {
         'instead of asking every section; for the details of one section use its own tools.',
       parameters: {
         type: 'object',
-        properties: { day: { type: 'string', description: 'The day, YYYY-MM-DD' } },
+        properties: {day: {type: 'string', description: 'The day, YYYY-MM-DD'}},
         required: ['day'],
       },
       // The events of a section the AI must not see stay out (switched off, or its own model).
       handler: async (userId, args) =>
         this.life.day(
           userId,
-          lifeDayQuerySchema.parse({ day: args['day'] }).day,
+          lifeDayQuerySchema.parse({day: args['day']}).day,
           await this.ai.hiddenFromShared(userId),
         ),
     });
@@ -145,8 +157,8 @@ export class CoreAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Project id from core_projects' },
-          months: { type: 'number', description: '1–24, default 6' },
+          id: {type: 'string', description: 'Project id from core_projects'},
+          months: {type: 'number', description: '1–24, default 6'},
         },
         required: ['id'],
       },
@@ -170,7 +182,10 @@ export class CoreAiTools implements OnModuleInit {
         'together, not the cause: say so. Use a long period (three months and more).',
       parameters: PERIOD_PARAMETERS,
       handler: (userId, args) =>
-        this.overviews.moodInsights(userId, moodInsightsQuerySchema.parse(args)),
+        this.overviews.moodInsights(
+          userId,
+          moodInsightsQuerySchema.parse(args),
+        ),
     });
     this.ai.registerTool({
       name: 'core_correlations',
@@ -191,7 +206,8 @@ export class CoreAiTools implements OnModuleInit {
           ...PERIOD_PARAMETERS.properties,
           target: {
             type: 'string',
-            description: 'The key of the number to explain, e.g. diary.mood, development.coding',
+            description:
+              'The key of the number to explain, e.g. diary.mood, development.coding',
           },
         },
         required: PERIOD_PARAMETERS.required,
@@ -207,11 +223,16 @@ export class CoreAiTools implements OnModuleInit {
         return {
           from: found.from,
           to: found.to,
-          metrics: found.metrics.map(({ key, label, unit, days }) => ({ key, label, unit, days })),
+          metrics: found.metrics.map(({key, label, unit, days}) => ({
+            key,
+            label,
+            unit,
+            days,
+          })),
           links: found.correlations
-            .filter((pair) => pair.strong)
+            .filter(pair => pair.strong)
             .slice(0, 40)
-            .map(({ a, b, lag, rho, n, q, beyondItself, slope }) => ({
+            .map(({a, b, lag, rho, n, q, beyondItself, slope}) => ({
               a,
               b,
               lag,
@@ -240,7 +261,9 @@ export class CoreAiTools implements OnModuleInit {
         'judgement and not proof of a cause: say so, gently; suggest discussing it with the doctor.',
       parameters: {
         type: 'object',
-        properties: { weeks: { type: 'number', description: '2, 4 (default) or 8' } },
+        properties: {
+          weeks: {type: 'number', description: '2, 4 (default) or 8'},
+        },
       },
       // Nothing of a section the AI must not see: Health hidden — no periods at all.
       handler: async (userId, args) => {
@@ -251,37 +274,66 @@ export class CoreAiTools implements OnModuleInit {
         );
         return {
           weeks: found.weeks,
-          results: found.results.map(({ event, daysAfter, enough, changes }) => ({
-            event: { title: event.title, kind: event.kind, edge: event.edge, on: event.on },
+          results: found.results.map(({event, daysAfter, enough, changes}) => ({
+            event: {
+              title: event.title,
+              kind: event.kind,
+              edge: event.edge,
+              on: event.on,
+            },
             daysAfter,
             enough,
             changed: changes
-              .filter((change) => change.changed)
-              .map(({ key, label, unit, before, after, difference, differencePercent, p, q }) => ({
-                key,
-                label,
-                unit,
-                before,
-                after,
-                difference,
-                differencePercent,
-                p,
-                q,
-              })),
+              .filter(change => change.changed)
+              .map(
+                ({
+                  key,
+                  label,
+                  unit,
+                  before,
+                  after,
+                  difference,
+                  differencePercent,
+                  p,
+                  q,
+                }) => ({
+                  key,
+                  label,
+                  unit,
+                  before,
+                  after,
+                  difference,
+                  differencePercent,
+                  p,
+                  q,
+                }),
+              ),
           })),
         };
       },
     });
     this.links.registerPages([
-      { module: 'life', path: '/life/links', description: 'links between the daily numbers' },
-      { module: 'projects', path: '/projects', description: 'all projects' },
+      {
+        module: 'life',
+        path: '/life/links',
+        description: 'links between the daily numbers',
+      },
+      {module: 'projects', path: '/projects', description: 'all projects'},
       {
         module: 'projects',
         path: '/projects/<id>',
         description: 'one project across the sections (id from core_projects)',
       },
-      { module: 'life', path: '/life/summary', description: 'summary of a period, mood insights' },
-      { module: 'core', path: '/settings', description: 'settings, integrations, automations' },
+      {
+        module: 'life',
+        path: '/life/summary',
+        description: 'summary of a period, mood insights',
+      },
+      {
+        module: 'core',
+        path: '/settings',
+        description: 'settings, integrations, automations',
+      },
     ]);
   }
 
@@ -297,8 +349,13 @@ export class CoreAiTools implements OnModuleInit {
       description:
         'Creates a project — a site or service the user runs. Finance wallets and site ' +
         'monitoring are tied to projects.',
-      parameters: { type: 'object', properties: PROJECT_FIELDS, required: ['name'] },
-      handler: (userId, args) => this.projects.create(userId, projectInputSchema.parse(args)),
+      parameters: {
+        type: 'object',
+        properties: PROJECT_FIELDS,
+        required: ['name'],
+      },
+      handler: (userId, args) =>
+        this.projects.create(userId, projectInputSchema.parse(args)),
     });
 
     this.ai.registerTool({
@@ -306,14 +363,16 @@ export class CoreAiTools implements OnModuleInit {
       module: 'projects',
       writes: true,
       undoTables: [projects],
-      description: 'Changes a project: pass its id and only the fields to change (null clears).',
+      description:
+        'Changes a project: pass its id and only the fields to change (null clears).',
       parameters: {
         type: 'object',
-        properties: { id: { type: 'string' }, ...PROJECT_FIELDS },
+        properties: {id: {type: 'string'}, ...PROJECT_FIELDS},
         required: ['id'],
       },
       handler: async (userId, args) => {
-        const { id, name, url, description, aliases, closedOn } = await findProject(userId, args);
+        const {id, name, url, description, aliases, closedOn} =
+          await findProject(userId, args);
         const input = projectInputSchema.parse({
           name,
           url,
@@ -337,7 +396,10 @@ export class CoreAiTools implements OnModuleInit {
         'those have to be deleted or moved first.',
       parameters: idParameters('Project id from core_projects'),
       handler: async (userId, args) => {
-        await this.projects.remove(userId, (await findProject(userId, args)).id);
+        await this.projects.remove(
+          userId,
+          (await findProject(userId, args)).id,
+        );
       },
     });
 
@@ -350,8 +412,11 @@ export class CoreAiTools implements OnModuleInit {
         '(`effect`: mood points for a typical difference of the number). Tell it only when ' +
         '`trusted` (it beat "like the last week"); otherwise say there is not enough to tell.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) =>
-        this.overviews.moodForecast(userId, await this.ai.hiddenFromShared(userId)),
+      handler: async userId =>
+        this.overviews.moodForecast(
+          userId,
+          await this.ai.hiddenFromShared(userId),
+        ),
     });
 
     // "When did I last…": search by meaning over the user's own history.
@@ -367,15 +432,24 @@ export class CoreAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          query: { type: 'string', description: 'What to look for, in the user words' },
-          module: { type: 'string', description: 'Only in this section, e.g. diary' },
+          query: {
+            type: 'string',
+            description: 'What to look for, in the user words',
+          },
+          module: {
+            type: 'string',
+            description: 'Only in this section, e.g. diary',
+          },
         },
         required: ['query'],
       },
       handler: async (userId, args) =>
         (await this.recall.search(userId, String(args['query'] ?? ''), {
-          module: typeof args['module'] === 'string' ? args['module'] : undefined,
-        })) ?? { error: 'Search by meaning is off: no AI connection makes vectors' },
+          module:
+            typeof args['module'] === 'string' ? args['module'] : undefined,
+        })) ?? {
+          error: 'Search by meaning is off: no AI connection makes vectors',
+        },
     });
 
     // "Remember that…": a fact kept between conversations, in every prompt from then on.
@@ -390,17 +464,21 @@ export class CoreAiTools implements OnModuleInit {
         '"call me Roma"). One short sentence in the third person.',
       parameters: {
         type: 'object',
-        properties: { text: { type: 'string', description: 'The fact, one sentence' } },
+        properties: {
+          text: {type: 'string', description: 'The fact, one sentence'},
+        },
         required: ['text'],
       },
-      handler: (userId, args) => this.memories.add(userId, aiMemoryInputSchema.parse(args).text),
+      handler: (userId, args) =>
+        this.memories.add(userId, aiMemoryInputSchema.parse(args).text),
     });
     this.ai.registerTool({
       name: 'core_forget',
       module: 'ai',
       writes: true,
       undoTables: [aiMemories],
-      description: 'Forgets one remembered fact, by its id from the list in your instructions.',
+      description:
+        'Forgets one remembered fact, by its id from the list in your instructions.',
       parameters: idParameters('The id of the fact'),
       handler: async (userId, args) => {
         await this.memories.remove(userId, String(args['id']));
@@ -414,7 +492,12 @@ export class CoreAiTools implements OnModuleInit {
         throw new Error('There is no change of yours that can be undone');
       }
       const action = await this.actions.undoable(userId, id);
-      return { id, tool: action.tool, module: action.module, at: action.createdAt.toISOString() };
+      return {
+        id,
+        tool: action.tool,
+        module: action.module,
+        at: action.createdAt.toISOString(),
+      };
     };
     this.ai.registerTool({
       name: 'core_undo_last_change',
@@ -426,8 +509,8 @@ export class CoreAiTools implements OnModuleInit {
         'undo it, cancel it or put it back as it was. Refuses when the data was changed again ' +
         'since.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) => {
-        const { id } = await lastChange(userId);
+      handler: async userId => {
+        const {id} = await lastChange(userId);
         return this.ai.undoAction(userId, id);
       },
     });

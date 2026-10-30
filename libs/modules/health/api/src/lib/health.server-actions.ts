@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ServerActions } from '@pd/api-core';
-import { icdLoadSchema } from '@pd/contracts';
-import { IcdDictionaryService } from './icd/icd-dictionary.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {ServerActions} from '@pd/api-core';
+import {icdLoadSchema} from '@pd/contracts';
+import {IcdDictionaryService} from './icd/icd-dictionary.service';
 
 /** Downloads from outside services run on the server (see ServerActions). */
 export const HEALTH_ACTIONS = {

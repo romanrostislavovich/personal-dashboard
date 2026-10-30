@@ -1,5 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database, OtherComputersService, ProjectsService, UsersService } from '@pd/api-core';
+import {Inject, Injectable} from '@nestjs/common';
+import {
+  DB,
+  Database,
+  OtherComputersService,
+  ProjectsService,
+  UsersService,
+} from '@pd/api-core';
 import {
   ActivityApp,
   ActivityAppUpdate,
@@ -23,7 +29,7 @@ import {
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gt, gte, inArray, lt, SQL, sql } from 'drizzle-orm';
+import {and, asc, desc, eq, gt, gte, inArray, lt, SQL, sql} from 'drizzle-orm';
 import {
   ActivityRecords,
   appsOfCategories,
@@ -50,8 +56,8 @@ import {
   timeByClock,
   withOtherComputers,
 } from './other-computers';
-import { dayBounds, secondsByDay, spanOf, TimeSpan } from './time-spans';
-import { MAX_VISIT_SECONDS } from './visit-length';
+import {dayBounds, secondsByDay, spanOf, TimeSpan} from './time-spans';
+import {MAX_VISIT_SECONDS} from './visit-length';
 
 const DEFAULT_SETTINGS: ActivitySettings = {
   idleMinutes: 5,
@@ -109,13 +115,18 @@ export class ActivityService {
   // --- What a tracker does ---
 
   /** Saves the spans of a device; excluded programs and what was already sent are skipped. */
-  async ingest(device: ActivityDeviceRow, spans: ActivitySpanInput[]): Promise<number> {
+  async ingest(
+    device: ActivityDeviceRow,
+    spans: ActivitySpanInput[],
+  ): Promise<number> {
     const excluded = new Set((await this.config(device.userId)).excludedApps);
-    const rows = spans.flatMap((span) => {
+    const rows = spans.flatMap(span => {
       const app = span.app.trim().toLowerCase();
       const startedAt = new Date(span.startedAt);
       const endedAt = new Date(span.endedAt);
-      const seconds = Math.round((endedAt.getTime() - startedAt.getTime()) / 1000);
+      const seconds = Math.round(
+        (endedAt.getTime() - startedAt.getTime()) / 1000,
+      );
       if (excluded.has(app) || seconds < 1 || seconds > MAX_SPAN_SECONDS) {
         return [];
       }
@@ -138,7 +149,7 @@ export class ActivityService {
         .insert(activitySpans)
         .values(rows.slice(i, i + INSERT_CHUNK))
         .onConflictDoNothing()
-        .returning({ id: activitySpans.id });
+        .returning({id: activitySpans.id});
       saved += inserted.length;
     }
     return saved;
@@ -160,7 +171,7 @@ export class ActivityService {
     const settings = await this.settings(userId);
     return {
       idleMinutes: settings.idleMinutes,
-      excludedApps: apps.filter((row) => row.excluded).map((row) => row.app),
+      excludedApps: apps.filter(row => row.excluded).map(row => row.app),
       watchApps: watchedApps(apps),
       breakMinutes: settings.breakMinutes,
       focus: {
@@ -201,12 +212,15 @@ export class ActivityService {
   }
 
   /** Only the fields sent change. */
-  async saveSettings(userId: string, update: ActivitySettingsUpdate): Promise<void> {
-    const settings = { ...(await this.settings(userId)), ...update };
+  async saveSettings(
+    userId: string,
+    update: ActivitySettingsUpdate,
+  ): Promise<void> {
+    const settings = {...(await this.settings(userId)), ...update};
     await this.db
       .insert(activitySettings)
-      .values({ userId, ...settings })
-      .onConflictDoUpdate({ target: activitySettings.userId, set: settings });
+      .values({userId, ...settings})
+      .onConflictDoUpdate({target: activitySettings.userId, set: settings});
   }
 
   // --- Programs ---
@@ -214,14 +228,22 @@ export class ActivityService {
   /** Every program seen or configured, with its category and whether it is recorded. */
   async apps(userId: string): Promise<ActivityApp[]> {
     const seen = await this.db
-      .select({ app: activitySpans.app, name: sql<string>`max(${activitySpans.appName})` })
+      .select({
+        app: activitySpans.app,
+        name: sql<string>`max(${activitySpans.appName})`,
+      })
       .from(activitySpans)
       .where(eq(activitySpans.userId, userId))
       .groupBy(activitySpans.app);
-    const chosen = await this.db.select().from(activityApps).where(eq(activityApps.userId, userId));
-    const categories = new Map(chosen.map((row) => [row.app, row.category]));
-    const excluded = new Set(chosen.filter((row) => row.excluded).map((row) => row.app));
-    const names = new Map(seen.map((row) => [row.app, row.name]));
+    const chosen = await this.db
+      .select()
+      .from(activityApps)
+      .where(eq(activityApps.userId, userId));
+    const categories = new Map(chosen.map(row => [row.app, row.category]));
+    const excluded = new Set(
+      chosen.filter(row => row.excluded).map(row => row.app),
+    );
+    const names = new Map(seen.map(row => [row.app, row.name]));
     // An excluded program has no spans any more, but stays in the list to be let back in.
     for (const row of chosen) {
       if (!names.has(row.app)) {
@@ -242,16 +264,25 @@ export class ActivityService {
    * Gives a program a category, or stops recording it. Excluding deletes what was recorded:
    * "do not record" means there is no trace of it.
    */
-  async updateApp(userId: string, app: string, update: ActivityAppUpdate): Promise<void> {
+  async updateApp(
+    userId: string,
+    app: string,
+    update: ActivityAppUpdate,
+  ): Promise<void> {
     const key = app.trim().toLowerCase();
     await this.db
       .insert(activityApps)
-      .values({ userId, app: key, ...update })
-      .onConflictDoUpdate({ target: [activityApps.userId, activityApps.app], set: update });
+      .values({userId, app: key, ...update})
+      .onConflictDoUpdate({
+        target: [activityApps.userId, activityApps.app],
+        set: update,
+      });
     if (update.excluded) {
       await this.db
         .delete(activitySpans)
-        .where(and(eq(activitySpans.userId, userId), eq(activitySpans.app, key)));
+        .where(
+          and(eq(activitySpans.userId, userId), eq(activitySpans.app, key)),
+        );
     }
   }
 
@@ -269,19 +300,27 @@ export class ActivityService {
       .orderBy(asc(activityProjectRules.pattern));
   }
 
-  async addRule(userId: string, input: ActivityProjectRuleInput): Promise<void> {
+  async addRule(
+    userId: string,
+    input: ActivityProjectRuleInput,
+  ): Promise<void> {
     // A rule may only point at the user's own project.
     await this.projectsService.assertOwned(userId, input.projectId);
     await this.db
       .insert(activityProjectRules)
-      .values({ userId, ...input })
+      .values({userId, ...input})
       .onConflictDoNothing();
   }
 
   async removeRule(userId: string, id: string): Promise<void> {
     await this.db
       .delete(activityProjectRules)
-      .where(and(eq(activityProjectRules.id, id), eq(activityProjectRules.userId, userId)));
+      .where(
+        and(
+          eq(activityProjectRules.id, id),
+          eq(activityProjectRules.userId, userId),
+        ),
+      );
   }
 
   // --- What the section shows ---
@@ -307,7 +346,7 @@ export class ActivityService {
       .groupBy(sql`1`, s.deviceId, s.app, s.title);
 
     const devices = await this.db
-      .select({ id: activityDevices.id, name: activityDevices.name })
+      .select({id: activityDevices.id, name: activityDevices.name})
       .from(activityDevices)
       .where(eq(activityDevices.userId, userId));
     const stats = buildStats(rows, period, {
@@ -327,7 +366,10 @@ export class ActivityService {
     const trackedGames = new Map<LocalDate, number>();
     for (const row of rows) {
       if (categoryOf(row.app, chosen, row.title) === 'games') {
-        trackedGames.set(row.day, (trackedGames.get(row.day) ?? 0) + row.seconds);
+        trackedGames.set(
+          row.day,
+          (trackedGames.get(row.day) ?? 0) + row.seconds,
+        );
       }
     }
     return withOtherComputers(
@@ -346,7 +388,7 @@ export class ActivityService {
   async dayBounds(
     userId: string,
     period: ActivityPeriod,
-  ): Promise<{ day: LocalDate; first: number; last: number }[]> {
+  ): Promise<{day: LocalDate; first: number; last: number}[]> {
     const timeZone = await this.timeZone(userId);
     const s = activitySpans;
     type Moment = typeof s.startedAt | typeof s.endedAt;
@@ -367,7 +409,10 @@ export class ActivityService {
   }
 
   /** Time per window title since a moment, lower case — to find what a title names. */
-  async titleSeconds(userId: string, since: Date): Promise<{ title: string; seconds: number }[]> {
+  async titleSeconds(
+    userId: string,
+    since: Date,
+  ): Promise<{title: string; seconds: number}[]> {
     const s = activitySpans;
     return this.db
       .select({
@@ -375,7 +420,13 @@ export class ActivityService {
         seconds: sql<number>`sum(${s.seconds})::int`,
       })
       .from(s)
-      .where(and(eq(s.userId, userId), gte(s.startedAt, since), sql`${s.title} <> ''`))
+      .where(
+        and(
+          eq(s.userId, userId),
+          gte(s.startedAt, since),
+          sql`${s.title} <> ''`,
+        ),
+      )
       .groupBy(sql`1`);
   }
 
@@ -386,7 +437,7 @@ export class ActivityService {
   async gamesByDay(
     userId: string,
     period: ActivityPeriod,
-    { late = false } = {},
+    {late = false} = {},
   ): Promise<Map<LocalDate, number>> {
     const timeZone = await this.timeZone(userId);
     const s = activitySpans;
@@ -395,7 +446,7 @@ export class ActivityService {
       ? sql<LocalDate>`to_char(${local} - interval '4 hours', 'YYYY-MM-DD')`
       : sql<LocalDate>`to_char(${local}, 'YYYY-MM-DD')`;
     const rows = await this.db
-      .select({ day, app: s.app, seconds: sql<number>`sum(${s.seconds})::int` })
+      .select({day, app: s.app, seconds: sql<number>`sum(${s.seconds})::int`})
       .from(s)
       .where(
         and(
@@ -420,12 +471,20 @@ export class ActivityService {
    * The computers other services know (a work laptop in WakaTime) over a period, each with
    * whether its time is added to the time at the computer — for the settings.
    */
-  async otherComputers(userId: string, period: ActivityPeriod): Promise<ActivityOtherComputer[]> {
+  async otherComputers(
+    userId: string,
+    period: ActivityPeriod,
+  ): Promise<ActivityOtherComputer[]> {
     const devices = await this.db
-      .select({ name: activityDevices.name })
+      .select({name: activityDevices.name})
       .from(activityDevices)
       .where(eq(activityDevices.userId, userId));
-    const times = await this.otherTimes(userId, period, await this.timeZone(userId), devices);
+    const times = await this.otherTimes(
+      userId,
+      period,
+      await this.timeZone(userId),
+      devices,
+    );
     return this.computersOf(userId, times, devices);
   }
 
@@ -439,21 +498,24 @@ export class ActivityService {
     userId: string,
     period: ActivityPeriod,
     timeZone: string,
-    devices: { name: string }[],
+    devices: {name: string}[],
   ): Promise<OtherComputerTime[]> {
     const byDay = await this.others.days(userId, period.from, period.to);
     const bounds = dayBounds(period, timeZone);
     const from = new Date(bounds[0].start);
     const to = new Date(bounds[bounds.length - 1].end);
-    const keyOf = (item: { source: string; computer: string }) =>
+    const keyOf = (item: {source: string; computer: string}) =>
       `${item.source}:${item.computer.toLowerCase()}`;
     // Only the computers that count: the tracker's own computers are already in its time.
     const counted = new Set(
       (await this.computersOf(userId, byDay, devices))
-        .filter((computer) => computer.counted)
+        .filter(computer => computer.counted)
         .map(keyOf),
     );
-    const computers = new Map<string, { computer: string; source: string; spans: TimeSpan[] }>();
+    const computers = new Map<
+      string,
+      {computer: string; source: string; spans: TimeSpan[]}
+    >();
     for (const span of await this.others.spans(userId, from, to)) {
       if (!counted.has(keyOf(span))) {
         continue;
@@ -468,7 +530,7 @@ export class ActivityService {
     }
     const v = activitySiteVisits;
     const visits = await this.db
-      .select({ startedAt: v.startedAt, endedAt: v.endedAt })
+      .select({startedAt: v.startedAt, endedAt: v.endedAt})
       .from(v)
       .where(
         and(
@@ -483,7 +545,7 @@ export class ActivityService {
       return byDay;
     }
     const others = [
-      ...[...computers.values()].flatMap((item) => item.spans),
+      ...[...computers.values()].flatMap(item => item.spans),
       ...visits.map(spanOf),
     ];
     const tracker = await this.trackerSpans(userId, period, timeZone, [
@@ -497,11 +559,14 @@ export class ActivityService {
     });
     // A computer-day known by the clock is not counted by its total as well.
     const byClock = new Set(
-      [...computers.entries()].flatMap(([key, { spans }]) =>
-        [...secondsByDay(spans, bounds).keys()].map((day) => `${key}|${day}`),
+      [...computers.entries()].flatMap(([key, {spans}]) =>
+        [...secondsByDay(spans, bounds).keys()].map(day => `${key}|${day}`),
       ),
     );
-    return [...byDay.filter((time) => !byClock.has(`${keyOf(time)}|${time.day}`)), ...clock];
+    return [
+      ...byDay.filter(time => !byClock.has(`${keyOf(time)}|${time.day}`)),
+      ...clock,
+    ];
   }
 
   /**
@@ -520,7 +585,7 @@ export class ActivityService {
     const s = activitySpans;
     const day = sql<LocalDate>`to_char(${s.startedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`;
     const rows = await this.db
-      .select({ startedAt: s.startedAt, endedAt: s.endedAt })
+      .select({startedAt: s.startedAt, endedAt: s.endedAt})
       .from(s)
       .where(and(this.within(userId, period, timeZone), inArray(day, days)));
     return rows.map(spanOf);
@@ -529,29 +594,38 @@ export class ActivityService {
   private async computersOf(
     userId: string,
     times: OtherComputerTime[],
-    devices: { name: string }[],
+    devices: {name: string}[],
   ): Promise<ActivityOtherComputer[]> {
     if (!times.length) {
       return [];
     }
-    const { skippedComputers } = await this.settings(userId);
+    const {skippedComputers} = await this.settings(userId);
     return otherComputers(
       times,
-      devices.map((device) => device.name),
+      devices.map(device => device.name),
       skippedComputers,
     );
   }
 
   /** What was in front, minute by minute, on one day — newest first. */
-  async timeline(userId: string, query: ActivityDayQuery): Promise<ActivityTimelineEntry[]> {
+  async timeline(
+    userId: string,
+    query: ActivityDayQuery,
+  ): Promise<ActivityTimelineEntry[]> {
     const timeZone = await this.timeZone(userId);
     const categories = await this.chosenCategories(userId);
     const rows = await this.db
       .select()
       .from(activitySpans)
-      .where(this.within(userId, { from: query.day, to: query.day, ...query }, timeZone))
+      .where(
+        this.within(
+          userId,
+          {from: query.day, to: query.day, ...query},
+          timeZone,
+        ),
+      )
       .orderBy(desc(activitySpans.startedAt));
-    return rows.map((row) => ({
+    return rows.map(row => ({
       startedAt: row.startedAt.toISOString(),
       endedAt: row.endedAt.toISOString(),
       app: row.app,
@@ -585,14 +659,16 @@ export class ActivityService {
       sql<number>`coalesce(sum(${s.seconds}) filter (where ${condition}), 0)::int`;
     // A project is recognized by its name and rules anywhere in the window title.
     const patterns = (await this.projectPatterns(userId))
-      .flatMap((project) => project.patterns)
-      .map((pattern) => pattern.trim())
-      .filter((pattern) => pattern.length >= 2)
-      .map((pattern) => `%${pattern.replace(/[\\%_]/g, '\\$&')}%`);
+      .flatMap(project => project.patterns)
+      .map(pattern => pattern.trim())
+      .filter(pattern => pattern.length >= 2)
+      .map(pattern => `%${pattern.replace(/[\\%_]/g, '\\$&')}%`);
     const [times] = await this.db
       .select({
         night: sum(sql`${hour} < ${NIGHT_ENDS_AT}`),
-        early: sum(sql`${hour} >= ${NIGHT_ENDS_AT} and ${hour} < ${MORNING_ENDS_AT}`),
+        early: sum(
+          sql`${hour} >= ${NIGHT_ENDS_AT} and ${hour} < ${MORNING_ENDS_AT}`,
+        ),
         weekend: sum(sql`extract(isodow from ${local}) >= 6`),
         projects: patterns.length
           ? sum(sql`${s.title} ilike any (${sql.param(patterns)}::text[])`)
@@ -600,7 +676,10 @@ export class ActivityService {
       })
       .from(s)
       .where(eq(s.userId, userId));
-    const devices = await this.db.$count(activityDevices, eq(activityDevices.userId, userId));
+    const devices = await this.db.$count(
+      activityDevices,
+      eq(activityDevices.userId, userId),
+    );
     const chosen = await this.chosenCategories(userId);
     const records = buildRecords(rows, chosen);
     // The totals are what the overview shows: with the computers and the games other services
@@ -608,7 +687,10 @@ export class ActivityService {
     const other = await this.otherAllTime(userId, rows, chosen);
     for (const [category, seconds] of other) {
       records.totalSeconds += seconds;
-      records.byCategory.set(category, (records.byCategory.get(category) ?? 0) + seconds);
+      records.byCategory.set(
+        category,
+        (records.byCategory.get(category) ?? 0) + seconds,
+      );
     }
 
     return {
@@ -627,31 +709,44 @@ export class ActivityService {
    */
   private async otherAllTime(
     userId: string,
-    rows: { day: LocalDate; app: string; seconds: number }[],
+    rows: {day: LocalDate; app: string; seconds: number}[],
     chosen: ReadonlyMap<string, ActivityCategory | null>,
-  ): Promise<Map<NonNullable<OtherComputerTime['category']> | 'development', number>> {
-    const added = new Map<NonNullable<OtherComputerTime['category']> | 'development', number>();
-    const times = await this.others.days(userId, EVER_SINCE, await this.today(userId));
+  ): Promise<
+    Map<NonNullable<OtherComputerTime['category']> | 'development', number>
+  > {
+    const added = new Map<
+      NonNullable<OtherComputerTime['category']> | 'development',
+      number
+    >();
+    const times = await this.others.days(
+      userId,
+      EVER_SINCE,
+      await this.today(userId),
+    );
     if (!times.length) {
       return added;
     }
     const names = await this.db
-      .select({ name: activityDevices.name })
+      .select({name: activityDevices.name})
       .from(activityDevices)
       .where(eq(activityDevices.userId, userId));
     const computers = await this.computersOf(userId, times, names);
-    const counted = times.filter((time) =>
+    const counted = times.filter(time =>
       computers.some(
-        (item) =>
+        item =>
           item.counted &&
           item.source === time.source &&
-          item.computer.trim().toLowerCase() === time.computer.trim().toLowerCase(),
+          item.computer.trim().toLowerCase() ===
+            time.computer.trim().toLowerCase(),
       ),
     );
     const trackedGames = new Map<LocalDate, number>();
     for (const row of rows) {
       if (categoryOf(row.app, chosen) === 'games') {
-        trackedGames.set(row.day, (trackedGames.get(row.day) ?? 0) + row.seconds);
+        trackedGames.set(
+          row.day,
+          (trackedGames.get(row.day) ?? 0) + row.seconds,
+        );
       }
     }
     for (const time of newTime(counted, trackedGames)) {
@@ -664,12 +759,12 @@ export class ActivityService {
   /** Seconds at the computer on the user's today — for the widget and the digest. */
   async todaySeconds(userId: string): Promise<number> {
     const today = await this.today(userId);
-    return (await this.stats(userId, { from: today, to: today })).totalSeconds;
+    return (await this.stats(userId, {from: today, to: today})).totalSeconds;
   }
 
   async today(userId: string): Promise<LocalDate> {
     const timeZone = await this.timeZone(userId);
-    return new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date());
+    return new Intl.DateTimeFormat('en-CA', {timeZone}).format(new Date());
   }
 
   /** The spans of a period of the user's own days, of one device or of all. */
@@ -677,30 +772,40 @@ export class ActivityService {
     const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
     return and(
       eq(activitySpans.userId, userId),
-      gte(activitySpans.startedAt, zonedToUtc({ date: period.from, time: '00:00' }, timeZone)),
-      lt(activitySpans.startedAt, zonedToUtc({ date: after, time: '00:00' }, timeZone)),
+      gte(
+        activitySpans.startedAt,
+        zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+      ),
+      lt(
+        activitySpans.startedAt,
+        zonedToUtc({date: after, time: '00:00'}, timeZone),
+      ),
       period.deviceId ? eq(activitySpans.deviceId, period.deviceId) : undefined,
     );
   }
 
-  async chosenCategories(userId: string): Promise<Map<string, ActivityCategory | null>> {
+  async chosenCategories(
+    userId: string,
+  ): Promise<Map<string, ActivityCategory | null>> {
     const rows = await this.db
-      .select({ app: activityApps.app, category: activityApps.category })
+      .select({app: activityApps.app, category: activityApps.category})
       .from(activityApps)
       .where(eq(activityApps.userId, userId));
-    return new Map(rows.map((row) => [row.app, row.category]));
+    return new Map(rows.map(row => [row.app, row.category]));
   }
 
   /** Each project is recognized by its own name and by the user's rules for it. */
   async projectPatterns(userId: string): Promise<ProjectPatterns[]> {
     const rules = await this.rules(userId);
-    return (await this.projectsService.list(userId)).map((project) => ({
+    return (await this.projectsService.list(userId)).map(project => ({
       projectId: project.id,
       name: project.name,
       patterns: [
         project.name,
         ...project.aliases,
-        ...rules.filter((rule) => rule.projectId === project.id).map((rule) => rule.pattern),
+        ...rules
+          .filter(rule => rule.projectId === project.id)
+          .map(rule => rule.pattern),
       ],
     }));
   }

@@ -1,4 +1,4 @@
-import { evaluate, features, predict, train } from './category-model';
+import {evaluate, features, predict, train} from './category-model';
 
 /** A made-up history: shops of a few kinds, several counterparties each. */
 const history = [
@@ -12,7 +12,7 @@ const history = [
     'CARREFOUR EXPRESS',
     'AUCHAN POLSKA',
   ].flatMap((shop, i) =>
-    [12, 48, 85].map((amount) => ({
+    [12, 48, 85].map(amount => ({
       counterparty: shop,
       text: `${shop} zakup kartą`,
       amount: amount + i,
@@ -29,7 +29,7 @@ const history = [
     'UBER TRIP',
     'FREENOW',
   ].flatMap((shop, i) =>
-    [18, 160, 240].map((amount) => ({
+    [18, 160, 240].map(amount => ({
       counterparty: shop,
       text: `${shop} paliwo przejazd`,
       amount: amount + i,
@@ -45,8 +45,8 @@ const history = [
     'DISNEY PLUS',
     'GOOGLE ONE',
     'ICLOUD STORAGE',
-  ].flatMap((shop) =>
-    [15, 15, 15].map((amount) => ({
+  ].flatMap(shop =>
+    [15, 15, 15].map(amount => ({
       counterparty: shop,
       text: `${shop} subscription`,
       amount,
@@ -68,7 +68,9 @@ describe('the category model', () => {
     const [best] = predict(model, 'LIDL KRAKÓW zakup kartą', 40);
     expect(best.category).toBe('Groceries');
     expect(best.probability).toBeGreaterThan(0.8);
-    expect(predict(model, 'ORLEN STACJA 999 paliwo', 200)[0].category).toBe('Transport');
+    expect(predict(model, 'ORLEN STACJA 999 paliwo', 200)[0].category).toBe(
+      'Transport',
+    );
   });
 
   it('is measured on counterparties it never saw', () => {

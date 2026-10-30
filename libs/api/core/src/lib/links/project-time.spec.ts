@@ -1,5 +1,5 @@
-import { ProjectFact } from '@pd/contracts';
-import { withCodingAtComputer } from './project-time';
+import {ProjectFact} from '@pd/contracts';
+import {withCodingAtComputer} from './project-time';
 
 const HOUR = 3600;
 const time = (
@@ -11,7 +11,7 @@ const time = (
   value: (days ?? []).reduce((sum, [, hours]) => sum + hours * HOUR, 0),
   unit: 'seconds',
   metric,
-  days: days?.map(([day, hours]) => ({ day, seconds: hours * HOUR })),
+  days: days?.map(([day, hours]) => ({day, seconds: hours * HOUR})),
 });
 
 describe('withCodingAtComputer', () => {
@@ -28,7 +28,7 @@ describe('withCodingAtComputer', () => {
       ]),
     ]);
     // 5 + max(1, 4) + 3: the first day the tracker saw more, the others the IDE.
-    expect(facts[0]).toMatchObject({ value: 12 * HOUR, fromCoding: 6 * HOUR });
+    expect(facts[0]).toMatchObject({value: 12 * HOUR, fromCoding: 6 * HOUR});
     expect(facts[1].value).toBe(9 * HOUR);
   });
 

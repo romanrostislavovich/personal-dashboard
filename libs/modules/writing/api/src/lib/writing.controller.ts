@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, HttpCode, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Post,
+  Put,
+} from '@nestjs/common';
 import {
   AuthUser,
   CurrentUser,
@@ -23,7 +31,7 @@ import {
   WritingSettingsUpdate,
   writingSettingsUpdateSchema,
 } from '@pd/contracts';
-import { WritingService } from './writing.service';
+import {WritingService} from './writing.service';
 
 /**
  * `/api/writing`: the check as one types (the page, the browser extension, the desktop app),
@@ -41,7 +49,8 @@ export class WritingController {
   @HttpCode(204)
   async setLanguageTool(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(languageToolInputSchema)) input: LanguageToolInput,
+    @Body(new ZodValidationPipe(languageToolInputSchema))
+    input: LanguageToolInput,
   ): Promise<void> {
     await this.keys.assertOwner(user.id);
     await this.writing.setLanguageTool(input.url);
@@ -62,7 +71,8 @@ export class WritingController {
   @Put('settings')
   saveSettings(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(writingSettingsUpdateSchema)) update: WritingSettingsUpdate,
+    @Body(new ZodValidationPipe(writingSettingsUpdateSchema))
+    update: WritingSettingsUpdate,
   ): Promise<WritingConfig> {
     return this.writing.saveSettings(user.id, update);
   }
@@ -103,8 +113,9 @@ export class WritingController {
   @RateLimit(30, 60)
   async rewrite(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(writingRewriteSchema)) input: WritingRewriteInput,
+    @Body(new ZodValidationPipe(writingRewriteSchema))
+    input: WritingRewriteInput,
   ): Promise<WritingRewrite> {
-    return { text: await this.writing.rewrite(user.id, input) };
+    return {text: await this.writing.rewrite(user.id, input)};
   }
 }

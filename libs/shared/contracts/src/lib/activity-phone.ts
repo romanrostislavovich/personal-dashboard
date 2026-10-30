@@ -1,10 +1,10 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 // How the phone is used (the Android app, stage 2 of docs/proposals/mobile-app.md): how often it
 // is picked up, and how long it is looked at late at night.
 
-const moment = z.iso.datetime({ offset: true });
+const moment = z.iso.datetime({offset: true});
 const LOCAL_DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 /** The moments the phone was unlocked, as Android tells them. */
@@ -13,7 +13,10 @@ export const phoneUnlockIngestSchema = z.object({
 });
 export type PhoneUnlockIngest = z.infer<typeof phoneUnlockIngestSchema>;
 
-export const phoneUsageQuerySchema = z.object({ from: LOCAL_DATE, to: LOCAL_DATE });
+export const phoneUsageQuerySchema = z.object({
+  from: LOCAL_DATE,
+  to: LOCAL_DATE,
+});
 export type PhoneUsageQuery = z.infer<typeof phoneUsageQuerySchema>;
 
 /**
@@ -124,7 +127,10 @@ export interface PhoneSignalsDay {
 
 const appName = z.string().trim().max(200);
 /** An app of the phone as the security report names it: its package and its label. */
-const securityApp = z.object({ package: z.string().trim().min(1).max(200), name: appName });
+const securityApp = z.object({
+  package: z.string().trim().min(1).max(200),
+  name: appName,
+});
 
 /**
  * What the phone tells about its own safety once a day (Security → Phone): the system and its
@@ -155,10 +161,12 @@ export const phoneSecuritySchema = z.object({
   /** Apps allowed to install other apps ("unknown sources"), the dashboard itself left out. */
   installers: z.array(securityApp).max(100),
   /** Apps installed by something other than Google Play (and not with the system). */
-  notFromPlay: z.array(securityApp.extend({ installer: z.string().max(200).nullable() })).max(300),
+  notFromPlay: z
+    .array(securityApp.extend({installer: z.string().max(200).nullable()}))
+    .max(300),
   /** Certificate authorities added by the user: they can read the phone's HTTPS. */
   userCertificates: z.array(z.string().max(300)).max(50),
-  wifi: z.object({ name: z.string().max(100), open: z.boolean() }).nullable(),
+  wifi: z.object({name: z.string().max(100), open: z.boolean()}).nullable(),
   vpn: z.boolean(),
 });
 export type PhoneSecurity = z.infer<typeof phoneSecuritySchema>;

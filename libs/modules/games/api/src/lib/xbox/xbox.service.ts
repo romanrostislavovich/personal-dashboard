@@ -1,8 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { SecretsService, UsersService } from '@pd/api-core';
-import { XboxGame, XboxSummary } from '@pd/contracts';
-import { GameAccountRow } from '../games.schema';
-import { OpenXblClient, OpenXblKeyError, XboxProfile } from './openxbl.client';
+import {BadRequestException, Injectable} from '@nestjs/common';
+import {SecretsService, UsersService} from '@pd/api-core';
+import {XboxGame, XboxSummary} from '@pd/contracts';
+import {GameAccountRow} from '../games.schema';
+import {OpenXblClient, OpenXblKeyError, XboxProfile} from './openxbl.client';
 
 const KEY_SECRET = 'games.openxbl-key';
 
@@ -48,9 +48,11 @@ export class XboxService {
   }
 
   /** The account of the key: its Xbox user id and gamertag, before the first sync. */
-  async identify(userId: string): Promise<{ externalId: string; displayName: string }> {
+  async identify(
+    userId: string,
+  ): Promise<{externalId: string; displayName: string}> {
     const profile = await (await this.client(userId)).profile();
-    return { externalId: profile.xuid, displayName: profile.gamertag };
+    return {externalId: profile.xuid, displayName: profile.gamertag};
   }
 
   async sync(account: GameAccountRow): Promise<XboxStored> {
@@ -60,8 +62,8 @@ export class XboxService {
       // A key of another Xbox account was saved since: this account cannot be read with it.
       throw new Error('The OpenXBL key is of another Xbox account');
     }
-    const { games, shapes } = await client.games(profile.xuid);
-    return { ...profile, games, ...(shapes.length ? { noGames: shapes } : {}) };
+    const {games, shapes} = await client.games(profile.xuid);
+    return {...profile, games, ...(shapes.length ? {noGames: shapes} : {})};
   }
 
   summary(account: GameAccountRow): XboxSummary | null {
@@ -91,8 +93,13 @@ export class XboxService {
   private async client(userId: string): Promise<OpenXblClient> {
     const key = await this.secrets.get(userId, KEY_SECRET);
     if (!key) {
-      throw new BadRequestException('No OpenXBL key: set it in Settings → Integrations');
+      throw new BadRequestException(
+        'No OpenXBL key: set it in Settings → Integrations',
+      );
     }
-    return new OpenXblClient(key, (await this.users.findById(userId))?.locale ?? 'en');
+    return new OpenXblClient(
+      key,
+      (await this.users.findById(userId))?.locale ?? 'en',
+    );
   }
 }

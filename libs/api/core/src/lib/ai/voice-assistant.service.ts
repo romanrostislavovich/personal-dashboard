@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { VoiceAnswer } from '@pd/contracts';
-import { coreMessages } from '../i18n/core.messages';
-import { UsersService } from '../users/users.service';
-import { AiConnectionsService } from './ai-connections.service';
-import { AiConversationsService } from './ai-conversations.service';
-import { AiLimitException, AiService } from './ai.service';
-import { AudioFile, transcribe } from './openai-compatible.client';
+import {Injectable, Logger} from '@nestjs/common';
+import {VoiceAnswer} from '@pd/contracts';
+import {coreMessages} from '../i18n/core.messages';
+import {UsersService} from '../users/users.service';
+import {AiConnectionsService} from './ai-connections.service';
+import {AiConversationsService} from './ai-conversations.service';
+import {AiLimitException, AiService} from './ai.service';
+import {AudioFile, transcribe} from './openai-compatible.client';
 
 /** A sentence for the speech synthesizer: the emoji of the chat texts are not said. */
 function spoken(text: string): string {
@@ -57,10 +57,10 @@ export class VoiceAssistantService {
       return fail(messages.voiceEmpty);
     }
     try {
-      const { reply, awaitsConfirmation } = await this.conversations.ask(
+      const {reply, awaitsConfirmation} = await this.conversations.ask(
         userId,
-        { content: question },
-        { plainText: true, spoken: true, allowWrites: true },
+        {content: question},
+        {plainText: true, spoken: true, allowWrites: true},
       );
       return {
         ok: true,
@@ -74,7 +74,7 @@ export class VoiceAssistantService {
         error instanceof AiLimitException
           ? messages.assistantLimit(error.connectionName)
           : messages.assistantFailed;
-      return { ...fail(text), question };
+      return {...fail(text), question};
     }
   }
 }

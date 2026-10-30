@@ -1,12 +1,26 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { AutomationCatalog, AutomationParamDef, AutomationRuleInput } from '@pd/contracts';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {
+  AutomationCatalog,
+  AutomationParamDef,
+  AutomationRuleInput,
+} from '@pd/contracts';
 
 export interface AutomationRuleData {
   catalog: AutomationCatalog;
@@ -32,7 +46,12 @@ export interface AutomationRuleData {
     <mat-dialog-content class="form">
       <mat-form-field>
         <mat-label>{{ 'core.automations.name' | transloco }}</mat-label>
-        <input matInput [ngModel]="name()" (ngModelChange)="name.set($event)" maxlength="100" />
+        <input
+          matInput
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+          maxlength="100"
+        />
       </mat-form-field>
 
       <h3>{{ 'core.automations.when' | transloco }}</h3>
@@ -41,7 +60,8 @@ export interface AutomationRuleData {
         <mat-select [ngModel]="trigger()" (ngModelChange)="pickTrigger($event)">
           @for (item of data.catalog.triggers; track item.id) {
             <mat-option [value]="item.id">
-              {{ moduleKey(item.module) | transloco }} · {{ item.labelKey | transloco }}
+              {{ moduleKey(item.module) | transloco }} ·
+              {{ item.labelKey | transloco }}
             </mat-option>
           }
         </mat-select>
@@ -55,7 +75,9 @@ export interface AutomationRuleData {
               (ngModelChange)="setTrigger(param.name, $event)"
             >
               @for (option of param.options ?? []; track option.value) {
-                <mat-option [value]="option.value">{{ option.labelKey | transloco }}</mat-option>
+                <mat-option [value]="option.value">{{
+                  option.labelKey | transloco
+                }}</mat-option>
               }
             </mat-select>
           } @else {
@@ -75,7 +97,8 @@ export interface AutomationRuleData {
         <mat-select [ngModel]="action()" (ngModelChange)="pickAction($event)">
           @for (item of data.catalog.actions; track item.id) {
             <mat-option [value]="item.id">
-              {{ moduleKey(item.module) | transloco }} · {{ item.labelKey | transloco }}
+              {{ moduleKey(item.module) | transloco }} ·
+              {{ item.labelKey | transloco }}
             </mat-option>
           }
         </mat-select>
@@ -90,7 +113,9 @@ export interface AutomationRuleData {
                 (ngModelChange)="setAction(param.name, $event)"
               >
                 @for (option of param.options ?? []; track option.value) {
-                  <mat-option [value]="option.value">{{ option.labelKey | transloco }}</mat-option>
+                  <mat-option [value]="option.value">{{
+                    option.labelKey | transloco
+                  }}</mat-option>
                 }
               </mat-select>
             }
@@ -105,14 +130,19 @@ export interface AutomationRuleData {
           }
           @if (param.template && variables()) {
             <!-- Not through transloco: it would take {{site}} for its own placeholder. -->
-            <mat-hint>{{ 'core.automations.variables' | transloco }} {{ variables() }}</mat-hint>
+            <mat-hint
+              >{{ 'core.automations.variables' | transloco }}
+              {{ variables() }}</mat-hint
+            >
           }
         </mat-form-field>
       }
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button matButton mat-dialog-close>{{ 'core.actions.cancel' | transloco }}</button>
+      <button matButton mat-dialog-close>
+        {{ 'core.actions.cancel' | transloco }}
+      </button>
       <button matButton="filled" [disabled]="!valid()" (click)="save()">
         {{ 'core.actions.save' | transloco }}
       </button>
@@ -132,7 +162,9 @@ export interface AutomationRuleData {
 })
 export class AutomationRuleDialog {
   protected readonly data = inject<AutomationRuleData>(MAT_DIALOG_DATA);
-  private readonly dialogRef = inject(MatDialogRef<AutomationRuleDialog, AutomationRuleInput>);
+  private readonly dialogRef = inject(
+    MatDialogRef<AutomationRuleDialog, AutomationRuleInput>,
+  );
 
   protected readonly name = signal(this.data.rule?.name ?? '');
   protected readonly trigger = signal(this.data.rule?.trigger ?? '');
@@ -145,19 +177,23 @@ export class AutomationRuleDialog {
   });
 
   protected readonly triggerDef = computed(() =>
-    this.data.catalog.triggers.find((item) => item.id === this.trigger()),
+    this.data.catalog.triggers.find(item => item.id === this.trigger()),
   );
   protected readonly actionDef = computed(() =>
-    this.data.catalog.actions.find((item) => item.id === this.action()),
+    this.data.catalog.actions.find(item => item.id === this.action()),
   );
   protected readonly variables = computed(() =>
-    ['rule', ...(this.triggerDef()?.variables ?? [])].map((name) => `{{${name}}}`).join(', '),
+    ['rule', ...(this.triggerDef()?.variables ?? [])]
+      .map(name => `{{${name}}}`)
+      .join(', '),
   );
   protected readonly valid = computed(() => {
     const trigger = this.triggerDef();
     const action = this.actionDef();
-    const filled = (defs: AutomationParamDef[], values: Record<string, string>) =>
-      defs.every((def) => !def.required || (values[def.name] ?? '').trim());
+    const filled = (
+      defs: AutomationParamDef[],
+      values: Record<string, string>,
+    ) => defs.every(def => !def.required || (values[def.name] ?? '').trim());
     return (
       !!this.name().trim() &&
       !!trigger &&
@@ -173,7 +209,11 @@ export class AutomationRuleDialog {
   }
 
   protected inputType(param: AutomationParamDef): string {
-    return param.type === 'number' ? 'number' : param.type === 'time' ? 'time' : 'text';
+    return param.type === 'number'
+      ? 'number'
+      : param.type === 'time'
+        ? 'time'
+        : 'text';
   }
 
   protected pickTrigger(id: string): void {
@@ -187,17 +227,25 @@ export class AutomationRuleDialog {
   }
 
   protected setTrigger(name: string, value: string | number): void {
-    this.triggerParams.update((params) => ({ ...params, [name]: String(value ?? '') }));
+    this.triggerParams.update(params => ({
+      ...params,
+      [name]: String(value ?? ''),
+    }));
   }
 
   protected setAction(name: string, value: string | number): void {
-    this.actionParams.update((params) => ({ ...params, [name]: String(value ?? '') }));
+    this.actionParams.update(params => ({
+      ...params,
+      [name]: String(value ?? ''),
+    }));
   }
 
   protected save(): void {
     // Empty optional fields are left out: the server checks only what is there.
     const clean = (values: Record<string, string>) =>
-      Object.fromEntries(Object.entries(values).filter(([, value]) => value.trim() !== ''));
+      Object.fromEntries(
+        Object.entries(values).filter(([, value]) => value.trim() !== ''),
+      );
     this.dialogRef.close({
       name: this.name().trim(),
       trigger: this.trigger(),

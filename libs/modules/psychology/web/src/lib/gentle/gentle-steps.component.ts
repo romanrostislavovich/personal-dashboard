@@ -1,12 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { GentleStep } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { PsychologyApi } from '../psychology.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {GentleStep} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {PsychologyApi} from '../psychology.api';
 
 /**
  * One's own library of small steps, made on a better day for a hard one: each with an
@@ -15,7 +20,13 @@ import { PsychologyApi } from '../psychology.api';
 @Component({
   selector: 'pd-gentle-steps',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, TranslocoPipe],
+  imports: [
+    MatButtonModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    TranslocoPipe,
+  ],
   template: `
     <p class="hint">{{ 'psychology.gentle.libraryAbout' | transloco }}</p>
     <div class="form">
@@ -36,14 +47,20 @@ import { PsychologyApi } from '../psychology.api';
           [value]="smaller()"
           (input)="smaller.set($any($event.target).value)"
         />
-        <mat-hint>{{ 'psychology.gentle.stepSmallerHint' | transloco }}</mat-hint>
+        <mat-hint>{{
+          'psychology.gentle.stepSmallerHint' | transloco
+        }}</mat-hint>
       </mat-form-field>
       <div class="row">
         @if (editing()) {
-          <button matButton (click)="cancel()">{{ 'core.actions.cancel' | transloco }}</button>
+          <button matButton (click)="cancel()">
+            {{ 'core.actions.cancel' | transloco }}
+          </button>
         }
         <button matButton="filled" [disabled]="!text().trim()" (click)="save()">
-          {{ (editing() ? 'core.actions.save' : 'core.actions.add') | transloco }}
+          {{
+            (editing() ? 'core.actions.save' : 'core.actions.add') | transloco
+          }}
         </button>
       </div>
     </div>
@@ -128,7 +145,7 @@ export class GentleStepsComponent {
   protected async save(): Promise<void> {
     await firstValueFrom(
       this.api.saveGentleStep(
-        { text: this.text().trim(), smaller: this.smaller().trim() || null },
+        {text: this.text().trim(), smaller: this.smaller().trim() || null},
         this.editing() ?? undefined,
       ),
     );

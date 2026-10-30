@@ -1,14 +1,27 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthClinic } from '@pd/contracts';
-import { HealthApi } from '../health.api';
-import { orNull } from '../health-labels';
-import { CountryFieldComponent } from './country-field.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {HealthClinic} from '@pd/contracts';
+import {HealthApi} from '../health.api';
+import {orNull} from '../health-labels';
+import {CountryFieldComponent} from './country-field.component';
 
 /** Adds or changes a clinic; closes with `true` once saved. */
 @Component({
@@ -42,17 +55,28 @@ import { CountryFieldComponent } from './country-field.component';
         </div>
         <mat-form-field>
           <mat-label>{{ 'health.contacts' | transloco }}</mat-label>
-          <textarea matInput rows="2" maxlength="1000" formControlName="contacts"></textarea>
+          <textarea
+            matInput
+            rows="2"
+            maxlength="1000"
+            formControlName="contacts"
+          ></textarea>
         </mat-form-field>
         @if (error()) {
-          <p class="error" role="alert">{{ 'health.errors.save' | transloco }}</p>
+          <p class="error" role="alert">
+            {{ 'health.errors.save' | transloco }}
+          </p>
         }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}
         </button>
-        <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+        <button
+          matButton="filled"
+          type="submit"
+          [disabled]="form.invalid || busy()"
+        >
           {{ 'core.actions.save' | transloco }}
         </button>
       </mat-dialog-actions>

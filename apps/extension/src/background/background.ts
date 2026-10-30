@@ -1,5 +1,5 @@
-import { ApiError, generatePassword, passwordStrength } from '@pd/client-core';
-import { WRITING_CHECK_MAX, WRITING_REWRITE_MAX } from '@pd/contracts';
+import {ApiError, generatePassword, passwordStrength} from '@pd/client-core';
+import {WRITING_CHECK_MAX, WRITING_REWRITE_MAX} from '@pd/contracts';
 import {
   ContentRequest,
   ERROR_CODES,
@@ -11,10 +11,10 @@ import {
   PopupState,
   Reply,
 } from '../shared/messages';
-import { matchesPage, siteName } from '../shared/site';
-import { telemetrySettingsSenderAllowed } from '../shared/telemetry-gates';
-import { completeSignIn, email, serverUrl, signIn, signOut } from './account';
-import { clearBadges, countLogins } from './badge';
+import {matchesPage, siteName} from '../shared/site';
+import {telemetrySettingsSenderAllowed} from '../shared/telemetry-gates';
+import {completeSignIn, email, serverUrl, signIn, signOut} from './account';
+import {clearBadges, countLogins} from './badge';
 import {
   dismissOffer,
   forgetNever,
@@ -25,9 +25,21 @@ import {
   offerFor,
   saveOffer,
 } from './capture';
-import { activeTab, fillLogin, fillNewPassword } from './fill';
-import { menuFill, menuFillText, menuGenerate, menuState, menuUnlock, openMenu } from './inline';
-import { checkForUpdate, scheduleSelfUpdate, UPDATE_ALARM, updateStatus } from './self-update';
+import {activeTab, fillLogin, fillNewPassword} from './fill';
+import {
+  menuFill,
+  menuFillText,
+  menuGenerate,
+  menuState,
+  menuUnlock,
+  openMenu,
+} from './inline';
+import {
+  checkForUpdate,
+  scheduleSelfUpdate,
+  UPDATE_ALARM,
+  updateStatus,
+} from './self-update';
 import {
   blockOf,
   guardNavigation,
@@ -62,13 +74,20 @@ import {
   startDevice,
   stopDevice,
 } from './device';
-import { accessTokensApi, aiApi } from '@pd/client-core';
-import { signedInClient } from './account';
-import { LOCK_ALARM, lock, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
-import { addWish, wishPopupState } from './wishlist';
-import { chatAttach } from './chat';
-import { fromWorkstatePanel } from './workstates';
-import { clearWorkstatePreview } from './workstate-state';
+import {accessTokensApi, aiApi} from '@pd/client-core';
+import {signedInClient} from './account';
+import {
+  LOCK_ALARM,
+  lock,
+  unlock,
+  vaultItem,
+  vaultItems,
+  vaultStatus,
+} from './vault';
+import {addWish, wishPopupState} from './wishlist';
+import {chatAttach} from './chat';
+import {fromWorkstatePanel} from './workstates';
+import {clearWorkstatePreview} from './workstate-state';
 import {
   excludeTelemetrySite,
   invalidateEngagement,
@@ -86,7 +105,7 @@ import {
  */
 
 // Session storage for the extension's own pages and this worker only — never content scripts.
-void chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
+void chrome.storage.session.setAccessLevel({accessLevel: 'TRUSTED_CONTEXTS'});
 
 // The browser as a device of the dashboard: its tools for the assistant while it is online.
 // Started whenever the worker starts; the link's own pings keep the worker awake.
@@ -103,29 +122,35 @@ chrome.storage.onChanged.addListener((changes, area) => {
       'server',
       'pd.user',
       'pd.refreshToken',
-    ].some((key) => key in changes)
+    ].some(key => key in changes)
   ) {
     clearWorkstatePreview();
   }
   if (
     area === 'local' &&
-    ['telemetryConsent', 'telemetryExcluded', 'neverSave', 'browserConfig', 'server'].some(
-      (key) => key in changes,
-    )
+    [
+      'telemetryConsent',
+      'telemetryExcluded',
+      'neverSave',
+      'browserConfig',
+      'server',
+    ].some(key => key in changes)
   ) {
     invalidateEngagement();
   }
 });
 
-chrome.runtime.onMessage.addListener((message, sender, reply: (answer: Reply<unknown>) => void) => {
-  route(message, sender).then(
-    (value) => reply({ ok: true, value }),
-    (error: unknown) => reply({ ok: false, error: errorCode(error) }),
-  );
-  return true; // The answer comes later.
-});
+chrome.runtime.onMessage.addListener(
+  (message, sender, reply: (answer: Reply<unknown>) => void) => {
+    route(message, sender).then(
+      value => reply({ok: true, value}),
+      (error: unknown) => reply({ok: false, error: errorCode(error)}),
+    );
+    return true; // The answer comes later.
+  },
+);
 
-chrome.alarms.onAlarm.addListener((alarm) => {
+chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === TELEMETRY_ALARM) {
     void uploadTelemetry().catch(() => undefined);
   } else if (alarm.name === LOCK_ALARM) {
@@ -155,7 +180,7 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 // The computer is locked: so is the vault. Away or back: the time on a site stops or goes on.
-chrome.idle.onStateChanged.addListener((state) => {
+chrome.idle.onStateChanged.addListener(state => {
   clearWorkstatePreview();
   invalidateEngagement();
   if (state === 'locked') {
@@ -178,23 +203,25 @@ chrome.windows.onFocusChanged.addListener(() => {
   deviceActive();
 });
 chrome.tabs.onUpdated.addListener((_tabId, change) => {
-  if (change.url !== undefined || change.status === 'loading') clearWorkstatePreview();
-  if (change.url !== undefined || change.status === 'loading') invalidateEngagement();
+  if (change.url !== undefined || change.status === 'loading')
+    clearWorkstatePreview();
+  if (change.url !== undefined || change.status === 'loading')
+    invalidateEngagement();
   if (change.url !== undefined || change.audible !== undefined) {
     void noteFront();
   }
 });
 
 // A page of a site kept closed (a focus session, a spent limit): the extension's page instead.
-chrome.webNavigation.onCommitted.addListener((details) => {
+chrome.webNavigation.onCommitted.addListener(details => {
   if (details.frameId === 0) {
     void guardNavigation(details.tabId, details.url);
   }
 });
 
-chrome.tabs.onRemoved.addListener((tabId) => void forgetTab(tabId));
+chrome.tabs.onRemoved.addListener(tabId => void forgetTab(tabId));
 
-chrome.commands.onCommand.addListener((command) => {
+chrome.commands.onCommand.addListener(command => {
   if (command === 'fill-login') {
     void fillFirstLogin();
   } else if (command === 'open-assistant') {
@@ -223,7 +250,10 @@ async function route(
   if (message.type === 'watching') {
     return noteWatching(message.report, sender);
   }
-  if (message.type === 'telemetry-consent' || message.type === 'telemetry-exclude') {
+  if (
+    message.type === 'telemetry-consent' ||
+    message.type === 'telemetry-exclude'
+  ) {
     if (
       !telemetrySettingsSenderAllowed(
         sender,
@@ -233,9 +263,12 @@ async function route(
     ) {
       throw new ExtensionError('not-allowed');
     }
-    if (message.type === 'telemetry-consent') return setTelemetryConsent(message.enabled === true);
+    if (message.type === 'telemetry-consent')
+      return setTelemetryConsent(message.enabled === true);
     const tab = await activeTab();
-    return tab ? excludeTelemetrySite(tab.url, message.excluded === true) : undefined;
+    return tab
+      ? excludeTelemetrySite(tab.url, message.excluded === true)
+      : undefined;
   }
   if (isPopup(sender)) {
     return fromPopup(message as PopupRequest);
@@ -255,19 +288,35 @@ function isPopup(sender: chrome.runtime.MessageSender): boolean {
   return sender.url?.startsWith(chrome.runtime.getURL('')) === true;
 }
 
+/** A popup message a group of handlers below does not take. */
+const NOT_MINE = Symbol('not mine');
+
 async function fromPopup(message: PopupRequest): Promise<unknown> {
   const menu = fromMenu(message);
   if (menu) {
     return menu;
   }
+  for (const group of [fromAccount, fromPasswords, fromAssistant]) {
+    const answer = await group(message);
+    if (answer !== NOT_MINE) {
+      return answer;
+    }
+  }
+  return undefined;
+}
+
+/** Signing in and out, and the extension itself; `NOT_MINE` — not one of its messages. */
+async function fromAccount(message: PopupRequest): Promise<unknown> {
   switch (message.type) {
     case 'state':
       return popupState();
     case 'sign-in':
-      return signIn(message.server, message.email, message.password).then(async (result) => {
-        await startDevice();
-        return result;
-      });
+      return signIn(message.server, message.email, message.password).then(
+        async result => {
+          await startDevice();
+          return result;
+        },
+      );
     case 'sign-in-code':
       await completeSignIn(message.challengeToken, message.code);
       return startDevice();
@@ -275,6 +324,17 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
       await lockEverywhere();
       stopDevice();
       return signOut();
+    case 'reload':
+      chrome.runtime.reload();
+      return undefined;
+    default:
+      return NOT_MINE;
+  }
+}
+
+/** The password vault: unlocking, filling, generating, saving; `NOT_MINE` — not one of its messages. */
+async function fromPasswords(message: PopupRequest): Promise<unknown> {
+  switch (message.type) {
     case 'unlock':
       await unlock(message.masterPassword);
       return unlocked();
@@ -285,34 +345,44 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
     case 'secret':
       return (await vaultItem(message.id))[message.field];
     case 'fill':
-      return fillInActiveTab((tabId) =>
-        vaultItem(message.id).then((item) => fillLogin(tabId, item, message.force)),
+      return fillInActiveTab(tabId =>
+        vaultItem(message.id).then(item =>
+          fillLogin(tabId, item, message.force),
+        ),
       );
     case 'generate': {
-      const length = Math.min(64, Math.max(8, Math.round(Number(message.length) || 20)));
+      const length = Math.min(
+        64,
+        Math.max(8, Math.round(Number(message.length) || 20)),
+      );
       const password = generatePassword({
         length,
         digits: !!message.digits,
         symbols: !!message.symbols,
       });
-      return { password, strength: passwordStrength(password).strength };
+      return {password, strength: passwordStrength(password).strength};
     }
     case 'fill-generated':
-      return fillInActiveTab((tabId) => fillNewPassword(tabId, message.password));
+      return fillInActiveTab(tabId => fillNewPassword(tabId, message.password));
     case 'save-offer':
-      return withActiveTab((tabId) => saveOffer(tabId, message.mode));
+      return withActiveTab(tabId => saveOffer(tabId, message.mode));
     case 'dismiss-offer':
-      return withActiveTab((tabId) => dismissOffer(tabId, message.never));
-    case 'reload':
-      chrome.runtime.reload();
-      return undefined;
+      return withActiveTab(tabId => dismissOffer(tabId, message.never));
     case 'never-sites':
       return neverSites();
     case 'forget-never':
       return forgetNever(message.site);
+    default:
+      return NOT_MINE;
+  }
+}
+
+/** The assistant, its MCP tokens and chat, blocked sites and writing help; `NOT_MINE` — not one of its messages. */
+async function fromAssistant(message: PopupRequest): Promise<unknown> {
+  switch (message.type) {
     case 'assistant-state':
       await startDevice();
-      return { online: deviceOnline(), settings: await deviceSettings() };
+      return {online: deviceOnline(), settings: await deviceSettings()};
     case 'assistant-settings':
       return saveDeviceSettings(message.update);
     case 'mcp-info':
@@ -327,15 +397,13 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
     case 'chat-new':
       return aiApi((await signedInClient()).api).startConversation();
     case 'chat-send':
-      return aiApi((await signedInClient()).api).chat({
-        content: String(message.content).slice(0, 20_000),
-        ...(message.conversationId ? { conversationId: String(message.conversationId) } : {}),
-        ...(message.attachments?.length ? { attachments: message.attachments } : {}),
-      });
+      return chatSend(message);
     case 'chat-attach':
       return chatAttach(message);
     case 'mcp-revoke':
-      return accessTokensApi((await signedInClient()).api).revoke(String(message.id));
+      return accessTokensApi((await signedInClient()).api).revoke(
+        String(message.id),
+      );
     case 'blocked-info':
       return (await blockOf(message.back))?.block ?? null;
     case 'pass-site':
@@ -344,7 +412,22 @@ async function fromPopup(message: PopupRequest): Promise<unknown> {
       return setWritingOnSite((await activeTab())?.url, !!message.on);
     case 'writing-enabled':
       return setWritingEnabled(!!message.on);
+    default:
+      return NOT_MINE;
   }
+}
+
+/** A message to the assistant from the side panel, cut to what the server takes. */
+async function chatSend(
+  message: Extract<PopupRequest, {type: 'chat-send'}>,
+): Promise<unknown> {
+  return aiApi((await signedInClient()).api).chat({
+    content: String(message.content).slice(0, 20_000),
+    ...(message.conversationId
+      ? {conversationId: String(message.conversationId)}
+      : {}),
+    ...(message.attachments?.length ? {attachments: message.attachments} : {}),
+  });
 }
 
 /** The menu under a field (inline-menu); `null` — not one of its messages. */
@@ -396,7 +479,10 @@ async function fromContent(
     case 'writing-state':
       return writingState(sender.url);
     case 'writing-check':
-      return checkWriting(sender.url, String(message.text).slice(0, WRITING_CHECK_MAX));
+      return checkWriting(
+        sender.url,
+        String(message.text).slice(0, WRITING_CHECK_MAX),
+      );
     case 'writing-rewrite':
       return rewriteWriting(
         sender.url,
@@ -412,7 +498,7 @@ async function fromContent(
     case 'writing-settings': {
       const server = await serverUrl();
       return server
-        ? chrome.tabs.create({ url: `${server}/writing` }).then(() => undefined)
+        ? chrome.tabs.create({url: `${server}/writing`}).then(() => undefined)
         : undefined;
     }
   }
@@ -441,7 +527,7 @@ async function openPopupWindow(): Promise<void> {
  */
 async function openForOffer(): Promise<void> {
   // Signed out, it waits through the sign-in: the vault is asked for once that is done.
-  await chrome.storage.session.set({ [UNLOCK_ASKED]: true });
+  await chrome.storage.session.set({[UNLOCK_ASKED]: true});
   await openPopupWindow();
 }
 
@@ -449,15 +535,19 @@ async function openForOffer(): Promise<void> {
 async function unlocked(): Promise<void> {
   await refreshBadge();
   for (const tabId of await offerAgain()) {
-    await chrome.tabs.sendMessage(tabId, { type: 'offer-again' }).catch(() => undefined);
+    await chrome.tabs
+      .sendMessage(tabId, {type: 'offer-again'})
+      .catch(() => undefined);
   }
 }
 
 /** The assistant beside the page of the window in front (a shortcut, the popup's button). */
 async function openAssistant(): Promise<void> {
-  const window = await chrome.windows.getLastFocused({ windowTypes: ['normal'] }).catch(() => null);
+  const window = await chrome.windows
+    .getLastFocused({windowTypes: ['normal']})
+    .catch(() => null);
   if (window?.id !== undefined) {
-    await chrome.sidePanel.open({ windowId: window.id });
+    await chrome.sidePanel.open({windowId: window.id});
   }
 }
 
@@ -476,9 +566,12 @@ async function popupState(): Promise<PopupState> {
     server,
     email: signedIn ? await email() : null,
     vault,
-    page: tab ? { url: tab.url, site: siteName(tab.url) } : null,
+    page: tab ? {url: tab.url, site: siteName(tab.url)} : null,
     offer: tab && signedIn ? await offerFor(tab.id) : null,
-    writing: tab && signedIn ? await writingPopupState(tab.url).catch(() => null) : null,
+    writing:
+      tab && signedIn
+        ? await writingPopupState(tab.url).catch(() => null)
+        : null,
     wish: tab && signedIn ? await wishPopupState().catch(() => null) : null,
     unlockAsked: vault === 'locked' ? await takeUnlockAsked() : false,
     update: await updateStatus(),
@@ -489,7 +582,8 @@ async function popupState(): Promise<PopupState> {
 const UNLOCK_ASKED = 'unlockAsked';
 
 async function takeUnlockAsked(): Promise<boolean> {
-  const { [UNLOCK_ASKED]: asked } = await chrome.storage.session.get(UNLOCK_ASKED);
+  const {[UNLOCK_ASKED]: asked} =
+    await chrome.storage.session.get(UNLOCK_ASKED);
   if (asked) {
     await chrome.storage.session.remove(UNLOCK_ASKED);
   }
@@ -497,9 +591,12 @@ async function takeUnlockAsked(): Promise<boolean> {
 }
 
 /** Every item for the list, fresh from the server: the logins of the active page first. */
-async function itemSummaries(): Promise<{ items: ItemSummary[]; unreadable: number }> {
+async function itemSummaries(): Promise<{
+  items: ItemSummary[];
+  unreadable: number;
+}> {
   const tab = await activeTab();
-  const { items, unreadable } = await vaultItems({ fresh: true });
+  const {items, unreadable} = await vaultItems({fresh: true});
   const summaries = items.map((item): ItemSummary => ({
     id: item.id,
     kind: item.kind,
@@ -515,15 +612,19 @@ async function itemSummaries(): Promise<{ items: ItemSummary[]; unreadable: numb
       Number(b.favorite) - Number(a.favorite) ||
       a.title.localeCompare(b.title),
   );
-  return { items: summaries, unreadable };
+  return {items: summaries, unreadable};
 }
 
-async function fillInActiveTab(fill: (tabId: number) => Promise<FillResult>): Promise<FillResult> {
+async function fillInActiveTab(
+  fill: (tabId: number) => Promise<FillResult>,
+): Promise<FillResult> {
   const tab = await activeTab();
-  return tab ? fill(tab.id) : { status: 'no-form' };
+  return tab ? fill(tab.id) : {status: 'no-form'};
 }
 
-async function withActiveTab(work: (tabId: number) => Promise<void>): Promise<void> {
+async function withActiveTab(
+  work: (tabId: number) => Promise<void>,
+): Promise<void> {
   const tab = await activeTab();
   if (tab) {
     await work(tab.id);
@@ -539,14 +640,14 @@ async function fillFirstLogin(): Promise<void> {
   const status = await vaultStatus().catch(() => 'signed-out' as const);
   if (status !== 'unlocked') {
     if (status === 'locked') {
-      await chrome.storage.session.set({ [UNLOCK_ASKED]: true });
+      await chrome.storage.session.set({[UNLOCK_ASKED]: true});
     }
     await chrome.action.openPopup().catch(() => undefined);
     return;
   }
-  const { items } = await vaultItems();
+  const {items} = await vaultItems();
   const logins = items
-    .filter((item) => item.kind === 'login' && matchesPage(item.urls, tab.url))
+    .filter(item => item.kind === 'login' && matchesPage(item.urls, tab.url))
     .sort((a, b) => Number(b.favorite) - Number(a.favorite));
   if (logins[0]) {
     await fillLogin(tab.id, logins[0], false);

@@ -17,7 +17,9 @@
     <mat-form-field subscriptSizing="dynamic" class="device">
       <mat-label>{{ 'activity.device' | transloco }}</mat-label>
       <mat-select [value]="deviceId()" (valueChange)="deviceId.set($event)">
-        <mat-option [value]="null">{{ 'activity.allDevices' | transloco }}</mat-option>
+        <mat-option [value]="null">{{
+          'activity.allDevices' | transloco
+        }}</mat-option>
         @for (device of devices.value(); track device.id) {
           <mat-option [value]="device.id">{{ device.name }}</mat-option>
         }
@@ -30,7 +32,9 @@
   <section class="setup">
     <h3>{{ 'activity.setup.title' | transloco }}</h3>
     <p class="hint">{{ 'activity.setup.hint' | transloco }}</p>
-    <a matButton="filled" routerLink="../settings">{{ 'activity.setup.open' | transloco }}</a>
+    <a matButton="filled" routerLink="../settings">{{
+      'activity.setup.open' | transloco
+    }}</a>
   </section>
 } @else if (s) {
   <mat-card appearance="outlined">
@@ -39,7 +43,9 @@
         <span class="label">{{ 'activity.total' | transloco }}</span>
         <span class="value">{{ s.totalSeconds | pdDuration }}</span>
         @if (days() > 1) {
-          <span class="sub">{{ 'activity.activeDays' | transloco: { count: activeDays() } }}</span>
+          <span class="sub">{{
+            'activity.activeDays' | transloco: {count: activeDays()}
+          }}</span>
         }
       </div>
       @if (days() > 1) {
@@ -62,7 +68,10 @@
   </mat-card>
   @if (otherSeconds() > 0) {
     <p class="hint">
-      {{ 'activity.otherComputers.included' | transloco: { time: (otherSeconds() | pdDuration) } }}
+      {{
+        'activity.otherComputers.included'
+          | transloco: {time: (otherSeconds() | pdDuration)}
+      }}
     </p>
   }
 
@@ -91,28 +100,47 @@
     <p class="sort-hint">
       <mat-icon inline>category</mat-icon>
       {{ 'activity.mostlyOther' | transloco }}
-      <a routerLink="/activity/settings">{{ 'activity.sortPrograms' | transloco }}</a>
+      <a routerLink="/activity/settings">{{
+        'activity.sortPrograms' | transloco
+      }}</a>
     </p>
   }
 
   <div class="columns">
     <ng-container
-      *ngTemplateOutlet="top; context: { title: 'activity.byCategory', items: categories() }"
+      *ngTemplateOutlet="
+        top;
+        context: {title: 'activity.byCategory', items: categories()}
+      "
     />
-    <ng-container *ngTemplateOutlet="top; context: { title: 'activity.byApp', items: apps() }" />
     <ng-container
-      *ngTemplateOutlet="top; context: { title: 'activity.bySite', items: siteShares() }"
+      *ngTemplateOutlet="top; context: {title: 'activity.byApp', items: apps()}"
     />
     <ng-container
-      *ngTemplateOutlet="top; context: { title: 'activity.byProject', items: projects() }"
+      *ngTemplateOutlet="
+        top;
+        context: {title: 'activity.bySite', items: siteShares()}
+      "
+    />
+    <ng-container
+      *ngTemplateOutlet="
+        top;
+        context: {title: 'activity.byProject', items: projects()}
+      "
     />
     @if (byDevice().length > 1) {
       <ng-container
-        *ngTemplateOutlet="top; context: { title: 'activity.byDevice', items: byDevice() }"
+        *ngTemplateOutlet="
+          top;
+          context: {title: 'activity.byDevice', items: byDevice()}
+        "
       />
     }
     <ng-container
-      *ngTemplateOutlet="top; context: { title: 'activity.byTitle', items: titles() }"
+      *ngTemplateOutlet="
+        top;
+        context: {title: 'activity.byTitle', items: titles()}
+      "
     />
   </div>
 

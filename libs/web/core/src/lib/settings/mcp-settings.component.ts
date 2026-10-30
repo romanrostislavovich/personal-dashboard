@@ -1,18 +1,24 @@
-import { Clipboard } from '@angular/cdk/clipboard';
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { accessTokensApi, CORE_READS } from '@pd/client-core';
-import { AccessTokenCreated, AccessTokenScope, McpInfo } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
+import {Clipboard} from '@angular/cdk/clipboard';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {accessTokensApi, CORE_READS} from '@pd/client-core';
+import {AccessTokenCreated, AccessTokenScope, McpInfo} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
 
 /** How a client is connected, with the address and the token put in. */
 type Client = 'claudeCode' | 'claudeDesktop' | 'cursor';
@@ -40,8 +46,12 @@ type Client = 'claudeCode' | 'claudeDesktop' | 'cursor';
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>hub</mat-icon>
-        <mat-card-title>{{ 'core.settings.mcp.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'core.settings.mcp.hint' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'core.settings.mcp.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'core.settings.mcp.hint' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (info.value(); as current) {
@@ -67,7 +77,11 @@ type Client = 'claudeCode' | 'claudeDesktop' | 'cursor';
                 }}</mat-option>
               </mat-select>
             </mat-form-field>
-            <button matButton="filled" type="submit" [disabled]="!name().trim() || busy()">
+            <button
+              matButton="filled"
+              type="submit"
+              [disabled]="!name().trim() || busy()"
+            >
               {{ 'core.settings.mcp.create' | transloco }}
             </button>
           </form>
@@ -98,7 +112,8 @@ type Client = 'claudeCode' | 'claudeDesktop' | 'cursor';
                   <span class="name">{{ token.name }}</span>
                   <span class="meta">
                     {{ token.hint }}… ·
-                    {{ 'core.settings.mcp.scopes.' + token.scope | transloco }} ·
+                    {{ 'core.settings.mcp.scopes.' + token.scope | transloco }}
+                    ·
                     {{ 'core.settings.mcp.created' | transloco }}
                     {{ token.createdAt | date: 'd MMM y' }}
                     ·
@@ -115,7 +130,9 @@ type Client = 'claudeCode' | 'claudeDesktop' | 'cursor';
                 </button>
               </li>
             } @empty {
-              <li class="hint">{{ 'core.settings.mcp.noTokens' | transloco }}</li>
+              <li class="hint">
+                {{ 'core.settings.mcp.noTokens' | transloco }}
+              </li>
             }
           </ul>
         }
@@ -196,13 +213,19 @@ export class McpSettingsComponent {
   private readonly transloco = inject(TranslocoService);
 
   protected readonly info = httpResource<McpInfo>(() => CORE_READS.mcp());
-  protected readonly clients: Client[] = ['claudeCode', 'claudeDesktop', 'cursor'];
+  protected readonly clients: Client[] = [
+    'claudeCode',
+    'claudeDesktop',
+    'cursor',
+  ];
   protected readonly name = signal('');
   protected readonly scope = signal<AccessTokenScope>('read');
   protected readonly busy = signal(false);
   /** The token just made: shown in the lines once, until the page is left. */
   protected readonly created = signal<AccessTokenCreated | null>(null);
-  private readonly token = computed(() => this.created()?.token ?? 'pd_YOUR_TOKEN');
+  private readonly token = computed(
+    () => this.created()?.token ?? 'pd_YOUR_TOKEN',
+  );
 
   /** The lines that connect a client, with the address and the token put in. */
   protected snippet(client: Client, url: string): string {
@@ -217,8 +240,14 @@ export class McpSettingsComponent {
             mcpServers: {
               'personal-dashboard': {
                 command: 'npx',
-                args: ['-y', 'mcp-remote', url, '--header', 'Authorization:${AUTH}'],
-                env: { AUTH: `Bearer ${token}` },
+                args: [
+                  '-y',
+                  'mcp-remote',
+                  url,
+                  '--header',
+                  'Authorization:${AUTH}',
+                ],
+                env: {AUTH: `Bearer ${token}`},
               },
             },
           },
@@ -229,7 +258,10 @@ export class McpSettingsComponent {
         return JSON.stringify(
           {
             mcpServers: {
-              'personal-dashboard': { url, headers: { Authorization: `Bearer ${token}` } },
+              'personal-dashboard': {
+                url,
+                headers: {Authorization: `Bearer ${token}`},
+              },
             },
           },
           null,
@@ -245,7 +277,9 @@ export class McpSettingsComponent {
   protected async create(): Promise<void> {
     this.busy.set(true);
     try {
-      this.created.set(await this.api.create({ name: this.name().trim(), scope: this.scope() }));
+      this.created.set(
+        await this.api.create({name: this.name().trim(), scope: this.scope()}),
+      );
       this.name.set('');
       this.info.reload();
     } finally {

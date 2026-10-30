@@ -1,10 +1,16 @@
-import { WowDetails } from '@pd/contracts';
+import {WowDetails} from '@pd/contracts';
 
 /** Something worth a message that happened to a character between two syncs. */
 export type WowNews =
-  | { kind: 'mythic'; from: number; to: number }
-  | { kind: 'raid'; raid: string; difficulty: string; killed: number; total: number }
-  | { kind: 'pvp'; bracket: string; from: number; to: number }
+  | {kind: 'mythic'; from: number; to: number}
+  | {
+      kind: 'raid';
+      raid: string;
+      difficulty: string;
+      killed: number;
+      total: number;
+    }
+  | {kind: 'pvp'; bracket: string; from: number; to: number}
   | {
       kind: 'collection';
       what: 'mounts' | 'pets' | 'toys' | 'titles';
@@ -22,13 +28,23 @@ const COLLECTIONS = ['mounts', 'pets', 'toys', 'titles'] as const;
 export function wowNews(previous: WowDetails, current: WowDetails): WowNews[] {
   const news: WowNews[] = [];
 
-  if (previous.mythic && current.mythic && current.mythic.rating > previous.mythic.rating) {
-    news.push({ kind: 'mythic', from: previous.mythic.rating, to: current.mythic.rating });
+  if (
+    previous.mythic &&
+    current.mythic &&
+    current.mythic.rating > previous.mythic.rating
+  ) {
+    news.push({
+      kind: 'mythic',
+      from: previous.mythic.rating,
+      to: current.mythic.rating,
+    });
   }
 
   const killedBefore = new Map(
-    previous.raids.flatMap((raid) =>
-      raid.modes.map((mode) => [`${raid.name}|${mode.difficulty}`, mode.killed] as const),
+    previous.raids.flatMap(raid =>
+      raid.modes.map(
+        mode => [`${raid.name}|${mode.difficulty}`, mode.killed] as const,
+      ),
     ),
   );
   for (const raid of current.raids) {
@@ -48,12 +64,20 @@ export function wowNews(previous: WowDetails, current: WowDetails): WowNews[] {
   }
 
   const ratingBefore = new Map(
-    (previous.pvp?.brackets ?? []).map((bracket) => [bracket.bracket, bracket.rating]),
+    (previous.pvp?.brackets ?? []).map(bracket => [
+      bracket.bracket,
+      bracket.rating,
+    ]),
   );
   for (const bracket of current.pvp?.brackets ?? []) {
     const before = ratingBefore.get(bracket.bracket);
     if (before !== undefined && bracket.rating > before) {
-      news.push({ kind: 'pvp', bracket: bracket.bracket, from: before, to: bracket.rating });
+      news.push({
+        kind: 'pvp',
+        bracket: bracket.bracket,
+        from: before,
+        to: bracket.rating,
+      });
     }
   }
 
@@ -61,7 +85,7 @@ export function wowNews(previous: WowDetails, current: WowDetails): WowNews[] {
     const before = previous.collections[what];
     const now = current.collections[what];
     if (before !== null && now !== null && now > before) {
-      news.push({ kind: 'collection', what, added: now - before, total: now });
+      news.push({kind: 'collection', what, added: now - before, total: now});
     }
   }
   return news;

@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
-import { newAccount, signIn } from './account';
+import {expect, test} from '@playwright/test';
+import {newAccount, signIn} from './account';
 
 test('a diary entry is saved as it is typed and is there after a reload', async ({
   page,
@@ -15,7 +15,7 @@ test('a diary entry is saved as it is typed and is there after a reload', async 
 
   // Saved after a pause in typing: the server has it once the request is answered.
   await page.waitForResponse(
-    (response) =>
+    response =>
       response.url().includes('/api/diary/entries') &&
       response.request().method() !== 'GET' &&
       response.ok(),

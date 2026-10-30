@@ -1,7 +1,7 @@
-import { ContractLetterInput, LocalDate, RecurringPayment } from '@pd/contracts';
-import { nextCancelBy } from './contract-dates';
+import {ContractLetterInput, LocalDate, RecurringPayment} from '@pd/contracts';
+import {nextCancelBy} from './contract-dates';
 
-type Letter = { subject: string; body: string };
+type Letter = {subject: string; body: string};
 
 /** The facts of a payment the letter is about, the same for the AI and the template. */
 function facts(payment: RecurringPayment, today: LocalDate) {
@@ -20,14 +20,14 @@ function facts(payment: RecurringPayment, today: LocalDate) {
   };
 }
 
-const LANGUAGE = { en: 'English', pl: 'Polish' } as const;
+const LANGUAGE = {en: 'English', pl: 'Polish'} as const;
 
 /** What the AI is asked: a short formal letter, as JSON, nothing invented. */
 export function letterPrompt(
   payment: RecurringPayment,
   input: ContractLetterInput,
   today: LocalDate,
-): { instruction: string; text: string } {
+): {instruction: string; text: string} {
   const goal =
     input.kind === 'cancel'
       ? 'ends the contract (a notice of termination) at the end of the current term, or at the earliest date the terms allow, and asks for a written confirmation'
@@ -36,9 +36,12 @@ export function letterPrompt(
     instruction:
       `Write a short, polite, formal letter in ${LANGUAGE[input.language]} to the provider of a ` +
       `service. The letter ${goal}. Use only the facts given; where a fact the letter needs is ` +
-      `missing (a customer or contract number, an address), put a placeholder in square ` +
-      `brackets. Answer with JSON only: {"subject": "...", "body": "..."}.`,
-    text: JSON.stringify({ ...facts(payment, today), sender: input.details ?? null }),
+      'missing (a customer or contract number, an address), put a placeholder in square ' +
+      'brackets. Answer with JSON only: {"subject": "...", "body": "..."}.',
+    text: JSON.stringify({
+      ...facts(payment, today),
+      sender: input.details ?? null,
+    }),
   };
 }
 
@@ -47,8 +50,10 @@ export function parseLetter(answer: string): Letter | null {
   const json = answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1);
   try {
     const parsed = JSON.parse(json) as Partial<Letter>;
-    return typeof parsed.subject === 'string' && typeof parsed.body === 'string' && parsed.body
-      ? { subject: parsed.subject.trim(), body: parsed.body.trim() }
+    return typeof parsed.subject === 'string' &&
+      typeof parsed.body === 'string' &&
+      parsed.body
+      ? {subject: parsed.subject.trim(), body: parsed.body.trim()}
       : null;
   } catch {
     return null;

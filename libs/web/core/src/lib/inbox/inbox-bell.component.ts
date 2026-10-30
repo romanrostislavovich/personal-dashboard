@@ -1,5 +1,5 @@
-import { httpResource } from '@angular/common/http';
-import { NgTemplateOutlet } from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {NgTemplateOutlet} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,15 +9,15 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
-import { Router, RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { InboxItem } from '@pd/contracts';
-import { InboxListComponent } from './inbox-list.component';
-import { InboxStore } from './inbox.store';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatMenuModule, MatMenuTrigger} from '@angular/material/menu';
+import {Router, RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {InboxItem} from '@pd/contracts';
+import {InboxListComponent} from './inbox-list.component';
+import {InboxStore} from './inbox.store';
 
 /** How many of the latest the bell's panel shows; the page has them all. */
 const PANEL_ITEMS = 8;
@@ -57,7 +57,9 @@ const PANEL_ITEMS = 8;
       </button>
     }
     <ng-template #bell>
-      <mat-icon>{{ s.waiting || s.unread ? 'notifications_active' : 'notifications' }}</mat-icon>
+      <mat-icon>{{
+        s.waiting || s.unread ? 'notifications_active' : 'notifications'
+      }}</mat-icon>
       @if (s.waiting) {
         <span class="count">{{ s.waiting > 99 ? '99+' : s.waiting }}</span>
       } @else if (s.unread) {
@@ -171,15 +173,17 @@ export class InboxBellComponent {
   protected readonly latest = httpResource<InboxItem[]>(
     () => {
       this.store.version();
-      return this.open() ? CORE_READS.inbox({ limit: 30 }) : undefined;
+      return this.open() ? CORE_READS.inbox({limit: 30}) : undefined;
     },
-    { defaultValue: [] },
+    {defaultValue: []},
   );
-  protected readonly waiting = computed(() => this.latest.value().filter((item) => item.waiting));
+  protected readonly waiting = computed(() =>
+    this.latest.value().filter(item => item.waiting),
+  );
   protected readonly rest = computed(() =>
     this.latest
       .value()
-      .filter((item) => !item.waiting)
+      .filter(item => !item.waiting)
       .slice(0, PANEL_ITEMS),
   );
   protected readonly label = computed(() =>

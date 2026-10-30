@@ -1,15 +1,21 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { AppointmentBrief, eventTouches } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { localDate, PsychologyApi, today } from '../psychology.api';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {AppointmentBrief, eventTouches} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {localDate, PsychologyApi, today} from '../psychology.api';
 
 interface Draft {
   title: string;
@@ -69,7 +75,10 @@ function monthAgo(): string {
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-card-title>
-          {{ (editing() ? 'psychology.brief.edit' : 'psychology.brief.add') | transloco }}
+          {{
+            (editing() ? 'psychology.brief.edit' : 'psychology.brief.add')
+              | transloco
+          }}
         </mat-card-title>
       </mat-card-header>
       <mat-card-content class="form">
@@ -80,17 +89,19 @@ function monthAgo(): string {
             maxlength="200"
             [placeholder]="'psychology.brief.titleHint' | transloco"
             [value]="draft().title"
-            (input)="set({ title: $any($event.target).value })"
+            (input)="set({title: $any($event.target).value})"
           />
         </mat-form-field>
         <div class="row">
           <mat-form-field subscriptSizing="dynamic">
-            <mat-label>{{ 'psychology.brief.appointmentOn' | transloco }}</mat-label>
+            <mat-label>{{
+              'psychology.brief.appointmentOn' | transloco
+            }}</mat-label>
             <input
               matInput
               type="date"
               [value]="draft().appointmentOn"
-              (change)="set({ appointmentOn: $any($event.target).value })"
+              (change)="set({appointmentOn: $any($event.target).value})"
             />
           </mat-form-field>
           <mat-form-field subscriptSizing="dynamic">
@@ -99,7 +110,7 @@ function monthAgo(): string {
               matInput
               type="date"
               [value]="draft().from"
-              (change)="set({ from: $any($event.target).value })"
+              (change)="set({from: $any($event.target).value})"
             />
           </mat-form-field>
           <mat-form-field subscriptSizing="dynamic">
@@ -109,7 +120,7 @@ function monthAgo(): string {
               type="date"
               [min]="draft().from"
               [value]="draft().to"
-              (change)="set({ to: $any($event.target).value })"
+              (change)="set({to: $any($event.target).value})"
             />
           </mat-form-field>
         </div>
@@ -121,8 +132,12 @@ function monthAgo(): string {
             (change)="pick('assessmentIds', item.id, $event.checked)"
           >
             {{ item.takenOn | date: 'd MMM y' }} ·
-            {{ 'psychology.tests.' + item.test + '.name' | transloco }} · {{ item.score }} ·
-            {{ 'psychology.tests.' + item.test + '.bands.' + item.band | transloco }}
+            {{ 'psychology.tests.' + item.test + '.name' | transloco }} ·
+            {{ item.score }} ·
+            {{
+              'psychology.tests.' + item.test + '.bands.' + item.band
+                | transloco
+            }}
           </mat-checkbox>
         } @empty {
           <p class="hint">{{ 'psychology.brief.noCheckups' | transloco }}</p>
@@ -134,7 +149,8 @@ function monthAgo(): string {
             [checked]="draft().eventIds.includes(event.id)"
             (change)="pick('eventIds', event.id, $event.checked)"
           >
-            {{ event.startedOn ? (event.startedOn | date: 'd MMM y') : '' }} · {{ event.title }}
+            {{ event.startedOn ? (event.startedOn | date: 'd MMM y') : '' }} ·
+            {{ event.title }}
           </mat-checkbox>
         } @empty {
           <p class="hint">{{ 'psychology.brief.noEvents' | transloco }}</p>
@@ -148,7 +164,7 @@ function monthAgo(): string {
             maxlength="5000"
             [placeholder]="'psychology.brief.changesHint' | transloco"
             [value]="draft().changes"
-            (input)="set({ changes: $any($event.target).value })"
+            (input)="set({changes: $any($event.target).value})"
           ></textarea>
         </mat-form-field>
         <mat-form-field subscriptSizing="dynamic">
@@ -158,7 +174,7 @@ function monthAgo(): string {
             rows="4"
             [placeholder]="'psychology.brief.questionsHint' | transloco"
             [value]="draft().questions"
-            (input)="set({ questions: $any($event.target).value })"
+            (input)="set({questions: $any($event.target).value})"
           ></textarea>
           <mat-hint>{{ 'psychology.brief.onePerLine' | transloco }}</mat-hint>
         </mat-form-field>
@@ -169,16 +185,24 @@ function monthAgo(): string {
             rows="3"
             maxlength="5000"
             [value]="draft().notes"
-            (input)="set({ notes: $any($event.target).value })"
+            (input)="set({notes: $any($event.target).value})"
           ></textarea>
         </mat-form-field>
       </mat-card-content>
       <mat-card-actions align="end">
         @if (editing()) {
-          <button matButton (click)="cancel()">{{ 'core.actions.cancel' | transloco }}</button>
+          <button matButton (click)="cancel()">
+            {{ 'core.actions.cancel' | transloco }}
+          </button>
         }
-        <button matButton="filled" [disabled]="!valid() || busy()" (click)="save()">
-          {{ (editing() ? 'core.actions.save' : 'core.actions.add') | transloco }}
+        <button
+          matButton="filled"
+          [disabled]="!valid() || busy()"
+          (click)="save()"
+        >
+          {{
+            (editing() ? 'core.actions.save' : 'core.actions.add') | transloco
+          }}
         </button>
       </mat-card-actions>
     </mat-card>
@@ -189,7 +213,8 @@ function monthAgo(): string {
           <div class="body">
             <strong>{{ brief.title }}</strong>
             <span class="hint">
-              {{ brief.from | date: 'd MMM y' }} – {{ brief.to | date: 'd MMM y' }}
+              {{ brief.from | date: 'd MMM y' }} –
+              {{ brief.to | date: 'd MMM y' }}
               @if (brief.appointmentOn) {
                 · {{ 'psychology.brief.appointmentOn' | transloco }}:
                 {{ brief.appointmentOn | date: 'd MMM y' }}
@@ -288,49 +313,58 @@ export class BriefsPage {
   private readonly fresh = signal(true);
 
   protected readonly valid = computed(() => {
-    const { title, from, to } = this.draft();
+    const {title, from, to} = this.draft();
     return Boolean(title.trim() && from && to && to >= from);
   });
 
   protected readonly checkupsInPeriod = computed(() => {
-    const { from, to } = this.draft();
+    const {from, to} = this.draft();
     return this.assessments
       .value()
-      .filter((item) => item.takenOn >= from && item.takenOn <= to)
+      .filter(item => item.takenOn >= from && item.takenOn <= to)
       .sort((a, b) => a.takenOn.localeCompare(b.takenOn));
   });
 
   protected readonly eventsInPeriod = computed(() => {
-    const { from, to } = this.draft();
+    const {from, to} = this.draft();
     const birthYear = this.settings.value()?.birthYear ?? null;
-    return this.events.value().filter((event) => eventTouches(event, birthYear, { from, to }));
+    return this.events
+      .value()
+      .filter(event => eventTouches(event, birthYear, {from, to}));
   });
 
   /** The questionnaires ticked: all of the period while a new brief is untouched. */
   protected readonly pickedCheckups = computed(() =>
-    this.fresh() ? this.checkupsInPeriod().map((item) => item.id) : this.draft().assessmentIds,
+    this.fresh()
+      ? this.checkupsInPeriod().map(item => item.id)
+      : this.draft().assessmentIds,
   );
 
   protected set(change: Partial<Draft>): void {
-    this.draft.update((draft) => ({ ...draft, ...change }));
+    this.draft.update(draft => ({...draft, ...change}));
   }
 
-  protected pick(field: 'eventIds' | 'assessmentIds', id: string, checked: boolean): void {
-    const base = field === 'assessmentIds' ? this.pickedCheckups() : this.draft().eventIds;
+  protected pick(
+    field: 'eventIds' | 'assessmentIds',
+    id: string,
+    checked: boolean,
+  ): void {
+    const base =
+      field === 'assessmentIds' ? this.pickedCheckups() : this.draft().eventIds;
     this.fresh.set(false);
-    this.draft.update((draft) => ({
+    this.draft.update(draft => ({
       ...draft,
-      [field]: checked ? [...base, id] : base.filter((item) => item !== id),
+      [field]: checked ? [...base, id] : base.filter(item => item !== id),
     }));
   }
 
   /** What is picked and still in the period goes into the brief. */
-  private chosen(): { eventIds: string[]; assessmentIds: string[] } {
-    const checkups = new Set(this.checkupsInPeriod().map((item) => item.id));
-    const events = new Set(this.eventsInPeriod().map((event) => event.id));
+  private chosen(): {eventIds: string[]; assessmentIds: string[]} {
+    const checkups = new Set(this.checkupsInPeriod().map(item => item.id));
+    const events = new Set(this.eventsInPeriod().map(event => event.id));
     return {
-      assessmentIds: this.pickedCheckups().filter((id) => checkups.has(id)),
-      eventIds: this.draft().eventIds.filter((id) => events.has(id)),
+      assessmentIds: this.pickedCheckups().filter(id => checkups.has(id)),
+      eventIds: this.draft().eventIds.filter(id => events.has(id)),
     };
   }
 
@@ -349,7 +383,7 @@ export class BriefsPage {
             changes: draft.changes.trim(),
             questions: draft.questions
               .split('\n')
-              .map((line) => line.trim())
+              .map(line => line.trim())
               .filter(Boolean),
             notes: draft.notes.trim(),
           },
@@ -377,7 +411,7 @@ export class BriefsPage {
       questions: brief.questions.join('\n'),
       notes: brief.notes,
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({top: 0, behavior: 'smooth'});
   }
 
   /** A new brief starts where the last one ended: the time since the last appointment. */
@@ -389,7 +423,11 @@ export class BriefsPage {
 
   protected async remove(brief: AppointmentBrief): Promise<void> {
     if (
-      confirm(this.transloco.translate('psychology.brief.confirmDelete', { title: brief.title }))
+      confirm(
+        this.transloco.translate('psychology.brief.confirmDelete', {
+          title: brief.title,
+        }),
+      )
     ) {
       await firstValueFrom(this.api.removeBrief(brief.id));
       this.briefs.reload();

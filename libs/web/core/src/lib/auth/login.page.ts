@@ -1,14 +1,23 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { errorStatus } from '../client/core-requests';
-import { isMobileApp, mobileServer } from '../mobile/mobile-app';
-import { AuthService } from './auth.service';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {Router, RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {errorStatus} from '../client/core-requests';
+import {isMobileApp, mobileServer} from '../mobile/mobile-app';
+import {AuthService} from './auth.service';
 
 @Component({
   selector: 'pd-login-page',
@@ -61,7 +70,12 @@ import { AuthService } from './auth.service';
           <form [formGroup]="form" (ngSubmit)="submit()">
             <mat-form-field>
               <mat-label>{{ 'core.login.email' | transloco }}</mat-label>
-              <input matInput type="email" formControlName="email" autocomplete="username" />
+              <input
+                matInput
+                type="email"
+                formControlName="email"
+                autocomplete="username"
+              />
             </mat-form-field>
             <mat-form-field>
               <mat-label>{{ 'core.login.password' | transloco }}</mat-label>
@@ -75,7 +89,11 @@ import { AuthService } from './auth.service';
             @if (error(); as key) {
               <p class="error">{{ key | transloco }}</p>
             }
-            <button matButton="filled" type="submit" [disabled]="form.invalid || loading()">
+            <button
+              matButton="filled"
+              type="submit"
+              [disabled]="form.invalid || loading()"
+            >
               {{ 'core.login.submit' | transloco }}
             </button>
           </form>
@@ -83,7 +101,12 @@ import { AuthService } from './auth.service';
         @if (demo()) {
           <div class="demo">
             <p class="hint">{{ 'core.login.demoHint' | transloco }}</p>
-            <button matButton="tonal" type="button" [disabled]="loading()" (click)="tryDemo()">
+            <button
+              matButton="tonal"
+              type="button"
+              [disabled]="loading()"
+              (click)="tryDemo()"
+            >
               {{ 'core.login.tryDemo' | transloco }}
             </button>
           </div>
@@ -91,14 +114,18 @@ import { AuthService } from './auth.service';
         @if (registrationEnabled()) {
           <p class="switch">
             {{ 'core.login.noAccount' | transloco }}
-            <a routerLink="/register">{{ 'core.login.register' | transloco }}</a>
+            <a routerLink="/register">{{
+              'core.login.register' | transloco
+            }}</a>
           </p>
         }
         @if (server) {
           <!-- The Android app: which server it signs in to, and a way to another one -->
           <p class="switch">
             {{ server }} ·
-            <a routerLink="/connect">{{ 'core.mobile.connect.change' | transloco }}</a>
+            <a routerLink="/connect">{{
+              'core.mobile.connect.change' | transloco
+            }}</a>
           </p>
         }
       </mat-card-content>
@@ -169,7 +196,7 @@ export class LoginPage {
 
   constructor() {
     this.auth.config().then(
-      (config) => {
+      config => {
         this.registrationEnabled.set(config.registrationEnabled);
         this.demo.set(config.demo);
       },
@@ -179,7 +206,7 @@ export class LoginPage {
 
   async submit(): Promise<void> {
     await this.attempt(async () => {
-      const { challengeToken } = await this.auth.login(this.form.getRawValue());
+      const {challengeToken} = await this.auth.login(this.form.getRawValue());
       if (challengeToken) {
         this.challengeToken.set(challengeToken);
         return;

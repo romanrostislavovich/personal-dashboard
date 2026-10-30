@@ -1,21 +1,24 @@
-import { pickMessages } from '@pd/api-core';
+import {pickMessages} from '@pd/api-core';
 
 /** Texts of the security agent's findings about a computer; the language is `user.locale`. */
 const messages = {
   en: {
     silent: (name: string, days: number) => ({
       title: `${name}: no report for ${days} days`,
-      details: 'The desktop app has not told anything about this computer: its state is unknown.',
+      details:
+        'The desktop app has not told anything about this computer: its state is unknown.',
       fix: 'Start the app on that computer, or remove the computer in Settings → Devices if it is gone.',
     }),
     antivirusOff: (name: string) => ({
       title: `${name}: the antivirus is off`,
-      details: 'Microsoft Defender (or its real-time protection) is switched off.',
+      details:
+        'Microsoft Defender (or its real-time protection) is switched off.',
       fix: 'Windows Security → Virus & threat protection → turn real-time protection on. If another antivirus is installed, ignore this finding.',
     }),
     signaturesOld: (name: string, days: number) => ({
       title: `${name}: antivirus definitions are ${days} days old`,
-      details: 'New threats are not recognized until the definitions are updated.',
+      details:
+        'New threats are not recognized until the definitions are updated.',
       fix: 'Windows Security → Virus & threat protection → Protection updates → Check for updates.',
     }),
     firewallOff: (name: string, profiles: string[]) => ({
@@ -31,7 +34,8 @@ const messages = {
     }),
     updatesOld: (name: string, days: number) => ({
       title: `${name}: no Windows update for ${days} days`,
-      details: 'Security fixes come every month; this computer has missed some.',
+      details:
+        'Security fixes come every month; this computer has missed some.',
       fix: 'Settings → Windows Update → Check for updates.',
     }),
     restartPending: (name: string) => ({
@@ -60,7 +64,8 @@ const messages = {
     }),
     antivirusOff: (name: string) => ({
       title: `${name}: антивирус выключен`,
-      details: 'Microsoft Defender (или его защита в реальном времени) отключён.',
+      details:
+        'Microsoft Defender (или его защита в реальном времени) отключён.',
       fix: 'Безопасность Windows → Защита от вирусов и угроз → включите защиту в реальном времени. Если стоит другой антивирус, отметьте находку как «знаю».',
     }),
     signaturesOld: (name: string, days: number) => ({
@@ -75,17 +80,20 @@ const messages = {
     }),
     notEncrypted: (name: string) => ({
       title: `${name}: системный диск не зашифрован`,
-      details: 'Тот, кому попадёт компьютер или его диск, прочитает всё, включая сессию дашборда.',
+      details:
+        'Тот, кому попадёт компьютер или его диск, прочитает всё, включая сессию дашборда.',
       fix: 'Параметры → Конфиденциальность и защита → Шифрование устройства (или BitLocker) → включите и сохраните ключ восстановления.',
     }),
     updatesOld: (name: string, days: number) => ({
       title: `${name}: обновлений Windows не было ${days} дн.`,
-      details: 'Исправления безопасности выходят каждый месяц; этот компьютер часть пропустил.',
+      details:
+        'Исправления безопасности выходят каждый месяц; этот компьютер часть пропустил.',
       fix: 'Параметры → Центр обновления Windows → Проверить наличие обновлений.',
     }),
     restartPending: (name: string) => ({
       title: `${name}: обновление ждёт перезагрузки`,
-      details: 'Установленные исправления начнут работать только после перезапуска.',
+      details:
+        'Установленные исправления начнут работать только после перезапуска.',
       fix: 'Перезагрузите компьютер.',
     }),
     noIdleLock: (name: string) => ({
@@ -104,6 +112,8 @@ const messages = {
 
 export type ComputerSecurityMessages = (typeof messages)['en'];
 
-export function computerSecurityMessages(locale: string): ComputerSecurityMessages {
+export function computerSecurityMessages(
+  locale: string,
+): ComputerSecurityMessages {
   return pickMessages(messages, locale);
 }

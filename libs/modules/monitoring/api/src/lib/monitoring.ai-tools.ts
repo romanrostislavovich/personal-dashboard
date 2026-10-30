@@ -1,10 +1,10 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, findById, idParameters, NO_PARAMETERS } from '@pd/api-core';
-import { monitorInputSchema } from '@pd/contracts';
-import { CheckerService } from './checker.service';
-import { MonitoringLinks } from './monitoring.links';
-import { MonitorsService } from './monitors.service';
-import { monitors } from './monitoring.schema';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AiService, findById, idParameters, NO_PARAMETERS} from '@pd/api-core';
+import {monitorInputSchema} from '@pd/contracts';
+import {CheckerService} from './checker.service';
+import {MonitoringLinks} from './monitoring.links';
+import {MonitorsService} from './monitors.service';
+import {monitors} from './monitoring.schema';
 
 /** AI access to site monitoring; adding and removing monitored addresses (assistant). */
 @Injectable()
@@ -33,10 +33,13 @@ export class MonitoringAiTools implements OnModuleInit {
         'A change before an incident is a suspect, not a proof.',
       parameters: {
         type: 'object',
-        properties: { days: { type: 'number', description: '1–35, default 30' } },
+        properties: {days: {type: 'number', description: '1–35, default 30'}},
       },
       handler: (userId, args) =>
-        this.links.incidents(userId, Math.min(35, Math.max(1, Number(args['days']) || 30))),
+        this.links.incidents(
+          userId,
+          Math.min(35, Math.max(1, Number(args['days']) || 30)),
+        ),
     });
 
     this.ai.registerTool({
@@ -47,8 +50,8 @@ export class MonitoringAiTools implements OnModuleInit {
         'availability over 24 h / 7 / 30 days, SSL certificate expiry.',
       parameters: NO_PARAMETERS,
       // The model does not need the hourly chart — save context.
-      handler: async (userId) =>
-        (await this.monitors.list(userId)).map((monitor) => ({
+      handler: async userId =>
+        (await this.monitors.list(userId)).map(monitor => ({
           ...monitor,
           responseTimes: undefined,
         })),
@@ -65,17 +68,27 @@ export class MonitoringAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          url: { type: 'string', description: 'https://… — the site or a health endpoint' },
-          projectId: { type: 'string' },
+          url: {
+            type: 'string',
+            description: 'https://… — the site or a health endpoint',
+          },
+          projectId: {type: 'string'},
         },
         required: ['url', 'projectId'],
       },
       handler: async (userId, args) => {
-        const monitor = await this.monitors.create(userId, monitorInputSchema.parse(args));
+        const monitor = await this.monitors.create(
+          userId,
+          monitorInputSchema.parse(args),
+        );
         // Like the dashboard: check right away so the status is not "pending" for 5 minutes.
         await this.checker.checkNew(monitor);
-        const created = findById(await this.monitors.list(userId), monitor.id, 'Monitor');
-        return { ...created, responseTimes: undefined };
+        const created = findById(
+          await this.monitors.list(userId),
+          monitor.id,
+          'Monitor',
+        );
+        return {...created, responseTimes: undefined};
       },
     });
 
@@ -88,8 +101,8 @@ export class MonitoringAiTools implements OnModuleInit {
       writes: true,
       undoTables: [monitors],
       confirm: async (userId, args) => {
-        const { url, status } = await find(userId, args);
-        return { url, status };
+        const {url, status} = await find(userId, args);
+        return {url, status};
       },
       description: 'Stops monitoring a URL and deletes its check history.',
       parameters: idParameters('Monitor id from monitoring_status'),

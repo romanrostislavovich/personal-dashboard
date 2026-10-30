@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,18 +7,24 @@ import {
   LOCALE_ID,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { ActivityFocusSession } from '@pd/contracts';
-import { Bar, BarChartComponent, DurationPipe, Share, ShareListComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { lastDays } from '../activity-period';
-import { ActivityApi } from '../activity.api';
-import { FocusControlComponent } from './focus-control.component';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {ActivityFocusSession} from '@pd/contracts';
+import {
+  Bar,
+  BarChartComponent,
+  DurationPipe,
+  Share,
+  ShareListComponent,
+} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {lastDays} from '../activity-period';
+import {ActivityApi} from '../activity.api';
+import {FocusControlComponent} from './focus-control.component';
 
 const PERIODS = [7, 30, 90, 365] as const;
 const DAILY_BARS_LIMIT = 31;
@@ -69,24 +75,33 @@ const DAILY_BARS_LIMIT = 31;
             <span class="value">{{ s.focusSeconds | pdDuration }}</span>
           </div>
           <div class="stat">
-            <span class="label">{{ 'activity.focus.completed' | transloco }}</span>
+            <span class="label">{{
+              'activity.focus.completed' | transloco
+            }}</span>
             <span class="value">{{ s.completed }}</span>
           </div>
           <div class="stat">
             <span class="label">{{ 'activity.focus.streak' | transloco }}</span>
             <span class="value">{{
-              'activity.focus.days' | transloco: { count: s.streak.current }
+              'activity.focus.days' | transloco: {count: s.streak.current}
             }}</span>
             <span class="sub">
-              {{ 'activity.focus.longest' | transloco: { count: s.streak.longest } }}
+              {{
+                'activity.focus.longest' | transloco: {count: s.streak.longest}
+              }}
             </span>
           </div>
           <div class="stat">
-            <span class="label">{{ 'activity.focus.distracted' | transloco }}</span>
+            <span class="label">{{
+              'activity.focus.distracted' | transloco
+            }}</span>
             <span class="value">{{ s.distractedSeconds | pdDuration }}</span>
             @if (s.focusSeconds) {
               <span class="sub">
-                {{ 'activity.focus.distractedShare' | transloco: { share: distractedShare() } }}
+                {{
+                  'activity.focus.distractedShare'
+                    | transloco: {share: distractedShare()}
+                }}
               </span>
             }
           </div>
@@ -96,7 +111,9 @@ const DAILY_BARS_LIMIT = 31;
       @if (s.sessions.length) {
         <mat-card appearance="outlined">
           <mat-card-header>
-            <mat-card-title>{{ 'activity.focus.chart' | transloco }}</mat-card-title>
+            <mat-card-title>{{
+              'activity.focus.chart' | transloco
+            }}</mat-card-title>
           </mat-card-header>
           <mat-card-content class="padded">
             <pd-bar-chart
@@ -112,7 +129,9 @@ const DAILY_BARS_LIMIT = 31;
           @if (projects().length) {
             <mat-card appearance="outlined">
               <mat-card-header>
-                <mat-card-title>{{ 'activity.byProject' | transloco }}</mat-card-title>
+                <mat-card-title>{{
+                  'activity.byProject' | transloco
+                }}</mat-card-title>
               </mat-card-header>
               <mat-card-content class="padded">
                 <pd-share-list [items]="projects()" />
@@ -124,7 +143,9 @@ const DAILY_BARS_LIMIT = 31;
             @if (m.withMusic.sessions) {
               <mat-card appearance="outlined">
                 <mat-card-header>
-                  <mat-card-title>{{ 'activity.focus.music.title' | transloco }}</mat-card-title>
+                  <mat-card-title>{{
+                    'activity.focus.music.title' | transloco
+                  }}</mat-card-title>
                   <mat-card-subtitle>
                     {{ 'activity.focus.music.hint' | transloco }}
                   </mat-card-subtitle>
@@ -136,7 +157,7 @@ const DAILY_BARS_LIMIT = 31;
                         ($index === 0
                           ? 'activity.focus.music.with'
                           : 'activity.focus.music.without'
-                        ) | transloco: { count: group.sessions }
+                        ) | transloco: {count: group.sessions}
                       }}</b>
                       <span class="hint">
                         {{
@@ -153,12 +174,19 @@ const DAILY_BARS_LIMIT = 31;
                   <p class="hint">
                     {{ 'activity.focus.music.artists' | transloco }}
                     @for (artist of m.artists; track artist.artist) {
-                      {{ artist.artist }} ({{ artist.sessions }}){{ $last ? '' : ', ' }}
+                      {{ artist.artist }} ({{ artist.sessions }}){{
+                        $last ? '' : ', '
+                      }}
                     }
                   </p>
                   @for (item of m.byProject; track item.project) {
                     <p class="hint">
-                      <b>{{ item.project ?? ('activity.focus.noProject' | transloco) }}:</b>
+                      <b
+                        >{{
+                          item.project ??
+                            ('activity.focus.noProject' | transloco)
+                        }}:</b
+                      >
                       {{ item.artists.join(', ') }}
                     </p>
                   }
@@ -169,7 +197,9 @@ const DAILY_BARS_LIMIT = 31;
 
           <mat-card appearance="outlined">
             <mat-card-header>
-              <mat-card-title>{{ 'activity.focus.sessions' | transloco }}</mat-card-title>
+              <mat-card-title>{{
+                'activity.focus.sessions' | transloco
+              }}</mat-card-title>
             </mat-card-header>
             <mat-card-content>
               <ul class="sessions">
@@ -180,7 +210,9 @@ const DAILY_BARS_LIMIT = 31;
                     </mat-icon>
                     <span class="when">
                       {{ session.startedAt | date: 'd MMM, HH:mm' }}
-                      <span class="hint">{{ session.focusSeconds | pdDuration }}</span>
+                      <span class="hint">{{
+                        session.focusSeconds | pdDuration
+                      }}</span>
                     </span>
                     <span class="what">
                       {{ session.projectName ?? '' }}
@@ -307,24 +339,30 @@ export class FocusPage {
 
   protected readonly distractedShare = computed(() => {
     const s = this.stats.value();
-    return s?.focusSeconds ? Math.round((s.distractedSeconds / s.focusSeconds) * 100) : 0;
+    return s?.focusSeconds
+      ? Math.round((s.distractedSeconds / s.focusSeconds) * 100)
+      : 0;
   });
 
   /** The scale of the chart: seconds as a duration ("2 h 30 min"). */
-  protected readonly hours = (seconds: number) => this.duration.transform(seconds);
+  protected readonly hours = (seconds: number) =>
+    this.duration.transform(seconds);
 
   protected readonly bars = computed<Bar[]>(() => {
     const days = this.stats.value()?.days ?? [];
     if (days.length <= DAILY_BARS_LIMIT) {
       const labelEvery = days.length <= 7 ? 1 : 5;
-      return days.map(({ day, seconds }, index) => ({
-        label: index % labelEvery === 0 ? (this.datePipe.transform(day, 'd MMM') ?? '') : '',
+      return days.map(({day, seconds}, index) => ({
+        label:
+          index % labelEvery === 0
+            ? (this.datePipe.transform(day, 'd MMM') ?? '')
+            : '',
         value: seconds,
         title: `${this.datePipe.transform(day, 'EEEE, d MMMM')} — ${this.duration.transform(seconds)}`,
       }));
     }
     const months = new Map<string, number>();
-    for (const { day, seconds } of days) {
+    for (const {day, seconds} of days) {
       months.set(day.slice(0, 7), (months.get(day.slice(0, 7)) ?? 0) + seconds);
     }
     return [...months].map(([month, seconds]) => ({
@@ -335,7 +373,7 @@ export class FocusPage {
   });
 
   protected readonly projects = computed<Share[]>(() =>
-    (this.stats.value()?.projects ?? []).map(({ name, seconds }) => ({
+    (this.stats.value()?.projects ?? []).map(({name, seconds}) => ({
       name: name ?? this.transloco.translate('activity.focus.noProject'),
       value: seconds,
       text: this.duration.transform(seconds),
@@ -345,9 +383,9 @@ export class FocusPage {
   /** "Telegram 4 min, Dota 2 2 min" — what took attention away. */
   protected distractions(session: ActivityFocusSession): string {
     return session.distractions
-      .filter((item) => item.seconds >= 30)
+      .filter(item => item.seconds >= 30)
       .slice(0, 3)
-      .map((item) => `${item.name} ${this.duration.transform(item.seconds)}`)
+      .map(item => `${item.name} ${this.duration.transform(item.seconds)}`)
       .join(', ');
   }
 

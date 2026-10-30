@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from '@pd/api-core';
+import {fetchWithTimeout} from '@pd/api-core';
 
 /*
  * A song's page on Spotify without Spotify's API (the server has no Spotify app keys): the
@@ -23,9 +23,12 @@ export async function findOnSpotifyWeb(
   artist: string | null,
 ): Promise<string | null> {
   const query = `site:open.spotify.com/track ${[artist, track].filter(Boolean).join(' ')}`;
-  const response = await fetchWithTimeout(`${SEARCH}?q=${encodeURIComponent(query)}`, {
-    headers: HEADERS,
-  });
+  const response = await fetchWithTimeout(
+    `${SEARCH}?q=${encodeURIComponent(query)}`,
+    {
+      headers: HEADERS,
+    },
+  );
   if (response.status !== 200) {
     // 202 — the search asks to slow down: no link this time.
     return null;
@@ -42,8 +45,10 @@ export async function findOnSpotifyWeb(
 
 /** The ids of the Spotify songs a page of results links to, in their order. */
 export function trackIds(page: string): string[] {
-  const found = page.matchAll(/open\.spotify\.com(?:%2F|\/)track(?:%2F|\/)([A-Za-z0-9]{22})/g);
-  return [...new Set([...found].map((match) => match[1]))];
+  const found = page.matchAll(
+    /open\.spotify\.com(?:%2F|\/)track(?:%2F|\/)([A-Za-z0-9]{22})/g,
+  );
+  return [...new Set([...found].map(match => match[1]))];
 }
 
 /**
@@ -62,11 +67,14 @@ export function sameSong(title: string, track: string): boolean {
 }
 
 async function titleOf(url: string): Promise<string | null> {
-  const response = await fetchWithTimeout(`${OEMBED}?url=${encodeURIComponent(url)}`, {
-    headers: HEADERS,
-  });
+  const response = await fetchWithTimeout(
+    `${OEMBED}?url=${encodeURIComponent(url)}`,
+    {
+      headers: HEADERS,
+    },
+  );
   if (!response.ok) {
     return null;
   }
-  return ((await response.json()) as { title?: string }).title ?? null;
+  return ((await response.json()) as {title?: string}).title ?? null;
 }

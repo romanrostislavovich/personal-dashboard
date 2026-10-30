@@ -1,12 +1,17 @@
-import { UnauthorizedException } from '@nestjs/common';
-import { AuthController } from './auth.controller';
+import {UnauthorizedException} from '@nestjs/common';
+import {AuthController} from './auth.controller';
 
 describe('AuthController, the refresh cookie', () => {
   const refresh = vi.fn();
   const logout = vi.fn();
-  const controller = new AuthController({ refresh, logout } as never, {} as never, {} as never);
-  const request = (cookie: string) => ({ headers: { cookie }, secure: true }) as never;
-  const response = () => ({ cookie: vi.fn(), clearCookie: vi.fn() });
+  const controller = new AuthController(
+    {refresh, logout} as never,
+    {} as never,
+    {} as never,
+  );
+  const request = (cookie: string) =>
+    ({headers: {cookie}, secure: true}) as never;
+  const response = () => ({cookie: vi.fn(), clearCookie: vi.fn()});
 
   beforeEach(() => {
     refresh.mockReset();
@@ -39,7 +44,7 @@ describe('AuthController, the refresh cookie', () => {
     expect(logout).toHaveBeenCalledWith('good');
     expect(answer.clearCookie).toHaveBeenCalledWith(
       'pd_refresh',
-      expect.objectContaining({ path: '/api/auth' }),
+      expect.objectContaining({path: '/api/auth'}),
     );
   });
 });

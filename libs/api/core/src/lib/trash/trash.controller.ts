@@ -1,7 +1,7 @@
-import { Controller, Delete, Get, HttpCode, Param, Post } from '@nestjs/common';
-import { TrashItem } from '@pd/contracts';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { TrashService } from './trash.service';
+import {Controller, Delete, Get, HttpCode, Param, Post} from '@nestjs/common';
+import {TrashItem} from '@pd/contracts';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {TrashService} from './trash.service';
 
 /** Deleted data for 30 days: bring it back or delete it for good. */
 @Controller('trash')

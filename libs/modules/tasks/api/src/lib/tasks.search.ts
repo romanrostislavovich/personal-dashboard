@@ -1,8 +1,15 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { contains, DB, Database, SEARCH_LIMIT, snippet, SearchService } from '@pd/api-core';
-import { SearchHit } from '@pd/contracts';
-import { and, desc, eq, or, sql } from 'drizzle-orm';
-import { reminders, tasks } from './tasks.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  contains,
+  DB,
+  Database,
+  SEARCH_LIMIT,
+  snippet,
+  SearchService,
+} from '@pd/api-core';
+import {SearchHit} from '@pd/contracts';
+import {and, desc, eq, or, sql} from 'drizzle-orm';
+import {reminders, tasks} from './tasks.schema';
 
 /** Tasks and reminders for the command palette: by the title, the notes and the tags. */
 @Injectable()
@@ -13,7 +20,10 @@ export class TasksSearch implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.search.register({ module: 'tasks', search: (userId, query) => this.find(userId, query) });
+    this.search.register({
+      module: 'tasks',
+      search: (userId, query) => this.find(userId, query),
+    });
   }
 
   private async find(userId: string, query: string): Promise<SearchHit[]> {
@@ -40,14 +50,14 @@ export class TasksSearch implements OnModuleInit {
       .orderBy(desc(reminders.remindAt))
       .limit(SEARCH_LIMIT);
     return [
-      ...found.map((task) => ({
+      ...found.map(task => ({
         module: 'tasks',
         kind: task.completedAt ? 'task-done' : 'task',
         title: task.title,
         subtitle: task.notes ? snippet(task.notes, query) : task.dueDate,
         url: '/tasks/todo',
       })),
-      ...reminded.map((reminder) => ({
+      ...reminded.map(reminder => ({
         module: 'tasks',
         kind: 'reminder',
         title: reminder.text,

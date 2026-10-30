@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoService } from '@jsverse/transloco';
-import { interval } from 'rxjs';
-import { MusicApi } from './music.api';
-import { MusicConnectComponent } from './music-connect.component';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {ActivatedRoute, Router} from '@angular/router';
+import {TranslocoService} from '@jsverse/transloco';
+import {interval} from 'rxjs';
+import {MusicApi} from './music.api';
+import {MusicConnectComponent} from './music-connect.component';
 
 const HISTORY_REFRESH_MS = 5_000;
 
@@ -45,11 +45,11 @@ export class MusicIntegration {
       inject(MatSnackBar).open(
         inject(TranslocoService).translate(`music.connect.spotify.${result}`),
         'OK',
-        { duration: 5000 },
+        {duration: 5000},
       );
       // Remove the parameter so the message does not repeat on reload; the tab stays.
       void inject(Router).navigate([], {
-        queryParams: { spotify: null },
+        queryParams: {spotify: null},
         queryParamsHandling: 'merge',
         replaceUrl: true,
       });

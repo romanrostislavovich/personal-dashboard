@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService } from '@pd/api-core';
-import { SoundcloudService } from './soundcloud.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService} from '@pd/api-core';
+import {SoundcloudService} from './soundcloud.service';
 
 /** Play milestones are counted in these steps. */
 const MILESTONE = 1000;
@@ -22,13 +22,14 @@ export class SoundcloudDigest implements OnModuleInit {
         `\`playsMilestone\` — plays of all tracks rounded down to ${MILESTONE}. Tell about new ` +
         'followers and a new track, congratulate on a new milestone.',
       // Plays grow every day by themselves, so only milestones are compared.
-      collect: async (userId) => {
+      collect: async userId => {
         const stats = await this.soundcloud.stats(userId);
         return (
           stats && {
             followers: stats.followers,
             tracks: stats.tracks.length,
-            playsMilestone: Math.floor(stats.totals.plays / MILESTONE) * MILESTONE,
+            playsMilestone:
+              Math.floor(stats.totals.plays / MILESTONE) * MILESTONE,
           }
         );
       },

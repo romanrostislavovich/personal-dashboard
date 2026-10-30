@@ -1,4 +1,4 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /**
  * Web part of the Activity section: time at the computer, recorded by the tracker of the
@@ -6,45 +6,52 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const activityModule: WebDashboardModule = {
   id: 'activity',
-  nav: { labelKey: 'activity.title', icon: 'timelapse', group: 'work' },
+  nav: {labelKey: 'activity.title', icon: 'timelapse', group: 'work'},
   // The page holds the tabs; every subsection is its child route.
   loadRoutes: async () => [
     {
       path: '',
-      loadComponent: () => import('./activity.page').then((m) => m.ActivityPage),
+      loadComponent: () => import('./activity.page').then(m => m.ActivityPage),
       children: [
-        { path: '', pathMatch: 'full', redirectTo: 'overview' },
+        {path: '', pathMatch: 'full', redirectTo: 'overview'},
         {
           path: 'overview',
-          loadComponent: () => import('./overview/overview.page').then((m) => m.OverviewPage),
+          loadComponent: () =>
+            import('./overview/overview.page').then(m => m.OverviewPage),
         },
         {
           path: 'focus',
-          loadComponent: () => import('./focus/focus.page').then((m) => m.FocusPage),
+          loadComponent: () =>
+            import('./focus/focus.page').then(m => m.FocusPage),
         },
         {
           path: 'workstates',
           loadComponent: () =>
             import('./workstates/workstate-timeline.component').then(
-              (m) => m.WorkstateTimelineComponent,
+              m => m.WorkstateTimelineComponent,
             ),
         },
         {
           path: 'notifications',
           loadComponent: () =>
-            import('./notifications/notifications.page').then((m) => m.NotificationsPage),
+            import('./notifications/notifications.page').then(
+              m => m.NotificationsPage,
+            ),
         },
         {
           path: 'places',
-          loadComponent: () => import('./places/places.page').then((m) => m.PlacesPage),
+          loadComponent: () =>
+            import('./places/places.page').then(m => m.PlacesPage),
         },
         {
           path: 'computers',
-          loadComponent: () => import('./computers/computers.page').then((m) => m.ComputersPage),
+          loadComponent: () =>
+            import('./computers/computers.page').then(m => m.ComputersPage),
         },
         {
           path: 'settings',
-          loadComponent: () => import('./settings/settings.page').then((m) => m.SettingsPage),
+          loadComponent: () =>
+            import('./settings/settings.page').then(m => m.SettingsPage),
         },
       ],
     },
@@ -77,20 +84,23 @@ export const activityModule: WebDashboardModule = {
     {
       id: 'activity.google-places',
       loadComponent: () =>
-        import('./places/google-places.integration').then((m) => m.GooglePlacesIntegration),
+        import('./places/google-places.integration').then(
+          m => m.GooglePlacesIntegration,
+        ),
     },
   ],
   // The trackers of every device and the time of devices without one: Settings → Devices.
   devices: [
     {
       id: 'activity.trackers',
-      loadComponent: () => import('./tracker-card.component').then((m) => m.TrackerCardComponent),
+      loadComponent: () =>
+        import('./tracker-card.component').then(m => m.TrackerCardComponent),
     },
     {
       id: 'activity.other-computers',
       loadComponent: () =>
         import('./settings/other-computers-settings.component').then(
-          (m) => m.OtherComputersSettingsComponent,
+          m => m.OtherComputersSettingsComponent,
         ),
     },
   ],
@@ -98,7 +108,8 @@ export const activityModule: WebDashboardModule = {
     {
       id: 'activity.today',
       size: 'small',
-      loadComponent: () => import('./activity.widget').then((m) => m.ActivityWidget),
+      loadComponent: () =>
+        import('./activity.widget').then(m => m.ActivityWidget),
     },
   ],
 };

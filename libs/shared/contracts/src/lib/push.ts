@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /**
  * Push notifications on a phone (the Android app, through Firebase Cloud Messaging), next to

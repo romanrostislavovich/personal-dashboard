@@ -12,7 +12,9 @@ export function githubTokenExpiry(header: string | null): Date | null {
  * When a GitLab token expires: `expires_at` of `/personal_access_tokens/self` is a day, and the
  * token stops working when that day begins (UTC). `null` — it does not expire.
  */
-export function gitlabTokenExpiry(expiresAt: string | null | undefined): Date | null {
+export function gitlabTokenExpiry(
+  expiresAt: string | null | undefined,
+): Date | null {
   return expiresAt && /^\d{4}-\d{2}-\d{2}$/.test(expiresAt)
     ? new Date(`${expiresAt}T00:00:00Z`)
     : null;

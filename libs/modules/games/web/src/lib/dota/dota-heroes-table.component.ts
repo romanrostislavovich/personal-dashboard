@@ -1,19 +1,26 @@
-import { DecimalPipe, PercentPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { MatSortModule, Sort } from '@angular/material/sort';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { DotaHeroStats } from '@pd/contracts';
-import { TimeAgoPipe } from '../time-ago.pipe';
+import {DecimalPipe, PercentPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
+import {MatSortModule, Sort} from '@angular/material/sort';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {DotaHeroStats} from '@pd/contracts';
+import {TimeAgoPipe} from '../time-ago.pipe';
 
-type Column = 'matches' | 'winrate' | 'kda' | 'goldPerMin' | 'xpPerMin' | 'lastPlayedAt';
+type Column =
+  'matches' | 'winrate' | 'kda' | 'goldPerMin' | 'xpPerMin' | 'lastPlayedAt';
 
 const VALUE: Record<Column, (h: DotaHeroStats) => number> = {
-  matches: (h) => h.matches,
-  winrate: (h) => winrate(h) ?? -1,
-  kda: (h) => kda(h) ?? -1,
-  goldPerMin: (h) => h.goldPerMin ?? -1,
-  xpPerMin: (h) => h.xpPerMin ?? -1,
-  lastPlayedAt: (h) => new Date(h.lastPlayedAt).getTime(),
+  matches: h => h.matches,
+  winrate: h => winrate(h) ?? -1,
+  kda: h => kda(h) ?? -1,
+  goldPerMin: h => h.goldPerMin ?? -1,
+  xpPerMin: h => h.xpPerMin ?? -1,
+  lastPlayedAt: h => new Date(h.lastPlayedAt).getTime(),
 };
 
 /** `null` — no match with known numbers yet. */
@@ -28,7 +35,10 @@ export function kda({
 }
 
 /** Wins among the matches with a known result; `null` — there are none yet. */
-function winrate({ wins, decided }: Pick<DotaHeroStats, 'wins' | 'decided'>): number | null {
+function winrate({
+  wins,
+  decided,
+}: Pick<DotaHeroStats, 'wins' | 'decided'>): number | null {
   return decided ? wins / decided : null;
 }
 
@@ -39,10 +49,20 @@ function winrate({ wins, decided }: Pick<DotaHeroStats, 'wins' | 'decided'>): nu
 @Component({
   selector: 'pd-dota-heroes-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, PercentPipe, MatSortModule, TranslocoPipe, TimeAgoPipe],
+  imports: [
+    DecimalPipe,
+    PercentPipe,
+    MatSortModule,
+    TranslocoPipe,
+    TimeAgoPipe,
+  ],
   template: `
     <div class="scroll">
-      <table matSort [matSortDisabled]="!!limit()" (matSortChange)="sort.set($event)">
+      <table
+        matSort
+        [matSortDisabled]="!!limit()"
+        (matSortChange)="sort.set($event)"
+      >
         <thead>
           <tr>
             <th class="hero-col">{{ 'games.dota.table.hero' | transloco }}</th>
@@ -54,9 +74,25 @@ function winrate({ wins, decided }: Pick<DotaHeroStats, 'wins' | 'decided'>): nu
             </th>
             <th mat-sort-header="kda" arrowPosition="before">KDA</th>
             @if (!limit()) {
-              <th class="wide" mat-sort-header="goldPerMin" arrowPosition="before">GPM</th>
-              <th class="wide" mat-sort-header="xpPerMin" arrowPosition="before">XPM</th>
-              <th class="wide" mat-sort-header="lastPlayedAt" arrowPosition="before">
+              <th
+                class="wide"
+                mat-sort-header="goldPerMin"
+                arrowPosition="before"
+              >
+                GPM
+              </th>
+              <th
+                class="wide"
+                mat-sort-header="xpPerMin"
+                arrowPosition="before"
+              >
+                XPM
+              </th>
+              <th
+                class="wide"
+                mat-sort-header="lastPlayedAt"
+                arrowPosition="before"
+              >
                 {{ 'games.dota.table.lastPlayed' | transloco }}
               </th>
             }
@@ -80,19 +116,27 @@ function winrate({ wins, decided }: Pick<DotaHeroStats, 'wins' | 'decided'>): nu
                 <span class="num" [class.good]="(rate ?? 0) >= 0.5">{{
                   rate === null ? '—' : (rate | percent: '1.1-1')
                 }}</span>
-                <span class="bar rate"><span [style.width.%]="(rate ?? 0) * 100"></span></span>
+                <span class="bar rate"
+                  ><span [style.width.%]="(rate ?? 0) * 100"></span
+                ></span>
               </td>
               <td>
                 @let ratio = kda(h);
-                <span class="num">{{ ratio === null ? '—' : (ratio | number: '1.2-2') }}</span>
+                <span class="num">{{
+                  ratio === null ? '—' : (ratio | number: '1.2-2')
+                }}</span>
                 @if (ratio !== null) {
-                  <span class="kda-parts">{{ h.kills }} / {{ h.deaths }} / {{ h.assists }}</span>
+                  <span class="kda-parts"
+                    >{{ h.kills }} / {{ h.deaths }} / {{ h.assists }}</span
+                  >
                 }
               </td>
               @if (!limit()) {
                 <td class="wide num">{{ h.goldPerMin ?? '—' }}</td>
                 <td class="wide num">{{ h.xpPerMin ?? '—' }}</td>
-                <td class="wide muted">{{ h.lastPlayedAt | timeAgo: lang() }}</td>
+                <td class="wide muted">
+                  {{ h.lastPlayedAt | timeAgo: lang() }}
+                </td>
               }
             </tr>
           }
@@ -125,7 +169,8 @@ function winrate({ wins, decided }: Pick<DotaHeroStats, 'wins' | 'decided'>): nu
     }
     td {
       padding: 6px 8px;
-      border-bottom: 1px solid color-mix(in srgb, var(--pd-border) 50%, transparent);
+      border-bottom: 1px solid
+        color-mix(in srgb, var(--pd-border) 50%, transparent);
       vertical-align: middle;
     }
     tbody tr:hover {
@@ -157,7 +202,11 @@ function winrate({ wins, decided }: Pick<DotaHeroStats, 'wins' | 'decided'>): nu
       margin-top: 4px;
       border-radius: 2px;
       overflow: hidden;
-      background: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+      background: color-mix(
+        in srgb,
+        var(--mat-sys-on-surface) 10%,
+        transparent
+      );
     }
     .bar span {
       display: block;
@@ -191,15 +240,20 @@ export class DotaHeroesTableComponent {
 
   protected readonly kda = kda;
   protected readonly winrate = winrate;
-  protected readonly sort = signal<Sort>({ active: 'matches', direction: 'desc' });
-  protected readonly most = computed(() => Math.max(1, ...this.heroes().map((h) => h.matches)));
+  protected readonly sort = signal<Sort>({
+    active: 'matches',
+    direction: 'desc',
+  });
+  protected readonly most = computed(() =>
+    Math.max(1, ...this.heroes().map(h => h.matches)),
+  );
 
   protected readonly rows = computed(() => {
     const limit = this.limit();
     if (limit) {
       return this.heroes().slice(0, limit);
     }
-    const { active, direction } = this.sort();
+    const {active, direction} = this.sort();
     const value = VALUE[active as Column];
     if (!value || !direction) {
       return this.heroes();

@@ -1,15 +1,21 @@
-import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { ProjectMonth, ProjectOverview } from '@pd/contracts';
-import { DurationPipe } from '../ui/duration.pipe';
+import {CurrencyPipe, DatePipe, DecimalPipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {ProjectMonth, ProjectOverview} from '@pd/contracts';
+import {DurationPipe} from '../ui/duration.pipe';
 
 const PERIODS = [30, 90, 365] as const;
 const MONTHS = 6;
@@ -40,7 +46,11 @@ function localDate(date: Date): string {
   ],
   template: `
     <header class="page-header">
-      <a matIconButton routerLink="/projects" [attr.aria-label]="'core.projects.title' | transloco">
+      <a
+        matIconButton
+        routerLink="/projects"
+        [attr.aria-label]="'core.projects.title' | transloco"
+      >
         <mat-icon>arrow_back</mat-icon>
       </a>
       <h1 class="page-title">{{ overview.value()?.project?.name }}</h1>
@@ -52,7 +62,7 @@ function localDate(date: Date): string {
       >
         @for (option of periods; track option) {
           <mat-button-toggle [value]="option">
-            {{ 'core.projects.days' | transloco: { days: option } }}
+            {{ 'core.projects.days' | transloco: {days: option} }}
           </mat-button-toggle>
         }
       </mat-button-toggle-group>
@@ -66,7 +76,8 @@ function localDate(date: Date): string {
       }
       @if (data.project.closedOn) {
         <p class="hint">
-          {{ 'core.projects.closedOn' | transloco }}: {{ data.project.closedOn | date: 'd MMM y' }}
+          {{ 'core.projects.closedOn' | transloco }}:
+          {{ data.project.closedOn | date: 'd MMM y' }}
         </p>
       }
 
@@ -91,7 +102,9 @@ function localDate(date: Date): string {
                     {{ fact.value | pdDuration }}
                   }
                   @case ('money') {
-                    {{ fact.value | currency: fact.currency : 'symbol' : '1.0-0' }}
+                    {{
+                      fact.value | currency: fact.currency : 'symbol' : '1.0-0'
+                    }}
                   }
                   @case ('percent') {
                     {{ fact.value | number: '1.0-2' }}%
@@ -107,14 +120,16 @@ function localDate(date: Date): string {
               @if (fact.fromCoding) {
                 <span class="hint">
                   {{
-                    'core.projects.fromCoding' | transloco: { time: fact.fromCoding | pdDuration }
+                    'core.projects.fromCoding'
+                      | transloco: {time: fact.fromCoding | pdDuration}
                   }}
                 </span>
               }
               @if (fact.fromContext) {
                 <span class="hint">
                   {{
-                    'core.projects.fromContext' | transloco: { time: fact.fromContext | pdDuration }
+                    'core.projects.fromContext'
+                      | transloco: {time: fact.fromContext | pdDuration}
                   }}
                 </span>
               }
@@ -133,14 +148,18 @@ function localDate(date: Date): string {
       @if (data.changes.length) {
         <mat-card appearance="outlined">
           <mat-card-header>
-            <mat-card-title>{{ 'core.projects.changes' | transloco }}</mat-card-title>
+            <mat-card-title>{{
+              'core.projects.changes' | transloco
+            }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             @for (change of data.changes; track change.at + change.title) {
               <div class="change">
                 <span class="hint">{{ change.at | date: 'd MMM, HH:mm' }}</span>
                 @if (change.url) {
-                  <a [href]="change.url" target="_blank" rel="noopener">{{ change.title }}</a>
+                  <a [href]="change.url" target="_blank" rel="noopener">{{
+                    change.title
+                  }}</a>
                 } @else {
                   <span>{{ change.title }}</span>
                 }
@@ -154,32 +173,50 @@ function localDate(date: Date): string {
       @if (hasMonths()) {
         <mat-card appearance="outlined">
           <mat-card-header>
-            <mat-card-title>{{ 'core.projects.months' | transloco }}</mat-card-title>
+            <mat-card-title>{{
+              'core.projects.months' | transloco
+            }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <div class="months">
               <span class="head"></span>
-              <span class="head">{{ 'core.projects.monthTime' | transloco }}</span>
-              <span class="head">{{ 'core.projects.monthCoding' | transloco }}</span>
-              <span class="head">{{ 'core.projects.monthIncome' | transloco }}</span>
-              <span class="head">{{ 'core.projects.monthExpense' | transloco }}</span>
+              <span class="head">{{
+                'core.projects.monthTime' | transloco
+              }}</span>
+              <span class="head">{{
+                'core.projects.monthCoding' | transloco
+              }}</span>
+              <span class="head">{{
+                'core.projects.monthIncome' | transloco
+              }}</span>
+              <span class="head">{{
+                'core.projects.monthExpense' | transloco
+              }}</span>
               @for (month of months.value(); track month.month) {
                 <span>{{ month.month + '-01' | date: 'LLL y' }}</span>
-                <span class="number">{{ month.seconds ? (month.seconds | pdDuration) : '—' }}</span>
+                <span class="number">{{
+                  month.seconds ? (month.seconds | pdDuration) : '—'
+                }}</span>
                 <span class="number">
-                  {{ month.codingSeconds ? (month.codingSeconds | pdDuration) : '—' }}
+                  {{
+                    month.codingSeconds
+                      ? (month.codingSeconds | pdDuration)
+                      : '—'
+                  }}
                 </span>
                 <span class="number">
                   {{
                     month.currency && month.income
-                      ? (month.income | currency: month.currency : 'symbol' : '1.0-0')
+                      ? (month.income
+                        | currency: month.currency : 'symbol' : '1.0-0')
                       : '—'
                   }}
                 </span>
                 <span class="number">
                   {{
                     month.currency && month.expense
-                      ? (month.expense | currency: month.currency : 'symbol' : '1.0-0')
+                      ? (month.expense
+                        | currency: month.currency : 'symbol' : '1.0-0')
                       : '—'
                   }}
                 </span>
@@ -290,17 +327,20 @@ export class ProjectPage {
     const to = new Date();
     const from = new Date(to);
     from.setDate(from.getDate() - this.days() + 1);
-    return { from: localDate(from), to: localDate(to) };
+    return {from: localDate(from), to: localDate(to)};
   });
   /** The last half-year month by month, whatever the period above. */
   protected readonly months = httpResource<ProjectMonth[]>(
     () => CORE_READS.projectMonths(this.id(), MONTHS),
-    { defaultValue: [] },
+    {defaultValue: []},
   );
   protected readonly hasMonths = computed(() =>
     this.months
       .value()
-      .some((month) => month.seconds || month.codingSeconds || month.income || month.expense),
+      .some(
+        month =>
+          month.seconds || month.codingSeconds || month.income || month.expense,
+      ),
   );
   protected readonly overview = httpResource<ProjectOverview>(() =>
     CORE_READS.projectOverview(this.id(), this.period().from, this.period().to),

@@ -1,10 +1,15 @@
-import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { SyncConflict, SyncParkedChange, SyncParkedKey } from '@pd/contracts';
-import { sql, SQL } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { isForeignKeyViolation } from '../database/pg-errors';
-import { UsersService } from '../users/users.service';
-import { readSyncTables, SyncTable } from './sync-catalog';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {SyncConflict, SyncParkedChange, SyncParkedKey} from '@pd/contracts';
+import {sql, SQL} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {isForeignKeyViolation} from '../database/pg-errors';
+import {UsersService} from '../users/users.service';
+import {readSyncTables, SyncTable} from './sync-catalog';
 
 /** The screen shows the latest ones; older ones follow after these are sorted out. */
 const LIST_LIMIT = 100;
@@ -26,7 +31,7 @@ export class SyncConflictsService {
   ) {}
 
   async conflicts(userId: string): Promise<SyncConflict[]> {
-    const { rows } = await this.db.execute<{
+    const {rows} = await this.db.execute<{
       id: string;
       table_name: string;
       reason: string;
@@ -39,7 +44,7 @@ export class SyncConflictsService {
       ORDER BY c.created_at DESC LIMIT ${LIST_LIMIT}
     `);
     return Promise.all(
-      rows.map(async (row) => ({
+      rows.map(async row => ({
         id: row.id,
         table: row.table_name,
         reason: row.reason,
@@ -57,7 +62,7 @@ export class SyncConflictsService {
     const name = sql.identifier(table.name);
     const incoming = sql`jsonb_populate_record(NULL::${name}, ${conflict.row}::jsonb)`;
     try {
-      await this.db.transaction(async (tx) => {
+      await this.db.transaction(async tx => {
         // A row holding the same unique values under another key (the diary entry of the same
         // day) gives way; it lands in the trash, so nothing is lost either.
         for (const unique of table.uniques) {
@@ -68,18 +73,25 @@ export class SyncConflictsService {
           `);
         }
         const updates = table.columns
-          .filter((column) => !table.primaryKey.includes(column))
-          .map((column) => sql`${sql.identifier(column)} = EXCLUDED.${sql.identifier(column)}`);
+          .filter(column => !table.primaryKey.includes(column))
+          .map(
+            column =>
+              sql`${sql.identifier(column)} = EXCLUDED.${sql.identifier(column)}`,
+          );
         await tx.execute(sql`
           INSERT INTO ${name} SELECT * FROM ${incoming}
           ON CONFLICT (${columns(null, table.primaryKey)})
           ${updates.length ? sql`DO UPDATE SET ${sql.join(updates, sql`, `)}` : sql`DO NOTHING`}
         `);
-        await tx.execute(sql`DELETE FROM sync.conflicts WHERE id = ${id}::uuid`);
+        await tx.execute(
+          sql`DELETE FROM sync.conflicts WHERE id = ${id}::uuid`,
+        );
       });
     } catch (error) {
       if (isForeignKeyViolation(error)) {
-        throw new ConflictException('What this row belongs to no longer exists');
+        throw new ConflictException(
+          'What this row belongs to no longer exists',
+        );
       }
       throw error;
     }
@@ -88,7 +100,9 @@ export class SyncConflictsService {
   /** Leaves the current row as it is and forgets the other version. */
   async dismiss(userId: string, id: string): Promise<void> {
     await this.requireConflict(userId, id);
-    await this.db.execute(sql`DELETE FROM sync.conflicts WHERE id = ${id}::uuid`);
+    await this.db.execute(
+      sql`DELETE FROM sync.conflicts WHERE id = ${id}::uuid`,
+    );
   }
 
   async dismissAll(userId: string): Promise<void> {
@@ -98,7 +112,7 @@ export class SyncConflictsService {
   }
 
   async parked(userId: string): Promise<SyncParkedChange[]> {
-    const { rows } = await this.db.execute<{
+    const {rows} = await this.db.execute<{
       table_name: string;
       pk: string;
       error: string;
@@ -110,7 +124,7 @@ export class SyncConflictsService {
       WHERE ${await this.owned(userId, sql`p.table_name`, sql`p.row`)}
       ORDER BY p.parked_at DESC LIMIT ${LIST_LIMIT}
     `);
-    return rows.map((row) => ({
+    return rows.map(row => ({
       table: row.table_name,
       pk: row.pk,
       error: row.error,
@@ -121,7 +135,7 @@ export class SyncConflictsService {
 
   /** Gives up on a change that keeps failing. */
   async discardParked(userId: string, key: SyncParkedKey): Promise<void> {
-    const { rowCount } = await this.db.execute(sql`
+    const {rowCount} = await this.db.execute(sql`
       DELETE FROM sync.parked p
       WHERE p.table_name = ${key.table} AND p.pk = ${key.pk}::jsonb
         AND ${await this.owned(userId, sql`p.table_name`, sql`p.row`)}
@@ -146,11 +160,11 @@ export class SyncConflictsService {
   private async requireConflict(
     userId: string,
     id: string,
-  ): Promise<{ table_name: string; row: string }> {
+  ): Promise<{table_name: string; row: string}> {
     if (!/^[0-9a-f-]{36}$/i.test(id)) {
       throw new NotFoundException('No such conflict');
     }
-    const { rows } = await this.db.execute<{ table_name: string; row: string }>(sql`
+    const {rows} = await this.db.execute<{table_name: string; row: string}>(sql`
       SELECT c.table_name, c.row::text AS row FROM sync.conflicts c
       WHERE c.id = ${id}::uuid AND ${await this.owned(userId, sql`c.table_name`, sql`c.row`)}
     `);
@@ -161,13 +175,16 @@ export class SyncConflictsService {
   }
 
   /** The row the conflict is about, as it is now. */
-  private async current(tableName: string, id: string): Promise<Record<string, unknown> | null> {
+  private async current(
+    tableName: string,
+    id: string,
+  ): Promise<Record<string, unknown> | null> {
     const table = await this.table(tableName).catch(() => null);
     if (!table) {
       return null;
     }
     const name = sql.identifier(table.name);
-    const { rows } = await this.db.execute<{ row: Record<string, unknown> }>(sql`
+    const {rows} = await this.db.execute<{row: Record<string, unknown>}>(sql`
       SELECT to_jsonb(t) AS row FROM ${name} t
       WHERE (${columns('t', table.primaryKey)}) = (
         SELECT ${columns('k', table.primaryKey)} FROM sync.conflicts c
@@ -180,7 +197,9 @@ export class SyncConflictsService {
 
   private async table(name: string): Promise<SyncTable> {
     this.tables ??= readSyncTables(this.db);
-    const table = (await this.tables).find((candidate) => candidate.name === name);
+    const table = (await this.tables).find(
+      candidate => candidate.name === name,
+    );
     if (!table) {
       throw new NotFoundException(`Unknown table ${name}`);
     }
@@ -191,8 +210,10 @@ export class SyncConflictsService {
 /** `t.a, t.b` — or just `a, b` without an alias. */
 function columns(alias: string | null, names: string[]): SQL {
   return sql.join(
-    names.map((name) =>
-      alias ? sql`${sql.identifier(alias)}.${sql.identifier(name)}` : sql.identifier(name),
+    names.map(name =>
+      alias
+        ? sql`${sql.identifier(alias)}.${sql.identifier(name)}`
+        : sql.identifier(name),
     ),
     sql`, `,
   );

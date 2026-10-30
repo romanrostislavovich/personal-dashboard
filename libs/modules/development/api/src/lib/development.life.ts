@@ -1,9 +1,9 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LifeService } from '@pd/api-core';
-import { LifeCard, LifeEvent } from '@pd/contracts';
-import { and, eq, gte, lte, sql } from 'drizzle-orm';
-import { codeAccountDays } from './accounts/accounts.schema';
-import { githubContributionDays } from './github-profile/github-profile.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, LifeService} from '@pd/api-core';
+import {LifeCard, LifeEvent} from '@pd/contracts';
+import {and, eq, gte, lte, sql} from 'drizzle-orm';
+import {codeAccountDays} from './accounts/accounts.schema';
+import {githubContributionDays} from './github-profile/github-profile.schema';
 
 /** Contributions (GitHub, GitLab, Bitbucket together) of a day and of a period. */
 @Injectable()
@@ -17,14 +17,17 @@ export class DevelopmentLife implements OnModuleInit {
     this.life.register({
       module: 'development',
       day: async (userId, day): Promise<LifeEvent[]> => {
-        const contributions = await this.contributions(userId, { from: day, to: day });
+        const contributions = await this.contributions(userId, {
+          from: day,
+          to: day,
+        });
         return contributions
           ? [
               {
                 module: 'development',
                 icon: 'code',
                 key: 'development.life.day',
-                params: { count: contributions },
+                params: {count: contributions},
                 at: null,
                 link: '/development',
               },
@@ -50,10 +53,12 @@ export class DevelopmentLife implements OnModuleInit {
 
   private async contributions(
     userId: string,
-    period: { from: string; to: string },
+    period: {from: string; to: string},
   ): Promise<number> {
     const [github] = await this.db
-      .select({ total: sql<number>`coalesce(sum(${githubContributionDays.count}), 0)::int` })
+      .select({
+        total: sql<number>`coalesce(sum(${githubContributionDays.count}), 0)::int`,
+      })
       .from(githubContributionDays)
       .where(
         and(
@@ -63,7 +68,9 @@ export class DevelopmentLife implements OnModuleInit {
         ),
       );
     const [others] = await this.db
-      .select({ total: sql<number>`coalesce(sum(${codeAccountDays.count}), 0)::int` })
+      .select({
+        total: sql<number>`coalesce(sum(${codeAccountDays.count}), 0)::int`,
+      })
       .from(codeAccountDays)
       .where(
         and(

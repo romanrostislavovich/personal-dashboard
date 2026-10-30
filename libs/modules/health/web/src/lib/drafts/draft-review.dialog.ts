@@ -1,14 +1,23 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   DIAGNOSIS_STATUSES,
   HEALTH_DRAFT_KINDS,
@@ -18,11 +27,11 @@ import {
   HealthDocumentDraft,
   HealthRecord,
 } from '@pd/contracts';
-import { errorBody } from '@pd/web-core';
-import { CountryFieldComponent } from '../dialogs/country-field.component';
-import { DocumentPagesComponent } from '../dialogs/document-pages.component';
-import { HealthApi } from '../health.api';
-import { SpecialityPipe, today } from '../health-labels';
+import {errorBody} from '@pd/web-core';
+import {CountryFieldComponent} from '../dialogs/country-field.component';
+import {DocumentPagesComponent} from '../dialogs/document-pages.component';
+import {HealthApi} from '../health.api';
+import {SpecialityPipe, today} from '../health-labels';
 import {
   diagnosisLine,
   DraftForm,
@@ -92,7 +101,9 @@ export class DraftReviewDialog {
   /** The draft kept, or the document read now. */
   private async load(): Promise<void> {
     try {
-      const { draft } = await this.api.client.documentDraft(this.data.document.id);
+      const {draft} = await this.api.client.documentDraft(
+        this.data.document.id,
+      );
       if (draft) {
         this.setDraft(draft);
       } else {
@@ -109,7 +120,8 @@ export class DraftReviewDialog {
     try {
       this.setDraft(await this.api.client.readDocument(this.data.document.id));
     } catch (error) {
-      const code = (errorBody(error) as { code?: string } | null)?.code ?? 'aiFailed';
+      const code =
+        (errorBody(error) as {code?: string} | null)?.code ?? 'aiFailed';
       this.failure.set(`health.drafts.failed.${code}`);
     } finally {
       this.reading.set(false);
@@ -121,7 +133,7 @@ export class DraftReviewDialog {
       draftForm(
         this.fb,
         draft,
-        { clinics: this.data.record.clinics, doctors: this.data.record.doctors },
+        {clinics: this.data.record.clinics, doctors: this.data.record.doctors},
         today(),
       ),
     );
@@ -141,7 +153,7 @@ export class DraftReviewDialog {
 
   /** Only the parts saved with the kind picked have to be right: the rest is not saved. */
   protected valid(form: DraftForm): boolean {
-    const { controls } = form;
+    const {controls} = form;
     if (controls.day.invalid) {
       return false;
     }
@@ -165,7 +177,9 @@ export class DraftReviewDialog {
     this.busy.set(true);
     this.saveFailed.set(false);
     try {
-      await this.api.client.applyDraft(toApplyInput(this.data.document.id, form));
+      await this.api.client.applyDraft(
+        toApplyInput(this.data.document.id, form),
+      );
       this.ref.close(true);
     } catch {
       this.saveFailed.set(true);

@@ -1,16 +1,21 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Task } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { todayLocal } from './local-time';
-import { AuthService } from '@pd/web-core';
-import { TasksApi } from './tasks.api';
-import { filterTasks, isOverdue } from './todo/task-filter';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Task} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {todayLocal} from './local-time';
+import {AuthService} from '@pd/web-core';
+import {TasksApi} from './tasks.api';
+import {filterTasks, isOverdue} from './todo/task-filter';
 
 const WIDGET_MAX_TASKS = 6;
 
@@ -18,14 +23,26 @@ const WIDGET_MAX_TASKS = 6;
 @Component({
   selector: 'pd-tasks-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, RouterLink, MatButtonModule, MatCardModule, MatCheckboxModule, TranslocoPipe],
+  imports: [
+    DatePipe,
+    RouterLink,
+    MatButtonModule,
+    MatCardModule,
+    MatCheckboxModule,
+    TranslocoPipe,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>✅ {{ 'tasks.widget.title' | transloco }}</mat-card-title>
+        <mat-card-title
+          >✅ {{ 'tasks.widget.title' | transloco }}</mat-card-title
+        >
         @if (today().length > shown().length) {
           <mat-card-subtitle>
-            {{ 'tasks.widget.more' | transloco: { count: today().length - shown().length } }}
+            {{
+              'tasks.widget.more'
+                | transloco: {count: today().length - shown().length}
+            }}
           </mat-card-subtitle>
         }
       </mat-card-header>
@@ -39,12 +56,15 @@ const WIDGET_MAX_TASKS = 6;
         }
         @if (nextReminder(); as reminder) {
           <p class="muted reminder">
-            ⏰ {{ reminder.remindAt | date: 'd MMM, HH:mm' }} — {{ reminder.text }}
+            ⏰ {{ reminder.remindAt | date: 'd MMM, HH:mm' }} —
+            {{ reminder.text }}
           </p>
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/tasks">{{ 'tasks.widget.open' | transloco }}</a>
+        <a matButton routerLink="/tasks">{{
+          'tasks.widget.open' | transloco
+        }}</a>
       </mat-card-actions>
     </mat-card>
   `,
@@ -75,11 +95,20 @@ export class TasksWidget {
 
   /** Due today or earlier, in the order the server gives: by date, then by priority. */
   protected readonly today = computed(() =>
-    filterTasks(this.tasks.value(), { view: 'today', listId: null, tag: null }, this.day),
+    filterTasks(
+      this.tasks.value(),
+      {view: 'today', listId: null, tag: null},
+      this.day,
+    ),
   );
-  protected readonly shown = computed(() => this.today().slice(0, WIDGET_MAX_TASKS));
+  protected readonly shown = computed(() =>
+    this.today().slice(0, WIDGET_MAX_TASKS),
+  );
   protected readonly nextReminder = computed(
-    () => this.reminders.value().find((reminder) => reminder.status === 'scheduled') ?? null,
+    () =>
+      this.reminders
+        .value()
+        .find(reminder => reminder.status === 'scheduled') ?? null,
   );
 
   /** Past its date, shown in red — unless the user asked for soft overdue (CalmSettings). */

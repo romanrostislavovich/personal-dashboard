@@ -1,15 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { EmptyStateComponent } from '@pd/web-core';
-import { HealthApi } from '../health.api';
-import { today } from './band-format';
-import { BandDayComponent } from './band-day.component';
-import { BandMindComponent } from './band-mind.component';
-import { BandTrendsComponent } from './band-trends.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {EmptyStateComponent} from '@pd/web-core';
+import {HealthApi} from '../health.api';
+import {today} from './band-format';
+import {BandDayComponent} from './band-day.component';
+import {BandMindComponent} from './band-mind.component';
+import {BandTrendsComponent} from './band-trends.component';
 
 const VIEWS = ['day', 'trends', 'mind'] as const;
 type View = (typeof VIEWS)[number];
@@ -42,14 +47,18 @@ type View = (typeof VIEWS)[number];
           [text]="'health.band.empty.text' | transloco"
         />
         <p class="center">
-          <a matButton="filled" routerLink="/settings" [queryParams]="{ tab: 'integrations' }">
+          <a
+            matButton="filled"
+            routerLink="/settings"
+            [queryParams]="{tab: 'integrations'}"
+          >
             {{ 'health.band.empty.connect' | transloco }}
           </a>
         </p>
       } @else {
         <mat-button-toggle-group
           [value]="view()"
-          (change)="go({ view: $event.value })"
+          (change)="go({view: $event.value})"
           [attr.aria-label]="'health.band.views.label' | transloco"
         >
           @for (v of views; track v) {
@@ -60,7 +69,10 @@ type View = (typeof VIEWS)[number];
         </mat-button-toggle-group>
         @switch (view()) {
           @case ('day') {
-            <pd-band-day [day]="day()" (dayChange)="go({ view: 'day', day: $event })" />
+            <pd-band-day
+              [day]="day()"
+              (dayChange)="go({view: 'day', day: $event})"
+            />
           }
           @case ('trends') {
             <pd-band-trends />
@@ -104,7 +116,7 @@ export class BandPage {
     return day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : today();
   });
 
-  protected go(params: { view: View; day?: string }): void {
+  protected go(params: {view: View; day?: string}): void {
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {

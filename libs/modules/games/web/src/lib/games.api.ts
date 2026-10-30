@@ -1,6 +1,6 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { GAMES_READS, gamesApi } from '@pd/client-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {GAMES_READS, gamesApi} from '@pd/client-core';
 import {
   DotaMatchesPage,
   DotaMatchesQuery,
@@ -12,24 +12,30 @@ import {
   WowCredentialsInput,
   WowToken,
 } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The games requests of the client core (`@pd/client-core`) for Angular. */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class GamesApi {
   private readonly games = gamesApi(inject(DASHBOARD_CLIENT).api);
 
   accounts() {
-    return httpResource<GameAccount[]>(() => GAMES_READS.accounts(), { defaultValue: [] });
+    return httpResource<GameAccount[]>(() => GAMES_READS.accounts(), {
+      defaultValue: [],
+    });
   }
 
   /** `accountId()` → one account; `null` → all Dota accounts together. */
   dotaOverview(accountId: () => string | null) {
-    return httpResource<DotaOverview>(() => GAMES_READS.dotaOverview(accountId()));
+    return httpResource<DotaOverview>(() =>
+      GAMES_READS.dotaOverview(accountId()),
+    );
   }
 
   dotaMatches(query: () => Partial<DotaMatchesQuery>) {
-    return httpResource<DotaMatchesPage>(() => GAMES_READS.dotaMatches(query()));
+    return httpResource<DotaMatchesPage>(() =>
+      GAMES_READS.dotaMatches(query()),
+    );
   }
 
   settings() {
@@ -74,7 +80,9 @@ export class GamesApi {
 
   /** The price of the WoW Token with its history, per region. */
   wowTokens() {
-    return httpResource<WowToken[]>(() => GAMES_READS.wowTokens(), { defaultValue: [] });
+    return httpResource<WowToken[]>(() => GAMES_READS.wowTokens(), {
+      defaultValue: [],
+    });
   }
 
   updateWowCharacter(accountId: string, update: WowCharacterUpdate) {

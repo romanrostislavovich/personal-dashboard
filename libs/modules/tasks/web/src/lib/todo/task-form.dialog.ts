@@ -1,13 +1,23 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   ChecklistItem,
   Repeat,
@@ -19,10 +29,10 @@ import {
   TaskPriority,
   TaskUpdate,
 } from '@pd/contracts';
-import { pickableProjects, ProjectsApi } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { RepeatFieldComponent } from '../repeat-field.component';
-import { TasksApi } from '../tasks.api';
+import {pickableProjects, ProjectsApi} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {RepeatFieldComponent} from '../repeat-field.component';
+import {TasksApi} from '../tasks.api';
 
 export interface TaskDialogData {
   /** `null` — a new task. */
@@ -53,7 +63,9 @@ export interface TaskDialogData {
   ],
   template: `
     <h2 mat-dialog-title>
-      {{ (data.task ? 'tasks.todo.editTitle' : 'tasks.todo.newTitle') | transloco }}
+      {{
+        (data.task ? 'tasks.todo.editTitle' : 'tasks.todo.newTitle') | transloco
+      }}
     </h2>
     <mat-dialog-content class="form">
       <mat-form-field>
@@ -62,7 +74,12 @@ export interface TaskDialogData {
       </mat-form-field>
       <mat-form-field>
         <mat-label>{{ 'tasks.todo.notes' | transloco }}</mat-label>
-        <textarea matInput [(ngModel)]="notes" rows="3" maxlength="5000"></textarea>
+        <textarea
+          matInput
+          [(ngModel)]="notes"
+          rows="3"
+          maxlength="5000"
+        ></textarea>
       </mat-form-field>
 
       <div class="row">
@@ -74,7 +91,9 @@ export interface TaskDialogData {
           <mat-label>{{ 'tasks.todo.priority' | transloco }}</mat-label>
           <mat-select [(ngModel)]="priority">
             @for (p of priorities; track p) {
-              <mat-option [value]="p">{{ 'tasks.priority.' + p | transloco }}</mat-option>
+              <mat-option [value]="p">{{
+                'tasks.priority.' + p | transloco
+              }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
@@ -82,7 +101,9 @@ export interface TaskDialogData {
           <mat-label>{{ 'tasks.todo.horizon' | transloco }}</mat-label>
           <mat-select [(ngModel)]="horizon">
             @for (h of horizons; track h) {
-              <mat-option [value]="h">{{ 'tasks.horizon.' + h | transloco }}</mat-option>
+              <mat-option [value]="h">{{
+                'tasks.horizon.' + h | transloco
+              }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
@@ -97,7 +118,9 @@ export interface TaskDialogData {
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'tasks.todo.list' | transloco }}</mat-label>
           <mat-select [(ngModel)]="listId">
-            <mat-option [value]="null">{{ 'tasks.todo.inbox' | transloco }}</mat-option>
+            <mat-option [value]="null">{{
+              'tasks.todo.inbox' | transloco
+            }}</mat-option>
             @for (list of data.lists; track list.id) {
               <mat-option [value]="list.id">{{ list.name }}</mat-option>
             }
@@ -116,14 +139,21 @@ export interface TaskDialogData {
 
       <mat-form-field subscriptSizing="dynamic">
         <mat-label>{{ 'tasks.todo.tags' | transloco }}</mat-label>
-        <input matInput [(ngModel)]="tags" [placeholder]="'tasks.todo.tagsHint' | transloco" />
+        <input
+          matInput
+          [(ngModel)]="tags"
+          [placeholder]="'tasks.todo.tagsHint' | transloco"
+        />
       </mat-form-field>
 
       <section class="checklist">
         <span class="label">{{ 'tasks.todo.checklist' | transloco }}</span>
         @for (item of checklist(); track $index) {
           <div class="item">
-            <mat-checkbox [checked]="item.done" (change)="toggleItem($index, $event.checked)" />
+            <mat-checkbox
+              [checked]="item.done"
+              (change)="toggleItem($index, $event.checked)"
+            />
             <span [class.done]="item.done">{{ item.text }}</span>
             <button
               matIconButton
@@ -137,13 +167,24 @@ export interface TaskDialogData {
         }
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'tasks.todo.checklistAdd' | transloco }}</mat-label>
-          <input matInput #step maxlength="200" (keydown.enter)="addItem(step)" />
+          <input
+            matInput
+            #step
+            maxlength="200"
+            (keydown.enter)="addItem(step)"
+          />
         </mat-form-field>
       </section>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button matButton mat-dialog-close>{{ 'core.actions.cancel' | transloco }}</button>
-      <button matButton="filled" [disabled]="!valid() || saving()" (click)="save()">
+      <button matButton mat-dialog-close>
+        {{ 'core.actions.cancel' | transloco }}
+      </button>
+      <button
+        matButton="filled"
+        [disabled]="!valid() || saving()"
+        (click)="save()"
+      >
         {{ 'core.actions.save' | transloco }}
       </button>
     </mat-dialog-actions>
@@ -204,15 +245,23 @@ export class TaskFormDialog {
   protected readonly title = signal(this.task?.title ?? '');
   protected readonly notes = signal(this.task?.notes ?? '');
   /** `''` — no due date (what an empty date input gives). */
-  protected readonly dueDate = signal(this.task?.dueDate ?? this.data.defaults?.dueDate ?? '');
+  protected readonly dueDate = signal(
+    this.task?.dueDate ?? this.data.defaults?.dueDate ?? '',
+  );
   protected readonly priority = signal<TaskPriority>(this.task?.priority ?? 0);
-  protected readonly horizon = signal<TaskHorizon>(this.task?.horizon ?? 'normal');
-  protected readonly listId = signal(this.task?.listId ?? this.data.defaults?.listId ?? null);
+  protected readonly horizon = signal<TaskHorizon>(
+    this.task?.horizon ?? 'normal',
+  );
+  protected readonly listId = signal(
+    this.task?.listId ?? this.data.defaults?.listId ?? null,
+  );
   protected readonly projectId = signal(this.task?.projectId ?? null);
   /** Tags as the user types them: separated by spaces or commas. */
   protected readonly tags = signal((this.task?.tags ?? []).join(' '));
   protected readonly repeat = signal<Repeat | null>(this.task?.repeat ?? null);
-  protected readonly checklist = signal<ChecklistItem[]>(this.task?.checklist ?? []);
+  protected readonly checklist = signal<ChecklistItem[]>(
+    this.task?.checklist ?? [],
+  );
   protected readonly saving = signal(false);
 
   protected valid(): boolean {
@@ -222,19 +271,19 @@ export class TaskFormDialog {
   protected addItem(input: HTMLInputElement): void {
     const text = input.value.trim();
     if (text) {
-      this.checklist.update((items) => [...items, { text, done: false }]);
+      this.checklist.update(items => [...items, {text, done: false}]);
       input.value = '';
     }
   }
 
   protected toggleItem(index: number, done: boolean): void {
-    this.checklist.update((items) =>
-      items.map((item, i) => (i === index ? { ...item, done } : item)),
+    this.checklist.update(items =>
+      items.map((item, i) => (i === index ? {...item, done} : item)),
     );
   }
 
   protected removeItem(index: number): void {
-    this.checklist.update((items) => items.filter((_, i) => i !== index));
+    this.checklist.update(items => items.filter((_, i) => i !== index));
   }
 
   protected async save(): Promise<void> {

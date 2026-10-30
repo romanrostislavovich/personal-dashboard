@@ -1,5 +1,5 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DB, Database, ProjectsService } from '@pd/api-core';
+import {Inject, Injectable, NotFoundException} from '@nestjs/common';
+import {DB, Database, ProjectsService} from '@pd/api-core';
 import {
   FinanceSummary,
   MainCashFlow,
@@ -9,11 +9,23 @@ import {
   TransactionInput,
   TransactionQuery,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gte, inArray, isNull, lte, SQL, sql, sum } from 'drizzle-orm';
-import { Converted, round } from '../currency/conversion';
-import { ExchangeRatesService } from '../currency/exchange-rates.service';
-import { FinanceSettingsService } from '../currency/finance-settings.service';
-import { financeReceipts, TransactionRow, transactions } from '../finance.schema';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  lte,
+  SQL,
+  sql,
+  sum,
+} from 'drizzle-orm';
+import {Converted, round} from '../currency/conversion';
+import {ExchangeRatesService} from '../currency/exchange-rates.service';
+import {FinanceSettingsService} from '../currency/finance-settings.service';
+import {financeReceipts, TransactionRow, transactions} from '../finance.schema';
 
 const TOP_CATEGORIES_LIMIT = 5;
 
@@ -27,7 +39,10 @@ export class TransactionsService {
   ) {}
 
   private readonly listeners: ((userId: string) => Promise<void>)[] = [];
-  private readonly createdListeners: ((userId: string, created: Transaction[]) => void)[] = [];
+  private readonly createdListeners: ((
+    userId: string,
+    created: Transaction[],
+  ) => void)[] = [];
 
   /** Called with the new transactions (rules "if an expense over…" look at them). */
   onCreated(listener: (userId: string, created: Transaction[]) => void): void {
@@ -42,8 +57,8 @@ export class TransactionsService {
   /** Expenses of a period per category, in the main currency (each at the rate of its day). */
   async expensesInMain(
     userId: string,
-    period: { from: string; to: string },
-  ): Promise<{ mainCurrency: string; byCategory: Map<string, number> }> {
+    period: {from: string; to: string},
+  ): Promise<{mainCurrency: string; byCategory: Map<string, number>}> {
     const rows = await this.db
       .select({
         amount: transactions.amount,
@@ -52,19 +67,24 @@ export class TransactionsService {
         day: transactions.occurredOn,
       })
       .from(transactions)
-      .where(and(this.filter(userId, period), eq(transactions.kind, 'expense')));
+      .where(
+        and(this.filter(userId, period), eq(transactions.kind, 'expense')),
+      );
     const main = await this.settings.mainCurrency(userId);
-    const { values } = await this.convert(
+    const {values} = await this.convert(
       rows,
       main,
-      (r) => r.amount,
-      (r) => r.day,
+      r => r.amount,
+      r => r.day,
     );
     const byCategory = new Map<string, number>();
     rows.forEach((row, index) =>
-      byCategory.set(row.category, (byCategory.get(row.category) ?? 0) + (values[index] ?? 0)),
+      byCategory.set(
+        row.category,
+        (byCategory.get(row.category) ?? 0) + (values[index] ?? 0),
+      ),
     );
-    return { mainCurrency: main, byCategory };
+    return {mainCurrency: main, byCategory};
   }
 
   /**
@@ -73,7 +93,7 @@ export class TransactionsService {
    */
   async expensesByDayInMain(
     userId: string,
-    period: { from: string; to: string },
+    period: {from: string; to: string},
   ): Promise<{
     mainCurrency: string;
     byDay: Map<string, number>;
@@ -89,16 +109,16 @@ export class TransactionsService {
       .from(transactions)
       .where(
         and(
-          this.filter(userId, { ...period, scope: 'personal' }),
+          this.filter(userId, {...period, scope: 'personal'}),
           eq(transactions.kind, 'expense'),
         ),
       );
     const main = await this.settings.mainCurrency(userId);
-    const { values } = await this.convert(
+    const {values} = await this.convert(
       rows,
       main,
-      (r) => r.amount,
-      (r) => r.day,
+      r => r.amount,
+      r => r.day,
     );
     const byDay = new Map<string, number>();
     const byCategory = new Map<string, Map<string, number>>();
@@ -109,7 +129,7 @@ export class TransactionsService {
       days.set(row.day, (days.get(row.day) ?? 0) + value);
       byCategory.set(row.category, days);
     });
-    return { mainCurrency: main, byDay, byCategory };
+    return {mainCurrency: main, byDay, byCategory};
   }
 
   private changed(userId: string): void {
@@ -146,11 +166,11 @@ export class TransactionsService {
     }
     const [row] = await this.db
       .insert(transactions)
-      .values({ userId, ...input })
+      .values({userId, ...input})
       .returning();
     const [transaction] = await this.withMainAmounts(userId, [row]);
     this.changed(userId);
-    this.createdListeners.forEach((listener) => listener(userId, [transaction]));
+    this.createdListeners.forEach(listener => listener(userId, [transaction]));
     return transaction;
   }
 
@@ -173,15 +193,17 @@ export class TransactionsService {
     }
     const inserted = await this.db
       .insert(transactions)
-      .values(rows.map((row) => ({ ...row, userId })))
-      .onConflictDoNothing({ target: [transactions.userId, transactions.bankEntryId] })
+      .values(rows.map(row => ({...row, userId})))
+      .onConflictDoNothing({
+        target: [transactions.userId, transactions.bankEntryId],
+      })
       .returning();
     if (inserted.length) {
       this.changed(userId);
-      const recent = inserted.filter((row) => row.occurredOn >= recentFrom);
+      const recent = inserted.filter(row => row.occurredOn >= recentFrom);
       if (recent.length) {
         const created = await this.withMainAmounts(userId, recent);
-        this.createdListeners.forEach((listener) => listener(userId, created));
+        this.createdListeners.forEach(listener => listener(userId, created));
       }
     }
     return inserted.length;
@@ -191,7 +213,11 @@ export class TransactionsService {
   async linkToBank(
     userId: string,
     id: string,
-    link: { bankAccountId: string | null; bankEntryId: string; counterparty: string | null },
+    link: {
+      bankAccountId: string | null;
+      bankEntryId: string;
+      counterparty: string | null;
+    },
   ): Promise<void> {
     await this.db
       .update(transactions)
@@ -202,13 +228,13 @@ export class TransactionsService {
   /** Bank transactions sorted again: their categories and the counterparty found for them. */
   async sortFromBank(
     userId: string,
-    updates: { id: string; category: string; counterparty: string | null }[],
+    updates: {id: string; category: string; counterparty: string | null}[],
   ): Promise<void> {
     if (!updates.length) {
       return;
     }
-    await this.db.transaction(async (tx) => {
-      for (const { id, ...fields } of updates) {
+    await this.db.transaction(async tx => {
+      for (const {id, ...fields} of updates) {
         await tx
           .update(transactions)
           .set(fields)
@@ -219,8 +245,15 @@ export class TransactionsService {
   }
 
   /** Several transactions at once (an imported bank statement): all are saved or none. */
-  async createMany(userId: string, inputs: TransactionInput[]): Promise<Transaction[]> {
-    const projectIds = new Set(inputs.map((input) => input.projectId).filter((id) => id != null));
+  async createMany(
+    userId: string,
+    inputs: TransactionInput[],
+  ): Promise<Transaction[]> {
+    const projectIds = new Set(
+      inputs
+        .map(input => input.projectId)
+        .filter(id => id !== null && id !== undefined),
+    );
     for (const projectId of projectIds) {
       await this.projects.assertOwned(userId, projectId);
     }
@@ -229,15 +262,19 @@ export class TransactionsService {
     }
     const rows = await this.db
       .insert(transactions)
-      .values(inputs.map((input) => ({ userId, ...input })))
+      .values(inputs.map(input => ({userId, ...input})))
       .returning();
     this.changed(userId);
     const created = await this.withMainAmounts(userId, rows);
-    this.createdListeners.forEach((listener) => listener(userId, created));
+    this.createdListeners.forEach(listener => listener(userId, created));
     return created;
   }
 
-  async update(userId: string, id: string, input: TransactionInput): Promise<Transaction> {
+  async update(
+    userId: string,
+    id: string,
+    input: TransactionInput,
+  ): Promise<Transaction> {
     if (input.projectId) {
       await this.projects.assertOwned(userId, input.projectId);
     }
@@ -261,35 +298,43 @@ export class TransactionsService {
   }
 
   /** Income/expenses by currency and top expense categories for a period. */
-  async summary(userId: string, query: TransactionQuery): Promise<FinanceSummary> {
+  async summary(
+    userId: string,
+    query: TransactionQuery,
+  ): Promise<FinanceSummary> {
     const where = this.filter(userId, query);
     const total = sum(transactions.amount).mapWith(Number);
 
     const byKind = await this.db
-      .select({ currency: transactions.currency, kind: transactions.kind, total })
+      .select({currency: transactions.currency, kind: transactions.kind, total})
       .from(transactions)
       .where(where)
       .groupBy(transactions.currency, transactions.kind);
 
     const topCategories = await this.db
-      .select({ category: transactions.category, currency: transactions.currency, expense: total })
+      .select({
+        category: transactions.category,
+        currency: transactions.currency,
+        expense: total,
+      })
       .from(transactions)
       .where(and(where, eq(transactions.kind, 'expense')))
       .groupBy(transactions.category, transactions.currency)
       .orderBy(desc(total))
       .limit(TOP_CATEGORIES_LIMIT);
 
-    const currencies = [...new Set(byKind.map((row) => row.currency))].sort();
+    const currencies = [...new Set(byKind.map(row => row.currency))].sort();
     const totalFor = (currency: string, kind: string) =>
-      byKind.find((row) => row.currency === currency && row.kind === kind)?.total ?? 0;
+      byKind.find(row => row.currency === currency && row.kind === kind)
+        ?.total ?? 0;
 
     return {
       from: query.from,
       to: query.to,
-      totals: currencies.map((currency) => {
+      totals: currencies.map(currency => {
         const income = totalFor(currency, 'income');
         const expense = totalFor(currency, 'expense');
-        return { currency, income, expense, balance: round(income - expense) };
+        return {currency, income, expense, balance: round(income - expense)};
       }),
       topExpenseCategories: topCategories,
       inMain: await this.totalsInMain(userId, query),
@@ -297,7 +342,10 @@ export class TransactionsService {
   }
 
   /** Income and expenses per month and currency, oldest month first. */
-  async cashFlow(userId: string, query: TransactionQuery): Promise<MonthCashFlow[]> {
+  async cashFlow(
+    userId: string,
+    query: TransactionQuery,
+  ): Promise<MonthCashFlow[]> {
     const month = sql<string>`to_char(${transactions.occurredOn}, 'YYYY-MM')`;
     const rows = await this.db
       .select({
@@ -312,9 +360,14 @@ export class TransactionsService {
       .orderBy(asc(month));
 
     const byMonth = new Map<string, MonthCashFlow>();
-    for (const { month, currency, kind, total } of rows) {
+    for (const {month, currency, kind, total} of rows) {
       const key = `${month} ${currency}`;
-      const entry = byMonth.get(key) ?? { month, currency, income: 0, expense: 0 };
+      const entry = byMonth.get(key) ?? {
+        month,
+        currency,
+        income: 0,
+        expense: 0,
+      };
       entry[kind] = round(total);
       byMonth.set(key, entry);
     }
@@ -322,7 +375,10 @@ export class TransactionsService {
   }
 
   /** Months in the main currency: each transaction at the rate of its day. */
-  async cashFlowInMain(userId: string, query: TransactionQuery): Promise<MainCashFlow> {
+  async cashFlowInMain(
+    userId: string,
+    query: TransactionQuery,
+  ): Promise<MainCashFlow> {
     const month = sql<string>`to_char(${transactions.occurredOn}, 'YYYY-MM')`;
     // Summed per day and currency first: one rate per group instead of one per transaction.
     const groups = await this.db
@@ -335,21 +391,37 @@ export class TransactionsService {
       })
       .from(transactions)
       .where(this.filter(userId, query))
-      .groupBy(month, transactions.occurredOn, transactions.currency, transactions.kind);
+      .groupBy(
+        month,
+        transactions.occurredOn,
+        transactions.currency,
+        transactions.kind,
+      );
     const main = await this.settings.mainCurrency(userId);
     const converted = await this.convert(
       groups,
       main,
-      (g) => g.total,
-      (g) => g.day,
+      g => g.total,
+      g => g.day,
     );
-    const byMonth = new Map<string, { month: string; income: number; expense: number }>();
+    const byMonth = new Map<
+      string,
+      {month: string; income: number; expense: number}
+    >();
     groups.forEach((group, index) => {
-      const entry = byMonth.get(group.month) ?? { month: group.month, income: 0, expense: 0 };
-      entry[group.kind] = round(entry[group.kind] + (converted.values[index] ?? 0));
+      const entry = byMonth.get(group.month) ?? {
+        month: group.month,
+        income: 0,
+        expense: 0,
+      };
+      entry[group.kind] = round(
+        entry[group.kind] + (converted.values[index] ?? 0),
+      );
       byMonth.set(group.month, entry);
     });
-    const months = [...byMonth.values()].sort((a, b) => a.month.localeCompare(b.month));
+    const months = [...byMonth.values()].sort((a, b) =>
+      a.month.localeCompare(b.month),
+    );
     return {
       mainCurrency: main,
       approximate: converted.approximate,
@@ -376,11 +448,11 @@ export class TransactionsService {
       return null;
     }
     const main = await this.settings.mainCurrency(userId);
-    const { values, approximate, missing } = await this.convert(
+    const {values, approximate, missing} = await this.convert(
       rows,
       main,
-      (r) => r.amount,
-      (r) => r.day,
+      r => r.amount,
+      r => r.day,
     );
     let income = 0;
     let expense = 0;
@@ -391,11 +463,14 @@ export class TransactionsService {
         income += value;
       } else {
         expense += value;
-        categories.set(row.category, (categories.get(row.category) ?? 0) + value);
+        categories.set(
+          row.category,
+          (categories.get(row.category) ?? 0) + value,
+        );
       }
     });
     const topExpenseCategories = [...categories]
-      .map(([category, total]) => ({ category, expense: round(total) }))
+      .map(([category, total]) => ({category, expense: round(total)}))
       .sort((a, b) => b.expense - a.expense)
       .slice(0, TOP_CATEGORIES_LIMIT);
     return {
@@ -409,41 +484,50 @@ export class TransactionsService {
     };
   }
 
-  private async withMainAmounts(userId: string, rows: TransactionRow[]): Promise<Transaction[]> {
+  private async withMainAmounts(
+    userId: string,
+    rows: TransactionRow[],
+  ): Promise<Transaction[]> {
     if (rows.length === 0) {
       return [];
     }
     const main = await this.settings.mainCurrency(userId);
-    const { values } = await this.convert(
+    const {values} = await this.convert(
       rows,
       main,
-      (r) => r.amount,
-      (r) => r.occurredOn,
+      r => r.amount,
+      r => r.occurredOn,
     );
     const withReceipt = new Set(
       (
         await this.db
-          .select({ id: financeReceipts.transactionId })
+          .select({id: financeReceipts.transactionId})
           .from(financeReceipts)
           .where(
             inArray(
               financeReceipts.transactionId,
-              rows.map((row) => row.id),
+              rows.map(row => row.id),
             ),
           )
-      ).map((receipt) => receipt.id),
+      ).map(receipt => receipt.id),
     );
-    return rows.map((row, index) => toTransaction(row, values[index], withReceipt.has(row.id)));
+    return rows.map((row, index) =>
+      toTransaction(row, values[index], withReceipt.has(row.id)),
+    );
   }
 
-  private convert<T extends { currency: string }>(
+  private convert<T extends {currency: string}>(
     items: T[],
     main: string,
     amount: (item: T) => number,
     day: (item: T) => string,
   ): Promise<Converted> {
     return this.rates.convert(
-      items.map((item) => ({ amount: amount(item), currency: item.currency, day: day(item) })),
+      items.map(item => ({
+        amount: amount(item),
+        currency: item.currency,
+        day: day(item),
+      })),
       main,
     );
   }
@@ -454,14 +538,18 @@ export class TransactionsService {
       from,
       to,
       scope,
-    }: Pick<TransactionQuery, 'from' | 'to'> & { scope?: TransactionQuery['scope'] },
+    }: Pick<TransactionQuery, 'from' | 'to'> & {
+      scope?: TransactionQuery['scope'];
+    },
   ): SQL | undefined {
     return and(
       eq(transactions.userId, userId),
       gte(transactions.occurredOn, from),
       lte(transactions.occurredOn, to),
       scope === 'personal' ? isNull(transactions.projectId) : undefined,
-      scope && scope !== 'personal' ? eq(transactions.projectId, scope) : undefined,
+      scope && scope !== 'personal'
+        ? eq(transactions.projectId, scope)
+        : undefined,
     );
   }
 }

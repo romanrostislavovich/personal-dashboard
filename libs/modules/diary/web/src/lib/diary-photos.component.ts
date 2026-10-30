@@ -8,13 +8,13 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { DIARY_PHOTO_MAX_BYTES, DiaryPhoto, LocalDate } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { DiaryApi } from './diary.api';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {DIARY_PHOTO_MAX_BYTES, DiaryPhoto, LocalDate} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {DiaryApi} from './diary.api';
 
 /**
  * Photos of a day that are not placed in the text: thumbnails, upload and a full-size view.
@@ -24,12 +24,17 @@ import { DiaryApi } from './diary.api';
   selector: 'pd-diary-photos',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MatButtonModule, MatIconModule, MatTooltipModule, TranslocoPipe],
-  host: { '(document:keydown.escape)': 'opened.set(null)' },
+  host: {'(document:keydown.escape)': 'opened.set(null)'},
   template: `
     <div class="photos">
       @for (photo of visible(); track photo.id) {
         <div class="photo">
-          <button type="button" class="thumb" (click)="open(photo)" [title]="photo.caption ?? ''">
+          <button
+            type="button"
+            class="thumb"
+            (click)="open(photo)"
+            [title]="photo.caption ?? ''"
+          >
             @if (urls()[photo.id]; as url) {
               <img [src]="url" [alt]="photo.caption ?? ''" />
             }
@@ -47,7 +52,13 @@ import { DiaryApi } from './diary.api';
         </div>
       }
       <label class="add" [class.busy]="uploading()">
-        <input type="file" accept="image/*" multiple (change)="upload($event)" hidden />
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          (change)="upload($event)"
+          hidden
+        />
         <mat-icon>add_photo_alternate</mat-icon>
         <span>{{ 'diary.photos.add' | transloco }}</span>
       </label>
@@ -186,7 +197,7 @@ export class DiaryPhotosComponent {
 
   protected readonly photos = this.api.photos(this.day);
   protected readonly visible = computed(() =>
-    this.photos.value().filter((photo) => !this.hiddenIds().includes(photo.id)),
+    this.photos.value().filter(photo => !this.hiddenIds().includes(photo.id)),
   );
   /** Object URLs of loaded images by photo id. */
   protected readonly urls = signal<Record<string, string>>({});
@@ -206,7 +217,9 @@ export class DiaryPhotosComponent {
       }
     });
     // Object URLs keep the image in memory until revoked.
-    inject(DestroyRef).onDestroy(() => Object.values(this.urls()).forEach(URL.revokeObjectURL));
+    inject(DestroyRef).onDestroy(() =>
+      Object.values(this.urls()).forEach(URL.revokeObjectURL),
+    );
   }
 
   protected open(photo: DiaryPhoto): void {
@@ -242,6 +255,6 @@ export class DiaryPhotosComponent {
 
   private async load(id: string): Promise<void> {
     const blob = await firstValueFrom(this.api.photoBlob(id));
-    this.urls.update((urls) => ({ ...urls, [id]: URL.createObjectURL(blob) }));
+    this.urls.update(urls => ({...urls, [id]: URL.createObjectURL(blob)}));
   }
 }

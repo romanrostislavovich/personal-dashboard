@@ -1,22 +1,32 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { ACTIVITY_CATEGORIES, ActivityApp, ActivityCategory } from '@pd/contracts';
-import { pickableProjects, ProjectsApi } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { ActivityApi } from '../activity.api';
-import { RuleSuggestionsComponent } from './rule-suggestions.component';
-import { RouterLink } from '@angular/router';
-import { PrivacySettingsComponent } from './privacy-settings.component';
-import { WellbeingSettingsComponent } from './wellbeing-settings.component';
-import { BrowserSettingsComponent } from './browser-settings.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {
+  ACTIVITY_CATEGORIES,
+  ActivityApp,
+  ActivityCategory,
+} from '@pd/contracts';
+import {pickableProjects, ProjectsApi} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {ActivityApi} from '../activity.api';
+import {RuleSuggestionsComponent} from './rule-suggestions.component';
+import {RouterLink} from '@angular/router';
+import {PrivacySettingsComponent} from './privacy-settings.component';
+import {WellbeingSettingsComponent} from './wellbeing-settings.component';
+import {BrowserSettingsComponent} from './browser-settings.component';
 
 const IDLE_MINUTES = [1, 2, 3, 5, 10, 15, 30, 60];
 
@@ -56,7 +66,9 @@ export class SettingsPage {
   protected readonly apps = this.api.apps();
   protected readonly rules = this.api.rules();
   protected readonly projects = inject(ProjectsApi).list();
-  protected readonly pickable = computed(() => pickableProjects(this.projects.value()));
+  protected readonly pickable = computed(() =>
+    pickableProjects(this.projects.value()),
+  );
 
   /** The new rule being typed. */
   protected readonly ruleProject = signal<string | null>(null);
@@ -66,30 +78,40 @@ export class SettingsPage {
   );
 
   protected readonly rulesShown = computed(() => {
-    const names = new Map(this.projects.value().map((project) => [project.id, project.name]));
+    const names = new Map(
+      this.projects.value().map(project => [project.id, project.name]),
+    );
     return this.rules
       .value()
-      .map((rule) => ({ ...rule, project: names.get(rule.projectId) ?? '—' }));
+      .map(rule => ({...rule, project: names.get(rule.projectId) ?? '—'}));
   });
 
   protected async setIdle(idleMinutes: number): Promise<void> {
-    await firstValueFrom(this.api.saveSettings({ idleMinutes }));
+    await firstValueFrom(this.api.saveSettings({idleMinutes}));
     this.settings.reload();
   }
 
-  protected async setCategory(app: ActivityApp, category: ActivityCategory): Promise<void> {
-    await firstValueFrom(this.api.updateApp(app.app, { category }));
+  protected async setCategory(
+    app: ActivityApp,
+    category: ActivityCategory,
+  ): Promise<void> {
+    await firstValueFrom(this.api.updateApp(app.app, {category}));
     this.apps.reload();
   }
 
   /** Excluding deletes what was recorded for the program, so it is confirmed first. */
-  protected async setExcluded(app: ActivityApp, excluded: boolean): Promise<void> {
-    const question = this.transloco.translate('activity.apps.confirmExclude', { name: app.name });
+  protected async setExcluded(
+    app: ActivityApp,
+    excluded: boolean,
+  ): Promise<void> {
+    const question = this.transloco.translate('activity.apps.confirmExclude', {
+      name: app.name,
+    });
     if (excluded && !confirm(question)) {
       this.apps.reload(); // Puts the switch back.
       return;
     }
-    await firstValueFrom(this.api.updateApp(app.app, { excluded }));
+    await firstValueFrom(this.api.updateApp(app.app, {excluded}));
     this.apps.reload();
   }
 
@@ -98,7 +120,9 @@ export class SettingsPage {
     if (!projectId || !this.canAddRule()) {
       return;
     }
-    await firstValueFrom(this.api.addRule({ projectId, pattern: this.rulePattern().trim() }));
+    await firstValueFrom(
+      this.api.addRule({projectId, pattern: this.rulePattern().trim()}),
+    );
     this.rulePattern.set('');
     this.rules.reload();
   }

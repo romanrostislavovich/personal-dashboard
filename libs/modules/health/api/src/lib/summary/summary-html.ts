@@ -1,12 +1,15 @@
-import { SummaryLanguage } from '@pd/contracts';
-import { SummaryBlock } from './summary-blocks';
+import {SummaryLanguage} from '@pd/contracts';
+import {SummaryBlock} from './summary-blocks';
 
 /**
  * A summary as one page of HTML with nothing outside it — no script, no font, no image — that
  * a doctor opens from a link or the user prints to PDF. Every text is escaped.
  */
-export function summaryHtml(language: SummaryLanguage, blocks: SummaryBlock[]): string {
-  const title = blocks.find((block) => block.kind === 'title')?.text ?? '';
+export function summaryHtml(
+  language: SummaryLanguage,
+  blocks: SummaryBlock[],
+): string {
+  const title = blocks.find(block => block.kind === 'title')?.text ?? '';
   return `<!doctype html>
 <html lang="${language}">
 <head>
@@ -34,13 +37,13 @@ function render(block: SummaryBlock): string {
       return `<p${block.muted ? ' class="muted"' : ''}>${escape(block.text)}</p>`;
     case 'table':
       return `<div class="table"><table>
-<thead><tr>${block.head.map((cell) => `<th>${escape(cell)}</th>`).join('')}</tr></thead>
+<thead><tr>${block.head.map(cell => `<th>${escape(cell)}</th>`).join('')}</tr></thead>
 <tbody>
 ${block.rows
   .map(
     (row, index) =>
       `<tr${block.marked?.[index] ? ' class="marked"' : ''}>${row
-        .map((cell) => `<td>${escape(cell)}</td>`)
+        .map(cell => `<td>${escape(cell)}</td>`)
         .join('')}</tr>`,
   )
   .join('\n')}

@@ -1,11 +1,11 @@
-import { app } from 'electron';
-import type { DesktopTelemetryDiagnostics } from '@pd/contracts';
-import { ChildProcess, spawn } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createInterface } from 'node:readline';
-import { NativeInputAggregate, parseInputAggregate } from './input-dynamics';
+import {app} from 'electron';
+import type {DesktopTelemetryDiagnostics} from '@pd/contracts';
+import {ChildProcess, spawn} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {readFileSync, writeFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {createInterface} from 'node:readline';
+import {NativeInputAggregate, parseInputAggregate} from './input-dynamics';
 
 export interface TerminalReport {
   durationMs: number;
@@ -29,13 +29,18 @@ export interface SourceGate {
 export function parseTerminalReport(value: unknown): TerminalReport | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const report = value as TerminalReport;
-  return Object.keys(report).sort().join(',') === 'category,durationMs,exitCode' &&
+  return Object.keys(report).sort().join(',') ===
+    'category,durationMs,exitCode' &&
     ['build', 'test', 'commit', 'general'].includes(report.category) &&
     Number.isSafeInteger(report.exitCode) &&
     Number.isFinite(report.durationMs) &&
     report.durationMs >= 0 &&
     report.durationMs <= 300_000
-    ? { durationMs: report.durationMs, exitCode: report.exitCode, category: report.category }
+    ? {
+        durationMs: report.durationMs,
+        exitCode: report.exitCode,
+        category: report.category,
+      }
     : null;
 }
 
@@ -63,9 +68,11 @@ export class TelemetrySources {
     if (this.identity !== gate.identity) this.stop();
     if (!this.child && Date.now() >= this.retryAt) this.start(gate.identity);
     // No server/device credentials are passed to the helper. A missed lease fails closed.
-    const { privateWords, excludedApps, idleMs } = gate;
+    const {privateWords, excludedApps, idleMs} = gate;
     if (this.child?.stdin?.writable && !this.child.stdin.writableNeedDrain) {
-      this.child.stdin.write(JSON.stringify({ privateWords, excludedApps, idleMs }) + '\n');
+      this.child.stdin.write(
+        JSON.stringify({privateWords, excludedApps, idleMs}) + '\n',
+      );
     }
   }
 
@@ -85,10 +92,17 @@ export class TelemetrySources {
     try {
       const directory = app.getPath('userData');
       const pipe =
-        'pd-telemetry-' + createHash('sha256').update(directory).digest('hex').slice(0, 24);
-      for (const name of ['telemetry-watch.ps1', 'telemetry-native.cs', 'terminal-telemetry.ps1']) {
+        'pd-telemetry-' +
+        createHash('sha256').update(directory).digest('hex').slice(0, 24);
+      for (const name of [
+        'telemetry-watch.ps1',
+        'telemetry-native.cs',
+        'terminal-telemetry.ps1',
+      ]) {
         const prefix =
-          name === 'terminal-telemetry.ps1' ? `$script:PdTelemetryPipe = '${pipe}'\n` : '';
+          name === 'terminal-telemetry.ps1'
+            ? `$script:PdTelemetryPipe = '${pipe}'\n`
+            : '';
         writeFileSync(
           join(directory, name),
           prefix + readFileSync(join(__dirname, 'assets', name), 'utf8'),
@@ -107,11 +121,11 @@ export class TelemetrySources {
           '-PipeName',
           pipe,
         ],
-        { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] },
+        {windowsHide: true, stdio: ['pipe', 'pipe', 'ignore']},
       );
       this.child = child;
-      const lines = createInterface({ input: child.stdout! });
-      lines.on('line', (line) => {
+      const lines = createInterface({input: child.stdout!});
+      lines.on('line', line => {
         if (this.child !== child || line.length > 1024) return;
         try {
           const value = JSON.parse(line);

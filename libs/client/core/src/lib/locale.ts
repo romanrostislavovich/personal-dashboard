@@ -1,9 +1,13 @@
-import { Locale, SUPPORTED_LOCALES } from '@pd/contracts';
+import {Locale, SUPPORTED_LOCALES} from '@pd/contracts';
 
 /** `ru-RU`, `RU`, `ru` → `ru`; an unsupported language → `null`. */
-export function toSupportedLocale(value: string | null | undefined): Locale | null {
+export function toSupportedLocale(
+  value: string | null | undefined,
+): Locale | null {
   const short = value?.slice(0, 2).toLowerCase() ?? '';
-  return (SUPPORTED_LOCALES as readonly string[]).includes(short) ? (short as Locale) : null;
+  return (SUPPORTED_LOCALES as readonly string[]).includes(short)
+    ? (short as Locale)
+    : null;
 }
 
 /**

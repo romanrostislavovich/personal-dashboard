@@ -11,7 +11,13 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, DeviceAuthService, Public, ZodValidationPipe } from '@pd/api-core';
+import {
+  AuthUser,
+  CurrentUser,
+  DeviceAuthService,
+  Public,
+  ZodValidationPipe,
+} from '@pd/api-core';
 import {
   BandDayDetail,
   BandDayQuery,
@@ -23,7 +29,7 @@ import {
   ReactionFeelingInput,
   reactionFeelingSchema,
 } from '@pd/contracts';
-import { BandService } from './band.service';
+import {BandService} from './band.service';
 
 /** The band through the phone's Health Connect: `/api/medical/band`. */
 @Controller('medical/band')
@@ -39,8 +45,11 @@ export class BandController {
   async ingest(
     @Headers('authorization') authorization: string | undefined,
     @Body(new ZodValidationPipe(bandIngestSchema)) body: BandIngest,
-  ): Promise<{ saved: number }> {
-    return this.band.ingest(await this.devices.authenticate(authorization), body);
+  ): Promise<{saved: number}> {
+    return this.band.ingest(
+      await this.devices.authenticate(authorization),
+      body,
+    );
   }
 
   @Get('day')
@@ -56,7 +65,8 @@ export class BandController {
   feeling(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(reactionFeelingSchema)) body: ReactionFeelingInput,
+    @Body(new ZodValidationPipe(reactionFeelingSchema))
+    body: ReactionFeelingInput,
   ): Promise<void> {
     return this.band.setFeeling(user.id, id, body.feeling);
   }

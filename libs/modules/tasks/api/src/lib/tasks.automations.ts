@@ -1,5 +1,5 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AutomationsService, UsersService } from '@pd/api-core';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AutomationsService, UsersService} from '@pd/api-core';
 import {
   addDays,
   parseLocalDate,
@@ -8,8 +8,8 @@ import {
   toLocalDate,
   zonedDateTime,
 } from '@pd/contracts';
-import { RemindersService } from './reminders.service';
-import { TasksService } from './tasks.service';
+import {RemindersService} from './reminders.service';
+import {TasksService} from './tasks.service';
 
 /** Overdue tasks are listed up to this many in a message. */
 const TITLES = 5;
@@ -29,22 +29,30 @@ export class TasksAutomations implements OnModuleInit {
       id: 'tasks.overdue',
       module: 'tasks',
       labelKey: 'tasks.automations.overdue',
-      description: 'At a time of the user, if some tasks are past their due date',
-      params: [{ name: 'time', type: 'time', labelKey: 'tasks.automations.time', required: true }],
+      description:
+        'At a time of the user, if some tasks are past their due date',
+      params: [
+        {
+          name: 'time',
+          type: 'time',
+          labelKey: 'tasks.automations.time',
+          required: true,
+        },
+      ],
       variables: ['count', 'titles'],
       check: async (userId, params, now) => {
         if (now.time < params['time']) {
           return null;
         }
         const overdue = (await this.tasks.list(userId)).filter(
-          (task) => !task.completedAt && task.dueDate && task.dueDate < now.date,
+          task => !task.completedAt && task.dueDate && task.dueDate < now.date,
         );
         return overdue.length
           ? {
               count: String(overdue.length),
               titles: overdue
                 .slice(0, TITLES)
-                .map((task) => task.title)
+                .map(task => task.title)
                 .join(', '),
             }
           : null;
@@ -55,7 +63,8 @@ export class TasksAutomations implements OnModuleInit {
       id: 'tasks.create',
       module: 'tasks',
       labelKey: 'tasks.automations.create',
-      description: 'Add a task to the TODO list, due today, tomorrow or with no date',
+      description:
+        'Add a task to the TODO list, due today, tomorrow or with no date',
       params: [
         {
           name: 'title',
@@ -69,9 +78,9 @@ export class TasksAutomations implements OnModuleInit {
           type: 'select',
           labelKey: 'tasks.automations.due',
           options: [
-            { value: 'none', labelKey: 'tasks.automations.dues.none' },
-            { value: 'today', labelKey: 'tasks.automations.dues.today' },
-            { value: 'tomorrow', labelKey: 'tasks.automations.dues.tomorrow' },
+            {value: 'none', labelKey: 'tasks.automations.dues.none'},
+            {value: 'today', labelKey: 'tasks.automations.dues.today'},
+            {value: 'tomorrow', labelKey: 'tasks.automations.dues.tomorrow'},
           ],
         },
       ],
@@ -83,7 +92,10 @@ export class TasksAutomations implements OnModuleInit {
             : params['due'] === 'tomorrow'
               ? toLocalDate(addDays(parseLocalDate(today), 1))
               : null;
-        await this.tasks.create(userId, taskInputSchema.parse({ title: params['title'], dueDate }));
+        await this.tasks.create(
+          userId,
+          taskInputSchema.parse({title: params['title'], dueDate}),
+        );
       },
     });
 

@@ -1,6 +1,9 @@
 <h2 mat-dialog-title>{{ 'health.drafts.title' | transloco }}</h2>
 <mat-dialog-content class="layout">
-  <section class="original" [attr.aria-label]="'health.drafts.original' | transloco">
+  <section
+    class="original"
+    [attr.aria-label]="'health.drafts.original' | transloco"
+  >
     <pd-health-document-pages [document]="data.document" />
   </section>
 
@@ -62,15 +65,23 @@
                 <mat-select formControlName="clinicId">
                   <mat-option [value]="''">—</mat-option>
                   @for (clinic of data.record.clinics; track clinic.id) {
-                    <mat-option [value]="clinic.id">{{ clinic.name }}</mat-option>
+                    <mat-option [value]="clinic.id">{{
+                      clinic.name
+                    }}</mat-option>
                   }
-                  <mat-option [value]="NEW">{{ 'health.drafts.newClinic' | transloco }}</mat-option>
+                  <mat-option [value]="NEW">{{
+                    'health.drafts.newClinic' | transloco
+                  }}</mat-option>
                 </mat-select>
               </mat-form-field>
               @if (form.controls.clinicId.value === NEW) {
                 <mat-form-field>
                   <mat-label>{{ 'health.clinic.name' | transloco }}</mat-label>
-                  <input matInput maxlength="200" formControlName="clinicName" />
+                  <input
+                    matInput
+                    maxlength="200"
+                    formControlName="clinicName"
+                  />
                 </mat-form-field>
               }
             </div>
@@ -80,33 +91,55 @@
                 <mat-select formControlName="doctorId">
                   <mat-option [value]="''">—</mat-option>
                   @for (doctor of data.record.doctors; track doctor.id) {
-                    <mat-option [value]="doctor.id">{{ doctor.name }}</mat-option>
+                    <mat-option [value]="doctor.id">{{
+                      doctor.name
+                    }}</mat-option>
                   }
-                  <mat-option [value]="NEW">{{ 'health.drafts.newDoctor' | transloco }}</mat-option>
+                  <mat-option [value]="NEW">{{
+                    'health.drafts.newDoctor' | transloco
+                  }}</mat-option>
                 </mat-select>
               </mat-form-field>
               @if (form.controls.doctorId.value === NEW) {
                 <mat-form-field>
                   <mat-label>{{ 'health.doctor.name' | transloco }}</mat-label>
-                  <input matInput maxlength="200" formControlName="doctorName" />
+                  <input
+                    matInput
+                    maxlength="200"
+                    formControlName="doctorName"
+                  />
                 </mat-form-field>
               }
               <mat-form-field>
-                <mat-label>{{ 'health.doctor.speciality' | transloco }}</mat-label>
+                <mat-label>{{
+                  'health.doctor.speciality' | transloco
+                }}</mat-label>
                 <input matInput maxlength="100" formControlName="speciality" />
                 @if (form.controls.speciality.value) {
-                  <mat-hint>{{ form.controls.speciality.value | pdSpeciality }}</mat-hint>
+                  <mat-hint>{{
+                    form.controls.speciality.value | pdSpeciality
+                  }}</mat-hint>
                 }
               </mat-form-field>
             </div>
-            @for (field of ['complaints', 'findings', 'recommendations']; track field) {
+            @for (
+              field of ['complaints', 'findings', 'recommendations'];
+              track field
+            ) {
               <mat-form-field>
                 <mat-label>{{ 'health.visit.' + field | transloco }}</mat-label>
-                <textarea matInput rows="3" maxlength="10000" [formControlName]="field"></textarea>
+                <textarea
+                  matInput
+                  rows="3"
+                  maxlength="10000"
+                  [formControlName]="field"
+                ></textarea>
               </mat-form-field>
             }
             <mat-form-field class="narrow">
-              <mat-label>{{ 'health.visit.nextVisitOn' | transloco }}</mat-label>
+              <mat-label>{{
+                'health.visit.nextVisitOn' | transloco
+              }}</mat-label>
               <input matInput type="date" formControlName="nextVisitOn" />
             </mat-form-field>
           }
@@ -134,7 +167,12 @@
             </div>
             <mat-form-field>
               <mat-label>{{ 'health.study.conclusion' | transloco }}</mat-label>
-              <textarea matInput rows="6" maxlength="10000" formControlName="conclusion"></textarea>
+              <textarea
+                matInput
+                rows="6"
+                maxlength="10000"
+                formControlName="conclusion"
+              ></textarea>
             </mat-form-field>
           }
 
@@ -144,14 +182,21 @@
         }
 
         <!-- A visit may list lab results too: they are saved as a report of the visit. -->
-        @if (form.controls.kind.value === 'visit' || form.controls.kind.value === 'labs') {
+        @if (
+          form.controls.kind.value === 'visit' ||
+          form.controls.kind.value === 'labs'
+        ) {
           <h3 class="section">{{ 'health.tabs.results' | transloco }}</h3>
           <mat-form-field>
             <mat-label>{{ 'health.labs.laboratory' | transloco }}</mat-label>
             <input matInput maxlength="200" formControlName="laboratory" />
           </mat-form-field>
           <div formArrayName="labValues" class="lines">
-            @for (line of form.controls.labValues.controls; track line; let i = $index) {
+            @for (
+              line of form.controls.labValues.controls;
+              track line;
+              let i = $index
+            ) {
               <div class="line" [formGroupName]="i">
                 <mat-form-field subscriptSizing="dynamic" class="wide">
                   <mat-label>{{ 'health.labs.name' | transloco }}</mat-label>
@@ -180,7 +225,12 @@
               </div>
             }
           </div>
-          <button matButton type="button" class="add" (click)="addLabLine(form)">
+          <button
+            matButton
+            type="button"
+            class="add"
+            (click)="addLabLine(form)"
+          >
             <mat-icon>add</mat-icon> {{ 'health.labs.addLine' | transloco }}
           </button>
         }
@@ -189,18 +239,28 @@
         @if (form.controls.kind.value !== 'other') {
           <h3 class="section">{{ 'health.tabs.conditions' | transloco }}</h3>
           <div formArrayName="diagnoses" class="lines">
-            @for (line of form.controls.diagnoses.controls; track line; let i = $index) {
+            @for (
+              line of form.controls.diagnoses.controls;
+              track line;
+              let i = $index
+            ) {
               <div class="line" [formGroupName]="i">
                 <mat-form-field subscriptSizing="dynamic" class="code">
-                  <mat-label>{{ 'health.diagnosis.code' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'health.diagnosis.code' | transloco
+                  }}</mat-label>
                   <input matInput maxlength="20" formControlName="code" />
                 </mat-form-field>
                 <mat-form-field subscriptSizing="dynamic" class="wide">
-                  <mat-label>{{ 'health.diagnosis.title' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'health.diagnosis.title' | transloco
+                  }}</mat-label>
                   <input matInput maxlength="500" formControlName="title" />
                 </mat-form-field>
                 <mat-form-field subscriptSizing="dynamic" class="status">
-                  <mat-label>{{ 'health.diagnosis.status' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'health.diagnosis.status' | transloco
+                  }}</mat-label>
                   <mat-select formControlName="status">
                     @for (status of statuses; track status) {
                       <mat-option [value]="status">
@@ -220,28 +280,45 @@
               </div>
             }
           </div>
-          <button matButton type="button" class="add" (click)="addDiagnosis(form)">
+          <button
+            matButton
+            type="button"
+            class="add"
+            (click)="addDiagnosis(form)"
+          >
             <mat-icon>add</mat-icon> {{ 'health.diagnosis.one' | transloco }}
           </button>
 
           <h3 class="section">{{ 'health.tabs.medications' | transloco }}</h3>
           <div formArrayName="medications" class="lines">
-            @for (line of form.controls.medications.controls; track line; let i = $index) {
+            @for (
+              line of form.controls.medications.controls;
+              track line;
+              let i = $index
+            ) {
               <div class="line" [formGroupName]="i">
                 <mat-form-field subscriptSizing="dynamic" class="wide">
-                  <mat-label>{{ 'health.medication.name' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'health.medication.name' | transloco
+                  }}</mat-label>
                   <input matInput maxlength="200" formControlName="name" />
                 </mat-form-field>
                 <mat-form-field subscriptSizing="dynamic">
-                  <mat-label>{{ 'health.medication.substance' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'health.medication.substance' | transloco
+                  }}</mat-label>
                   <input matInput maxlength="200" formControlName="substance" />
                 </mat-form-field>
                 <mat-form-field subscriptSizing="dynamic">
-                  <mat-label>{{ 'health.medication.dose' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'health.medication.dose' | transloco
+                  }}</mat-label>
                   <input matInput maxlength="200" formControlName="dose" />
                 </mat-form-field>
                 <mat-form-field subscriptSizing="dynamic" class="wide">
-                  <mat-label>{{ 'health.medication.schedule' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'health.medication.schedule' | transloco
+                  }}</mat-label>
                   <input matInput maxlength="500" formControlName="schedule" />
                 </mat-form-field>
                 <button
@@ -255,7 +332,12 @@
               </div>
             }
           </div>
-          <button matButton type="button" class="add" (click)="addMedication(form)">
+          <button
+            matButton
+            type="button"
+            class="add"
+            (click)="addMedication(form)"
+          >
             <mat-icon>add</mat-icon> {{ 'health.medication.one' | transloco }}
           </button>
         }
@@ -271,7 +353,9 @@
     {{ 'health.drafts.drop' | transloco }}
   </button>
   <span class="spacer"></span>
-  <button matButton type="button" mat-dialog-close>{{ 'core.actions.cancel' | transloco }}</button>
+  <button matButton type="button" mat-dialog-close>
+    {{ 'core.actions.cancel' | transloco }}
+  </button>
   @if (form(); as form) {
     <button
       matButton="filled"

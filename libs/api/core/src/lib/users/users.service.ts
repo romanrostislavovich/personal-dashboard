@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { asc, eq } from 'drizzle-orm';
-import { AppConfig } from '../config/env';
-import { DB, Database } from '../database/database.module';
-import { UserRow, users } from './users.schema';
+import {Inject, Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {asc, eq} from 'drizzle-orm';
+import {AppConfig} from '../config/env';
+import {DB, Database} from '../database/database.module';
+import {UserRow, users} from './users.schema';
 
 @Injectable()
 export class UsersService {
@@ -18,12 +18,18 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<UserRow | undefined> {
-    const [user] = await this.db.select().from(users).where(eq(users.email, email.toLowerCase()));
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()));
     return user;
   }
 
   async findByTelegramChatId(chatId: string): Promise<UserRow | undefined> {
-    const [user] = await this.db.select().from(users).where(eq(users.telegramChatId, chatId));
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.telegramChatId, chatId));
     return user;
   }
 
@@ -37,7 +43,11 @@ export class UsersService {
    * sync) and sees sync conflicts of rows that belong to no user.
    */
   async owner(): Promise<UserRow | undefined> {
-    const [user] = await this.db.select().from(users).orderBy(asc(users.createdAt)).limit(1);
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .orderBy(asc(users.createdAt))
+      .limit(1);
     return user;
   }
 
@@ -55,7 +65,7 @@ export class UsersService {
   }
 
   timeZoneOf(user: Pick<UserRow, 'timeZone'> | undefined): string {
-    return user?.timeZone ?? this.config.get('APP_TIMEZONE', { infer: true });
+    return user?.timeZone ?? this.config.get('APP_TIMEZONE', {infer: true});
   }
 
   async count(): Promise<number> {
@@ -70,7 +80,7 @@ export class UsersService {
   }): Promise<UserRow> {
     const [user] = await this.db
       .insert(users)
-      .values({ ...data, email: data.email.toLowerCase() })
+      .values({...data, email: data.email.toLowerCase()})
       .returning();
     return user;
   }
@@ -78,14 +88,32 @@ export class UsersService {
   async update(
     userId: string,
     changes: Partial<
-      Pick<UserRow, 'displayName' | 'locale' | 'passwordHash' | 'timeZone' | 'theme' | 'layout'>
+      Pick<
+        UserRow,
+        | 'displayName'
+        | 'locale'
+        | 'passwordHash'
+        | 'timeZone'
+        | 'theme'
+        | 'layout'
+      >
     >,
   ): Promise<UserRow> {
-    const [user] = await this.db.update(users).set(changes).where(eq(users.id, userId)).returning();
+    const [user] = await this.db
+      .update(users)
+      .set(changes)
+      .where(eq(users.id, userId))
+      .returning();
     return user;
   }
 
-  async setTelegramChatId(userId: string, chatId: string | null): Promise<void> {
-    await this.db.update(users).set({ telegramChatId: chatId }).where(eq(users.id, userId));
+  async setTelegramChatId(
+    userId: string,
+    chatId: string | null,
+  ): Promise<void> {
+    await this.db
+      .update(users)
+      .set({telegramChatId: chatId})
+      .where(eq(users.id, userId));
   }
 }

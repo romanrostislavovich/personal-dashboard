@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /**
  * A calmer dashboard for hard evenings and nights, set by the user for every device:
@@ -12,7 +12,7 @@ import { z } from 'zod';
  */
 export interface CalmSettings {
   /** `null` — notifications come at any time. */
-  quietHours: { from: string; to: string } | null;
+  quietHours: {from: string; to: string} | null;
   softOverdue: boolean;
   /** Section id → the channels it does not send to; missing — every section sends everywhere. */
   muted?: Record<string, MutableChannel[]>;
@@ -23,8 +23,12 @@ export const MUTABLE_CHANNELS = ['telegram', 'push', 'desktop'] as const;
 export type MutableChannel = (typeof MUTABLE_CHANNELS)[number];
 
 /** Whether a section's notifications skip a channel. */
-export function isMuted(calm: CalmSettings | null, section: string, channel: string): boolean {
-  return (calm?.muted?.[section] ?? []).some((muted) => muted === channel);
+export function isMuted(
+  calm: CalmSettings | null,
+  section: string,
+  channel: string,
+): boolean {
+  return (calm?.muted?.[section] ?? []).some(muted => muted === channel);
 }
 
 /** `HH:MM`, 24 hours. */
@@ -32,8 +36,8 @@ const clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'HH:MM');
 
 export const calmSchema = z.object({
   quietHours: z
-    .object({ from: clock, to: clock })
-    .refine((hours) => hours.from !== hours.to, {
+    .object({from: clock, to: clock})
+    .refine(hours => hours.from !== hours.to, {
       message: 'The quiet hours start and end at the same time',
     })
     .nullable(),
@@ -48,7 +52,7 @@ export const calmSchema = z.object({
 });
 
 /** Nothing set yet: as before. */
-export const NO_CALM: CalmSettings = { quietHours: null, softOverdue: false };
+export const NO_CALM: CalmSettings = {quietHours: null, softOverdue: false};
 
 /** Minutes since midnight of `HH:MM`. */
 function minutesOf(clockTime: string): number {
@@ -60,14 +64,19 @@ function minutesOf(clockTime: string): number {
  * How many minutes of the quiet hours are left at `minuteOfDay` (minutes since the local
  * midnight); `0` — not in them. The hours may cross midnight (21:00–09:00).
  */
-export function quietMinutesLeft(hours: CalmSettings['quietHours'], minuteOfDay: number): number {
+export function quietMinutesLeft(
+  hours: CalmSettings['quietHours'],
+  minuteOfDay: number,
+): number {
   if (!hours) {
     return 0;
   }
   const from = minutesOf(hours.from);
   const to = minutesOf(hours.to);
   const inside =
-    from < to ? minuteOfDay >= from && minuteOfDay < to : minuteOfDay >= from || minuteOfDay < to;
+    from < to
+      ? minuteOfDay >= from && minuteOfDay < to
+      : minuteOfDay >= from || minuteOfDay < to;
   if (!inside) {
     return 0;
   }

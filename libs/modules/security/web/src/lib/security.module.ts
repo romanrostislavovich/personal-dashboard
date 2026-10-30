@@ -1,4 +1,4 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /**
  * Web part of the security agent: its findings and the AI's report. The server side is the core
@@ -6,9 +6,12 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const securityModule: WebDashboardModule = {
   id: 'security',
-  nav: { labelKey: 'security.title', icon: 'shield', group: 'safety' },
+  nav: {labelKey: 'security.title', icon: 'shield', group: 'safety'},
   loadRoutes: async () => [
-    { path: '', loadComponent: () => import('./security.page').then((m) => m.SecurityPage) },
+    {
+      path: '',
+      loadComponent: () => import('./security.page').then(m => m.SecurityPage),
+    },
   ],
   translations: {
     en: () => import('./i18n/en.json'),

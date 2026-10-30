@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 import {
   AllergySeverity,
   BloodType,
@@ -10,8 +10,8 @@ import {
   IcdSystem,
   labSeries,
 } from './health';
-import { LabFlag } from './health-labs';
-import { LocalDate } from './local-date';
+import {LabFlag} from './health-labs';
+import {LocalDate} from './local-date';
 
 /**
  * A summary of one's medical history for a new doctor: what is going on now, what is taken,
@@ -41,18 +41,27 @@ export const healthSummaryOptionsSchema = z.object({
   /** The complaints, examination and recommendations of each visit, not only its date. */
   visitTexts: z.boolean().default(false),
   /** Specialities left out entirely: their visits, and what was diagnosed or prescribed there. */
-  excludeSpecialities: z.array(z.string().trim().min(1).max(100)).max(30).default([]),
+  excludeSpecialities: z
+    .array(z.string().trim().min(1).max(100))
+    .max(30)
+    .default([]),
   /** Visits, results and studies from this day on; `null` — the whole history. */
   from: z.iso.date().nullish(),
 });
 export type HealthSummaryOptions = z.output<typeof healthSummaryOptionsSchema>;
-export type HealthSummaryOptionsInput = z.input<typeof healthSummaryOptionsSchema>;
+export type HealthSummaryOptionsInput = z.input<
+  typeof healthSummaryOptionsSchema
+>;
 
 export interface SummaryProfile {
   bloodType: BloodType | null;
-  allergies: { substance: string; reaction: string | null; severity: AllergySeverity | null }[];
-  operations: { title: string; performedOn: LocalDate }[];
-  vaccinations: { vaccine: string; dose: string | null; givenOn: LocalDate }[];
+  allergies: {
+    substance: string;
+    reaction: string | null;
+    severity: AllergySeverity | null;
+  }[];
+  operations: {title: string; performedOn: LocalDate}[];
+  vaccinations: {vaccine: string; dose: string | null; givenOn: LocalDate}[];
 }
 
 export interface SummaryCondition {
@@ -84,7 +93,7 @@ export interface SummaryLabResult {
   flag: LabFlag;
   day: LocalDate;
   /** The values before it, the oldest first, for the trend. */
-  earlier: { day: LocalDate; value: number }[];
+  earlier: {day: LocalDate; value: number}[];
 }
 
 export interface SummaryStudy {
@@ -131,21 +140,29 @@ const EARLIER_VALUES = 4;
 export function buildHealthSummary(
   record: HealthRecord,
   options: HealthSummaryOptions,
-  context: { patient: string; today: LocalDate },
+  context: {patient: string; today: LocalDate},
 ): HealthSummary {
   const excluded = new Set(options.excludeSpecialities);
   const from = options.from ?? null;
-  const inPeriod = (day: string | null) => !from || (day !== null && day >= from);
+  const inPeriod = (day: string | null) =>
+    !from || (day !== null && day >= from);
   // A visit of an excluded speciality takes along what was diagnosed or prescribed at it.
   const hiddenVisits = new Set(
-    record.visits.filter((v) => v.speciality && excluded.has(v.speciality)).map((v) => v.id),
+    record.visits
+      .filter(v => v.speciality && excluded.has(v.speciality))
+      .map(v => v.id),
   );
-  const shown = (item: { visitId: string | null }) =>
+  const shown = (item: {visitId: string | null}) =>
     !item.visitId || !hiddenVisits.has(item.visitId);
 
   const conditions = healthConditions(record.diagnoses.filter(shown))
-    .filter((c) => options.pastConditions || c.status === 'confirmed' || c.status === 'suspected')
-    .map(({ system, code, title, status, firstOn, lastOn }) => ({
+    .filter(
+      c =>
+        options.pastConditions ||
+        c.status === 'confirmed' ||
+        c.status === 'suspected',
+    )
+    .map(({system, code, title, status, firstOn, lastOn}) => ({
       system,
       code,
       title,
@@ -156,21 +173,31 @@ export function buildHealthSummary(
 
   const medications = record.medications
     .filter(shown)
-    .filter((m) => options.pastMedications || !m.stoppedOn)
-    .map(({ name, substance, dose, schedule, startedOn, stoppedOn, stopReason }) => ({
-      name,
-      substance,
-      dose,
-      schedule,
-      startedOn,
-      stoppedOn,
-      stopReason,
-    }));
+    .filter(m => options.pastMedications || !m.stoppedOn)
+    .map(
+      ({
+        name,
+        substance,
+        dose,
+        schedule,
+        startedOn,
+        stoppedOn,
+        stopReason,
+      }) => ({
+        name,
+        substance,
+        dose,
+        schedule,
+        startedOn,
+        stoppedOn,
+        stopReason,
+      }),
+    );
 
   const panels: HealthLabPanel[] = record.labPanels.filter(
-    (panel) => shown(panel) && inPeriod(panel.takenOn),
+    panel => shown(panel) && inPeriod(panel.takenOn),
   );
-  const labs = labSeries(panels).map((series) => {
+  const labs = labSeries(panels).map(series => {
     const latest = series.points[series.points.length - 1];
     return {
       name: series.name,
@@ -183,27 +210,34 @@ export function buildHealthSummary(
       earlier: series.points
         .slice(0, -1)
         .slice(-EARLIER_VALUES)
-        .map(({ day, value }) => ({ day, value })),
+        .map(({day, value}) => ({day, value})),
     };
   });
 
   const studies = record.studies
-    .filter((s) => shown(s) && inPeriod(s.performedOn))
-    .map(({ kind, area, performedOn, conclusion }) => ({ kind, area, performedOn, conclusion }));
+    .filter(s => shown(s) && inPeriod(s.performedOn))
+    .map(({kind, area, performedOn, conclusion}) => ({
+      kind,
+      area,
+      performedOn,
+      conclusion,
+    }));
 
-  const name = <T extends { id: string; name: string }>(items: T[], id: string | null) =>
-    items.find((item) => item.id === id)?.name ?? null;
+  const name = <T extends {id: string; name: string}>(
+    items: T[],
+    id: string | null,
+  ) => items.find(item => item.id === id)?.name ?? null;
   const visits = record.visits
-    .filter((v) => !hiddenVisits.has(v.id) && inPeriod(v.visitedOn))
-    .map((visit) => ({
+    .filter(v => !hiddenVisits.has(v.id) && inPeriod(v.visitedOn))
+    .map(visit => ({
       visitedOn: visit.visitedOn,
       country: visit.country,
       speciality: visit.speciality,
       clinic: name(record.clinics, visit.clinicId),
       doctor: name(record.doctors, visit.doctorId),
       diagnoses: record.diagnoses
-        .filter((d) => d.visitId === visit.id)
-        .map((d) => (d.code ? `${d.code} ${d.title}` : d.title)),
+        .filter(d => d.visitId === visit.id)
+        .map(d => (d.code ? `${d.code} ${d.title}` : d.title)),
       complaints: options.visitTexts ? visit.complaints : null,
       findings: options.visitTexts ? visit.findings : null,
       recommendations: options.visitTexts ? visit.recommendations : null,
@@ -218,20 +252,24 @@ export function buildHealthSummary(
     profile: options.profile
       ? {
           bloodType: record.profile.bloodType,
-          allergies: record.profile.allergies.map(({ substance, reaction, severity }) => ({
-            substance,
-            reaction,
-            severity,
-          })),
-          operations: record.profile.operations.map(({ title, performedOn }) => ({
+          allergies: record.profile.allergies.map(
+            ({substance, reaction, severity}) => ({
+              substance,
+              reaction,
+              severity,
+            }),
+          ),
+          operations: record.profile.operations.map(({title, performedOn}) => ({
             title,
             performedOn,
           })),
-          vaccinations: record.profile.vaccinations.map(({ vaccine, dose, givenOn }) => ({
-            vaccine,
-            dose,
-            givenOn,
-          })),
+          vaccinations: record.profile.vaccinations.map(
+            ({vaccine, dose, givenOn}) => ({
+              vaccine,
+              dose,
+              givenOn,
+            }),
+          ),
         }
       : null,
     conditions: options.conditions ? conditions : null,
@@ -248,7 +286,9 @@ export const SHARE_DAYS = [1, 3, 7, 30] as const;
 
 export const healthShareInputSchema = z.object({
   options: healthSummaryOptionsSchema,
-  days: z.union([z.literal(1), z.literal(3), z.literal(7), z.literal(30)]).default(3),
+  days: z
+    .union([z.literal(1), z.literal(3), z.literal(7), z.literal(30)])
+    .default(3),
   /** Whom it is for, to tell the links apart: "Dr. Kowalska, Medicover". */
   note: z.string().trim().max(200).nullish(),
 });

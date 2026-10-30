@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {Injectable, OnModuleInit} from '@nestjs/common';
 import {
   AiService,
   ServerActions,
@@ -16,17 +16,25 @@ import {
   transactionInputSchema,
   TransactionQuery,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { BankService } from './bank/bank.service';
-import { NetWorthService } from './worth/net-worth.service';
-import { CostSourcesService } from './cost-sources/cost-sources.service';
-import { RecurringPaymentsService } from './recurring/recurring-payments.service';
-import { SubscriptionsService } from './recurring/subscriptions.service';
-import { TransactionsService } from './transactions/transactions.service';
-import { FINANCE_ACTIONS } from './finance.server-actions';
-import { WishlistService } from './wishlist/wishlist.service';
-import { filterTransactions, totalsByCategory } from './transactions/transaction-report';
-import { costSources, recurringPayments, transactions, wishes } from './finance.schema';
+import {z} from 'zod';
+import {BankService} from './bank/bank.service';
+import {NetWorthService} from './worth/net-worth.service';
+import {CostSourcesService} from './cost-sources/cost-sources.service';
+import {RecurringPaymentsService} from './recurring/recurring-payments.service';
+import {SubscriptionsService} from './recurring/subscriptions.service';
+import {TransactionsService} from './transactions/transactions.service';
+import {FINANCE_ACTIONS} from './finance.server-actions';
+import {WishlistService} from './wishlist/wishlist.service';
+import {
+  filterTransactions,
+  totalsByCategory,
+} from './transactions/transaction-report';
+import {
+  costSources,
+  recurringPayments,
+  transactions,
+  wishes,
+} from './finance.schema';
 
 /** Period schema + an optional "wallet". */
 const QUERY_PARAMETERS = {
@@ -35,46 +43,65 @@ const QUERY_PARAMETERS = {
     ...PERIOD_PARAMETERS.properties,
     scope: {
       type: 'string',
-      description: '"personal" — personal only, a project id — that project only, empty — all',
+      description:
+        '"personal" — personal only, a project id — that project only, empty — all',
     },
   },
   required: ['from', 'to'],
 };
 
 const MONEY_FIELDS = {
-  amount: { type: 'number', description: 'Positive number' },
-  currency: { type: 'string', description: 'ISO 4217: EUR, USD, PLN…' },
-  category: { type: 'string', description: 'E.g. Food, Hosting, Salary' },
-  projectId: { type: 'string', description: 'Project id; omit (or null) for personal' },
+  amount: {type: 'number', description: 'Positive number'},
+  currency: {type: 'string', description: 'ISO 4217: EUR, USD, PLN…'},
+  category: {type: 'string', description: 'E.g. Food, Hosting, Salary'},
+  projectId: {
+    type: 'string',
+    description: 'Project id; omit (or null) for personal',
+  },
 } as const;
 
 const TRANSACTION_FIELDS = {
-  kind: { type: 'string', enum: [...TRANSACTION_KINDS] },
+  kind: {type: 'string', enum: [...TRANSACTION_KINDS]},
   ...MONEY_FIELDS,
-  note: { type: 'string' },
-  occurredOn: { type: 'string', description: 'YYYY-MM-DD' },
+  note: {type: 'string'},
+  occurredOn: {type: 'string', description: 'YYYY-MM-DD'},
 } as const;
 
 const RECURRING_FIELDS = {
-  name: { type: 'string', description: 'What is paid: "Hetzner CX22", "Spotify"' },
+  name: {
+    type: 'string',
+    description: 'What is paid: "Hetzner CX22", "Spotify"',
+  },
   ...MONEY_FIELDS,
-  dayOfMonth: { type: 'number', description: 'Day of the month to charge, 1–31' },
-  period: { type: 'string', enum: ['month', 'year'], description: 'Every month or once a year' },
-  monthOfYear: { type: 'number', description: 'For a yearly payment: its month, 1–12' },
+  dayOfMonth: {type: 'number', description: 'Day of the month to charge, 1–31'},
+  period: {
+    type: 'string',
+    enum: ['month', 'year'],
+    description: 'Every month or once a year',
+  },
+  monthOfYear: {
+    type: 'number',
+    description: 'For a yearly payment: its month, 1–12',
+  },
   trialEndsOn: {
     type: 'string',
-    description: 'YYYY-MM-DD: a free trial ends this day; nothing is charged before it',
+    description:
+      'YYYY-MM-DD: a free trial ends this day; nothing is charged before it',
   },
-  isActive: { type: 'boolean', description: 'false — paused' },
+  isActive: {type: 'boolean', description: 'false — paused'},
 } as const;
 
 /** What narrows the transactions of a period, on top of the period and the wallet. */
 const FILTER_PARAMETERS = {
-  kind: { type: 'string', enum: [...TRANSACTION_KINDS] },
-  category: { type: 'string', description: 'Only this category (the case does not matter)' },
+  kind: {type: 'string', enum: [...TRANSACTION_KINDS]},
+  category: {
+    type: 'string',
+    description: 'Only this category (the case does not matter)',
+  },
   search: {
     type: 'string',
-    description: 'A part of the comment or of the category: a shop, a service ("zabka", "taxi")',
+    description:
+      'A part of the comment or of the category: a shop, a service ("zabka", "taxi")',
   },
 } as const;
 
@@ -86,7 +113,7 @@ const filterArgs = z.object({
 });
 
 /** Transaction ids come from the model: check the format before querying the database. */
-const idArgs = z.object({ id: z.uuid() });
+const idArgs = z.object({id: z.uuid()});
 
 /** Enough for a month of an active card; a longer statement is split into several calls. */
 const MAX_BATCH = 500;
@@ -94,7 +121,10 @@ const batchArgs = z.object({
   transactions: z
     .array(transactionInputSchema)
     .min(1)
-    .max(MAX_BATCH, `At most ${MAX_BATCH} per call: send the rest with more calls now`),
+    .max(
+      MAX_BATCH,
+      `At most ${MAX_BATCH} per call: send the rest with more calls now`,
+    ),
 });
 
 /**
@@ -137,7 +167,7 @@ export class FinanceAiTools implements OnModuleInit {
         'expenses and what buying it would leave (negative — over the budget). Useful for ' +
         '"can I afford X now".',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.wishlist.list(userId),
+      handler: userId => this.wishlist.list(userId),
     });
 
     this.ai.registerTool({
@@ -152,20 +182,25 @@ export class FinanceAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          url: { type: 'string', description: 'The link to the product page' },
-          name: { type: 'string' },
-          note: { type: 'string' },
-          price: { type: 'number' },
-          currency: { type: 'string', description: 'ISO 4217: EUR, USD, PLN…' },
+          url: {type: 'string', description: 'The link to the product page'},
+          name: {type: 'string'},
+          note: {type: 'string'},
+          price: {type: 'number'},
+          currency: {type: 'string', description: 'ISO 4217: EUR, USD, PLN…'},
           recipient: {
             type: 'string',
-            description: 'Whom it is a gift for: the name as in birthdays_upcoming',
+            description:
+              'Whom it is a gift for: the name as in birthdays_upcoming',
           },
         },
         required: ['url'],
       },
       handler: (userId, args) =>
-        this.actions.run(userId, FINANCE_ACTIONS.addWish, wishInputSchema.parse(args)),
+        this.actions.run(
+          userId,
+          FINANCE_ACTIONS.addWish,
+          wishInputSchema.parse(args),
+        ),
     });
 
     this.ai.registerTool({
@@ -180,20 +215,23 @@ export class FinanceAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Wish id from finance_wishlist' },
-          name: { type: 'string' },
-          note: { type: 'string' },
-          price: { type: 'number' },
-          currency: { type: 'string', description: 'ISO 4217: EUR, USD, PLN…' },
-          recipient: { type: 'string' },
+          id: {type: 'string', description: 'Wish id from finance_wishlist'},
+          name: {type: 'string'},
+          note: {type: 'string'},
+          price: {type: 'number'},
+          currency: {type: 'string', description: 'ISO 4217: EUR, USD, PLN…'},
+          recipient: {type: 'string'},
         },
         required: ['id'],
       },
       handler: async (userId, args) => {
-        const { id } = idArgs.parse(args);
+        const {id} = idArgs.parse(args);
         const wish = findById(await this.wishlist.list(userId), id, 'Wish');
         // The link of a wish stays; what is not passed stays as it is.
-        const input = wishInputSchema.parse({ url: wish.url, ...changedFields(args) });
+        const input = wishInputSchema.parse({
+          url: wish.url,
+          ...changedFields(args),
+        });
         return this.wishlist.update(userId, id, input);
       },
     });
@@ -210,13 +248,18 @@ export class FinanceAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Wish id from finance_wishlist' },
-          record: { type: 'boolean', description: 'Also record the expense' },
+          id: {type: 'string', description: 'Wish id from finance_wishlist'},
+          record: {type: 'boolean', description: 'Also record the expense'},
         },
         required: ['id'],
       },
       handler: (userId, args) =>
-        this.wishlist.setBought(userId, idArgs.parse(args).id, true, args['record'] === true),
+        this.wishlist.setBought(
+          userId,
+          idArgs.parse(args).id,
+          true,
+          args['record'] === true,
+        ),
     });
   }
 
@@ -231,7 +274,7 @@ export class FinanceAiTools implements OnModuleInit {
         'leaks: prices that crept up over the year, double charges, unused or unrecorded ' +
         'subscriptions, renewals within a month, with what each costs a year.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.subscriptions.summary(userId),
+      handler: userId => this.subscriptions.summary(userId),
     });
 
     this.ai.registerTool({
@@ -245,9 +288,9 @@ export class FinanceAiTools implements OnModuleInit {
         'and not used once. Payments no section knows are not listed: nothing can be said ' +
         'about them. Useful for "which subscriptions can I cancel".',
       parameters: NO_PARAMETERS,
-      handler: async (userId) => {
-        const { usage, usageDays } = await this.subscriptions.summary(userId);
-        return { days: usageDays, payments: usage };
+      handler: async userId => {
+        const {usage, usageDays} = await this.subscriptions.summary(userId);
+        return {days: usageDays, payments: usage};
       },
     });
   }
@@ -262,7 +305,8 @@ export class FinanceAiTools implements OnModuleInit {
         'categories. For every category, or for one shop or service, use finance_categories. ' +
         'Project ids are available via core_projects.',
       parameters: QUERY_PARAMETERS,
-      handler: (userId, args) => this.transactions.summary(userId, toQuery(args)),
+      handler: (userId, args) =>
+        this.transactions.summary(userId, toQuery(args)),
     });
 
     this.ai.registerTool({
@@ -276,7 +320,7 @@ export class FinanceAiTools implements OnModuleInit {
         '"zabka", "taxi") or `category`. Any period works — a month, a year, everything.',
       parameters: {
         type: 'object',
-        properties: { ...QUERY_PARAMETERS.properties, ...FILTER_PARAMETERS },
+        properties: {...QUERY_PARAMETERS.properties, ...FILTER_PARAMETERS},
         required: ['from', 'to'],
       },
       handler: async (userId, args) => {
@@ -284,7 +328,10 @@ export class FinanceAiTools implements OnModuleInit {
           await this.transactions.list(userId, toQuery(args)),
           filterArgs.parse(args),
         );
-        return { transactions: found.length, categories: totalsByCategory(found) };
+        return {
+          transactions: found.length,
+          categories: totalsByCategory(found),
+        };
       },
     });
 
@@ -302,7 +349,7 @@ export class FinanceAiTools implements OnModuleInit {
         properties: {
           ...QUERY_PARAMETERS.properties,
           ...FILTER_PARAMETERS,
-          limit: { type: 'number', description: '1–200, default 60' },
+          limit: {type: 'number', description: '1–200, default 60'},
         },
         required: ['from', 'to'],
       },
@@ -387,7 +434,13 @@ export class FinanceAiTools implements OnModuleInit {
             items: {
               type: 'object',
               properties: TRANSACTION_FIELDS,
-              required: ['kind', 'amount', 'currency', 'category', 'occurredOn'],
+              required: [
+                'kind',
+                'amount',
+                'currency',
+                'category',
+                'occurredOn',
+              ],
             },
           },
         },
@@ -395,7 +448,10 @@ export class FinanceAiTools implements OnModuleInit {
       },
       handler: async (userId, args) =>
         importSummary(
-          await this.transactions.createMany(userId, batchArgs.parse(args).transactions),
+          await this.transactions.createMany(
+            userId,
+            batchArgs.parse(args).transactions,
+          ),
         ),
     });
 
@@ -409,12 +465,16 @@ export class FinanceAiTools implements OnModuleInit {
         'to change.',
       parameters: {
         type: 'object',
-        properties: { id: { type: 'string' }, ...TRANSACTION_FIELDS },
+        properties: {id: {type: 'string'}, ...TRANSACTION_FIELDS},
         required: ['id'],
       },
       handler: async (userId, args) => {
-        const current = await this.transactions.get(userId, idArgs.parse(args).id);
-        const { kind, amount, currency, category, note, occurredOn, projectId } = current;
+        const current = await this.transactions.get(
+          userId,
+          idArgs.parse(args).id,
+        );
+        const {kind, amount, currency, category, note, occurredOn, projectId} =
+          current;
         const input = transactionInputSchema.parse({
           kind,
           amount,
@@ -434,16 +494,22 @@ export class FinanceAiTools implements OnModuleInit {
       module: 'finance',
       writes: true,
       undoTables: [transactions],
-      confirm: (userId, args) => this.transactions.get(userId, idArgs.parse(args).id),
+      confirm: (userId, args) =>
+        this.transactions.get(userId, idArgs.parse(args).id),
       description: 'Deletes a transaction.',
       parameters: idParameters('Transaction id from finance_transactions'),
-      handler: (userId, args) => this.transactions.remove(userId, idArgs.parse(args).id),
+      handler: (userId, args) =>
+        this.transactions.remove(userId, idArgs.parse(args).id),
     });
   }
 
   private registerRecurringTools(): void {
     const find = async (userId: string, args: Record<string, unknown>) =>
-      findById(await this.recurring.list(userId), args['id'], 'Recurring payment');
+      findById(
+        await this.recurring.list(userId),
+        args['id'],
+        'Recurring payment',
+      );
 
     this.ai.registerTool({
       name: 'finance_recurring_payments',
@@ -452,7 +518,7 @@ export class FinanceAiTools implements OnModuleInit {
         'Recurring payments (servers, domains, subscriptions): id, amount, charge day, ' +
         'whether active.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.recurring.list(userId),
+      handler: userId => this.recurring.list(userId),
     });
 
     this.ai.registerTool({
@@ -483,13 +549,21 @@ export class FinanceAiTools implements OnModuleInit {
         'only the fields to change.',
       parameters: {
         type: 'object',
-        properties: { id: { type: 'string' }, ...RECURRING_FIELDS },
+        properties: {id: {type: 'string'}, ...RECURRING_FIELDS},
         required: ['id'],
       },
       handler: async (userId, args) => {
         const current = await find(userId, args);
-        const { name, amount, currency, category, dayOfMonth, projectId, isActive } = current;
-        const { period, monthOfYear, trialEndsOn } = current;
+        const {
+          name,
+          amount,
+          currency,
+          category,
+          dayOfMonth,
+          projectId,
+          isActive,
+        } = current;
+        const {period, monthOfYear, trialEndsOn} = current;
         const input = recurringPaymentInputSchema.parse({
           name,
           amount,
@@ -516,7 +590,9 @@ export class FinanceAiTools implements OnModuleInit {
       description:
         'Deletes a recurring payment; expenses it already created stay. To stop it for a while, ' +
         'pause it instead (finance_update_recurring_payment with isActive false).',
-      parameters: idParameters('Recurring payment id from finance_recurring_payments'),
+      parameters: idParameters(
+        'Recurring payment id from finance_recurring_payments',
+      ),
       handler: async (userId, args) => {
         await this.recurring.remove(userId, (await find(userId, args)).id);
       },
@@ -533,11 +609,11 @@ export class FinanceAiTools implements OnModuleInit {
         'four characters of the IBAN, the balance and its currency, and when the bank said it ' +
         '(refreshed with every import, about every 6 hours). For "how much money do I have".',
       parameters: NO_PARAMETERS,
-      handler: async (userId) =>
-        (await this.bank.state(userId)).connections.flatMap((connection) =>
+      handler: async userId =>
+        (await this.bank.state(userId)).connections.flatMap(connection =>
           connection.accounts
-            .filter((account) => account.enabled)
-            .map((account) => ({
+            .filter(account => account.enabled)
+            .map(account => ({
               bank: connection.bank,
               account: account.name,
               ibanEnd: account.ibanEnd,
@@ -558,8 +634,8 @@ export class FinanceAiTools implements OnModuleInit {
         'personal spending of a month over the last full months and how many months the money ' +
         'at hand would last at it. For "how much am I worth", "how long would my savings last".',
       parameters: NO_PARAMETERS,
-      handler: async (userId) => {
-        const { history: _, ...worth } = await this.worth.get(userId);
+      handler: async userId => {
+        const {history: _, ...worth} = await this.worth.get(userId);
         return worth;
       },
     });
@@ -572,7 +648,7 @@ export class FinanceAiTools implements OnModuleInit {
         'last day to give notice of a contract, the end of a term that does not renew, the end ' +
         'of a fixed price or a free trial, a yearly charge.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.subscriptions.keyDates(userId),
+      handler: userId => this.subscriptions.keyDates(userId),
     });
 
     const find = async (userId: string, args: Record<string, unknown>) =>
@@ -585,19 +661,24 @@ export class FinanceAiTools implements OnModuleInit {
         'Automatic cost import (Hetzner, DeepSeek): id, name, amount for the current month, ' +
         'last sync and error.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.costSources.list(userId),
+      handler: userId => this.costSources.list(userId),
     });
 
     this.ai.registerTool({
       name: 'finance_sync_cost_source',
       module: 'finance',
       writes: true,
-      description: 'Imports the latest costs from a cost source now instead of waiting.',
+      description:
+        'Imports the latest costs from a cost source now instead of waiting.',
       parameters: idParameters('Cost source id from finance_cost_sources'),
       handler: async (userId, args) => {
         const source = await find(userId, args);
         await this.costSources.syncOne(userId, source.id);
-        return findById(await this.costSources.list(userId), source.id, 'Cost source');
+        return findById(
+          await this.costSources.list(userId),
+          source.id,
+          'Cost source',
+        );
       },
     });
 
@@ -619,19 +700,30 @@ export class FinanceAiTools implements OnModuleInit {
 /** Not the whole list: a hundred rows would only fill the model context. */
 function importSummary(added: Transaction[]) {
   const totals = new Map<string, number>();
-  for (const { kind, currency, amount } of added) {
+  for (const {kind, currency, amount} of added) {
     const key = `${kind} ${currency}`;
     totals.set(key, (totals.get(key) ?? 0) + amount);
   }
   return {
     added: added.length,
-    from: added.reduce((min, t) => (t.occurredOn < min ? t.occurredOn : min), added[0]?.occurredOn),
-    to: added.reduce((max, t) => (t.occurredOn > max ? t.occurredOn : max), added[0]?.occurredOn),
-    totals: [...totals].map(([key, total]) => ({ [key]: Math.round(total * 100) / 100 })),
+    from: added.reduce(
+      (min, t) => (t.occurredOn < min ? t.occurredOn : min),
+      added[0]?.occurredOn,
+    ),
+    to: added.reduce(
+      (max, t) => (t.occurredOn > max ? t.occurredOn : max),
+      added[0]?.occurredOn,
+    ),
+    totals: [...totals].map(([key, total]) => ({
+      [key]: Math.round(total * 100) / 100,
+    })),
   };
 }
 
 function toQuery(args: Record<string, unknown>): TransactionQuery {
-  const scope = typeof args['scope'] === 'string' && args['scope'] ? args['scope'] : undefined;
-  return { from: String(args['from']), to: String(args['to']), scope };
+  const scope =
+    typeof args['scope'] === 'string' && args['scope']
+      ? args['scope']
+      : undefined;
+  return {from: String(args['from']), to: String(args['to']), scope};
 }

@@ -7,7 +7,8 @@
 export type TextField = HTMLTextAreaElement | HTMLInputElement | HTMLElement;
 
 /** Code editors check themselves (or should not be checked): left alone. */
-const CODE_EDITORS = '.cm-editor, .CodeMirror, .monaco-editor, .ace_editor, [data-pd-no-writing]';
+const CODE_EDITORS =
+  '.cm-editor, .CodeMirror, .monaco-editor, .ace_editor, [data-pd-no-writing]';
 const BLOCKS = new Set([
   'ADDRESS',
   'BLOCKQUOTE',
@@ -42,20 +43,29 @@ export interface FieldText {
 /** A field worth checking: one to write in, never a password, a code or a number. */
 export function checkableField(target: EventTarget | null): TextField | null {
   if (target instanceof HTMLTextAreaElement) {
-    return target.readOnly || target.disabled || target.closest(CODE_EDITORS) ? null : target;
+    return target.readOnly || target.disabled || target.closest(CODE_EDITORS)
+      ? null
+      : target;
   }
   if (target instanceof HTMLInputElement) {
     const type = target.type.toLowerCase();
     const plain =
       type === 'text' &&
-      !/one-time-code|cc-|email|tel|url|username|name|address|postal/.test(target.autocomplete) &&
-      !SEARCH.test(`${target.name} ${target.id} ${target.getAttribute('role') ?? ''}`) &&
+      !/one-time-code|cc-|email|tel|url|username|name|address|postal/.test(
+        target.autocomplete,
+      ) &&
+      !SEARCH.test(
+        `${target.name} ${target.id} ${target.getAttribute('role') ?? ''}`,
+      ) &&
       !inLoginForm(target);
     return plain && !target.readOnly && !target.disabled ? target : null;
   }
   if (target instanceof HTMLElement && target.isContentEditable) {
     const host = editingHost(target);
-    return host.closest(CODE_EDITORS) || host.getAttribute('spellcheck') === 'false' ? null : host;
+    return host.closest(CODE_EDITORS) ||
+      host.getAttribute('spellcheck') === 'false'
+      ? null
+      : host;
   }
   return null;
 }
@@ -77,18 +87,25 @@ function editingHost(element: HTMLElement): HTMLElement {
   return host;
 }
 
-export function isPlainField(field: TextField): field is HTMLTextAreaElement | HTMLInputElement {
-  return field instanceof HTMLTextAreaElement || field instanceof HTMLInputElement;
+export function isPlainField(
+  field: TextField,
+): field is HTMLTextAreaElement | HTMLInputElement {
+  return (
+    field instanceof HTMLTextAreaElement || field instanceof HTMLInputElement
+  );
 }
 
 export function readField(field: TextField): FieldText {
   if (isPlainField(field)) {
-    return { text: field.value, segments: null };
+    return {text: field.value, segments: null};
   }
   const segments: Segment[] = [];
   let text = '';
   let lastBlock: Element | null = null;
-  const walker = document.createTreeWalker(field, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+  const walker = document.createTreeWalker(
+    field,
+    NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+  );
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     if (node instanceof HTMLBRElement) {
       text += '\n';
@@ -103,10 +120,10 @@ export function readField(field: TextField): FieldText {
       text += '\n';
     }
     lastBlock = block;
-    segments.push({ node, start: text.length });
+    segments.push({node, start: text.length});
     text += node.data;
   }
-  return { text, segments };
+  return {text, segments};
 }
 
 function blockOf(node: Node, root: HTMLElement): Element {
@@ -118,7 +135,11 @@ function blockOf(node: Node, root: HTMLElement): Element {
 }
 
 /** The text nodes and offsets of a stretch of the text of a rich editor; null — not there. */
-export function domRange(segments: Segment[], start: number, end: number): Range | null {
+export function domRange(
+  segments: Segment[],
+  start: number,
+  end: number,
+): Range | null {
   const from = pointAt(segments, start, false);
   const to = pointAt(segments, end, true);
   if (!from || !to) {
@@ -134,11 +155,11 @@ function pointAt(
   segments: Segment[],
   at: number,
   isEnd: boolean,
-): { node: Text; offset: number } | null {
-  for (const { node, start } of segments) {
+): {node: Text; offset: number} | null {
+  for (const {node, start} of segments) {
     const end = start + node.data.length;
     if (at >= start && (isEnd ? at <= end : at < end)) {
-      return { node, offset: at - start };
+      return {node, offset: at - start};
     }
   }
   return null;
@@ -151,6 +172,6 @@ export function caretOffset(field: TextField, read: FieldText): number | null {
   }
   const selection = document.getSelection();
   const node = selection?.focusNode;
-  const segment = read.segments?.find((one) => one.node === node);
+  const segment = read.segments?.find(one => one.node === node);
   return segment && selection ? segment.start + selection.focusOffset : null;
 }

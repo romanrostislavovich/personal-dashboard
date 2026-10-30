@@ -5,19 +5,20 @@ import {
   LoginResponse,
   RegisterRequest,
 } from '@pd/contracts';
-import { ApiClient } from './api-client';
-import { API_PATHS, authApi, projectsApi } from './core-api';
-import { Outbox } from './outbox';
-import { ClientPlatform } from './platform';
-import { RealtimeConnection } from './realtime';
-import { Session } from './session';
+import {ApiClient} from './api-client';
+import {API_PATHS, authApi, projectsApi} from './core-api';
+import {Outbox} from './outbox';
+import {ClientPlatform} from './platform';
+import {RealtimeConnection} from './realtime';
+import {Session} from './session';
 
 /** Signing in either finishes or asks for a code from the authenticator app. */
 /** The profile as last seen, for starting without a connection. */
 const USER_KEY = 'pd.user';
 
 export type SignInResult =
-  { status: 'signed-in'; user: CurrentUser } | { status: 'code-required'; challengeToken: string };
+  | {status: 'signed-in'; user: CurrentUser}
+  | {status: 'code-required'; challengeToken: string};
 
 /**
  * Everything a client needs from the core, wired together. A platform creates it once:
@@ -53,20 +54,25 @@ export function createDashboardClient(platform: ClientPlatform) {
     realtime,
 
     /** The password step; with two-factor sign-in on, a code is asked for next. */
-    async signIn(credentials: Omit<LoginRequest, 'client'>): Promise<SignInResult> {
-      const result = await auth.login({ ...credentials, client });
+    async signIn(
+      credentials: Omit<LoginRequest, 'client'>,
+    ): Promise<SignInResult> {
+      const result = await auth.login({...credentials, client});
       return isTwoFactorChallenge(result)
-        ? { status: 'code-required', challengeToken: result.challengeToken }
-        : { status: 'signed-in', user: await started(result) };
+        ? {status: 'code-required', challengeToken: result.challengeToken}
+        : {status: 'signed-in', user: await started(result)};
     },
 
     /** The code from the authenticator app (or a recovery code) for the challenge. */
-    async completeSignIn(challengeToken: string, code: string): Promise<CurrentUser> {
-      return started(await auth.loginWithCode({ challengeToken, code }));
+    async completeSignIn(
+      challengeToken: string,
+      code: string,
+    ): Promise<CurrentUser> {
+      return started(await auth.loginWithCode({challengeToken, code}));
     },
 
     async signUp(input: Omit<RegisterRequest, 'client'>): Promise<CurrentUser> {
-      return started(await auth.register({ ...input, client }));
+      return started(await auth.register({...input, client}));
     },
 
     /** "Try the demo" of a demo instance: in as the shared demo user. */
@@ -111,7 +117,9 @@ export function createDashboardClient(platform: ClientPlatform) {
     /** Signs this device out on the server too. */
     async signOut(): Promise<void> {
       const refreshToken = await session.refreshToken();
-      await api.post(API_PATHS.logout, refreshToken ? { refreshToken } : {}).catch(() => undefined);
+      await api
+        .post(API_PATHS.logout, refreshToken ? {refreshToken} : {})
+        .catch(() => undefined);
       await platform.storage.remove(USER_KEY);
       // What was read belongs to this account: the next one starts with nothing kept.
       await platform.readCache?.clear().catch(() => undefined);

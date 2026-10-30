@@ -17,10 +17,15 @@
   <span class="spacer"></span>
   @if (connection?.lastSyncedAt; as syncedAt) {
     <span class="hint">
-      {{ 'development.wakatime.syncedAt' | transloco }} {{ syncedAt | date: 'd MMM, HH:mm' }}
+      {{ 'development.wakatime.syncedAt' | transloco }}
+      {{ syncedAt | date: 'd MMM, HH:mm' }}
     </span>
   }
-  <button matButton (click)="sync()" [disabled]="busy() || !connection?.connected">
+  <button
+    matButton
+    (click)="sync()"
+    [disabled]="busy() || !connection?.connected"
+  >
     <mat-icon>sync</mat-icon> {{ 'development.wakatime.syncNow' | transloco }}
   </button>
 </header>
@@ -32,8 +37,14 @@
 @if (connection && !connection.connected) {
   <section class="setup">
     <h3>{{ 'development.wakatime.notConnectedTitle' | transloco }}</h3>
-    <p class="hint">{{ 'development.wakatime.notConnectedHint' | transloco }}</p>
-    <a matButton="filled" [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+    <p class="hint">
+      {{ 'development.wakatime.notConnectedHint' | transloco }}
+    </p>
+    <a
+      matButton="filled"
+      [routerLink]="integrations.path"
+      [queryParams]="integrations.queryParams"
+    >
       {{ 'core.settings.openIntegrations' | transloco }}
     </a>
   </section>
@@ -41,7 +52,8 @@
 
 @if (connection?.syncError; as syncError) {
   <p class="error">
-    <mat-icon inline>warning</mat-icon> {{ 'development.wakatime.syncError' | transloco }}:
+    <mat-icon inline>warning</mat-icon>
+    {{ 'development.wakatime.syncError' | transloco }}:
     {{ syncError }}
   </p>
 }
@@ -51,23 +63,35 @@
   <mat-card appearance="outlined">
     <mat-card-content class="stats">
       <div class="stat">
-        <span class="label">{{ 'development.wakatime.today' | transloco }}</span>
+        <span class="label">{{
+          'development.wakatime.today' | transloco
+        }}</span>
         <span class="value">{{ s.todaySeconds | pdDuration }}</span>
       </div>
       <div class="stat">
-        <span class="label">{{ 'development.wakatime.total' | transloco }}</span>
+        <span class="label">{{
+          'development.wakatime.total' | transloco
+        }}</span>
         <span class="value">{{ s.totalSeconds | pdDuration }}</span>
         <span class="sub">
-          {{ 'development.wakatime.activeDays' | transloco: { count: s.activeDays } }}
+          {{
+            'development.wakatime.activeDays' | transloco: {count: s.activeDays}
+          }}
         </span>
       </div>
       <div class="stat">
-        <span class="label">{{ 'development.wakatime.dailyAverage' | transloco }}</span>
+        <span class="label">{{
+          'development.wakatime.dailyAverage' | transloco
+        }}</span>
         <span class="value">{{ s.dailyAverageSeconds | pdDuration }}</span>
-        <span class="sub">{{ 'development.wakatime.dailyAverageHint' | transloco }}</span>
+        <span class="sub">{{
+          'development.wakatime.dailyAverageHint' | transloco
+        }}</span>
       </div>
       <div class="stat">
-        <span class="label">{{ 'development.wakatime.bestDay' | transloco }}</span>
+        <span class="label">{{
+          'development.wakatime.bestDay' | transloco
+        }}</span>
         @if (s.bestDay; as best) {
           <span class="value">{{ best.seconds | pdDuration }}</span>
           <span class="sub">{{ best.day | date: 'd MMM y' }}</span>
@@ -76,10 +100,13 @@
         }
       </div>
       <div class="stat">
-        <span class="label">{{ 'development.wakatime.allTime' | transloco }}</span>
+        <span class="label">{{
+          'development.wakatime.allTime' | transloco
+        }}</span>
         <span class="value">{{ s.allTime.seconds | pdDuration }}</span>
         <span class="sub">
-          {{ 'development.wakatime.since' | transloco }} {{ s.allTime.since | date: 'd MMM y' }}
+          {{ 'development.wakatime.since' | transloco }}
+          {{ s.allTime.since | date: 'd MMM y' }}
         </span>
       </div>
     </mat-card-content>
@@ -87,7 +114,9 @@
 
   <mat-card appearance="outlined">
     <mat-card-header>
-      <mat-card-title>{{ 'development.wakatime.chart' | transloco }}</mat-card-title>
+      <mat-card-title>{{
+        'development.wakatime.chart' | transloco
+      }}</mat-card-title>
     </mat-card-header>
     <mat-card-content class="padded">
       <pd-bar-chart
@@ -103,22 +132,28 @@
     <ng-container
       *ngTemplateOutlet="
         top;
-        context: { title: 'development.wakatime.projects', items: projects() }
+        context: {title: 'development.wakatime.projects', items: projects()}
       "
     />
     <ng-container
       *ngTemplateOutlet="
         top;
-        context: { title: 'development.wakatime.languages', items: languages() }
+        context: {title: 'development.wakatime.languages', items: languages()}
       "
-    />
-    <ng-container
-      *ngTemplateOutlet="top; context: { title: 'development.wakatime.editors', items: editors() }"
     />
     <ng-container
       *ngTemplateOutlet="
         top;
-        context: { title: 'development.wakatime.operatingSystems', items: systems() }
+        context: {title: 'development.wakatime.editors', items: editors()}
+      "
+    />
+    <ng-container
+      *ngTemplateOutlet="
+        top;
+        context: {
+          title: 'development.wakatime.operatingSystems',
+          items: systems(),
+        }
       "
     />
   </div>

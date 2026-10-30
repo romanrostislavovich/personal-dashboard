@@ -6,7 +6,13 @@
       "name": "app",
       "installMode": "prefetch",
       "resources": {
-        "files": ["/index.html", "/manifest.webmanifest", "/*.css", "/*.js", "/icon*.png"]
+        "files": [
+          "/index.html",
+          "/manifest.webmanifest",
+          "/*.css",
+          "/*.js",
+          "/icon*.png"
+        ]
       }
     },
     {

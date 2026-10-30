@@ -1,4 +1,4 @@
-import { LocalDate, parseLocalDate } from '@pd/contracts';
+import {LocalDate, parseLocalDate} from '@pd/contracts';
 
 /** Prompts for an empty day. Add more freely — the question of the day rotates by date. */
 const QUESTIONS: Record<string, string[]> = {
@@ -49,9 +49,15 @@ const QUESTIONS: Record<string, string[]> = {
 };
 
 /** The question for `day`; `shift` moves to the next ones ("another question"). */
-export function questionOfTheDay(day: LocalDate, lang: string, shift = 0): string {
+export function questionOfTheDay(
+  day: LocalDate,
+  lang: string,
+  shift = 0,
+): string {
   const questions = QUESTIONS[lang] ?? QUESTIONS['en'];
-  const { year, month, day: dayOfMonth } = parseLocalDate(day);
-  const dayNumber = Math.floor(Date.UTC(year, month - 1, dayOfMonth) / 86_400_000);
+  const {year, month, day: dayOfMonth} = parseLocalDate(day);
+  const dayNumber = Math.floor(
+    Date.UTC(year, month - 1, dayOfMonth) / 86_400_000,
+  );
   return questions[(dayNumber + shift) % questions.length];
 }

@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { forEachUser, SchedulerService } from '@pd/api-core';
-import { WakatimeService } from './wakatime.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {forEachUser, SchedulerService} from '@pd/api-core';
+import {WakatimeService} from './wakatime.service';
 
 /**
  * Copies the latest days from WakaTime every hour. WakaTime keeps only a short history on the
@@ -20,8 +20,10 @@ export class WakatimeJob implements OnModuleInit {
       // It only copies days, and a day not copied in time is lost: worth another try.
       retry: true,
       handler: async () =>
-        forEachUser('development.wakatime-sync', await this.wakatime.connectedUserIds(), (userId) =>
-          this.wakatime.sync(userId),
+        forEachUser(
+          'development.wakatime-sync',
+          await this.wakatime.connectedUserIds(),
+          userId => this.wakatime.sync(userId),
         ),
     });
   }

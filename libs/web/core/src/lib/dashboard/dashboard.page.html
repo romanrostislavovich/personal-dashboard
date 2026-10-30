@@ -2,7 +2,10 @@
   <div>
     <p class="date">{{ today | date: 'EEEE, d MMMM' }}</p>
     <h1 class="greeting">
-      {{ 'core.dashboard.greeting.' + partOfDay() | transloco: { name: firstName() } }}
+      {{
+        'core.dashboard.greeting.' + partOfDay()
+          | transloco: {name: firstName()}
+      }}
     </h1>
   </div>
   <pd-level-card />
@@ -24,7 +27,8 @@
     </button>
   } @else {
     <button matButton (click)="editing.set(true)">
-      <mat-icon>dashboard_customize</mat-icon> {{ 'core.dashboard.edit.start' | transloco }}
+      <mat-icon>dashboard_customize</mat-icon>
+      {{ 'core.dashboard.edit.start' | transloco }}
     </button>
   }
 </div>
@@ -66,7 +70,9 @@
                 role="radio"
                 [class.selected]="widget.size === size"
                 [attr.aria-checked]="widget.size === size"
-                [attr.aria-label]="'core.dashboard.edit.sizes.' + size | transloco"
+                [attr.aria-label]="
+                  'core.dashboard.edit.sizes.' + size | transloco
+                "
                 [matTooltip]="'core.dashboard.edit.sizes.' + size | transloco"
                 (click)="resize(widget, size)"
               >
@@ -75,27 +81,37 @@
             }
           </span>
           @if (sectionHidden(widget)) {
-            <span class="hint">{{ 'core.dashboard.edit.sectionHidden' | transloco }}</span>
+            <span class="hint">{{
+              'core.dashboard.edit.sectionHidden' | transloco
+            }}</span>
           } @else {
             <button
               matIconButton
               [matTooltip]="
-                (widget.hidden ? 'core.dashboard.edit.show' : 'core.dashboard.edit.hide')
-                  | transloco
+                (widget.hidden
+                  ? 'core.dashboard.edit.show'
+                  : 'core.dashboard.edit.hide'
+                ) | transloco
               "
               [attr.aria-label]="
-                (widget.hidden ? 'core.dashboard.edit.show' : 'core.dashboard.edit.hide')
-                  | transloco
+                (widget.hidden
+                  ? 'core.dashboard.edit.show'
+                  : 'core.dashboard.edit.hide'
+                ) | transloco
               "
               (click)="toggleHidden(widget)"
             >
-              <mat-icon>{{ widget.hidden ? 'visibility_off' : 'visibility' }}</mat-icon>
+              <mat-icon>{{
+                widget.hidden ? 'visibility_off' : 'visibility'
+              }}</mat-icon>
             </button>
           }
         </div>
       }
       <div class="body">
-        <ng-container *ngComponentOutlet="widget.component; injector: widget.injector" />
+        <ng-container
+          *ngComponentOutlet="widget.component; injector: widget.injector"
+        />
       </div>
     </section>
   }
@@ -106,7 +122,8 @@
     <span class="hint">{{ 'core.dashboard.pending' | transloco }}</span>
     @for (section of pending(); track section.id) {
       <a matButton [routerLink]="'/' + section.id">
-        <mat-icon>{{ section.icon }}</mat-icon> {{ section.labelKey | transloco }}
+        <mat-icon>{{ section.icon }}</mat-icon>
+        {{ section.labelKey | transloco }}
       </a>
     }
   </p>

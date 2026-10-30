@@ -1,13 +1,19 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Monitor } from '@pd/contracts';
-import { SparklineComponent } from '@pd/web-core';
-import { StatusBadgeComponent } from './status-badge.component';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Monitor} from '@pd/contracts';
+import {SparklineComponent} from '@pd/web-core';
+import {StatusBadgeComponent} from './status-badge.component';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** How many days before SSL expiry to highlight a warning. */
@@ -42,7 +48,8 @@ const SSL_WARNING_DAYS = 14;
           <pd-status-badge [status]="m.status" />
           @if (m.status === 'down' && m.downSince) {
             <span class="since">
-              {{ 'monitoring.downSince' | transloco }} {{ m.downSince | date: 'd MMM, HH:mm' }}
+              {{ 'monitoring.downSince' | transloco }}
+              {{ m.downSince | date: 'd MMM, HH:mm' }}
             </span>
           }
           @if (m.lastError) {
@@ -54,25 +61,35 @@ const SSL_WARNING_DAYS = 14;
           <div class="stat">
             <span class="label">{{ 'monitoring.uptime24h' | transloco }}</span>
             <span class="value">{{
-              m.uptime.day === null ? '—' : (m.uptime.day | number: '1.0-2') + '%'
+              m.uptime.day === null
+                ? '—'
+                : (m.uptime.day | number: '1.0-2') + '%'
             }}</span>
           </div>
           <div class="stat">
             <span class="label">{{ 'monitoring.uptime7d' | transloco }}</span>
             <span class="value">{{
-              m.uptime.week === null ? '—' : (m.uptime.week | number: '1.0-2') + '%'
+              m.uptime.week === null
+                ? '—'
+                : (m.uptime.week | number: '1.0-2') + '%'
             }}</span>
           </div>
           <div class="stat">
             <span class="label">{{ 'monitoring.uptime30d' | transloco }}</span>
             <span class="value">{{
-              m.uptime.month === null ? '—' : (m.uptime.month | number: '1.0-2') + '%'
+              m.uptime.month === null
+                ? '—'
+                : (m.uptime.month | number: '1.0-2') + '%'
             }}</span>
           </div>
           <div class="stat">
             <span class="label">{{ 'monitoring.response' | transloco }}</span>
             <span class="value">
-              {{ m.lastResponseMs === null ? '—' : (m.lastResponseMs | number) + ' ' }}
+              {{
+                m.lastResponseMs === null
+                  ? '—'
+                  : (m.lastResponseMs | number) + ' '
+              }}
               @if (m.lastResponseMs !== null) {
                 <small>{{ 'monitoring.ms' | transloco }}</small>
               }
@@ -81,7 +98,9 @@ const SSL_WARNING_DAYS = 14;
         </div>
 
         <div class="chart">
-          <span class="label">{{ 'monitoring.responseChart' | transloco }}</span>
+          <span class="label">{{
+            'monitoring.responseChart' | transloco
+          }}</span>
           @if (responsePoints().length > 1) {
             <pd-sparkline
               [points]="responsePoints()"
@@ -99,12 +118,13 @@ const SSL_WARNING_DAYS = 14;
           <!-- Compare with null explicitly: 0 days is important information too. -->
           @if (days !== null) {
             <span [class.warning]="days <= sslWarningDays">
-              🔒 {{ 'monitoring.sslExpires' | transloco: { days } }}
+              🔒 {{ 'monitoring.sslExpires' | transloco: {days} }}
             </span>
           }
           @if (m.lastCheckedAt) {
             <span
-              >{{ 'monitoring.lastCheck' | transloco }} {{ m.lastCheckedAt | date: 'HH:mm' }}</span
+              >{{ 'monitoring.lastCheck' | transloco }}
+              {{ m.lastCheckedAt | date: 'HH:mm' }}</span
             >
           }
         </p>
@@ -181,11 +201,16 @@ export class MonitorCardComponent {
   protected readonly sslWarningDays = SSL_WARNING_DAYS;
 
   protected readonly responsePoints = computed(() =>
-    this.monitor().responseTimes.map((point) => ({ at: point.at, value: point.avgMs })),
+    this.monitor().responseTimes.map(point => ({
+      at: point.at,
+      value: point.avgMs,
+    })),
   );
 
   protected readonly sslDaysLeft = computed(() => {
     const expiresAt = this.monitor().sslExpiresAt;
-    return expiresAt ? Math.floor((new Date(expiresAt).getTime() - Date.now()) / DAY_MS) : null;
+    return expiresAt
+      ? Math.floor((new Date(expiresAt).getTime() - Date.now()) / DAY_MS)
+      : null;
   });
 }

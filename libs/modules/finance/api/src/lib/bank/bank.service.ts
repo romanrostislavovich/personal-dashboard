@@ -6,7 +6,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {ConfigService} from '@nestjs/config';
 import {
   AppConfig,
   DB,
@@ -24,12 +24,16 @@ import {
   BankSyncResult,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, asc, eq, isNotNull, lte } from 'drizzle-orm';
-import { randomBytes } from 'node:crypto';
-import { financeMessages } from '../finance.messages';
-import { BankImportService } from './bank-import.service';
-import { BankConnectionRow, bankAccounts, bankConnections } from './bank.schema';
-import { EnableBankingClient, EnableBankingError, ProviderAccount } from './enable-banking.client';
+import {and, asc, eq, isNotNull, lte} from 'drizzle-orm';
+import {randomBytes} from 'node:crypto';
+import {financeMessages} from '../finance.messages';
+import {BankImportService} from './bank-import.service';
+import {BankConnectionRow, bankAccounts, bankConnections} from './bank.schema';
+import {
+  EnableBankingClient,
+  EnableBankingError,
+  ProviderAccount,
+} from './enable-banking.client';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** What PSD2 lets a consent last: the bank may give less. */
@@ -38,7 +42,10 @@ const CONSENT_DAYS = 180;
 const CONSENT_MARGIN_MS = 60 * 60 * 1000;
 
 /** PSD2's 180 days, or less when the bank gives less (asking for more is refused). */
-export function consentUntil(maxSeconds?: number | null, now = Date.now()): Date {
+export function consentUntil(
+  maxSeconds?: number | null,
+  now = Date.now(),
+): Date {
   const wanted = CONSENT_DAYS * DAY_MS;
   const allowed = maxSeconds ? maxSeconds * 1000 - CONSENT_MARGIN_MS : wanted;
   return new Date(now + Math.max(DAY_MS, Math.min(wanted, allowed)));
@@ -99,7 +106,9 @@ export class BankService {
     private readonly notifications: NotificationsService,
     private readonly importer: BankImportService,
   ) {
-    this.publicUrl = config.get('PUBLIC_URL', { infer: true }).replace(/\/+$/, '');
+    this.publicUrl = config
+      .get('PUBLIC_URL', {infer: true})
+      .replace(/\/+$/, '');
   }
 
   /** Where the bank sends the user back: added to the application at Enable Banking. */
@@ -112,16 +121,20 @@ export class BankService {
     const owner = await this.keys.isOwner(userId);
     return {
       available: (await this.client()) !== null,
-      app: owner ? { appId: appId ?? '', redirectUrl: this.redirectUrl } : null,
+      app: owner ? {appId: appId ?? '', redirectUrl: this.redirectUrl} : null,
       connections: await this.connections(userId),
     };
   }
 
   /** The owner's application: kept only when Enable Banking answers to its keys. */
-  async setApp(userId: string, appId: string, privateKey: string): Promise<void> {
+  async setApp(
+    userId: string,
+    appId: string,
+    privateKey: string,
+  ): Promise<void> {
     await this.keys.assertOwner(userId);
     try {
-      await new EnableBankingClient({ appId, privateKey }).application();
+      await new EnableBankingClient({appId, privateKey}).application();
     } catch (error) {
       throw new BadRequestException(
         `Enable Banking does not accept this application id and key: ${String(error)}`,
@@ -140,12 +153,19 @@ export class BankService {
   async banks(country: string): Promise<BankOption[]> {
     const client = await this.requireClient();
     return (await refused(() => client.banks(country)))
-      .map((bank) => ({ name: bank.name, country: bank.country, logo: bank.logo ?? null }))
+      .map(bank => ({
+        name: bank.name,
+        country: bank.country,
+        logo: bank.logo ?? null,
+      }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   /** The bank's sign-in page for the user's consent. */
-  async connect(userId: string, input: BankConnectInput): Promise<{ url: string }> {
+  async connect(
+    userId: string,
+    input: BankConnectInput,
+  ): Promise<{url: string}> {
     const client = await this.requireClient();
     if (input.connectionId) {
       await this.owned(userId, input.connectionId);
@@ -159,7 +179,9 @@ export class BankService {
       expiresAt: Date.now() + STATE_TTL_MS,
     });
     try {
-      const bank = (await client.banks(input.country)).find((one) => one.name === input.bank);
+      const bank = (await client.banks(input.country)).find(
+        one => one.name === input.bank,
+      );
       return await client.startAuthorization({
         bank: input.bank,
         country: input.country,
@@ -169,7 +191,9 @@ export class BankService {
       });
     } catch (error) {
       this.pending.delete(state);
-      throw new BadRequestException(`The bank cannot be connected: ${reason(error)}`);
+      throw new BadRequestException(
+        `The bank cannot be connected: ${reason(error)}`,
+      );
     }
   }
 
@@ -177,7 +201,11 @@ export class BankService {
    * The bank sent the user back: the code becomes a session, its accounts are kept (none
    * enabled yet — the user chooses them on the card). The answer is where the browser goes.
    */
-  async handleCallback(code?: string, state?: string, error?: string): Promise<string> {
+  async handleCallback(
+    code?: string,
+    state?: string,
+    error?: string,
+  ): Promise<string> {
     const back = (result: string, connectionId?: string) =>
       `${this.publicUrl}/settings?tab=integrations&bank=${result}` +
       (connectionId ? `&connection=${connectionId}` : '');
@@ -186,12 +214,20 @@ export class BankService {
       this.pending.delete(state);
     }
     const client = await this.client();
-    if (!pending || pending.expiresAt < Date.now() || !code || error || !client) {
+    if (
+      !pending ||
+      pending.expiresAt < Date.now() ||
+      !code ||
+      error ||
+      !client
+    ) {
       return back('error');
     }
     try {
       const session = await client.createSession(code);
-      const validUntil = session.access?.valid_until ? new Date(session.access.valid_until) : null;
+      const validUntil = session.access?.valid_until
+        ? new Date(session.access.valid_until)
+        : null;
       const connectionId = pending.connectionId
         ? await this.renew(
             pending.userId,
@@ -201,7 +237,11 @@ export class BankService {
             client,
           )
         : await this.create(pending, session.session_id, validUntil);
-      await this.saveAccounts(pending.userId, connectionId, session.accounts ?? []);
+      await this.saveAccounts(
+        pending.userId,
+        connectionId,
+        session.accounts ?? [],
+      );
       return back(pending.connectionId ? 'renewed' : 'connected', connectionId);
     } catch (failure) {
       this.logger.warn(`The bank's session was not made: ${String(failure)}`);
@@ -210,10 +250,14 @@ export class BankService {
   }
 
   /** An account on or off; one switched on is imported at once. */
-  async setAccount(userId: string, id: string, enabled: boolean): Promise<void> {
+  async setAccount(
+    userId: string,
+    id: string,
+    enabled: boolean,
+  ): Promise<void> {
     const [account] = await this.db
       .update(bankAccounts)
-      .set({ enabled })
+      .set({enabled})
       .where(and(eq(bankAccounts.id, id), eq(bankAccounts.userId, userId)))
       .returning();
     if (!account) {
@@ -235,7 +279,9 @@ export class BankService {
     const connection = await this.owned(userId, connectionId);
     const client = await this.client();
     await client?.deleteSession(connection.sessionId).catch(() => undefined);
-    await this.db.delete(bankConnections).where(eq(bankConnections.id, connection.id));
+    await this.db
+      .delete(bankConnections)
+      .where(eq(bankConnections.id, connection.id));
   }
 
   /** The job: every connection still in its consent, one after another. */
@@ -248,7 +294,7 @@ export class BankService {
       .select()
       .from(bankConnections)
       .orderBy(asc(bankConnections.createdAt));
-    for (const connection of all.filter((item) => !expired(item))) {
+    for (const connection of all.filter(item => !expired(item))) {
       await this.syncOne(connection, client).catch(() => undefined);
     }
   }
@@ -259,8 +305,13 @@ export class BankService {
     const ending = await this.db
       .select()
       .from(bankConnections)
-      .where(and(isNotNull(bankConnections.validUntil), lte(bankConnections.validUntil, soon)));
-    for (const connection of ending.filter((item) => !expired(item))) {
+      .where(
+        and(
+          isNotNull(bankConnections.validUntil),
+          lte(bankConnections.validUntil, soon),
+        ),
+      );
+    for (const connection of ending.filter(item => !expired(item))) {
       const user = await this.users.findById(connection.userId);
       const timeZone = this.users.timeZoneOf(user);
       const until = zonedDateTime(connection.validUntil as Date, timeZone).date;
@@ -270,12 +321,15 @@ export class BankService {
       const text = financeMessages(user?.locale ?? 'en');
       await this.notifications.send(connection.userId, {
         title: text.bankExpiringTitle(connection.bank),
-        body: text.bankExpiringBody(until, `${this.publicUrl}/settings?tab=integrations`),
+        body: text.bankExpiringBody(
+          until,
+          `${this.publicUrl}/settings?tab=integrations`,
+        ),
         source: 'finance',
       });
       await this.db
         .update(bankConnections)
-        .set({ remindedFor: until })
+        .set({remindedFor: until})
         .where(eq(bankConnections.id, connection.id));
     }
   }
@@ -288,21 +342,29 @@ export class BankService {
       const result = await this.importer.importConnection(connection, client);
       await this.db
         .update(bankConnections)
-        .set({ lastSyncedAt: new Date(), lastError: null })
+        .set({lastSyncedAt: new Date(), lastError: null})
         .where(eq(bankConnections.id, connection.id));
       return result;
     } catch (error) {
-      const message = String(error instanceof Error ? error.message : error).slice(0, 500);
+      const message = String(
+        error instanceof Error ? error.message : error,
+      ).slice(0, 500);
       this.logger.warn(`The bank ${connection.bank} was not read: ${message}`);
       await this.db
         .update(bankConnections)
-        .set({ lastError: message })
+        .set({lastError: message})
         .where(eq(bankConnections.id, connection.id));
-      throw new ServiceUnavailableException(`The bank was not read: ${message}`);
+      throw new ServiceUnavailableException(
+        `The bank was not read: ${message}`,
+      );
     }
   }
 
-  private async create(pending: Pending, sessionId: string, validUntil: Date | null) {
+  private async create(
+    pending: Pending,
+    sessionId: string,
+    validUntil: Date | null,
+  ) {
     const [row] = await this.db
       .insert(bankConnections)
       .values({
@@ -312,7 +374,7 @@ export class BankService {
         sessionId,
         validUntil,
       })
-      .returning({ id: bankConnections.id });
+      .returning({id: bankConnections.id});
     return row.id;
   }
 
@@ -328,7 +390,7 @@ export class BankService {
     await client.deleteSession(connection.sessionId).catch(() => undefined);
     await this.db
       .update(bankConnections)
-      .set({ sessionId, validUntil, remindedFor: null, lastError: null })
+      .set({sessionId, validUntil, remindedFor: null, lastError: null})
       .where(eq(bankConnections.id, connectionId));
     return connectionId;
   }
@@ -337,14 +399,18 @@ export class BankService {
    * The accounts of a new session: an account known by its IBAN keeps its choice and the day
    * it was imported to (its id in the new session changes); a new one comes switched off.
    */
-  private async saveAccounts(userId: string, connectionId: string, accounts: ProviderAccount[]) {
+  private async saveAccounts(
+    userId: string,
+    connectionId: string,
+    accounts: ProviderAccount[],
+  ) {
     const known = await this.db
       .select()
       .from(bankAccounts)
       .where(eq(bankAccounts.connectionId, connectionId));
     for (const account of accounts) {
       const iban = account.account_id?.iban ?? null;
-      const same = known.find((row) => iban && row.iban === iban);
+      const same = known.find(row => iban && row.iban === iban);
       const fields = {
         uid: account.uid,
         iban,
@@ -352,9 +418,14 @@ export class BankService {
         currency: account.currency ?? null,
       };
       if (same) {
-        await this.db.update(bankAccounts).set(fields).where(eq(bankAccounts.id, same.id));
+        await this.db
+          .update(bankAccounts)
+          .set(fields)
+          .where(eq(bankAccounts.id, same.id));
       } else {
-        await this.db.insert(bankAccounts).values({ userId, connectionId, ...fields });
+        await this.db
+          .insert(bankAccounts)
+          .values({userId, connectionId, ...fields});
       }
     }
   }
@@ -370,7 +441,7 @@ export class BankService {
       .from(bankAccounts)
       .where(eq(bankAccounts.userId, userId))
       .orderBy(asc(bankAccounts.createdAt));
-    return rows.map((row) => ({
+    return rows.map(row => ({
       id: row.id,
       bank: row.bank,
       country: row.country,
@@ -379,11 +450,13 @@ export class BankService {
       lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
       lastError: row.lastError,
       accounts: accounts
-        .filter((account) => account.connectionId === row.id)
+        .filter(account => account.connectionId === row.id)
         .map((account): BankAccount => ({
           id: account.id,
           name: account.name,
-          ibanEnd: account.iban ? account.iban.replace(/\s+/g, '').slice(-4) : null,
+          ibanEnd: account.iban
+            ? account.iban.replace(/\s+/g, '').slice(-4)
+            : null,
           currency: account.currency,
           enabled: account.enabled,
           lastSyncedAt: account.lastSyncedAt?.toISOString() ?? null,
@@ -403,7 +476,9 @@ export class BankService {
     const [row] = await this.db
       .select()
       .from(bankConnections)
-      .where(and(eq(bankConnections.id, id), eq(bankConnections.userId, userId)));
+      .where(
+        and(eq(bankConnections.id, id), eq(bankConnections.userId, userId)),
+      );
     if (!row) {
       throw new NotFoundException('Bank connection not found');
     }
@@ -413,18 +488,24 @@ export class BankService {
   private async client(): Promise<EnableBankingClient | null> {
     const appId = await this.keys.get('finance.enablebanking-app-id');
     const privateKey = await this.keys.get('finance.enablebanking-key');
-    return appId && privateKey ? new EnableBankingClient({ appId, privateKey }) : null;
+    return appId && privateKey
+      ? new EnableBankingClient({appId, privateKey})
+      : null;
   }
 
   private async requireClient(): Promise<EnableBankingClient> {
     const client = await this.client();
     if (!client) {
-      throw new ServiceUnavailableException('Open banking is not set up on this server');
+      throw new ServiceUnavailableException(
+        'Open banking is not set up on this server',
+      );
     }
     return client;
   }
 }
 
 function expired(connection: BankConnectionRow): boolean {
-  return !!connection.validUntil && connection.validUntil.getTime() < Date.now();
+  return (
+    !!connection.validUntil && connection.validUntil.getTime() < Date.now()
+  );
 }

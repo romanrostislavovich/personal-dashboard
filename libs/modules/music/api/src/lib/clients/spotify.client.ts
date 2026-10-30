@@ -1,5 +1,5 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { NowPlaying } from '@pd/contracts';
+import {fetchWithTimeout} from '@pd/api-core';
+import {NowPlaying} from '@pd/contracts';
 
 const ACCOUNTS = 'https://accounts.spotify.com';
 const API = 'https://api.spotify.com/v1';
@@ -44,14 +44,20 @@ export class SpotifyClient {
   }
 
   refresh(refreshToken: string): Promise<SpotifyTokens> {
-    return this.requestToken({ grant_type: 'refresh_token', refresh_token: refreshToken });
+    return this.requestToken({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    });
   }
 
   /** The current track, or `null` if nothing is playing. */
   async currentlyPlaying(accessToken: string): Promise<NowPlaying | null> {
-    const response = await fetchWithTimeout(`${API}/me/player/currently-playing`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    const response = await fetchWithTimeout(
+      `${API}/me/player/currently-playing`,
+      {
+        headers: {Authorization: `Bearer ${accessToken}`},
+      },
+    );
     if (response.status === 204) {
       return null;
     }
@@ -69,7 +75,7 @@ export class SpotifyClient {
     return {
       source: 'spotify',
       track: data.item.name,
-      artist: data.item.artists.map((a) => a.name).join(', '),
+      artist: data.item.artists.map(a => a.name).join(', '),
       album: data.item.album?.name ?? null,
       imageUrl: data.item.album?.images[0]?.url ?? null,
       url: data.item.external_urls.spotify,
@@ -81,7 +87,7 @@ export class SpotifyClient {
 
   /** A token of the app itself (no user): enough to search the catalogue. */
   appToken(): Promise<SpotifyTokens> {
-    return this.requestToken({ grant_type: 'client_credentials' });
+    return this.requestToken({grant_type: 'client_credentials'});
   }
 
   /** The link of the song in Spotify that best matches; `null` — none found. */
@@ -95,13 +101,19 @@ export class SpotifyClient {
     const strict = artist
       ? await this.search(accessToken, `track:${track} artist:${artist}`)
       : null;
-    return strict ?? (await this.search(accessToken, [artist, track].filter(Boolean).join(' ')));
+    return (
+      strict ??
+      (await this.search(
+        accessToken,
+        [artist, track].filter(Boolean).join(' '),
+      ))
+    );
   }
 
   private async search(accessToken: string, q: string): Promise<string | null> {
-    const params = new URLSearchParams({ q, type: 'track', limit: '1' });
+    const params = new URLSearchParams({q, type: 'track', limit: '1'});
     const response = await fetchWithTimeout(`${API}/search?${params}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: {Authorization: `Bearer ${accessToken}`},
     });
     if (response.status === 401) {
       throw new SpotifyAuthError('Spotify access token expired');
@@ -110,12 +122,14 @@ export class SpotifyClient {
       throw new Error(`Spotify API ${response.status}`);
     }
     const data = (await response.json()) as {
-      tracks?: { items: { external_urls: { spotify: string } }[] };
+      tracks?: {items: {external_urls: {spotify: string}}[]};
     };
     return data.tracks?.items[0]?.external_urls.spotify ?? null;
   }
 
-  private async requestToken(body: Record<string, string>): Promise<SpotifyTokens> {
+  private async requestToken(
+    body: Record<string, string>,
+  ): Promise<SpotifyTokens> {
     const response = await fetchWithTimeout(`${ACCOUNTS}/api/token`, {
       method: 'POST',
       headers: {
@@ -125,7 +139,9 @@ export class SpotifyClient {
       body: new URLSearchParams(body),
     });
     if (response.status === 400 || response.status === 401) {
-      throw new SpotifyAuthError(`Spotify token request failed: ${await response.text()}`);
+      throw new SpotifyAuthError(
+        `Spotify token request failed: ${await response.text()}`,
+      );
     }
     if (!response.ok) {
       throw new Error(`Spotify accounts ${response.status}`);
@@ -151,8 +167,8 @@ interface RawCurrentlyPlaying {
   item: {
     name: string;
     duration_ms: number;
-    artists: { name: string }[];
-    album?: { name: string; images: { url: string }[] };
-    external_urls: { spotify: string };
+    artists: {name: string}[];
+    album?: {name: string; images: {url: string}[]};
+    external_urls: {spotify: string};
   } | null;
 }

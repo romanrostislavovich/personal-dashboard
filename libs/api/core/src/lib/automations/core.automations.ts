@@ -1,9 +1,9 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { coreMessages } from '../i18n/core.messages';
-import { NotificationsService } from '../notifications/notifications.service';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { UsersService } from '../users/users.service';
-import { AutomationsService } from './automations.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {coreMessages} from '../i18n/core.messages';
+import {NotificationsService} from '../notifications/notifications.service';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {UsersService} from '../users/users.service';
+import {AutomationsService} from './automations.service';
 
 const WEEKDAYS = ['any', '1', '2', '3', '4', '5', '6', '7'];
 
@@ -25,14 +25,20 @@ export class CoreAutomations implements OnModuleInit {
       id: 'core.daily',
       module: 'core',
       labelKey: 'core.automations.daily',
-      description: 'Every day (or one weekday, 1 = Monday) at a time of the user',
+      description:
+        'Every day (or one weekday, 1 = Monday) at a time of the user',
       params: [
-        { name: 'time', type: 'time', labelKey: 'core.automations.time', required: true },
+        {
+          name: 'time',
+          type: 'time',
+          labelKey: 'core.automations.time',
+          required: true,
+        },
         {
           name: 'weekday',
           type: 'select',
           labelKey: 'core.automations.weekday',
-          options: WEEKDAYS.map((value) => ({
+          options: WEEKDAYS.map(value => ({
             value,
             labelKey: `core.automations.weekdays.${value}`,
           })),
@@ -40,10 +46,12 @@ export class CoreAutomations implements OnModuleInit {
       ],
       variables: ['date'],
       check: async (_userId, params, now) => {
-        const weekday = String(((new Date(`${now.date}T12:00:00Z`).getUTCDay() + 6) % 7) + 1);
+        const weekday = String(
+          ((new Date(`${now.date}T12:00:00Z`).getUTCDay() + 6) % 7) + 1,
+        );
         const day = params['weekday'] ?? 'any';
         return now.time >= params['time'] && (day === 'any' || day === weekday)
-          ? { date: now.date }
+          ? {date: now.date}
           : null;
       },
     });
@@ -52,7 +60,8 @@ export class CoreAutomations implements OnModuleInit {
       id: 'core.notify',
       module: 'core',
       labelKey: 'core.automations.notify',
-      description: 'Send the user a message (Telegram and the dashboard) with a text',
+      description:
+        'Send the user a message (Telegram and the dashboard) with a text',
       params: [
         {
           name: 'text',

@@ -1,18 +1,29 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { RouterLink } from '@angular/router';
-import { needsSetup } from '@pd/web-core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { DotaSummary, GameAccount, SteamSummary, WowSummary } from '@pd/contracts';
-import { DotaRankComponent } from './dota/dota-rank.component';
-import { GamesApi } from './games.api';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {RouterLink} from '@angular/router';
+import {needsSetup} from '@pd/web-core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {
+  DotaSummary,
+  GameAccount,
+  SteamSummary,
+  WowSummary,
+} from '@pd/contracts';
+import {DotaRankComponent} from './dota/dota-rank.component';
+import {GamesApi} from './games.api';
 
 /** Home widget: Steam hours, medal and win rate in Dota, ilvl and the latest achievement in WoW. */
 @Component({
   selector: 'pd-games-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatCardModule, MatButtonModule, TranslocoPipe, DotaRankComponent],
+  imports: [
+    RouterLink,
+    MatCardModule,
+    MatButtonModule,
+    TranslocoPipe,
+    DotaRankComponent,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
@@ -28,7 +39,8 @@ import { GamesApi } from './games.api';
                 <span class="muted">
                   {{
                     'games.widget.dota30'
-                      | transloco: { wins: d.last30Days.wins, losses: d.last30Days.losses }
+                      | transloco
+                        : {wins: d.last30Days.wins, losses: d.last30Days.losses}
                   }}
                 </span>
               </div>
@@ -58,7 +70,9 @@ import { GamesApi } from './games.api';
               }
               <div class="info">
                 <b>{{ w.name }}</b>
-                <span class="muted">ilvl {{ w.itemLevel ?? '—' }} · {{ w.className }}</span>
+                <span class="muted"
+                  >ilvl {{ w.itemLevel ?? '—' }} · {{ w.className }}</span
+                >
                 @if (w.recentAchievements[0]; as last) {
                   <span class="muted">🏆 {{ last.name }}</span>
                 }
@@ -70,7 +84,9 @@ import { GamesApi } from './games.api';
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/games">{{ 'games.widget.open' | transloco }}</a>
+        <a matButton routerLink="/games">{{
+          'games.widget.open' | transloco
+        }}</a>
       </mat-card-actions>
     </mat-card>
   `,
@@ -101,7 +117,9 @@ export class GamesWidget {
   protected readonly accounts = inject(GamesApi).accounts();
 
   constructor() {
-    needsSetup(() => !this.accounts.isLoading() && !this.accounts.value().length);
+    needsSetup(
+      () => !this.accounts.isLoading() && !this.accounts.value().length,
+    );
   }
 
   protected dota(account: GameAccount): DotaSummary | null {

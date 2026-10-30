@@ -1,6 +1,6 @@
-import { toForecast } from './forecast';
+import {toForecast} from './forecast';
 import raw from './forecast.fixture.json';
-import { RawForecast } from './open-meteo.client';
+import {RawForecast} from './open-meteo.client';
 
 // A real Open-Meteo answer for Warsaw, 2026-09-28: a clear, cool morning and a warm afternoon.
 const warsaw = {
@@ -33,13 +33,18 @@ describe('toForecast', () => {
   });
 
   it('dresses for the cool morning and suggests layers for the warm afternoon', () => {
-    expect(forecast.clothing).toEqual({ outfit: 'jacket', extras: ['layers'] });
+    expect(forecast.clothing).toEqual({outfit: 'jacket', extras: ['layers']});
   });
 });
 
 describe('toForecast for a week', () => {
   /** Two days: a cold wet Monday and a warm dry Tuesday; only two daytime hours each. */
-  const series = <T>(monday: T, tuesday: T) => [monday, monday, tuesday, tuesday];
+  const series = <T>(monday: T, tuesday: T) => [
+    monday,
+    monday,
+    tuesday,
+    tuesday,
+  ];
   const week: RawForecast = {
     current: {
       temperature_2m: 4,
@@ -49,7 +54,12 @@ describe('toForecast for a week', () => {
       is_day: 1,
     },
     hourly: {
-      time: ['2026-10-05T09:00', '2026-10-05T15:00', '2026-10-06T09:00', '2026-10-06T15:00'],
+      time: [
+        '2026-10-05T09:00',
+        '2026-10-05T15:00',
+        '2026-10-06T09:00',
+        '2026-10-06T15:00',
+      ],
       temperature_2m: series(4, 22),
       apparent_temperature: series(1, 22),
       precipitation_probability: series(90, 0),
@@ -75,21 +85,24 @@ describe('toForecast for a week', () => {
   };
 
   it('gives every day its own numbers and clothing advice', () => {
-    const { days, hours, clothing } = toForecast(week, warsaw);
-    expect(days.map((day) => [day.date, day.max, day.clothing.outfit])).toEqual([
+    const {days, hours, clothing} = toForecast(week, warsaw);
+    expect(days.map(day => [day.date, day.max, day.clothing.outfit])).toEqual([
       ['2026-10-05', 5, 'warm'],
       ['2026-10-06', 23, 'summer'],
     ]);
     expect(days[0].clothing.extras).toContain('umbrella');
     expect(days[1].clothing.extras).not.toContain('umbrella');
     // The hourly strip and the main advice stay about today.
-    expect(hours.map((hour) => hour.time)).toEqual(['09:00', '15:00']);
+    expect(hours.map(hour => hour.time)).toEqual(['09:00', '15:00']);
     expect(clothing).toEqual(days[0].clothing);
   });
 
   it("applies the user's scale to every day", () => {
     const forecast = toForecast(week, warsaw, 2);
     expect(forecast.thermalFeel).toBe(2);
-    expect(forecast.days.map((day) => day.clothing.outfit)).toEqual(['jacket', 'hot']);
+    expect(forecast.days.map(day => day.clothing.outfit)).toEqual([
+      'jacket',
+      'hot',
+    ]);
   });
 });

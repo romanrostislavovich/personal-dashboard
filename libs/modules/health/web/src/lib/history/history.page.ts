@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,20 +8,25 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { todayLocalDate, ToastService } from '@pd/web-core';
-import { HealthDocument, HealthLabPanel, HealthRecord, HealthVisit } from '@pd/contracts';
-import { HealthDialogs } from '../dialogs/health-dialogs.service';
-import { HealthApi } from '../health.api';
-import { CountryPipe, SpecialityPipe } from '../health-labels';
+import {ActivatedRoute, Router} from '@angular/router';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSelectModule} from '@angular/material/select';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {todayLocalDate, ToastService} from '@pd/web-core';
+import {
+  HealthDocument,
+  HealthLabPanel,
+  HealthRecord,
+  HealthVisit,
+} from '@pd/contracts';
+import {HealthDialogs} from '../dialogs/health-dialogs.service';
+import {HealthApi} from '../health.api';
+import {CountryPipe, SpecialityPipe} from '../health-labels';
 
 interface Filters {
   country: string;
@@ -29,7 +34,7 @@ interface Filters {
   doctorId: string;
 }
 
-const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
+const NO_FILTERS: Filters = {country: '', speciality: '', doctorId: ''};
 
 /**
  * The whole history: every visit, the latest first, with what was diagnosed, prescribed and
@@ -59,13 +64,17 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
       <button matButton="tonal" (click)="addDocument()">
         <mat-icon>upload_file</mat-icon> {{ 'health.document.add' | transloco }}
       </button>
-      @if (countries().length > 1 || specialities().length > 1 || doctors().length > 1) {
+      @if (
+        countries().length > 1 ||
+        specialities().length > 1 ||
+        doctors().length > 1
+      ) {
         <span class="spacer"></span>
         <mat-form-field subscriptSizing="dynamic" class="filter">
           <mat-label>{{ 'health.country' | transloco }}</mat-label>
           <mat-select
             [value]="filters().country"
-            (selectionChange)="filter({ country: $event.value })"
+            (selectionChange)="filter({country: $event.value})"
           >
             <mat-option [value]="''">{{ 'health.all' | transloco }}</mat-option>
             @for (code of countries(); track code) {
@@ -77,11 +86,13 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
           <mat-label>{{ 'health.doctor.speciality' | transloco }}</mat-label>
           <mat-select
             [value]="filters().speciality"
-            (selectionChange)="filter({ speciality: $event.value })"
+            (selectionChange)="filter({speciality: $event.value})"
           >
             <mat-option [value]="''">{{ 'health.all' | transloco }}</mat-option>
             @for (speciality of specialities(); track speciality) {
-              <mat-option [value]="speciality">{{ speciality | pdSpeciality }}</mat-option>
+              <mat-option [value]="speciality">{{
+                speciality | pdSpeciality
+              }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
@@ -89,7 +100,7 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
           <mat-label>{{ 'health.visit.doctor' | transloco }}</mat-label>
           <mat-select
             [value]="filters().doctorId"
-            (selectionChange)="filter({ doctorId: $event.value })"
+            (selectionChange)="filter({doctorId: $event.value})"
           >
             <mat-option [value]="''">{{ 'health.all' | transloco }}</mat-option>
             @for (doctor of doctors(); track doctor.id) {
@@ -109,7 +120,9 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
       @if (drafts().length) {
         <div class="drafts" role="status">
           <mat-icon>auto_awesome</mat-icon>
-          <span>{{ 'health.drafts.waiting' | transloco: { count: drafts().length } }}</span>
+          <span>{{
+            'health.drafts.waiting' | transloco: {count: drafts().length}
+          }}</span>
           <button matButton="filled" (click)="review(data, drafts()[0])">
             {{ 'health.drafts.checkOne' | transloco }}
           </button>
@@ -123,7 +136,7 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
             <b>{{
               next.days === 0
                 ? ('health.upcoming.today' | transloco)
-                : ('health.upcoming.title' | transloco: { days: next.days })
+                : ('health.upcoming.title' | transloco: {days: next.days})
             }}</b>
             {{ next.visit.nextVisitOn | date: 'd MMMM y' }}
             @if (next.visit.speciality) {
@@ -176,7 +189,9 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
             @for (field of texts; track field) {
               @if (visit[field]; as text) {
                 <div class="text">
-                  <span class="label">{{ 'health.visit.' + field | transloco }}</span>
+                  <span class="label">{{
+                    'health.visit.' + field | transloco
+                  }}</span>
                   @if (field === 'recommendations') {
                     <!-- Every line of the recommendations can become a task. -->
                     @for (line of lines(text); track $index) {
@@ -208,12 +223,18 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
                   }
                   {{ diagnosis.title }}
                   <span class="hint"
-                    >· {{ 'health.statuses.' + diagnosis.status | transloco }}</span
+                    >·
+                    {{
+                      'health.statuses.' + diagnosis.status | transloco
+                    }}</span
                   >
                 </span>
               </div>
             }
-            @for (medication of medicationsOf(data, visit); track medication.id) {
+            @for (
+              medication of medicationsOf(data, visit);
+              track medication.id
+            ) {
               <div class="line">
                 <mat-icon>medication</mat-icon>
                 <span>
@@ -236,9 +257,13 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
                     · {{ panel.laboratory }}
                   }
                   <span class="hint">
-                    · {{ 'health.labs.lines' | transloco: { count: panel.values.length } }}
+                    ·
+                    {{
+                      'health.labs.lines'
+                        | transloco: {count: panel.values.length}
+                    }}
                     @if (outOfRange(panel); as out) {
-                      · {{ 'health.labs.outOfRange' | transloco: { count: out } }}
+                      · {{ 'health.labs.outOfRange' | transloco: {count: out} }}
                     }
                   </span>
                 </span>
@@ -261,28 +286,36 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
             @for (document of documentsOf(data, visit); track document.id) {
               <button matButton class="document" (click)="open(document)">
                 <mat-icon>{{
-                  document.mimeType === 'application/pdf' ? 'picture_as_pdf' : 'image'
+                  document.mimeType === 'application/pdf'
+                    ? 'picture_as_pdf'
+                    : 'image'
                 }}</mat-icon>
                 {{ document.name }}
                 @if (document.pages > 1) {
-                  · {{ 'health.document.pages' | transloco: { count: document.pages } }}
+                  ·
+                  {{
+                    'health.document.pages' | transloco: {count: document.pages}
+                  }}
                 }
               </button>
             }
             @if (visit.nextVisitOn) {
               <p class="hint">
                 {{
-                  'health.visit.next' | transloco: { day: (visit.nextVisitOn | date: 'd MMMM y') }
+                  'health.visit.next'
+                    | transloco: {day: (visit.nextVisitOn | date: 'd MMMM y')}
                 }}
               </p>
             }
 
             <div class="actions">
               <button matButton (click)="addDiagnosis(data, visit)">
-                <mat-icon>add</mat-icon> {{ 'health.diagnosis.one' | transloco }}
+                <mat-icon>add</mat-icon>
+                {{ 'health.diagnosis.one' | transloco }}
               </button>
               <button matButton (click)="addMedication(data, visit)">
-                <mat-icon>add</mat-icon> {{ 'health.medication.one' | transloco }}
+                <mat-icon>add</mat-icon>
+                {{ 'health.medication.one' | transloco }}
               </button>
               <button matButton (click)="addPanel(data, visit)">
                 <mat-icon>add</mat-icon> {{ 'health.labs.one' | transloco }}
@@ -299,23 +332,32 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
       } @empty {
         <p class="hint">
           {{
-            (data.visits.length ? 'health.history.nothingFound' : 'health.history.empty')
-              | transloco
+            (data.visits.length
+              ? 'health.history.nothingFound'
+              : 'health.history.empty'
+            ) | transloco
           }}
         </p>
       }
 
       @if (looseDocuments().length) {
-        <h2 class="section">{{ 'health.history.otherDocuments' | transloco }}</h2>
+        <h2 class="section">
+          {{ 'health.history.otherDocuments' | transloco }}
+        </h2>
         @for (document of looseDocuments(); track document.id) {
           <div class="line">
             <button matButton class="document" (click)="open(document)">
               <mat-icon>{{
-                document.mimeType === 'application/pdf' ? 'picture_as_pdf' : 'image'
+                document.mimeType === 'application/pdf'
+                  ? 'picture_as_pdf'
+                  : 'image'
               }}</mat-icon>
               {{ document.name }}
               @if (document.pages > 1) {
-                · {{ 'health.document.pages' | transloco: { count: document.pages } }}
+                ·
+                {{
+                  'health.document.pages' | transloco: {count: document.pages}
+                }}
               }
             </button>
             <span class="hint">
@@ -327,7 +369,8 @@ const NO_FILTERS: Filters = { country: '', speciality: '', doctorId: '' };
             <span class="spacer"></span>
             @if (document.hasDraft) {
               <button matButton="tonal" (click)="review(data, document)">
-                <mat-icon>fact_check</mat-icon> {{ 'health.drafts.checkOne' | transloco }}
+                <mat-icon>fact_check</mat-icon>
+                {{ 'health.drafts.checkOne' | transloco }}
               </button>
             } @else {
               <button
@@ -484,20 +527,27 @@ export class HistoryPage {
   protected readonly data = computed(() =>
     this.record.hasValue() ? this.record.value() : undefined,
   );
-  protected readonly texts = ['complaints', 'findings', 'recommendations', 'notes'] as const;
+  protected readonly texts = [
+    'complaints',
+    'findings',
+    'recommendations',
+    'notes',
+  ] as const;
   protected readonly filters = signal<Filters>(NO_FILTERS);
 
   private readonly allVisits = computed(() => this.data()?.visits ?? []);
-  protected readonly countries = computed(() => distinct(this.allVisits().map((v) => v.country)));
+  protected readonly countries = computed(() =>
+    distinct(this.allVisits().map(v => v.country)),
+  );
   protected readonly specialities = computed(() =>
-    distinct(this.allVisits().map((v) => v.speciality)),
+    distinct(this.allVisits().map(v => v.speciality)),
   );
   protected readonly doctors = computed(() => this.data()?.doctors ?? []);
 
   protected readonly visits = computed(() => {
-    const { country, speciality, doctorId } = this.filters();
+    const {country, speciality, doctorId} = this.filters();
     return this.allVisits().filter(
-      (visit) =>
+      visit =>
         (!country || visit.country === country) &&
         (!speciality || visit.speciality === speciality) &&
         (!doctorId || visit.doctorId === doctorId),
@@ -508,24 +558,28 @@ export class HistoryPage {
   protected readonly upcoming = computed(() => {
     const today = todayLocalDate();
     const next = this.allVisits()
-      .filter((visit) => visit.nextVisitOn && visit.nextVisitOn >= today)
-      .sort((a, b) => (a.nextVisitOn ?? '').localeCompare(b.nextVisitOn ?? ''))[0];
+      .filter(visit => visit.nextVisitOn && visit.nextVisitOn >= today)
+      .sort((a, b) =>
+        (a.nextVisitOn ?? '').localeCompare(b.nextVisitOn ?? ''),
+      )[0];
     if (!next?.nextVisitOn) {
       return null;
     }
     const days = Math.round(
-      (Date.parse(`${next.nextVisitOn}T12:00:00`) - Date.parse(`${today}T12:00:00`)) / 86_400_000,
+      (Date.parse(`${next.nextVisitOn}T12:00:00`) -
+        Date.parse(`${today}T12:00:00`)) /
+        86_400_000,
     );
-    return { visit: next, days };
+    return {visit: next, days};
   });
 
   /** Documents the AI has read whose drafts wait to be checked. */
   protected readonly drafts = computed(() =>
-    (this.data()?.documents ?? []).filter((document) => document.hasDraft),
+    (this.data()?.documents ?? []).filter(document => document.hasDraft),
   );
 
   protected readonly looseDocuments = computed(() =>
-    (this.data()?.documents ?? []).filter((document) => !document.visitId),
+    (this.data()?.documents ?? []).filter(document => !document.visitId),
   );
 
   constructor() {
@@ -533,9 +587,12 @@ export class HistoryPage {
     effect(() => {
       const data = this.data();
       const id = this.route.snapshot.queryParamMap.get('draft');
-      const document = data?.documents.find((d) => d.id === id);
+      const document = data?.documents.find(d => d.id === id);
       if (data && id) {
-        void this.router.navigate([], { queryParams: { draft: null }, replaceUrl: true });
+        void this.router.navigate([], {
+          queryParams: {draft: null},
+          replaceUrl: true,
+        });
         if (document) {
           void untracked(() => this.review(data, document));
         }
@@ -544,81 +601,132 @@ export class HistoryPage {
   }
 
   protected filter(change: Partial<Filters>): void {
-    this.filters.update((filters) => ({ ...filters, ...change }));
+    this.filters.update(filters => ({...filters, ...change}));
   }
 
-  protected doctorName(data: HealthRecord, visit: HealthVisit): string | undefined {
-    return data.doctors.find((doctor) => doctor.id === visit.doctorId)?.name;
+  protected doctorName(
+    data: HealthRecord,
+    visit: HealthVisit,
+  ): string | undefined {
+    return data.doctors.find(doctor => doctor.id === visit.doctorId)?.name;
   }
 
-  protected clinicName(data: HealthRecord, visit: HealthVisit): string | undefined {
-    return data.clinics.find((clinic) => clinic.id === visit.clinicId)?.name;
+  protected clinicName(
+    data: HealthRecord,
+    visit: HealthVisit,
+  ): string | undefined {
+    return data.clinics.find(clinic => clinic.id === visit.clinicId)?.name;
   }
 
   protected diagnosesOf(data: HealthRecord, visit: HealthVisit) {
-    return data.diagnoses.filter((diagnosis) => diagnosis.visitId === visit.id);
+    return data.diagnoses.filter(diagnosis => diagnosis.visitId === visit.id);
   }
 
   protected medicationsOf(data: HealthRecord, visit: HealthVisit) {
-    return data.medications.filter((medication) => medication.visitId === visit.id);
+    return data.medications.filter(
+      medication => medication.visitId === visit.id,
+    );
   }
 
   protected panelsOf(data: HealthRecord, visit: HealthVisit) {
-    return data.labPanels.filter((panel) => panel.visitId === visit.id);
+    return data.labPanels.filter(panel => panel.visitId === visit.id);
   }
 
   protected studiesOf(data: HealthRecord, visit: HealthVisit) {
-    return data.studies.filter((study) => study.visitId === visit.id);
+    return data.studies.filter(study => study.visitId === visit.id);
   }
 
   /** How many lines are out of the laboratory's range; `0` is not shown. */
   protected outOfRange(panel: HealthLabPanel): number {
-    return panel.values.filter((line) => line.flag).length;
+    return panel.values.filter(line => line.flag).length;
   }
 
-  protected async addPanel(record: HealthRecord, visit: HealthVisit): Promise<void> {
-    if (await this.dialogs.labPanel({ record, visitId: visit.id, day: visit.visitedOn })) {
+  protected async addPanel(
+    record: HealthRecord,
+    visit: HealthVisit,
+  ): Promise<void> {
+    if (
+      await this.dialogs.labPanel({
+        record,
+        visitId: visit.id,
+        day: visit.visitedOn,
+      })
+    ) {
       this.record.reload();
     }
   }
 
-  protected async addStudy(record: HealthRecord, visit: HealthVisit): Promise<void> {
-    if (await this.dialogs.study({ record, visitId: visit.id, day: visit.visitedOn })) {
+  protected async addStudy(
+    record: HealthRecord,
+    visit: HealthVisit,
+  ): Promise<void> {
+    if (
+      await this.dialogs.study({
+        record,
+        visitId: visit.id,
+        day: visit.visitedOn,
+      })
+    ) {
       this.record.reload();
     }
   }
 
   protected documentsOf(data: HealthRecord, visit: HealthVisit) {
-    return data.documents.filter((document) => document.visitId === visit.id);
+    return data.documents.filter(document => document.visitId === visit.id);
   }
 
   protected async addVisit(): Promise<void> {
     const record = this.data();
-    if (record && (await this.dialogs.visit({ record }))) {
+    if (record && (await this.dialogs.visit({record}))) {
       this.record.reload();
     }
   }
 
-  protected async editVisit(record: HealthRecord, visit: HealthVisit): Promise<void> {
-    if (await this.dialogs.visit({ record, visit })) {
+  protected async editVisit(
+    record: HealthRecord,
+    visit: HealthVisit,
+  ): Promise<void> {
+    if (await this.dialogs.visit({record, visit})) {
       this.record.reload();
     }
   }
 
   protected async removeVisit(visit: HealthVisit): Promise<void> {
-    if (await this.dialogs.remove(visit.visitedOn, () => this.api.client.removeVisit(visit.id))) {
+    if (
+      await this.dialogs.remove(visit.visitedOn, () =>
+        this.api.client.removeVisit(visit.id),
+      )
+    ) {
       this.record.reload();
     }
   }
 
-  protected async addDiagnosis(record: HealthRecord, visit: HealthVisit): Promise<void> {
-    if (await this.dialogs.diagnosis({ record, visitId: visit.id, day: visit.visitedOn })) {
+  protected async addDiagnosis(
+    record: HealthRecord,
+    visit: HealthVisit,
+  ): Promise<void> {
+    if (
+      await this.dialogs.diagnosis({
+        record,
+        visitId: visit.id,
+        day: visit.visitedOn,
+      })
+    ) {
       this.record.reload();
     }
   }
 
-  protected async addMedication(record: HealthRecord, visit: HealthVisit): Promise<void> {
-    if (await this.dialogs.medication({ record, visitId: visit.id, day: visit.visitedOn })) {
+  protected async addMedication(
+    record: HealthRecord,
+    visit: HealthVisit,
+  ): Promise<void> {
+    if (
+      await this.dialogs.medication({
+        record,
+        visitId: visit.id,
+        day: visit.visitedOn,
+      })
+    ) {
       this.record.reload();
     }
   }
@@ -627,28 +735,40 @@ export class HistoryPage {
     const record = this.data();
     if (
       record &&
-      (await this.dialogs.document({ record, visitId: visit?.id, day: visit?.visitedOn }))
+      (await this.dialogs.document({
+        record,
+        visitId: visit?.id,
+        day: visit?.visitedOn,
+      }))
     ) {
       this.record.reload();
     }
   }
 
-  protected async editDocument(record: HealthRecord, document: HealthDocument): Promise<void> {
-    if (await this.dialogs.document({ record, document })) {
+  protected async editDocument(
+    record: HealthRecord,
+    document: HealthDocument,
+  ): Promise<void> {
+    if (await this.dialogs.document({record, document})) {
       this.record.reload();
     }
   }
 
   protected async removeDocument(document: HealthDocument): Promise<void> {
     if (
-      await this.dialogs.remove(document.name, () => this.api.client.removeDocument(document.id))
+      await this.dialogs.remove(document.name, () =>
+        this.api.client.removeDocument(document.id),
+      )
     ) {
       this.record.reload();
     }
   }
 
-  protected async review(record: HealthRecord, document: HealthDocument): Promise<void> {
-    if (await this.dialogs.review({ record, document })) {
+  protected async review(
+    record: HealthRecord,
+    document: HealthDocument,
+  ): Promise<void> {
+    if (await this.dialogs.review({record, document})) {
       this.record.reload();
     }
   }
@@ -657,14 +777,14 @@ export class HistoryPage {
   protected lines(text: string): string[] {
     return text
       .split(/\r?\n/)
-      .map((line) => line.replace(/^\s*(?:[-•*]|\d+[.)])\s*/, '').trim())
+      .map(line => line.replace(/^\s*(?:[-•*]|\d+[.)])\s*/, '').trim())
       .filter(Boolean);
   }
 
   /** The line becomes a task of the TODO list (through the core: Health does not know Tasks). */
   protected async toTask(line: string): Promise<void> {
     try {
-      await this.api.client.addTask({ title: line });
+      await this.api.client.addTask({title: line});
       this.toasts.show({
         icon: 'add_task',
         title: this.transloco.translate('health.visit.taskAdded'),
@@ -687,5 +807,7 @@ export class HistoryPage {
 }
 
 function distinct(values: (string | null)[]): string[] {
-  return [...new Set(values.filter((value): value is string => Boolean(value)))].sort();
+  return [
+    ...new Set(values.filter((value): value is string => Boolean(value))),
+  ].sort();
 }

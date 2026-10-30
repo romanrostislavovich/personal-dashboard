@@ -1,10 +1,17 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatMenuModule} from '@angular/material/menu';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {
   addDays,
   Habit,
@@ -13,7 +20,7 @@ import {
   parseLocalDate,
   toLocalDate,
 } from '@pd/contracts';
-import { habitIcon, localToday } from './habits.api';
+import {habitIcon, localToday} from './habits.api';
 
 /** A day of the calendar: before the start (none), clean, with it, or still to come. */
 interface CalendarDay {
@@ -25,10 +32,10 @@ interface CalendarDay {
 
 /** A change a card asks the page for. */
 export type HabitCardAction =
-  | { type: 'mark'; day: string; status: 'used' | 'done'; amount: number | null }
-  | { type: 'unmark'; day: string }
-  | { type: 'edit' }
-  | { type: 'remove' };
+  | {type: 'mark'; day: string; status: 'used' | 'done'; amount: number | null}
+  | {type: 'unmark'; day: string}
+  | {type: 'edit'}
+  | {type: 'remove'};
 
 /**
  * One habit: the run of clean days, big; the best run and the other numbers; the calendar of the
@@ -37,7 +44,14 @@ export type HabitCardAction =
 @Component({
   selector: 'pd-habit-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, MatButtonModule, MatCardModule, MatIconModule, MatMenuModule, TranslocoPipe],
+  imports: [
+    DatePipe,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    MatMenuModule,
+    TranslocoPipe,
+  ],
   template: `
     @let h = habit();
     <mat-card appearance="outlined">
@@ -50,16 +64,24 @@ export type HabitCardAction =
               {{ 'habits.goals.quit' | transloco }}
             }
             @case ('less') {
-              {{ 'habits.goals.lessThan' | transloco: { days: h.maxDaysPerWeek } }}
+              {{
+                'habits.goals.lessThan' | transloco: {days: h.maxDaysPerWeek}
+              }}
             }
             @case ('daily') {
               {{ 'habits.goals.daily' | transloco }}
             }
             @case ('weekly') {
-              {{ 'habits.goals.weeklyTimes' | transloco: { times: h.timesPerWeek } }}
+              {{
+                'habits.goals.weeklyTimes' | transloco: {times: h.timesPerWeek}
+              }}
             }
           }
-          · {{ 'habits.card.since' | transloco: { day: (h.startedOn | date: 'd MMM y') } }}
+          ·
+          {{
+            'habits.card.since'
+              | transloco: {day: (h.startedOn | date: 'd MMM y')}
+          }}
         </mat-card-subtitle>
         <button
           matIconButton
@@ -70,10 +92,10 @@ export type HabitCardAction =
           <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #menu="matMenu">
-          <button mat-menu-item (click)="action.emit({ type: 'edit' })">
+          <button mat-menu-item (click)="action.emit({type: 'edit'})">
             <mat-icon>edit</mat-icon> {{ 'core.actions.edit' | transloco }}
           </button>
-          <button mat-menu-item (click)="action.emit({ type: 'remove' })">
+          <button mat-menu-item (click)="action.emit({type: 'remove'})">
             <mat-icon>delete</mat-icon> {{ 'core.actions.delete' | transloco }}
           </button>
         </mat-menu>
@@ -83,22 +105,32 @@ export type HabitCardAction =
           <span class="number">{{ h.stats.currentStreak }}</span>
           <span class="label">
             {{
-              (h.goal === 'weekly' ? 'habits.card.weeksInRow' : 'habits.card.streak') | transloco
+              (h.goal === 'weekly'
+                ? 'habits.card.weeksInRow'
+                : 'habits.card.streak'
+              ) | transloco
             }}
           </span>
         </div>
         <div class="numbers">
-          <span>{{ 'habits.card.best' | transloco: { days: h.stats.bestStreak } }}</span>
+          <span>{{
+            'habits.card.best' | transloco: {days: h.stats.bestStreak}
+          }}</span>
           @if (building()) {
-            <span>{{ 'habits.card.done' | transloco: { days: h.stats.doneDays } }}</span>
+            <span>{{
+              'habits.card.done' | transloco: {days: h.stats.doneDays}
+            }}</span>
           } @else {
-            <span>{{ 'habits.card.clean' | transloco: { days: h.stats.cleanDays } }}</span>
+            <span>{{
+              'habits.card.clean' | transloco: {days: h.stats.cleanDays}
+            }}</span>
           }
           @if (h.goal === 'weekly') {
             <span>
               {{
                 'habits.card.thisWeekDone'
-                  | transloco: { done: h.stats.doneThisWeek, times: h.timesPerWeek }
+                  | transloco
+                    : {done: h.stats.doneThisWeek, times: h.timesPerWeek}
               }}
             </span>
           }
@@ -106,14 +138,21 @@ export type HabitCardAction =
             <span [class.over]="h.stats.usedThisWeek > (h.maxDaysPerWeek ?? 0)">
               {{
                 'habits.card.thisWeek'
-                  | transloco: { used: h.stats.usedThisWeek, max: h.maxDaysPerWeek }
+                  | transloco
+                    : {used: h.stats.usedThisWeek, max: h.maxDaysPerWeek}
               }}
             </span>
-            <span>{{ 'habits.card.weeks' | transloco: { weeks: h.stats.weeksWithinLimit } }}</span>
+            <span>{{
+              'habits.card.weeks' | transloco: {weeks: h.stats.weeksWithinLimit}
+            }}</span>
           }
         </div>
 
-        <div class="calendar" role="grid" [attr.aria-label]="'habits.card.calendar' | transloco">
+        <div
+          class="calendar"
+          role="grid"
+          [attr.aria-label]="'habits.card.calendar' | transloco"
+        >
           @for (cell of calendar(); track cell.day) {
             <button
               type="button"
@@ -128,18 +167,24 @@ export type HabitCardAction =
         </div>
         <p class="hint">
           {{
-            (building() ? 'habits.card.calendarHintBuild' : 'habits.card.calendarHint') | transloco
+            (building()
+              ? 'habits.card.calendarHintBuild'
+              : 'habits.card.calendarHint'
+            ) | transloco
           }}
         </p>
       </mat-card-content>
       <mat-card-actions align="end">
         @if (todayMarked()) {
-          <button matButton (click)="action.emit({ type: 'unmark', day: today })">
+          <button matButton (click)="action.emit({type: 'unmark', day: today})">
             <mat-icon>undo</mat-icon> {{ 'habits.card.undoToday' | transloco }}
           </button>
         } @else {
           <button matButton="tonal" (click)="markToday()">
-            {{ (building() ? 'habits.card.doneToday' : 'habits.card.usedToday') | transloco }}
+            {{
+              (building() ? 'habits.card.doneToday' : 'habits.card.usedToday')
+                | transloco
+            }}
           </button>
         }
       </mat-card-actions>
@@ -230,7 +275,9 @@ export class HabitCardComponent {
 
   protected readonly today = localToday();
   protected readonly building = computed(() => isBuilding(this.habit().goal));
-  protected readonly icon = computed(() => habitIcon(this.habit().kind, this.building()));
+  protected readonly icon = computed(() =>
+    habitIcon(this.habit().kind, this.building()),
+  );
   protected readonly title = computed(() => {
     const habit = this.habit();
     return habit.kind === 'custom'
@@ -240,20 +287,24 @@ export class HabitCardComponent {
   /** Today is marked: with it (to quit) or done (to build). */
   protected readonly todayMarked = computed(() =>
     this.habit().recent.some(
-      (mark) => mark.day === this.today && mark.status === (this.building() ? 'done' : 'used'),
+      mark =>
+        mark.day === this.today &&
+        mark.status === (this.building() ? 'done' : 'used'),
     ),
   );
 
   /** The weeks up to this one, from Monday, as a column each. */
   protected readonly calendar = computed<CalendarDay[]>(() => {
     const habit = this.habit();
-    const marks = new Map(habit.recent.map((mark) => [mark.day, mark]));
+    const marks = new Map(habit.recent.map(mark => [mark.day, mark]));
     const today = parseLocalDate(this.today);
     const weekday =
-      (new Date(Date.UTC(today.year, today.month - 1, today.day)).getUTCDay() + 6) % 7;
+      (new Date(Date.UTC(today.year, today.month - 1, today.day)).getUTCDay() +
+        6) %
+      7;
     const weeks = Math.floor(HABIT_CALENDAR_DAYS / 7);
     const first = addDays(today, -weekday - (weeks - 1) * 7);
-    return Array.from({ length: weeks * 7 }, (_, index) => {
+    return Array.from({length: weeks * 7}, (_, index) => {
       const day = toLocalDate(addDays(first, index));
       const mark = marks.get(day);
       const state =
@@ -268,7 +319,7 @@ export class HabitCardComponent {
               : mark?.status === 'used'
                 ? 'used'
                 : 'clean';
-      return { day, state, amount: mark?.amount ?? null };
+      return {day, state, amount: mark?.amount ?? null};
     });
   });
 
@@ -280,14 +331,17 @@ export class HabitCardComponent {
     };
     const key = keys[cell.state];
     const what = key ? this.transloco.translate(key) : '';
-    const amount = cell.amount != null ? ` · ${cell.amount} ${this.habit().unit ?? ''}` : '';
+    const amount =
+      cell.amount !== null && cell.amount !== undefined
+        ? ` · ${cell.amount} ${this.habit().unit ?? ''}`
+        : '';
     return `${cell.day}${what ? ` — ${what}` : ''}${amount}`;
   }
 
   /** A clean day becomes a day with it (asking how much, for a unit); a day with it, clean. */
   protected toggle(cell: CalendarDay): void {
     if (cell.state === 'used' || cell.state === 'done') {
-      this.action.emit({ type: 'unmark', day: cell.day });
+      this.action.emit({type: 'unmark', day: cell.day});
     } else if (cell.state === 'clean' || cell.state === 'open') {
       this.mark(cell.day);
     }
@@ -299,19 +353,22 @@ export class HabitCardComponent {
 
   private mark(day: string): void {
     if (this.building()) {
-      this.action.emit({ type: 'mark', day, status: 'done', amount: null });
+      this.action.emit({type: 'mark', day, status: 'done', amount: null});
       return;
     }
     const unit = this.habit().unit;
     let amount: number | null = null;
     if (unit) {
-      const answer = prompt(this.transloco.translate('habits.card.howMuch', { unit }));
+      const answer = prompt(
+        this.transloco.translate('habits.card.howMuch', {unit}),
+      );
       if (answer === null) {
         return;
       }
       const parsed = Number(answer.trim().replace(',', '.'));
-      amount = answer.trim() && Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+      amount =
+        answer.trim() && Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
     }
-    this.action.emit({ type: 'mark', day, status: 'used', amount });
+    this.action.emit({type: 'mark', day, status: 'used', amount});
   }
 }

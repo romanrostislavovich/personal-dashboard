@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { UserRow } from '../../users/users.schema';
-import { Notification, NotificationChannel } from '../notification-channel';
-import { PushService } from './push.service';
+import {Injectable} from '@nestjs/common';
+import {UserRow} from '../../users/users.schema';
+import {Notification, NotificationChannel} from '../notification-channel';
+import {PushService} from './push.service';
 
 /**
  * Push notifications on the user's phones, next to Telegram. Durable like Telegram: a phone

@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService } from '@pd/api-core';
-import { GithubProfileService } from './github-profile.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService} from '@pd/api-core';
+import {GithubProfileService} from './github-profile.service';
 
 /** Contribution milestones are counted in these steps. */
 const MILESTONE = 500;
@@ -24,12 +24,13 @@ export class GithubProfileDigest implements OnModuleInit {
         "The user's GitHub account: `followers`, `contributionMilestone` — total contributions " +
         `rounded down to ${MILESTONE}. Tell about new followers, congratulate on a new milestone.`,
       // Contributions grow every day by themselves, so only milestones are compared.
-      collect: async (userId) => {
+      collect: async userId => {
         const profile = await this.profiles.profile(userId);
         return (
           profile && {
             followers: profile.followers,
-            contributionMilestone: Math.floor(profile.totalContributions / MILESTONE) * MILESTONE,
+            contributionMilestone:
+              Math.floor(profile.totalContributions / MILESTONE) * MILESTONE,
           }
         );
       },

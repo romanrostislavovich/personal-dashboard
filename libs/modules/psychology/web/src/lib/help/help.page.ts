@@ -1,13 +1,19 @@
-import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {NgTemplateOutlet} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatExpansionModule} from '@angular/material/expansion';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   CRISIS_LINES,
   CRISIS_LINES_CHECKED_ON,
@@ -16,9 +22,9 @@ import {
   FIND_A_HELPLINE,
   telegramContact,
 } from '@pd/contracts';
-import { AuthService } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { PsychologyApi } from '../psychology.api';
+import {AuthService} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {PsychologyApi} from '../psychology.api';
 
 /**
  * When it is too hard: a close person to write to in one tap, the crisis lines of the user's
@@ -43,8 +49,12 @@ import { PsychologyApi } from '../psychology.api';
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'psychology.help.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'psychology.help.about' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'psychology.help.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'psychology.help.about' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content class="content">
         @if (contact(); as person) {
@@ -57,9 +67,11 @@ import { PsychologyApi } from '../psychology.api';
               rel="noopener"
             >
               <mat-icon>send</mat-icon>
-              {{ 'psychology.help.write' | transloco: { name: person.name } }}
+              {{ 'psychology.help.write' | transloco: {name: person.name} }}
             </a>
-            <button matButton (click)="edit()">{{ 'psychology.help.change' | transloco }}</button>
+            <button matButton (click)="edit()">
+              {{ 'psychology.help.change' | transloco }}
+            </button>
           }
         } @else if (!editing()) {
           <p class="hint">{{ 'psychology.help.noPerson' | transloco }}</p>
@@ -75,7 +87,9 @@ import { PsychologyApi } from '../psychology.api';
               <input matInput name="name" [(ngModel)]="name" maxlength="60" />
             </mat-form-field>
             <mat-form-field subscriptSizing="dynamic">
-              <mat-label>{{ 'psychology.help.telegram' | transloco }}</mat-label>
+              <mat-label>{{
+                'psychology.help.telegram' | transloco
+              }}</mat-label>
               <input
                 matInput
                 name="telegram"
@@ -108,10 +122,14 @@ import { PsychologyApi } from '../psychology.api';
     @if (home(); as country) {
       <mat-card appearance="outlined">
         <mat-card-header>
-          <mat-card-title>{{ 'psychology.help.lines' | transloco }}</mat-card-title>
+          <mat-card-title>{{
+            'psychology.help.lines' | transloco
+          }}</mat-card-title>
         </mat-card-header>
         <mat-card-content class="content">
-          <ng-container *ngTemplateOutlet="lines; context: { $implicit: country }" />
+          <ng-container
+            *ngTemplateOutlet="lines; context: {$implicit: country}"
+          />
         </mat-card-content>
       </mat-card>
     }
@@ -119,11 +137,15 @@ import { PsychologyApi } from '../psychology.api';
     <mat-accordion>
       <mat-expansion-panel>
         <mat-expansion-panel-header>
-          <mat-panel-title>{{ 'psychology.help.otherCountries' | transloco }}</mat-panel-title>
+          <mat-panel-title>{{
+            'psychology.help.otherCountries' | transloco
+          }}</mat-panel-title>
         </mat-expansion-panel-header>
         @for (country of others(); track country.code) {
           <h3>{{ 'psychology.help.countries.' + country.code | transloco }}</h3>
-          <ng-container *ngTemplateOutlet="lines; context: { $implicit: country }" />
+          <ng-container
+            *ngTemplateOutlet="lines; context: {$implicit: country}"
+          />
         }
         <p>
           <a [href]="findAHelpline" target="_blank" rel="noopener">
@@ -134,7 +156,7 @@ import { PsychologyApi } from '../psychology.api';
     </mat-accordion>
 
     <p class="checked">
-      {{ 'psychology.help.checked' | transloco: { date: checkedOn } }}
+      {{ 'psychology.help.checked' | transloco: {date: checkedOn} }}
     </p>
 
     <ng-template #lines let-country>
@@ -147,16 +169,27 @@ import { PsychologyApi } from '../psychology.api';
           <div>
             <div>{{ line.name }}</div>
             <div class="hint">
-              {{ (line.allDay ? 'psychology.help.allDay' : 'psychology.help.hours') | transloco }}
+              {{
+                (line.allDay
+                  ? 'psychology.help.allDay'
+                  : 'psychology.help.hours'
+                ) | transloco
+              }}
               @if (line.url) {
-                · <a [href]="line.url" target="_blank" rel="noopener">{{ host(line.url) }}</a>
+                ·
+                <a [href]="line.url" target="_blank" rel="noopener">{{
+                  host(line.url)
+                }}</a>
               }
             </div>
           </div>
         </div>
       }
       <p class="hint">
-        {{ 'psychology.help.emergency' | transloco: { number: $any(country).emergency } }}
+        {{
+          'psychology.help.emergency'
+            | transloco: {number: $any(country).emergency}
+        }}
       </p>
     </ng-template>
   `,
@@ -221,16 +254,16 @@ export class HelpPage {
   protected readonly contact = computed(() => {
     const value = this.settings.value();
     return value?.closeName && value.closeTelegram
-      ? { name: value.closeName, telegram: value.closeTelegram }
+      ? {name: value.closeName, telegram: value.closeTelegram}
       : null;
   });
   /** The user's own country (by the time zone of their device); `null` — none listed. */
   protected readonly home = computed<CrisisCountry | null>(() => {
     const code = crisisCountryOf(this.auth.user()?.timeZone);
-    return CRISIS_LINES.find((country) => country.code === code) ?? null;
+    return CRISIS_LINES.find(country => country.code === code) ?? null;
   });
   protected readonly others = computed(() =>
-    CRISIS_LINES.filter((country) => country !== this.home()),
+    CRISIS_LINES.filter(country => country !== this.home()),
   );
 
   protected edit(): void {
@@ -246,14 +279,19 @@ export class HelpPage {
       return;
     }
     await firstValueFrom(
-      this.api.saveSettings({ closeName: this.name.trim(), closeTelegram: this.telegram }),
+      this.api.saveSettings({
+        closeName: this.name.trim(),
+        closeTelegram: this.telegram,
+      }),
     );
     this.editing.set(false);
     this.settings.reload();
   }
 
   protected async removePerson(): Promise<void> {
-    await firstValueFrom(this.api.saveSettings({ closeName: null, closeTelegram: null }));
+    await firstValueFrom(
+      this.api.saveSettings({closeName: null, closeTelegram: null}),
+    );
     this.editing.set(false);
     this.settings.reload();
   }

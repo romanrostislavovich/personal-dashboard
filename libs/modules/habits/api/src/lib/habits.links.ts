@@ -1,5 +1,5 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService, UsersService } from '@pd/api-core';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, LinksService, UsersService} from '@pd/api-core';
 import {
   addDays,
   DailyMetric,
@@ -8,8 +8,8 @@ import {
   toLocalDate,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, eq, gte, lte } from 'drizzle-orm';
-import { habitDays, habits } from './habits.schema';
+import {and, eq, gte, lte} from 'drizzle-orm';
+import {habitDays, habits} from './habits.schema';
 
 /**
  * What habits tell the other sections (see LinksService): every habit as a daily number — 1 on
@@ -28,7 +28,10 @@ export class HabitsLinks implements OnModuleInit {
     this.links.registerDailyMetrics({
       module: 'habits',
       metrics: async (userId, period) => {
-        const rows = await this.db.select().from(habits).where(eq(habits.userId, userId));
+        const rows = await this.db
+          .select()
+          .from(habits)
+          .where(eq(habits.userId, userId));
         if (!rows.length) {
           return [];
         }
@@ -43,18 +46,24 @@ export class HabitsLinks implements OnModuleInit {
             ),
           );
         const user = await this.users.findById(userId);
-        const today = zonedDateTime(new Date(), this.users.timeZoneOf(user)).date;
+        const today = zonedDateTime(
+          new Date(),
+          this.users.timeZoneOf(user),
+        ).date;
         const last = period.to < today ? period.to : today;
         return rows.flatMap((habit): DailyMetric[] => {
           const marked = new Map(
             marks
-              .filter((mark) => mark.habitId === habit.id && mark.status !== 'clean')
-              .map((mark) => [mark.day, mark.amount ?? 1]),
+              .filter(
+                mark => mark.habitId === habit.id && mark.status !== 'clean',
+              )
+              .map(mark => [mark.day, mark.amount ?? 1]),
           );
-          const days: { day: LocalDate; value: number }[] = [];
-          const first = habit.startedOn > period.from ? habit.startedOn : period.from;
+          const days: {day: LocalDate; value: number}[] = [];
+          const first =
+            habit.startedOn > period.from ? habit.startedOn : period.from;
           for (let day = first; day <= last; day = next(day)) {
-            days.push({ day, value: marked.get(day) ?? 0 });
+            days.push({day, value: marked.get(day) ?? 0});
           }
           return days.length
             ? [
@@ -62,7 +71,7 @@ export class HabitsLinks implements OnModuleInit {
                   key: `habits.${habit.id}`,
                   module: 'habits',
                   labelKey: `habits.kinds.${habit.kind}`,
-                  ...(habit.name ? { label: habit.name } : {}),
+                  ...(habit.name ? {label: habit.name} : {}),
                   unit: 'count',
                   days,
                 },

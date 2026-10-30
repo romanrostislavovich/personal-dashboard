@@ -1,15 +1,15 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService, ProjectRef } from '@pd/api-core';
-import { DailyMetric, ProjectChange, ProjectFact } from '@pd/contracts';
-import { and, eq, gte, lte, sum } from 'drizzle-orm';
-import { codeAccountDays } from './accounts/accounts.schema';
-import { AccountTokensService } from './accounts/account-tokens.service';
-import { GithubTokenService } from './github/github-token.service';
-import { GithubClient } from './github/github.client';
-import { TrackedRepoRow, trackedRepos } from './open-source/open-source.schema';
-import { bitbucketCommits, gitlabCommits, RepoCommit } from './project-commits';
-import { belongsTo, namesOf } from './project-names';
-import { wakatimeDayBreakdown, wakatimeDays } from './wakatime/wakatime.schema';
+import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {DB, Database, LinksService, ProjectRef} from '@pd/api-core';
+import {DailyMetric, ProjectChange, ProjectFact} from '@pd/contracts';
+import {and, eq, gte, lte, sum} from 'drizzle-orm';
+import {codeAccountDays} from './accounts/accounts.schema';
+import {AccountTokensService} from './accounts/account-tokens.service';
+import {GithubTokenService} from './github/github-token.service';
+import {GithubClient} from './github/github.client';
+import {TrackedRepoRow, trackedRepos} from './open-source/open-source.schema';
+import {bitbucketCommits, gitlabCommits, RepoCommit} from './project-commits';
+import {belongsTo, namesOf} from './project-names';
+import {wakatimeDayBreakdown, wakatimeDays} from './wakatime/wakatime.schema';
 
 /** Repositories of a project asked for commits at once: each is a request to its service. */
 const MAX_REPOS = 3;
@@ -34,14 +34,15 @@ export class DevelopmentLinks implements OnModuleInit {
     this.links.registerProject({
       module: 'development',
       facts: (userId, project, period) => this.facts(userId, project, period),
-      changes: (userId, project, from, to) => this.changes(userId, project, from, to),
+      changes: (userId, project, from, to) =>
+        this.changes(userId, project, from, to),
     });
 
     this.links.registerDailyMetrics({
       module: 'development',
-      metrics: async (userId, { from, to }) => {
+      metrics: async (userId, {from, to}) => {
         const days = await this.db
-          .select({ day: wakatimeDays.day, seconds: wakatimeDays.totalSeconds })
+          .select({day: wakatimeDays.day, seconds: wakatimeDays.totalSeconds})
           .from(wakatimeDays)
           .where(
             and(
@@ -71,7 +72,7 @@ export class DevelopmentLinks implements OnModuleInit {
             module: 'development',
             labelKey: 'development.links.coding',
             unit: 'hours',
-            days: days.map(({ day, seconds }) => ({ day, value: seconds / 3600 })),
+            days: days.map(({day, seconds}) => ({day, value: seconds / 3600})),
           },
           {
             key: 'development.commits',
@@ -79,38 +80,54 @@ export class DevelopmentLinks implements OnModuleInit {
             labelKey: 'development.links.commits',
             unit: 'count',
             days: commits
-              .filter((row) => row.commits > 0)
-              .map(({ day, commits: value }) => ({ day, value })),
+              .filter(row => row.commits > 0)
+              .map(({day, commits: value}) => ({day, value})),
           },
         ];
-        return metrics.filter((metric) => metric.days.length);
+        return metrics.filter(metric => metric.days.length);
       },
     });
 
     this.links.registerPages([
-      { module: 'development', path: '/development/summary', description: 'all code accounts' },
+      {
+        module: 'development',
+        path: '/development/summary',
+        description: 'all code accounts',
+      },
       {
         module: 'development',
         path: '/development/repositories',
-        description: 'repositories, open source and private: stars, issues, releases',
+        description:
+          'repositories, open source and private: stars, issues, releases',
       },
-      { module: 'development', path: '/development/wakatime', description: 'coding time' },
+      {
+        module: 'development',
+        path: '/development/wakatime',
+        description: 'coding time',
+      },
     ]);
   }
 
   private async facts(
     userId: string,
     project: ProjectRef,
-    { from, to }: { from: string; to: string },
+    {from, to}: {from: string; to: string},
   ): Promise<ProjectFact[]> {
     const names = namesOf(project);
     const b = wakatimeDayBreakdown;
     const coded = await this.db
-      .select({ day: b.day, name: b.name, seconds: b.seconds })
+      .select({day: b.day, name: b.name, seconds: b.seconds})
       .from(b)
-      .where(and(eq(b.userId, userId), eq(b.kind, 'project'), gte(b.day, from), lte(b.day, to)));
+      .where(
+        and(
+          eq(b.userId, userId),
+          eq(b.kind, 'project'),
+          gte(b.day, from),
+          lte(b.day, to),
+        ),
+      );
     const byDay = new Map<string, number>();
-    for (const row of coded.filter((item) => belongsTo(item.name, names))) {
+    for (const row of coded.filter(item => belongsTo(item.name, names))) {
       byDay.set(row.day, (byDay.get(row.day) ?? 0) + row.seconds);
     }
     const seconds = [...byDay.values()].reduce((sum, value) => sum + value, 0);
@@ -126,7 +143,7 @@ export class DevelopmentLinks implements OnModuleInit {
               unit: 'seconds' as const,
               metric: 'codingSeconds' as const,
               days: [...byDay]
-                .map(([day, daySeconds]) => ({ day, seconds: daySeconds }))
+                .map(([day, daySeconds]) => ({day, seconds: daySeconds}))
                 .sort((a, b) => a.day.localeCompare(b.day)),
               link: '/development/wakatime',
             },
@@ -140,7 +157,7 @@ export class DevelopmentLinks implements OnModuleInit {
               value: repos.reduce((sum, repo) => sum + repo.stars, 0),
               unit: 'count' as const,
               link: '/development/repositories',
-              note: repos.map((repo) => repo.fullName).join(', '),
+              note: repos.map(repo => repo.fullName).join(', '),
             },
           ]
         : []),
@@ -161,10 +178,15 @@ export class DevelopmentLinks implements OnModuleInit {
     const changes: ProjectChange[] = [];
     for (const repo of repos.slice(0, MAX_REPOS)) {
       for (const commit of await this.commits(userId, repo, from, to)) {
-        changes.push({ module: 'development', where: repo.fullName, ...commit });
+        changes.push({module: 'development', where: repo.fullName, ...commit});
       }
       const released = repo.latestReleaseAt;
-      if (repo.latestReleaseTag && released && released >= from && released <= to) {
+      if (
+        repo.latestReleaseTag &&
+        released &&
+        released >= from &&
+        released <= to
+      ) {
         changes.push({
           module: 'development',
           where: repo.fullName,
@@ -188,22 +210,31 @@ export class DevelopmentLinks implements OnModuleInit {
     try {
       if (repo.provider === 'gitlab') {
         const gitlab = await this.tokens.gitlab(userId);
-        return gitlab ? await gitlabCommits(gitlab, repo.fullName, from, to) : [];
+        return gitlab
+          ? await gitlabCommits(gitlab, repo.fullName, from, to)
+          : [];
       }
       if (repo.provider === 'bitbucket') {
         const bitbucket = await this.tokens.bitbucket(userId);
-        return bitbucket ? await bitbucketCommits(bitbucket, repo.fullName, from, to) : [];
+        return bitbucket
+          ? await bitbucketCommits(bitbucket, repo.fullName, from, to)
+          : [];
       }
       const github = new GithubClient(await this.github.token(userId));
       return await github.listCommits(repo.fullName, from, to);
     } catch (error) {
-      this.logger.warn(`Commits of ${repo.fullName} were not read: ${String(error).slice(0, 200)}`);
+      this.logger.warn(
+        `Commits of ${repo.fullName} were not read: ${String(error).slice(0, 200)}`,
+      );
       return [];
     }
   }
 
   private async reposOf(userId: string, names: string[]) {
-    const repos = await this.db.select().from(trackedRepos).where(eq(trackedRepos.userId, userId));
-    return repos.filter((repo) => belongsTo(repo.fullName, names));
+    const repos = await this.db
+      .select()
+      .from(trackedRepos)
+      .where(eq(trackedRepos.userId, userId));
+    return repos.filter(repo => belongsTo(repo.fullName, names));
   }
 }

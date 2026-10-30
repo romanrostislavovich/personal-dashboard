@@ -40,7 +40,7 @@ export function memoryReadCache(): ReadCache {
       return reads.get(url) ?? null;
     },
     async put(url, body) {
-      reads.set(url, { body, at: new Date().toISOString() });
+      reads.set(url, {body, at: new Date().toISOString()});
     },
     async clear() {
       reads.clear();

@@ -1,12 +1,12 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, Inspection, SecurityService } from '@pd/api-core';
-import { desc, eq } from 'drizzle-orm';
-import { activityDevices, activityHealth } from './activity.schema';
-import { activityPhoneSecurity } from './phone/phone-security.schema';
-import { ComputerFacts, computerProblems } from './security/computer-security';
-import { computerSecurityMessages } from './security/computer-security.messages';
-import { PhoneFacts, phoneProblems } from './security/phone-security';
-import { phoneSecurityMessages } from './security/phone-security.messages';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, Inspection, SecurityService} from '@pd/api-core';
+import {desc, eq} from 'drizzle-orm';
+import {activityDevices, activityHealth} from './activity.schema';
+import {activityPhoneSecurity} from './phone/phone-security.schema';
+import {ComputerFacts, computerProblems} from './security/computer-security';
+import {computerSecurityMessages} from './security/computer-security.messages';
+import {PhoneFacts, phoneProblems} from './security/phone-security';
+import {phoneSecurityMessages} from './security/phone-security.messages';
 
 /**
  * The devices of Activity for the security agent: the computers with the desktop app (what each
@@ -49,45 +49,55 @@ export class ActivitySecurity implements OnModuleInit {
   }
 
   /** `null` — no phone is registered: there is nothing to look at. */
-  private async inspectPhones(userId: string, locale: string): Promise<Inspection | null> {
+  private async inspectPhones(
+    userId: string,
+    locale: string,
+  ): Promise<Inspection | null> {
     const phones = await this.db
       .select()
       .from(activityDevices)
       .where(eq(activityDevices.userId, userId));
-    const own = phones.filter((device) => PHONES.has(device.platform));
+    const own = phones.filter(device => PHONES.has(device.platform));
     if (!own.length) {
       return null;
     }
     const facts: PhoneFacts[] = [];
     for (const device of own) {
       const [last] = await this.db
-        .select({ report: activityPhoneSecurity.report })
+        .select({report: activityPhoneSecurity.report})
         .from(activityPhoneSecurity)
         .where(eq(activityPhoneSecurity.deviceId, device.id));
-      facts.push({ id: device.id, name: device.name, report: last?.report ?? null });
+      facts.push({
+        id: device.id,
+        name: device.name,
+        report: last?.report ?? null,
+      });
     }
     const text = phoneSecurityMessages(locale);
     const now = new Date();
     return {
       facts,
-      problems: facts.flatMap((phone) => phoneProblems(phone, text, now)),
+      problems: facts.flatMap(phone => phoneProblems(phone, text, now)),
     };
   }
 
   /** `null` — no computer is registered: there is nothing to look at. */
-  private async inspect(userId: string, locale: string): Promise<Inspection | null> {
+  private async inspect(
+    userId: string,
+    locale: string,
+  ): Promise<Inspection | null> {
     const devices = await this.db
       .select()
       .from(activityDevices)
       .where(eq(activityDevices.userId, userId));
-    const desktops = devices.filter((device) => !PHONES.has(device.platform));
+    const desktops = devices.filter(device => !PHONES.has(device.platform));
     if (!desktops.length) {
       return null;
     }
     const computers: ComputerFacts[] = [];
     for (const device of desktops) {
       const [last] = await this.db
-        .select({ at: activityHealth.at, system: activityHealth.system })
+        .select({at: activityHealth.at, system: activityHealth.system})
         .from(activityHealth)
         .where(eq(activityHealth.deviceId, device.id))
         .orderBy(desc(activityHealth.at))
@@ -106,7 +116,9 @@ export class ActivitySecurity implements OnModuleInit {
     const now = new Date();
     return {
       facts: computers,
-      problems: computers.flatMap((computer) => computerProblems(computer, text, now)),
+      problems: computers.flatMap(computer =>
+        computerProblems(computer, text, now),
+      ),
     };
   }
 }

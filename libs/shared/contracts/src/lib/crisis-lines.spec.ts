@@ -1,5 +1,5 @@
-import { CRISIS_LINES, crisisCountryOf } from './crisis-lines';
-import { telegramContact } from './psychology';
+import {CRISIS_LINES, crisisCountryOf} from './crisis-lines';
+import {telegramContact} from './psychology';
 
 describe('the help button', () => {
   it('knows the country of the device by its time zone', () => {

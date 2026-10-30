@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {Injectable, OnModuleInit} from '@nestjs/common';
 import {
   AiService,
   findById,
@@ -17,12 +17,12 @@ import {
   WOW_REGIONS,
   WOW_VERSIONS,
 } from '@pd/contracts';
-import { DotaHeroesService } from './dota/dota-heroes.service';
-import { DotaOverviewService } from './dota/dota-overview.service';
-import { GameAccountsService } from './game-accounts.service';
-import { GAMES_ACTIONS } from './games.server-actions';
-import { SteamPlayService } from './steam/steam-play.service';
-import { gameAccounts } from './games.schema';
+import {DotaHeroesService} from './dota/dota-heroes.service';
+import {DotaOverviewService} from './dota/dota-overview.service';
+import {GameAccountsService} from './game-accounts.service';
+import {GAMES_ACTIONS} from './games.server-actions';
+import {SteamPlayService} from './steam/steam-play.service';
+import {gameAccounts} from './games.schema';
 
 /** Steam games an account shows in the list of accounts. */
 const STEAM_TOP = 15;
@@ -51,7 +51,7 @@ export class GamesAiTools implements OnModuleInit {
         'week", "how long did I play on Saturday".',
       parameters: PERIOD_PARAMETERS,
       handler: (userId, args) => {
-        const { from, to } = activityPeriodSchema.parse(args);
+        const {from, to} = activityPeriodSchema.parse(args);
         return this.steamPlay.days(userId, from, to);
       },
     });
@@ -69,19 +69,26 @@ export class GamesAiTools implements OnModuleInit {
         'in games in total and over two weeks, achievements unlocked, the most played games ' +
         '(the whole library — games_steam_library).',
       parameters: NO_PARAMETERS,
-      handler: async (userId) =>
-        (await this.accounts.list(userId)).map((account) => {
+      handler: async userId =>
+        (await this.accounts.list(userId)).map(account => {
           if (account.summary?.game === 'steam') {
             return {
               ...account,
-              summary: { ...account.summary, games: account.summary.games.slice(0, STEAM_TOP) },
+              summary: {
+                ...account.summary,
+                games: account.summary.games.slice(0, STEAM_TOP),
+              },
             };
           }
           // The chart and the pictures are of no use to the model.
           return account.summary?.game === 'wow'
             ? {
                 ...account,
-                summary: { ...account.summary, history: undefined, avatarUrl: undefined },
+                summary: {
+                  ...account.summary,
+                  history: undefined,
+                  avatarUrl: undefined,
+                },
               }
             : account;
         }),
@@ -97,16 +104,19 @@ export class GamesAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          accountId: { type: 'string', description: 'Game account id from games_accounts' },
+          accountId: {
+            type: 'string',
+            description: 'Game account id from games_accounts',
+          },
         },
       },
       handler: async (userId, args) => {
-        const { activity, ...overview } = await this.dota.overview(
+        const {activity, ...overview} = await this.dota.overview(
           userId,
           typeof args['accountId'] === 'string' ? args['accountId'] : undefined,
         );
         // The day-by-day calendar is for the page; a count of active days is enough here.
-        return { ...overview, activeDaysLastYear: activity.length };
+        return {...overview, activeDaysLastYear: activity.length};
       },
     });
 
@@ -122,34 +132,51 @@ export class GamesAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          hero: { type: 'string', description: 'The name of the hero, e.g. "Pudge"' },
-          mode: { type: 'string', enum: [...DOTA_MATCH_MODES] },
-          result: { type: 'string', enum: [...DOTA_RESULTS] },
-          from: { type: 'string', description: 'YYYY-MM-DD' },
-          to: { type: 'string', description: 'YYYY-MM-DD' },
-          accountId: { type: 'string', description: 'Game account id from games_accounts' },
-          limit: { type: 'number', description: '10–100, default 30' },
+          hero: {
+            type: 'string',
+            description: 'The name of the hero, e.g. "Pudge"',
+          },
+          mode: {type: 'string', enum: [...DOTA_MATCH_MODES]},
+          result: {type: 'string', enum: [...DOTA_RESULTS]},
+          from: {type: 'string', description: 'YYYY-MM-DD'},
+          to: {type: 'string', description: 'YYYY-MM-DD'},
+          accountId: {
+            type: 'string',
+            description: 'Game account id from games_accounts',
+          },
+          limit: {type: 'number', description: '10–100, default 30'},
         },
       },
       handler: async (userId, args) => {
-        const { hero, limit, ...filters } = args;
-        const heroId = typeof hero === 'string' ? await this.heroId(hero) : undefined;
+        const {hero, limit, ...filters} = args;
+        const heroId =
+          typeof hero === 'string' ? await this.heroId(hero) : undefined;
         if (typeof hero === 'string' && !heroId) {
-          return { error: `No Dota hero is called "${hero}"` };
+          return {error: `No Dota hero is called "${hero}"`};
         }
-        const query = dotaMatchesQuerySchema.parse({ ...filters, heroId, pageSize: limit ?? 30 });
+        const query = dotaMatchesQuerySchema.parse({
+          ...filters,
+          heroId,
+          pageSize: limit ?? 30,
+        });
         const page = await this.dota.matches(userId, query);
         // The wins and losses of everything that matches, not of the page.
         const count = async (result: 'win' | 'loss') =>
           query.result && query.result !== result
             ? 0
-            : (await this.dota.matches(userId, { ...query, result, pageSize: 10 })).total;
+            : (
+                await this.dota.matches(userId, {
+                  ...query,
+                  result,
+                  pageSize: 10,
+                })
+              ).total;
         return {
           total: page.total,
           wins: await count('win'),
           losses: await count('loss'),
           shown: page.items.length,
-          matches: page.items.map(({ hero: played, ...match }) => ({
+          matches: page.items.map(({hero: played, ...match}) => ({
             ...match,
             hero: played.name,
           })),
@@ -165,10 +192,15 @@ export class GamesAiTools implements OnModuleInit {
         'over the last two weeks, when it was last played, achievements unlocked out of all. ' +
         'Use it for "what do I play", "how many hours in X", "which games did I never finish".',
       parameters: NO_PARAMETERS,
-      handler: async (userId) =>
-        (await this.accounts.list(userId)).flatMap((account) =>
+      handler: async userId =>
+        (await this.accounts.list(userId)).flatMap(account =>
           account.summary?.game === 'steam'
-            ? [{ account: account.summary.personaName, games: account.summary.games }]
+            ? [
+                {
+                  account: account.summary.personaName,
+                  games: account.summary.games,
+                },
+              ]
             : [],
         ),
     });
@@ -185,14 +217,14 @@ export class GamesAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          game: { type: 'string', enum: [...GAMES] },
+          game: {type: 'string', enum: [...GAMES]},
           steamId: {
             type: 'string',
             description:
               'Dota 2: Steam ID32/ID64 or an OpenDota/Dotabuff/Steam profile link. ' +
               'Steam: Steam ID64, a profile link or the custom profile name',
           },
-          region: { type: 'string', enum: [...WOW_REGIONS], description: 'WoW' },
+          region: {type: 'string', enum: [...WOW_REGIONS], description: 'WoW'},
           version: {
             type: 'string',
             enum: [...WOW_VERSIONS],
@@ -203,9 +235,10 @@ export class GamesAiTools implements OnModuleInit {
           },
           realm: {
             type: 'string',
-            description: 'WoW realm as the game shows it ("Гордунни", "Howling Fjord") or its slug',
+            description:
+              'WoW realm as the game shows it ("Гордунни", "Howling Fjord") or its slug',
           },
-          name: { type: 'string', description: 'WoW character name' },
+          name: {type: 'string', description: 'WoW character name'},
         },
         required: ['game'],
       },
@@ -216,7 +249,7 @@ export class GamesAiTools implements OnModuleInit {
           GAMES_ACTIONS.addAccount,
           gameAccountInputSchema.parse(args),
         );
-        return { added: true };
+        return {added: true};
       },
     });
 
@@ -227,11 +260,14 @@ export class GamesAiTools implements OnModuleInit {
       name: 'games_sync_account',
       module: 'games',
       writes: true,
-      description: 'Reloads a game account now (the whole match history for Dota 2).',
+      description:
+        'Reloads a game account now (the whole match history for Dota 2).',
       parameters: idParameters('Game account id from games_accounts'),
       handler: async (userId, args) => {
         const account = await find(userId, args);
-        await this.actions.run(userId, GAMES_ACTIONS.syncAccount, { id: account.id });
+        await this.actions.run(userId, GAMES_ACTIONS.syncAccount, {
+          id: account.id,
+        });
         return find(userId, args);
       },
     });
@@ -242,8 +278,8 @@ export class GamesAiTools implements OnModuleInit {
       writes: true,
       undoTables: [gameAccounts],
       confirm: async (userId, args) => {
-        const { game, displayName } = await find(userId, args);
-        return { game, displayName };
+        const {game, displayName} = await find(userId, args);
+        return {game, displayName};
       },
       description: 'Removes a game account and its loaded history.',
       parameters: idParameters('Game account id from games_accounts'),
@@ -257,10 +293,10 @@ export class GamesAiTools implements OnModuleInit {
   private async heroId(name: string): Promise<number | undefined> {
     const hero = await this.heroes.resolver();
     const wanted = name.trim().toLowerCase();
-    const all = (await this.heroes.ids()).map((id) => hero(id));
+    const all = (await this.heroes.ids()).map(id => hero(id));
     return (
-      all.find((item) => item.name.toLowerCase() === wanted) ??
-      all.find((item) => item.name.toLowerCase().includes(wanted))
+      all.find(item => item.name.toLowerCase() === wanted) ??
+      all.find(item => item.name.toLowerCase().includes(wanted))
     )?.id;
   }
 }

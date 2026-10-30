@@ -15,13 +15,13 @@ import {
   AutomationTriggerDef,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, asc, eq, inArray } from 'drizzle-orm';
-import { z } from 'zod';
-import { AiService } from '../ai/ai.service';
-import { DB, Database } from '../database/database.module';
-import { UsersService } from '../users/users.service';
-import { fillTemplate, paramsError, parseDraft } from './automation-rules';
-import { AutomationRuleRow, automationRules } from './automations.schema';
+import {and, asc, eq, inArray} from 'drizzle-orm';
+import {z} from 'zod';
+import {AiService} from '../ai/ai.service';
+import {DB, Database} from '../database/database.module';
+import {UsersService} from '../users/users.service';
+import {fillTemplate, paramsError, parseDraft} from './automation-rules';
+import {AutomationRuleRow, automationRules} from './automations.schema';
 
 type Params = Record<string, string>;
 type ValidRuleInput = z.output<typeof automationRuleInputSchema>;
@@ -39,7 +39,7 @@ export interface AutomationTrigger extends AutomationTriggerDef {
   check?(
     userId: string,
     params: Params,
-    now: { date: string; time: string },
+    now: {date: string; time: string},
   ): Promise<Params | null>;
 }
 
@@ -96,7 +96,11 @@ export class AutomationsService {
    * Runs an action of another module once, without a rule: a recommendation of a doctor becomes
    * a task (Health) without Health knowing Tasks. `false` — no module does it here.
    */
-  async runAction(userId: string, id: string, params: Params): Promise<boolean> {
+  async runAction(
+    userId: string,
+    id: string,
+    params: Params,
+  ): Promise<boolean> {
     const action = this.actions.get(id);
     if (!action) {
       return false;
@@ -107,19 +111,23 @@ export class AutomationsService {
 
   catalog(): AutomationCatalog {
     return {
-      triggers: [...this.triggers.values()].map(({ id, module, labelKey, params, variables }) => ({
-        id,
-        module,
-        labelKey,
-        params,
-        variables,
-      })),
-      actions: [...this.actions.values()].map(({ id, module, labelKey, params }) => ({
-        id,
-        module,
-        labelKey,
-        params,
-      })),
+      triggers: [...this.triggers.values()].map(
+        ({id, module, labelKey, params, variables}) => ({
+          id,
+          module,
+          labelKey,
+          params,
+          variables,
+        }),
+      ),
+      actions: [...this.actions.values()].map(
+        ({id, module, labelKey, params}) => ({
+          id,
+          module,
+          labelKey,
+          params,
+        }),
+      ),
     };
   }
 
@@ -136,17 +144,23 @@ export class AutomationsService {
     this.validate(input);
     const [row] = await this.db
       .insert(automationRules)
-      .values({ userId, ...input })
+      .values({userId, ...input})
       .returning();
     return toRule(row);
   }
 
-  async update(userId: string, id: string, input: ValidRuleInput): Promise<AutomationRule> {
+  async update(
+    userId: string,
+    id: string,
+    input: ValidRuleInput,
+  ): Promise<AutomationRule> {
     this.validate(input);
     const [row] = await this.db
       .update(automationRules)
-      .set({ ...input, lastError: null })
-      .where(and(eq(automationRules.id, id), eq(automationRules.userId, userId)))
+      .set({...input, lastError: null})
+      .where(
+        and(eq(automationRules.id, id), eq(automationRules.userId, userId)),
+      )
       .returning();
     if (!row) {
       throw new NotFoundException();
@@ -157,7 +171,9 @@ export class AutomationsService {
   async remove(userId: string, id: string): Promise<void> {
     await this.db
       .delete(automationRules)
-      .where(and(eq(automationRules.id, id), eq(automationRules.userId, userId)));
+      .where(
+        and(eq(automationRules.id, id), eq(automationRules.userId, userId)),
+      );
   }
 
   /** Something happened in a module: the user's rules on it run. Never throws. */
@@ -174,13 +190,15 @@ export class AutomationsService {
         }
       }
     } catch (error) {
-      this.logger.warn(`Automations on ${triggerId} failed: ${(error as Error).message}`);
+      this.logger.warn(
+        `Automations on ${triggerId} failed: ${(error as Error).message}`,
+      );
     }
   }
 
   /** The triggers of time, for every user: run by AutomationsJob every few minutes. */
   async checkTime(): Promise<void> {
-    const timed = [...this.triggers.values()].filter((trigger) => trigger.check);
+    const timed = [...this.triggers.values()].filter(trigger => trigger.check);
     if (!timed.length) {
       return;
     }
@@ -192,7 +210,7 @@ export class AutomationsService {
           eq(automationRules.isActive, true),
           inArray(
             automationRules.trigger,
-            timed.map((trigger) => trigger.id),
+            timed.map(trigger => trigger.id),
           ),
         ),
       );
@@ -220,13 +238,15 @@ export class AutomationsService {
       throw new BadRequestException('AI is not configured');
     }
     const catalog = {
-      triggers: [...this.triggers.values()].map(({ id, description, params, variables }) => ({
-        id,
-        description,
-        params: params.map(describeParam),
-        variables,
-      })),
-      actions: [...this.actions.values()].map(({ id, description, params }) => ({
+      triggers: [...this.triggers.values()].map(
+        ({id, description, params, variables}) => ({
+          id,
+          description,
+          params: params.map(describeParam),
+          variables,
+        }),
+      ),
+      actions: [...this.actions.values()].map(({id, description, params}) => ({
         id,
         description,
         params: params.map(describeParam),
@@ -244,7 +264,11 @@ export class AutomationsService {
     return result.draft;
   }
 
-  private async runRule(rule: AutomationRuleRow, vars: Params, timed: boolean): Promise<void> {
+  private async runRule(
+    rule: AutomationRuleRow,
+    vars: Params,
+    timed: boolean,
+  ): Promise<void> {
     const action = this.actions.get(rule.action);
     if (!action) {
       return;
@@ -255,9 +279,12 @@ export class AutomationsService {
       return;
     }
     // `{{rule}}` — the rule's own name, for a message title.
-    const filled = { ...vars, rule: rule.name };
+    const filled = {...vars, rule: rule.name};
     const params = Object.fromEntries(
-      Object.entries(rule.actionParams).map(([name, value]) => [name, fillTemplate(value, filled)]),
+      Object.entries(rule.actionParams).map(([name, value]) => [
+        name,
+        fillTemplate(value, filled),
+      ]),
     );
     try {
       await action.run(rule.userId, params, filled);
@@ -281,7 +308,7 @@ export class AutomationsService {
     this.logger.warn(`Automation "${rule.name}" failed: ${message}`);
     await this.db
       .update(automationRules)
-      .set({ lastError: message.slice(0, 500) })
+      .set({lastError: message.slice(0, 500)})
       .where(eq(automationRules.id, rule.id));
   }
 
@@ -298,7 +325,7 @@ export class AutomationsService {
       );
   }
 
-  private async now(userId: string): Promise<{ date: string; time: string }> {
+  private async now(userId: string): Promise<{date: string; time: string}> {
     const user = await this.users.findById(userId);
     return zonedDateTime(new Date(), this.users.timeZoneOf(user));
   }
@@ -323,7 +350,9 @@ function describeParam(param: AutomationTriggerDef['params'][number]) {
     name: param.name,
     type: param.type,
     required: param.required ?? false,
-    ...(param.options ? { values: param.options.map((option) => option.value) } : {}),
+    ...(param.options
+      ? {values: param.options.map(option => option.value)}
+      : {}),
   };
 }
 

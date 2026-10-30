@@ -1,4 +1,4 @@
-import { isTemporary } from './lastfm.client';
+import {isTemporary} from './lastfm.client';
 
 describe('isTemporary', () => {
   it('knows the Last.fm errors that pass by themselves', () => {

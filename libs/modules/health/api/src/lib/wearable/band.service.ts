@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import {
   DB,
   Database,
@@ -17,10 +23,10 @@ import {
   ReactionFeeling,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, asc, eq, gt, gte, lt } from 'drizzle-orm';
-import { BandDaysService, dayBounds } from './band-days.service';
-import { median } from './band-math';
-import { bandMessages } from './band.messages';
+import {and, asc, eq, gt, gte, lt} from 'drizzle-orm';
+import {BandDaysService, dayBounds} from './band-days.service';
+import {median} from './band-math';
+import {bandMessages} from './band.messages';
 import {
   healthBandHours,
   healthBandMinutes,
@@ -62,38 +68,56 @@ export class BandService implements OnModuleInit {
     });
   }
 
-  async ingest(device: DeviceIdentity, body: BandIngest): Promise<{ saved: number }> {
-    const { userId } = device;
+  async ingest(
+    device: DeviceIdentity,
+    body: BandIngest,
+  ): Promise<{saved: number}> {
+    const {userId} = device;
     const from = new Date(body.from);
     const to = new Date(body.to);
-    await this.db.transaction(async (tx) => {
-      for (const table of [healthBandMinutes, healthBandHours, healthBandPoints]) {
+    await this.db.transaction(async tx => {
+      for (const table of [
+        healthBandMinutes,
+        healthBandHours,
+        healthBandPoints,
+      ]) {
         await tx
           .delete(table)
-          .where(and(eq(table.userId, userId), gte(table.at, from), lt(table.at, to)));
+          .where(
+            and(
+              eq(table.userId, userId),
+              gte(table.at, from),
+              lt(table.at, to),
+            ),
+          );
       }
       const s = healthBandSessions;
       await tx
         .delete(s)
         .where(
-          and(eq(s.userId, userId), eq(s.source, 'phone'), gte(s.startAt, from), lt(s.startAt, to)),
+          and(
+            eq(s.userId, userId),
+            eq(s.source, 'phone'),
+            gte(s.startAt, from),
+            lt(s.startAt, to),
+          ),
         );
       if (body.minutes.length) {
         await tx
           .insert(healthBandMinutes)
-          .values(body.minutes.map((m) => ({ userId, ...m, at: new Date(m.at) })))
+          .values(body.minutes.map(m => ({userId, ...m, at: new Date(m.at)})))
           .onConflictDoNothing();
       }
       if (body.hours.length) {
         await tx
           .insert(healthBandHours)
-          .values(body.hours.map((h) => ({ userId, ...h, at: new Date(h.at) })))
+          .values(body.hours.map(h => ({userId, ...h, at: new Date(h.at)})))
           .onConflictDoNothing();
       }
       if (body.points.length) {
         await tx
           .insert(healthBandPoints)
-          .values(body.points.map((p) => ({ userId, ...p, at: new Date(p.at) })))
+          .values(body.points.map(p => ({userId, ...p, at: new Date(p.at)})))
           .onConflictDoNothing();
       }
       if (body.sessions.length) {
@@ -101,7 +125,7 @@ export class BandService implements OnModuleInit {
         await tx
           .insert(s)
           .values(
-            body.sessions.map((one) => ({
+            body.sessions.map(one => ({
               userId,
               ...one,
               startAt: new Date(one.startAt),
@@ -114,104 +138,122 @@ export class BandService implements OnModuleInit {
     const moments = [
       from,
       new Date(to.getTime() - 1),
-      ...body.sessions.map((s) => new Date(s.endAt)),
+      ...body.sessions.map(s => new Date(s.endAt)),
     ];
     await this.days.recompute(userId, await this.days.daysOf(userId, moments));
-    await this.notifyReactions(userId).catch((error) =>
-      this.logger.warn(`Reactions not told: ${error instanceof Error ? error.message : error}`),
+    await this.notifyReactions(userId).catch(error =>
+      this.logger.warn(
+        `Reactions not told: ${error instanceof Error ? error.message : error}`,
+      ),
     );
     return {
-      saved: body.minutes.length + body.hours.length + body.points.length + body.sessions.length,
+      saved:
+        body.minutes.length +
+        body.hours.length +
+        body.points.length +
+        body.sessions.length,
     };
   }
 
   /** Health → Band: a day by hours, its night and its reactions. */
   async day(userId: string, day: LocalDate): Promise<BandDayDetail> {
     const zone = await this.days.timeZone(userId);
-    const { start, end } = dayBounds(day, zone);
-    const [minutes, hours, stress, sessions, reactions, points, history] = await Promise.all([
-      this.db
-        .select()
-        .from(healthBandMinutes)
-        .where(
-          and(
-            eq(healthBandMinutes.userId, userId),
-            gte(healthBandMinutes.at, start),
-            lt(healthBandMinutes.at, end),
+    const {start, end} = dayBounds(day, zone);
+    const [minutes, hours, stress, sessions, reactions, points, history] =
+      await Promise.all([
+        this.db
+          .select()
+          .from(healthBandMinutes)
+          .where(
+            and(
+              eq(healthBandMinutes.userId, userId),
+              gte(healthBandMinutes.at, start),
+              lt(healthBandMinutes.at, end),
+            ),
+          )
+          .orderBy(asc(healthBandMinutes.at)),
+        this.db
+          .select()
+          .from(healthBandHours)
+          .where(
+            and(
+              eq(healthBandHours.userId, userId),
+              gte(healthBandHours.at, start),
+              lt(healthBandHours.at, end),
+            ),
+          )
+          .orderBy(asc(healthBandHours.at)),
+        this.db
+          .select()
+          .from(healthBandStressHours)
+          .where(
+            and(
+              eq(healthBandStressHours.userId, userId),
+              gte(healthBandStressHours.at, start),
+              lt(healthBandStressHours.at, end),
+            ),
           ),
-        )
-        .orderBy(asc(healthBandMinutes.at)),
-      this.db
-        .select()
-        .from(healthBandHours)
-        .where(
-          and(
-            eq(healthBandHours.userId, userId),
-            gte(healthBandHours.at, start),
-            lt(healthBandHours.at, end),
-          ),
-        )
-        .orderBy(asc(healthBandHours.at)),
-      this.db
-        .select()
-        .from(healthBandStressHours)
-        .where(
-          and(
-            eq(healthBandStressHours.userId, userId),
-            gte(healthBandStressHours.at, start),
-            lt(healthBandStressHours.at, end),
-          ),
-        ),
-      this.db
-        .select()
-        .from(healthBandSessions)
-        .where(
-          and(
-            eq(healthBandSessions.userId, userId),
-            lt(healthBandSessions.startAt, end),
-            gt(healthBandSessions.endAt, new Date(start.getTime() - 18 * 3600_000)),
-          ),
-        )
-        .orderBy(asc(healthBandSessions.startAt)),
-      this.db
-        .select()
-        .from(healthBandReactions)
-        .where(
-          and(
-            eq(healthBandReactions.userId, userId),
-            gte(healthBandReactions.startAt, start),
-            lt(healthBandReactions.startAt, end),
-          ),
-        )
-        .orderBy(asc(healthBandReactions.startAt)),
-      this.db
-        .select()
-        .from(healthBandPoints)
-        .where(
-          and(
-            eq(healthBandPoints.userId, userId),
-            gte(healthBandPoints.at, new Date(start.getTime() - 18 * 3600_000)),
-            lt(healthBandPoints.at, end),
-          ),
-        )
-        .orderBy(asc(healthBandPoints.at)),
-      this.days.history(userId, day),
-    ]);
+        this.db
+          .select()
+          .from(healthBandSessions)
+          .where(
+            and(
+              eq(healthBandSessions.userId, userId),
+              lt(healthBandSessions.startAt, end),
+              gt(
+                healthBandSessions.endAt,
+                new Date(start.getTime() - 18 * 3600_000),
+              ),
+            ),
+          )
+          .orderBy(asc(healthBandSessions.startAt)),
+        this.db
+          .select()
+          .from(healthBandReactions)
+          .where(
+            and(
+              eq(healthBandReactions.userId, userId),
+              gte(healthBandReactions.startAt, start),
+              lt(healthBandReactions.startAt, end),
+            ),
+          )
+          .orderBy(asc(healthBandReactions.startAt)),
+        this.db
+          .select()
+          .from(healthBandPoints)
+          .where(
+            and(
+              eq(healthBandPoints.userId, userId),
+              gte(
+                healthBandPoints.at,
+                new Date(start.getTime() - 18 * 3600_000),
+              ),
+              lt(healthBandPoints.at, end),
+            ),
+          )
+          .orderBy(asc(healthBandPoints.at)),
+        this.days.history(userId, day),
+      ]);
     const ofDay = (at: Date) => at >= start && at < end;
     const night = sessions
-      .filter((s) => s.kind === 'sleep' && ofDay(s.endAt))
+      .filter(s => s.kind === 'sleep' && ofDay(s.endAt))
       .sort((a, b) => length(b) - length(a))[0];
-    const stressAt = new Map(stress.map((h) => [h.at.getTime(), h.score]));
+    const stressAt = new Map(stress.map(h => [h.at.getTime(), h.score]));
     // The hours of the day: those with activity, and those with only an index.
     const hourMoments = [
-      ...new Set([...hours.map((h) => h.at.getTime()), ...stressAt.keys()]),
+      ...new Set([...hours.map(h => h.at.getTime()), ...stressAt.keys()]),
     ].sort((a, b) => a - b);
-    const hourRows = new Map(hours.map((h) => [h.at.getTime(), h]));
-    const known = (values: (number | null)[]) => values.filter((v): v is number => v !== null);
+    const hourRows = new Map(hours.map(h => [h.at.getTime(), h]));
+    const known = (values: (number | null)[]) =>
+      values.filter((v): v is number => v !== null);
     return {
       day,
-      minutes: minutes.map((m) => ({ at: m.at.toISOString(), bpm: m.bpm, steps: m.steps })),
-      hours: hourMoments.map((at) => ({
+      minutes: minutes.map(m => ({
+        at: m.at.toISOString(),
+        bpm: m.bpm,
+        steps: m.steps,
+      })),
+      hours: hourMoments.map(at => ({
         at: new Date(at).toISOString(),
         steps: hourRows.get(at)?.steps ?? null,
         calories: hourRows.get(at)?.calories ?? null,
@@ -224,11 +266,13 @@ export class BandService implements OnModuleInit {
             stages: night.stages,
           }
         : null,
-      exercises: sessions.filter((s) => s.kind === 'exercise' && ofDay(s.startAt)).map(toSession),
-      mindfulness: sessions
-        .filter((s) => s.kind === 'mindfulness' && ofDay(s.startAt))
+      exercises: sessions
+        .filter(s => s.kind === 'exercise' && ofDay(s.startAt))
         .map(toSession),
-      reactions: reactions.map((r) => ({
+      mindfulness: sessions
+        .filter(s => s.kind === 'mindfulness' && ofDay(s.startAt))
+        .map(toSession),
+      reactions: reactions.map(r => ({
         id: r.id,
         startAt: r.startAt.toISOString(),
         endAt: r.endAt.toISOString(),
@@ -238,22 +282,35 @@ export class BandService implements OnModuleInit {
         feeling: r.feeling,
       })),
       points: points
-        .filter((p) => ofDay(p.at) || (night && p.at >= night.startAt && p.at <= night.endAt))
-        .map((p) => ({ kind: p.kind, at: p.at.toISOString(), value: p.value })),
+        .filter(
+          p =>
+            ofDay(p.at) ||
+            (night && p.at >= night.startAt && p.at <= night.endAt),
+        )
+        .map(p => ({kind: p.kind, at: p.at.toISOString(), value: p.value})),
       baseline: {
-        restingHeartRate: median(known(history.map((h) => h.restingHeartRate))),
-        hrvMs: median(known(history.map((h) => h.hrvMs))),
-        sleepMinutes: median(known(history.map((h) => h.sleepMinutes))),
+        restingHeartRate: median(known(history.map(h => h.restingHeartRate))),
+        hrvMs: median(known(history.map(h => h.hrvMs))),
+        sleepMinutes: median(known(history.map(h => h.sleepMinutes))),
       },
     };
   }
 
-  async setFeeling(userId: string, id: string, feeling: ReactionFeeling): Promise<void> {
+  async setFeeling(
+    userId: string,
+    id: string,
+    feeling: ReactionFeeling,
+  ): Promise<void> {
     const [updated] = await this.db
       .update(healthBandReactions)
-      .set({ feeling })
-      .where(and(eq(healthBandReactions.id, id), eq(healthBandReactions.userId, userId)))
-      .returning({ id: healthBandReactions.id });
+      .set({feeling})
+      .where(
+        and(
+          eq(healthBandReactions.id, id),
+          eq(healthBandReactions.userId, userId),
+        ),
+      )
+      .returning({id: healthBandReactions.id});
     if (!updated) {
       throw new NotFoundException();
     }
@@ -265,12 +322,25 @@ export class BandService implements OnModuleInit {
     const endAt = new Date(startAt.getTime() + input.minutes * 60_000);
     await this.db
       .insert(healthBandSessions)
-      .values({ userId, kind: 'mindfulness', startAt, endAt, source: 'dashboard' })
+      .values({
+        userId,
+        kind: 'mindfulness',
+        startAt,
+        endAt,
+        source: 'dashboard',
+      })
       .onConflictDoUpdate({
-        target: [healthBandSessions.userId, healthBandSessions.kind, healthBandSessions.startAt],
-        set: { endAt, source: 'dashboard' },
+        target: [
+          healthBandSessions.userId,
+          healthBandSessions.kind,
+          healthBandSessions.startAt,
+        ],
+        set: {endAt, source: 'dashboard'},
       });
-    await this.days.recompute(userId, await this.days.daysOf(userId, [startAt]));
+    await this.days.recompute(
+      userId,
+      await this.days.daysOf(userId, [startAt]),
+    );
   }
 
   async removeMindfulness(userId: string, id: string): Promise<void> {
@@ -283,11 +353,14 @@ export class BandService implements OnModuleInit {
           eq(healthBandSessions.source, 'dashboard'),
         ),
       )
-      .returning({ startAt: healthBandSessions.startAt });
+      .returning({startAt: healthBandSessions.startAt});
     if (!removed) {
       throw new NotFoundException();
     }
-    await this.days.recompute(userId, await this.days.daysOf(userId, [removed.startAt]));
+    await this.days.recompute(
+      userId,
+      await this.days.daysOf(userId, [removed.startAt]),
+    );
   }
 
   /**
@@ -300,7 +373,7 @@ export class BandService implements OnModuleInit {
     if (!last) {
       return;
     }
-    await this.days.markNotified(fresh.map((r) => r.id));
+    await this.days.markNotified(fresh.map(r => r.id));
     const user = await this.days.user(userId);
     const text = bandMessages(user?.locale);
     const zone = await this.days.timeZone(userId);
@@ -316,9 +389,9 @@ export class BandService implements OnModuleInit {
       source: 'health',
       link: `/health/band?day=${day.date}`,
       now: true,
-      dedupe: { key: 'health.band.reaction', minutes: NOTIFY_EVERY_MINUTES },
+      dedupe: {key: 'health.band.reaction', minutes: NOTIFY_EVERY_MINUTES},
       // Six answers: more than the phone's shade shows, so a tap opens the card with them.
-      actions: REACTION_FEELINGS.map((feeling) => ({
+      actions: REACTION_FEELINGS.map(feeling => ({
         label: text.feelings[feeling],
         action: `${ACTION}:f:${last.id}:${feeling}`,
       })),

@@ -17,7 +17,7 @@ import {
 export const syncSchema = pgSchema('sync');
 
 /** PostgreSQL `xid8` — a transaction id; read as a string. */
-const xid8 = customType<{ data: string }>({ dataType: () => 'xid8' });
+const xid8 = customType<{data: string}>({dataType: () => 'xid8'});
 
 /** Orders changes: a new position for every change of a row. */
 export const syncChangeSeq = syncSchema.sequence('change_seq');
@@ -33,15 +33,15 @@ export const syncRowVersions = syncSchema.table(
     /** Primary key columns and values: `{"id": "…"}`. */
     pk: jsonb().notNull(),
     /** When the row last changed; the newer change wins a conflict. */
-    changedAt: timestamp({ withTimezone: true }).notNull(),
+    changedAt: timestamp({withTimezone: true}).notNull(),
     /** Transaction of the change: the change log is read only up to committed transactions. */
     tx: xid8().notNull(),
-    seq: bigint({ mode: 'number' }).notNull(),
+    seq: bigint({mode: 'number'}).notNull(),
     /** `null` — changed here; otherwise the instance the change came from. */
     origin: text(),
   },
-  (table) => [
-    primaryKey({ columns: [table.tableName, table.pk] }),
+  table => [
+    primaryKey({columns: [table.tableName, table.pk]}),
     index().on(table.tx, table.seq),
   ],
 );
@@ -61,13 +61,13 @@ export const syncParked = syncSchema.table(
   {
     tableName: text().notNull(),
     pk: jsonb().notNull(),
-    changedAt: timestamp({ withTimezone: true }).notNull(),
+    changedAt: timestamp({withTimezone: true}).notNull(),
     row: jsonb(),
     origin: text().notNull(),
     error: text().notNull(),
-    parkedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    parkedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [primaryKey({ columns: [table.tableName, table.pk] })],
+  table => [primaryKey({columns: [table.tableName, table.pk]})],
 );
 
 /** Versions that lost a conflict to a newer change — kept so nothing is silently lost. */
@@ -78,5 +78,5 @@ export const syncConflicts = syncSchema.table('conflicts', {
   /** The losing version of the row. */
   row: jsonb().notNull(),
   reason: text().notNull(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
 });

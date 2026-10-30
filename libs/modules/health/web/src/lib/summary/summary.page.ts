@@ -1,16 +1,22 @@
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HEALTH_READS } from '@pd/client-core';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {HEALTH_READS} from '@pd/client-core';
 import {
   HealthShare,
   HealthSummaryOptionsInput,
@@ -18,8 +24,8 @@ import {
   SUMMARY_LANGUAGES,
   SummaryLanguage,
 } from '@pd/contracts';
-import { HealthApi } from '../health.api';
-import { SpecialityPipe } from '../health-labels';
+import {HealthApi} from '../health.api';
+import {SpecialityPipe} from '../health-labels';
 
 type Section =
   | 'profile'
@@ -102,24 +108,33 @@ export class SummaryPage {
   private readonly record = this.api.record();
   /** The specialities of the history, to leave some of them out. */
   protected readonly specialities = computed(() => {
-    const visits = this.record.hasValue() ? (this.record.value()?.visits ?? []) : [];
-    return [...new Set(visits.map((v) => v.speciality).filter((s): s is string => !!s))].sort();
+    const visits = this.record.hasValue()
+      ? (this.record.value()?.visits ?? [])
+      : [];
+    return [
+      ...new Set(visits.map(v => v.speciality).filter((s): s is string => !!s)),
+    ].sort();
   });
 
-  protected readonly shares = httpResource<HealthShare[]>(() => HEALTH_READS.shares(), {
-    defaultValue: [],
-  });
+  protected readonly shares = httpResource<HealthShare[]>(
+    () => HEALTH_READS.shares(),
+    {
+      defaultValue: [],
+    },
+  );
   protected readonly shareList = computed(() =>
     this.shares.hasValue() ? this.shares.value() : [],
   );
 
   protected set(section: Section, value: boolean): void {
-    this.included.update((included) => ({ ...included, [section]: value }));
+    this.included.update(included => ({...included, [section]: value}));
   }
 
   protected toggleExcluded(speciality: string, excluded: boolean): void {
-    this.excluded.update((list) =>
-      excluded ? [...list, speciality] : list.filter((item) => item !== speciality),
+    this.excluded.update(list =>
+      excluded
+        ? [...list, speciality]
+        : list.filter(item => item !== speciality),
     );
   }
 
@@ -138,7 +153,7 @@ export class SummaryPage {
     const tab = window.open('', '_blank');
     await this.run(async () => {
       const blob = await this.api.client.summaryHtml(this.options());
-      const url = URL.createObjectURL(new Blob([blob], { type: 'text/html' }));
+      const url = URL.createObjectURL(new Blob([blob], {type: 'text/html'}));
       if (tab) {
         tab.location.href = url;
       } else {
@@ -168,7 +183,7 @@ export class SummaryPage {
   protected async share(): Promise<void> {
     this.copied.set(false);
     await this.run(async () => {
-      const { url } = await this.api.client.share({
+      const {url} = await this.api.client.share({
         options: this.options(),
         days: this.days(),
         note: this.note().trim() || null,

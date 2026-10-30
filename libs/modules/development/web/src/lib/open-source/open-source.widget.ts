@@ -1,10 +1,15 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { OpenSourceApi } from './open-source.api';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {OpenSourceApi} from './open-source.api';
 
 const WIDGET_MAX_REPOS = 5;
 
@@ -12,11 +17,19 @@ const WIDGET_MAX_REPOS = 5;
 @Component({
   selector: 'pd-open-source-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, MatCardModule, MatButtonModule, TranslocoPipe],
+  imports: [
+    DecimalPipe,
+    RouterLink,
+    MatCardModule,
+    MatButtonModule,
+    TranslocoPipe,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>🐙 {{ 'development.oss.widget.title' | transloco }}</mat-card-title>
+        <mat-card-title
+          >🐙 {{ 'development.oss.widget.title' | transloco }}</mat-card-title
+        >
       </mat-card-header>
       <mat-card-content>
         @if (top().length > 0) {
@@ -41,7 +54,11 @@ const WIDGET_MAX_REPOS = 5;
                     </td>
                     <td>{{ repo.stars | number }}</td>
                     <td [class.up]="repo.starsDelta.week > 0">
-                      {{ repo.starsDelta.week > 0 ? '+' + repo.starsDelta.week : '—' }}
+                      {{
+                        repo.starsDelta.week > 0
+                          ? '+' + repo.starsDelta.week
+                          : '—'
+                      }}
                     </td>
                     <td>{{ repo.openIssues }}</td>
                     <td>{{ repo.openPulls }}</td>
@@ -101,7 +118,7 @@ export class OpenSourceWidget {
   protected readonly top = computed(() =>
     this.repos
       .value()
-      .filter((repo) => !repo.hidden && !repo.isPrivate)
+      .filter(repo => !repo.hidden && !repo.isPrivate)
       .slice(0, WIDGET_MAX_REPOS),
   );
 

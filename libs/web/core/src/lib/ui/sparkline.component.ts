@@ -1,5 +1,11 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 
 export interface SparklinePoint {
   /** A date (`YYYY-MM-DD`) or a point in time (ISO). */
@@ -30,10 +36,18 @@ const PADDING = 5;
           (pointermove)="onPointerMove($event)"
         >
           <path class="area" [attr.d]="g.area" />
-          <path class="line" [attr.d]="g.line" vector-effect="non-scaling-stroke" />
+          <path
+            class="line"
+            [attr.d]="g.line"
+            vector-effect="non-scaling-stroke"
+          />
         </svg>
         @if (hoveredPoint(); as p) {
-          <span class="marker" [style.left.%]="p.xPercent" [style.top.%]="p.yPercent"></span>
+          <span
+            class="marker"
+            [style.left.%]="p.xPercent"
+            [style.top.%]="p.yPercent"
+          ></span>
           <span
             class="pd-chart-tooltip tooltip"
             [class.right]="p.xPercent > 60"
@@ -48,7 +62,10 @@ const PADDING = 5;
         <!-- The ends of the period and the range of the values: a line one can read alone. -->
         <div class="axis">
           <span>{{ a.from | date: dateFormat() }}</span>
-          <span>{{ a.low | number: '1.0-1' }} – {{ a.high | number: '1.0-1' }}{{ unit() }}</span>
+          <span
+            >{{ a.low | number: '1.0-1' }} – {{ a.high | number: '1.0-1'
+            }}{{ unit() }}</span
+          >
           <span>{{ a.to | date: dateFormat() }}</span>
         </div>
       }
@@ -136,7 +153,7 @@ export class SparklineComponent {
     if (points.length < 2) {
       return null;
     }
-    const values = points.map((p) => p.value);
+    const values = points.map(p => p.value);
     const min = this.min() ?? Math.min(...values);
     const max = this.max() ?? Math.max(...values);
     const range = max - min || 1;
@@ -145,8 +162,10 @@ export class SparklineComponent {
       x: (i / (points.length - 1)) * WIDTH,
       y: HEIGHT - PADDING - ((p.value - min) / range) * (HEIGHT - PADDING * 2),
     }));
-    const line = coords.map((c, i) => `${i ? 'L' : 'M'}${c.x},${c.y}`).join(' ');
-    return { coords, line, area: `${line} L${WIDTH},${HEIGHT} L0,${HEIGHT} Z` };
+    const line = coords
+      .map((c, i) => `${i ? 'L' : 'M'}${c.x},${c.y}`)
+      .join(' ');
+    return {coords, line, area: `${line} L${WIDTH},${HEIGHT} L0,${HEIGHT} Z`};
   });
 
   protected readonly axis = computed(() => {
@@ -154,7 +173,7 @@ export class SparklineComponent {
     if (!this.showAxis() || points.length < 2) {
       return null;
     }
-    const values = points.map((p) => p.value);
+    const values = points.map(p => p.value);
     return {
       from: points[0].at,
       to: points[points.length - 1].at,
@@ -167,21 +186,30 @@ export class SparklineComponent {
     const index = this.hovered();
     const point = index === null ? null : this.geometry()?.coords[index];
     return point
-      ? { ...point, xPercent: (point.x / WIDTH) * 100, yPercent: (point.y / HEIGHT) * 100 }
+      ? {
+          ...point,
+          xPercent: (point.x / WIDTH) * 100,
+          yPercent: (point.y / HEIGHT) * 100,
+        }
       : null;
   });
 
   protected readonly ariaLabel = computed(() => {
     const points = this.points();
     const last = points[points.length - 1];
-    return last ? `${this.label()}: ${points[0].value} → ${last.value}` : this.label();
+    return last
+      ? `${this.label()}: ${points[0].value} → ${last.value}`
+      : this.label();
   });
 
   /** Highlight the horizontally nearest point — no need to hit the line with the cursor. */
   protected onPointerMove(event: PointerEvent): void {
     const count = this.points().length;
     const rect = (event.currentTarget as SVGElement).getBoundingClientRect();
-    const ratio = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+    const ratio = Math.min(
+      Math.max((event.clientX - rect.left) / rect.width, 0),
+      1,
+    );
     this.hovered.set(Math.round(ratio * (count - 1)));
   }
 }

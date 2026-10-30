@@ -1,9 +1,13 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
-import { eq } from 'drizzle-orm';
-import { LastfmAuthError, LastfmClient, LastfmRecentPage } from './clients/lastfm.client';
-import { LastfmService } from './lastfm.service';
-import { musicSettings } from './music.schema';
+import {Inject, Injectable, Logger} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
+import {eq} from 'drizzle-orm';
+import {
+  LastfmAuthError,
+  LastfmClient,
+  LastfmRecentPage,
+} from './clients/lastfm.client';
+import {LastfmService} from './lastfm.service';
+import {musicSettings} from './music.schema';
 
 /** Last.fm's maximum page size. */
 const PAGE_SIZE = 200;
@@ -71,13 +75,19 @@ export class LastfmHistoryImport {
       await this.importPages(userId, client, maxPages);
     } catch (error) {
       // The next run continues from the oldest stored play.
-      this.logger.warn(`Last.fm history import stopped for ${userId}: ${error}`);
+      this.logger.warn(
+        `Last.fm history import stopped for ${userId}: ${error}`,
+      );
     } finally {
       this.running.delete(userId);
     }
   }
 
-  private async importPages(userId: string, client: LastfmClient, maxPages: number) {
+  private async importPages(
+    userId: string,
+    client: LastfmClient,
+    maxPages: number,
+  ) {
     const oldest = await this.lastfm.oldestPlay(userId);
     // Last.fm takes seconds; +1 so that plays in the same second as the oldest are not skipped.
     let to = oldest ? Math.floor(oldest.getTime() / 1000) + 1 : undefined;
@@ -97,7 +107,7 @@ export class LastfmHistoryImport {
   private async markComplete(userId: string): Promise<void> {
     await this.db
       .update(musicSettings)
-      .set({ historyImportedAt: new Date() })
+      .set({historyImportedAt: new Date()})
       .where(eq(musicSettings.userId, userId));
     this.logger.log(`Last.fm history import complete for ${userId}`);
   }
@@ -108,9 +118,17 @@ export class LastfmHistoryImport {
  * end in the middle of it). If that would not move the cursor, step past the second.
  * `null` — this was the last page.
  */
-export function nextCursor(page: LastfmRecentPage, to: number | undefined): number | null {
-  const times = page.tracks.flatMap((t) => (t.playedAt ? [t.playedAt.getTime() / 1000] : []));
-  if (times.length === 0 || (times.length < PAGE_SIZE && page.totalPages <= 1)) {
+export function nextCursor(
+  page: LastfmRecentPage,
+  to: number | undefined,
+): number | null {
+  const times = page.tracks.flatMap(t =>
+    t.playedAt ? [t.playedAt.getTime() / 1000] : [],
+  );
+  if (
+    times.length === 0 ||
+    (times.length < PAGE_SIZE && page.totalPages <= 1)
+  ) {
     return null;
   }
   const oldest = Math.floor(Math.min(...times));
@@ -123,7 +141,7 @@ async function fetchWithRetries(
 ): Promise<LastfmRecentPage> {
   for (let attempt = 0; ; attempt++) {
     try {
-      return await client.getRecentTracks({ to, limit: PAGE_SIZE });
+      return await client.getRecentTracks({to, limit: PAGE_SIZE});
     } catch (error) {
       if (error instanceof LastfmAuthError || attempt >= RETRIES) {
         throw error;
@@ -134,5 +152,5 @@ async function fetchWithRetries(
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

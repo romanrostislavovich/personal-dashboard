@@ -1,13 +1,13 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ServerActions } from '@pd/api-core';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {ServerActions} from '@pd/api-core';
 import {
   bitbucketTokenInputSchema,
   codeProviderSchema,
   gitlabTokenInputSchema,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { AccountTokensService } from './account-tokens.service';
-import { AccountsService } from './accounts.service';
+import {z} from 'zod';
+import {AccountTokensService} from './account-tokens.service';
+import {AccountsService} from './accounts.service';
 
 /** GitLab and Bitbucket requests run on the server (see ServerActions). */
 export const ACCOUNT_ACTIONS = {
@@ -16,7 +16,7 @@ export const ACCOUNT_ACTIONS = {
   saveBitbucketToken: 'development.save-bitbucket-token',
 } as const;
 
-const syncArgsSchema = z.object({ provider: codeProviderSchema });
+const syncArgsSchema = z.object({provider: codeProviderSchema});
 
 @Injectable()
 export class AccountsServerActions implements OnModuleInit {

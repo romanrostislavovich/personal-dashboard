@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from '@pd/api-core';
+import {fetchWithTimeout} from '@pd/api-core';
 
 const API = 'https://api.steampowered.com';
 const TIMEOUT_MS = 20_000;
@@ -43,22 +43,23 @@ export class SteamClient {
   /** Key check: a request for a profile is answered 403 when Steam does not know the key. */
   async verify(): Promise<void> {
     // Any id will do — the key is checked before the profile is looked for.
-    await this.get('/ISteamUser/GetPlayerSummaries/v2/', { steamids: '76561197960435530' });
+    await this.get('/ISteamUser/GetPlayerSummaries/v2/', {
+      steamids: '76561197960435530',
+    });
   }
 
   /** The Steam ID64 behind a custom profile address (`steamcommunity.com/id/<name>`). */
   async resolveVanity(name: string): Promise<string | null> {
-    const { response } = await this.get<{ response: { success: number; steamid?: string } }>(
-      '/ISteamUser/ResolveVanityURL/v1/',
-      { vanityurl: name },
-    );
+    const {response} = await this.get<{
+      response: {success: number; steamid?: string};
+    }>('/ISteamUser/ResolveVanityURL/v1/', {vanityurl: name});
     return response.success === 1 && response.steamid ? response.steamid : null;
   }
 
   async getPlayer(steamId: string): Promise<SteamPlayer> {
-    const { response } = await this.get<{ response: { players: RawPlayer[] } }>(
+    const {response} = await this.get<{response: {players: RawPlayer[]}}>(
       '/ISteamUser/GetPlayerSummaries/v2/',
-      { steamids: steamId },
+      {steamids: steamId},
     );
     const player = response.players[0];
     if (!player) {
@@ -69,22 +70,24 @@ export class SteamClient {
       personaName: player.personaname,
       avatarUrl: player.avatarfull ?? null,
       profileUrl: player.profileurl,
-      createdAt: player.timecreated ? new Date(player.timecreated * 1000).toISOString() : null,
+      createdAt: player.timecreated
+        ? new Date(player.timecreated * 1000).toISOString()
+        : null,
     };
   }
 
   /** `null` — the level is hidden. */
   async getLevel(steamId: string): Promise<number | null> {
-    const { response } = await this.get<{ response: { player_level?: number } }>(
+    const {response} = await this.get<{response: {player_level?: number}}>(
       '/IPlayerService/GetSteamLevel/v1/',
-      { steamid: steamId },
+      {steamid: steamId},
     );
     return response.player_level ?? null;
   }
 
   /** Every game of the library with its playtime; `null` — "Game details" are not public. */
   async getOwnedGames(steamId: string): Promise<SteamOwnedGame[] | null> {
-    const { response } = await this.get<{ response: { games?: RawGame[] } }>(
+    const {response} = await this.get<{response: {games?: RawGame[]}}>(
       '/IPlayerService/GetOwnedGames/v1/',
       {
         steamid: steamId,
@@ -103,25 +106,30 @@ export class SteamClient {
    * leaves them out, so the two lists are put together (`mergeGames`).
    */
   async getRecentGames(steamId: string): Promise<SteamOwnedGame[]> {
-    const { response } = await this.get<{ response: { games?: RawGame[] } }>(
+    const {response} = await this.get<{response: {games?: RawGame[]}}>(
       '/IPlayerService/GetRecentlyPlayedGames/v1/',
-      { steamid: steamId },
+      {steamid: steamId},
     );
     return (response.games ?? []).map(toOwnedGame);
   }
 
   /** Achievements of a game: how many are unlocked; `null` — the game has none (or hides them). */
-  async getAchievements(steamId: string, appId: number): Promise<SteamAchievementCount | null> {
-    const data = await this.get<{ playerstats?: { achievements?: { achieved: number }[] } }>(
+  async getAchievements(
+    steamId: string,
+    appId: number,
+  ): Promise<SteamAchievementCount | null> {
+    const data = await this.get<{
+      playerstats?: {achievements?: {achieved: number}[]};
+    }>(
       '/ISteamUserStats/GetPlayerAchievements/v1/',
-      { steamid: steamId, appid: String(appId) },
+      {steamid: steamId, appid: String(appId)},
       // "Requested app has no stats" and a hidden profile come as 400 and 403 with a body.
-      { tolerate: [400, 403] },
+      {tolerate: [400, 403]},
     );
     const achievements = data?.playerstats?.achievements;
     return achievements?.length
       ? {
-          unlocked: achievements.filter((a) => a.achieved === 1).length,
+          unlocked: achievements.filter(a => a.achieved === 1).length,
           total: achievements.length,
         }
       : null;
@@ -134,15 +142,22 @@ export class SteamClient {
   protected async get<T>(
     path: string,
     params: Record<string, string>,
-    options: { tolerate: number[] },
+    options: {tolerate: number[]},
   ): Promise<T | null>;
-  protected async get<T>(path: string, params: Record<string, string>): Promise<T>;
   protected async get<T>(
     path: string,
     params: Record<string, string>,
-    { tolerate = [] as number[] } = {},
+  ): Promise<T>;
+  protected async get<T>(
+    path: string,
+    params: Record<string, string>,
+    {tolerate = [] as number[]} = {},
   ): Promise<T | null> {
-    const query = new URLSearchParams({ key: this.key, format: 'json', ...params });
+    const query = new URLSearchParams({
+      key: this.key,
+      format: 'json',
+      ...params,
+    });
     const response = await fetchWithTimeout(`${API}${path}?${query}`, {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
@@ -154,7 +169,10 @@ export class SteamClient {
     }
     const body = await response.text().catch(() => '');
     // A bad key is answered with an HTML page ("Access is denied… verify your key= parameter").
-    if ([401, 403].includes(response.status) && /key=|access is denied/i.test(body)) {
+    if (
+      [401, 403].includes(response.status) &&
+      /key=|access is denied/i.test(body)
+    ) {
       throw new SteamKeyError('Steam Web API key is invalid');
     }
     if (tolerate.includes(response.status)) {
@@ -162,8 +180,15 @@ export class SteamClient {
     }
     // What was asked (without the key) and what Steam said: a bare status explains nothing.
     const asked = new URLSearchParams(params).toString();
-    const said = body.split(this.key).join('…').replace(/\s+/g, ' ').trim().slice(0, 200);
-    throw new Error(`Steam ${response.status}: ${path}?${asked}${said ? ` — ${said}` : ''}`);
+    const said = body
+      .split(this.key)
+      .join('…')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 200);
+    throw new Error(
+      `Steam ${response.status}: ${path}?${asked}${said ? ` — ${said}` : ''}`,
+    );
   }
 }
 
@@ -174,14 +199,19 @@ function toOwnedGame(game: RawGame): SteamOwnedGame {
     iconHash: game.img_icon_url || null,
     playtimeMinutes: game.playtime_forever ?? 0,
     playtime2WeeksMinutes: game.playtime_2weeks ?? 0,
-    lastPlayedAt: game.rtime_last_played ? new Date(game.rtime_last_played * 1000) : null,
+    lastPlayedAt: game.rtime_last_played
+      ? new Date(game.rtime_last_played * 1000)
+      : null,
   };
 }
 
 /** The library plus the recently played games it does not list. */
-export function mergeGames(owned: SteamOwnedGame[], recent: SteamOwnedGame[]): SteamOwnedGame[] {
-  const known = new Set(owned.map((game) => game.appId));
-  return [...owned, ...recent.filter((game) => !known.has(game.appId))];
+export function mergeGames(
+  owned: SteamOwnedGame[],
+  recent: SteamOwnedGame[],
+): SteamOwnedGame[] {
+  const known = new Set(owned.map(game => game.appId));
+  return [...owned, ...recent.filter(game => !known.has(game.appId))];
 }
 
 // --- Raw Steam API responses (only the fields we use) ---

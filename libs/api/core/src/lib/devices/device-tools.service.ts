@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { DEVICE_TOOL_NAME, DeviceKind, DeviceToolSpec, ServerToDevice } from '@pd/contracts';
-import { randomUUID } from 'node:crypto';
-import { AiTool } from '../ai/ai-tool';
+import {Injectable} from '@nestjs/common';
+import {
+  DEVICE_TOOL_NAME,
+  DeviceKind,
+  DeviceToolSpec,
+  ServerToDevice,
+} from '@pd/contracts';
+import {randomUUID} from 'node:crypto';
+import {AiTool} from '../ai/ai-tool';
 
 /** A device that does not answer in this long is taken as gone for this call. */
 const CALL_TIMEOUT_MS = 20_000;
@@ -35,7 +40,10 @@ export class DeviceToolsService {
   private readonly waiting = new Map<string, Waiting>();
 
   connected(device: OnlineDevice): void {
-    this.devices.set(device.id, { ...device, tools: valid(device.tools, device.kind) });
+    this.devices.set(device.id, {
+      ...device,
+      tools: valid(device.tools, device.kind),
+    });
   }
 
   disconnected(deviceId: string): void {
@@ -57,17 +65,17 @@ export class DeviceToolsService {
   }
 
   answered(callId: string, value: unknown): void {
-    this.settle(callId, (call) => call.resolve(value));
+    this.settle(callId, call => call.resolve(value));
   }
 
   failed(callId: string, message: string): void {
-    this.settle(callId, (call) => call.reject(new Error(message)));
+    this.settle(callId, call => call.reject(new Error(message)));
   }
 
   /** The devices of a user online now, the one in use first. */
   online(userId: string): OnlineDevice[] {
     return [...this.devices.values()]
-      .filter((device) => device.userId === userId)
+      .filter(device => device.userId === userId)
       .sort((a, b) => b.activeAt - a.activeAt);
   }
 
@@ -95,10 +103,18 @@ export class DeviceToolsService {
   }
 
   /** Runs a tool on the device in use that offers it. */
-  call(userId: string, name: string, args: Record<string, unknown>): Promise<unknown> {
-    const device = this.online(userId).find((one) => one.tools.some((tool) => tool.name === name));
+  call(
+    userId: string,
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<unknown> {
+    const device = this.online(userId).find(one =>
+      one.tools.some(tool => tool.name === name),
+    );
     if (!device) {
-      return Promise.reject(new Error(`No device of the user offers ${name} now`));
+      return Promise.reject(
+        new Error(`No device of the user offers ${name} now`),
+      );
     }
     const id = randomUUID();
     return new Promise((resolve, reject) => {
@@ -106,8 +122,8 @@ export class DeviceToolsService {
         this.waiting.delete(id);
         reject(new Error(`The device "${device.name}" did not answer`));
       }, CALL_TIMEOUT_MS);
-      this.waiting.set(id, { resolve, reject, timer });
-      device.send({ type: 'call', id, name, args });
+      this.waiting.set(id, {resolve, reject, timer});
+      device.send({type: 'call', id, name, args});
     });
   }
 
@@ -125,7 +141,7 @@ export class DeviceToolsService {
 function valid(tools: DeviceToolSpec[], kind: DeviceKind): DeviceToolSpec[] {
   return (Array.isArray(tools) ? tools : [])
     .filter(
-      (tool) =>
+      tool =>
         typeof tool?.name === 'string' &&
         DEVICE_TOOL_NAME.test(tool.name) &&
         tool.name.startsWith(`${kind}_`) &&
@@ -133,7 +149,7 @@ function valid(tools: DeviceToolSpec[], kind: DeviceKind): DeviceToolSpec[] {
         typeof tool.inputSchema === 'object',
     )
     .slice(0, 50)
-    .map((tool) => ({
+    .map(tool => ({
       name: tool.name,
       description: tool.description.slice(0, 1000),
       inputSchema: tool.inputSchema,

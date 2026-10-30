@@ -1,11 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { BandReaction, REACTION_FEELINGS, ReactionFeeling } from '@pd/contracts';
-import { ToastService } from '@pd/web-core';
-import { HealthApi } from '../health.api';
-import { clock, minutesBetween } from './band-format';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  output,
+} from '@angular/core';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {BandReaction, REACTION_FEELINGS, ReactionFeeling} from '@pd/contracts';
+import {ToastService} from '@pd/web-core';
+import {HealthApi} from '../health.api';
+import {clock, minutesBetween} from './band-format';
 
 /**
  * The body's reactions of a day (the pulse well above the owner's own at rest, without moving),
@@ -22,12 +28,16 @@ import { clock, minutesBetween } from './band-format';
         <div class="what">
           <span class="when">
             {{ clock(reaction.startAt) }} ·
-            {{ 'health.band.reactions.minutes' | transloco: { count: length(reaction) } }}
+            {{
+              'health.band.reactions.minutes'
+                | transloco: {count: length(reaction)}
+            }}
           </span>
           <span class="pulse">
             {{
               'health.band.reactions.pulse'
-                | transloco: { peak: reaction.peakBpm, base: reaction.baselineBpm }
+                | transloco
+                  : {peak: reaction.peakBpm, base: reaction.baselineBpm}
             }}
           </span>
           <mat-chip-listbox
@@ -91,7 +101,10 @@ export class BandReactionsComponent {
     return minutesBetween(reaction.startAt, reaction.endAt);
   }
 
-  protected async answer(reaction: BandReaction, feeling: ReactionFeeling | undefined) {
+  protected async answer(
+    reaction: BandReaction,
+    feeling: ReactionFeeling | undefined,
+  ) {
     if (!feeling || feeling === reaction.feeling) {
       return;
     }

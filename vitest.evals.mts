@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config';
-import { API_TEST_ENV } from './libs/api/core/test-env.mts';
+import {defineConfig} from 'vitest/config';
+import {API_TEST_ENV} from './libs/api/core/test-env.mts';
 
 /**
  * The evals of the AI jobs (`*.eval.ts`): real instructions, made-up inputs, a live model —
@@ -7,7 +7,7 @@ import { API_TEST_ENV } from './libs/api/core/test-env.mts';
  * EVAL_AI_URL / EVAL_AI_MODEL / EVAL_AI_KEY (see libs/api/core/src/lib/ai/eval-model.ts).
  */
 export default defineConfig({
-  resolve: { tsconfigPaths: true },
+  resolve: {tsconfigPaths: true},
   test: {
     name: 'ai-evals',
     env: API_TEST_ENV,

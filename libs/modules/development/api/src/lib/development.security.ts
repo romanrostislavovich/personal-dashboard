@@ -1,10 +1,20 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Database, DB, fetchWithTimeout, Inspection, SecurityService } from '@pd/api-core';
-import { and, desc, eq, inArray } from 'drizzle-orm';
-import { AccountTokensService } from './accounts/account-tokens.service';
-import { GithubTokenService } from './github/github-token.service';
-import { trackedRepos } from './open-source/open-source.schema';
-import { HostingFacts, hostingProblems, RepositoryFacts } from './security/code-hosting-security';
+import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {
+  Database,
+  DB,
+  fetchWithTimeout,
+  Inspection,
+  SecurityService,
+} from '@pd/api-core';
+import {and, desc, eq, inArray} from 'drizzle-orm';
+import {AccountTokensService} from './accounts/account-tokens.service';
+import {GithubTokenService} from './github/github-token.service';
+import {trackedRepos} from './open-source/open-source.schema';
+import {
+  HostingFacts,
+  hostingProblems,
+  RepositoryFacts,
+} from './security/code-hosting-security';
 
 const GITHUB_API = 'https://api.github.com';
 const TIMEOUT_MS = 15_000;
@@ -51,7 +61,10 @@ export class DevelopmentSecurity implements OnModuleInit {
   }
 
   /** `null` — no code hosting is connected. */
-  private async inspect(userId: string, locale: string): Promise<Inspection | null> {
+  private async inspect(
+    userId: string,
+    locale: string,
+  ): Promise<Inspection | null> {
     const readers = [
       () => this.readGithub(userId),
       () => this.readGitlab(userId),
@@ -66,13 +79,18 @@ export class DevelopmentSecurity implements OnModuleInit {
         }
       } catch (error) {
         // One hosting being down (or its token refused) must not hide the others.
-        this.logger.warn(`A code hosting was not read: ${String(error).slice(0, 200)}`);
+        this.logger.warn(
+          `A code hosting was not read: ${String(error).slice(0, 200)}`,
+        );
       }
     }
     if (!hostings.length) {
       return null;
     }
-    return { facts: hostings, problems: hostingProblems(hostings, locale, new Date()) };
+    return {
+      facts: hostings,
+      problems: hostingProblems(hostings, locale, new Date()),
+    };
   }
 
   private async readGithub(userId: string): Promise<HostingFacts | null> {
@@ -95,22 +113,27 @@ export class DevelopmentSecurity implements OnModuleInit {
       if (!response.ok) {
         await response.body?.cancel();
       }
-      return { body, headers: response.headers };
+      return {body, headers: response.headers};
     };
 
-    const user = await ask<{ login?: string; two_factor_authentication?: boolean }>('/user');
+    const user = await ask<{
+      login?: string;
+      two_factor_authentication?: boolean;
+    }>('/user');
     // Classic tokens list their scopes; a fine-grained one sends an empty header.
     const scopes = user.headers.get('x-oauth-scopes');
     const expires = user.headers.get('github-authentication-token-expiration');
     const repositories: RepositoryFacts[] = [];
     for (const name of await this.ownRepositories(userId, 'github')) {
-      const alerts = await ask<{ security_advisory?: { severity?: string } }[]>(
+      const alerts = await ask<{security_advisory?: {severity?: string}}[]>(
         `/repos/${name}/dependabot/alerts?state=open&per_page=100`,
       );
       const secrets = await ask<unknown[]>(
         `/repos/${name}/secret-scanning/alerts?state=open&per_page=100`,
       );
-      const runs = await ask<{ workflow_runs?: { conclusion: string | null; html_url: string }[] }>(
+      const runs = await ask<{
+        workflow_runs?: {conclusion: string | null; html_url: string}[];
+      }>(
         `/repos/${name}/actions/workflows/${WORKFLOW}/runs?per_page=1&status=completed`,
       );
       const run = runs.body?.workflow_runs?.[0];
@@ -118,7 +141,9 @@ export class DevelopmentSecurity implements OnModuleInit {
         name,
         dependencies: alerts.body && countBySeverity(alerts.body),
         secrets: secrets.body && secrets.body.length,
-        securityCheck: run ? { conclusion: run.conclusion, url: run.html_url } : null,
+        securityCheck: run
+          ? {conclusion: run.conclusion, url: run.html_url}
+          : null,
       });
     }
     return {
@@ -129,8 +154,10 @@ export class DevelopmentSecurity implements OnModuleInit {
       },
       token: {
         expiresAt:
-          expires && !Number.isNaN(Date.parse(expires)) ? new Date(expires).toISOString() : null,
-        scopes: scopes ? scopes.split(',').map((scope) => scope.trim()) : null,
+          expires && !Number.isNaN(Date.parse(expires))
+            ? new Date(expires).toISOString()
+            : null,
+        scopes: scopes ? scopes.split(',').map(scope => scope.trim()) : null,
       },
       repositories,
     };
@@ -141,13 +168,20 @@ export class DevelopmentSecurity implements OnModuleInit {
     if (!client) {
       return null;
     }
-    const user = await client.get<{ username?: string; two_factor_enabled?: boolean }>('/user');
-    const token = await client.get<{ expires_at?: string | null; scopes?: string[] }>(
-      '/personal_access_tokens/self',
-    );
+    const user = await client.get<{
+      username?: string;
+      two_factor_enabled?: boolean;
+    }>('/user');
+    const token = await client.get<{
+      expires_at?: string | null;
+      scopes?: string[];
+    }>('/personal_access_tokens/self');
     return {
       hosting: 'gitlab',
-      account: { login: user?.username ?? null, twoFactor: user?.two_factor_enabled ?? null },
+      account: {
+        login: user?.username ?? null,
+        twoFactor: user?.two_factor_enabled ?? null,
+      },
       token: {
         // A date without a time: the token works through that day.
         expiresAt: token?.expires_at ? `${token.expires_at}T23:59:59Z` : null,
@@ -172,18 +206,24 @@ export class DevelopmentSecurity implements OnModuleInit {
       hosting: 'bitbucket',
       account: {
         login: user?.username ?? user?.nickname ?? null,
-        twoFactor: typeof user?.has_2fa_enabled === 'boolean' ? user.has_2fa_enabled : null,
+        twoFactor:
+          typeof user?.has_2fa_enabled === 'boolean'
+            ? user.has_2fa_enabled
+            : null,
       },
       // Bitbucket tells neither the expiry nor the scopes of an API token.
-      token: { expiresAt: null, scopes: null },
+      token: {expiresAt: null, scopes: null},
       repositories: [],
     };
   }
 
   /** The user's own repositories on a hosting (not forks, not archived), the freshest first. */
-  private async ownRepositories(userId: string, provider: 'github'): Promise<string[]> {
+  private async ownRepositories(
+    userId: string,
+    provider: 'github',
+  ): Promise<string[]> {
     const rows = await this.db
-      .select({ fullName: trackedRepos.fullName })
+      .select({fullName: trackedRepos.fullName})
       .from(trackedRepos)
       .where(
         and(
@@ -196,11 +236,11 @@ export class DevelopmentSecurity implements OnModuleInit {
       )
       .orderBy(desc(trackedRepos.pushedAt))
       .limit(MAX_REPOSITORIES);
-    return rows.map((row) => row.fullName);
+    return rows.map(row => row.fullName);
   }
 }
 
-function countBySeverity(alerts: { security_advisory?: { severity?: string } }[]) {
+function countBySeverity(alerts: {security_advisory?: {severity?: string}}[]) {
   const counts: Record<string, number> = {};
   for (const alert of alerts) {
     const severity = alert.security_advisory?.severity ?? 'low';

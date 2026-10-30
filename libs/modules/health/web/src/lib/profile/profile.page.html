@@ -87,9 +87,12 @@
 
   <section>
     <div class="toolbar">
-      <h2 class="section">{{ 'health.profile.vaccination.title' | transloco }}</h2>
+      <h2 class="section">
+        {{ 'health.profile.vaccination.title' | transloco }}
+      </h2>
       <button matButton="tonal" (click)="edit('vaccination')">
-        <mat-icon>add</mat-icon> {{ 'health.profile.vaccination.add' | transloco }}
+        <mat-icon>add</mat-icon>
+        {{ 'health.profile.vaccination.add' | transloco }}
       </button>
     </div>
     @for (vaccination of profile.vaccinations; track vaccination.id) {
@@ -110,7 +113,7 @@
             <span class="hint" [class.due]="dueSoon(vaccination.nextDueOn)">
               {{
                 'health.profile.nextDue'
-                  | transloco: { day: (vaccination.nextDueOn | date: 'd MMM y') }
+                  | transloco: {day: (vaccination.nextDueOn | date: 'd MMM y')}
               }}
             </span>
           }
@@ -137,9 +140,12 @@
 
   <section>
     <div class="toolbar">
-      <h2 class="section">{{ 'health.profile.operation.title' | transloco }}</h2>
+      <h2 class="section">
+        {{ 'health.profile.operation.title' | transloco }}
+      </h2>
       <button matButton="tonal" (click)="edit('operation')">
-        <mat-icon>add</mat-icon> {{ 'health.profile.operation.add' | transloco }}
+        <mat-icon>add</mat-icon>
+        {{ 'health.profile.operation.add' | transloco }}
       </button>
     </div>
     @for (operation of profile.operations; track operation.id) {

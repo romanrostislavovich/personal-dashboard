@@ -1,12 +1,16 @@
-import { app, dialog, shell } from 'electron';
-import { randomUUID } from 'node:crypto';
-import { sanitizeTelemetryUrl, WorkstateCapture, workstateRestorePlanSchema } from '@pd/contracts';
-import { ActivityTracker } from '../activity/tracker';
-import { loadSettings, saveSettings } from '../settings-store';
-import { gitBranch, launchProject, localPath } from './local-path';
-import { workstateMessages } from './messages';
+import {app, dialog, shell} from 'electron';
+import {randomUUID} from 'node:crypto';
+import {
+  sanitizeTelemetryUrl,
+  WorkstateCapture,
+  workstateRestorePlanSchema,
+} from '@pd/contracts';
+import {ActivityTracker} from '../activity/tracker';
+import {loadSettings, saveSettings} from '../settings-store';
+import {gitBranch, launchProject, localPath} from './local-path';
+import {workstateMessages} from './messages';
 
-const canceledResult = () => ({ opened: 0, failed: 0, canceled: true });
+const canceledResult = () => ({opened: 0, failed: 0, canceled: true});
 
 /** Explicit native actions only. No background snapshots or renderer-supplied capture fields. */
 export class DesktopWorkstates {
@@ -35,13 +39,20 @@ export class DesktopWorkstates {
     const messages = workstateMessages(app.getLocale());
     try {
       const result = await dialog.showOpenDialog({
-        title: kind === 'directory' ? messages.chooseProject : messages.chooseIde,
+        title:
+          kind === 'directory' ? messages.chooseProject : messages.chooseIde,
         properties: [kind === 'directory' ? 'openDirectory' : 'openFile'],
-        ...(kind === 'exe' ? { filters: [{ name: 'IDE (.exe)', extensions: ['exe'] }] } : {}),
+        ...(kind === 'exe'
+          ? {filters: [{name: 'IDE (.exe)', extensions: ['exe']}]}
+          : {}),
       });
       if (result.canceled || !result.filePaths[0]) return;
       const path = await localPath(result.filePaths[0], kind);
-      if (server !== this.serverUrl() || deviceId !== this.tracker.status().deviceId) return;
+      if (
+        server !== this.serverUrl() ||
+        deviceId !== this.tracker.status().deviceId
+      )
+        return;
       saveSettings({
         ...loadSettings(),
         workstateContext: {
@@ -49,10 +60,10 @@ export class DesktopWorkstates {
           deviceId,
           projectPath: this.context()?.projectPath ?? null,
           idePath: this.context()?.idePath ?? null,
-          ...(kind === 'directory' ? { projectPath: path } : { idePath: path }),
+          ...(kind === 'directory' ? {projectPath: path} : {idePath: path}),
         },
       });
-      await dialog.showMessageBox({ message: messages.selected, detail: path });
+      await dialog.showMessageBox({message: messages.selected, detail: path});
     } catch {
       await this.failure();
     } finally {
@@ -61,7 +72,7 @@ export class DesktopWorkstates {
   }
 
   clear(): void {
-    saveSettings({ ...loadSettings(), workstateContext: null });
+    saveSettings({...loadSettings(), workstateContext: null});
     this.tracker.resetTelemetry();
   }
 
@@ -78,11 +89,17 @@ export class DesktopWorkstates {
     if (!permit || !trusted()) return null;
     const controller = new AbortController();
     const valid = () => {
-      if (!trusted() || this.tracker.workstatePermit()?.key !== permit.key) controller.abort();
+      if (!trusted() || this.tracker.workstatePermit()?.key !== permit.key)
+        controller.abort();
       return !controller.signal.aborted;
     };
     const timer = setInterval(valid, 250);
-    return { permit, valid, signal: controller.signal, close: () => clearInterval(timer) };
+    return {
+      permit,
+      valid,
+      signal: controller.signal,
+      close: () => clearInterval(timer),
+    };
   }
 
   async capture(trusted: () => boolean = () => true): Promise<boolean> {
@@ -95,7 +112,7 @@ export class DesktopWorkstates {
     this.busy = true;
     try {
       const messages = workstateMessages(app.getLocale());
-      const capture: WorkstateCapture = { browserUrls: [] };
+      const capture: WorkstateCapture = {browserUrls: []};
       if (lease.permit.activeApp) capture.activeApp = lease.permit.activeApp;
       const project = this.context()?.projectPath;
       if (project) {
@@ -104,7 +121,9 @@ export class DesktopWorkstates {
       }
       if (
         !Object.values(capture).every(
-          (value) => typeof value !== 'string' || this.tracker.workstateTextAllowed(value),
+          value =>
+            typeof value !== 'string' ||
+            this.tracker.workstateTextAllowed(value),
         )
       )
         throw new Error('Private context');
@@ -155,11 +174,11 @@ export class DesktopWorkstates {
   async resume(input: unknown, trusted: () => boolean = () => true) {
     if (this.busy) return canceledResult();
     const parsed = workstateRestorePlanSchema.safeParse(input);
-    if (!parsed.success) return { opened: 0, failed: 1, canceled: false };
+    if (!parsed.success) return {opened: 0, failed: 1, canceled: false};
     const lease = this.lease(trusted);
     if (!lease) return canceledResult();
     this.busy = true;
-    const result = { opened: 0, failed: 0, canceled: false };
+    const result = {opened: 0, failed: 0, canceled: false};
     try {
       const messages = workstateMessages(app.getLocale());
       const plan = parsed.data;
@@ -174,7 +193,8 @@ export class DesktopWorkstates {
           action.path = await localPath(action.path, 'directory');
           lines.push(`${messages.project}: ${action.path}`);
         } else if (action.kind === 'openUrl') {
-          if (sanitizeTelemetryUrl(action.url) !== action.url) throw new Error('Unsafe URL');
+          if (sanitizeTelemetryUrl(action.url) !== action.url)
+            throw new Error('Unsafe URL');
           lines.push(action.url);
         } else lines.push(`${action.field}: ${action.text}`);
       }
@@ -197,7 +217,8 @@ export class DesktopWorkstates {
         if (action.kind === 'reference') continue;
         try {
           if (action.kind === 'openUrl') {
-            if (sanitizeTelemetryUrl(action.url) !== action.url) throw new Error('Unsafe URL');
+            if (sanitizeTelemetryUrl(action.url) !== action.url)
+              throw new Error('Unsafe URL');
             await shell.openExternal(action.url);
           } else {
             const path = await localPath(action.path, 'directory');
@@ -207,7 +228,8 @@ export class DesktopWorkstates {
               break;
             }
             if (exe) await launchProject(exe, path);
-            else if (await shell.openPath(path)) throw new Error('Folder could not be opened');
+            else if (await shell.openPath(path))
+              throw new Error('Folder could not be opened');
           }
           result.opened++;
         } catch {
@@ -216,7 +238,7 @@ export class DesktopWorkstates {
       }
       return result;
     } catch {
-      return { ...result, failed: result.failed + 1 };
+      return {...result, failed: result.failed + 1};
     } finally {
       lease.close();
       this.busy = false;

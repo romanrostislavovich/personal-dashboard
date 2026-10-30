@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import {
   LifelogNote,
   LifelogQuery,
@@ -6,11 +16,11 @@ import {
   lifelogNoteSchema,
   lifelogQuerySchema,
 } from '@pd/contracts';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
-import { LifelogService } from './lifelog.service';
-import { LifelogSettings, lifelogSettingsSchema } from '@pd/contracts';
-import { LifelogGenerator } from './lifelog-generator.service';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
+import {LifelogService} from './lifelog.service';
+import {LifelogSettings, lifelogSettingsSchema} from '@pd/contracts';
+import {LifelogGenerator} from './lifelog-generator.service';
 
 @Controller('life/narratives')
 export class LifelogController {

@@ -1,18 +1,28 @@
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { BEFORE_AFTER_WEEKS, BeforeAfter, BeforeAfterChange } from '@pd/contracts';
-import { formatValue } from './links-format';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {
+  BEFORE_AFTER_WEEKS,
+  BeforeAfter,
+  BeforeAfterChange,
+} from '@pd/contracts';
+import {formatValue} from './links-format';
 
-const CHART = { width: 160, height: 36, pad: 3 };
+const CHART = {width: 160, height: 36, pad: 3};
 /** As the server's MIN_WINDOW_DAYS: the days after a date it needs to compare. */
 const MIN_WINDOW_DAYS = 7;
 
@@ -20,8 +30,8 @@ interface MiniChart {
   line: string;
   /** Where the event is, and the averages of the two sides. */
   at: number;
-  before: { x1: number; x2: number; y: number };
-  after: { x1: number; x2: number; y: number };
+  before: {x1: number; x2: number; y: number};
+  after: {x1: number; x2: number; y: number};
 }
 
 /**
@@ -47,23 +57,33 @@ interface MiniChart {
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-icon mat-card-avatar>compare_arrows</mat-icon>
-          <mat-card-title>{{ 'life.links.beforeAfter.title' | transloco }}</mat-card-title>
-          <mat-card-subtitle>{{ 'life.links.beforeAfter.hint' | transloco }}</mat-card-subtitle>
+          <mat-card-title>{{
+            'life.links.beforeAfter.title' | transloco
+          }}</mat-card-title>
+          <mat-card-subtitle>{{
+            'life.links.beforeAfter.hint' | transloco
+          }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <div class="controls">
             <mat-form-field subscriptSizing="dynamic">
-              <mat-label>{{ 'life.links.beforeAfter.event' | transloco }}</mat-label>
+              <mat-label>{{
+                'life.links.beforeAfter.event' | transloco
+              }}</mat-label>
               <mat-select
                 [value]="result()?.event?.id"
                 (selectionChange)="chosen.set($event.value)"
               >
-                @for (item of data.value()?.results ?? []; track item.event.id) {
+                @for (
+                  item of data.value()?.results ?? [];
+                  track item.event.id
+                ) {
                   <mat-option [value]="item.event.id">
                     {{ item.event.title }} ·
                     {{
                       'life.links.beforeAfter.' + item.event.edge
-                        | transloco: { date: (item.event.on | date: 'mediumDate') }
+                        | transloco
+                          : {date: (item.event.on | date: 'mediumDate')}
                     }}
                   </mat-option>
                 }
@@ -77,7 +97,9 @@ interface MiniChart {
             >
               @for (option of weekOptions; track option) {
                 <mat-button-toggle [value]="option">
-                  {{ 'life.links.beforeAfter.weeks' | transloco: { weeks: option } }}
+                  {{
+                    'life.links.beforeAfter.weeks' | transloco: {weeks: option}
+                  }}
                 </mat-button-toggle>
               }
             </mat-button-toggle-group>
@@ -91,14 +113,22 @@ interface MiniChart {
               <p class="hint">
                 {{
                   'life.links.beforeAfter.wait'
-                    | transloco: { days: current.daysAfter, left: minDays - current.daysAfter }
+                    | transloco
+                      : {
+                          days: current.daysAfter,
+                          left: minDays - current.daysAfter,
+                        }
                 }}
               </p>
             } @else {
               @if (noHistory()) {
-                <p class="hint">{{ 'life.links.beforeAfter.noHistory' | transloco }}</p>
+                <p class="hint">
+                  {{ 'life.links.beforeAfter.noHistory' | transloco }}
+                </p>
               } @else if (!changed().length) {
-                <p class="hint">{{ 'life.links.beforeAfter.none' | transloco }}</p>
+                <p class="hint">
+                  {{ 'life.links.beforeAfter.none' | transloco }}
+                </p>
               }
               <ul class="changes">
                 @for (change of shown(); track change.key) {
@@ -107,14 +137,19 @@ interface MiniChart {
                     <span class="values">
                       {{ format(change, change.before) }} →
                       <b>{{ format(change, change.after) }}</b>
-                      <span class="difference" [class.down]="change.difference < 0">
+                      <span
+                        class="difference"
+                        [class.down]="change.difference < 0"
+                      >
                         {{ differenceText(change) }}
                       </span>
                     </span>
                     @if (chartOf(change, current.event.on); as chart) {
                       <svg
                         class="chart"
-                        [attr.viewBox]="'0 0 ' + chartSize.width + ' ' + chartSize.height"
+                        [attr.viewBox]="
+                          '0 0 ' + chartSize.width + ' ' + chartSize.height
+                        "
                         aria-hidden="true"
                       >
                         <line
@@ -147,8 +182,12 @@ interface MiniChart {
               @if (current.changes.length > changed().length) {
                 <button matButton (click)="showAll.set(!showAll())">
                   {{
-                    (showAll() ? 'life.links.beforeAfter.less' : 'life.links.beforeAfter.all')
-                      | transloco: { count: current.changes.length - changed().length }
+                    (showAll()
+                      ? 'life.links.beforeAfter.less'
+                      : 'life.links.beforeAfter.all'
+                    )
+                      | transloco
+                        : {count: current.changes.length - changed().length}
                   }}
                 </button>
               }
@@ -268,20 +307,26 @@ export class BeforeAfterComponent {
   protected readonly chosen = signal<string | null>(null);
   protected readonly showAll = signal(false);
 
-  protected readonly data = httpResource<BeforeAfter>(() => CORE_READS.beforeAfter(this.weeks()));
+  protected readonly data = httpResource<BeforeAfter>(() =>
+    CORE_READS.beforeAfter(this.weeks()),
+  );
 
   /** The chosen event, or the latest one. */
   protected readonly result = computed(() => {
     const results = this.data.value()?.results ?? [];
-    return results.find((item) => item.event.id === this.chosen()) ?? results[0] ?? null;
+    return (
+      results.find(item => item.event.id === this.chosen()) ??
+      results[0] ??
+      null
+    );
   });
   protected readonly changed = computed(
-    () => this.result()?.changes.filter((change) => change.changed) ?? [],
+    () => this.result()?.changes.filter(change => change.changed) ?? [],
   );
   /** Every number compared, none with enough ordinary dates to tell a change from the usual. */
   protected readonly noHistory = computed(() => {
     const changes = this.result()?.changes ?? [];
-    return changes.length > 0 && changes.every((change) => change.p === null);
+    return changes.length > 0 && changes.every(change => change.p === null);
   });
   protected readonly shown = computed(() =>
     this.showAll() ? (this.result()?.changes ?? []) : this.changed(),
@@ -292,8 +337,8 @@ export class BeforeAfterComponent {
   }
 
   protected format(change: BeforeAfterChange, value: number): string {
-    return formatValue(change, value, this.transloco.getActiveLang(), (number) =>
-      this.transloco.translate('life.hours', { value: number }),
+    return formatValue(change, value, this.transloco.getActiveLang(), number =>
+      this.transloco.translate('life.hours', {value: number}),
     );
   }
 
@@ -312,14 +357,21 @@ export class BeforeAfterComponent {
       return null;
     }
     const time = (day: string) => new Date(`${day}T00:00:00Z`).getTime();
-    const [first, last] = [time(values[0].day), time(values[values.length - 1].day)];
-    const numbers = values.map((item) => item.value);
+    const [first, last] = [
+      time(values[0].day),
+      time(values[values.length - 1].day),
+    ];
+    const numbers = values.map(item => item.value);
     const [low, high] = [Math.min(...numbers), Math.max(...numbers)];
     const span = high - low || 1;
     const x = (day: string) =>
-      CHART.pad + ((time(day) - first) / (last - first || 1)) * (CHART.width - 2 * CHART.pad);
+      CHART.pad +
+      ((time(day) - first) / (last - first || 1)) *
+        (CHART.width - 2 * CHART.pad);
     const y = (value: number) =>
-      CHART.height - CHART.pad - ((value - low) / span) * (CHART.height - 2 * CHART.pad);
+      CHART.height -
+      CHART.pad -
+      ((value - low) / span) * (CHART.height - 2 * CHART.pad);
     const at = x(on);
     return {
       line: values
@@ -329,8 +381,8 @@ export class BeforeAfterComponent {
         )
         .join(' '),
       at,
-      before: { x1: CHART.pad, x2: at, y: y(change.before) },
-      after: { x1: at, x2: CHART.width - CHART.pad, y: y(change.after) },
+      before: {x1: CHART.pad, x2: at, y: y(change.before)},
+      after: {x1: at, x2: CHART.width - CHART.pad, y: y(change.after)},
     };
   }
 }

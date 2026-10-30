@@ -1,4 +1,4 @@
-import type { WatchHints, WatchViewInput } from '@pd/contracts';
+import type {WatchHints, WatchViewInput} from '@pd/contracts';
 
 /*
  * What plays, as views: a content script reports every few seconds that a video plays in its
@@ -47,17 +47,19 @@ export interface WatchSession {
 export function takeReport(
   open: WatchSession | null,
   report: WatchReport,
-  page: { url: string; site: string; hints: WatchHints },
+  page: {url: string; site: string; hints: WatchHints},
   now: number,
   newId: () => string,
-): { open: WatchSession; closed: WatchSession | null } {
+): {open: WatchSession; closed: WatchSession | null} {
   if (open && open.page === page.url && now - open.lastAt < WATCH_GAP_MS) {
     return {
       open: {
         ...open,
         hints: mergeHints(open.hints, page.hints),
         lastAt: now,
-        watchedMs: open.watchedMs + Math.min(Math.max(now - open.lastAt, 0), MAX_STEP_MS),
+        watchedMs:
+          open.watchedMs +
+          Math.min(Math.max(now - open.lastAt, 0), MAX_STEP_MS),
         positionSeconds: report.positionSeconds,
         durationSeconds: report.durationSeconds ?? open.durationSeconds,
       },
@@ -82,8 +84,11 @@ export function takeReport(
 
 /** A hint read later wins when it says something (Netflix shows its title a moment after). */
 export function mergeHints(old: WatchHints, fresh: WatchHints): WatchHints {
-  const merged: WatchHints = { ...old };
-  for (const [key, value] of Object.entries(fresh) as [keyof WatchHints, string | undefined][]) {
+  const merged: WatchHints = {...old};
+  for (const [key, value] of Object.entries(fresh) as [
+    keyof WatchHints,
+    string | undefined,
+  ][]) {
     if (value?.trim()) {
       merged[key] = value.trim().slice(0, 300);
     }
@@ -102,7 +107,9 @@ export function toViewInput(session: WatchSession): WatchViewInput {
     site: session.site,
     hints: session.hints,
     startedAt: new Date(session.startedAt).toISOString(),
-    endedAt: new Date(Math.max(session.lastAt, session.startedAt + 1000)).toISOString(),
+    endedAt: new Date(
+      Math.max(session.lastAt, session.startedAt + 1000),
+    ).toISOString(),
     watchedSeconds: Math.round(session.watchedMs / 1000),
     positionSeconds: Math.max(0, Math.round(session.positionSeconds)),
     durationSeconds:

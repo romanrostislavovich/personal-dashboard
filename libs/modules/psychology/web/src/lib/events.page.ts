@@ -1,13 +1,19 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {
   EVENT_FEELINGS,
   EventExportFormat,
@@ -15,8 +21,8 @@ import {
   eventTouches,
   PsychologyEvent,
 } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { PsychologyApi, today } from './psychology.api';
+import {firstValueFrom} from 'rxjs';
+import {PsychologyApi, today} from './psychology.api';
 
 const ICONS: Record<string, string> = {
   '-2': 'sentiment_very_dissatisfied',
@@ -52,7 +58,9 @@ const EMPTY: Draft = {
 /** An age as it was typed: a whole number of years, or `null`. */
 function toAge(value: string): number | null {
   const age = Number(value);
-  return value.trim() !== '' && Number.isInteger(age) && age >= 0 && age <= 120 ? age : null;
+  return value.trim() !== '' && Number.isInteger(age) && age >= 0 && age <= 120
+    ? age
+    : null;
 }
 
 /**
@@ -78,7 +86,10 @@ function toAge(value: string): number | null {
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-card-title>
-          {{ (editing() ? 'psychology.events.edit' : 'psychology.events.add') | transloco }}
+          {{
+            (editing() ? 'psychology.events.edit' : 'psychology.events.add')
+              | transloco
+          }}
         </mat-card-title>
       </mat-card-header>
       <mat-card-content class="form">
@@ -88,14 +99,14 @@ function toAge(value: string): number | null {
             matInput
             maxlength="200"
             [value]="draft().title"
-            (input)="set({ title: $any($event.target).value })"
+            (input)="set({title: $any($event.target).value})"
           />
         </mat-form-field>
         <mat-button-toggle-group
           hideSingleSelectionIndicator
           [attr.aria-label]="'psychology.events.when' | transloco"
           [value]="draft().by"
-          (change)="set({ by: $event.value })"
+          (change)="set({by: $event.value})"
         >
           <mat-button-toggle value="dates">
             {{ 'psychology.events.byDates' | transloco }}
@@ -112,7 +123,7 @@ function toAge(value: string): number | null {
                 matInput
                 type="date"
                 [value]="draft().startedOn"
-                (change)="set({ startedOn: $any($event.target).value })"
+                (change)="set({startedOn: $any($event.target).value})"
               />
             </mat-form-field>
             <mat-form-field subscriptSizing="dynamic">
@@ -122,20 +133,22 @@ function toAge(value: string): number | null {
                 type="date"
                 [value]="draft().endedOn"
                 [min]="draft().startedOn"
-                (change)="set({ endedOn: $any($event.target).value })"
+                (change)="set({endedOn: $any($event.target).value})"
               />
               <mat-hint>{{ 'psychology.events.toHint' | transloco }}</mat-hint>
             </mat-form-field>
           } @else {
             <mat-form-field subscriptSizing="dynamic" class="age">
-              <mat-label>{{ 'psychology.events.ageFrom' | transloco }}</mat-label>
+              <mat-label>{{
+                'psychology.events.ageFrom' | transloco
+              }}</mat-label>
               <input
                 matInput
                 type="number"
                 min="0"
                 max="120"
                 [value]="draft().ageFrom"
-                (input)="set({ ageFrom: $any($event.target).value })"
+                (input)="set({ageFrom: $any($event.target).value})"
               />
               <mat-hint>{{ 'psychology.events.ageHint' | transloco }}</mat-hint>
             </mat-form-field>
@@ -147,16 +160,18 @@ function toAge(value: string): number | null {
                 min="0"
                 max="120"
                 [value]="draft().ageTo"
-                (input)="set({ ageTo: $any($event.target).value })"
+                (input)="set({ageTo: $any($event.target).value})"
               />
-              <mat-hint>{{ 'psychology.events.ageToHint' | transloco }}</mat-hint>
+              <mat-hint>{{
+                'psychology.events.ageToHint' | transloco
+              }}</mat-hint>
             </mat-form-field>
           }
           <mat-form-field subscriptSizing="dynamic">
             <mat-label>{{ 'psychology.events.feeling' | transloco }}</mat-label>
             <mat-select
               [value]="draft().feeling"
-              (selectionChange)="set({ feeling: $event.value })"
+              (selectionChange)="set({feeling: $event.value})"
             >
               @for (feeling of feelings; track feeling) {
                 <mat-option [value]="feeling">
@@ -167,18 +182,22 @@ function toAge(value: string): number | null {
           </mat-form-field>
         </div>
         <mat-form-field subscriptSizing="dynamic">
-          <mat-label>{{ 'psychology.events.description' | transloco }}</mat-label>
+          <mat-label>{{
+            'psychology.events.description' | transloco
+          }}</mat-label>
           <textarea
             matInput
             rows="3"
             maxlength="5000"
             [value]="draft().description"
-            (input)="set({ description: $any($event.target).value })"
+            (input)="set({description: $any($event.target).value})"
           ></textarea>
         </mat-form-field>
         @if (draft().by === 'age') {
           <mat-form-field subscriptSizing="dynamic" class="birth">
-            <mat-label>{{ 'psychology.events.birthYear' | transloco }}</mat-label>
+            <mat-label>{{
+              'psychology.events.birthYear' | transloco
+            }}</mat-label>
             <input
               matInput
               type="number"
@@ -187,24 +206,34 @@ function toAge(value: string): number | null {
               [value]="birthYear() ?? ''"
               (change)="setBirthYear($any($event.target).value)"
             />
-            <mat-hint>{{ 'psychology.events.birthYearHint' | transloco }}</mat-hint>
+            <mat-hint>{{
+              'psychology.events.birthYearHint' | transloco
+            }}</mat-hint>
           </mat-form-field>
         }
       </mat-card-content>
       <mat-card-actions align="end">
         @if (editing()) {
-          <button matButton (click)="cancel()">{{ 'core.actions.cancel' | transloco }}</button>
+          <button matButton (click)="cancel()">
+            {{ 'core.actions.cancel' | transloco }}
+          </button>
         }
         <button matButton="filled" [disabled]="!valid()" (click)="save()">
-          {{ (editing() ? 'core.actions.save' : 'core.actions.add') | transloco }}
+          {{
+            (editing() ? 'core.actions.save' : 'core.actions.add') | transloco
+          }}
         </button>
       </mat-card-actions>
     </mat-card>
 
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'psychology.events.export' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'psychology.events.exportHint' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'psychology.events.export' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'psychology.events.exportHint' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content class="row padded">
         <mat-form-field subscriptSizing="dynamic">
@@ -226,14 +255,22 @@ function toAge(value: string): number | null {
             (change)="exportTo.set($any($event.target).value)"
           />
         </mat-form-field>
-        <button matButton="tonal" [disabled]="exporting()" (click)="export('xlsx')">
+        <button
+          matButton="tonal"
+          [disabled]="exporting()"
+          (click)="export('xlsx')"
+        >
           <mat-icon>table_view</mat-icon> Excel
         </button>
-        <button matButton="tonal" [disabled]="exporting()" (click)="export('docx')">
+        <button
+          matButton="tonal"
+          [disabled]="exporting()"
+          (click)="export('docx')"
+        >
           <mat-icon>description</mat-icon> Word
         </button>
         <span class="hint">
-          {{ 'psychology.events.inPeriod' | transloco: { count: inPeriod() } }}
+          {{ 'psychology.events.inPeriod' | transloco: {count: inPeriod()} }}
         </span>
       </mat-card-content>
     </mat-card>
@@ -244,7 +281,9 @@ function toAge(value: string): number | null {
           <mat-icon
             [class.hard]="event.feeling < 0"
             [class.good]="event.feeling > 0"
-            [attr.aria-label]="'psychology.feelings.' + event.feeling | transloco"
+            [attr.aria-label]="
+              'psychology.feelings.' + event.feeling | transloco
+            "
           >
             {{ icons[event.feeling] }}
           </mat-icon>
@@ -257,7 +296,7 @@ function toAge(value: string): number | null {
                   – {{ event.endedOn | date: 'd MMM y' }}
                 }
               } @else {
-                {{ 'psychology.events.age' | transloco: { age: ages(event) } }}
+                {{ 'psychology.events.age' | transloco: {age: ages(event)} }}
                 @if (years(event); as years) {
                   · ≈ {{ years }}
                 }
@@ -365,11 +404,13 @@ export class EventsPage {
   protected readonly events = this.api.events();
   private readonly settings = this.api.settings();
   /** Places the events told by age among the dated ones. */
-  protected readonly birthYear = computed(() => this.settings.value()?.birthYear ?? null);
-  protected readonly draft = signal<Draft>({ ...EMPTY, startedOn: today() });
+  protected readonly birthYear = computed(
+    () => this.settings.value()?.birthYear ?? null,
+  );
+  protected readonly draft = signal<Draft>({...EMPTY, startedOn: today()});
   protected readonly editing = signal<string | null>(null);
   protected readonly valid = computed(() => {
-    const { title, by, startedOn, endedOn, ageFrom, ageTo } = this.draft();
+    const {title, by, startedOn, endedOn, ageFrom, ageTo} = this.draft();
     if (!title.trim()) {
       return false;
     }
@@ -377,7 +418,9 @@ export class EventsPage {
       return Boolean(startedOn && (!endedOn || endedOn >= startedOn));
     }
     const [from, to] = [toAge(ageFrom), toAge(ageTo)];
-    return from !== null && (ageTo.trim() === '' || (to !== null && to >= from));
+    return (
+      from !== null && (ageTo.trim() === '' || (to !== null && to >= from))
+    );
   });
 
   /** The period of the export; empty — everything. */
@@ -386,17 +429,30 @@ export class EventsPage {
   protected readonly exporting = signal(false);
   /** How many events the export will hold: those that touch the period. */
   protected readonly inPeriod = computed(() => {
-    const period = { from: this.exportFrom() || undefined, to: this.exportTo() || undefined };
-    return this.events.value().filter((event) => eventTouches(event, this.birthYear(), period))
-      .length;
+    const period = {
+      from: this.exportFrom() || undefined,
+      to: this.exportTo() || undefined,
+    };
+    return this.events
+      .value()
+      .filter(event => eventTouches(event, this.birthYear(), period)).length;
   });
 
   protected set(change: Partial<Draft>): void {
-    this.draft.update((draft) => ({ ...draft, ...change }));
+    this.draft.update(draft => ({...draft, ...change}));
   }
 
   protected async save(): Promise<void> {
-    const { title, description, by, startedOn, endedOn, ageFrom, ageTo, feeling } = this.draft();
+    const {
+      title,
+      description,
+      by,
+      startedOn,
+      endedOn,
+      ageFrom,
+      ageTo,
+      feeling,
+    } = this.draft();
     await firstValueFrom(
       this.api.saveEvent(
         {
@@ -428,17 +484,19 @@ export class EventsPage {
       ageTo: event.ageTo?.toString() ?? '',
       feeling: event.feeling,
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({top: 0, behavior: 'smooth'});
   }
 
   protected cancel(): void {
     this.editing.set(null);
-    this.draft.set({ ...EMPTY, startedOn: today() });
+    this.draft.set({...EMPTY, startedOn: today()});
   }
 
   /** `3`, or `6–9` for several years of life. */
   protected ages(event: PsychologyEvent): string {
-    return event.ageTo === null ? `${event.ageFrom}` : `${event.ageFrom}–${event.ageTo}`;
+    return event.ageTo === null
+      ? `${event.ageFrom}`
+      : `${event.ageFrom}–${event.ageTo}`;
   }
 
   /** The calendar years of an age, when the year of birth is known: a year of life lies across two. */
@@ -452,17 +510,24 @@ export class EventsPage {
   /** An empty field forgets the year; one that is not a year is left as it was. */
   protected async setBirthYear(value: string): Promise<void> {
     const year = value.trim() === '' ? null : Number(value);
-    if (year !== null && !(Number.isInteger(year) && year >= 1900 && year <= 2100)) {
+    if (
+      year !== null &&
+      !(Number.isInteger(year) && year >= 1900 && year <= 2100)
+    ) {
       return;
     }
-    await firstValueFrom(this.api.saveSettings({ birthYear: year }));
+    await firstValueFrom(this.api.saveSettings({birthYear: year}));
     this.settings.reload();
     this.events.reload(); // The order depends on it.
   }
 
   protected async remove(event: PsychologyEvent): Promise<void> {
     if (
-      confirm(this.transloco.translate('psychology.events.confirmDelete', { title: event.title }))
+      confirm(
+        this.transloco.translate('psychology.events.confirmDelete', {
+          title: event.title,
+        }),
+      )
     ) {
       await firstValueFrom(this.api.removeEvent(event.id));
       this.events.reload();
@@ -474,7 +539,11 @@ export class EventsPage {
     this.exporting.set(true);
     try {
       const blob = await firstValueFrom(
-        this.api.exportEvents(format, this.exportFrom() || undefined, this.exportTo() || undefined),
+        this.api.exportEvents(
+          format,
+          this.exportFrom() || undefined,
+          this.exportTo() || undefined,
+        ),
       );
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');

@@ -1,6 +1,6 @@
-import { app } from 'electron';
-import { FSWatcher, promises as fs, watch } from 'node:fs';
-import { basename, extname, join } from 'node:path';
+import {app} from 'electron';
+import {FSWatcher, promises as fs, watch} from 'node:fs';
+import {basename, extname, join} from 'node:path';
 
 export interface FoundStatement {
   id: string;
@@ -59,7 +59,12 @@ export class StatementWatch {
       return;
     }
     const size = await settledSize(path);
-    if (size === null || size === 0 || size > MAX_BYTES || this.seen.has(path)) {
+    if (
+      size === null ||
+      size === 0 ||
+      size > MAX_BYTES ||
+      this.seen.has(path)
+    ) {
       return;
     }
     this.seen.add(path);
@@ -69,7 +74,11 @@ export class StatementWatch {
     ) {
       return;
     }
-    const statement = { id: String(this.found.size + 1), path, name: basename(path) };
+    const statement = {
+      id: String(this.found.size + 1),
+      path,
+      name: basename(path),
+    };
     this.found.set(statement.id, statement);
     this.onFound(statement);
   }
@@ -79,7 +88,7 @@ export class StatementWatch {
 async function settledSize(path: string): Promise<number | null> {
   try {
     const first = (await fs.stat(path)).size;
-    await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
+    await new Promise(resolve => setTimeout(resolve, SETTLE_MS));
     const second = (await fs.stat(path)).size;
     return first === second ? second : null;
   } catch {
@@ -90,9 +99,15 @@ async function settledSize(path: string): Promise<number | null> {
 async function csvLooksLikeOne(path: string): Promise<boolean> {
   try {
     const handle = await fs.open(path, 'r');
-    const { buffer, bytesRead } = await handle.read(Buffer.alloc(2048), 0, 2048, 0);
+    const {buffer, bytesRead} = await handle.read(
+      Buffer.alloc(2048),
+      0,
+      2048,
+      0,
+    );
     await handle.close();
-    const header = buffer.subarray(0, bytesRead).toString('utf8').split(/\r?\n/)[0] ?? '';
+    const header =
+      buffer.subarray(0, bytesRead).toString('utf8').split(/\r?\n/)[0] ?? '';
     return CSV_DATE.test(header) && CSV_AMOUNT.test(header);
   } catch {
     return false;

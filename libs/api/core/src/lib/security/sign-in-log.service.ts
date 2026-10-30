@@ -1,7 +1,7 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { desc, gte, lt } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { SignInRow, signIns } from './security.schema';
+import {Inject, Injectable, Logger} from '@nestjs/common';
+import {desc, gte, lt} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {SignInRow, signIns} from './security.schema';
 
 /**
  * How an attempt ended. An attempt refused for too many before it (429) is not journaled:
@@ -41,7 +41,11 @@ export class SignInLog {
   }
 
   since(from: Date): Promise<SignInRow[]> {
-    return this.db.select().from(signIns).where(gte(signIns.at, from)).orderBy(desc(signIns.at));
+    return this.db
+      .select()
+      .from(signIns)
+      .where(gte(signIns.at, from))
+      .orderBy(desc(signIns.at));
   }
 
   async prune(): Promise<void> {

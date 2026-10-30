@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { WowDetails, WowHistoryPoint } from './wow-details';
+import {z} from 'zod';
+import {WowDetails, WowHistoryPoint} from './wow-details';
 
 export const GAMES = ['dota2', 'wow', 'steam', 'xbox'] as const;
 export type Game = (typeof GAMES)[number];
@@ -12,7 +12,12 @@ export type WowRegion = (typeof WOW_REGIONS)[number];
  * (`retail`), Classic Anniversary, Classic Era (with Hardcore and Season of Discovery) and
  * Classic of the later expansions (Cataclysm, Mists of Pandaria).
  */
-export const WOW_VERSIONS = ['retail', 'anniversary', 'era', 'progression'] as const;
+export const WOW_VERSIONS = [
+  'retail',
+  'anniversary',
+  'era',
+  'progression',
+] as const;
 export type WowVersion = (typeof WOW_VERSIONS)[number];
 
 export const gameAccountInputSchema = z.discriminatedUnion('game', [
@@ -84,14 +89,22 @@ export interface DotaHero {
   imageUrl: string;
 }
 
-export const DOTA_MATCH_MODES = ['ranked', 'unranked', 'turbo', 'other'] as const;
+export const DOTA_MATCH_MODES = [
+  'ranked',
+  'unranked',
+  'turbo',
+  'other',
+] as const;
 export type DotaMatchMode = (typeof DOTA_MATCH_MODES)[number];
 
 /**
  * Groups OpenDota game modes and lobby types into what a player thinks of:
  * Turbo, ranked, unranked matchmaking, everything else (custom games, bots, events…).
  */
-export function dotaMatchMode(gameMode: number | null, lobbyType: number | null): DotaMatchMode {
+export function dotaMatchMode(
+  gameMode: number | null,
+  lobbyType: number | null,
+): DotaMatchMode {
   if (gameMode === 23) {
     return 'turbo';
   }
@@ -165,9 +178,9 @@ export interface DotaSummary {
   };
   modes: DotaModeStats[];
   records: DotaRecord[];
-  last30Days: { wins: number; losses: number };
+  last30Days: {wins: number; losses: number};
   recentMatches: DotaMatch[];
-  topHeroes: { hero: DotaHero; games: number; wins: number }[];
+  topHeroes: {hero: DotaHero; games: number; wins: number}[];
 }
 
 /** One Dota account in the overview: the profile and its share of the matches. */
@@ -241,8 +254,8 @@ export interface DotaOverview {
     lastMatchAt: string | null;
   };
   modes: DotaModeStats[];
-  last30Days: { wins: number; losses: number };
-  records: (DotaRecord & { accountId: string })[];
+  last30Days: {wins: number; losses: number};
+  records: (DotaRecord & {accountId: string})[];
   /** Every hero played, most played first. */
   heroes: DotaHeroStats[];
   /** The last 365 days, only days with matches. */
@@ -251,7 +264,9 @@ export interface DotaOverview {
 }
 
 /** `accountId` missing — all Dota accounts of the user. */
-export const dotaOverviewQuerySchema = z.object({ accountId: z.uuid().optional() });
+export const dotaOverviewQuerySchema = z.object({
+  accountId: z.uuid().optional(),
+});
 export type DotaOverviewQuery = z.infer<typeof dotaOverviewQuerySchema>;
 
 export const DOTA_RESULTS = ['win', 'loss'] as const;
@@ -289,7 +304,7 @@ export interface SteamGame {
   minutes2Weeks: number;
   lastPlayedAt: string | null;
   /** `null` — the game has no achievements (or they were not read yet). */
-  achievements: { unlocked: number; total: number } | null;
+  achievements: {unlocked: number; total: number} | null;
 }
 
 export interface SteamSummary {
@@ -332,7 +347,7 @@ export interface XboxGame {
   gamerscore: number;
   totalGamerscore: number;
   /** `null` — the game has no achievements; `total` null — Xbox does not tell it (older games). */
-  achievements: { unlocked: number; total: number | null } | null;
+  achievements: {unlocked: number; total: number | null} | null;
   lastPlayedAt: string | null;
 }
 
@@ -344,7 +359,7 @@ export interface XboxSummary {
   /** Silver, Gold… as Xbox calls the account's tier; `null` — not told. */
   tier: string | null;
   profileUrl: string;
-  totals: { games: number; achievements: number };
+  totals: {games: number; achievements: number};
   /** The games, the last played first (at most a hundred). */
   games: XboxGame[];
   /**

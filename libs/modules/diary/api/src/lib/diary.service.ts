@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database } from '@pd/api-core';
+import {Inject, Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database} from '@pd/api-core';
 import {
   addDays,
   computeStreaks,
@@ -23,7 +23,17 @@ import {
   todayIn,
   toLocalDate,
 } from '@pd/contracts';
-import { and, arrayContains, asc, desc, eq, gte, isNotNull, lte, sql } from 'drizzle-orm';
+import {
+  and,
+  arrayContains,
+  asc,
+  desc,
+  eq,
+  gte,
+  isNotNull,
+  lte,
+  sql,
+} from 'drizzle-orm';
 import {
   appendNote,
   countWords,
@@ -33,7 +43,12 @@ import {
   searchSnippet,
   shorten,
 } from './diary-text';
-import { DiaryEntryRow, diaryEntries, diaryPhotos, diarySettings } from './diary.schema';
+import {
+  DiaryEntryRow,
+  diaryEntries,
+  diaryPhotos,
+  diarySettings,
+} from './diary.schema';
 
 const MOOD_HISTORY_DAYS = 30;
 const TOP_TAGS_LIMIT = 10;
@@ -50,7 +65,10 @@ export class DiaryService {
     @Inject(ConfigService) private readonly config: AppConfig,
   ) {}
 
-  async list(userId: string, { from, to, tag }: DiaryQuery): Promise<DiaryEntry[]> {
+  async list(
+    userId: string,
+    {from, to, tag}: DiaryQuery,
+  ): Promise<DiaryEntry[]> {
     const rows = await this.db
       .select()
       .from(diaryEntries)
@@ -59,7 +77,9 @@ export class DiaryService {
           eq(diaryEntries.userId, userId),
           gte(diaryEntries.day, from),
           lte(diaryEntries.day, to),
-          tag ? arrayContains(diaryEntries.tags, [tag.toLowerCase()]) : undefined,
+          tag
+            ? arrayContains(diaryEntries.tags, [tag.toLowerCase()])
+            : undefined,
         ),
       )
       .orderBy(desc(diaryEntries.day));
@@ -75,8 +95,13 @@ export class DiaryService {
    * Saves the day's entry. An empty entry without a mood is deleted. Written over a version
    * that changed since (`basedOn`), it is added to the stored text instead (mergeOverChanged).
    */
-  async save(userId: string, day: LocalDate, input: DiaryEntryInput): Promise<DiaryEntry | null> {
-    const stored = input.basedOn === undefined ? undefined : await this.findRow(userId, day);
+  async save(
+    userId: string,
+    day: LocalDate,
+    input: DiaryEntryInput,
+  ): Promise<DiaryEntry | null> {
+    const stored =
+      input.basedOn === undefined ? undefined : await this.findRow(userId, day);
     const merged = stored
       ? mergeOverChanged(stored, {
           content: input.content,
@@ -100,8 +125,11 @@ export class DiaryService {
     };
     const [row] = await this.db
       .insert(diaryEntries)
-      .values({ userId, day, ...values })
-      .onConflictDoUpdate({ target: [diaryEntries.userId, diaryEntries.day], set: values })
+      .values({userId, day, ...values})
+      .onConflictDoUpdate({
+        target: [diaryEntries.userId, diaryEntries.day],
+        set: values,
+      })
       .returning();
     return toEntry(row);
   }
@@ -114,7 +142,7 @@ export class DiaryService {
 
   /** The whole diary: every entry and photo. Settings (reminders, template) stay. */
   async removeAll(userId: string): Promise<void> {
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       await tx.delete(diaryPhotos).where(eq(diaryPhotos.userId, userId));
       await tx.delete(diaryEntries).where(eq(diaryEntries.userId, userId));
     });
@@ -126,11 +154,17 @@ export class DiaryService {
   }
 
   /** Appends a note to a day's entry; today's notes get the current time. */
-  async appendNote(userId: string, day: LocalDate, note: string): Promise<DiaryEntry | null> {
+  async appendNote(
+    userId: string,
+    day: LocalDate,
+    note: string,
+  ): Promise<DiaryEntry | null> {
     const timeZone = this.timeZone();
     const time =
       day === this.todayDate()
-        ? new Intl.DateTimeFormat('ru', { timeZone, timeStyle: 'short' }).format(new Date())
+        ? new Intl.DateTimeFormat('ru', {timeZone, timeStyle: 'short'}).format(
+            new Date(),
+          )
         : null;
     const existing = await this.findRow(userId, day);
     return this.save(userId, day, {
@@ -144,9 +178,13 @@ export class DiaryService {
     await this.setMood(userId, this.todayDate(), mood);
   }
 
-  async setMood(userId: string, day: LocalDate, mood: number): Promise<DiaryEntry | null> {
+  async setMood(
+    userId: string,
+    day: LocalDate,
+    mood: number,
+  ): Promise<DiaryEntry | null> {
     const existing = await this.findRow(userId, day);
-    return this.save(userId, day, { content: existing?.content ?? '', mood });
+    return this.save(userId, day, {content: existing?.content ?? '', mood});
   }
 
   async todayEntry(userId: string): Promise<DiaryEntry | null> {
@@ -156,28 +194,31 @@ export class DiaryService {
   async stats(userId: string): Promise<DiaryStats> {
     const today = this.today();
     const days = await this.db
-      .select({ day: diaryEntries.day })
+      .select({day: diaryEntries.day})
       .from(diaryEntries)
       .where(eq(diaryEntries.userId, userId));
     const streaks = computeStreaks(
-      days.map((d) => d.day),
+      days.map(d => d.day),
       today,
     );
 
     const moodHistory = await this.db
-      .select({ day: diaryEntries.day, mood: diaryEntries.mood })
+      .select({day: diaryEntries.day, mood: diaryEntries.mood})
       .from(diaryEntries)
       .where(
         and(
           eq(diaryEntries.userId, userId),
           isNotNull(diaryEntries.mood),
-          gte(diaryEntries.day, toLocalDate(addDays(today, -MOOD_HISTORY_DAYS))),
+          gte(
+            diaryEntries.day,
+            toLocalDate(addDays(today, -MOOD_HISTORY_DAYS)),
+          ),
         ),
       )
       .orderBy(asc(diaryEntries.day));
 
     // unnest expands the tag array into rows so they can be counted.
-    const topTags = await this.db.execute<{ tag: string; count: number }>(sql`
+    const topTags = await this.db.execute<{tag: string; count: number}>(sql`
       SELECT tag, count(*)::int AS count
       FROM ${diaryEntries}, unnest(${diaryEntries.tags}) AS tag
       WHERE ${diaryEntries.userId} = ${userId}
@@ -187,7 +228,7 @@ export class DiaryService {
     `);
 
     // Same for marks: one row per marked fragment.
-    const topMarks = await this.db.execute<{ emoji: string; count: number }>(sql`
+    const topMarks = await this.db.execute<{emoji: string; count: number}>(sql`
       SELECT mark ->> 'emoji' AS emoji, count(*)::int AS count
       FROM ${diaryEntries}, jsonb_array_elements(${diaryEntries.marks}) AS mark
       WHERE ${diaryEntries.userId} = ${userId}
@@ -200,8 +241,11 @@ export class DiaryService {
       currentStreak: streaks.current,
       longestStreak: streaks.longest,
       totalEntries: days.length,
-      hasEntryToday: days.some((d) => d.day === toLocalDate(today)),
-      moodHistory: moodHistory.map((row) => ({ day: row.day, mood: row.mood as number })),
+      hasEntryToday: days.some(d => d.day === toLocalDate(today)),
+      moodHistory: moodHistory.map(row => ({
+        day: row.day,
+        mood: row.mood as number,
+      })),
       topTags: topTags.rows,
       topMarks: topMarks.rows,
     };
@@ -210,19 +254,19 @@ export class DiaryService {
   /** Every fragment marked with `emoji`, newest days first. */
   async marks(userId: string, emoji: string): Promise<DiaryMarkHit[]> {
     const rows = await this.db
-      .select({ day: diaryEntries.day, marks: diaryEntries.marks })
+      .select({day: diaryEntries.day, marks: diaryEntries.marks})
       .from(diaryEntries)
       .where(
         and(
           eq(diaryEntries.userId, userId),
-          sql`${diaryEntries.marks} @> ${JSON.stringify([{ emoji }])}::jsonb`,
+          sql`${diaryEntries.marks} @> ${JSON.stringify([{emoji}])}::jsonb`,
         ),
       )
       .orderBy(desc(diaryEntries.day));
-    return rows.flatMap((row) =>
+    return rows.flatMap(row =>
       row.marks
-        .filter((mark) => mark.emoji === emoji)
-        .map((mark) => ({ day: row.day, emoji: mark.emoji, text: mark.text })),
+        .filter(mark => mark.emoji === emoji)
+        .map(mark => ({day: row.day, emoji: mark.emoji, text: mark.text})),
     );
   }
 
@@ -232,14 +276,18 @@ export class DiaryService {
    */
   async search(userId: string, query: string): Promise<DiarySearchHit[]> {
     const rows = await this.db
-      .select({ day: diaryEntries.day, mood: diaryEntries.mood, content: diaryEntries.content })
+      .select({
+        day: diaryEntries.day,
+        mood: diaryEntries.mood,
+        content: diaryEntries.content,
+      })
       .from(diaryEntries)
       .where(eq(diaryEntries.userId, userId))
       .orderBy(desc(diaryEntries.day));
     return rows
-      .filter((row) => hasText(row.content, query))
+      .filter(row => hasText(row.content, query))
       .slice(0, SEARCH_LIMIT)
-      .map((row) => ({
+      .map(row => ({
         day: row.day,
         mood: row.mood,
         snippet: searchSnippet(row.content, query),
@@ -249,7 +297,11 @@ export class DiaryService {
   /** Days of a year with an entry — for the heatmap. */
   async calendar(userId: string, year: number): Promise<DiaryCalendarDay[]> {
     const rows = await this.db
-      .select({ day: diaryEntries.day, mood: diaryEntries.mood, words: diaryEntries.words })
+      .select({
+        day: diaryEntries.day,
+        mood: diaryEntries.mood,
+        words: diaryEntries.words,
+      })
       .from(diaryEntries)
       .where(
         and(
@@ -259,14 +311,22 @@ export class DiaryService {
         ),
       )
       .orderBy(asc(diaryEntries.day));
-    return rows.map((row) => ({ day: row.day, mood: row.mood, words: Number(row.words) }));
+    return rows.map(row => ({
+      day: row.day,
+      mood: row.mood,
+      words: Number(row.words),
+    }));
   }
 
   /** "On this day": the same date a month ago and in every previous year. */
   async memories(userId: string, day: LocalDate): Promise<DiaryMemory[]> {
     const monthAgo = toLocalDate(addMonths(parseLocalDate(day), -1));
     const rows = await this.db
-      .select({ day: diaryEntries.day, mood: diaryEntries.mood, content: diaryEntries.content })
+      .select({
+        day: diaryEntries.day,
+        mood: diaryEntries.mood,
+        content: diaryEntries.content,
+      })
       .from(diaryEntries)
       .where(
         and(
@@ -276,7 +336,7 @@ export class DiaryService {
         ),
       )
       .orderBy(desc(diaryEntries.day));
-    return rows.map((row) => ({
+    return rows.map(row => ({
       day: row.day,
       mood: row.mood,
       preview: shorten(diaryPlainText(row.content), MEMORY_PREVIEW_LENGTH),
@@ -296,9 +356,13 @@ export class DiaryService {
       WHERE ${diaryEntries.userId} = ${userId}
       GROUP BY 1
     `);
-    const byWeekday = new Map(weekdays.rows.map((row) => [row.weekday, row]));
+    const byWeekday = new Map(weekdays.rows.map(row => [row.weekday, row]));
 
-    const tagMoods = await this.db.execute<{ tag: string; average: number; count: number }>(sql`
+    const tagMoods = await this.db.execute<{
+      tag: string;
+      average: number;
+      count: number;
+    }>(sql`
       SELECT tag, avg(${diaryEntries.mood})::float AS average, count(*)::int AS count
       FROM ${diaryEntries}, unnest(${diaryEntries.tags}) AS tag
       WHERE ${diaryEntries.userId} = ${userId} AND ${diaryEntries.mood} IS NOT NULL
@@ -308,7 +372,7 @@ export class DiaryService {
     `);
 
     return {
-      moodByWeekday: [1, 2, 3, 4, 5, 6, 7].map((weekday) => ({
+      moodByWeekday: [1, 2, 3, 4, 5, 6, 7].map(weekday => ({
         weekday,
         average: byWeekday.get(weekday)?.average ?? null,
         count: byWeekday.get(weekday)?.count ?? 0,
@@ -329,12 +393,15 @@ export class DiaryService {
     };
   }
 
-  async saveSettings(userId: string, settings: DiarySettings): Promise<DiarySettings> {
-    const values = { ...settings, template: settings.template?.trim() || null };
+  async saveSettings(
+    userId: string,
+    settings: DiarySettings,
+  ): Promise<DiarySettings> {
+    const values = {...settings, template: settings.template?.trim() || null};
     await this.db
       .insert(diarySettings)
-      .values({ userId, ...values })
-      .onConflictDoUpdate({ target: diarySettings.userId, set: values });
+      .values({userId, ...values})
+      .onConflictDoUpdate({target: diarySettings.userId, set: values});
     return values;
   }
 
@@ -342,35 +409,46 @@ export class DiaryService {
   async usersToRemind(): Promise<string[]> {
     const today = this.todayDate();
     const rows = await this.db
-      .select({ userId: diarySettings.userId })
+      .select({userId: diarySettings.userId})
       .from(diarySettings)
       .leftJoin(
         diaryEntries,
-        and(eq(diaryEntries.userId, diarySettings.userId), eq(diaryEntries.day, today)),
+        and(
+          eq(diaryEntries.userId, diarySettings.userId),
+          eq(diaryEntries.day, today),
+        ),
       )
-      .where(and(eq(diarySettings.eveningReminder, true), sql`${diaryEntries.id} IS NULL`));
-    return rows.map((row) => row.userId);
+      .where(
+        and(
+          eq(diarySettings.eveningReminder, true),
+          sql`${diaryEntries.id} IS NULL`,
+        ),
+      );
+    return rows.map(row => row.userId);
   }
 
   async usersWithWeeklySummary(): Promise<string[]> {
     const rows = await this.db
-      .select({ userId: diarySettings.userId })
+      .select({userId: diarySettings.userId})
       .from(diarySettings)
       .where(eq(diarySettings.weeklySummary, true));
-    return rows.map((row) => row.userId);
+    return rows.map(row => row.userId);
   }
 
   /** The last 7 days, including today. */
-  lastWeek(): { from: LocalDate; to: LocalDate } {
+  lastWeek(): {from: LocalDate; to: LocalDate} {
     const today = this.today();
-    return { from: toLocalDate(addDays(today, -6)), to: toLocalDate(today) };
+    return {from: toLocalDate(addDays(today, -6)), to: toLocalDate(today)};
   }
 
   todayDate(): LocalDate {
     return toLocalDate(this.today());
   }
 
-  private async findRow(userId: string, day: LocalDate): Promise<DiaryEntryRow | undefined> {
+  private async findRow(
+    userId: string,
+    day: LocalDate,
+  ): Promise<DiaryEntryRow | undefined> {
     const [row] = await this.db
       .select()
       .from(diaryEntries)
@@ -379,7 +457,7 @@ export class DiaryService {
   }
 
   private timeZone(): string {
-    return this.config.get('APP_TIMEZONE', { infer: true });
+    return this.config.get('APP_TIMEZONE', {infer: true});
   }
 
   private today(): DateParts {
@@ -392,7 +470,7 @@ function addMonths(date: DateParts, months: number): DateParts {
   const target = new Date(Date.UTC(date.year, date.month - 1 + months, 1));
   const year = target.getUTCFullYear();
   const month = target.getUTCMonth() + 1;
-  return { year, month, day: Math.min(date.day, daysInMonth(year, month)) };
+  return {year, month, day: Math.min(date.day, daysInMonth(year, month))};
 }
 
 function toEntry(row: DiaryEntryRow): DiaryEntry {

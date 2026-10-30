@@ -1,13 +1,13 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ServerActions } from '@pd/api-core';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {ServerActions} from '@pd/api-core';
 import {
   movieAddSchema,
   movieAssignSchema,
   movieSearchQuerySchema,
   tmdbKeySchema,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { MoviesMatchService } from './movies-match.service';
+import {z} from 'zod';
+import {MoviesMatchService} from './movies-match.service';
 
 /** TMDB requests run on the server (see ServerActions). */
 export const MOVIES_ACTIONS = {
@@ -32,7 +32,9 @@ export class MoviesServerActions implements OnModuleInit {
       this.match.add(userId, movieAddSchema.parse(args)),
     );
     this.actions.register(MOVIES_ACTIONS.assign, (userId, args) => {
-      const { viewId, ...input } = movieAssignSchema.extend({ viewId: z.uuid() }).parse(args);
+      const {viewId, ...input} = movieAssignSchema
+        .extend({viewId: z.uuid()})
+        .parse(args);
       return this.match.assign(userId, viewId, input);
     });
     this.actions.register(MOVIES_ACTIONS.setKey, (userId, args) =>

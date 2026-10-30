@@ -6,8 +6,15 @@ import {
   DailyMetric,
   LocalDate,
 } from '@pd/contracts';
-import { daysOf, round, Series, seriesOf, shift, SURROUNDINGS } from '../daily-series';
-import { MOOD_METRIC } from '../mood-insights';
+import {
+  daysOf,
+  round,
+  Series,
+  seriesOf,
+  shift,
+  SURROUNDINGS,
+} from '../daily-series';
+import {MOOD_METRIC} from '../mood-insights';
 import {
   benjaminiHochberg,
   correlationP,
@@ -70,16 +77,16 @@ interface Prepared {
  */
 export function correlations(
   metrics: DailyMetric[],
-  period: { from: LocalDate; to: LocalDate },
+  period: {from: LocalDate; to: LocalDate},
   target?: string,
 ): Correlations {
   const days = daysOf(period);
   const prepared = [...metrics, weekend(days)]
-    .map((metric) => prepare(metric, days))
-    .filter((item) => item.series.size >= MIN_DAYS);
+    .map(metric => prepare(metric, days))
+    .filter(item => item.series.size >= MIN_DAYS);
 
   const found = pairs(prepared);
-  const q = benjaminiHochberg(found.map((pair) => pair.p));
+  const q = benjaminiHochberg(found.map(pair => pair.p));
   const all: Correlation[] = found.map((pair, index) => ({
     ...pair,
     q: round(q[index], 4),
@@ -88,13 +95,19 @@ export function correlations(
       Math.abs(pair.rho) >= MIN_RHO &&
       (pair.lag === 0 || Math.abs(pair.beyondItself ?? 0) >= MIN_BEYOND),
   }));
-  all.sort((a, b) => Number(b.strong) - Number(a.strong) || Math.abs(b.rho) - Math.abs(a.rho));
+  all.sort(
+    (a, b) =>
+      Number(b.strong) - Number(a.strong) || Math.abs(b.rho) - Math.abs(a.rho),
+  );
 
   const wanted =
-    target ?? (prepared.some((item) => item.metric.key === MOOD_METRIC) ? MOOD_METRIC : undefined);
+    target ??
+    (prepared.some(item => item.metric.key === MOOD_METRIC)
+      ? MOOD_METRIC
+      : undefined);
   return {
     ...period,
-    metrics: prepared.map(({ metric, series }) => describe(metric, series)),
+    metrics: prepared.map(({metric, series}) => describe(metric, series)),
     correlations: all,
     regression: wanted ? regression(prepared, all, wanted) : null,
   };
@@ -103,12 +116,12 @@ export function correlations(
 function prepare(metric: DailyMetric, days: LocalDate[]): Prepared {
   const series = seriesOf(metric, days);
   const daily = withoutSeason(series, days);
-  return { metric, series, daily, auto: autocorrelation(daily, days) };
+  return {metric, series, daily, auto: autocorrelation(daily, days)};
 }
 
 /** Each value less the average of its own values within SEASON_DAYS around it. */
 function withoutSeason(series: Series, days: LocalDate[]): Series {
-  const values = days.map((day) => series.get(day));
+  const values = days.map(day => series.get(day));
   const result: Series = new Map();
   days.forEach((day, index) => {
     const value = values[index];
@@ -147,17 +160,23 @@ type Pair = Omit<Correlation, 'q' | 'strong'>;
 
 function pairs(prepared: Prepared[]): Pair[] {
   const result: Pair[] = [];
-  const sorted = [...prepared].sort((a, b) => a.metric.key.localeCompare(b.metric.key));
+  const sorted = [...prepared].sort((a, b) =>
+    a.metric.key.localeCompare(b.metric.key),
+  );
   for (const a of sorted) {
     for (const b of sorted) {
-      if (a === b || related(a.metric, b.metric) || surroundings(a.metric, b.metric)) {
+      if (
+        a === b ||
+        related(a.metric, b.metric) ||
+        surroundings(a.metric, b.metric)
+      ) {
         continue;
       }
       // Of the same day, a pair once; of the next day, both ways round.
       const lags: (0 | 1)[] = a.metric.key < b.metric.key ? [0, 1] : [1];
       // Whether tomorrow is a Saturday is known without any number.
-      const calendar = [a, b].some((item) => item.metric.key === WEEKEND_METRIC);
-      for (const lag of calendar ? lags.filter((one) => one === 0) : lags) {
+      const calendar = [a, b].some(item => item.metric.key === WEEKEND_METRIC);
+      for (const lag of calendar ? lags.filter(one => one === 0) : lags) {
         const pair = compare(a, b, lag);
         if (pair) {
           result.push(pair);
@@ -216,11 +235,13 @@ function compare(a: Prepared, b: Prepared, lag: 0 | 1): Pair | null {
 
 /** The partial correlation of x and y with z held fixed, on the days z is known. */
 function beyond(x: number[], y: number[], z: number[]): number | null {
-  const keep = z.map((value, index) => (Number.isNaN(value) ? -1 : index)).filter((i) => i >= 0);
+  const keep = z
+    .map((value, index) => (Number.isNaN(value) ? -1 : index))
+    .filter(i => i >= 0);
   if (keep.length < MIN_DAYS) {
     return null;
   }
-  const [rx, ry, rz] = [x, y, z].map((values) => ranks(keep.map((i) => values[i])));
+  const [rx, ry, rz] = [x, y, z].map(values => ranks(keep.map(i => values[i])));
   return round(partial(pearson(rx, ry), pearson(rx, rz), pearson(ry, rz)), 3);
 }
 
@@ -234,29 +255,35 @@ function regression(
   found: Correlation[],
   target: string,
 ): CorrelationRegression | null {
-  const goal = prepared.find((item) => item.metric.key === target);
+  const goal = prepared.find(item => item.metric.key === target);
   if (!goal) {
     return null;
   }
-  type Candidate = { key: string; lag: 0 | 1; p: number };
+  type Candidate = {key: string; lag: 0 | 1; p: number};
   const candidates = found
     .flatMap((pair): Candidate[] => {
       if (pair.lag === 0 && (pair.a === target || pair.b === target)) {
-        return [{ key: pair.a === target ? pair.b : pair.a, lag: 0, p: pair.p }];
+        return [{key: pair.a === target ? pair.b : pair.a, lag: 0, p: pair.p}];
       }
-      return pair.lag === 1 && pair.b === target ? [{ key: pair.a, lag: 1, p: pair.p }] : [];
+      return pair.lag === 1 && pair.b === target
+        ? [{key: pair.a, lag: 1, p: pair.p}]
+        : [];
     })
-    .filter((candidate) => candidate.p < TERM_MAX_P)
+    .filter(candidate => candidate.p < TERM_MAX_P)
     .sort((a, b) => a.p - b.p);
   // One lag a number (of its day or of the day before, whichever says more), and never a
   // number together with a part of it: the two would share what they explain.
-  const metricOf = (key: string) => prepared.find((item) => item.metric.key === key)?.metric;
+  const metricOf = (key: string) =>
+    prepared.find(item => item.metric.key === key)?.metric;
   const chosen: Candidate[] = [];
   for (const candidate of candidates) {
     const metric = metricOf(candidate.key);
-    const clash = chosen.some((other) => {
+    const clash = chosen.some(other => {
       const taken = metricOf(other.key);
-      return other.key === candidate.key || (metric && taken && related(metric, taken));
+      return (
+        other.key === candidate.key ||
+        (metric && taken && related(metric, taken))
+      );
     });
     if (!clash) {
       chosen.push(candidate);
@@ -272,13 +299,19 @@ function regression(
         return {
           target,
           n: rows.length,
-          r2: round(Math.max(0, 1 - ((1 - fit.r2) * (rows.length - 1)) / df), 3),
+          r2: round(
+            Math.max(0, 1 - ((1 - fit.r2) * (rows.length - 1)) / df),
+            3,
+          ),
           terms: terms
             .map((term, index) => ({
               key: term.key,
               lag: term.lag,
               beta: round(fit.coefficients[index], 3),
-              p: round(tTwoSidedP(fit.coefficients[index] / fit.errors[index], df), 6),
+              p: round(
+                tTwoSidedP(fit.coefficients[index] / fit.errors[index], df),
+                6,
+              ),
             }))
             .sort((a, b) => Math.abs(b.beta) - Math.abs(a.beta)),
         };
@@ -294,16 +327,20 @@ function regression(
 function rowsOf(
   prepared: Prepared[],
   goal: Prepared,
-  terms: { key: string; lag: 0 | 1 }[],
+  terms: {key: string; lag: 0 | 1}[],
 ): number[][] {
-  const series = terms.map((term) => prepared.find((item) => item.metric.key === term.key));
+  const series = terms.map(term =>
+    prepared.find(item => item.metric.key === term.key),
+  );
   const rows: number[][] = [];
   for (const [day, value] of goal.daily) {
     const row = [value];
     terms.forEach((term, index) => {
-      row.push(series[index]?.daily.get(term.lag ? shift(day, -1) : day) ?? NaN);
+      row.push(
+        series[index]?.daily.get(term.lag ? shift(day, -1) : day) ?? NaN,
+      );
     });
-    if (row.every((cell) => !Number.isNaN(cell))) {
+    if (row.every(cell => !Number.isNaN(cell))) {
       rows.push(row);
     }
   }
@@ -311,34 +348,38 @@ function rowsOf(
 }
 
 function fitOn(rows: number[][], k: number) {
-  const columns = Array.from({ length: k + 1 }, (_, j) => standardize(rows.map((row) => row[j])));
-  if (columns.some((column) => !column)) {
+  const columns = Array.from({length: k + 1}, (_, j) =>
+    standardize(rows.map(row => row[j])),
+  );
+  if (columns.some(column => !column)) {
     return null; // A number that never changed on these days explains nothing.
   }
   const [y, ...x] = columns as number[][];
   return leastSquares(
-    rows.map((_, r) => x.map((column) => column[r])),
+    rows.map((_, r) => x.map(column => column[r])),
     y,
   );
 }
 
 function standardize(values: number[]): number[] | null {
   const m = mean(values);
-  const sd = Math.sqrt(values.reduce((sum, value) => sum + (value - m) ** 2, 0) / values.length);
-  return sd ? values.map((value) => (value - m) / sd) : null;
+  const sd = Math.sqrt(
+    values.reduce((sum, value) => sum + (value - m) ** 2, 0) / values.length,
+  );
+  return sd ? values.map(value => (value - m) / sd) : null;
 }
 
 function describe(metric: DailyMetric, series: Series): CorrelationMetric {
-  const { key, module, labelKey, label, unit, currency } = metric;
+  const {key, module, labelKey, label, unit, currency} = metric;
   return {
     key,
     module,
     labelKey,
-    ...(label ? { label } : {}),
+    ...(label ? {label} : {}),
     unit,
-    ...(currency ? { currency } : {}),
+    ...(currency ? {currency} : {}),
     days: series.size,
-    values: [...series].map(([day, value]) => ({ day, value: round(value, 3) })),
+    values: [...series].map(([day, value]) => ({day, value: round(value, 3)})),
   };
 }
 
@@ -348,9 +389,9 @@ function weekend(days: LocalDate[]): DailyMetric {
     module: 'life',
     labelKey: 'life.links.weekend',
     unit: 'count',
-    days: days.map((day) => {
+    days: days.map(day => {
       const weekday = new Date(`${day}T00:00:00Z`).getUTCDay();
-      return { day, value: weekday === 0 || weekday === 6 ? 1 : 0 };
+      return {day, value: weekday === 0 || weekday === 6 ? 1 : 0};
     }),
   };
 }

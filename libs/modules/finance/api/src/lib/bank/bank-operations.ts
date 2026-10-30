@@ -1,6 +1,6 @@
-import { createHash } from 'node:crypto';
-import { TransactionKind } from '@pd/contracts';
-import { ProviderBalance, ProviderTransaction } from './enable-banking.client';
+import {createHash} from 'node:crypto';
+import {TransactionKind} from '@pd/contracts';
+import {ProviderBalance, ProviderTransaction} from './enable-banking.client';
 
 /** A booked operation of a bank account as Finance takes it. */
 export interface BankOperation {
@@ -24,7 +24,9 @@ const NOTE_MAX = 500;
  * before it is booked), each with an id that stays the same on every import — the bank's own,
  * or a fingerprint; two equal operations of one day (two coffees) are told apart by their order.
  */
-export function operationsOf(transactions: ProviderTransaction[]): BankOperation[] {
+export function operationsOf(
+  transactions: ProviderTransaction[],
+): BankOperation[] {
   const seen = new Map<string, number>();
   const operations: BankOperation[] = [];
   for (const transaction of transactions) {
@@ -34,17 +36,26 @@ export function operationsOf(transactions: ProviderTransaction[]): BankOperation
     }
     const times = seen.get(operation.entryId) ?? 0;
     seen.set(operation.entryId, times + 1);
-    operations.push(times ? { ...operation, entryId: `${operation.entryId}#${times}` } : operation);
+    operations.push(
+      times
+        ? {...operation, entryId: `${operation.entryId}#${times}`}
+        : operation,
+    );
   }
   return operations;
 }
 
-export function operationOf(transaction: ProviderTransaction): BankOperation | null {
+export function operationOf(
+  transaction: ProviderTransaction,
+): BankOperation | null {
   if (transaction.status && transaction.status !== 'BOOK') {
     return null;
   }
   const bookedOn =
-    transaction.booking_date ?? transaction.value_date ?? transaction.transaction_date ?? null;
+    transaction.booking_date ??
+    transaction.value_date ??
+    transaction.transaction_date ??
+    null;
   const amount = Math.abs(Number(transaction.transaction_amount?.amount));
   const currency = transaction.transaction_amount?.currency?.toUpperCase();
   if (!bookedOn || !currency || !Number.isFinite(amount) || amount === 0) {
@@ -52,13 +63,21 @@ export function operationOf(transaction: ProviderTransaction): BankOperation | n
   }
   const kind: TransactionKind =
     transaction.credit_debit_indicator === 'CRDT' ? 'income' : 'expense';
-  const { counterparty, counterpartyIban } = partyOf(transaction, kind);
+  const {counterparty, counterpartyIban} = partyOf(transaction, kind);
   const note =
-    clean((transaction.remittance_information ?? []).join(' ')).slice(0, NOTE_MAX) || null;
-  const operation = { kind, amount: Math.round(amount * 100) / 100, currency, bookedOn };
+    clean((transaction.remittance_information ?? []).join(' ')).slice(
+      0,
+      NOTE_MAX,
+    ) || null;
+  const operation = {
+    kind,
+    amount: Math.round(amount * 100) / 100,
+    currency,
+    bookedOn,
+  };
   return {
     // The name as the bank gave it: the fingerprint stays the one of the earlier imports.
-    entryId: entryIdOf(transaction, { ...operation, counterparty, note }),
+    entryId: entryIdOf(transaction, {...operation, counterparty, note}),
     ...operation,
     counterparty: counterparty ?? merchantOf(note),
     counterpartyIban,
@@ -82,7 +101,10 @@ export function merchantOf(title: string | null): string | null {
 /** The other side: who was paid for an expense, who paid for an income. */
 function partyOf(transaction: ProviderTransaction, kind: TransactionKind) {
   const party = kind === 'expense' ? transaction.creditor : transaction.debtor;
-  const account = kind === 'expense' ? transaction.creditor_account : transaction.debtor_account;
+  const account =
+    kind === 'expense'
+      ? transaction.creditor_account
+      : transaction.debtor_account;
   return {
     counterparty: clean(party?.name) || null,
     counterpartyIban: normalizeIban(account?.iban),
@@ -98,9 +120,13 @@ function entryIdOf(
   if (bankId) {
     return bankId;
   }
-  const { bookedOn, kind, amount, currency, counterparty, note } = fields;
+  const {bookedOn, kind, amount, currency, counterparty, note} = fields;
   const hash = createHash('sha256')
-    .update([bookedOn, kind, amount.toFixed(2), currency, counterparty, note].join('|'))
+    .update(
+      [bookedOn, kind, amount.toFixed(2), currency, counterparty, note].join(
+        '|',
+      ),
+    )
     .digest('hex');
   return `h:${hash.slice(0, 32)}`;
 }
@@ -111,13 +137,13 @@ const BALANCE_TYPES = ['ITAV', 'CLAV', 'XPCD', 'ITBD', 'CLBD', 'OPAV', 'OPBD'];
 /** The balance an account is shown with; `null` — the bank gave none that is a number. */
 export function balanceOf(
   balances: ProviderBalance[],
-): { amount: number; currency: string } | null {
+): {amount: number; currency: string} | null {
   const rank = (type?: string | null) => {
     const at = BALANCE_TYPES.indexOf((type ?? '').toUpperCase());
     return at < 0 ? BALANCE_TYPES.length : at;
   };
   const best = balances
-    .filter((item) => Number.isFinite(Number(item.balance_amount?.amount)))
+    .filter(item => Number.isFinite(Number(item.balance_amount?.amount)))
     .sort((a, b) => rank(a.balance_type) - rank(b.balance_type))[0];
   return best
     ? {
@@ -128,8 +154,13 @@ export function balanceOf(
 }
 
 /** A transfer between the user's own accounts: neither spent nor earned. */
-export function isOwnTransfer(operation: BankOperation, ownIbans: Set<string>): boolean {
-  return !!operation.counterpartyIban && ownIbans.has(operation.counterpartyIban);
+export function isOwnTransfer(
+  operation: BankOperation,
+  ownIbans: Set<string>,
+): boolean {
+  return (
+    !!operation.counterpartyIban && ownIbans.has(operation.counterpartyIban)
+  );
 }
 
 export function normalizeIban(iban: string | null | undefined): string | null {
@@ -146,7 +177,7 @@ export function counterpartyKey(name: string | null): string | null {
     .toLowerCase()
     .replace(/[^\p{L}\s]+/gu, ' ')
     .split(/\s+/)
-    .filter((word) => word.length > 1);
+    .filter(word => word.length > 1);
   return words.length ? words.slice(0, 2).join(' ') : null;
 }
 
@@ -170,7 +201,9 @@ export function matchOf(
   let best: MatchCandidate | null = null;
   let bestDistance = Infinity;
   for (const candidate of candidates) {
-    const distance = Math.abs(day(candidate.occurredOn) - day(operation.bookedOn));
+    const distance = Math.abs(
+      day(candidate.occurredOn) - day(operation.bookedOn),
+    );
     if (
       candidate.kind === operation.kind &&
       candidate.currency === operation.currency &&

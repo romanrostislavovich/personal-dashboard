@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SchedulerService, TelegramBotService } from '@pd/api-core';
-import { MOVIE_ACTION, MovieQuestionService } from './movie-question.service';
-import { MoviesMatchService } from './movies-match.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {SchedulerService, TelegramBotService} from '@pd/api-core';
+import {MOVIE_ACTION, MovieQuestionService} from './movie-question.service';
+import {MoviesMatchService} from './movies-match.service';
 
 /**
  * The views of the last minutes get their titles: from the user's own, or from TMDB. And an hour

@@ -1,4 +1,4 @@
-import { claimsChange } from './claims-change';
+import {claimsChange} from './claims-change';
 
 describe('claimsChange', () => {
   it('spots confirmations in Russian and English', () => {
@@ -13,9 +13,11 @@ describe('claimsChange', () => {
     expect(claimsChange('В сентябре ты потратил 120 EUR')).toBe(false);
     expect(claimsChange('Upcoming birthdays: Masha on March 14')).toBe(false);
     // Asking for a confirmation is not a claim.
-    expect(claimsChange('Удалить транзакцию «Кофе» на 3,20 EUR? Подтверди, пожалуйста')).toBe(
-      false,
-    );
+    expect(
+      claimsChange(
+        'Удалить транзакцию «Кофе» на 3,20 EUR? Подтверди, пожалуйста',
+      ),
+    ).toBe(false);
     // Part of a longer word is not a claim.
     expect(claimsChange('Your address was updatedAt yesterday')).toBe(false);
   });

@@ -7,8 +7,8 @@ import {
   LocalDate,
   TimelinePeriod,
 } from '@pd/contracts';
-import { daysOf, READINGS, round, seriesOf, SURROUNDINGS } from '../daily-series';
-import { benjaminiHochberg, mean, tTwoSidedP } from '../correlations/statistics';
+import {daysOf, READINGS, round, seriesOf, SURROUNDINGS} from '../daily-series';
+import {benjaminiHochberg, mean, tTwoSidedP} from '../correlations/statistics';
 
 /** Fewer days with a value on either side, and the two averages say nothing. */
 const MIN_WINDOW_DAYS = 7;
@@ -33,23 +33,28 @@ const MAX_Q = 0.1;
 export function beforeAfter(
   metrics: DailyMetric[],
   periods: TimelinePeriod[],
-  range: { from: LocalDate; to: LocalDate },
+  range: {from: LocalDate; to: LocalDate},
   weeks: number,
 ): BeforeAfter {
   const days = daysOf(range);
   const index = new Map(days.map((day, i) => [day, i]));
   const own = metrics
-    .filter((metric) => !SURROUNDINGS.has(metric.module))
-    .map((metric) => ({ metric, sums: prefixSums(seriesOf(metric, days), days) }));
+    .filter(metric => !SURROUNDINGS.has(metric.module))
+    .map(metric => ({metric, sums: prefixSums(seriesOf(metric, days), days)}));
   const window = weeks * 7;
   const results = eventsOf(periods, range.to)
-    .filter((event) => index.has(event.on))
-    .map((event) => compareAround(event, index.get(event.on) as number, days, own, window));
-  return { weeks, results };
+    .filter(event => index.has(event.on))
+    .map(event =>
+      compareAround(event, index.get(event.on) as number, days, own, window),
+    );
+  return {weeks, results};
 }
 
 /** The starts and the ends of the periods that have come, the latest first. */
-export function eventsOf(periods: TimelinePeriod[], today: LocalDate): BeforeAfterEvent[] {
+export function eventsOf(
+  periods: TimelinePeriod[],
+  today: LocalDate,
+): BeforeAfterEvent[] {
   const events = new Map<string, BeforeAfterEvent>();
   for (const period of periods) {
     // A period of one day (an event of a life) is one date, not a start and an end.
@@ -59,7 +64,9 @@ export function eventsOf(periods: TimelinePeriod[], today: LocalDate): BeforeAft
     ];
     for (const [edge, on] of edges) {
       if (on && on <= today) {
-        const id = [period.module, period.kind, period.title, on, edge].join('|');
+        const id = [period.module, period.kind, period.title, on, edge].join(
+          '|',
+        );
         events.set(id, {
           id,
           module: period.module,
@@ -85,22 +92,26 @@ interface Sums {
 function prefixSums(series: Map<LocalDate, number>, days: LocalDate[]): Sums {
   const sum = [0];
   const count = [0];
-  const values = days.map((day) => series.get(day));
+  const values = days.map(day => series.get(day));
   values.forEach((value, i) => {
     sum.push(sum[i] + (value ?? 0));
     count.push(count[i] + (value === undefined ? 0 : 1));
   });
-  return { sum, count, values };
+  return {sum, count, values};
 }
 
 /** The average and the days with a value of the days `from`…`to` (indices, inclusive). */
-function windowOf(sums: Sums, from: number, to: number): { mean: number; days: number } {
+function windowOf(
+  sums: Sums,
+  from: number,
+  to: number,
+): {mean: number; days: number} {
   const [a, b] = [Math.max(0, from), Math.min(sums.values.length - 1, to)];
   if (b < a) {
-    return { mean: 0, days: 0 };
+    return {mean: 0, days: 0};
   }
   const days = sums.count[b + 1] - sums.count[a];
-  return { mean: days ? (sums.sum[b + 1] - sums.sum[a]) / days : 0, days };
+  return {mean: days ? (sums.sum[b + 1] - sums.sum[a]) / days : 0, days};
 }
 
 /** The change at a date: `null` when either side has too few days with a value. */
@@ -110,23 +121,23 @@ function changeAt(sums: Sums, at: number, before: number, after: number) {
   if (left.days < MIN_WINDOW_DAYS || right.days < MIN_WINDOW_DAYS) {
     return null;
   }
-  return { left, right, difference: right.mean - left.mean };
+  return {left, right, difference: right.mean - left.mean};
 }
 
 function compareAround(
   event: BeforeAfterEvent,
   at: number,
   days: LocalDate[],
-  own: { metric: DailyMetric; sums: Sums }[],
+  own: {metric: DailyMetric; sums: Sums}[],
   window: number,
 ): BeforeAfterResult {
   // A recent event: as many days after it as there are so far.
   const after = Math.min(window, days.length - at);
   if (after < MIN_WINDOW_DAYS) {
-    return { event, daysAfter: after, enough: false, changes: [] };
+    return {event, daysAfter: after, enough: false, changes: []};
   }
   const found: Omit<BeforeAfterChange, 'q' | 'changed'>[] = [];
-  for (const { metric, sums } of own) {
+  for (const {metric, sums} of own) {
     const change = changeAt(sums, at, window, after);
     if (!change) {
       continue;
@@ -135,9 +146,9 @@ function compareAround(
       key: metric.key,
       module: metric.module,
       labelKey: metric.labelKey,
-      ...(metric.label ? { label: metric.label } : {}),
+      ...(metric.label ? {label: metric.label} : {}),
       unit: metric.unit,
-      ...(metric.currency ? { currency: metric.currency } : {}),
+      ...(metric.currency ? {currency: metric.currency} : {}),
       before: round(change.left.mean, 3),
       after: round(change.right.mean, 3),
       daysBefore: change.left.days,
@@ -151,14 +162,21 @@ function compareAround(
       values: valuesAround(sums, days, at - window, at + after - 1),
     });
   }
-  const tested = found.filter((change) => change.p !== null);
-  const q = benjaminiHochberg(tested.map((change) => change.p as number));
-  const changes: BeforeAfterChange[] = found.map((change) => {
-    const corrected = change.p === null ? null : round(q[tested.indexOf(change)], 4);
-    return { ...change, q: corrected, changed: corrected !== null && corrected < MAX_Q };
+  const tested = found.filter(change => change.p !== null);
+  const q = benjaminiHochberg(tested.map(change => change.p as number));
+  const changes: BeforeAfterChange[] = found.map(change => {
+    const corrected =
+      change.p === null ? null : round(q[tested.indexOf(change)], 4);
+    return {
+      ...change,
+      q: corrected,
+      changed: corrected !== null && corrected < MAX_Q,
+    };
   });
-  changes.sort((a, b) => Number(b.changed) - Number(a.changed) || (a.p ?? 2) - (b.p ?? 2));
-  return { event, daysAfter: after, enough: true, changes };
+  changes.sort(
+    (a, b) => Number(b.changed) - Number(a.changed) || (a.p ?? 2) - (b.p ?? 2),
+  );
+  return {event, daysAfter: after, enough: true, changes};
 }
 
 /**
@@ -168,10 +186,17 @@ function compareAround(
  * are the windows that fit apart in that history, as neighbouring dates share most of their
  * days. `null` when the history has too few ordinary dates.
  */
-function placebo(sums: Sums, at: number, before: number, after: number, observed: number) {
+function placebo(
+  sums: Sums,
+  at: number,
+  before: number,
+  after: number,
+  observed: number,
+) {
   const changes: number[] = [];
   for (let date = before; date + after <= sums.values.length; date++) {
-    const apart = date + after - 1 < at - before || date - before > at + after - 1;
+    const apart =
+      date + after - 1 < at - before || date - before > at + after - 1;
     const change = apart ? changeAt(sums, date, before, after) : null;
     if (change) {
       changes.push(change.difference);
@@ -182,7 +207,8 @@ function placebo(sums: Sums, at: number, before: number, after: number, observed
   }
   const usual = mean(changes);
   const spread = Math.sqrt(
-    changes.reduce((sum, change) => sum + (change - usual) ** 2, 0) / (changes.length - 1),
+    changes.reduce((sum, change) => sum + (change - usual) ** 2, 0) /
+      (changes.length - 1),
   );
   const distance = Math.abs(observed - usual);
   if (!spread) {
@@ -193,11 +219,11 @@ function placebo(sums: Sums, at: number, before: number, after: number, observed
 }
 
 function valuesAround(sums: Sums, days: LocalDate[], from: number, to: number) {
-  const values: { day: LocalDate; value: number }[] = [];
+  const values: {day: LocalDate; value: number}[] = [];
   for (let i = Math.max(0, from); i <= Math.min(days.length - 1, to); i++) {
     const value = sums.values[i];
     if (value !== undefined) {
-      values.push({ day: days[i], value: round(value, 3) });
+      values.push({day: days[i], value: round(value, 3)});
     }
   }
   return values;

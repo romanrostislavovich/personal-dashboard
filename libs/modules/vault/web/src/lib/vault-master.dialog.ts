@@ -1,12 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { passwordStrength } from '@pd/client-core';
-import { VaultSession } from './vault-session.service';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialogModule, MatDialogRef} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {passwordStrength} from '@pd/client-core';
+import {VaultSession} from './vault-session.service';
 
 /** A new master password for the open vault; closes with `true` once it is changed. */
 @Component({
@@ -61,12 +67,20 @@ import { VaultSession } from './vault-session.service';
         <p class="hint">{{ key | transloco }}</p>
       }
       @if (failed()) {
-        <p class="error" role="alert">{{ 'vault.unlock.wrongAccount' | transloco }}</p>
+        <p class="error" role="alert">
+          {{ 'vault.unlock.wrongAccount' | transloco }}
+        </p>
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button matButton mat-dialog-close>{{ 'core.actions.cancel' | transloco }}</button>
-      <button matButton="filled" [disabled]="!!problem() || !account() || busy()" (click)="save()">
+      <button matButton mat-dialog-close>
+        {{ 'core.actions.cancel' | transloco }}
+      </button>
+      <button
+        matButton="filled"
+        [disabled]="!!problem() || !account() || busy()"
+        (click)="save()"
+      >
         {{ 'vault.change.save' | transloco }}
       </button>
     </mat-dialog-actions>
@@ -97,7 +111,9 @@ export class VaultMasterDialog {
   protected readonly account = signal('');
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
-  protected readonly strength = computed(() => passwordStrength(this.master()).strength);
+  protected readonly strength = computed(
+    () => passwordStrength(this.master()).strength,
+  );
   protected readonly problem = computed(() => {
     if (this.master().length < 12) {
       return 'vault.setup.short';

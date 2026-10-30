@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,12 +8,12 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   WorkstateInput,
   WorkstateQuery,
@@ -22,10 +22,10 @@ import {
   workstateInputSchema,
   workstateQuerySchema,
 } from '@pd/contracts';
-import { desktopBridge, errorStatus } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { ActivityApi } from '../activity.api';
-import { DigitalConsentComponent } from './digital-consent.component';
+import {desktopBridge, errorStatus} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {ActivityApi} from '../activity.api';
+import {DigitalConsentComponent} from './digital-consent.component';
 
 @Component({
   selector: 'pd-workstate-timeline',
@@ -47,10 +47,12 @@ export class WorkstateTimelineComponent {
   private readonly api = inject(ActivityApi);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly desktop = desktopBridge()?.workstates;
-  protected readonly query = signal<WorkstateQuery>({ limit: 50 });
+  protected readonly query = signal<WorkstateQuery>({limit: 50});
   protected readonly timeline = this.api.workstateTimeline(this.query);
   protected readonly page = computed(() =>
-    !this.timeline.isLoading() && !this.timeline.error() ? this.timeline.value() : undefined,
+    !this.timeline.isLoading() && !this.timeline.error()
+      ? this.timeline.value()
+      : undefined,
   );
   protected readonly plan = signal<WorkstateRestorePlan | null>(null);
   protected readonly busy = signal(false);
@@ -64,7 +66,8 @@ export class WorkstateTimelineComponent {
     failed: number;
     canceled: boolean;
   } | null>(null);
-  protected readonly timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  protected readonly timezone =
+    Intl.DateTimeFormat().resolvedOptions().timeZone;
   protected search = '';
   protected from = '';
   protected to = '';
@@ -97,11 +100,11 @@ export class WorkstateTimelineComponent {
 
   protected next(): void {
     const cursor = this.page()?.nextCursor;
-    if (cursor) this.changeQuery({ ...this.query(), ...cursor });
+    if (cursor) this.changeQuery({...this.query(), ...cursor});
   }
 
   protected first(): void {
-    this.changeQuery({ ...this.query(), before: undefined, beforeId: undefined });
+    this.changeQuery({...this.query(), before: undefined, beforeId: undefined});
   }
 
   protected refresh(): void {
@@ -118,7 +121,11 @@ export class WorkstateTimelineComponent {
     const revision = this.revision;
     await this.run(async () => {
       const plan = await firstValueFrom(this.api.restoreWorkstate(id));
-      if (revision === this.revision && !this.destroyRef.destroyed && !this.timeline.error()) {
+      if (
+        revision === this.revision &&
+        !this.destroyRef.destroyed &&
+        !this.timeline.error()
+      ) {
         this.plan.set(plan);
       }
     });
@@ -131,7 +138,8 @@ export class WorkstateTimelineComponent {
     const revision = this.revision;
     await this.run(async () => {
       const result = await desktop.resume(plan);
-      if (revision === this.revision && !this.destroyRef.destroyed) this.resumeResult.set(result);
+      if (revision === this.revision && !this.destroyRef.destroyed)
+        this.resumeResult.set(result);
     });
   }
 
@@ -155,7 +163,7 @@ export class WorkstateTimelineComponent {
         gitBranch: this.gitBranch.trim() || undefined,
         browserUrls: this.browserUrls
           .split(/\r?\n/)
-          .map((url) => url.trim())
+          .map(url => url.trim())
           .filter(Boolean),
       },
     });
@@ -164,7 +172,8 @@ export class WorkstateTimelineComponent {
     // Keep a failed submission's identity for a safe retry after a lost response.
     if (
       this.pendingCapture &&
-      JSON.stringify(this.pendingCapture.capture) !== JSON.stringify(parsed.data.capture)
+      JSON.stringify(this.pendingCapture.capture) !==
+        JSON.stringify(parsed.data.capture)
     ) {
       parsed.data.id = crypto.randomUUID();
       parsed.data.capturedAt = new Date().toISOString();
@@ -185,7 +194,9 @@ export class WorkstateTimelineComponent {
     await this.run(async () => {
       const captured = await desktop.capture();
       this.message.set(
-        captured ? 'activity.workstates.captured' : 'activity.workstates.notCaptured',
+        captured
+          ? 'activity.workstates.captured'
+          : 'activity.workstates.notCaptured',
       );
       if (captured) this.first();
     });

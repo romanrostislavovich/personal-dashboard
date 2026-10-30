@@ -1,7 +1,7 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig } from '../config/env';
-import { setPrivateAddressesAllowed } from './outbound';
+import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig} from '../config/env';
+import {setPrivateAddressesAllowed} from './outbound';
 
 /**
  * Whether requests to addresses users give may go to private and local addresses (see
@@ -15,11 +15,12 @@ export class OutboundPolicy implements OnModuleInit {
   constructor(@Inject(ConfigService) private readonly config: AppConfig) {}
 
   onModuleInit(): void {
-    const registration = this.config.get('ALLOW_REGISTRATION', { infer: true });
-    const demo = this.config.get('DEMO_MODE', { infer: true });
+    const registration = this.config.get('ALLOW_REGISTRATION', {infer: true});
+    const demo = this.config.get('DEMO_MODE', {infer: true});
     // A demo is open to everybody, like an instance with registration.
     const allowed =
-      this.config.get('ALLOW_PRIVATE_URLS', { infer: true }) ?? !(registration || demo);
+      this.config.get('ALLOW_PRIVATE_URLS', {infer: true}) ??
+      !(registration || demo);
     setPrivateAddressesAllowed(allowed);
     if (allowed && (registration || demo)) {
       this.logger.warn(

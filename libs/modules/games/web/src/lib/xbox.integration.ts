@@ -1,15 +1,24 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { IntegrationGuideComponent, errorBody, errorStatus } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { GamesApi } from './games.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {IntegrationGuideComponent, errorBody, errorStatus} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {GamesApi} from './games.api';
 
 /**
  * The OpenXBL key (xbl.io), in Settings → Integrations (see `integrations` in games.module.ts):
@@ -34,27 +43,45 @@ import { GamesApi } from './games.api';
       <mat-card-header>
         <mat-icon mat-card-avatar>sports_esports</mat-icon>
         <mat-card-title>Xbox</mat-card-title>
-        <mat-card-subtitle>{{ 'games.xbox.keyTitle' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'games.xbox.keyTitle' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (settings.value()?.xboxKey) {
           <p class="ok">
-            <mat-icon inline>check_circle</mat-icon> {{ 'games.xbox.keySaved' | transloco }}
+            <mat-icon inline>check_circle</mat-icon>
+            {{ 'games.xbox.keySaved' | transloco }}
           </p>
-          <button matButton (click)="remove()">{{ 'games.xbox.keyRemove' | transloco }}</button>
+          <button matButton (click)="remove()">
+            {{ 'games.xbox.keyRemove' | transloco }}
+          </button>
         } @else {
           <p class="hint">{{ 'games.xbox.keyHint' | transloco }}</p>
           <form class="form" [formGroup]="form" (ngSubmit)="save()">
             <mat-form-field subscriptSizing="dynamic">
               <mat-label>{{ 'games.xbox.keyLabel' | transloco }}</mat-label>
-              <input matInput type="password" formControlName="apiKey" autocomplete="off" />
+              <input
+                matInput
+                type="password"
+                formControlName="apiKey"
+                autocomplete="off"
+              />
             </mat-form-field>
-            <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+            <button
+              matButton="filled"
+              type="submit"
+              [disabled]="form.invalid || busy()"
+            >
               {{ 'core.actions.save' | transloco }}
             </button>
           </form>
         }
-        <pd-integration-guide guide="games.xbox.guide" [steps]="3" link="https://xbl.io" />
+        <pd-integration-guide
+          guide="games.xbox.guide"
+          [steps]="3"
+          link="https://xbl.io"
+        />
       </mat-card-content>
     </mat-card>
   `,
@@ -94,19 +121,26 @@ export class XboxIntegration {
   async save(): Promise<void> {
     this.busy.set(true);
     try {
-      await firstValueFrom(this.api.saveXboxKey(this.form.getRawValue().apiKey));
+      await firstValueFrom(
+        this.api.saveXboxKey(this.form.getRawValue().apiKey),
+      );
       this.form.reset();
       this.settings.reload();
     } catch (error) {
       // A wrong key is told in the user's words; anything else as the server said it.
-      const message = (errorBody(error) as { message?: string } | null)?.message ?? '';
+      const message =
+        (errorBody(error) as {message?: string} | null)?.message ?? '';
       const text =
-        errorStatus(error) === 400 && message !== 'OpenXBL key is invalid' && message
+        errorStatus(error) === 400 &&
+        message !== 'OpenXBL key is invalid' &&
+        message
           ? message
           : this.transloco.translate(
-              errorStatus(error) === 400 ? 'games.xbox.keyInvalid' : 'games.errors.generic',
+              errorStatus(error) === 400
+                ? 'games.xbox.keyInvalid'
+                : 'games.errors.generic',
             );
-      this.snackBar.open(text, 'OK', { duration: 10000 });
+      this.snackBar.open(text, 'OK', {duration: 10000});
     } finally {
       this.busy.set(false);
     }

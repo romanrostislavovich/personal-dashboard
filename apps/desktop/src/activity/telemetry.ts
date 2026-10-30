@@ -1,14 +1,14 @@
-import { sanitizeTelemetryText, telemetryBucketSchema } from '@pd/contracts';
-import type { DesktopTelemetryDiagnostics, TelemetryBucket } from '@pd/contracts';
-import { randomUUID } from 'node:crypto';
-import { ContextSwitches, MAX_SAMPLE_GAP_MS } from './context-switch';
+import {sanitizeTelemetryText, telemetryBucketSchema} from '@pd/contracts';
+import type {DesktopTelemetryDiagnostics, TelemetryBucket} from '@pd/contracts';
+import {randomUUID} from 'node:crypto';
+import {ContextSwitches, MAX_SAMPLE_GAP_MS} from './context-switch';
 import {
   InputDynamics,
   InputFieldContext,
   NativeInputAggregate,
   SafeInputKind,
 } from './input-dynamics';
-import { TerminalCompletion, TerminalFriction } from './terminal-friction';
+import {TerminalCompletion, TerminalFriction} from './terminal-friction';
 
 const MINUTE_MS = 60_000;
 const BATCH_MS = 5 * MINUTE_MS;
@@ -72,7 +72,11 @@ export class DesktopTelemetry {
   }
 
   /** For trusted field-aware observers; the Windows bridge supplies aggregates instead. */
-  observeInput(kind: SafeInputKind, field: InputFieldContext, now: number): boolean {
+  observeInput(
+    kind: SafeInputKind,
+    field: InputFieldContext,
+    now: number,
+  ): boolean {
     if (!this.fresh(now)) return false;
     this.rotate(now);
     return this.input.observe(kind, now, field);
@@ -82,14 +86,21 @@ export class DesktopTelemetry {
     if (!this.fresh(now)) return false;
     this.rotate(now);
     // Do not attribute a command that began before consent or during a blocked interval.
-    if (!report || report.durationMs > now - (this.allowedSince ?? now)) return false;
+    if (!report || report.durationMs > now - (this.allowedSince ?? now))
+      return false;
     return this.terminal.report(report);
   }
 
   async tick(now: number): Promise<void> {
     if (!this.fresh(now)) return;
     this.rotate(now);
-    if (this.request || now < this.nextUpload || !this.pending.length || !this.identity) return;
+    if (
+      this.request ||
+      now < this.nextUpload ||
+      !this.pending.length ||
+      !this.identity
+    )
+      return;
     this.nextUpload = now + BATCH_MS;
     const request = new AbortController();
     this.request = request;
@@ -104,8 +115,8 @@ export class DesktopTelemetry {
         this.delivery = accepted ? 'accepted' : 'failed';
         if (accepted) {
           this.lastSuccessAt = new Date().toISOString();
-          const ids = new Set(batch.map((bucket) => bucket.id));
-          this.pending = this.pending.filter((bucket) => !ids.has(bucket.id));
+          const ids = new Set(batch.map(bucket => bucket.id));
+          this.pending = this.pending.filter(bucket => !ids.has(bucket.id));
         }
       }
     } catch {
@@ -122,7 +133,11 @@ export class DesktopTelemetry {
     this.request = null;
     if (this.delivery === 'sending') this.delivery = 'failed';
     const gate = this.gate();
-    if (gate.identity !== this.identity || !gate.identity || gate.consent !== true)
+    if (
+      gate.identity !== this.identity ||
+      !gate.identity ||
+      gate.consent !== true
+    )
       this.clearHistory();
     this.pending = [];
     this.startedAt = null;
@@ -142,12 +157,18 @@ export class DesktopTelemetry {
     this.check(Date.now());
     if (this.request?.signal === signal && !signal.aborted)
       this.lastHttpStatus =
-        Number.isInteger(status) && status >= 100 && status <= 599 ? status : null;
+        Number.isInteger(status) && status >= 100 && status <= 599
+          ? status
+          : null;
   }
 
   diagnostics(): Pick<
     DesktopTelemetryDiagnostics,
-    'pendingBuckets' | 'lastAttemptAt' | 'lastSuccessAt' | 'lastHttpStatus' | 'delivery'
+    | 'pendingBuckets'
+    | 'lastAttemptAt'
+    | 'lastSuccessAt'
+    | 'lastHttpStatus'
+    | 'delivery'
   > {
     this.fresh(Date.now());
     return {
@@ -172,7 +193,12 @@ export class DesktopTelemetry {
       this.clear();
       this.identity = gate.identity;
     }
-    if (!Number.isFinite(now) || !gate.identity || gate.consent !== true || gate.allowed !== true) {
+    if (
+      !Number.isFinite(now) ||
+      !gate.identity ||
+      gate.consent !== true ||
+      gate.allowed !== true
+    ) {
       this.clear();
       return false;
     }
@@ -206,7 +232,8 @@ export class DesktopTelemetry {
           ...this.terminal.metrics(),
         },
       });
-      if (result.success) this.pending = [...this.pending, result.data].slice(-5);
+      if (result.success)
+        this.pending = [...this.pending, result.data].slice(-5);
       this.startedAt = end;
       this.input = new InputDynamics();
       this.terminal = new TerminalFriction();

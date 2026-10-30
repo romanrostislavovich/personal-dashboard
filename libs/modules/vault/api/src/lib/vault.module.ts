@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { VaultAchievements } from './vault.achievements';
-import { VaultController } from './vault.controller';
-import { VaultService } from './vault.service';
+import {Module} from '@nestjs/common';
+import {VaultAchievements} from './vault.achievements';
+import {VaultController} from './vault.controller';
+import {VaultService} from './vault.service';
 
 /**
  * The password vault: logins and secure notes encrypted on the device with a key of the master

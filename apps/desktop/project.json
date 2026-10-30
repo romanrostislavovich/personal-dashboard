@@ -21,7 +21,10 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/desktop"],
       "options": {
-        "commands": ["tsc -p apps/desktop/tsconfig.json --noEmit", "node apps/desktop/build.mjs"],
+        "commands": [
+          "tsc -p apps/desktop/tsconfig.json --noEmit",
+          "node apps/desktop/build.mjs"
+        ],
         "parallel": false
       }
     },

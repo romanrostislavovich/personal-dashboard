@@ -1,4 +1,10 @@
-import { mergeHints, takeReport, toViewInput, WATCH_GAP_MS, worthSending } from './watch-session';
+import {
+  mergeHints,
+  takeReport,
+  toViewInput,
+  WATCH_GAP_MS,
+  worthSending,
+} from './watch-session';
 
 const report = (position: number) => ({
   top: true,
@@ -9,14 +15,14 @@ const report = (position: number) => ({
 const page = {
   url: 'https://kinogo.ec/1-moana.html',
   site: 'kinogo.ec',
-  hints: { pageTitle: 'Моана (2026)' },
+  hints: {pageTitle: 'Моана (2026)'},
 };
 let ids = 0;
 const newId = () => `view-${++ids}`;
 
 describe('watch sessions', () => {
   it('makes one view of the reports of one page, counting time by the clock', () => {
-    let { open } = takeReport(null, report(0), page, 0, newId);
+    let {open} = takeReport(null, report(0), page, 0, newId);
     for (let at = 15_000; at <= 600_000; at += 15_000) {
       open = takeReport(open, report(at / 1000), page, at, newId).open;
     }
@@ -32,7 +38,7 @@ describe('watch sessions', () => {
   });
 
   it('counts two frames playing at once only once', () => {
-    let { open } = takeReport(null, report(0), page, 0, newId);
+    let {open} = takeReport(null, report(0), page, 0, newId);
     open = takeReport(open, report(15), page, 15_000, newId).open;
     // The film's frame and an advert's report a moment apart.
     open = takeReport(open, report(15), page, 15_500, newId).open;
@@ -48,7 +54,7 @@ describe('watch sessions', () => {
     const other = takeReport(
       later.open,
       report(0),
-      { ...page, url: 'https://kinogo.ec/2' },
+      {...page, url: 'https://kinogo.ec/2'},
       WATCH_GAP_MS + 2,
       newId,
     );
@@ -56,14 +62,16 @@ describe('watch sessions', () => {
   });
 
   it('keeps a hint read later and ignores an empty one', () => {
-    expect(mergeHints({ pageTitle: 'Netflix' }, { playerTitle: 'Dune', pageTitle: ' ' })).toEqual({
+    expect(
+      mergeHints({pageTitle: 'Netflix'}, {playerTitle: 'Dune', pageTitle: ' '}),
+    ).toEqual({
       pageTitle: 'Netflix',
       playerTitle: 'Dune',
     });
   });
 
   it('does not send a trailer', () => {
-    let { open } = takeReport(null, report(0), page, 0, newId);
+    let {open} = takeReport(null, report(0), page, 0, newId);
     open = takeReport(open, report(15), page, 120_000, newId).open;
     expect(worthSending(open)).toBe(false);
   });

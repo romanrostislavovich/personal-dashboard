@@ -1,6 +1,6 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { FINANCE_READS, financeApi } from '@pd/client-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {FINANCE_READS, financeApi} from '@pd/client-core';
 import {
   Asset,
   AssetInput,
@@ -33,19 +33,22 @@ import {
   CategoryModelState,
   TransactionKind,
 } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The finance requests of the client core (`@pd/client-core`) for Angular. */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class FinanceApi {
   private readonly finance = financeApi(inject(DASHBOARD_CLIENT).api);
 
   // --- Reactive reads: re-fetched automatically when query() changes ---
 
   transactions(query: () => TransactionQuery) {
-    return httpResource<Transaction[]>(() => FINANCE_READS.transactions(query()), {
-      defaultValue: [],
-    });
+    return httpResource<Transaction[]>(
+      () => FINANCE_READS.transactions(query()),
+      {
+        defaultValue: [],
+      },
+    );
   }
 
   summary(query: () => TransactionQuery) {
@@ -54,14 +57,19 @@ export class FinanceApi {
 
   /** Income and expenses per month and currency — for the chart and month-over-month deltas. */
   cashFlow(query: () => TransactionQuery) {
-    return httpResource<MonthCashFlow[]>(() => FINANCE_READS.cashFlow(query()), {
-      defaultValue: [],
-    });
+    return httpResource<MonthCashFlow[]>(
+      () => FINANCE_READS.cashFlow(query()),
+      {
+        defaultValue: [],
+      },
+    );
   }
 
   /** Everything converted into the main currency (see FinanceConversion). */
   cashFlowInMain(query: () => TransactionQuery) {
-    return httpResource<MainCashFlow>(() => FINANCE_READS.cashFlowInMain(query()));
+    return httpResource<MainCashFlow>(() =>
+      FINANCE_READS.cashFlowInMain(query()),
+    );
   }
 
   settings() {
@@ -73,9 +81,12 @@ export class FinanceApi {
   }
 
   recurringPayments() {
-    return httpResource<RecurringPayment[]>(() => FINANCE_READS.recurringPayments(), {
-      defaultValue: [],
-    });
+    return httpResource<RecurringPayment[]>(
+      () => FINANCE_READS.recurringPayments(),
+      {
+        defaultValue: [],
+      },
+    );
   }
 
   // --- Mutations ---
@@ -99,7 +110,9 @@ export class FinanceApi {
   // --- Automatic cost import ---
 
   costSources() {
-    return httpResource<CostSource[]>(() => FINANCE_READS.costSources(), { defaultValue: [] });
+    return httpResource<CostSource[]>(() => FINANCE_READS.costSources(), {
+      defaultValue: [],
+    });
   }
 
   addCostSource(input: CostSourceInput) {
@@ -115,7 +128,9 @@ export class FinanceApi {
   }
 
   budgets(month: () => string) {
-    return httpResource<Budget[]>(() => FINANCE_READS.budgets(month()), { defaultValue: [] });
+    return httpResource<Budget[]>(() => FINANCE_READS.budgets(month()), {
+      defaultValue: [],
+    });
   }
 
   saveBudgets(budgets: BudgetInput[]) {
@@ -133,7 +148,9 @@ export class FinanceApi {
   }
 
   keyDates() {
-    return httpResource<KeyDate[]>(() => FINANCE_READS.keyDates(), { defaultValue: [] });
+    return httpResource<KeyDate[]>(() => FINANCE_READS.keyDates(), {
+      defaultValue: [],
+    });
   }
 
   contractLetter(id: string, input: ContractLetterInput) {
@@ -147,7 +164,9 @@ export class FinanceApi {
   }
 
   categoryModel() {
-    return httpResource<CategoryModelState>(() => FINANCE_READS.categoryModel());
+    return httpResource<CategoryModelState>(() =>
+      FINANCE_READS.categoryModel(),
+    );
   }
 
   suggestCategory(kind: TransactionKind, text: string, amount: number) {
@@ -155,7 +174,9 @@ export class FinanceApi {
   }
 
   assets() {
-    return httpResource<Asset[]>(() => FINANCE_READS.assets(), { defaultValue: [] });
+    return httpResource<Asset[]>(() => FINANCE_READS.assets(), {
+      defaultValue: [],
+    });
   }
 
   saveAsset(input: AssetInput, id?: string) {
@@ -167,7 +188,9 @@ export class FinanceApi {
   }
 
   report(month: () => string) {
-    return httpResource<{ report: FinanceReport | null }>(() => FINANCE_READS.report(month()));
+    return httpResource<{report: FinanceReport | null}>(() =>
+      FINANCE_READS.report(month()),
+    );
   }
 
   writeReport(month: string) {
@@ -177,7 +200,9 @@ export class FinanceApi {
   // --- Wishlist ---
 
   wishlist() {
-    return httpResource<Wish[]>(() => FINANCE_READS.wishlist(), { defaultValue: [] });
+    return httpResource<Wish[]>(() => FINANCE_READS.wishlist(), {
+      defaultValue: [],
+    });
   }
 
   wishPrices(id: () => string | null) {
@@ -186,7 +211,7 @@ export class FinanceApi {
         const wish = id();
         return wish ? FINANCE_READS.wishPrices(wish) : undefined;
       },
-      { defaultValue: [] },
+      {defaultValue: []},
     );
   }
 
@@ -222,7 +247,7 @@ export class FinanceApi {
         const code = country();
         return code ? FINANCE_READS.bankBanks(code) : undefined;
       },
-      { defaultValue: [] },
+      {defaultValue: []},
     );
   }
 

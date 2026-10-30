@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 import {
   addDays,
   BeforeAfter,
@@ -15,15 +15,15 @@ import {
   zonedDateTime,
   zonedToUtc,
 } from '@pd/contracts';
-import { ProjectsService } from '../projects/projects.service';
-import { UsersService } from '../users/users.service';
-import { LinksService, Period, ProjectRef } from './links.service';
-import { beforeAfter } from './before-after/before-after';
-import { correlations } from './correlations/correlations';
-import { moodInsights } from './mood-insights';
-import { lastMonths, monthOf } from './project-months';
-import { moodForecast } from './forecast';
-import { withCodingAtComputer } from './project-time';
+import {ProjectsService} from '../projects/projects.service';
+import {UsersService} from '../users/users.service';
+import {LinksService, Period, ProjectRef} from './links.service';
+import {beforeAfter} from './before-after/before-after';
+import {correlations} from './correlations/correlations';
+import {moodInsights} from './mood-insights';
+import {lastMonths, monthOf} from './project-months';
+import {moodForecast} from './forecast';
+import {withCodingAtComputer} from './project-time';
 
 /** Changes of a project shown in its overview. */
 const CHANGES = 15;
@@ -31,10 +31,11 @@ const HOUR = 3600;
 
 /** Money for an hour at the project: its income and expenses over the hours worked on it. */
 export function perHour(facts: ProjectFact[]): ProjectOverview['perHour'] {
-  const of = (metric: ProjectFact['metric']) => facts.filter((fact) => fact.metric === metric);
+  const of = (metric: ProjectFact['metric']) =>
+    facts.filter(fact => fact.metric === metric);
   // The tracker and the IDE count the same hours from two sides: the larger is nearer the truth.
   const seconds = Math.max(
-    ...[...of('seconds'), ...of('codingSeconds')].map((fact) => fact.value),
+    ...[...of('seconds'), ...of('codingSeconds')].map(fact => fact.value),
     0,
   );
   const currency = [...of('income'), ...of('expense')][0]?.currency;
@@ -43,7 +44,7 @@ export function perHour(facts: ProjectFact[]): ProjectOverview['perHour'] {
   }
   const total = (metric: 'income' | 'expense') =>
     of(metric)
-      .filter((fact) => fact.currency === currency)
+      .filter(fact => fact.currency === currency)
       .reduce((sum, fact) => sum + fact.value, 0);
   const hours = seconds / HOUR;
   return {
@@ -66,10 +67,16 @@ export class ProjectOverviewService {
    * What the sections know about the project in a period, the time at the computer made whole
    * (see withCodingAtComputer); the days of the times are only for that and are left out.
    */
-  private async facts(userId: string, project: ProjectRef, period: Period): Promise<ProjectFact[]> {
-    const facts = withCodingAtComputer(await this.links.projectFacts(userId, project, period));
-    return facts.map((fact) => {
-      const shown = { ...fact };
+  private async facts(
+    userId: string,
+    project: ProjectRef,
+    period: Period,
+  ): Promise<ProjectFact[]> {
+    const facts = withCodingAtComputer(
+      await this.links.projectFacts(userId, project, period),
+    );
+    return facts.map(fact => {
+      const shown = {...fact};
       delete shown.days;
       return shown;
     });
@@ -77,13 +84,20 @@ export class ProjectOverviewService {
 
   /** A project as the sections are asked about it; throws when it is not the user's. */
   async ref(userId: string, projectId: string): Promise<ProjectRef> {
-    const { id, name, url, aliases } = await this.projects.get(userId, projectId);
-    return { id, name, url, aliases };
+    const {id, name, url, aliases} = await this.projects.get(userId, projectId);
+    return {id, name, url, aliases};
   }
 
-  async overview(userId: string, projectId: string, period: Period): Promise<ProjectOverview> {
-    const { id, name, url, aliases, closedOn } = await this.projects.get(userId, projectId);
-    const project = { id, name, url, aliases };
+  async overview(
+    userId: string,
+    projectId: string,
+    period: Period,
+  ): Promise<ProjectOverview> {
+    const {id, name, url, aliases, closedOn} = await this.projects.get(
+      userId,
+      projectId,
+    );
+    const project = {id, name, url, aliases};
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
     const [facts, changes] = await Promise.all([
@@ -91,12 +105,12 @@ export class ProjectOverviewService {
       this.links.projectChanges(
         userId,
         project,
-        zonedToUtc({ date: period.from, time: '00:00' }, timeZone),
-        zonedToUtc({ date: after, time: '00:00' }, timeZone),
+        zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+        zonedToUtc({date: after, time: '00:00'}, timeZone),
       ),
     ]);
     return {
-      project: { ...project, closedOn },
+      project: {...project, closedOn},
       ...period,
       facts,
       changes: changes.slice(0, CHANGES),
@@ -105,13 +119,19 @@ export class ProjectOverviewService {
   }
 
   /** The project month by month, oldest first: its hours and its money. */
-  async months(userId: string, projectId: string, count: number): Promise<ProjectMonth[]> {
+  async months(
+    userId: string,
+    projectId: string,
+    count: number,
+  ): Promise<ProjectMonth[]> {
     const project = await this.ref(userId, projectId);
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const today = zonedDateTime(new Date(), timeZone).date;
     const months: ProjectMonth[] = [];
-    for (const { month, from, to } of lastMonths(today, count)) {
-      months.push(monthOf(month, await this.facts(userId, project, { from, to })));
+    for (const {month, from, to} of lastMonths(today, count)) {
+      months.push(
+        monthOf(month, await this.facts(userId, project, {from, to})),
+      );
     }
     return months;
   }
@@ -125,12 +145,18 @@ export class ProjectOverviewService {
    * Today's mood from yesterday's numbers, by a model of the user's own last two years (see
    * forecast.ts); the numbers of the `hidden` sections are left out.
    */
-  async moodForecast(userId: string, hidden: string[] = []): Promise<MoodForecast> {
+  async moodForecast(
+    userId: string,
+    hidden: string[] = [],
+  ): Promise<MoodForecast> {
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const today = zonedDateTime(new Date(), timeZone).date;
-    const period = { from: toLocalDate(addDays(parseLocalDate(today), -730)), to: today };
+    const period = {
+      from: toLocalDate(addDays(parseLocalDate(today), -730)),
+      to: today,
+    };
     const metrics = (await this.links.dailyMetrics(userId, period)).filter(
-      (metric) => !hidden.includes(metric.module),
+      metric => !hidden.includes(metric.module),
     );
     return moodForecast(metrics, today);
   }
@@ -146,9 +172,12 @@ export class ProjectOverviewService {
   ): Promise<Correlations> {
     // Two years at most: enough to see a link, and the pairs stay quick to compare.
     const earliest = toLocalDate(addDays(parseLocalDate(query.to), -730));
-    const period = { from: query.from < earliest ? earliest : query.from, to: query.to };
+    const period = {
+      from: query.from < earliest ? earliest : query.from,
+      to: query.to,
+    };
     const metrics = (await this.links.dailyMetrics(userId, period)).filter(
-      (metric) => !hidden.includes(metric.module),
+      metric => !hidden.includes(metric.module),
     );
     return correlations(metrics, period, query.target);
   }
@@ -165,19 +194,25 @@ export class ProjectOverviewService {
   ): Promise<BeforeAfter> {
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const today = zonedDateTime(new Date(), timeZone).date;
-    const range = { from: toLocalDate(addDays(parseLocalDate(today), -1095)), to: today };
+    const range = {
+      from: toLocalDate(addDays(parseLocalDate(today), -1095)),
+      to: today,
+    };
     const recent = toLocalDate(addDays(parseLocalDate(today), -730));
-    const periods = (await this.links.periodsBetween(userId, { from: recent, to: today })).filter(
-      (period) => !hidden.includes(period.module),
-    );
+    const periods = (
+      await this.links.periodsBetween(userId, {from: recent, to: today})
+    ).filter(period => !hidden.includes(period.module));
     if (!periods.length) {
-      return { weeks: query.weeks, results: [] };
+      return {weeks: query.weeks, results: []};
     }
     const metrics = (await this.links.dailyMetrics(userId, range)).filter(
-      (metric) => !hidden.includes(metric.module),
+      metric => !hidden.includes(metric.module),
     );
     const result = beforeAfter(metrics, periods, range, query.weeks);
     // A period that began before the two years can still have ended within them.
-    return { ...result, results: result.results.filter((item) => item.event.on >= recent) };
+    return {
+      ...result,
+      results: result.results.filter(item => item.event.on >= recent),
+    };
   }
 }

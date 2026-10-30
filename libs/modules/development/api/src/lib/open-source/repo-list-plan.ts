@@ -1,5 +1,5 @@
-import { RepoRelation } from '@pd/contracts';
-import { AccountRepo } from './repo-source';
+import {RepoRelation} from '@pd/contracts';
+import {AccountRepo} from './repo-source';
 
 export interface SavedRepo {
   id: string;
@@ -10,7 +10,7 @@ export interface SavedRepo {
 
 export interface RepoListPlan<Row extends SavedRepo> {
   /** Saved rows the account still has, with their fresh data. */
-  matched: { row: Row; repo: AccountRepo }[];
+  matched: {row: Row; repo: AccountRepo}[];
   /** Repositories of the account that are not saved yet. */
   added: AccountRepo[];
   /** Came from the account earlier and are gone from it: deleted, made private, left the organization. */
@@ -29,22 +29,29 @@ export function planRepoList<Row extends SavedRepo>(
   account: AccountRepo[],
 ): RepoListPlan<Row> {
   const byExternalId = new Map(
-    rows.filter((row) => row.externalId).map((row) => [row.externalId, row]),
+    rows.filter(row => row.externalId).map(row => [row.externalId, row]),
   );
-  const byName = new Map(rows.map((row) => [row.fullName.toLowerCase(), row]));
+  const byName = new Map(rows.map(row => [row.fullName.toLowerCase(), row]));
   const taken = new Set<string>();
-  const plan: RepoListPlan<Row> = { matched: [], added: [], removed: [], manual: [] };
+  const plan: RepoListPlan<Row> = {
+    matched: [],
+    added: [],
+    removed: [],
+    manual: [],
+  };
 
   for (const repo of account) {
-    const row = byExternalId.get(repo.externalId) ?? byName.get(repo.fullName.toLowerCase());
+    const row =
+      byExternalId.get(repo.externalId) ??
+      byName.get(repo.fullName.toLowerCase());
     if (row && !taken.has(row.id)) {
       taken.add(row.id);
-      plan.matched.push({ row, repo });
+      plan.matched.push({row, repo});
     } else if (!row) {
       plan.added.push(repo);
     }
   }
-  for (const row of rows.filter((saved) => !taken.has(saved.id))) {
+  for (const row of rows.filter(saved => !taken.has(saved.id))) {
     (row.relation === 'manual' ? plan.manual : plan.removed).push(row);
   }
   return plan;

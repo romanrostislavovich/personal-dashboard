@@ -7,9 +7,9 @@
   "implicitDependencies": ["web"],
   "targets": {
     "sync": {
-      "dependsOn": [{ "projects": ["web"], "target": "build" }],
+      "dependsOn": [{"projects": ["web"], "target": "build"}],
       "command": "npx cap sync android",
-      "options": { "cwd": "apps/mobile" }
+      "options": {"cwd": "apps/mobile"}
     }
   }
 }

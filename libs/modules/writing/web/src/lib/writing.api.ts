@@ -1,6 +1,6 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { WRITING_READS, writingApi } from '@pd/client-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {WRITING_READS, writingApi} from '@pd/client-core';
 import {
   WritingCheck,
   WritingConfig,
@@ -8,10 +8,10 @@ import {
   WritingRewriteInput,
   WritingSettingsUpdate,
 } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The writing requests of the client core (`@pd/client-core`) for Angular. */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class WritingApi {
   private readonly writing = writingApi(inject(DASHBOARD_CLIENT).api);
 
@@ -37,7 +37,7 @@ export class WritingApi {
 
   /** The owner sets the server's LanguageTool. */
   setLanguageTool(url: string) {
-    return fromCore(() => this.writing.setLanguageTool({ url }));
+    return fromCore(() => this.writing.setLanguageTool({url}));
   }
 
   removeLanguageTool() {

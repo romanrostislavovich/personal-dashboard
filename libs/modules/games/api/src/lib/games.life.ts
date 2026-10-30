@@ -1,8 +1,14 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LifeService, localDaysRange, UsersService } from '@pd/api-core';
-import { LifeCard, LifeEvent } from '@pd/contracts';
-import { and, eq, gte, lt, sql } from 'drizzle-orm';
-import { dotaMatches, gameAccounts } from './games.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  DB,
+  Database,
+  LifeService,
+  localDaysRange,
+  UsersService,
+} from '@pd/api-core';
+import {LifeCard, LifeEvent} from '@pd/contracts';
+import {and, eq, gte, lt, sql} from 'drizzle-orm';
+import {dotaMatches, gameAccounts} from './games.schema';
 
 /** Dota 2 matches of a day and of a period, with the wins. */
 @Injectable()
@@ -17,14 +23,14 @@ export class GamesLife implements OnModuleInit {
     this.life.register({
       module: 'games',
       day: async (userId, day): Promise<LifeEvent[]> => {
-        const { matches, wins } = await this.dota(userId, { from: day, to: day });
+        const {matches, wins} = await this.dota(userId, {from: day, to: day});
         return matches
           ? [
               {
                 module: 'games',
                 icon: 'sports_esports',
                 key: 'games.life.dotaDay',
-                params: { matches, wins },
+                params: {matches, wins},
                 at: null,
                 link: '/games',
               },
@@ -32,7 +38,7 @@ export class GamesLife implements OnModuleInit {
           : [];
       },
       period: async (userId, period): Promise<LifeCard[]> => {
-        const { matches, wins } = await this.dota(userId, period);
+        const {matches, wins} = await this.dota(userId, period);
         return matches
           ? [
               {
@@ -42,7 +48,7 @@ export class GamesLife implements OnModuleInit {
                 value: matches,
                 format: 'number',
                 detailKey: 'games.life.dotaWins',
-                detailParams: { wins, rate: Math.round((wins / matches) * 100) },
+                detailParams: {wins, rate: Math.round((wins / matches) * 100)},
               },
             ]
           : [];
@@ -50,8 +56,8 @@ export class GamesLife implements OnModuleInit {
     });
   }
 
-  private async dota(userId: string, period: { from: string; to: string }) {
-    const { start, end } = localDaysRange(
+  private async dota(userId: string, period: {from: string; to: string}) {
+    const {start, end} = localDaysRange(
       this.users.timeZoneOf(await this.users.findById(userId)),
       period,
     );
@@ -69,6 +75,6 @@ export class GamesLife implements OnModuleInit {
           lt(dotaMatches.startedAt, end),
         ),
       );
-    return { matches: row?.matches ?? 0, wins: row?.wins ?? 0 };
+    return {matches: row?.matches ?? 0, wins: row?.wins ?? 0};
   }
 }

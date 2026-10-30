@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Subject } from 'rxjs';
+import {Injectable} from '@nestjs/common';
+import {Subject} from 'rxjs';
 
 /**
  * "The user just changed something": fired after every non-GET request and after

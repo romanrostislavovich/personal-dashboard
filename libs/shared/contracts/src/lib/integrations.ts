@@ -7,7 +7,14 @@
  * - `expired` — its token has expired;
  * - `off` — the dashboard can connect it, but it is not connected.
  */
-export const INTEGRATION_STATES = ['ok', 'error', 'stale', 'expiring', 'expired', 'off'] as const;
+export const INTEGRATION_STATES = [
+  'ok',
+  'error',
+  'stale',
+  'expiring',
+  'expired',
+  'off',
+] as const;
 export type IntegrationState = (typeof INTEGRATION_STATES)[number];
 
 /** One connection of the user, as "Settings → Integrations" lists it. */

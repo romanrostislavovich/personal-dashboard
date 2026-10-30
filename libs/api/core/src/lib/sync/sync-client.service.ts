@@ -7,7 +7,7 @@ import {
   OnApplicationShutdown,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {ConfigService} from '@nestjs/config';
 import {
   ReconcileResult,
   SyncActionRequest,
@@ -20,15 +20,19 @@ import {
   SyncPushRequest,
   SyncPushResponse,
 } from '@pd/contracts';
-import { hostname } from 'node:os';
-import { AppConfig } from '../config/env';
-import { coreMessages } from '../i18n/core.messages';
-import { NotificationsService } from '../notifications/notifications.service';
-import { UsersService } from '../users/users.service';
-import { compareFingerprints } from './reconcile';
-import { decodeSyncBody, encodeSyncBody, SYNC_CONTENT_TYPE } from './sync-protocol';
-import { SyncStore } from './sync-store';
-import { SERVER_ORIGIN, SYNC_STATE, SyncService } from './sync.service';
+import {hostname} from 'node:os';
+import {AppConfig} from '../config/env';
+import {coreMessages} from '../i18n/core.messages';
+import {NotificationsService} from '../notifications/notifications.service';
+import {UsersService} from '../users/users.service';
+import {compareFingerprints} from './reconcile';
+import {
+  decodeSyncBody,
+  encodeSyncBody,
+  SYNC_CONTENT_TYPE,
+} from './sync-protocol';
+import {SyncStore} from './sync-store';
+import {SERVER_ORIGIN, SYNC_STATE, SyncService} from './sync.service';
 
 /** The first sync runs shortly after startup, not in the middle of it. */
 const FIRST_SYNC_DELAY_MS = 5_000;
@@ -75,7 +79,9 @@ class SyncError extends Error {
 const SYNC_FAILING_REPORT_MS = 15 * 60 * 1000;
 
 @Injectable()
-export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown {
+export class SyncClient
+  implements OnApplicationBootstrap, OnApplicationShutdown
+{
   /** Since when syncs keep failing; `null` — the last one worked, `0` — already reported. */
   private failingSince: number | null = null;
   private readonly logger = new Logger(SyncClient.name);
@@ -91,16 +97,20 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
     private readonly users: UsersService,
     private readonly notifications: NotificationsService,
   ) {
-    this.peer = config.get('SYNC_PEER_NAME', { infer: true }) ?? hostname();
+    this.peer = config.get('SYNC_PEER_NAME', {infer: true}) ?? hostname();
   }
 
   onApplicationBootstrap(): void {
     if (this.sync.mode !== 'client') {
       return;
     }
-    const interval = this.config.get('SYNC_INTERVAL_SECONDS', { infer: true }) * 1000;
+    const interval =
+      this.config.get('SYNC_INTERVAL_SECONDS', {infer: true}) * 1000;
     const tick = () => void this.syncNow();
-    this.timers = [setTimeout(tick, FIRST_SYNC_DELAY_MS), setInterval(tick, interval)];
+    this.timers = [
+      setTimeout(tick, FIRST_SYNC_DELAY_MS),
+      setInterval(tick, interval),
+    ];
   }
 
   onApplicationShutdown(): void {
@@ -129,7 +139,10 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
       await this.running;
       await this.syncNow();
     })();
-    await Promise.race([fresh, new Promise((resolve) => setTimeout(resolve, ACTION_PULL_WAIT_MS))]);
+    await Promise.race([
+      fresh,
+      new Promise(resolve => setTimeout(resolve, ACTION_PULL_WAIT_MS)),
+    ]);
   }
 
   /** Runs a server action for the user (see ServerActions) and returns its result. */
@@ -139,7 +152,10 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
     args: Record<string, unknown>,
   ): Promise<unknown> {
     try {
-      const response = await this.request<SyncActionRequest, SyncActionResponse>('action', {
+      const response = await this.request<
+        SyncActionRequest,
+        SyncActionResponse
+      >('action', {
         ...(await this.handshake()),
         userId,
         action,
@@ -154,7 +170,10 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
         error.status < 500 &&
         error.status !== 401
       ) {
-        throw new HttpException(error.serverMessage ?? error.message, error.status);
+        throw new HttpException(
+          error.serverMessage ?? error.message,
+          error.status,
+        );
       }
       throw new ServiceUnavailableException(
         `This runs on the server: ${error instanceof Error ? error.message : error}`,
@@ -164,16 +183,19 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
 
   /** The server's newest dump (see BackupService). */
   async backupInfo(): Promise<SyncBackupInfo> {
-    const response = await this.fetchServer('backup', { method: 'GET' });
+    const response = await this.fetchServer('backup', {method: 'GET'});
     return (await response.json()) as SyncBackupInfo;
   }
 
   /** A dump of the server's, as a stream. */
   async downloadBackup(name: string): Promise<ReadableStream<Uint8Array>> {
-    const response = await this.fetchServer(`backup/${encodeURIComponent(name)}`, {
-      method: 'GET',
-      signal: AbortSignal.timeout(BACKUP_DOWNLOAD_TIMEOUT_MS),
-    });
+    const response = await this.fetchServer(
+      `backup/${encodeURIComponent(name)}`,
+      {
+        method: 'GET',
+        signal: AbortSignal.timeout(BACKUP_DOWNLOAD_TIMEOUT_MS),
+      },
+    );
     if (!response.body) {
       throw new SyncError('The server sent an empty backup');
     }
@@ -211,20 +233,29 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
         await this.sync.setState(SYNC_STATE.recheck, RECHECK_DONE);
       }
       const pushed = await this.pushOnce();
-      await this.sync.setState(SYNC_STATE.lastSyncedAt, new Date().toISOString());
+      await this.sync.setState(
+        SYNC_STATE.lastSyncedAt,
+        new Date().toISOString(),
+      );
       await this.sync.setState(SYNC_STATE.lastError, null);
       this.failingSince = null;
       if (pulled || pushed) {
         this.logger.log(`Synced: ${pulled} received, ${pushed} sent`);
       } else {
         // A failed comparison is not a failed sync: it is tried again later.
-        await this.reconcileIfDue().catch(async (error) => {
-          this.logger.warn(`Comparing the data with the server's failed: ${error}`);
-          await this.sync.setState(SYNC_STATE.reconcileDue, later(RECONCILE_CONFIRM_MS));
+        await this.reconcileIfDue().catch(async error => {
+          this.logger.warn(
+            `Comparing the data with the server's failed: ${error}`,
+          );
+          await this.sync.setState(
+            SYNC_STATE.reconcileDue,
+            later(RECONCILE_CONFIRM_MS),
+          );
         });
       }
     } catch (error) {
-      const message = error instanceof SyncError ? error.message : `Sync failed: ${error}`;
+      const message =
+        error instanceof SyncError ? error.message : `Sync failed: ${error}`;
       if ((await this.sync.getState(SYNC_STATE.lastError)) !== message) {
         this.logger.warn(message);
       }
@@ -239,7 +270,10 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
    */
   private reportIfLasting(message: string): void {
     this.failingSince ??= Date.now();
-    if (this.failingSince !== 0 && Date.now() - this.failingSince >= SYNC_FAILING_REPORT_MS) {
+    if (
+      this.failingSince !== 0 &&
+      Date.now() - this.failingSince >= SYNC_FAILING_REPORT_MS
+    ) {
       this.logger.error(
         `Sync has not worked for ${SYNC_FAILING_REPORT_MS / 60_000} minutes: ${message}`,
       );
@@ -258,7 +292,9 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
       return false;
     }
     if (state !== RECHECK_PULLING) {
-      this.logger.warn('Rechecking the whole change log once: earlier versions could skip rows');
+      this.logger.warn(
+        'Rechecking the whole change log once: earlier versions could skip rows',
+      );
       await this.sync.setState(SYNC_STATE.pullCursor, null);
       await this.sync.setState(SYNC_STATE.recheck, RECHECK_PULLING);
     }
@@ -275,38 +311,54 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
     if (due && Date.parse(due) > Date.now()) {
       return;
     }
-    const server = await this.request<SyncFingerprintsRequest, SyncFingerprintsResponse>(
-      'fingerprints',
-      await this.handshake(),
-    );
+    const server = await this.request<
+      SyncFingerprintsRequest,
+      SyncFingerprintsResponse
+    >('fingerprints', await this.handshake());
     // Rows missing from the change log are logged now: they count as pending below and go
     // out with the next sync, and the comparison waits for that.
     await this.store.trackUntracked();
     const local = await this.store.fingerprints();
     // A change on either side meanwhile makes the comparison meaningless: next sync then.
-    const pending = await this.store.pendingCount(await this.sync.getState(SYNC_STATE.pushCursor));
+    const pending = await this.store.pendingCount(
+      await this.sync.getState(SYNC_STATE.pushCursor),
+    );
     if (pending > 0 || (await this.pull()) > 0) {
       return;
     }
     const mismatches = compareFingerprints(local, server.tables);
-    const tables = mismatches.map((mismatch) => mismatch.table).join(', ');
+    const tables = mismatches.map(mismatch => mismatch.table).join(', ');
     const suspect = await this.sync.getState(SYNC_STATE.reconcileSuspect);
     if (mismatches.length && suspect !== tables) {
       await this.sync.setState(SYNC_STATE.reconcileSuspect, tables);
-      await this.sync.setState(SYNC_STATE.reconcileDue, later(RECONCILE_CONFIRM_MS));
+      await this.sync.setState(
+        SYNC_STATE.reconcileDue,
+        later(RECONCILE_CONFIRM_MS),
+      );
       return;
     }
     await this.sync.setState(SYNC_STATE.reconcileSuspect, null);
-    await this.sync.setState(SYNC_STATE.reconcileDue, later(RECONCILE_EVERY_MS));
+    await this.sync.setState(
+      SYNC_STATE.reconcileDue,
+      later(RECONCILE_EVERY_MS),
+    );
     const previous = await this.sync.getState(SYNC_STATE.reconcileResult);
-    const result: ReconcileResult = { checkedAt: new Date().toISOString(), mismatches };
-    await this.sync.setState(SYNC_STATE.reconcileResult, JSON.stringify(result));
+    const result: ReconcileResult = {
+      checkedAt: new Date().toISOString(),
+      mismatches,
+    };
+    await this.sync.setState(
+      SYNC_STATE.reconcileResult,
+      JSON.stringify(result),
+    );
     if (!mismatches.length) {
       return;
     }
     this.logger.warn(`The data differs from the server's: ${tables}`);
-    const known = previous ? (JSON.parse(previous) as ReconcileResult).mismatches : [];
-    if (known.map((mismatch) => mismatch.table).join(', ') !== tables) {
+    const known = previous
+      ? (JSON.parse(previous) as ReconcileResult).mismatches
+      : [];
+    if (known.map(mismatch => mismatch.table).join(', ') !== tables) {
       await this.notifyOwner(tables);
     }
   }
@@ -334,10 +386,13 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
     let count = 0;
     for (let batch = 0; batch < MAX_BATCHES; batch++) {
       const cursor = await this.sync.getState(SYNC_STATE.pullCursor);
-      const response = await this.request<SyncPullRequest, SyncPullResponse>('pull', {
-        ...(await this.handshake()),
-        cursor,
-      });
+      const response = await this.request<SyncPullRequest, SyncPullResponse>(
+        'pull',
+        {
+          ...(await this.handshake()),
+          cursor,
+        },
+      );
       const known = await this.sync.getState(SYNC_STATE.knownServerId);
       if (known !== response.serverId) {
         await this.sync.setState(SYNC_STATE.knownServerId, response.serverId);
@@ -373,7 +428,7 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
       const cursor = await this.sync.getState(SYNC_STATE.pushCursor);
       const local = await this.store.changesSince(
         cursor,
-        (origin) => everything || origin === null,
+        origin => everything || origin === null,
       );
       if (local.changes.length) {
         await this.request<SyncPushRequest, SyncPushResponse>('push', {
@@ -392,7 +447,7 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
   }
 
   private async handshake() {
-    return { peer: this.peer, ...(await this.sync.handshake()) };
+    return {peer: this.peer, ...(await this.sync.handshake())};
   }
 
   private async request<Req, Res>(
@@ -401,15 +456,23 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
   ): Promise<Res> {
     const response = await this.fetchServer(action, {
       method: 'POST',
-      headers: { 'Content-Type': SYNC_CONTENT_TYPE },
+      headers: {'Content-Type': SYNC_CONTENT_TYPE},
       body: new Uint8Array(await encodeSyncBody(body)),
     });
-    return (await decodeSyncBody(Buffer.from(await response.arrayBuffer()))) as Res;
+    return (await decodeSyncBody(
+      Buffer.from(await response.arrayBuffer()),
+    )) as Res;
   }
 
   /** A request to `/api/sync/<path>` with SYNC_TOKEN; a failure becomes a SyncError. */
-  private async fetchServer(path: string, init: RequestInit): Promise<Response> {
-    const url = new URL(`/api/sync/${path}`, this.config.get('SYNC_SERVER_URL', { infer: true }));
+  private async fetchServer(
+    path: string,
+    init: RequestInit,
+  ): Promise<Response> {
+    const url = new URL(
+      `/api/sync/${path}`,
+      this.config.get('SYNC_SERVER_URL', {infer: true}),
+    );
     let response: Response;
     try {
       response = await fetch(url, {
@@ -417,20 +480,24 @@ export class SyncClient implements OnApplicationBootstrap, OnApplicationShutdown
         ...init,
         headers: {
           ...init.headers,
-          Authorization: `Bearer ${this.config.get('SYNC_TOKEN', { infer: true })}`,
+          Authorization: `Bearer ${this.config.get('SYNC_TOKEN', {infer: true})}`,
         },
       });
     } catch {
-      throw new SyncError('The server is unreachable — working offline, will retry');
+      throw new SyncError(
+        'The server is unreachable — working offline, will retry',
+      );
     }
     if (response.status === 401) {
-      throw new SyncError('The server rejected SYNC_TOKEN — it must be the same on both sides');
+      throw new SyncError(
+        'The server rejected SYNC_TOKEN — it must be the same on both sides',
+      );
     }
     if (!response.ok) {
       const text = await response.text();
       let message = text;
       try {
-        message = (JSON.parse(text) as { message?: string }).message ?? text;
+        message = (JSON.parse(text) as {message?: string}).message ?? text;
       } catch {
         // Not JSON (a proxy error page) — show the text as is.
       }

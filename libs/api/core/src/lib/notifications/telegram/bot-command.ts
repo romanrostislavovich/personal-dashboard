@@ -1,5 +1,5 @@
-import { LocalizedText } from '../../i18n/locale';
-import { UserRow } from '../../users/users.schema';
+import {LocalizedText} from '../../i18n/locale';
+import {UserRow} from '../../users/users.schema';
 
 /**
  * A Telegram bot command added by a module. Example from the diary:
@@ -31,7 +31,11 @@ export interface BotCommand {
  * then goes to `expectText` instead of the assistant ("When to remind?" → "tomorrow 9:00").
  */
 export type BotActionReply =
-  string | { reply: string; expectText: (user: UserRow, text: string) => Promise<string> };
+  | string
+  | {
+      reply: string;
+      expectText: (user: UserRow, text: string) => Promise<string>;
+    };
 
 /**
  * A handler of buttons under the bot's messages (see NotificationAction). Example:
@@ -71,13 +75,16 @@ export interface BotPhotoPage {
  * receipt). Returns the bot reply. With several handlers the bot asks with buttons where a
  * photo goes — `BotPhotoChoice` is the button.
  */
-export type BotPhotoHandler = (user: UserRow, photo: BotPhoto) => Promise<string>;
+export type BotPhotoHandler = (
+  user: UserRow,
+  photo: BotPhoto,
+) => Promise<string>;
 
 /** A button of the "where does this photo go" question. */
 export interface BotPhotoChoice {
   /** Short, Latin letters: it is part of the button's 64 bytes. */
   id: string;
-  label: { en: string; ru: string };
+  label: {en: string; ru: string};
   /**
    * An album comes as one call with all its photos in `BotPhoto.pages` (the pages of one
    * document); without it, one call a photo, as if they were sent one by one.
@@ -96,12 +103,15 @@ export interface BotDocument {
  * Handles documents sent to the bot (the AI assistant reads them).
  * Returns the bot reply. Only one handler owns documents — the first registered.
  */
-export type BotDocumentHandler = (user: UserRow, document: BotDocument) => Promise<string>;
+export type BotDocumentHandler = (
+  user: UserRow,
+  document: BotDocument,
+) => Promise<string>;
 
 /** A reply with buttons under it (see BotAction for what a press does). */
 export interface BotReply {
   text: string;
-  buttons: { label: string; action: string }[];
+  buttons: {label: string; action: string}[];
 }
 
 /**
@@ -109,7 +119,10 @@ export interface BotReply {
  * Returns the bot reply, with buttons when it asks something. Only one handler owns free text
  * — the first registered.
  */
-export type BotTextHandler = (user: UserRow, text: string) => Promise<string | BotReply>;
+export type BotTextHandler = (
+  user: UserRow,
+  text: string,
+) => Promise<string | BotReply>;
 
 /** A voice message (or an audio file) sent to the bot. */
 export interface BotVoice {
@@ -121,10 +134,13 @@ export interface BotVoice {
 }
 
 /** The recognized text, or a reply explaining why there is none (recognition is not set up…). */
-export type BotTranscription = { text: string } | { reply: string };
+export type BotTranscription = {text: string} | {reply: string};
 
 /**
  * Turns voice messages into text (the AI core, through a speech recognition connection).
  * The bot then handles the text like a typed message: a `/command` or the assistant.
  */
-export type BotVoiceTranscriber = (user: UserRow, voice: BotVoice) => Promise<BotTranscription>;
+export type BotVoiceTranscriber = (
+  user: UserRow,
+  voice: BotVoice,
+) => Promise<BotTranscription>;

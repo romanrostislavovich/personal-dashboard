@@ -7,7 +7,7 @@ export function niceCeil(value: number): number {
     return 0;
   }
   const power = 10 ** Math.floor(Math.log10(value));
-  const step = [1, 2, 2.5, 5, 10].find((s) => s * power >= value) ?? 10;
+  const step = [1, 2, 2.5, 5, 10].find(s => s * power >= value) ?? 10;
   return step * power;
 }
 

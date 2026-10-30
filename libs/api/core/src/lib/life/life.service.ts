@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {Injectable, Logger} from '@nestjs/common';
 import {
   addDays,
   LifeCard,
@@ -18,7 +18,10 @@ import {
 export interface LifeSource {
   module: string;
   day?(userId: string, day: LocalDate): Promise<LifeEvent[]>;
-  period?(userId: string, period: { from: LocalDate; to: LocalDate }): Promise<LifeCard[]>;
+  period?(
+    userId: string,
+    period: {from: LocalDate; to: LocalDate},
+  ): Promise<LifeCard[]>;
   /** A line of its own for the message about a month (`YYYY-MM`), e.g. the finance review. */
   monthNote?(userId: string, month: string): Promise<string | null>;
 }
@@ -38,29 +41,37 @@ export class LifeService {
   }
 
   /** The events of a day across the modules; one module failing leaves the others. */
-  async day(userId: string, day: LocalDate, hidden: string[] = []): Promise<LifeDay> {
+  async day(
+    userId: string,
+    day: LocalDate,
+    hidden: string[] = [],
+  ): Promise<LifeDay> {
     const events = (
       await Promise.all(
-        this.visible(hidden).map((source) =>
-          source.day ? this.safely(source.module, () => source.day?.(userId, day)) : [],
+        this.visible(hidden).map(source =>
+          source.day
+            ? this.safely(source.module, () => source.day?.(userId, day))
+            : [],
         ),
       )
     ).flat();
     // The day as a whole first, then by the time.
     events.sort((a, b) => (a.at ?? '').localeCompare(b.at ?? ''));
-    return { day, events };
+    return {day, events};
   }
 
   /** The numbers of a period across the modules, in the order the modules were registered. */
   async period(
     userId: string,
-    period: { from: LocalDate; to: LocalDate },
+    period: {from: LocalDate; to: LocalDate},
     hidden: string[] = [],
   ): Promise<LifeCard[]> {
     return (
       await Promise.all(
-        this.visible(hidden).map((source) =>
-          source.period ? this.safely(source.module, () => source.period?.(userId, period)) : [],
+        this.visible(hidden).map(source =>
+          source.period
+            ? this.safely(source.module, () => source.period?.(userId, period))
+            : [],
         ),
       )
     ).flat();
@@ -69,7 +80,7 @@ export class LifeService {
   /** The modules' own lines about a month, for the message on the 1st. */
   async monthNotes(userId: string, month: string): Promise<string[]> {
     const notes = await Promise.all(
-      this.sources.map((source) =>
+      this.sources.map(source =>
         source.monthNote
           ? this.safely(source.module, async () => {
               const note = await source.monthNote?.(userId, month);
@@ -82,10 +93,13 @@ export class LifeService {
   }
 
   private visible(hidden: string[]): LifeSource[] {
-    return this.sources.filter((source) => !hidden.includes(source.module));
+    return this.sources.filter(source => !hidden.includes(source.module));
   }
 
-  private async safely<T>(module: string, work: () => Promise<T[]> | undefined): Promise<T[]> {
+  private async safely<T>(
+    module: string,
+    work: () => Promise<T[]> | undefined,
+  ): Promise<T[]> {
     try {
       return (await work()) ?? [];
     } catch (error) {
@@ -98,11 +112,11 @@ export class LifeService {
 /** The moments a period of the user's own days starts and ends (the end excluded). */
 export function localDaysRange(
   timeZone: string,
-  period: { from: LocalDate; to: LocalDate },
-): { start: Date; end: Date } {
+  period: {from: LocalDate; to: LocalDate},
+): {start: Date; end: Date} {
   const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
   return {
-    start: zonedToUtc({ date: period.from, time: '00:00' }, timeZone),
-    end: zonedToUtc({ date: after, time: '00:00' }, timeZone),
+    start: zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+    end: zonedToUtc({date: after, time: '00:00'}, timeZone),
   };
 }

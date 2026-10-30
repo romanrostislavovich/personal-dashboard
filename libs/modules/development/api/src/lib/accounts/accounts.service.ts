@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 import {
   CODE_PROVIDERS,
   CodeAccount,
@@ -7,9 +7,9 @@ import {
   GithubContributionDay,
   LocalDate,
 } from '@pd/contracts';
-import { GithubProfileService } from '../github-profile/github-profile.service';
-import { CodeAccountsService } from './code-accounts.service';
-import { AccountWithDays, mergeDays, summarize } from './summary';
+import {GithubProfileService} from '../github-profile/github-profile.service';
+import {CodeAccountsService} from './code-accounts.service';
+import {AccountWithDays, mergeDays, summarize} from './summary';
 
 /**
  * The accounts of all code hosting services behind one interface: GitHub is kept by its own
@@ -23,12 +23,15 @@ export class AccountsService {
   ) {}
 
   /** `null` until the first sync (no token yet). */
-  async account(userId: string, provider: CodeProvider): Promise<CodeAccount | null> {
+  async account(
+    userId: string,
+    provider: CodeProvider,
+  ): Promise<CodeAccount | null> {
     if (provider !== 'github') {
       return this.others.account(userId, provider);
     }
     const profile = await this.github.profile(userId);
-    return profile && { provider, ...profile };
+    return profile && {provider, ...profile};
   }
 
   /** The calendar of a period. */
@@ -44,13 +47,17 @@ export class AccountsService {
   }
 
   sync(userId: string, provider: CodeProvider): Promise<void> {
-    return provider === 'github' ? this.github.sync(userId) : this.others.sync(userId, provider);
+    return provider === 'github'
+      ? this.github.sync(userId)
+      : this.others.sync(userId, provider);
   }
 
   /** Every connected account as one; `null` — none is connected yet. */
   async summary(userId: string): Promise<CodeAccountsSummary | null> {
     const accounts = await this.withDays(userId);
-    return accounts.length > 0 ? summarize(accounts, this.github.today()) : null;
+    return accounts.length > 0
+      ? summarize(accounts, this.github.today())
+      : null;
   }
 
   /** The common calendar of a period: the days of all services added up. */
@@ -61,7 +68,9 @@ export class AccountsService {
   ): Promise<GithubContributionDay[]> {
     return mergeDays(
       await Promise.all(
-        CODE_PROVIDERS.map((provider) => this.contributions(userId, provider, from, to)),
+        CODE_PROVIDERS.map(provider =>
+          this.contributions(userId, provider, from, to),
+        ),
       ),
     );
   }
@@ -71,8 +80,13 @@ export class AccountsService {
     for (const provider of CODE_PROVIDERS) {
       const account = await this.account(userId, provider);
       if (account) {
-        const days = await this.contributions(userId, provider, '0001-01-01', '9999-12-31');
-        accounts.push({ account, days });
+        const days = await this.contributions(
+          userId,
+          provider,
+          '0001-01-01',
+          '9999-12-31',
+        );
+        accounts.push({account, days});
       }
     }
     return accounts;

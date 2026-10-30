@@ -1,7 +1,11 @@
-import { GithubLanguageShare } from '@pd/contracts';
-import { AccountSource, ActivityEvent, FetchedAccount } from '../accounts/account-source';
-import { BitbucketClient, RawBitbucketRepo } from './bitbucket.client';
-import { BitbucketWorkspaces, quoted } from './bitbucket-workspaces';
+import {GithubLanguageShare} from '@pd/contracts';
+import {
+  AccountSource,
+  ActivityEvent,
+  FetchedAccount,
+} from '../accounts/account-source';
+import {BitbucketClient, RawBitbucketRepo} from './bitbucket.client';
+import {BitbucketWorkspaces, quoted} from './bitbucket-workspaces';
 
 const TOP_REPOS = 10;
 /**
@@ -12,7 +16,7 @@ const OLD_COMMITS_TO_STOP = 30;
 
 interface RawCommit {
   date: string;
-  author?: { raw?: string; user?: { uuid?: string } };
+  author?: {raw?: string; user?: {uuid?: string}};
 }
 
 interface RawCreated {
@@ -34,8 +38,10 @@ export class BitbucketAccountSource implements AccountSource {
 
   async getAccount(): Promise<FetchedAccount> {
     const me = await this.workspaces.me();
-    const own = (await this.workspaces.repos()).filter((repo) => !repo.parent);
-    const recent = [...own].sort((a, b) => (b.updated_on ?? '').localeCompare(a.updated_on ?? ''));
+    const own = (await this.workspaces.repos()).filter(repo => !repo.parent);
+    const recent = [...own].sort((a, b) =>
+      (b.updated_on ?? '').localeCompare(a.updated_on ?? ''),
+    );
     return {
       login: me.nickname ?? me.username ?? me.display_name ?? 'bitbucket',
       name: me.display_name,
@@ -47,9 +53,10 @@ export class BitbucketAccountSource implements AccountSource {
       repos: own.length,
       totalStars: null,
       languages: languageShares(own),
-      topRepos: recent.slice(0, TOP_REPOS).map((repo) => ({
+      topRepos: recent.slice(0, TOP_REPOS).map(repo => ({
         fullName: repo.full_name,
-        htmlUrl: repo.links.html?.href ?? `https://bitbucket.org/${repo.full_name}`,
+        htmlUrl:
+          repo.links.html?.href ?? `https://bitbucket.org/${repo.full_name}`,
         stars: 0,
         forks: 0,
         language: repo.language || null,
@@ -80,21 +87,21 @@ export class BitbucketAccountSource implements AccountSource {
     let oldInRow = 0;
     const commits = await this.bitbucket.all<RawCommit>(
       `/repositories/${repo.full_name}/commits`,
-      { fields: 'values.date,values.author.raw,values.author.user.uuid,next' },
-      (commit) => {
+      {fields: 'values.date,values.author.raw,values.author.user.uuid,next'},
+      commit => {
         oldInRow = since && new Date(commit.date) < since ? oldInRow + 1 : 0;
         return oldInRow >= OLD_COMMITS_TO_STOP;
       },
     );
     const email = `<${this.email.toLowerCase()}>`;
     return commits
-      .filter((commit) => !since || new Date(commit.date) >= since)
+      .filter(commit => !since || new Date(commit.date) >= since)
       .filter(
-        (commit) =>
+        commit =>
           commit.author?.user?.uuid === uuid ||
           (commit.author?.raw ?? '').toLowerCase().includes(email),
       )
-      .map((commit) => ({
+      .map(commit => ({
         at: new Date(commit.date),
         kind: 'commit',
         contributions: 1,
@@ -116,9 +123,13 @@ export class BitbucketAccountSource implements AccountSource {
     ];
     const rows = await this.bitbucket.all<RawCreated>(
       `/repositories/${repo.full_name}/pullrequests`,
-      { q: conditions.join(' AND '), pagelen: '50', fields: 'values.created_on,next' },
+      {
+        q: conditions.join(' AND '),
+        pagelen: '50',
+        fields: 'values.created_on,next',
+      },
     );
-    return rows.map((row) => ({
+    return rows.map(row => ({
       at: new Date(row.created_on),
       kind: 'pullRequest',
       contributions: 1,
@@ -137,10 +148,13 @@ function languageShares(
   const shares = new Map<string, number>();
   for (const repo of repos) {
     if (repo.language) {
-      shares.set(repo.language, (shares.get(repo.language) ?? 0) + (repo.size ?? 0));
+      shares.set(
+        repo.language,
+        (shares.get(repo.language) ?? 0) + (repo.size ?? 0),
+      );
     }
   }
   return [...shares.entries()]
-    .map(([name, bytes]) => ({ name, color: null, bytes }))
+    .map(([name, bytes]) => ({name, color: null, bytes}))
     .sort((a, b) => b.bytes - a.bytes);
 }

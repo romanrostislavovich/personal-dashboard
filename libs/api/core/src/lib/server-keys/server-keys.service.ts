@@ -1,6 +1,6 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { SecretsService } from '../secrets/secrets.service';
-import { UsersService } from '../users/users.service';
+import {ForbiddenException, Injectable} from '@nestjs/common';
+import {SecretsService} from '../secrets/secrets.service';
+import {UsersService} from '../users/users.service';
 
 /**
  * The server's own keys at outside services — the Telegram bot, the Spotify app, the
@@ -28,7 +28,10 @@ const CACHE_MS = 60_000;
 
 @Injectable()
 export class ServerKeysService {
-  private readonly cache = new Map<ServerKey, { value: string | null; readAt: number }>();
+  private readonly cache = new Map<
+    ServerKey,
+    {value: string | null; readAt: number}
+  >();
 
   constructor(
     private readonly users: UsersService,
@@ -42,7 +45,9 @@ export class ServerKeysService {
 
   async assertOwner(userId: string): Promise<void> {
     if (!(await this.isOwner(userId))) {
-      throw new ForbiddenException('Only the owner of the dashboard sets the keys of the server');
+      throw new ForbiddenException(
+        'Only the owner of the dashboard sets the keys of the server',
+      );
     }
   }
 
@@ -55,7 +60,7 @@ export class ServerKeysService {
     const value = owner
       ? await this.secrets.get(owner.id, PREFIX + key).catch(() => null) // another ENCRYPTION_KEY
       : null;
-    this.cache.set(key, { value, readAt: Date.now() });
+    this.cache.set(key, {value, readAt: Date.now()});
     return value;
   }
 
@@ -70,6 +75,6 @@ export class ServerKeysService {
     } else {
       await this.secrets.set(owner.id, PREFIX + key, value);
     }
-    this.cache.set(key, { value, readAt: Date.now() });
+    this.cache.set(key, {value, readAt: Date.now()});
   }
 }

@@ -20,7 +20,10 @@ export interface McpTool {
 /** What the tools are for this caller: listed, and run. */
 export interface McpTools {
   list(): Promise<McpTool[]>;
-  call(name: string, args: Record<string, unknown>): Promise<{ text: string; isError: boolean }>;
+  call(
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<{text: string; isError: boolean}>;
 }
 
 interface Request {
@@ -31,14 +34,18 @@ interface Request {
 }
 
 type Response =
-  | { jsonrpc: '2.0'; id: string | number | null; result: unknown }
-  | { jsonrpc: '2.0'; id: string | number | null; error: { code: number; message: string } };
+  | {jsonrpc: '2.0'; id: string | number | null; result: unknown}
+  | {
+      jsonrpc: '2.0';
+      id: string | number | null;
+      error: {code: number; message: string};
+    };
 
 const INVALID_REQUEST = -32600;
 const METHOD_NOT_FOUND = -32601;
 const INVALID_PARAMS = -32602;
 
-const SERVER = { name: 'personal-dashboard', version: '1.0.0' };
+const SERVER = {name: 'personal-dashboard', version: '1.0.0'};
 const INSTRUCTIONS =
   "The tools of a personal dashboard: the user's own finance, tasks, diary, health, habits, " +
   'time at the computer and in the browser, music, games, projects and more. Each tool tells ' +
@@ -55,15 +62,18 @@ export async function answerMcp(
   tools: McpTools,
 ): Promise<Response | Response[] | null> {
   if (Array.isArray(body)) {
-    const answers = (await Promise.all(body.map((one) => answerOne(one, tools)))).filter(
-      (one): one is Response => one !== null,
-    );
+    const answers = (
+      await Promise.all(body.map(one => answerOne(one, tools)))
+    ).filter((one): one is Response => one !== null);
     return answers.length ? answers : null;
   }
   return answerOne(body, tools);
 }
 
-async function answerOne(message: unknown, tools: McpTools): Promise<Response | null> {
+async function answerOne(
+  message: unknown,
+  tools: McpTools,
+): Promise<Response | null> {
   if (!isRequest(message)) {
     return failure(null, INVALID_REQUEST, 'Expected a JSON-RPC 2.0 request');
   }
@@ -75,10 +85,13 @@ async function answerOne(message: unknown, tools: McpTools): Promise<Response | 
   const params = message.params ?? {};
   switch (message.method) {
     case 'initialize': {
-      const asked = typeof params['protocolVersion'] === 'string' ? params['protocolVersion'] : '';
+      const asked =
+        typeof params['protocolVersion'] === 'string'
+          ? params['protocolVersion']
+          : '';
       return success(id, {
         protocolVersion: MCP_VERSIONS.includes(asked) ? asked : MCP_VERSIONS[0],
-        capabilities: { tools: { listChanged: false } },
+        capabilities: {tools: {listChanged: false}},
         serverInfo: SERVER,
         instructions: INSTRUCTIONS,
       });
@@ -87,21 +100,31 @@ async function answerOne(message: unknown, tools: McpTools): Promise<Response | 
       return success(id, {});
     case 'tools/list':
       return success(id, {
-        tools: (await tools.list()).map((tool) => ({
+        tools: (await tools.list()).map(tool => ({
           name: tool.name,
           description: tool.description,
           inputSchema: tool.inputSchema,
-          annotations: { readOnlyHint: tool.readOnly, destructiveHint: tool.destructive },
+          annotations: {
+            readOnlyHint: tool.readOnly,
+            destructiveHint: tool.destructive,
+          },
         })),
       });
     case 'tools/call': {
       const name = params['name'];
       const args = params['arguments'] ?? {};
-      if (typeof name !== 'string' || typeof args !== 'object' || Array.isArray(args)) {
+      if (
+        typeof name !== 'string' ||
+        typeof args !== 'object' ||
+        Array.isArray(args)
+      ) {
         return failure(id, INVALID_PARAMS, 'Expected { name, arguments }');
       }
-      const { text, isError } = await tools.call(name, args as Record<string, unknown>);
-      return success(id, { content: [{ type: 'text', text }], isError });
+      const {text, isError} = await tools.call(
+        name,
+        args as Record<string, unknown>,
+      );
+      return success(id, {content: [{type: 'text', text}], isError});
     }
     default:
       return failure(id, METHOD_NOT_FOUND, `No method ${message.method}`);
@@ -118,9 +141,13 @@ function isRequest(message: unknown): message is Request {
 }
 
 function success(id: string | number | null, result: unknown): Response {
-  return { jsonrpc: '2.0', id, result };
+  return {jsonrpc: '2.0', id, result};
 }
 
-function failure(id: string | number | null, code: number, message: string): Response {
-  return { jsonrpc: '2.0', id, error: { code, message } };
+function failure(
+  id: string | number | null,
+  code: number,
+  message: string,
+): Response {
+  return {jsonrpc: '2.0', id, error: {code, message}};
 }

@@ -1,4 +1,4 @@
-import { LocalDate, SubscriptionSuggestion } from '@pd/contracts';
+import {LocalDate, SubscriptionSuggestion} from '@pd/contracts';
 
 export interface ExpenseRow {
   note: string | null;
@@ -51,13 +51,20 @@ export function suggestSubscriptions(
   const suggestions: SubscriptionSuggestion[] = [];
   for (const charges of groups.values()) {
     const key = chargeKey(charges[0].note);
-    if (dismissed.has(key) || knownKeys.some((name) => key.includes(name) || name.includes(key))) {
+    if (
+      dismissed.has(key) ||
+      knownKeys.some(name => key.includes(name) || name.includes(key))
+    ) {
       continue;
     }
-    const months = [...new Set(charges.map((charge) => charge.occurredOn.slice(0, 7)))].sort();
-    const amounts = charges.map((charge) => charge.amount);
-    const days = charges.map((charge) => Number(charge.occurredOn.slice(8, 10)));
-    const last = [...charges].sort((a, b) => a.occurredOn.localeCompare(b.occurredOn)).at(-1);
+    const months = [
+      ...new Set(charges.map(charge => charge.occurredOn.slice(0, 7))),
+    ].sort();
+    const amounts = charges.map(charge => charge.amount);
+    const days = charges.map(charge => Number(charge.occurredOn.slice(8, 10)));
+    const last = [...charges]
+      .sort((a, b) => a.occurredOn.localeCompare(b.occurredOn))
+      .at(-1);
     if (
       !last ||
       months.length < 2 ||
@@ -96,23 +103,23 @@ export interface WatchedPayment {
 export function priceRises(
   payments: WatchedPayment[],
   rows: ExpenseRow[],
-): { payment: WatchedPayment; amount: number }[] {
-  return payments.flatMap((payment) => {
+): {payment: WatchedPayment; amount: number}[] {
+  return payments.flatMap(payment => {
     const name = chargeKey(payment.name);
     if (!payment.isActive || !name) {
       return [];
     }
     const seen = rows
       .filter(
-        (row) =>
+        row =>
           !row.recurringPaymentId &&
           row.currency === payment.currency &&
           chargeKey(row.note).includes(name),
       )
-      .map((row) => row.amount);
+      .map(row => row.amount);
     const highest = seen.length ? Math.max(...seen) : 0;
     return highest > payment.amount * RISE && highest !== payment.noticedAmount
-      ? [{ payment, amount: highest }]
+      ? [{payment, amount: highest}]
       : [];
   });
 }
@@ -126,7 +133,7 @@ export function trialsEnding<
   },
 >(payments: T[], today: LocalDate): T[] {
   return payments.filter(
-    (payment) =>
+    payment =>
       payment.isActive &&
       payment.trialEndsOn !== null &&
       payment.trialEndsOn >= today &&

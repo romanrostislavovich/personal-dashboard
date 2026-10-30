@@ -1,12 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject, viewChild } from '@angular/core';
-import { MatTabsModule } from '@angular/material/tabs';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { WritingConfig } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { WritingEditorComponent } from './writing-editor.component';
-import { WritingSettingsComponent } from './writing-settings.component';
-import { DesktopWritingService } from './desktop-writing.service';
-import { WritingApi } from './writing.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  viewChild,
+} from '@angular/core';
+import {MatTabsModule} from '@angular/material/tabs';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {WritingConfig} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {WritingEditorComponent} from './writing-editor.component';
+import {WritingSettingsComponent} from './writing-settings.component';
+import {DesktopWritingService} from './desktop-writing.service';
+import {WritingApi} from './writing.api';
 
 /**
  * Writing: a text checked as it is typed and rewritten by the AI on request, and the settings
@@ -15,7 +20,12 @@ import { WritingApi } from './writing.api';
 @Component({
   selector: 'pd-writing-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatTabsModule, TranslocoPipe, WritingEditorComponent, WritingSettingsComponent],
+  imports: [
+    MatTabsModule,
+    TranslocoPipe,
+    WritingEditorComponent,
+    WritingSettingsComponent,
+  ],
   template: `
     <h1 class="page-title">{{ 'writing.title' | transloco }}</h1>
     <p class="intro">{{ 'writing.intro' | transloco }}</p>
@@ -53,7 +63,9 @@ export class WritingPage {
   protected readonly config = this.api.settings();
 
   /** A word into the dictionary or a rule switched off: the text is checked again. */
-  protected async ignore(what: { word: string } | { ruleId: string }): Promise<void> {
+  protected async ignore(
+    what: {word: string} | {ruleId: string},
+  ): Promise<void> {
     this.saved(await firstValueFrom(this.api.ignore(what)));
     this.editor()?.recheck();
   }

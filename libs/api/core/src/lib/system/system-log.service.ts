@@ -1,14 +1,19 @@
-import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { SystemLogEntry } from '@pd/contracts';
-import { and, desc, eq, gt, lt } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { coreMessages } from '../i18n/core.messages';
-import { NotificationsService } from '../notifications/notifications.service';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { UsersService } from '../users/users.service';
-import { NotifyThrottle } from './notify-throttle';
-import { LoggedProblem, SystemLogger } from './system-logger';
-import { systemLog } from './system.schema';
+import {
+  Inject,
+  Injectable,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
+import {SystemLogEntry} from '@pd/contracts';
+import {and, desc, eq, gt, lt} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {coreMessages} from '../i18n/core.messages';
+import {NotificationsService} from '../notifications/notifications.service';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {UsersService} from '../users/users.service';
+import {NotifyThrottle} from './notify-throttle';
+import {LoggedProblem, SystemLogger} from './system-logger';
+import {systemLog} from './system.schema';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** The same problem within this time is one entry with a counter. */
@@ -18,7 +23,11 @@ const SHOWN_ENTRIES = 200;
 const MAX_MESSAGE = 1000;
 const MAX_DETAILS = 8000;
 /** Their own failures are not told through them: a broken Telegram cannot report itself. */
-const NOT_NOTIFIED = new Set(['NotificationsService', 'TelegramChannel', 'TelegramBotService']);
+const NOT_NOTIFIED = new Set([
+  'NotificationsService',
+  'TelegramChannel',
+  'TelegramBotService',
+]);
 
 /**
  * The system log: every error and warning the server writes is saved here (see SystemLogger),
@@ -37,9 +46,9 @@ export class SystemLogService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    SystemLogger.setSink((problem) => {
+    SystemLogger.setSink(problem => {
       // Fire and forget: logging must not wait for the database, nor fail because of it.
-      void this.record(problem).catch((error) =>
+      void this.record(problem).catch(error =>
         console.error('[system log] an entry was not saved:', error),
       );
     });
@@ -61,7 +70,7 @@ export class SystemLogService implements OnModuleInit, OnModuleDestroy {
       .from(systemLog)
       .orderBy(desc(systemLog.lastAt))
       .limit(SHOWN_ENTRIES);
-    return rows.map((row) => ({
+    return rows.map(row => ({
       id: String(row.id),
       level: row.level,
       source: row.source,
@@ -81,7 +90,7 @@ export class SystemLogService implements OnModuleInit, OnModuleDestroy {
     const message = problem.message.slice(0, MAX_MESSAGE);
     const now = new Date();
     const [repeated] = await this.db
-      .select({ id: systemLog.id, count: systemLog.count })
+      .select({id: systemLog.id, count: systemLog.count})
       .from(systemLog)
       .where(
         and(
@@ -96,7 +105,7 @@ export class SystemLogService implements OnModuleInit, OnModuleDestroy {
     if (repeated) {
       await this.db
         .update(systemLog)
-        .set({ count: repeated.count + 1, lastAt: now })
+        .set({count: repeated.count + 1, lastAt: now})
         .where(eq(systemLog.id, repeated.id));
     } else {
       await this.db.insert(systemLog).values({
@@ -113,7 +122,10 @@ export class SystemLogService implements OnModuleInit, OnModuleDestroy {
 
   /** Warnings stay in the log; an error is worth a message — unless it was told recently. */
   private async tellOwner(source: string, message: string): Promise<void> {
-    if (NOT_NOTIFIED.has(source) || !this.throttle.allow(`${source}: ${message}`)) {
+    if (
+      NOT_NOTIFIED.has(source) ||
+      !this.throttle.allow(`${source}: ${message}`)
+    ) {
       return;
     }
     const owner = await this.users.owner();

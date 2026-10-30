@@ -9,11 +9,16 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
-import { trackedRepoInputSchema, trackedRepoUpdateSchema } from '@pd/contracts';
-import { z } from 'zod';
-import { ReposService } from './repos.service';
-import { OPEN_SOURCE_ACTIONS } from './open-source.server-actions';
+import {
+  AuthUser,
+  CurrentUser,
+  ServerActions,
+  ZodValidationPipe,
+} from '@pd/api-core';
+import {trackedRepoInputSchema, trackedRepoUpdateSchema} from '@pd/contracts';
+import {z} from 'zod';
+import {ReposService} from './repos.service';
+import {OPEN_SOURCE_ACTIONS} from './open-source.server-actions';
 
 /** Repositories of the Open Source section. */
 @Controller('development/repos')
@@ -53,7 +58,10 @@ export class OpenSourceController {
   /** Only a repository added by hand; one of the account is hidden instead. */
   @Delete(':id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.repos.remove(user.id, id);
   }
 

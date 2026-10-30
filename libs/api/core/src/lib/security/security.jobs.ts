@@ -1,10 +1,10 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { ServerActions } from '../sync/server-actions';
-import { UsersService } from '../users/users.service';
-import { SecurityAgent } from './security-agent.service';
-import { SecurityService } from './security.service';
-import { SignInLog } from './sign-in-log.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {ServerActions} from '../sync/server-actions';
+import {UsersService} from '../users/users.service';
+import {SecurityAgent} from './security-agent.service';
+import {SecurityService} from './security.service';
+import {SignInLog} from './sign-in-log.service';
 
 /** What reaches outside (the site, GitHub) or reads the server's files runs on the server. */
 export const SECURITY_ACTIONS = {
@@ -29,8 +29,12 @@ export class SecurityJobs implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.actions.register(SECURITY_ACTIONS.scan, (userId) => this.security.scan(userId));
-    this.actions.register(SECURITY_ACTIONS.investigate, (userId) => this.agent.investigate(userId));
+    this.actions.register(SECURITY_ACTIONS.scan, userId =>
+      this.security.scan(userId),
+    );
+    this.actions.register(SECURITY_ACTIONS.investigate, userId =>
+      this.agent.investigate(userId),
+    );
     this.actions.register(SECURITY_ACTIONS.guide, (userId, args) =>
       this.agent.explain(userId, String(args['id'])),
     );

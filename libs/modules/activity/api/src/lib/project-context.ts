@@ -1,4 +1,4 @@
-import { mergeSpans, subtractSpans, TimeSpan } from './time-spans';
+import {mergeSpans, subtractSpans, TimeSpan} from './time-spans';
 
 /**
  * The longest break between two moments of work on a project that what fills it still counts
@@ -35,7 +35,10 @@ export interface ProjectTime {
  * Whether a stretch lies in work on the project: during a moment of it, or in a break between
  * two moments no longer than CONTEXT_GAP_MS. `anchors` — merged, sorted.
  */
-export function nearProject(span: TimeSpan, anchors: readonly TimeSpan[]): boolean {
+export function nearProject(
+  span: TimeSpan,
+  anchors: readonly TimeSpan[],
+): boolean {
   // The first anchor that ends after the stretch begins.
   let low = 0;
   let high = anchors.length;
@@ -66,10 +69,11 @@ export function projectTime(
   projectId: string,
   coding: readonly TimeSpan[],
 ): ProjectTime {
-  const own = pieces.filter((piece) => piece.projectId === projectId);
+  const own = pieces.filter(piece => piece.projectId === projectId);
   const anchors = mergeSpans([...own, ...coding]);
   const context = pieces.filter(
-    (piece) => piece.projectId === null && !piece.leisure && nearProject(piece, anchors),
+    piece =>
+      piece.projectId === null && !piece.leisure && nearProject(piece, anchors),
   );
   return {
     spans: mergeSpans([...anchors, ...context]),

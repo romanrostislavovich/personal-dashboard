@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import {vi} from 'vitest';
 import {
   excludeTelemetrySite,
   invalidateEngagement,
@@ -8,7 +8,7 @@ import {
   telemetrySettings,
   uploadTelemetry,
 } from './telemetry';
-import { clearTelemetryConsent, telemetryExclusive } from './telemetry-state';
+import {clearTelemetryConsent, telemetryExclusive} from './telemetry-state';
 
 const mocks = vi.hoisted(() => ({
   record: vi.fn(),
@@ -19,7 +19,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock('./account', () => ({
   signedInClient: async () => {
     if (!mocks.signedIn) throw new Error('signed-out');
-    return { api: { post: mocks.record }, offlineUser: async () => ({ id: mocks.user }) };
+    return {
+      api: {post: mocks.record},
+      offlineUser: async () => ({id: mocks.user}),
+    };
   },
   serverUrl: async () => mocks.server,
 }));
@@ -33,7 +36,9 @@ let focused: boolean;
 function area(values: Record<string, unknown>) {
   return {
     get: async (keys: string | string[]) =>
-      Object.fromEntries((Array.isArray(keys) ? keys : [keys]).map((key) => [key, values[key]])),
+      Object.fromEntries(
+        (Array.isArray(keys) ? keys : [keys]).map(key => [key, values[key]]),
+      ),
     set: async (entries: Record<string, unknown>) => {
       Object.assign(values, structuredClone(entries));
     },
@@ -53,7 +58,7 @@ async function collect() {
       scrollDepthPercent: 50,
       url: 'https://evil.example',
       title: 'private',
-      metadata: { type: 'article', technologies: ['React', 'Jane Doe'] },
+      metadata: {type: 'article', technologies: ['React', 'Jane Doe']},
     },
     sender,
   );
@@ -69,7 +74,7 @@ beforeEach(() => {
   mocks.user = 'user-1';
   mocks.server = 'https://dashboard.example.com';
   mocks.signedIn = true;
-  mocks.record.mockReset().mockResolvedValue({ saved: 1 });
+  mocks.record.mockReset().mockResolvedValue({saved: 1});
   tab = {
     id: 1,
     windowId: 2,
@@ -86,12 +91,16 @@ beforeEach(() => {
     origin: 'https://docs.example.com',
   };
   vi.stubGlobal('chrome', {
-    runtime: { id: 'extension' },
-    extension: { inIncognitoContext: false },
-    storage: { local: area(local), session: area(session) },
-    tabs: { get: async () => tab, query: async () => [tab], sendMessage: async () => undefined },
-    windows: { get: async () => ({ focused }) },
-    idle: { queryState: async () => idle },
+    runtime: {id: 'extension'},
+    extension: {inIncognitoContext: false},
+    storage: {local: area(local), session: area(session)},
+    tabs: {
+      get: async () => tab,
+      query: async () => [tab],
+      sendMessage: async () => undefined,
+    },
+    windows: {get: async () => ({focused})},
+    idle: {queryState: async () => idle},
     alarms: {
       get: vi.fn().mockResolvedValue(undefined),
       create: vi.fn().mockResolvedValue(undefined),
@@ -106,7 +115,10 @@ afterEach(() => {
 
 describe('telemetry buffering and consent', () => {
   it('defaults off and starts a five-minute alarm without resetting an existing one', async () => {
-    expect(await telemetrySettings()).toEqual({ enabled: false, excluded: false });
+    expect(await telemetrySettings()).toEqual({
+      enabled: false,
+      excluded: false,
+    });
     await collect();
     expect(session).toEqual({});
     await scheduleTelemetry();
@@ -114,7 +126,10 @@ describe('telemetry buffering and consent', () => {
       delayInMinutes: 5,
       periodInMinutes: 5,
     });
-    vi.mocked(chrome.alarms.get).mockResolvedValue({ name: 'engagement-upload', scheduledTime: 0 });
+    vi.mocked(chrome.alarms.get).mockResolvedValue({
+      name: 'engagement-upload',
+      scheduledTime: 0,
+    });
     await scheduleTelemetry();
     expect(chrome.alarms.create).toHaveBeenCalledTimes(1);
   });
@@ -147,14 +162,17 @@ describe('telemetry buffering and consent', () => {
     expect(await receiveEngagement({}, sender)).toBeNull();
     await setTelemetryConsent(true);
     vi.advanceTimersByTime(15_000);
-    await receiveEngagement({ lease: permission?.lease, readingSeconds: 10, copyCount: 1 }, sender);
+    await receiveEngagement(
+      {lease: permission?.lease, readingSeconds: 10, copyCount: 1},
+      sender,
+    );
     await uploadTelemetry();
     expect(mocks.record).not.toHaveBeenCalled();
   });
 
   it.each(['account', 'server', 'signed-out'])(
     'discards queued data on %s change',
-    async (change) => {
+    async change => {
       await setTelemetryConsent(true);
       await collect();
       if (change === 'account') mocks.user = 'user-2';
@@ -172,12 +190,12 @@ describe('telemetry buffering and consent', () => {
     await collect();
     let finish!: () => void;
     let started!: () => void;
-    const sending = new Promise<void>((resolve) => {
+    const sending = new Promise<void>(resolve => {
       started = resolve;
     });
     mocks.record.mockImplementationOnce(() => {
       started();
-      return new Promise<void>((resolve) => {
+      return new Promise<void>(resolve => {
         finish = resolve;
       });
     });
@@ -204,13 +222,14 @@ describe('telemetry buffering and consent', () => {
     'never-save',
     'subframe',
     'origin',
-  ])('denies %s pages', async (reason) => {
+  ])('denies %s pages', async reason => {
     await setTelemetryConsent(true);
     if (reason === 'incognito') tab.incognito = true;
     if (reason === 'idle') idle = 'idle';
     if (reason === 'unfocused') focused = false;
-    if (reason === 'excluded') await excludeTelemetrySite(String(tab.url), true);
-    if (reason === 'private') local['browserConfig'] = { privateWords: ['docs'] };
+    if (reason === 'excluded')
+      await excludeTelemetrySite(String(tab.url), true);
+    if (reason === 'private') local['browserConfig'] = {privateWords: ['docs']};
     if (reason === 'never-save') local['neverSave'] = ['example.com'];
     if (reason === 'subframe') sender.frameId = 1;
     if (reason === 'origin') sender.origin = 'https://evil.example';
@@ -224,10 +243,16 @@ describe('telemetry buffering and consent', () => {
     const permission = await receiveEngagement({}, sender);
     invalidateEngagement();
     vi.advanceTimersByTime(15_000);
-    await receiveEngagement({ lease: permission?.lease, readingSeconds: 10, copyCount: 1 }, sender);
+    await receiveEngagement(
+      {lease: permission?.lease, readingSeconds: 10, copyCount: 1},
+      sender,
+    );
     const next = await receiveEngagement({}, sender);
     vi.advanceTimersByTime(30_000);
-    await receiveEngagement({ lease: next?.lease, readingSeconds: 10, copyCount: 1 }, sender);
+    await receiveEngagement(
+      {lease: next?.lease, readingSeconds: 10, copyCount: 1},
+      sender,
+    );
     await uploadTelemetry();
     expect(mocks.record).not.toHaveBeenCalled();
   });
@@ -235,7 +260,7 @@ describe('telemetry buffering and consent', () => {
   it('rechecks exclusions before uploading already queued aggregates', async () => {
     await setTelemetryConsent(true);
     await collect();
-    local['browserConfig'] = { privateWords: ['docs'] };
+    local['browserConfig'] = {privateWords: ['docs']};
     await uploadTelemetry();
     expect(mocks.record).not.toHaveBeenCalled();
   });
@@ -249,7 +274,7 @@ describe('telemetry buffering and consent', () => {
     const restarted = await import('./telemetry');
     vi.advanceTimersByTime(15_000);
     await restarted.receiveEngagement(
-      { lease: permission?.lease, readingSeconds: 10, copyCount: 1 },
+      {lease: permission?.lease, readingSeconds: 10, copyCount: 1},
       sender,
     );
     expect(session['telemetryQueue']).toEqual(queued);
@@ -260,12 +285,17 @@ describe('telemetry buffering and consent', () => {
 
   it.each([NaN, Infinity, -1, 16])(
     'rejects invalid reading duration %s',
-    async (readingSeconds) => {
+    async readingSeconds => {
       await setTelemetryConsent(true);
       const permission = await receiveEngagement({}, sender);
       vi.advanceTimersByTime(15_000);
       await receiveEngagement(
-        { lease: permission?.lease, readingSeconds, scrollDepthPercent: 50, copyCount: 1 },
+        {
+          lease: permission?.lease,
+          readingSeconds,
+          scrollDepthPercent: 50,
+          copyCount: 1,
+        },
         sender,
       );
       await uploadTelemetry();

@@ -1,13 +1,24 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Bar, BarChartComponent, SparklineComponent, SparklinePoint } from '@pd/web-core';
-import { localDate, PsychologyApi } from './psychology.api';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {
+  Bar,
+  BarChartComponent,
+  SparklineComponent,
+  SparklinePoint,
+} from '@pd/web-core';
+import {localDate, PsychologyApi} from './psychology.api';
 
 const PERIODS = [90, 180, 365] as const;
 
@@ -40,12 +51,13 @@ const PERIODS = [90, 180, 365] as const;
       >
         @for (option of periods; track option) {
           <mat-button-toggle [value]="option">
-            {{ 'psychology.days' | transloco: { days: option } }}
+            {{ 'psychology.days' | transloco: {days: option} }}
           </mat-button-toggle>
         }
       </mat-button-toggle-group>
       <a matButton routerLink="/life/summary">
-        <mat-icon>insights</mat-icon> {{ 'psychology.patterns.whatGoesWith' | transloco }}
+        <mat-icon>insights</mat-icon>
+        {{ 'psychology.patterns.whatGoesWith' | transloco }}
       </a>
     </header>
 
@@ -56,32 +68,47 @@ const PERIODS = [90, 180, 365] as const;
         <mat-card appearance="outlined">
           <mat-card-content class="stats">
             <div class="stat">
-              <span class="label">{{ 'psychology.patterns.average' | transloco }}</span>
+              <span class="label">{{
+                'psychology.patterns.average' | transloco
+              }}</span>
               <span class="value">{{ data.average | number: '1.1-1' }}</span>
-              <span class="sub">{{ 'psychology.patterns.ofFive' | transloco }}</span>
+              <span class="sub">{{
+                'psychology.patterns.ofFive' | transloco
+              }}</span>
             </div>
             <div class="stat">
-              <span class="label">{{ 'psychology.patterns.daysWithMood' | transloco }}</span>
+              <span class="label">{{
+                'psychology.patterns.daysWithMood' | transloco
+              }}</span>
               <span class="value">{{ data.days }}</span>
             </div>
             <div class="stat">
-              <span class="label">{{ 'psychology.patterns.bestDay' | transloco }}</span>
+              <span class="label">{{
+                'psychology.patterns.bestDay' | transloco
+              }}</span>
               <span class="value">{{ best() }}</span>
             </div>
             <div class="stat">
-              <span class="label">{{ 'psychology.patterns.hardestDay' | transloco }}</span>
+              <span class="label">{{
+                'psychology.patterns.hardestDay' | transloco
+              }}</span>
               <span class="value">{{ hardest() }}</span>
             </div>
             <!-- One low day is not a run: shown from two days on. -->
             @if (lowRun(data.longestLowRun); as run) {
               <div class="stat">
-                <span class="label">{{ 'psychology.patterns.lowRun' | transloco }}</span>
+                <span class="label">{{
+                  'psychology.patterns.lowRun' | transloco
+                }}</span>
                 <span class="value">
-                  {{ 'psychology.patterns.runDays' | transloco: { days: run.days } }}
+                  {{
+                    'psychology.patterns.runDays' | transloco: {days: run.days}
+                  }}
                 </span>
                 <span class="sub">
                   {{
-                    'psychology.patterns.since' | transloco: { date: (run.from | date: 'd MMM y') }
+                    'psychology.patterns.since'
+                      | transloco: {date: (run.from | date: 'd MMM y')}
                   }}
                 </span>
               </div>
@@ -92,7 +119,9 @@ const PERIODS = [90, 180, 365] as const;
         <div class="columns">
           <mat-card appearance="outlined">
             <mat-card-header>
-              <mat-card-title>{{ 'psychology.patterns.byWeekday' | transloco }}</mat-card-title>
+              <mat-card-title>{{
+                'psychology.patterns.byWeekday' | transloco
+              }}</mat-card-title>
             </mat-card-header>
             <mat-card-content class="padded">
               <pd-bar-chart
@@ -105,7 +134,9 @@ const PERIODS = [90, 180, 365] as const;
 
           <mat-card appearance="outlined">
             <mat-card-header>
-              <mat-card-title>{{ 'psychology.patterns.byWeek' | transloco }}</mat-card-title>
+              <mat-card-title>{{
+                'psychology.patterns.byWeek' | transloco
+              }}</mat-card-title>
             </mat-card-header>
             <mat-card-content class="padded">
               @if (weeks().length > 1) {
@@ -118,7 +149,9 @@ const PERIODS = [90, 180, 365] as const;
                   [label]="'psychology.patterns.byWeek' | transloco"
                 />
               } @else {
-                <p class="hint">{{ 'psychology.patterns.fewWeeks' | transloco }}</p>
+                <p class="hint">
+                  {{ 'psychology.patterns.fewWeeks' | transloco }}
+                </p>
               }
             </mat-card-content>
           </mat-card>
@@ -127,7 +160,9 @@ const PERIODS = [90, 180, 365] as const;
         @if (data.events.length) {
           <mat-card appearance="outlined">
             <mat-card-header>
-              <mat-card-title>{{ 'psychology.patterns.duringEvents' | transloco }}</mat-card-title>
+              <mat-card-title>{{
+                'psychology.patterns.duringEvents' | transloco
+              }}</mat-card-title>
               <mat-card-subtitle>
                 {{ 'psychology.patterns.duringEventsHint' | transloco }}
               </mat-card-subtitle>
@@ -146,10 +181,18 @@ const PERIODS = [90, 180, 365] as const;
                   </span>
                   <span
                     class="mood"
-                    [class.low]="event.mood !== null && event.mood < (data.average ?? 0) - 0.3"
-                    [class.high]="event.mood !== null && event.mood > (data.average ?? 0) + 0.3"
+                    [class.low]="
+                      event.mood !== null &&
+                      event.mood < (data.average ?? 0) - 0.3
+                    "
+                    [class.high]="
+                      event.mood !== null &&
+                      event.mood > (data.average ?? 0) + 0.3
+                    "
                   >
-                    {{ event.mood === null ? '—' : (event.mood | number: '1.1-1') }}
+                    {{
+                      event.mood === null ? '—' : (event.mood | number: '1.1-1')
+                    }}
                   </span>
                 </div>
               }
@@ -173,7 +216,10 @@ const PERIODS = [90, 180, 365] as const;
                   <span class="what">
                     <b>{{ period.title }}</b>
                     <span class="hint">
-                      {{ 'psychology.patterns.periodKinds.' + period.kind | transloco }}
+                      {{
+                        'psychology.patterns.periodKinds.' + period.kind
+                          | transloco
+                      }}
                       @if (period.subtitle) {
                         · {{ period.subtitle }}
                       }
@@ -187,10 +233,20 @@ const PERIODS = [90, 180, 365] as const;
                   </span>
                   <span
                     class="mood"
-                    [class.low]="period.mood !== null && period.mood < (data.average ?? 0) - 0.3"
-                    [class.high]="period.mood !== null && period.mood > (data.average ?? 0) + 0.3"
+                    [class.low]="
+                      period.mood !== null &&
+                      period.mood < (data.average ?? 0) - 0.3
+                    "
+                    [class.high]="
+                      period.mood !== null &&
+                      period.mood > (data.average ?? 0) + 0.3
+                    "
                   >
-                    {{ period.mood === null ? '—' : (period.mood | number: '1.1-1') }}
+                    {{
+                      period.mood === null
+                        ? '—'
+                        : (period.mood | number: '1.1-1')
+                    }}
                   </span>
                 </div>
               }
@@ -280,33 +336,41 @@ export class PatternsPage {
     const to = new Date();
     const from = new Date(to);
     from.setDate(from.getDate() - this.days() + 1);
-    return { from: localDate(from), to: localDate(to) };
+    return {from: localDate(from), to: localDate(to)};
   });
   protected readonly patterns = this.api.patterns(this.period);
 
   private readonly weekdayName = (weekday: number) =>
     this.transloco.translate(`psychology.weekdays.${weekday}`);
 
-  private readonly oneDecimal = new Intl.NumberFormat(this.transloco.getActiveLang(), {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
+  private readonly oneDecimal = new Intl.NumberFormat(
+    this.transloco.getActiveLang(),
+    {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    },
+  );
   protected readonly weekdays = computed<Bar[]>(() =>
-    (this.patterns.value()?.byWeekday ?? []).map(({ weekday, average, days }) => ({
-      label: this.weekdayName(weekday),
-      value: average ?? 0,
-      title: `${this.weekdayName(weekday)}: ${average === null ? '—' : this.oneDecimal.format(average)} · ${this.transloco.translate('psychology.patterns.days', { days })}`,
-      display: average === null ? '' : this.oneDecimal.format(average),
-    })),
+    (this.patterns.value()?.byWeekday ?? []).map(
+      ({weekday, average, days}) => ({
+        label: this.weekdayName(weekday),
+        value: average ?? 0,
+        title: `${this.weekdayName(weekday)}: ${average === null ? '—' : this.oneDecimal.format(average)} · ${this.transloco.translate('psychology.patterns.days', {days})}`,
+        display: average === null ? '' : this.oneDecimal.format(average),
+      }),
+    ),
   );
   protected readonly weeks = computed<SparklinePoint[]>(() =>
-    (this.patterns.value()?.weeks ?? []).map(({ week, average }) => ({ at: week, value: average })),
+    (this.patterns.value()?.weeks ?? []).map(({week, average}) => ({
+      at: week,
+      value: average,
+    })),
   );
 
   /** The day of the week with the highest and the lowest mood, among those that have one. */
   private readonly ranked = computed(() =>
     (this.patterns.value()?.byWeekday ?? [])
-      .filter((item) => item.average !== null)
+      .filter(item => item.average !== null)
       .sort((a, b) => (b.average ?? 0) - (a.average ?? 0)),
   );
   protected readonly best = computed(() => {
@@ -314,12 +378,14 @@ export class PatternsPage {
     return first ? this.weekdayName(first.weekday) : '—';
   });
   /** The longest run of low days, when it is a run at all: two days or more. */
-  protected lowRun(run: { days: number; from: string } | null) {
+  protected lowRun(run: {days: number; from: string} | null) {
     return run && run.days > 1 ? run : null;
   }
 
   protected readonly hardest = computed(() => {
     const last = this.ranked().at(-1);
-    return last && this.ranked().length > 1 ? this.weekdayName(last.weekday) : '—';
+    return last && this.ranked().length > 1
+      ? this.weekdayName(last.weekday)
+      : '—';
   });
 }

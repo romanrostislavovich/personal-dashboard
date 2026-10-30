@@ -8,8 +8,8 @@ import {
   Param,
   Req,
 } from '@nestjs/common';
-import { Public } from '@pd/api-core';
-import { SummaryService } from './summary.service';
+import {Public} from '@pd/api-core';
+import {SummaryService} from './summary.service';
 
 /** How many opens one address gets in a window: a doctor's few, never a guesser's many. */
 const OPENS_PER_WINDOW = 30;
@@ -22,7 +22,7 @@ const WINDOW_MS = 10 * 60_000;
  */
 @Controller('medical/shared')
 export class SharedSummaryController {
-  private readonly opens = new Map<string, { count: number; since: number }>();
+  private readonly opens = new Map<string, {count: number; since: number}>();
 
   constructor(private readonly summaries: SummaryService) {}
 
@@ -34,10 +34,18 @@ export class SharedSummaryController {
   @Header('Referrer-Policy', 'no-referrer')
   @Header('X-Content-Type-Options', 'nosniff')
   // The page has no script; nothing may run in it, nothing loads from outside.
-  @Header('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'")
-  async open(@Param('token') token: string, @Req() request: { ip?: string }): Promise<string> {
+  @Header(
+    'Content-Security-Policy',
+    "default-src 'none'; style-src 'unsafe-inline'",
+  )
+  async open(
+    @Param('token') token: string,
+    @Req() request: {ip?: string},
+  ): Promise<string> {
     this.throttle(request.ip ?? 'unknown');
-    const page = /^[\w-]{20,64}$/.test(token) ? await this.summaries.open(token) : null;
+    const page = /^[\w-]{20,64}$/.test(token)
+      ? await this.summaries.open(token)
+      : null;
     if (!page) {
       throw new NotFoundException();
     }
@@ -51,11 +59,14 @@ export class SharedSummaryController {
         this.opens.delete(key);
       }
     }
-    const entry = this.opens.get(address) ?? { count: 0, since: now };
+    const entry = this.opens.get(address) ?? {count: 0, since: now};
     entry.count++;
     this.opens.set(address, entry);
     if (entry.count > OPENS_PER_WINDOW) {
-      throw new HttpException('Too many requests', HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(
+        'Too many requests',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
   }
 }

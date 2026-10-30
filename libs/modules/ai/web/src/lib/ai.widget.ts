@@ -1,21 +1,34 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {Router} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 /** Home widget: a quick AI question — opens the chat and sends it right away. */
 @Component({
   selector: 'pd-ai-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MatCardModule, MatButtonModule, MatIconModule, TranslocoPipe],
+  imports: [
+    FormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    TranslocoPipe,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-card-title>✨ {{ 'ai.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'ai.widget.subtitle' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'ai.widget.subtitle' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <form class="ask" (ngSubmit)="ask()">
@@ -60,6 +73,8 @@ export class AiWidget {
   protected readonly question = signal('');
 
   ask(): void {
-    this.router.navigate(['/ai'], { queryParams: { q: this.question().trim() } });
+    void this.router.navigate(['/ai'], {
+      queryParams: {q: this.question().trim()},
+    });
   }
 }

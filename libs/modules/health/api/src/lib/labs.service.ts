@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
+import {Inject, Injectable} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
 import {
   HealthLabPanel,
   healthLabPanelInputSchema,
@@ -9,8 +9,8 @@ import {
   labFlag,
   toCanonical,
 } from '@pd/contracts';
-import { and, asc, desc, eq } from 'drizzle-orm';
-import { z } from 'zod';
+import {and, asc, desc, eq} from 'drizzle-orm';
+import {z} from 'zod';
 import {
   healthDocuments,
   HealthLabPanelRow,
@@ -21,7 +21,7 @@ import {
   healthStudies,
   healthVisits,
 } from './health.schema';
-import { assertOwnedId, found, removeOwned } from './owned';
+import {assertOwnedId, found, removeOwned} from './owned';
 
 export type ValidLabPanelInput = z.output<typeof healthLabPanelInputSchema>;
 export type ValidStudyInput = z.output<typeof healthStudyInputSchema>;
@@ -41,7 +41,10 @@ export class LabsService {
         .select()
         .from(healthLabPanels)
         .where(eq(healthLabPanels.userId, userId))
-        .orderBy(desc(healthLabPanels.takenOn), desc(healthLabPanels.createdAt)),
+        .orderBy(
+          desc(healthLabPanels.takenOn),
+          desc(healthLabPanels.createdAt),
+        ),
       this.db
         .select()
         .from(healthLabValues)
@@ -50,14 +53,27 @@ export class LabsService {
     ]);
     const byPanel = new Map<string, HealthLabValue[]>();
     for (const row of values) {
-      byPanel.set(row.panelId, [...(byPanel.get(row.panelId) ?? []), toValue(row)]);
+      byPanel.set(row.panelId, [
+        ...(byPanel.get(row.panelId) ?? []),
+        toValue(row),
+      ]);
     }
-    return panels.map((row) => toPanel(row, byPanel.get(row.id) ?? []));
+    return panels.map(row => toPanel(row, byPanel.get(row.id) ?? []));
   }
 
-  async savePanel(userId: string, input: ValidLabPanelInput, id?: string): Promise<HealthLabPanel> {
+  async savePanel(
+    userId: string,
+    input: ValidLabPanelInput,
+    id?: string,
+  ): Promise<HealthLabPanel> {
     await assertOwnedId(this.db, userId, healthVisits, input.visitId, 'Visit');
-    await assertOwnedId(this.db, userId, healthDocuments, input.documentId, 'Document');
+    await assertOwnedId(
+      this.db,
+      userId,
+      healthDocuments,
+      input.documentId,
+      'Document',
+    );
     const fields = {
       takenOn: input.takenOn,
       laboratory: input.laboratory || null,
@@ -66,19 +82,26 @@ export class LabsService {
       documentId: input.documentId ?? null,
       notes: input.notes || null,
     };
-    return this.db.transaction(async (tx) => {
+    return this.db.transaction(async tx => {
       const [panel] = id
         ? await tx
             .update(healthLabPanels)
             .set(fields)
-            .where(and(eq(healthLabPanels.id, id), eq(healthLabPanels.userId, userId)))
+            .where(
+              and(
+                eq(healthLabPanels.id, id),
+                eq(healthLabPanels.userId, userId),
+              ),
+            )
             .returning()
         : await tx
             .insert(healthLabPanels)
-            .values({ userId, ...fields })
+            .values({userId, ...fields})
             .returning();
       found(panel, 'Lab report');
-      await tx.delete(healthLabValues).where(eq(healthLabValues.panelId, panel.id));
+      await tx
+        .delete(healthLabValues)
+        .where(eq(healthLabValues.panelId, panel.id));
       const values = await tx
         .insert(healthLabValues)
         .values(
@@ -115,9 +138,19 @@ export class LabsService {
     return rows.map(toStudy);
   }
 
-  async saveStudy(userId: string, input: ValidStudyInput, id?: string): Promise<HealthStudy> {
+  async saveStudy(
+    userId: string,
+    input: ValidStudyInput,
+    id?: string,
+  ): Promise<HealthStudy> {
     await assertOwnedId(this.db, userId, healthVisits, input.visitId, 'Visit');
-    await assertOwnedId(this.db, userId, healthDocuments, input.documentId, 'Document');
+    await assertOwnedId(
+      this.db,
+      userId,
+      healthDocuments,
+      input.documentId,
+      'Document',
+    );
     const values = {
       kind: input.kind,
       area: input.area || null,
@@ -131,11 +164,13 @@ export class LabsService {
       ? await this.db
           .update(healthStudies)
           .set(values)
-          .where(and(eq(healthStudies.id, id), eq(healthStudies.userId, userId)))
+          .where(
+            and(eq(healthStudies.id, id), eq(healthStudies.userId, userId)),
+          )
           .returning()
       : await this.db
           .insert(healthStudies)
-          .values({ userId, ...values })
+          .values({userId, ...values})
           .returning();
     return toStudy(found(row, 'Study'));
   }
@@ -145,7 +180,10 @@ export class LabsService {
   }
 }
 
-function toPanel(row: HealthLabPanelRow, values: HealthLabValue[]): HealthLabPanel {
+function toPanel(
+  row: HealthLabPanelRow,
+  values: HealthLabValue[],
+): HealthLabPanel {
   return {
     id: row.id,
     takenOn: row.takenOn,
@@ -173,7 +211,10 @@ function toValue(row: HealthLabValueRow): HealthLabValue {
     canonical:
       row.value === null
         ? null
-        : toCanonical(row.analyte, row.value, row.unit, { low: row.refLow, high: row.refHigh }),
+        : toCanonical(row.analyte, row.value, row.unit, {
+            low: row.refLow,
+            high: row.refHigh,
+          }),
   };
 }
 

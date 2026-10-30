@@ -1,9 +1,9 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ServerActions } from '@pd/api-core';
-import { costSourceInputSchema, wishInputSchema } from '@pd/contracts';
-import { z } from 'zod';
-import { CostSourcesService } from './cost-sources/cost-sources.service';
-import { WishlistService } from './wishlist/wishlist.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {ServerActions} from '@pd/api-core';
+import {costSourceInputSchema, wishInputSchema} from '@pd/contracts';
+import {z} from 'zod';
+import {CostSourcesService} from './cost-sources/cost-sources.service';
+import {WishlistService} from './wishlist/wishlist.service';
 
 /**
  * Finance actions that call outside services — the providers' APIs, a shop's page — run on the
@@ -16,7 +16,7 @@ export const FINANCE_ACTIONS = {
   checkWish: 'finance.check-wish',
 } as const;
 
-const idArgs = z.object({ id: z.uuid() });
+const idArgs = z.object({id: z.uuid()});
 
 @Injectable()
 export class FinanceServerActions implements OnModuleInit {

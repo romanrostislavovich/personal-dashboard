@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { UserRow } from '../users/users.schema';
-import type { BotAction, BotActionReply } from './telegram/bot-command';
+import {Injectable} from '@nestjs/common';
+import {UserRow} from '../users/users.schema';
+import type {BotAction, BotActionReply} from './telegram/bot-command';
 
 /** How long an answer waits for the words it asked for ("a few words about the film?"). */
 const EXPECTED_TEXT_TTL_MS = 10 * 60 * 1000;
@@ -52,7 +52,11 @@ export class NotificationActions {
       return null;
     }
     const payload = action.slice(handler.name.length + 1);
-    return this.remember(user, await handler.handler(user, payload), notificationId);
+    return this.remember(
+      user,
+      await handler.handler(user, payload),
+      notificationId,
+    );
   }
 
   /**
@@ -64,24 +68,32 @@ export class NotificationActions {
     user: UserRow,
     text: string,
     notificationId?: string,
-  ): Promise<{ reply: string; notificationId: string | null } | null> {
+  ): Promise<{reply: string; notificationId: string | null} | null> {
     const expected = this.expected.get(user.id);
     if (!expected || expected.expiresAt <= Date.now()) {
       this.expected.delete(user.id);
       return null;
     }
-    if (notificationId !== undefined && expected.notificationId !== notificationId) {
+    if (
+      notificationId !== undefined &&
+      expected.notificationId !== notificationId
+    ) {
       return null;
     }
     this.expected.delete(user.id);
-    return { reply: await expected.handler(user, text), notificationId: expected.notificationId };
+    return {
+      reply: await expected.handler(user, text),
+      notificationId: expected.notificationId,
+    };
   }
 
   /** Whether words are awaited for this notification now. */
   awaitsText(userId: string, notificationId: string): boolean {
     const expected = this.expected.get(userId);
     return (
-      !!expected && expected.expiresAt > Date.now() && expected.notificationId === notificationId
+      !!expected &&
+      expected.expiresAt > Date.now() &&
+      expected.notificationId === notificationId
     );
   }
 
@@ -97,18 +109,18 @@ export class NotificationActions {
   ): ActionResult {
     if (typeof result === 'string') {
       this.expected.delete(user.id);
-      return { reply: result, expectsText: false };
+      return {reply: result, expectsText: false};
     }
     this.expected.set(user.id, {
       handler: result.expectText,
       expiresAt: Date.now() + EXPECTED_TEXT_TTL_MS,
       notificationId,
     });
-    return { reply: result.reply, expectsText: true };
+    return {reply: result.reply, expectsText: true};
   }
 
   private find(action: string): BotAction | undefined {
     const name = action.split(':')[0];
-    return this.actions.find((one) => one.name === name);
+    return this.actions.find(one => one.name === name);
   }
 }

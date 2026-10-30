@@ -1,10 +1,15 @@
-import { HttpException, Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, TelegramBotService, UserRow, UsersService } from '@pd/api-core';
-import { HEALTH_DOCUMENT_MAX_PAGES, zonedDateTime } from '@pd/contracts';
-import { healthMessages } from '../health.messages';
-import { HealthService } from '../health.service';
-import { DocumentReaderService, ReadFailure } from './document-reader.service';
+import {HttpException, Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {
+  AppConfig,
+  TelegramBotService,
+  UserRow,
+  UsersService,
+} from '@pd/api-core';
+import {HEALTH_DOCUMENT_MAX_PAGES, zonedDateTime} from '@pd/contracts';
+import {healthMessages} from '../health.messages';
+import {HealthService} from '../health.service';
+import {DocumentReaderService, ReadFailure} from './document-reader.service';
 
 /**
  * A photo of a medical document sent to Telegram ("🩺 A medical document" under it): it is kept
@@ -23,7 +28,9 @@ export class HealthTelegram implements OnModuleInit {
     private readonly reader: DocumentReaderService,
     private readonly users: UsersService,
   ) {
-    this.publicUrl = config.get('PUBLIC_URL', { infer: true }).replace(/\/+$/, '');
+    this.publicUrl = config
+      .get('PUBLIC_URL', {infer: true})
+      .replace(/\/+$/, '');
   }
 
   onModuleInit(): void {
@@ -32,7 +39,7 @@ export class HealthTelegram implements OnModuleInit {
         this.fromPhotos(
           user,
           await Promise.all(
-            photo.pages.map(async (page) => ({
+            photo.pages.map(async page => ({
               data: await page.download(),
               mimeType: page.mimeType,
             })),
@@ -40,20 +47,26 @@ export class HealthTelegram implements OnModuleInit {
         ),
       {
         id: 'med',
-        label: { en: healthMessages('en').photoChoice, ru: healthMessages('ru').photoChoice },
+        label: {
+          en: healthMessages('en').photoChoice,
+          ru: healthMessages('ru').photoChoice,
+        },
         wholeAlbum: true,
       },
     );
   }
 
   /** The pages of one document, in order; the first one makes it. */
-  async fromPhotos(user: UserRow, pages: { data: Buffer; mimeType: string }[]): Promise<string> {
+  async fromPhotos(
+    user: UserRow,
+    pages: {data: Buffer; mimeType: string}[],
+  ): Promise<string> {
     const text = healthMessages(user.locale);
     const today = zonedDateTime(new Date(), this.users.timeZoneOf(user)).date;
     const [first, ...rest] = pages.slice(0, HEALTH_DOCUMENT_MAX_PAGES);
     const document = await this.health.addDocument(
       user.id,
-      { name: `Telegram ${today}`, kind: 'other', documentedOn: today },
+      {name: `Telegram ${today}`, kind: 'other', documentedOn: today},
       first,
     );
     for (const page of rest) {
@@ -61,7 +74,10 @@ export class HealthTelegram implements OnModuleInit {
     }
     try {
       const draft = await this.reader.read(user.id, document.id);
-      return text.read(draft.kind, `${this.publicUrl}/health/history?draft=${document.id}`);
+      return text.read(
+        draft.kind,
+        `${this.publicUrl}/health/history?draft=${document.id}`,
+      );
     } catch (error) {
       const code = error instanceof HttpException ? codeOf(error) : null;
       return text.failed[code ?? 'aiFailed'];
@@ -70,6 +86,6 @@ export class HealthTelegram implements OnModuleInit {
 }
 
 function codeOf(error: HttpException): ReadFailure | null {
-  const code = (error.getResponse() as { code?: unknown }).code;
+  const code = (error.getResponse() as {code?: unknown}).code;
   return typeof code === 'string' ? (code as ReadFailure) : null;
 }

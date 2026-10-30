@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
-import { SoundcloudSettings } from './soundcloud';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
+import {SoundcloudSettings} from './soundcloud';
 
 export const lastfmSettingsInputSchema = z.object({
   username: z.string().trim().min(2).max(50),
@@ -72,7 +72,12 @@ export interface NowPlaying {
   durationMs: number | null;
 }
 
-export const MUSIC_TOP_PERIODS = ['7day', '1month', '12month', 'overall'] as const;
+export const MUSIC_TOP_PERIODS = [
+  '7day',
+  '1month',
+  '12month',
+  'overall',
+] as const;
 export type MusicTopPeriod = (typeof MUSIC_TOP_PERIODS)[number];
 
 export interface MusicTopItem {
@@ -103,7 +108,7 @@ export interface MusicStats {
   totalScrobbles: number | null;
   today: number;
   /** Plays per day for the last 30 days (from the local history). */
-  playsByDay: { day: LocalDate; plays: number }[];
+  playsByDay: {day: LocalDate; plays: number}[];
   recent: RecentTrack[];
 }
 
@@ -135,7 +140,9 @@ export function songLinks(song: {
   url?: string | null;
 }): SongLinks {
   const query = [song.artist, song.track].filter(Boolean).join(' ');
-  const spotifyTrack = Boolean(song.url && /^https:\/\/open\.spotify\.com\/track\//.test(song.url));
+  const spotifyTrack = Boolean(
+    song.url && /^https:\/\/open\.spotify\.com\/track\//.test(song.url),
+  );
   return {
     youtubeMusic: `https://music.youtube.com/search?q=${encodeURIComponent(query)}`,
     spotify: spotifyTrack

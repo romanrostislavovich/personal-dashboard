@@ -1,7 +1,11 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { NotificationsService, SchedulerService, UsersService } from '@pd/api-core';
-import { hasNews, soundcloudMessages } from './soundcloud.messages';
-import { SoundcloudService } from './soundcloud.service';
+import {Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {
+  NotificationsService,
+  SchedulerService,
+  UsersService,
+} from '@pd/api-core';
+import {hasNews, soundcloudMessages} from './soundcloud.messages';
+import {SoundcloudService} from './soundcloud.service';
 
 /**
  * Hourly: re-reads the SoundCloud profile and its tracks, saves the counters of the day and
@@ -29,11 +33,12 @@ export class SoundcloudJob implements OnModuleInit {
   private async run(): Promise<void> {
     for (const userId of await this.soundcloud.connectedUserIds()) {
       // One user's expired token must not stop the others; the error is saved for the page.
-      const news = await this.soundcloud.sync(userId).catch((error) => {
+      const news = await this.soundcloud.sync(userId).catch(error => {
         this.logger.warn(`SoundCloud sync for ${userId} failed: ${error}`);
         return null;
       });
-      const user = news && hasNews(news) ? await this.users.findById(userId) : null;
+      const user =
+        news && hasNews(news) ? await this.users.findById(userId) : null;
       if (!news || !user) {
         continue;
       }

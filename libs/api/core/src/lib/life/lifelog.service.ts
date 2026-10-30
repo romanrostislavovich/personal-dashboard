@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {Inject, Injectable} from '@nestjs/common';
 import {
   LifelogGenerated,
   LifelogNarrative,
@@ -8,10 +8,10 @@ import {
   lifelogNoteSchema,
   lifelogQuerySchema,
 } from '@pd/contracts';
-import { and, asc, eq, gte, lte } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { lifelogNarratives, lifelogSettings } from './life.schema';
-import { LifelogSettings, lifelogSettingsSchema } from '@pd/contracts';
+import {and, asc, eq, gte, lte} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {lifelogNarratives, lifelogSettings} from './life.schema';
+import {LifelogSettings, lifelogSettingsSchema} from '@pd/contracts';
 
 @Injectable()
 export class LifelogService {
@@ -22,14 +22,17 @@ export class LifelogService {
       .select()
       .from(lifelogSettings)
       .where(eq(lifelogSettings.userId, userId));
-    return { enabled: row?.enabled ?? false };
+    return {enabled: row?.enabled ?? false};
   }
 
-  async configure(userId: string, input: LifelogSettings): Promise<LifelogSettings> {
+  async configure(
+    userId: string,
+    input: LifelogSettings,
+  ): Promise<LifelogSettings> {
     const settings = lifelogSettingsSchema.parse(input);
     await this.db
       .insert(lifelogSettings)
-      .values({ userId, ...settings })
+      .values({userId, ...settings})
       .onConflictDoUpdate({
         target: lifelogSettings.userId,
         set: settings,
@@ -38,7 +41,7 @@ export class LifelogService {
   }
 
   async list(userId: string, input: LifelogQuery): Promise<LifelogNarrative[]> {
-    const { from, to } = lifelogQuerySchema.parse(input);
+    const {from, to} = lifelogQuerySchema.parse(input);
     const rows = await this.db
       .select()
       .from(lifelogNarratives)
@@ -66,8 +69,12 @@ export class LifelogService {
     return row ? toNarrative(row) : null;
   }
 
-  async saveNote(userId: string, day: string, note: string): Promise<LifelogNarrative> {
-    const input = lifelogNoteSchema.parse({ note });
+  async saveNote(
+    userId: string,
+    day: string,
+    note: string,
+  ): Promise<LifelogNarrative> {
+    const input = lifelogNoteSchema.parse({note});
     const [row] = await this.db
       .insert(lifelogNarratives)
       .values({
@@ -77,7 +84,7 @@ export class LifelogService {
       })
       .onConflictDoUpdate({
         target: [lifelogNarratives.userId, lifelogNarratives.day],
-        set: { note: input.note, updatedAt: new Date() },
+        set: {note: input.note, updatedAt: new Date()},
       })
       .returning();
     return toNarrative(row);
@@ -101,7 +108,7 @@ export class LifelogService {
       })
       .onConflictDoUpdate({
         target: [lifelogNarratives.userId, lifelogNarratives.day],
-        set: { ...input, generatedAt: now, updatedAt: now },
+        set: {...input, generatedAt: now, updatedAt: now},
       })
       .returning();
     return toNarrative(row);
@@ -119,7 +126,9 @@ export class LifelogService {
   }
 }
 
-function toNarrative(row: typeof lifelogNarratives.$inferSelect): LifelogNarrative {
+function toNarrative(
+  row: typeof lifelogNarratives.$inferSelect,
+): LifelogNarrative {
   return {
     id: row.id,
     day: row.day,

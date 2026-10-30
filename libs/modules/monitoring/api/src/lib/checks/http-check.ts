@@ -1,4 +1,4 @@
-import { safeFetch } from '@pd/api-core';
+import {safeFetch} from '@pd/api-core';
 
 export interface HttpCheckResult {
   isUp: boolean;
@@ -18,7 +18,7 @@ export async function checkHttp(url: string): Promise<HttpCheckResult> {
     const response = await safeFetch(url, {
       redirect: 'follow',
       signal: AbortSignal.timeout(TIMEOUT_MS),
-      headers: { 'User-Agent': 'personal-dashboard-uptime/1.0' },
+      headers: {'User-Agent': 'personal-dashboard-uptime/1.0'},
     });
     const responseMs = Math.round(performance.now() - startedAt);
     // The body is not needed — do not download it.
@@ -35,18 +35,24 @@ export async function checkHttp(url: string): Promise<HttpCheckResult> {
       isUp: false,
       statusCode: null,
       responseMs: null,
-      error: isTimeout ? `Timeout ${TIMEOUT_MS / 1000}s` : describeNetworkError(error),
+      error: isTimeout
+        ? `Timeout ${TIMEOUT_MS / 1000}s`
+        : describeNetworkError(error),
     };
   }
 }
 
 /** fetch hides the real cause (DNS, connection refused, TLS) in `cause`. */
 function describeNetworkError(error: unknown): string {
-  if (error instanceof Error && 'code' in error && typeof error.code === 'string') {
+  if (
+    error instanceof Error &&
+    'code' in error &&
+    typeof error.code === 'string'
+  ) {
     return error.code; // Refused before any request: ADDRESS_NOT_ALLOWED.
   }
   if (error instanceof Error && error.cause instanceof Error) {
-    const code = (error.cause as Error & { code?: string }).code;
+    const code = (error.cause as Error & {code?: string}).code;
     return code ?? error.cause.message;
   }
   return error instanceof Error ? error.message : String(error);

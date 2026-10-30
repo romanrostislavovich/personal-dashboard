@@ -1,22 +1,30 @@
-import { net, powerMonitor } from 'electron';
-import { TELEMETRY_INGEST_PATH, WORKSTATE_CAPTURE_PATH } from '@pd/client-core';
-import { sanitizeTelemetryText, WorkstateInput, workstateInputSchema } from '@pd/contracts';
-import type { DesktopTelemetryDiagnostics } from '@pd/contracts';
-import { ActivityStore, TrackerConfig } from './activity-store';
-import { BreakReminder } from './break-reminder';
-import { FocusPhase, FocusSession, FocusStatus, FocusTimer } from './focus-timer';
-import { HealthCollector, HealthSnapshot } from './health';
-import { Outage, OutageWatch } from './outages';
-import { Span, SpanBuilder, WindowSample } from './span-builder';
-import { isMeeting, isPrivateWindow } from './window-rules';
-import { SAMPLE_SECONDS, WindowWatcher } from './window-watcher';
-import { DesktopTelemetry } from './telemetry';
-import { InputFieldContext, SafeInputKind } from './input-dynamics';
-import { TerminalCompletion } from './terminal-friction';
-import { SuccessfulWorkEvent, TelemetrySources, TerminalReport } from './telemetry-sources';
-import { MAX_SAMPLE_GAP_MS } from './context-switch';
-import { SmartBreak } from './smart-break';
-import { secureOrigin } from '../update/updater';
+import {net, powerMonitor} from 'electron';
+import {TELEMETRY_INGEST_PATH, WORKSTATE_CAPTURE_PATH} from '@pd/client-core';
+import {
+  sanitizeTelemetryText,
+  WorkstateInput,
+  workstateInputSchema,
+} from '@pd/contracts';
+import type {DesktopTelemetryDiagnostics} from '@pd/contracts';
+import {ActivityStore, TrackerConfig} from './activity-store';
+import {BreakReminder} from './break-reminder';
+import {FocusPhase, FocusSession, FocusStatus, FocusTimer} from './focus-timer';
+import {HealthCollector, HealthSnapshot} from './health';
+import {Outage, OutageWatch} from './outages';
+import {Span, SpanBuilder, WindowSample} from './span-builder';
+import {isMeeting, isPrivateWindow} from './window-rules';
+import {SAMPLE_SECONDS, WindowWatcher} from './window-watcher';
+import {DesktopTelemetry} from './telemetry';
+import {InputFieldContext, SafeInputKind} from './input-dynamics';
+import {TerminalCompletion} from './terminal-friction';
+import {
+  SuccessfulWorkEvent,
+  TelemetrySources,
+  TerminalReport,
+} from './telemetry-sources';
+import {MAX_SAMPLE_GAP_MS} from './context-switch';
+import {SmartBreak} from './smart-break';
+import {secureOrigin} from '../update/updater';
 
 /** What waits is sent this often. */
 const UPLOAD_MS = 60_000;
@@ -36,12 +44,12 @@ const MEETING_GRACE_MS = 2 * 60_000;
 
 /** What the tracker tells the user; the shell shows it as a system notification. */
 export type TrackerNotice =
-  | { kind: 'break'; minutes: number }
-  | { kind: 'smart-break' }
-  | { kind: 'focus-ended'; next: FocusPhase; held: number; minutes: number }
-  | { kind: 'break-ended' }
+  | {kind: 'break'; minutes: number}
+  | {kind: 'smart-break'}
+  | {kind: 'focus-ended'; next: FocusPhase; held: number; minutes: number}
+  | {kind: 'break-ended'}
   /** A call ended; `held` — notifications that waited for it. */
-  | { kind: 'meeting-ended'; held: number };
+  | {kind: 'meeting-ended'; held: number};
 
 export interface TrackerStatus {
   /** The system is one the tracker can watch windows on (Windows). */
@@ -68,7 +76,7 @@ export interface TrackerStatus {
 export class ActivityTracker {
   private readonly store = new ActivityStore();
   private readonly spans = new SpanBuilder();
-  private readonly watcher = new WindowWatcher((sample) => this.onSample(sample));
+  private readonly watcher = new WindowWatcher(sample => this.onSample(sample));
   private locked = false;
   private suspended = false;
   private telemetryRunning = false;
@@ -77,15 +85,16 @@ export class ActivityTracker {
   private sourceTimer: NodeJS.Timeout | null = null;
   private sourceSampleAt: number | null = null;
   private sourceIdentity: string | null = null;
-  private windowCollection: DesktopTelemetryDiagnostics['collection'] = 'waiting-window';
+  private windowCollection: DesktopTelemetryDiagnostics['collection'] =
+    'waiting-window';
   private smartWindowAllowed = false;
   private workstateEpoch = 0;
   private readonly smartBreak = new SmartBreak();
   private readonly sources = new TelemetrySources(
-    (aggregate) => {
+    aggregate => {
       if (this.syncSources()) this.telemetry.mergeInput(aggregate, Date.now());
     },
-    (report) => this.onTerminalReport(report),
+    report => this.onTerminalReport(report),
   );
   private readonly telemetry = new DesktopTelemetry(
     () => ({
@@ -102,27 +111,45 @@ export class ActivityTracker {
     async (buckets, identity, signal) => {
       const server = this.serverUrl();
       const token = this.store.token;
-      if (!server || !token || identity !== this.telemetryIdentity()) return false;
-      const response = await net.fetch(new URL(TELEMETRY_INGEST_PATH, server).href, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Device ${token}` },
-        body: JSON.stringify({ buckets }),
-        signal: AbortSignal.any([signal, AbortSignal.timeout(UPLOAD_TIMEOUT_MS)]),
-      });
+      if (!server || !token || identity !== this.telemetryIdentity())
+        return false;
+      const response = await net.fetch(
+        new URL(TELEMETRY_INGEST_PATH, server).href,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Device ${token}`,
+          },
+          body: JSON.stringify({buckets}),
+          signal: AbortSignal.any([
+            signal,
+            AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+          ]),
+        },
+      );
       this.telemetry.recordHttpStatus(signal, response.status);
-      if (response.status === 401 && !signal.aborted && identity === this.telemetryIdentity())
+      if (
+        response.status === 401 &&
+        !signal.aborted &&
+        identity === this.telemetryIdentity()
+      )
         this.disable();
       return response.ok;
     },
   );
   private uploading = false;
   /** The window in front, as last sampled (for the assistant's computer_front_window). */
-  private front: (WindowSample & { at: number }) | null = null;
+  private front: (WindowSample & {at: number}) | null = null;
   /** A call is in front (or was a moment ago): the app keeps quiet. */
   private meetingUntil = 0;
-  private readonly outages = new OutageWatch((outage) => this.store.enqueueOutage(outage));
+  private readonly outages = new OutageWatch(outage =>
+    this.store.enqueueOutage(outage),
+  );
   private heldInMeeting = 0;
-  private readonly breaks = new BreakReminder((minutes) => this.notice({ kind: 'break', minutes }));
+  private readonly breaks = new BreakReminder(minutes =>
+    this.notice({kind: 'break', minutes}),
+  );
   private readonly health = new HealthCollector();
   /** The latest state of the computer, sent with the next upload. */
   private pendingHealth: HealthSnapshot | null = null;
@@ -131,9 +158,13 @@ export class ActivityTracker {
     phaseEnded: (ended, next, held) => {
       const settings = this.store.config.focus;
       const minutes =
-        next === 'long-break' ? settings.longBreakMinutes : settings.shortBreakMinutes;
+        next === 'long-break'
+          ? settings.longBreakMinutes
+          : settings.shortBreakMinutes;
       this.notice(
-        ended === 'focus' ? { kind: 'focus-ended', next, held, minutes } : { kind: 'break-ended' },
+        ended === 'focus'
+          ? {kind: 'focus-ended', next, held, minutes}
+          : {kind: 'break-ended'},
       );
     },
     changed: () => {
@@ -157,13 +188,18 @@ export class ActivityTracker {
     /** Separate opt-in, scoped to the registered device and server, never activity's default. */
     private readonly telemetryConsent: () => boolean = () => false,
     /** Local explicit wrapper reports only; no command, path or repository identity. */
-    private readonly successfulWork: (event: SuccessfulWorkEvent) => void = () => undefined,
+    private readonly successfulWork: (
+      event: SuccessfulWorkEvent,
+    ) => void = () => undefined,
     private readonly smartBreakConsent: () => boolean = () => false,
   ) {}
 
   start(): void {
     this.telemetryRunning = true;
-    this.telemetryTimer ??= setInterval(() => void this.telemetry.tick(Date.now()), UPLOAD_MS);
+    this.telemetryTimer ??= setInterval(
+      () => void this.telemetry.tick(Date.now()),
+      UPLOAD_MS,
+    );
     this.sourceTimer ??= setInterval(() => this.syncSources(), 1000);
     powerMonitor.on('lock-screen', () => this.setLocked(true));
     powerMonitor.on('unlock-screen', () => this.setLocked(false));
@@ -196,7 +232,7 @@ export class ActivityTracker {
   }
 
   /** The dashboard registered this computer as a device: tracking begins. */
-  enable(device: { id: string; token: string }): void {
+  enable(device: {id: string; token: string}): void {
     this.resetTelemetry();
     this.store.setDevice(device);
     this.watcher.start();
@@ -215,7 +251,11 @@ export class ActivityTracker {
   /** `minutes` — pause for so long; `0` — until resumed; `null` — resume. */
   pause(minutes: number | null): void {
     this.store.setPausedUntil(
-      minutes === null ? null : minutes === 0 ? 0 : Date.now() + minutes * 60_000,
+      minutes === null
+        ? null
+        : minutes === 0
+          ? 0
+          : Date.now() + minutes * 60_000,
     );
     if (minutes !== null) {
       this.close();
@@ -254,15 +294,17 @@ export class ActivityTracker {
     this.smartBreak.clear();
   }
 
-  smartBreakStatus(): { enabled: boolean; available: boolean } {
+  smartBreakStatus(): {enabled: boolean; available: boolean} {
     return {
       enabled: this.smartBreakConsent() === true,
       available:
-        WindowWatcher.supported && !!this.telemetryIdentity() && this.telemetryConsent() === true,
+        WindowWatcher.supported &&
+        !!this.telemetryIdentity() &&
+        this.telemetryConsent() === true,
     };
   }
 
-  telemetryStatus(): { enabled: boolean; available: boolean } {
+  telemetryStatus(): {enabled: boolean; available: boolean} {
     return {
       enabled: this.telemetryConsent() === true,
       available: WindowWatcher.supported && !!this.telemetryIdentity(),
@@ -297,7 +339,8 @@ export class ActivityTracker {
     if (this.suspended) return 'suspended';
     if (this.locked) return 'locked';
     if (this.paused) return 'paused';
-    if (powerMonitor.getSystemIdleTime() >= this.store.config.idleMinutes * 60) return 'idle';
+    if (powerMonitor.getSystemIdleTime() >= this.store.config.idleMinutes * 60)
+      return 'idle';
     const now = Date.now();
     if (
       this.sourceSampleAt === null ||
@@ -310,7 +353,7 @@ export class ActivityTracker {
   }
 
   /** Main-process only. Titles and browser tabs are deliberately never part of a snapshot. */
-  workstatePermit(): { key: string; activeApp?: string } | null {
+  workstatePermit(): {key: string; activeApp?: string} | null {
     const now = Date.now();
     const identity = this.telemetryIdentity();
     if (
@@ -329,36 +372,60 @@ export class ActivityTracker {
     )
       return null;
     const activeApp =
-      this.front && !isPrivateWindow(this.front.app, this.store.config.privateWords)
+      this.front &&
+      !isPrivateWindow(this.front.app, this.store.config.privateWords)
         ? (sanitizeTelemetryText(this.front.app) ?? undefined)
         : undefined;
-    return { key: JSON.stringify([identity, this.workstateEpoch]), activeApp };
+    return {key: JSON.stringify([identity, this.workstateEpoch]), activeApp};
   }
 
   workstateTextAllowed(text: string): boolean {
     return (
-      sanitizeTelemetryText(text) === text && !isPrivateWindow(text, this.store.config.privateWords)
+      sanitizeTelemetryText(text) === text &&
+      !isPrivateWindow(text, this.store.config.privateWords)
     );
   }
 
-  async saveWorkstate(input: WorkstateInput, key: string, signal: AbortSignal): Promise<boolean> {
+  async saveWorkstate(
+    input: WorkstateInput,
+    key: string,
+    signal: AbortSignal,
+  ): Promise<boolean> {
     const server = this.serverUrl();
     const token = this.store.token;
     const identity = this.telemetryIdentity();
-    if (!server || !token || signal.aborted || this.workstatePermit()?.key !== key) return false;
+    if (
+      !server ||
+      !token ||
+      signal.aborted ||
+      this.workstatePermit()?.key !== key
+    )
+      return false;
     try {
       // Redirects are refused here, so an http:// address goes to its https:// origin at once.
       const origin = secureOrigin(server) ?? server;
-      const response = await net.fetch(new URL(WORKSTATE_CAPTURE_PATH, origin).href, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Device ${token}` },
-        body: JSON.stringify(workstateInputSchema.parse(input)),
-        redirect: 'error',
-        credentials: 'omit',
-        signal: AbortSignal.any([signal, AbortSignal.timeout(UPLOAD_TIMEOUT_MS)]),
-      });
-      if (response.status === 401 && this.telemetryIdentity() === identity) this.disable();
-      return response.ok && !signal.aborted && this.workstatePermit()?.key === key;
+      const response = await net.fetch(
+        new URL(WORKSTATE_CAPTURE_PATH, origin).href,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Device ${token}`,
+          },
+          body: JSON.stringify(workstateInputSchema.parse(input)),
+          redirect: 'error',
+          credentials: 'omit',
+          signal: AbortSignal.any([
+            signal,
+            AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+          ]),
+        },
+      );
+      if (response.status === 401 && this.telemetryIdentity() === identity)
+        this.disable();
+      return (
+        response.ok && !signal.aborted && this.workstatePermit()?.key === key
+      );
     } catch {
       return false;
     }
@@ -443,7 +510,10 @@ export class ActivityTracker {
       })
     )
       return;
-    if (report.exitCode === 0 && (report.category === 'test' || report.category === 'commit')) {
+    if (
+      report.exitCode === 0 &&
+      (report.category === 'test' || report.category === 'commit')
+    ) {
       const event: SuccessfulWorkEvent = {
         category: report.category,
         durationMs: report.durationMs,
@@ -451,7 +521,7 @@ export class ActivityTracker {
       };
       this.sampleSmartBreak(event.completedAt);
       if (this.smartBreak.transition(event, event.completedAt))
-        this.notice({ kind: 'smart-break' });
+        this.notice({kind: 'smart-break'});
       this.successfulWork(event);
     }
   }
@@ -468,20 +538,27 @@ export class ActivityTracker {
    * The window in front as the tracker last saw it (a private one without its title, an
    * excluded program not at all), with how long there has been no input; `null` — none.
    */
-  frontWindow(): { app: string; name: string | null; title: string; idleSeconds: number } | null {
+  frontWindow(): {
+    app: string;
+    name: string | null;
+    title: string;
+    idleSeconds: number;
+  } | null {
     if (!this.front) {
       return null;
     }
-    const { app, name, title } = this.front;
-    return { app, name, title, idleSeconds: powerMonitor.getSystemIdleTime() };
+    const {app, name, title} = this.front;
+    return {app, name, title, idleSeconds: powerMonitor.getSystemIdleTime()};
   }
 
-  focusStatus(): FocusStatus & { available: boolean } {
-    return { ...this.focus.status(), available: !!this.store.deviceId };
+  focusStatus(): FocusStatus & {available: boolean} {
+    return {...this.focus.status(), available: !!this.store.deviceId};
   }
 
   /** A focus session needs a device to report to: tracking enabled on this computer. */
-  startFocus(options: { projectId?: string | null; note?: string | null } = {}): void {
+  startFocus(
+    options: {projectId?: string | null; note?: string | null} = {},
+  ): void {
     if (this.store.deviceId) {
       this.focus.start(options);
     }
@@ -509,7 +586,9 @@ export class ActivityTracker {
 
   private takeHealth(): void {
     if (this.store.deviceId) {
-      void this.health.collect().then((snapshot) => (this.pendingHealth = snapshot));
+      void this.health
+        .collect()
+        .then(snapshot => (this.pendingHealth = snapshot));
     }
   }
 
@@ -540,10 +619,14 @@ export class ActivityTracker {
       !this.paused &&
       !isExcluded(sample, config) &&
       !isPrivateWindow(sample.title, config.privateWords);
-    this.telemetryAllowed = this.smartWindowAllowed && idleMs < config.idleMinutes * 60_000;
+    this.telemetryAllowed =
+      this.smartWindowAllowed && idleMs < config.idleMinutes * 60_000;
     if (!this.telemetryAllowed) this.workstateEpoch++;
     this.followMeeting(sample, now);
-    this.telemetry.sample(this.telemetryAllowed ? (sample?.app ?? null) : null, now);
+    this.telemetry.sample(
+      this.telemetryAllowed ? (sample?.app ?? null) : null,
+      now,
+    );
     this.syncSources();
     this.breaks.tick(now, idleMs, {
       away: this.locked || this.paused,
@@ -557,14 +640,18 @@ export class ActivityTracker {
     }
     // A private window: the program is recorded, its title never leaves the computer.
     if (isPrivateWindow(sample.title, config.privateWords)) {
-      sample = { ...sample, title: '' };
+      sample = {...sample, title: ''};
     }
-    this.front = { ...sample, at: now };
+    this.front = {...sample, at: now};
     if (
       idleMs < config.idleMinutes * 60_000 &&
       config.distractingApps.includes(sample.app.toLowerCase())
     ) {
-      this.focus.distraction(sample.app.toLowerCase(), sample.name ?? sample.app, SAMPLE_SECONDS);
+      this.focus.distraction(
+        sample.app.toLowerCase(),
+        sample.name ?? sample.app,
+        SAMPLE_SECONDS,
+      );
     }
     // No keyboard or mouse for a while means the user went away — at the moment the input
     // stopped. A film is the exception: a full-screen player or browser needs no input, for a
@@ -576,7 +663,10 @@ export class ActivityTracker {
         idleMs < WATCH_WITHOUT_INPUT_MS;
       if (!watching) {
         // Past the limit of a film, the time up to now has been counted already.
-        const since = sample.fullscreen && idleMs >= WATCH_WITHOUT_INPUT_MS ? now : now - idleMs;
+        const since =
+          sample.fullscreen && idleMs >= WATCH_WITHOUT_INPUT_MS
+            ? now
+            : now - idleMs;
         this.keep(this.spans.feed(null, since));
         return;
       }
@@ -600,14 +690,18 @@ export class ActivityTracker {
    */
   private followMeeting(sample: WindowSample | null, now: number): void {
     const config = this.store.config;
-    if (sample && !this.locked && isMeeting(sample.app, sample.title, config.meetingApps)) {
+    if (
+      sample &&
+      !this.locked &&
+      isMeeting(sample.app, sample.title, config.meetingApps)
+    ) {
       this.meetingUntil = now + MEETING_GRACE_MS;
       return;
     }
     if (this.meetingUntil && now >= this.meetingUntil) {
       this.meetingUntil = 0;
       if (this.heldInMeeting) {
-        this.notice({ kind: 'meeting-ended', held: this.heldInMeeting });
+        this.notice({kind: 'meeting-ended', held: this.heldInMeeting});
       }
       this.heldInMeeting = 0;
     }
@@ -668,7 +762,8 @@ export class ActivityTracker {
         this.outages.succeeded();
         const config = mergedConfig(this.store.config, await response.json());
         if (config) {
-          if (JSON.stringify(config) !== JSON.stringify(this.store.config)) this.resetTelemetry();
+          if (JSON.stringify(config) !== JSON.stringify(this.store.config))
+            this.resetTelemetry();
           this.store.setConfig(config);
         }
         this.forget(batch);
@@ -697,20 +792,30 @@ export class ActivityTracker {
     return this.focus.working ? this.focus.status().endsAt : null;
   }
 
-  private async post(server: string, token: string, batch: Batch): Promise<Response> {
+  private async post(
+    server: string,
+    token: string,
+    batch: Batch,
+  ): Promise<Response> {
     const focusUntil = this.focusUntil();
-    const response = await net.fetch(new URL('/api/activity/device/spans', server).href, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Device ${token}` },
-      body: JSON.stringify({
-        focusUntil,
-        spans: batch.spans,
-        ...(batch.focus.length ? { focus: batch.focus } : {}),
-        ...(batch.health ? { health: batch.health } : {}),
-        ...(batch.outages.length ? { outages: batch.outages } : {}),
-      }),
-      signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
-    });
+    const response = await net.fetch(
+      new URL('/api/activity/device/spans', server).href,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Device ${token}`,
+        },
+        body: JSON.stringify({
+          focusUntil,
+          spans: batch.spans,
+          ...(batch.focus.length ? {focus: batch.focus} : {}),
+          ...(batch.health ? {health: batch.health} : {}),
+          ...(batch.outages.length ? {outages: batch.outages} : {}),
+        }),
+        signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+      },
+    );
     if (response.ok) {
       this.toldFocusUntil = focusUntil;
     }
@@ -720,8 +825,8 @@ export class ActivityTracker {
   /** What the server has (or will never take) leaves the store. */
   private forget(batch: Batch): void {
     this.store.dequeue(batch.spans.length);
-    this.store.dequeueFocus(new Set(batch.focus.map((session) => session.id)));
-    this.store.dequeueOutages(new Set(batch.outages.map((outage) => outage.id)));
+    this.store.dequeueFocus(new Set(batch.focus.map(session => session.id)));
+    this.store.dequeueOutages(new Set(batch.outages.map(outage => outage.id)));
     if (batch.health && this.pendingHealth === batch.health) {
       this.pendingHealth = null;
     }
@@ -764,8 +869,14 @@ function outcomeOf(
  * The settings the server sent, over the ones known: a field an older server does not send
  * keeps its value. `null` — the answer is not settings at all.
  */
-function mergedConfig(known: TrackerConfig, sent: Partial<TrackerConfig>): TrackerConfig | null {
-  if (typeof sent.idleMinutes !== 'number' || !Array.isArray(sent.excludedApps)) {
+function mergedConfig(
+  known: TrackerConfig,
+  sent: Partial<TrackerConfig>,
+): TrackerConfig | null {
+  if (
+    typeof sent.idleMinutes !== 'number' ||
+    !Array.isArray(sent.excludedApps)
+  ) {
     return null;
   }
   const list = (value: string[] | undefined, fallback: string[]) =>
@@ -774,7 +885,10 @@ function mergedConfig(known: TrackerConfig, sent: Partial<TrackerConfig>): Track
     idleMinutes: sent.idleMinutes,
     excludedApps: sent.excludedApps,
     watchApps: list(sent.watchApps, []),
-    breakMinutes: typeof sent.breakMinutes === 'number' ? sent.breakMinutes : known.breakMinutes,
+    breakMinutes:
+      typeof sent.breakMinutes === 'number'
+        ? sent.breakMinutes
+        : known.breakMinutes,
     focus: sent.focus ?? known.focus,
     distractingApps: list(sent.distractingApps, known.distractingApps),
     privateWords: list(sent.privateWords, known.privateWords),

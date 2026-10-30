@@ -7,14 +7,14 @@
  */
 
 /** A row as PostgreSQL gives it (`to_jsonb`): column names as in the database. */
-export type DbRow = Record<string, unknown> & { id: string };
+export type DbRow = Record<string, unknown> & {id: string};
 
 export interface TableChange {
   table: string;
   /** Rows the call added, as they were right after it. */
   inserted: DbRow[];
   /** Rows the call changed: before and right after it. */
-  updated: { before: DbRow; after: DbRow }[];
+  updated: {before: DbRow; after: DbRow}[];
 }
 
 /** What it takes to undo one call; stored with the action (AiActionsService). */
@@ -25,19 +25,23 @@ export interface UndoData {
 }
 
 /** The difference of a table's rows before and after a call; deletions are the trash's. */
-export function rowChanges(table: string, before: DbRow[], after: DbRow[]): TableChange | null {
-  const old = new Map(before.map((row) => [row.id, row]));
+export function rowChanges(
+  table: string,
+  before: DbRow[],
+  after: DbRow[],
+): TableChange | null {
+  const old = new Map(before.map(row => [row.id, row]));
   const inserted: DbRow[] = [];
-  const updated: { before: DbRow; after: DbRow }[] = [];
+  const updated: {before: DbRow; after: DbRow}[] = [];
   for (const row of after) {
     const was = old.get(row.id);
     if (!was) {
       inserted.push(row);
     } else if (stable(was) !== stable(row)) {
-      updated.push({ before: was, after: row });
+      updated.push({before: was, after: row});
     }
   }
-  return inserted.length || updated.length ? { table, inserted, updated } : null;
+  return inserted.length || updated.length ? {table, inserted, updated} : null;
 }
 
 /** Whether a call changed anything that can be undone. */
@@ -50,7 +54,9 @@ function stable(value: unknown): string {
   return JSON.stringify(value, (_key, item: unknown) =>
     item && typeof item === 'object' && !Array.isArray(item)
       ? Object.fromEntries(
-          Object.entries(item as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)),
+          Object.entries(item as Record<string, unknown>).sort(([a], [b]) =>
+            a.localeCompare(b),
+          ),
         )
       : item,
   );

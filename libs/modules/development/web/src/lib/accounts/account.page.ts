@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import {DatePipe, DecimalPipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,15 +7,15 @@ import {
   LOCALE_ID,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { CodeProvider } from '@pd/contracts';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {ActivatedRoute, RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {CodeProvider} from '@pd/contracts';
 import {
   Bar,
   BarChartComponent,
@@ -25,10 +25,13 @@ import {
   ShareListComponent,
   SparklineComponent,
 } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { ContributionHeatmapComponent, HeatmapDay } from '../ui/contribution-heatmap.component';
-import { AccountsApi } from './accounts.api';
-import { PROVIDER_NAMES } from './providers';
+import {firstValueFrom} from 'rxjs';
+import {
+  ContributionHeatmapComponent,
+  HeatmapDay,
+} from '../ui/contribution-heatmap.component';
+import {AccountsApi} from './accounts.api';
+import {PROVIDER_NAMES} from './providers';
 
 /**
  * The user's account on a code hosting service: contributions, streaks, languages, repositories.
@@ -62,7 +65,8 @@ export class AccountPage {
   private readonly transloco = inject(TranslocoService);
   private readonly datePipe = new DatePipe(inject(LOCALE_ID));
 
-  protected readonly provider: CodeProvider = inject(ActivatedRoute).snapshot.data['provider'];
+  protected readonly provider: CodeProvider =
+    inject(ActivatedRoute).snapshot.data['provider'];
   protected readonly service = PROVIDER_NAMES[this.provider];
 
   protected readonly settings = this.api.settings();
@@ -73,19 +77,29 @@ export class AccountPage {
 
   /** The year of the calendar; the current one until the user picks another. */
   private readonly pickedYear = signal<number | null>(null);
-  protected readonly year = computed(() => this.pickedYear() ?? new Date().getFullYear());
-  protected readonly contributions = this.api.contributions(this.provider, this.year);
+  protected readonly year = computed(
+    () => this.pickedYear() ?? new Date().getFullYear(),
+  );
+  protected readonly contributions = this.api.contributions(
+    this.provider,
+    this.year,
+  );
   protected readonly today = new Date().toLocaleDateString('en-CA');
 
   protected readonly yearTotals = computed(
-    () => this.profile.value()?.years.find((totals) => totals.year === this.year()) ?? null,
+    () =>
+      this.profile.value()?.years.find(totals => totals.year === this.year()) ??
+      null,
   );
 
   protected readonly heatmapDays = computed<HeatmapDay[]>(() =>
-    this.contributions.value().map(({ day, count }) => ({
+    this.contributions.value().map(({day, count}) => ({
       day,
       value: count,
-      label: this.transloco.translate('development.account.contributionsCount', { count }),
+      label: this.transloco.translate(
+        'development.account.contributionsCount',
+        {count},
+      ),
     })),
   );
 
@@ -94,8 +108,8 @@ export class AccountPage {
   protected readonly count = (value: number) => String(Math.round(value));
 
   protected readonly months = computed<Bar[]>(() => {
-    const totals = Array.from({ length: 12 }, () => 0);
-    for (const { day, count } of this.contributions.value()) {
+    const totals = Array.from({length: 12}, () => 0);
+    for (const {day, count} of this.contributions.value()) {
       totals[Number(day.slice(5, 7)) - 1] += count;
     }
     return totals.map((value, month) => {
@@ -110,8 +124,9 @@ export class AccountPage {
 
   protected readonly languages = computed<Share[]>(() => {
     const languages = this.profile.value()?.languages ?? [];
-    const total = languages.reduce((sum, language) => sum + language.bytes, 0) || 1;
-    return languages.map(({ name, color, bytes }) => ({
+    const total =
+      languages.reduce((sum, language) => sum + language.bytes, 0) || 1;
+    return languages.map(({name, color, bytes}) => ({
       name,
       color,
       value: bytes,
@@ -120,7 +135,7 @@ export class AccountPage {
   });
 
   protected readonly followersHistory = computed(() =>
-    (this.profile.value()?.followersHistory ?? []).map(({ day, followers }) => ({
+    (this.profile.value()?.followersHistory ?? []).map(({day, followers}) => ({
       at: day,
       value: followers,
     })),
@@ -138,10 +153,14 @@ export class AccountPage {
       await firstValueFrom(this.api.sync(this.provider));
     } catch (error) {
       // The service explains itself (an invalid token, a missing permission) — show its words.
-      const message = (errorBody(error) as { message?: string } | null)?.message;
-      this.snackBar.open(message ?? this.transloco.translate('development.errors.generic'), 'OK', {
-        duration: 8000,
-      });
+      const message = (errorBody(error) as {message?: string} | null)?.message;
+      this.snackBar.open(
+        message ?? this.transloco.translate('development.errors.generic'),
+        'OK',
+        {
+          duration: 8000,
+        },
+      );
     } finally {
       this.profile.reload();
       this.contributions.reload();

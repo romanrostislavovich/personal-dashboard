@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AutomationsService } from '@pd/api-core';
-import { DiaryService } from './diary.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AutomationsService} from '@pd/api-core';
+import {DiaryService} from './diary.service';
 
 /** The diary in the rules "if X, then Y": no entry by a time; a line added to today's entry. */
 @Injectable()
@@ -16,7 +16,14 @@ export class DiaryAutomations implements OnModuleInit {
       module: 'diary',
       labelKey: 'diary.automations.noEntryBy',
       description: 'There is no diary entry today by a time of the user',
-      params: [{ name: 'time', type: 'time', labelKey: 'diary.automations.time', required: true }],
+      params: [
+        {
+          name: 'time',
+          type: 'time',
+          labelKey: 'diary.automations.time',
+          required: true,
+        },
+      ],
       variables: [],
       check: async (userId, params, now) => {
         if (now.time < params['time']) {

@@ -1,4 +1,4 @@
-import { LocalDate, Task, TaskHorizon } from '@pd/contracts';
+import {LocalDate, Task, TaskHorizon} from '@pd/contracts';
 
 /** What the task list shows. `today` includes everything overdue. */
 export const TASK_VIEWS = ['today', 'upcoming', 'all', 'done'] as const;
@@ -13,12 +13,18 @@ export interface TaskFilter {
   horizon?: TaskHorizon | null;
 }
 
-export function filterTasks(tasks: Task[], filter: TaskFilter, today: LocalDate): Task[] {
+export function filterTasks(
+  tasks: Task[],
+  filter: TaskFilter,
+  today: LocalDate,
+): Task[] {
   return tasks.filter(
-    (task) =>
+    task =>
       inView(task, filter.view, today) &&
       (filter.listId === null ||
-        (filter.listId === 'inbox' ? task.listId === null : task.listId === filter.listId)) &&
+        (filter.listId === 'inbox'
+          ? task.listId === null
+          : task.listId === filter.listId)) &&
       (filter.tag === null || task.tags.includes(filter.tag)) &&
       (!filter.horizon || task.horizon === filter.horizon),
   );
@@ -43,10 +49,12 @@ function inView(task: Task, view: TaskView, today: LocalDate): boolean {
 
 /** Open tasks due before today. */
 export function isOverdue(task: Task, today: LocalDate): boolean {
-  return task.completedAt === null && task.dueDate !== null && task.dueDate < today;
+  return (
+    task.completedAt === null && task.dueDate !== null && task.dueDate < today
+  );
 }
 
 /** Every tag in use, alphabetical — for the filter. */
 export function allTags(tasks: Task[]): string[] {
-  return [...new Set(tasks.flatMap((task) => task.tags))].sort();
+  return [...new Set(tasks.flatMap(task => task.tags))].sort();
 }

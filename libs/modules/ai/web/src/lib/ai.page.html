@@ -10,25 +10,35 @@
       <mat-menu #models="matMenu">
         @for (c of settings.value()!.connections; track c.id) {
           <button mat-menu-item (click)="useConnection(c)">
-            <mat-icon>{{ c.id === activeConnection()?.id ? 'check' : '' }}</mat-icon>
+            <mat-icon>{{
+              c.id === activeConnection()?.id ? 'check' : ''
+            }}</mat-icon>
             {{ c.name }} · {{ c.model }}
           </button>
         }
       </mat-menu>
     }
     @if (settings.value()?.configured) {
-      <button matButton [matMenuTriggerFor]="archiveMenu" (menuOpened)="loadArchive()">
+      <button
+        matButton
+        [matMenuTriggerFor]="archiveMenu"
+        (menuOpened)="loadArchive()"
+      >
         <mat-icon>history</mat-icon> {{ 'ai.history.title' | transloco }}
       </button>
       <mat-menu #archiveMenu="matMenu" class="ai-archive">
         @for (c of archive(); track c.id) {
           <button mat-menu-item (click)="open(c)">
-            <mat-icon>{{ c.id === conversationId() ? 'chat' : 'chat_bubble_outline' }}</mat-icon>
+            <mat-icon>{{
+              c.id === conversationId() ? 'chat' : 'chat_bubble_outline'
+            }}</mat-icon>
             <span class="archive-item">
               <span class="archive-title">{{
                 c.title ?? ('ai.history.untitled' | transloco)
               }}</span>
-              <span class="archive-date">{{ c.updatedAt | date: 'd MMM, HH:mm' }}</span>
+              <span class="archive-date">{{
+                c.updatedAt | date: 'd MMM, HH:mm'
+              }}</span>
             </span>
             <span
               class="archive-remove"
@@ -52,7 +62,11 @@
       </button>
     }
     @if (settings.value()?.configured) {
-      <a matButton [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+      <a
+        matButton
+        [routerLink]="integrations.path"
+        [queryParams]="integrations.queryParams"
+      >
         <mat-icon>tune</mat-icon> {{ 'ai.settings.title' | transloco }}
       </a>
     }
@@ -78,7 +92,10 @@
     <!-- What one could ask: a reason to connect it, from one's own sections. -->
     <ul class="examples">
       @for (example of examples; track example) {
-        <li><mat-icon inline>chat_bubble</mat-icon> {{ 'ai.examples.' + example | transloco }}</li>
+        <li>
+          <mat-icon inline>chat_bubble</mat-icon>
+          {{ 'ai.examples.' + example | transloco }}
+        </li>
       }
     </ul>
   }
@@ -86,7 +103,11 @@
   @if (s.configured) {
     <div class="chat">
       @for (message of history(); track $index) {
-        <div class="message" [class]="message.role" [class.error]="message.isError">
+        <div
+          class="message"
+          [class]="message.role"
+          [class.error]="message.isError"
+        >
           @if (message.role === 'assistant') {
             <div class="bubble" [innerHTML]="message.content | markdown"></div>
             @if (message.toolsUsed?.length) {
@@ -140,7 +161,10 @@
             <mat-chip (removed)="removeAttachment($index)">
               <mat-icon matChipAvatar>description</mat-icon>
               {{ file.name }}
-              <button matChipRemove [attr.aria-label]="'ai.attach.remove' | transloco">
+              <button
+                matChipRemove
+                [attr.aria-label]="'ai.attach.remove' | transloco"
+              >
                 <mat-icon>cancel</mat-icon>
               </button>
             </mat-chip>
@@ -180,7 +204,11 @@
         matIconButton
         class="send"
         [attr.aria-label]="'ai.send' | transloco"
-        [disabled]="(!draft().trim() && !attachments().length) || thinking() || uploading()"
+        [disabled]="
+          (!draft().trim() && !attachments().length) ||
+          thinking() ||
+          uploading()
+        "
         (click)="send()"
       >
         <mat-icon>send</mat-icon>

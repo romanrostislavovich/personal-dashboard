@@ -1,5 +1,5 @@
-import { githubGraphql } from '../github/github-graphql';
-import { AccountRepo, RepoSnapshot } from './repo-source';
+import {githubGraphql} from '../github/github-graphql';
+import {AccountRepo, RepoSnapshot} from './repo-source';
 
 /** GitHub returns at most 100 repositories a page; package.json texts make a page heavy. */
 const PAGE_SIZE = 50;
@@ -54,9 +54,13 @@ export class GithubReposClient {
     const repos: AccountRepo[] = [];
     let cursor: string | null = null;
     do {
-      const { viewer }: AccountPage = await githubGraphql<AccountPage>(this.token, ACCOUNT_QUERY, {
-        cursor,
-      });
+      const {viewer}: AccountPage = await githubGraphql<AccountPage>(
+        this.token,
+        ACCOUNT_QUERY,
+        {
+          cursor,
+        },
+      );
       for (const raw of viewer.repositories.nodes) {
         repos.push({
           ...toSnapshot(raw),
@@ -85,7 +89,7 @@ export class GithubReposClient {
         this.token,
         `query { ${fields.join('\n')} }`,
         {},
-        { allowPartial: true },
+        {allowPartial: true},
       );
       chunk.forEach((_, index) => {
         const raw = data[`r${index}`];
@@ -128,7 +132,7 @@ export function packageNameFrom(packageJson: string | null): string | null {
     return null;
   }
   try {
-    const { name, private: isPrivate } = JSON.parse(packageJson) as {
+    const {name, private: isPrivate} = JSON.parse(packageJson) as {
       name?: unknown;
       private?: unknown;
     };
@@ -146,7 +150,7 @@ interface PageInfo {
 }
 
 interface AccountPage {
-  viewer: { login: string; repositories: { pageInfo: PageInfo; nodes: RawRepo[] } };
+  viewer: {login: string; repositories: {pageInfo: PageInfo; nodes: RawRepo[]}};
 }
 
 interface RawRepo {
@@ -160,10 +164,14 @@ interface RawRepo {
   stargazerCount: number;
   forkCount: number;
   pushedAt: string | null;
-  owner: { login: string };
-  primaryLanguage: { name: string } | null;
-  issues: { totalCount: number };
-  pullRequests: { totalCount: number };
-  latestRelease: { tagName: string; publishedAt: string | null; url: string } | null;
-  packageJson: { text?: string | null } | null;
+  owner: {login: string};
+  primaryLanguage: {name: string} | null;
+  issues: {totalCount: number};
+  pullRequests: {totalCount: number};
+  latestRelease: {
+    tagName: string;
+    publishedAt: string | null;
+    url: string;
+  } | null;
+  packageJson: {text?: string | null} | null;
 }

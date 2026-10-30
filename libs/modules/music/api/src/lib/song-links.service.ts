@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { songLinks, SongLinks } from '@pd/contracts';
-import { findOnSpotifyWeb } from './clients/spotify-web.client';
-import { findOnYoutubeMusic } from './clients/youtube-music.client';
-import { SpotifyService } from './spotify.service';
+import {Injectable, Logger} from '@nestjs/common';
+import {songLinks, SongLinks} from '@pd/contracts';
+import {findOnSpotifyWeb} from './clients/spotify-web.client';
+import {findOnYoutubeMusic} from './clients/youtube-music.client';
+import {SpotifyService} from './spotify.service';
 
 /** Songs remembered with their links (one song is shared again and again). */
 const CACHE_SIZE = 2000;
@@ -32,7 +32,9 @@ export class SongLinksService {
     const search = songLinks(song);
     const query = [song.artist, song.track].filter(Boolean).join(' ');
     const [youtube, spotify] = await Promise.all([
-      findOnYoutubeMusic(query).catch((error) => this.failed('YouTube Music', error)),
+      findOnYoutubeMusic(query).catch(error =>
+        this.failed('YouTube Music', error),
+      ),
       search.spotifyExact
         ? Promise.resolve(search.spotify)
         : this.findOnSpotify(song.track, song.artist),
@@ -57,13 +59,20 @@ export class SongLinksService {
    * Spotify's API when the server has its app keys (exact); without them, or when it found
    * nothing, the song's page found on the web and checked by its title.
    */
-  private async findOnSpotify(track: string, artist: string | null): Promise<string | null> {
+  private async findOnSpotify(
+    track: string,
+    artist: string | null,
+  ): Promise<string | null> {
     const viaApi = (await this.spotify.isAvailable())
-      ? await this.spotify.findTrack(track, artist).catch((error) => this.failed('Spotify', error))
+      ? await this.spotify
+          .findTrack(track, artist)
+          .catch(error => this.failed('Spotify', error))
       : null;
     return (
       viaApi ??
-      (await findOnSpotifyWeb(track, artist).catch((error) => this.failed('Spotify web', error)))
+      (await findOnSpotifyWeb(track, artist).catch(error =>
+        this.failed('Spotify web', error),
+      ))
     );
   }
 

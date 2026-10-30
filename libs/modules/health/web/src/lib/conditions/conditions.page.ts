@@ -1,14 +1,24 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthCondition, HealthDiagnosis, healthConditions, HealthRecord } from '@pd/contracts';
-import { HealthDialogs } from '../dialogs/health-dialogs.service';
-import { HealthApi } from '../health.api';
-import { CountryPipe, SpecialityPipe } from '../health-labels';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {
+  HealthCondition,
+  HealthDiagnosis,
+  healthConditions,
+  HealthRecord,
+} from '@pd/contracts';
+import {HealthDialogs} from '../dialogs/health-dialogs.service';
+import {HealthApi} from '../health.api';
+import {CountryPipe, SpecialityPipe} from '../health-labels';
 
 /**
  * Conditions: the diagnoses of one code over the years, from every clinic and country, as one
@@ -52,21 +62,29 @@ import { CountryPipe, SpecialityPipe } from '../health-labels';
               </span>
               @if (isActive(condition.status)) {
                 <button matButton (click)="close(data, condition)">
-                  <mat-icon>task_alt</mat-icon> {{ 'health.diagnosis.close' | transloco }}
+                  <mat-icon>task_alt</mat-icon>
+                  {{ 'health.diagnosis.close' | transloco }}
                 </button>
               }
             </div>
             <p class="hint">
               {{
-                'health.conditions.since' | transloco: { day: (condition.firstOn | date: 'MMMM y') }
+                'health.conditions.since'
+                  | transloco: {day: (condition.firstOn | date: 'MMMM y')}
               }}
               @if (condition.diagnoses.length > 1) {
-                · {{ 'health.conditions.times' | transloco: { count: condition.diagnoses.length } }}
+                ·
+                {{
+                  'health.conditions.times'
+                    | transloco: {count: condition.diagnoses.length}
+                }}
               }
             </p>
             @for (diagnosis of condition.diagnoses; track diagnosis.id) {
               <div class="diagnosis">
-                <span class="day">{{ diagnosis.diagnosedOn | date: 'd MMM y' }}</span>
+                <span class="day">{{
+                  diagnosis.diagnosedOn | date: 'd MMM y'
+                }}</span>
                 <span class="body">
                   <span>{{ diagnosis.title }}</span>
                   <span class="hint">
@@ -184,7 +202,9 @@ export class ConditionsPage {
   protected readonly data = computed(() =>
     this.record.hasValue() ? this.record.value() : undefined,
   );
-  protected readonly conditions = computed(() => healthConditions(this.data()?.diagnoses ?? []));
+  protected readonly conditions = computed(() =>
+    healthConditions(this.data()?.diagnoses ?? []),
+  );
 
   protected isActive(status: string): boolean {
     return status === 'confirmed' || status === 'suspected';
@@ -192,27 +212,37 @@ export class ConditionsPage {
 
   /** The speciality and country of the visit a diagnosis was set at. */
   protected where(data: HealthRecord, diagnosis: HealthDiagnosis) {
-    const visit = data.visits.find((v) => v.id === diagnosis.visitId);
+    const visit = data.visits.find(v => v.id === diagnosis.visitId);
     return visit?.speciality || visit?.country ? visit : null;
   }
 
   protected async add(): Promise<void> {
     const record = this.data();
-    if (record && (await this.dialogs.diagnosis({ record }))) {
+    if (record && (await this.dialogs.diagnosis({record}))) {
       this.record.reload();
     }
   }
 
   /** The diagnosis taken off: recovered, ruled out or in remission — kept in its history. */
-  protected async close(record: HealthRecord, condition: HealthCondition): Promise<void> {
-    const closing = { system: condition.system, code: condition.code, title: condition.title };
-    if (await this.dialogs.diagnosis({ record, closing })) {
+  protected async close(
+    record: HealthRecord,
+    condition: HealthCondition,
+  ): Promise<void> {
+    const closing = {
+      system: condition.system,
+      code: condition.code,
+      title: condition.title,
+    };
+    if (await this.dialogs.diagnosis({record, closing})) {
       this.record.reload();
     }
   }
 
-  protected async edit(record: HealthRecord, diagnosis: HealthDiagnosis): Promise<void> {
-    if (await this.dialogs.diagnosis({ record, diagnosis })) {
+  protected async edit(
+    record: HealthRecord,
+    diagnosis: HealthDiagnosis,
+  ): Promise<void> {
+    if (await this.dialogs.diagnosis({record, diagnosis})) {
       this.record.reload();
     }
   }

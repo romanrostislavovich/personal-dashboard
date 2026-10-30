@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ServerActions } from '@pd/api-core';
-import { GithubProfileService } from './github-profile.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {ServerActions} from '@pd/api-core';
+import {GithubProfileService} from './github-profile.service';
 
 /** GitHub requests run on the server (see ServerActions). */
 export const GITHUB_PROFILE_ACTIONS = {
@@ -15,6 +15,8 @@ export class GithubProfileServerActions implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.actions.register(GITHUB_PROFILE_ACTIONS.sync, (userId) => this.profile.sync(userId));
+    this.actions.register(GITHUB_PROFILE_ACTIONS.sync, userId =>
+      this.profile.sync(userId),
+    );
   }
 }

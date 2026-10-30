@@ -1,5 +1,12 @@
-import { mkdir, readdir, rename, stat, unlink, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import {
+  mkdir,
+  readdir,
+  rename,
+  stat,
+  unlink,
+  writeFile,
+} from 'node:fs/promises';
+import {join} from 'node:path';
 
 /**
  * The copies of one's data kept on this computer: the archive the dashboard exports
@@ -32,9 +39,9 @@ function isCopyName(name: string): boolean {
 export async function listCopies(folder: string): Promise<BackupCopy[]> {
   const names = await readdir(folder).catch(() => [] as string[]);
   const copies = await Promise.all(
-    names.filter(isCopyName).map(async (name) => {
+    names.filter(isCopyName).map(async name => {
       const info = await stat(join(folder, name));
-      return { name, size: info.size, savedAt: info.mtime.toISOString() };
+      return {name, size: info.size, savedAt: info.mtime.toISOString()};
     }),
   );
   return copies.sort((a, b) => b.name.localeCompare(a.name));
@@ -53,7 +60,7 @@ export async function saveCopy(
   if (!isCopyName(name)) {
     throw new Error(`Not a name of a copy: ${name}`);
   }
-  await mkdir(folder, { recursive: true });
+  await mkdir(folder, {recursive: true});
   const target = join(folder, name);
   const part = `${target}.part`;
   try {

@@ -1,12 +1,18 @@
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { ActivityRuleSuggestion } from '@pd/contracts';
-import { DurationPipe } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { ActivityApi } from '../activity.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  output,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {ActivityRuleSuggestion} from '@pd/contracts';
+import {DurationPipe} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {ActivityApi} from '../activity.api';
 
 /**
  * Rules the dashboard offers: windows and sites that keep turning up in work on a project (the
@@ -16,10 +22,18 @@ import { ActivityApi } from '../activity.api';
 @Component({
   selector: 'pd-activity-rule-suggestions',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, MatTooltipModule, TranslocoPipe, DurationPipe],
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    TranslocoPipe,
+    DurationPipe,
+  ],
   template: `
     <div class="head">
-      <span class="title">{{ 'activity.rules.suggestions.title' | transloco }}</span>
+      <span class="title">{{
+        'activity.rules.suggestions.title' | transloco
+      }}</span>
       <button matButton [disabled]="refreshing()" (click)="refresh()">
         <mat-icon>auto_awesome</mat-icon>
         {{ 'activity.rules.suggestions.refresh' | transloco }}
@@ -31,7 +45,10 @@ import { ActivityApi } from '../activity.api';
         <span class="body">
           <span>«{{ item.pattern }}» → {{ item.projectName }}</span>
           <span class="hint">
-            {{ 'activity.rules.suggestions.near' | transloco: { time: item.seconds | pdDuration } }}
+            {{
+              'activity.rules.suggestions.near'
+                | transloco: {time: item.seconds | pdDuration}
+            }}
             @if (item.reason) {
               · {{ item.reason }}
             }
@@ -57,8 +74,10 @@ import { ActivityApi } from '../activity.api';
     } @empty {
       <p class="hint">
         {{
-          (refreshed() ? 'activity.rules.suggestions.nothing' : 'activity.rules.suggestions.hint')
-            | transloco
+          (refreshed()
+            ? 'activity.rules.suggestions.nothing'
+            : 'activity.rules.suggestions.hint'
+          ) | transloco
         }}
       </p>
     }

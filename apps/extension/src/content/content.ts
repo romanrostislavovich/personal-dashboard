@@ -1,4 +1,4 @@
-import type { WatchHints } from '@pd/contracts';
+import type {WatchHints} from '@pd/contracts';
 import {
   ask,
   FillAnswer,
@@ -16,11 +16,11 @@ import {
   readSubmitted,
   typedLogin,
 } from './forms';
-import { closeMenu, fieldById, setupInline } from './inline';
-import { showSaveBar } from './save-bar';
-import { resetWriting, setupWriting } from './writing/writing';
-import { setupEngagement } from './engagement';
-import { setupWatching, watchHints } from './watching';
+import {closeMenu, fieldById, setupInline} from './inline';
+import {showSaveBar} from './save-bar';
+import {resetWriting, setupWriting} from './writing/writing';
+import {setupEngagement} from './engagement';
+import {setupWatching, watchHints} from './watching';
 
 setupEngagement();
 setupWatching();
@@ -35,7 +35,8 @@ setupWatching();
 const OFFER_DELAY_MS = 1500;
 
 /** A button that is not a form's submit button sends it only when it says so. */
-const SEND_HINT = /sign|log ?in|continue|next|submit|войти|вход|далее|продолжить/i;
+const SEND_HINT =
+  /sign|log ?in|continue|next|submit|войти|вход|далее|продолжить/i;
 
 let lastSent = '';
 
@@ -58,7 +59,7 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'fill-new-password': {
         const filled = fillNewPassword(document, command.password);
-        reply({ filled, login: typedLogin(document) });
+        reply({filled, login: typedLogin(document)});
         break;
       }
       case 'fill-field': {
@@ -66,19 +67,19 @@ chrome.runtime.onMessage.addListener(
         if (field?.isConnected) {
           fillField(field, command.value);
         }
-        reply({ filled: !!field?.isConnected });
+        reply({filled: !!field?.isConnected});
         break;
       }
       case 'close-menu':
         closeMenu();
-        reply({ filled: false });
+        reply({filled: false});
         break;
       case 'writing-changed':
         resetWriting();
-        reply({ filled: false });
+        reply({filled: false});
         break;
       case 'offer-again':
-        reply({ filled: false });
+        reply({filled: false});
         if (window === window.top) {
           void offerToSave();
         }
@@ -92,7 +93,9 @@ chrome.runtime.onMessage.addListener(
       case 'product':
         if (window === window.top) {
           // Read in the background: the parser stays out of the script of every page.
-          reply({ html: document.documentElement.outerHTML.slice(0, PAGE_HTML_MAX) });
+          reply({
+            html: document.documentElement.outerHTML.slice(0, PAGE_HTML_MAX),
+          });
         }
         break;
       case 'watch-hints':
@@ -114,10 +117,10 @@ setupWriting();
 watchForLoginForm();
 
 // The form was sent: by the form itself, a click on its button, or Enter.
-document.addEventListener('submit', (event) => noteSent(event.target), true);
+document.addEventListener('submit', event => noteSent(event.target), true);
 document.addEventListener(
   'click',
-  (event) => {
+  event => {
     const button = (event.target as Element | null)?.closest?.(
       'button, input[type="submit"], [role="button"]',
     );
@@ -129,7 +132,7 @@ document.addEventListener(
 );
 document.addEventListener(
   'keydown',
-  (event) => {
+  event => {
     if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
       noteSent(event.target);
     }
@@ -150,16 +153,16 @@ function watchForLoginForm(): void {
     return;
   }
   if (passwordFields(document).length) {
-    void ask({ type: 'login-form' }).catch(() => undefined);
+    void ask({type: 'login-form'}).catch(() => undefined);
     return;
   }
   const observer = new MutationObserver(() => {
     if (passwordFields(document).length) {
       observer.disconnect();
-      void ask({ type: 'login-form' }).catch(() => undefined);
+      void ask({type: 'login-form'}).catch(() => undefined);
     }
   });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  observer.observe(document.documentElement, {childList: true, subtree: true});
   // Long-lived pages: stop looking after a minute.
   setTimeout(() => observer.disconnect(), 60_000);
 }
@@ -176,14 +179,18 @@ function noteSent(target: EventTarget | null): void {
     return;
   }
   lastSent = key;
-  void ask({ type: 'submitted', ...sent })
-    .then(() => (sent.password && window === window.top ? delay(OFFER_DELAY_MS) : undefined))
+  void ask({type: 'submitted', ...sent})
+    .then(() =>
+      sent.password && window === window.top
+        ? delay(OFFER_DELAY_MS)
+        : undefined,
+    )
     .then(() => {
       // Still on the form with the password in it: the sign-in failed or never went.
       if (
         sent.password &&
         window === window.top &&
-        !passwordFields(document).some((input) => input.value === sent.password)
+        !passwordFields(document).some(input => input.value === sent.password)
       ) {
         return offerToSave();
       }
@@ -196,7 +203,9 @@ function noteSent(target: EventTarget | null): void {
 function sends(button: Element): boolean {
   const type = button.getAttribute('type')?.toLowerCase();
   if (
-    (button.tagName === 'BUTTON' && type !== 'button' && button.closest('form')) ||
+    (button.tagName === 'BUTTON' &&
+      type !== 'button' &&
+      button.closest('form')) ||
     type === 'submit'
   ) {
     return true;
@@ -209,12 +218,13 @@ function sends(button: Element): boolean {
 
 async function offerToSave(): Promise<void> {
   // The background gives a page the offer once; after that it waits in the popup.
-  const offer = await ask<SaveOffer | null>({ type: 'offer' }).catch(() => null);
+  const offer = await ask<SaveOffer | null>({type: 'offer'}).catch(() => null);
   if (offer) {
     showSaveBar(offer, {
-      save: (mode) => void ask({ type: 'save-offer', mode }).catch(() => undefined),
-      dismiss: (never) => void ask({ type: 'dismiss-offer', never }).catch(() => undefined),
-      open: () => void ask({ type: 'offer-open' }).catch(() => undefined),
+      save: mode => void ask({type: 'save-offer', mode}).catch(() => undefined),
+      dismiss: never =>
+        void ask({type: 'dismiss-offer', never}).catch(() => undefined),
+      open: () => void ask({type: 'offer-open'}).catch(() => undefined),
     });
   }
 }
@@ -224,18 +234,23 @@ const SNAPSHOT_TEXT_MAX = 30_000;
 
 /** What the page shows: the selection, and its readable text (the article, or the body). */
 function snapshot(withText: boolean): PageSnapshot {
-  const selection = (document.getSelection()?.toString() ?? '').trim().slice(0, 5000);
+  const selection = (document.getSelection()?.toString() ?? '')
+    .trim()
+    .slice(0, 5000);
   if (!withText) {
-    return { selection, text: null };
+    return {selection, text: null};
   }
-  const main = document.querySelector('article, main, [role="main"]') ?? document.body;
-  const text = (main instanceof HTMLElement ? main.innerText : (main?.textContent ?? ''))
+  const main =
+    document.querySelector('article, main, [role="main"]') ?? document.body;
+  const text = (
+    main instanceof HTMLElement ? main.innerText : (main?.textContent ?? '')
+  )
     .replace(/\n{3,}/g, '\n\n')
     .trim()
     .slice(0, SNAPSHOT_TEXT_MAX);
-  return { selection, text };
+  return {selection, text};
 }
 
 function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

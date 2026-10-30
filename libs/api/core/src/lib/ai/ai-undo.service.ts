@@ -1,9 +1,9 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { getTableColumns, getTableName, sql } from 'drizzle-orm';
-import type { PgTable } from 'drizzle-orm/pg-core';
-import { DB, Database } from '../database/database.module';
-import { TrashService } from '../trash/trash.service';
-import { DbRow, isEmpty, rowChanges, UndoData } from './ai-undo';
+import {ConflictException, Inject, Injectable} from '@nestjs/common';
+import {getTableColumns, getTableName, sql} from 'drizzle-orm';
+import type {PgTable} from 'drizzle-orm/pg-core';
+import {DB, Database} from '../database/database.module';
+import {TrashService} from '../trash/trash.service';
+import {DbRow, isEmpty, rowChanges, UndoData} from './ai-undo';
 
 /**
  * Reads the user's rows of a tool's tables around its call, and puts them back on undo (see
@@ -20,7 +20,9 @@ export class AiUndoService {
   /** A table can be undone only when it has a `user_id`: only the user's rows are read. */
   static check(table: PgTable): void {
     if (!('userId' in getTableColumns(table))) {
-      throw new Error(`${getTableName(table)} has no userId: it cannot be undone`);
+      throw new Error(
+        `${getTableName(table)} has no userId: it cannot be undone`,
+      );
     }
   }
 
@@ -29,24 +31,31 @@ export class AiUndoService {
     userId: string,
     tables: PgTable[],
     run: () => Promise<T>,
-  ): Promise<{ value: T; undo: UndoData | null }> {
-    const before = await Promise.all(tables.map((table) => this.rows(userId, table)));
+  ): Promise<{value: T; undo: UndoData | null}> {
+    const before = await Promise.all(
+      tables.map(table => this.rows(userId, table)),
+    );
     const {
-      rows: [{ now }],
-    } = await this.db.execute<{ now: string }>(sql`SELECT clock_timestamp()::text AS now`);
+      rows: [{now}],
+    } = await this.db.execute<{now: string}>(
+      sql`SELECT clock_timestamp()::text AS now`,
+    );
     const value = await run();
-    const after = await Promise.all(tables.map((table) => this.rows(userId, table)));
-    const { rows: deleted } = await this.db.execute<{ tx: string }>(sql`
+    const after = await Promise.all(
+      tables.map(table => this.rows(userId, table)),
+    );
+    const {rows: deleted} = await this.db.execute<{tx: string}>(sql`
       SELECT DISTINCT tx::text AS tx FROM trash.rows
       WHERE user_id = ${userId} AND deleted_at >= ${now}::timestamptz
     `);
     const undo: UndoData = {
       tables: tables.flatMap(
-        (table, i) => rowChanges(getTableName(table), before[i], after[i]) ?? [],
+        (table, i) =>
+          rowChanges(getTableName(table), before[i], after[i]) ?? [],
       ),
-      trash: deleted.map((row) => row.tx),
+      trash: deleted.map(row => row.tx),
     };
-    return { value, undo: isEmpty(undo) ? null : undo };
+    return {value, undo: isEmpty(undo) ? null : undo};
   }
 
   /**
@@ -54,28 +63,35 @@ export class AiUndoService {
    * (by the person, or by sync): the undo would overwrite that change.
    */
   async undo(userId: string, undo: UndoData): Promise<void> {
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       for (const change of undo.tables) {
         const name = sql.identifier(change.table);
-        const now = [...change.inserted, ...change.updated.map((one) => one.after)];
+        const now = [
+          ...change.inserted,
+          ...change.updated.map(one => one.after),
+        ];
         for (const row of now) {
           const {
             rows: [current],
-          } = await tx.execute<{ same: boolean | null }>(sql`
+          } = await tx.execute<{same: boolean | null}>(sql`
             SELECT to_jsonb(t) = ${JSON.stringify(row)}::jsonb AS same
             FROM ${name} t WHERE t.id = ${row.id} AND t.user_id = ${userId}
           `);
           if (current && !current.same) {
-            throw new ConflictException('Changed since: undoing it would overwrite that change');
+            throw new ConflictException(
+              'Changed since: undoing it would overwrite that change',
+            );
           }
         }
         for (const row of change.inserted) {
-          await tx.execute(sql`DELETE FROM ${name} WHERE id = ${row.id} AND user_id = ${userId}`);
+          await tx.execute(
+            sql`DELETE FROM ${name} WHERE id = ${row.id} AND user_id = ${userId}`,
+          );
         }
-        for (const { before } of change.updated) {
-          const columns = Object.keys(before).filter((column) => column !== 'id');
+        for (const {before} of change.updated) {
+          const columns = Object.keys(before).filter(column => column !== 'id');
           const list = sql.join(
-            columns.map((column) => sql.identifier(column)),
+            columns.map(column => sql.identifier(column)),
             sql`, `,
           );
           await tx.execute(sql`
@@ -94,10 +110,10 @@ export class AiUndoService {
   }
 
   private async rows(userId: string, table: PgTable): Promise<DbRow[]> {
-    const { rows } = await this.db.execute<{ row: DbRow }>(sql`
+    const {rows} = await this.db.execute<{row: DbRow}>(sql`
       SELECT to_jsonb(t) AS row FROM ${sql.identifier(getTableName(table))} t
       WHERE t.user_id = ${userId}
     `);
-    return rows.map((one) => one.row);
+    return rows.map(one => one.row);
   }
 }

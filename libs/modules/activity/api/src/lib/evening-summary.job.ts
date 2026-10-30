@@ -1,12 +1,22 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { DB, Database, NotificationsService, SchedulerService, UsersService } from '@pd/api-core';
-import { zonedDateTime } from '@pd/contracts';
-import { eq } from 'drizzle-orm';
-import { activityMessages } from './activity.messages';
-import { activityDevices, activityLimits, activitySettings } from './activity.schema';
-import { ActivityService } from './activity.service';
-import { isSummaryDue, summaryOf } from './evening-summary';
-import { WellbeingService } from './wellbeing.service';
+import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {
+  DB,
+  Database,
+  NotificationsService,
+  SchedulerService,
+  UsersService,
+} from '@pd/api-core';
+import {zonedDateTime} from '@pd/contracts';
+import {eq} from 'drizzle-orm';
+import {activityMessages} from './activity.messages';
+import {
+  activityDevices,
+  activityLimits,
+  activitySettings,
+} from './activity.schema';
+import {ActivityService} from './activity.service';
+import {isSummaryDue, summaryOf} from './evening-summary';
+import {WellbeingService} from './wellbeing.service';
 
 const DEFAULT_TIME = '21:00';
 
@@ -39,10 +49,10 @@ export class EveningSummaryJob implements OnModuleInit {
   private async sendAll(): Promise<void> {
     // Only users with a tracker have anything to sum up.
     const owners = await this.db
-      .selectDistinct({ userId: activityDevices.userId })
+      .selectDistinct({userId: activityDevices.userId})
       .from(activityDevices);
-    for (const { userId } of owners) {
-      await this.sendIfDue(userId).catch((error) =>
+    for (const {userId} of owners) {
+      await this.sendIfDue(userId).catch(error =>
         this.logger.error(`Evening summary failed for ${userId}: ${error}`),
       );
     }
@@ -50,7 +60,10 @@ export class EveningSummaryJob implements OnModuleInit {
 
   private async sendIfDue(userId: string): Promise<void> {
     const [settings] = await this.db
-      .select({ time: activitySettings.summaryTime, sentOn: activitySettings.summarySentOn })
+      .select({
+        time: activitySettings.summaryTime,
+        sentOn: activitySettings.summarySentOn,
+      })
       .from(activitySettings)
       .where(eq(activitySettings.userId, userId));
     const time = settings ? settings.time : DEFAULT_TIME;
@@ -61,10 +74,13 @@ export class EveningSummaryJob implements OnModuleInit {
     // Marked first: whatever happens next, one attempt a day.
     await this.db
       .insert(activitySettings)
-      .values({ userId, summarySentOn: now.date })
-      .onConflictDoUpdate({ target: activitySettings.userId, set: { summarySentOn: now.date } });
+      .values({userId, summarySentOn: now.date})
+      .onConflictDoUpdate({
+        target: activitySettings.userId,
+        set: {summarySentOn: now.date},
+      });
 
-    const day = { from: now.date, to: now.date };
+    const day = {from: now.date, to: now.date};
     const stats = await this.activity.stats(userId, day);
     const focus = await this.wellbeing.focusStats(userId, day);
     const reached = await this.db
@@ -74,10 +90,10 @@ export class EveningSummaryJob implements OnModuleInit {
     const text = activityMessages((await this.users.findById(userId))?.locale);
     const summary = summaryOf(
       stats,
-      { completed: focus.completed, seconds: focus.focusSeconds },
+      {completed: focus.completed, seconds: focus.focusSeconds},
       reached
-        .filter((limit) => limit.notifiedOn === now.date)
-        .map((limit) => ({
+        .filter(limit => limit.notifiedOn === now.date)
+        .map(limit => ({
           label: text.limitLabel(limit.kind, limit.app),
           minutes: limit.minutes,
         })),

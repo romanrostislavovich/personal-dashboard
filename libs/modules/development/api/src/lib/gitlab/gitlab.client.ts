@@ -1,5 +1,5 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { AccountAuthError } from '../accounts/account-source';
+import {fetchWithTimeout} from '@pd/api-core';
+import {AccountAuthError} from '../accounts/account-source';
 
 const API = 'https://gitlab.com/api/v4';
 const TIMEOUT_MS = 30_000;
@@ -19,28 +19,40 @@ export class GitlabClient {
   constructor(private readonly token: string) {}
 
   /** One object; `null` when GitLab answers 404 (a deleted or private project). */
-  async get<T>(path: string, params: Record<string, string> = {}): Promise<T | null> {
+  async get<T>(
+    path: string,
+    params: Record<string, string> = {},
+  ): Promise<T | null> {
     const response = await this.request(path, params, [404]);
     return response ? ((await response.json()) as T) : null;
   }
 
   /** One page of a list with the total GitLab reports for it. */
-  async page<T>(path: string, params: Record<string, string> = {}): Promise<GitlabPage<T>> {
+  async page<T>(
+    path: string,
+    params: Record<string, string> = {},
+  ): Promise<GitlabPage<T>> {
     const response = await this.request(path, params, [404]);
     if (!response) {
-      return { rows: [], total: 0 };
+      return {rows: [], total: 0};
     }
     const total = response.headers.get('x-total');
-    return { rows: (await response.json()) as T[], total: total ? Number(total) : null };
+    return {
+      rows: (await response.json()) as T[],
+      total: total ? Number(total) : null,
+    };
   }
 
   /** Every row of a list, page after page. */
-  async all<T>(path: string, params: Record<string, string> = {}): Promise<T[]> {
+  async all<T>(
+    path: string,
+    params: Record<string, string> = {},
+  ): Promise<T[]> {
     const rows: T[] = [];
     for (let page = 1; page <= MAX_PAGES; page++) {
       const response = await this.request(
         path,
-        { ...params, per_page: String(GITLAB_PAGE), page: String(page) },
+        {...params, per_page: String(GITLAB_PAGE), page: String(page)},
         [404],
       );
       if (!response) {
@@ -61,10 +73,16 @@ export class GitlabClient {
     tolerate: number[],
   ): Promise<Response | null> {
     const query = new URLSearchParams(params).toString();
-    const response = await fetchWithTimeout(`${API}${path}${query ? `?${query}` : ''}`, {
-      headers: { 'PRIVATE-TOKEN': this.token, 'User-Agent': 'personal-dashboard' },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+    const response = await fetchWithTimeout(
+      `${API}${path}${query ? `?${query}` : ''}`,
+      {
+        headers: {
+          'PRIVATE-TOKEN': this.token,
+          'User-Agent': 'personal-dashboard',
+        },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      },
+    );
     if (response.ok) {
       return response;
     }
@@ -75,8 +93,12 @@ export class GitlabClient {
       return null;
     }
     // GitLab explains itself: "insufficient_scope", a rate limit.
-    const said = (await response.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200);
-    throw new Error(`GitLab ${response.status}: ${path}${said ? ` — ${said}` : ''}`);
+    const said = (await response.text().catch(() => ''))
+      .replace(/\s+/g, ' ')
+      .slice(0, 200);
+    throw new Error(
+      `GitLab ${response.status}: ${path}${said ? ` — ${said}` : ''}`,
+    );
   }
 }
 
@@ -111,14 +133,14 @@ export interface RawGitlabProject {
   open_issues_count?: number;
   last_activity_at: string | null;
   forked_from_project?: unknown;
-  namespace: { kind: string; path: string };
-  statistics?: { repository_size: number };
+  namespace: {kind: string; path: string};
+  statistics?: {repository_size: number};
 }
 
 export interface RawGitlabEvent {
   action_name: string;
   target_type: string | null;
   created_at: string;
-  push_data?: { commit_count: number };
-  note?: { noteable_type?: string };
+  push_data?: {commit_count: number};
+  note?: {noteable_type?: string};
 }

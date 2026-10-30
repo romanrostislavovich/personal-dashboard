@@ -1,11 +1,11 @@
-import { h, t } from '../popup/dom';
-import { ask, ExtensionError, type WorkstatePreview } from '../shared/messages';
+import {h, t} from '../popup/dom';
+import {ask, ExtensionError, type WorkstatePreview} from '../shared/messages';
 
 /** Explicit capture, separate from the assistant's page tools and engagement consent. */
 export function workstateView(): HTMLElement {
   const root = h('section', {
     class: 'workstate',
-    attrs: { 'aria-label': t('workstateTitle') },
+    attrs: {'aria-label': t('workstateTitle')},
   });
   let preview: WorkstatePreview | null = null;
   let busy = false;
@@ -21,12 +21,16 @@ export function workstateView(): HTMLElement {
     busy = false;
     confirming = false;
     note = message;
-    void ask({ type: 'workstate-cancel' }).catch(() => undefined);
+    void ask({type: 'workstate-cancel'}).catch(() => undefined);
     draw();
   }
 
   function gesture(event: MouseEvent): boolean {
-    return event.isTrusted && document.visibilityState === 'visible' && document.hasFocus();
+    return (
+      event.isTrusted &&
+      document.visibilityState === 'visible' &&
+      document.hasFocus()
+    );
   }
 
   async function prepare(event: MouseEvent): Promise<void> {
@@ -68,7 +72,7 @@ export function workstateView(): HTMLElement {
     confirming = true;
     draw();
     try {
-      await ask({ type: 'workstate-confirm', id });
+      await ask({type: 'workstate-confirm', id});
       if (request === sequence) note = t('workstateSaved');
     } catch (error) {
       if (request === sequence) note = failure(error);
@@ -85,7 +89,7 @@ export function workstateView(): HTMLElement {
     if (!gesture(event) || busy) return;
     discard();
     try {
-      await ask({ type: 'workstate-open' });
+      await ask({type: 'workstate-open'});
     } catch (error) {
       note = failure(error);
       draw();
@@ -94,36 +98,39 @@ export function workstateView(): HTMLElement {
 
   function draw(): void {
     root.replaceChildren(
-      h('h2', { text: t('workstateTitle') }),
-      h('p', { class: 'hint', text: t('workstateHint') }),
+      h('h2', {text: t('workstateTitle')}),
+      h('p', {class: 'hint', text: t('workstateHint')}),
       ...(preview
         ? [
-            h('p', { text: `${t('server')}: ${preview.server}` }),
-            h('p', { text: t('workstatePreviewHint') }),
-            h('pre', { text: JSON.stringify(preview.input, null, 2), attrs: { tabindex: '0' } }),
+            h('p', {text: `${t('server')}: ${preview.server}`}),
+            h('p', {text: t('workstatePreviewHint')}),
+            h('pre', {
+              text: JSON.stringify(preview.input, null, 2),
+              attrs: {tabindex: '0'},
+            }),
           ]
         : []),
       h(
         'div',
-        { class: 'workstate-actions' },
+        {class: 'workstate-actions'},
         preview
           ? h('button', {
               type: 'button',
               class: 'primary',
               text: t('workstateConfirm'),
-              onClick: (event) => void save(event),
+              onClick: event => void save(event),
             })
           : h('button', {
               type: 'button',
               text: t('workstatePreview'),
               disabled: busy,
-              onClick: (event) => void prepare(event),
+              onClick: event => void prepare(event),
             }),
         preview || (busy && !confirming)
           ? h('button', {
               type: 'button',
               text: t('workstateCancel'),
-              onClick: (event) => {
+              onClick: event => {
                 if (gesture(event)) discard(t('workstateCanceled'));
               },
             })
@@ -132,10 +139,14 @@ export function workstateView(): HTMLElement {
           type: 'button',
           text: t('workstateOpen'),
           disabled: busy,
-          onClick: (event) => void open(event),
+          onClick: event => void open(event),
         }),
       ),
-      h('p', { class: 'hint', text: busy ? t('workstateBusy') : note, attrs: { role: 'status' } }),
+      h('p', {
+        class: 'hint',
+        text: busy ? t('workstateBusy') : note,
+        attrs: {role: 'status'},
+      }),
     );
   }
 
@@ -162,7 +173,7 @@ export function workstateView(): HTMLElement {
         'telemetryExcluded',
         'neverSave',
         'browserConfig',
-      ].some((key) => key in changes)
+      ].some(key => key in changes)
     )
       invalidate();
   });

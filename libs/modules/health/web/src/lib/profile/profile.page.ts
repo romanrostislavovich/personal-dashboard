@@ -1,21 +1,31 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { BLOOD_TYPES, BloodType } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { HealthDialogs } from '../dialogs/health-dialogs.service';
-import { HealthApi } from '../health.api';
-import { CountryPipe } from '../health-labels';
-import { IceCardComponent } from './ice-card.component';
-import { ProfileItemData, ProfileItemDialog, ProfileItemKind } from './profile-item.dialog';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatDialog} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {BLOOD_TYPES, BloodType} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {HealthDialogs} from '../dialogs/health-dialogs.service';
+import {HealthApi} from '../health.api';
+import {CountryPipe} from '../health-labels';
+import {IceCardComponent} from './ice-card.component';
+import {
+  ProfileItemData,
+  ProfileItemDialog,
+  ProfileItemKind,
+} from './profile-item.dialog';
 
 /**
  * What a doctor asks first: the blood type, the allergies (a severe one on top), the
@@ -55,15 +65,18 @@ export class ProfilePage {
   protected readonly failed = signal(false);
 
   protected async setBloodType(bloodType: BloodType | ''): Promise<void> {
-    await this.saveProfile({ bloodType: bloodType || null });
+    await this.saveProfile({bloodType: bloodType || null});
   }
 
   protected async saveNotes(): Promise<void> {
-    await this.saveProfile({ notes: this.notes() });
+    await this.saveProfile({notes: this.notes()});
     this.notes.set(null);
   }
 
-  private async saveProfile(change: { bloodType?: BloodType | null; notes?: string | null }) {
+  private async saveProfile(change: {
+    bloodType?: BloodType | null;
+    notes?: string | null;
+  }) {
     const current = this.profile();
     this.failed.set(false);
     try {
@@ -78,17 +91,27 @@ export class ProfilePage {
     }
   }
 
-  protected async edit(kind: ProfileItemKind, item?: ProfileItemData['item']): Promise<void> {
-    const ref = this.dialog.open<ProfileItemDialog, ProfileItemData, boolean>(ProfileItemDialog, {
-      data: { kind, item },
-      autoFocus: 'first-tabbable',
-    });
+  protected async edit(
+    kind: ProfileItemKind,
+    item?: ProfileItemData['item'],
+  ): Promise<void> {
+    const ref = this.dialog.open<ProfileItemDialog, ProfileItemData, boolean>(
+      ProfileItemDialog,
+      {
+        data: {kind, item},
+        autoFocus: 'first-tabbable',
+      },
+    );
     if (await firstValueFrom(ref.afterClosed())) {
       this.record.reload();
     }
   }
 
-  protected async remove(kind: ProfileItemKind, id: string, what: string): Promise<void> {
+  protected async remove(
+    kind: ProfileItemKind,
+    id: string,
+    what: string,
+  ): Promise<void> {
     const client = this.api.client;
     const remove = {
       allergy: () => client.removeAllergy(id),

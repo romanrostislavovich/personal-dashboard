@@ -1,5 +1,5 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService } from '@pd/api-core';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, LinksService} from '@pd/api-core';
 import {
   addDays,
   DailyMetric,
@@ -8,8 +8,8 @@ import {
   QUESTIONNAIRES,
   toLocalDate,
 } from '@pd/contracts';
-import { and, asc, eq, gte, isNotNull, lte, or, isNull } from 'drizzle-orm';
-import { psychologyAssessments, psychologyEvents } from './psychology.schema';
+import {and, asc, eq, gte, isNotNull, lte, or, isNull} from 'drizzle-orm';
+import {psychologyAssessments, psychologyEvents} from './psychology.schema';
 
 /** The questionnaires ask about the last two weeks: a score is of the 14 days up to its day. */
 const WEEKS_ASKED_DAYS = 14;
@@ -33,7 +33,7 @@ export class PsychologyLinks implements OnModuleInit {
       periods: async (userId, range) => {
         const e = psychologyEvents;
         const rows = await this.db
-          .select({ title: e.title, from: e.startedOn, to: e.endedOn })
+          .select({title: e.title, from: e.startedOn, to: e.endedOn})
           .from(e)
           .where(
             and(
@@ -44,7 +44,7 @@ export class PsychologyLinks implements OnModuleInit {
             ),
           );
         // Only the dated ones: an age does not say which days. An event without an end is a day.
-        return rows.map((row) => ({
+        return rows.map(row => ({
           kind: 'event',
           title: row.title,
           subtitle: null,
@@ -59,7 +59,7 @@ export class PsychologyLinks implements OnModuleInit {
       metrics: async (userId, period) => {
         const a = psychologyAssessments;
         const rows = await this.db
-          .select({ test: a.test, takenOn: a.takenOn, answers: a.answers })
+          .select({test: a.test, takenOn: a.takenOn, answers: a.answers})
           .from(a)
           .where(
             and(
@@ -72,9 +72,12 @@ export class PsychologyLinks implements OnModuleInit {
         return QUESTIONNAIRES.flatMap((questionnaire): DailyMetric[] => {
           const days = new Map<LocalDate, number>();
           // Oldest first: where two overlap, the later answer is of the nearer days.
-          for (const row of rows.filter((item) => item.test === questionnaire.id)) {
+          for (const row of rows.filter(
+            item => item.test === questionnaire.id,
+          )) {
             const score =
-              row.answers.reduce((sum, answer) => sum + answer, 0) * questionnaire.scale;
+              row.answers.reduce((sum, answer) => sum + answer, 0) *
+              questionnaire.scale;
             for (let back = WEEKS_ASKED_DAYS - 1; back >= 0; back--) {
               const day = shift(row.takenOn, -back);
               if (day >= period.from && day <= period.to) {
@@ -89,7 +92,7 @@ export class PsychologyLinks implements OnModuleInit {
                   module: 'psychology',
                   labelKey: `psychology.links.${questionnaire.id}`,
                   unit: 'score',
-                  days: [...days].map(([day, value]) => ({ day, value })),
+                  days: [...days].map(([day, value]) => ({day, value})),
                 },
               ]
             : [];
@@ -98,13 +101,21 @@ export class PsychologyLinks implements OnModuleInit {
     });
 
     this.links.registerPages([
-      { module: 'psychology', path: '/psychology/patterns', description: 'patterns of the mood' },
+      {
+        module: 'psychology',
+        path: '/psychology/patterns',
+        description: 'patterns of the mood',
+      },
       {
         module: 'psychology',
         path: '/psychology/checkups',
         description: 'questionnaires over time',
       },
-      { module: 'psychology', path: '/psychology/events', description: 'events of a life, export' },
+      {
+        module: 'psychology',
+        path: '/psychology/events',
+        description: 'events of a life, export',
+      },
     ]);
   }
 }

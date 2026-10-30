@@ -5,7 +5,13 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { AiService, DB, Database, ServerKeysService, UsersService } from '@pd/api-core';
+import {
+  AiService,
+  DB,
+  Database,
+  ServerKeysService,
+  UsersService,
+} from '@pd/api-core';
 import {
   DEFAULT_WRITING_SETTINGS,
   WritingCheck,
@@ -17,15 +23,15 @@ import {
   WritingSettings,
   WritingSettingsUpdate,
 } from '@pd/contracts';
-import { eq, sql } from 'drizzle-orm';
-import { createHash } from 'node:crypto';
+import {eq, sql} from 'drizzle-orm';
+import {createHash} from 'node:crypto';
 import {
   checkWithLanguageTool,
   languageToolAnswers,
   LanguageToolRequest,
 } from './language-tool.client';
-import { REWRITE_INSTRUCTIONS } from './rewrite-instructions';
-import { writingSettings } from './writing.schema';
+import {REWRITE_INSTRUCTIONS} from './rewrite-instructions';
+import {writingSettings} from './writing.schema';
 
 /** A line shorter than this tells too little to tell its language by. */
 const SHORT_LINE = 20;
@@ -58,7 +64,9 @@ export class WritingService {
   /** The owner sets the LanguageTool server: it must answer first. */
   async setLanguageTool(url: string): Promise<void> {
     if (!(await languageToolAnswers(url))) {
-      throw new BadRequestException('LanguageTool does not answer at this address');
+      throw new BadRequestException(
+        'LanguageTool does not answer at this address',
+      );
     }
     await this.keys.set('writing.languagetool-url', url);
   }
@@ -76,7 +84,7 @@ export class WritingService {
       return DEFAULT_WRITING_SETTINGS;
     }
     // The count of fixes is the achievements', not a setting.
-    const { userId: _owner, fixesAccepted: _fixes, ...settings } = row;
+    const {userId: _owner, fixesAccepted: _fixes, ...settings} = row;
     return settings;
   }
 
@@ -85,20 +93,25 @@ export class WritingService {
     return {
       ...(await this.settings(userId)),
       canCheck: Boolean(await this.languageToolUrl()),
-      canRewrite: (await this.ai.isConfigured(userId)) && (await this.ai.canSee(userId, 'writing')),
+      canRewrite:
+        (await this.ai.isConfigured(userId)) &&
+        (await this.ai.canSee(userId, 'writing')),
       languageTool: (await this.keys.isOwner(userId))
-        ? { url: await this.languageToolUrl() }
+        ? {url: await this.languageToolUrl()}
         : null,
     };
   }
 
   /** Only the fields sent change. */
-  async saveSettings(userId: string, update: WritingSettingsUpdate): Promise<WritingConfig> {
-    const settings = { ...(await this.settings(userId)), ...update };
+  async saveSettings(
+    userId: string,
+    update: WritingSettingsUpdate,
+  ): Promise<WritingConfig> {
+    const settings = {...(await this.settings(userId)), ...update};
     await this.db
       .insert(writingSettings)
-      .values({ userId, ...settings })
-      .onConflictDoUpdate({ target: writingSettings.userId, set: settings });
+      .values({userId, ...settings})
+      .onConflictDoUpdate({target: writingSettings.userId, set: settings});
     return this.config(userId);
   }
 
@@ -106,7 +119,9 @@ export class WritingService {
   async ignore(userId: string, what: WritingIgnore): Promise<WritingConfig> {
     const settings = await this.settings(userId);
     return 'word' in what
-      ? this.saveSettings(userId, { dictionary: unique([...settings.dictionary, what.word]) })
+      ? this.saveSettings(userId, {
+          dictionary: unique([...settings.dictionary, what.word]),
+        })
       : this.saveSettings(userId, {
           disabledRules: unique([...settings.disabledRules, what.ruleId]),
         });
@@ -116,28 +131,33 @@ export class WritingService {
   async accepted(userId: string, count: number): Promise<void> {
     await this.db
       .insert(writingSettings)
-      .values({ userId, fixesAccepted: count })
+      .values({userId, fixesAccepted: count})
       .onConflictDoUpdate({
         target: writingSettings.userId,
-        set: { fixesAccepted: sql`${writingSettings.fixesAccepted} + ${count}` },
+        set: {fixesAccepted: sql`${writingSettings.fixesAccepted} + ${count}`},
       });
   }
 
   async fixesAccepted(userId: string): Promise<number> {
     const [row] = await this.db
-      .select({ value: writingSettings.fixesAccepted })
+      .select({value: writingSettings.fixesAccepted})
       .from(writingSettings)
       .where(eq(writingSettings.userId, userId));
     return row?.value ?? 0;
   }
 
-  async check(userId: string, input: WritingCheck): Promise<WritingCheckResult> {
+  async check(
+    userId: string,
+    input: WritingCheck,
+  ): Promise<WritingCheckResult> {
     const url = await this.languageToolUrl();
     if (!url) {
-      throw new ServiceUnavailableException('LanguageTool is not set up on the server');
+      throw new ServiceUnavailableException(
+        'LanguageTool is not set up on the server',
+      );
     }
     if (!input.text.trim()) {
-      return { language: input.language ?? 'auto', issues: [] };
+      return {language: input.language ?? 'auto', issues: []};
     }
     const settings = await this.settings(userId);
     const request = {
@@ -152,13 +172,22 @@ export class WritingService {
     // tells one language a request. Typing changes one line, the rest come from the cache.
     // A line too short to tell its language by is checked in the language of the longest one.
     const lines = paragraphs(input.text);
-    const checkLine = async (line: (typeof lines)[number], language: string) => ({
+    const checkLine = async (
+      line: (typeof lines)[number],
+      language: string,
+    ) => ({
       offset: line.offset,
       length: line.text.length,
-      result: await this.checkParagraph(url, { ...request, text: line.text, language }),
+      result: await this.checkParagraph(url, {
+        ...request,
+        text: line.text,
+        language,
+      }),
     });
-    const long = lines.filter((line) => line.text.trim().length >= SHORT_LINE);
-    const told = await Promise.all(long.map((line) => checkLine(line, request.language)));
+    const long = lines.filter(line => line.text.trim().length >= SHORT_LINE);
+    const told = await Promise.all(
+      long.map(line => checkLine(line, request.language)),
+    );
     const longest = told.reduce<(typeof told)[number] | null>(
       (best, one) => (!best || one.length > best.length ? one : best),
       null,
@@ -166,8 +195,8 @@ export class WritingService {
     const fallback = longest?.result.language ?? request.language;
     const short = await Promise.all(
       lines
-        .filter((line) => line.text.trim().length < SHORT_LINE)
-        .map((line) =>
+        .filter(line => line.text.trim().length < SHORT_LINE)
+        .map(line =>
           checkLine(
             line,
             request.language === 'auto' && sameScript(line.text, fallback)
@@ -177,8 +206,8 @@ export class WritingService {
         ),
     );
     const checked = [...told, ...short];
-    const issues = checked.flatMap(({ offset, result }) =>
-      result.issues.map((issue) => ({ ...issue, offset: issue.offset + offset })),
+    const issues = checked.flatMap(({offset, result}) =>
+      result.issues.map(issue => ({...issue, offset: issue.offset + offset})),
     );
     return {
       language: longest?.result.language ?? request.language,
@@ -190,12 +219,14 @@ export class WritingService {
     url: string,
     request: LanguageToolRequest,
   ): Promise<WritingCheckResult> {
-    const key = createHash('sha256').update(JSON.stringify(request)).digest('base64url');
+    const key = createHash('sha256')
+      .update(JSON.stringify(request))
+      .digest('base64url');
     const known = this.cache.get(key);
     if (known) {
       return known;
     }
-    const result = await checkWithLanguageTool(url, request).catch((error) => {
+    const result = await checkWithLanguageTool(url, request).catch(error => {
       this.logger.warn(`LanguageTool failed: ${error}`);
       throw new ServiceUnavailableException('LanguageTool did not answer');
     });
@@ -204,13 +235,22 @@ export class WritingService {
   }
 
   /** The text as the AI rewrites it, in the text's own language. */
-  async rewrite(userId: string, { text, mode }: WritingRewriteInput): Promise<string> {
+  async rewrite(
+    userId: string,
+    {text, mode}: WritingRewriteInput,
+  ): Promise<string> {
     if (!(await this.ai.isConfigured(userId))) {
       throw new BadRequestException('AI is not configured');
     }
-    const answer = await this.ai.complete(userId, REWRITE_INSTRUCTIONS[mode], text, 'writing', {
-      keepLanguage: true,
-    });
+    const answer = await this.ai.complete(
+      userId,
+      REWRITE_INSTRUCTIONS[mode],
+      text,
+      'writing',
+      {
+        keepLanguage: true,
+      },
+    );
     return answer.trim();
   }
 
@@ -223,16 +263,16 @@ export class WritingService {
 }
 
 /** The lines of a text with where each starts; blank ones left out. */
-export function paragraphs(text: string): { offset: number; text: string }[] {
-  const result: { offset: number; text: string }[] = [];
+export function paragraphs(text: string): {offset: number; text: string}[] {
+  const result: {offset: number; text: string}[] = [];
   const breaks = /\n\s*/g;
   let start = 0;
   for (const match of text.matchAll(breaks)) {
-    result.push({ offset: start, text: text.slice(start, match.index) });
+    result.push({offset: start, text: text.slice(start, match.index)});
     start = (match.index ?? 0) + match[0].length;
   }
-  result.push({ offset: start, text: text.slice(start) });
-  return result.filter((paragraph) => paragraph.text.trim());
+  result.push({offset: start, text: text.slice(start)});
+  return result.filter(paragraph => paragraph.text.trim());
 }
 
 /**
@@ -253,14 +293,18 @@ export function withoutKnownWords(
   if (!dictionary.length) {
     return issues;
   }
-  const known = new Set(dictionary.map((word) => word.toLocaleLowerCase()));
+  const known = new Set(dictionary.map(word => word.toLocaleLowerCase()));
   return issues.filter(
-    (issue) =>
+    issue =>
       issue.kind !== 'spelling' ||
-      !known.has(text.slice(issue.offset, issue.offset + issue.length).toLocaleLowerCase()),
+      !known.has(
+        text
+          .slice(issue.offset, issue.offset + issue.length)
+          .toLocaleLowerCase(),
+      ),
   );
 }
 
 function unique(values: string[]): string[] {
-  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+  return [...new Set(values.map(value => value.trim()).filter(Boolean))];
 }

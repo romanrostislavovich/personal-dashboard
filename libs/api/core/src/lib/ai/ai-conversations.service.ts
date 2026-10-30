@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {Inject, Injectable, NotFoundException} from '@nestjs/common';
 import {
   AiAttachment,
   AiChatMessage,
@@ -7,10 +7,15 @@ import {
   AiConversationDetail,
   AiStoredMessage,
 } from '@pd/contracts';
-import { and, asc, desc, eq } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { AiConversationRow, aiConversations, AiMessageRow, aiMessages } from './ai.schema';
-import { AiService, AskOptions } from './ai.service';
+import {and, asc, desc, eq} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {
+  AiConversationRow,
+  aiConversations,
+  AiMessageRow,
+  aiMessages,
+} from './ai.schema';
+import {AiService, AskOptions} from './ai.service';
 
 /** The model gets this many recent messages of the conversation as context. */
 const CONTEXT_MESSAGES = 20;
@@ -44,20 +49,35 @@ export class AiConversationsService {
   ) {}
 
   /** Asks within a conversation: the model sees its recent messages, both turns are saved. */
-  async ask(userId: string, question: Question, options: AskOptions): Promise<AiChatResponse> {
+  async ask(
+    userId: string,
+    question: Question,
+    options: AskOptions,
+  ): Promise<AiChatResponse> {
     const conversation = await this.resolve(userId, question.conversationId);
     const message: NewMessage = {
       role: 'user',
       content: question.content,
-      ...(question.attachments?.length ? { attachments: question.attachments } : {}),
+      ...(question.attachments?.length
+        ? {attachments: question.attachments}
+        : {}),
     };
     const history = [...(await this.context(conversation.id)), message];
-    const { reply, toolsUsed, awaitsConfirmation } = await this.ai.ask(userId, history, options);
+    const {reply, toolsUsed, awaitsConfirmation} = await this.ai.ask(
+      userId,
+      history,
+      options,
+    );
     await this.append(userId, conversation, [
       message,
-      { role: 'assistant', content: reply, toolsUsed },
+      {role: 'assistant', content: reply, toolsUsed},
     ]);
-    return { conversationId: conversation.id, reply, toolsUsed, awaitsConfirmation };
+    return {
+      conversationId: conversation.id,
+      reply,
+      toolsUsed,
+      awaitsConfirmation,
+    };
   }
 
   async list(userId: string): Promise<AiConversation[]> {
@@ -82,14 +102,19 @@ export class AiConversationsService {
 
   /** Starts an empty conversation; it becomes the current one. */
   async start(userId: string): Promise<AiConversationDetail> {
-    const [row] = await this.db.insert(aiConversations).values({ userId }).returning();
-    return { ...toConversation(row), messages: [] };
+    const [row] = await this.db
+      .insert(aiConversations)
+      .values({userId})
+      .returning();
+    return {...toConversation(row), messages: []};
   }
 
   async remove(userId: string, id: string): Promise<void> {
     await this.db
       .delete(aiConversations)
-      .where(and(eq(aiConversations.id, id), eq(aiConversations.userId, userId)));
+      .where(
+        and(eq(aiConversations.id, id), eq(aiConversations.userId, userId)),
+      );
   }
 
   /** The given conversation, or the current one, or a new one; checks ownership. */
@@ -108,10 +133,10 @@ export class AiConversationsService {
       .where(eq(aiMessages.conversationId, conversationId))
       .orderBy(desc(aiMessages.createdAt))
       .limit(CONTEXT_MESSAGES);
-    return rows.reverse().map(({ role, content, attachments }) => ({
+    return rows.reverse().map(({role, content, attachments}) => ({
       role,
       content,
-      ...(attachments.length ? { attachments } : {}),
+      ...(attachments.length ? {attachments} : {}),
     }));
   }
 
@@ -125,7 +150,7 @@ export class AiConversationsService {
     messages: NewMessage[],
   ): Promise<void> {
     const now = Date.now();
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       await tx.insert(aiMessages).values(
         messages.map((message, index) => ({
           conversationId: conversation.id,
@@ -138,18 +163,21 @@ export class AiConversationsService {
           createdAt: new Date(now + index),
         })),
       );
-      const firstQuestion = messages.find((message) => message.role === 'user');
+      const firstQuestion = messages.find(message => message.role === 'user');
       await tx
         .update(aiConversations)
         .set({
           updatedAt: new Date(now),
-          ...(!conversation.title && firstQuestion && { title: titleOf(firstQuestion) }),
+          ...(!conversation.title &&
+            firstQuestion && {title: titleOf(firstQuestion)}),
         })
         .where(eq(aiConversations.id, conversation.id));
     });
   }
 
-  private async currentRow(userId: string): Promise<AiConversationRow | undefined> {
+  private async currentRow(
+    userId: string,
+  ): Promise<AiConversationRow | undefined> {
     const [row] = await this.db
       .select()
       .from(aiConversations)
@@ -160,7 +188,10 @@ export class AiConversationsService {
   }
 
   private async createRow(userId: string): Promise<AiConversationRow> {
-    const [row] = await this.db.insert(aiConversations).values({ userId }).returning();
+    const [row] = await this.db
+      .insert(aiConversations)
+      .values({userId})
+      .returning();
     return row;
   }
 
@@ -168,25 +199,29 @@ export class AiConversationsService {
     const [row] = await this.db
       .select()
       .from(aiConversations)
-      .where(and(eq(aiConversations.id, id), eq(aiConversations.userId, userId)));
+      .where(
+        and(eq(aiConversations.id, id), eq(aiConversations.userId, userId)),
+      );
     if (!row) {
       throw new NotFoundException('Conversation not found');
     }
     return row;
   }
 
-  private async withMessages(row: AiConversationRow): Promise<AiConversationDetail> {
+  private async withMessages(
+    row: AiConversationRow,
+  ): Promise<AiConversationDetail> {
     const messages = await this.db
       .select()
       .from(aiMessages)
       .where(eq(aiMessages.conversationId, row.id))
       .orderBy(asc(aiMessages.createdAt));
-    return { ...toConversation(row), messages: messages.map(toStoredMessage) };
+    return {...toConversation(row), messages: messages.map(toStoredMessage)};
   }
 }
 
 function toConversation(row: AiConversationRow): AiConversation {
-  return { id: row.id, title: row.title, updatedAt: row.updatedAt.toISOString() };
+  return {id: row.id, title: row.title, updatedAt: row.updatedAt.toISOString()};
 }
 
 function toStoredMessage(row: AiMessageRow): AiStoredMessage {
@@ -194,7 +229,7 @@ function toStoredMessage(row: AiMessageRow): AiStoredMessage {
     id: row.id,
     role: row.role,
     content: row.content,
-    attachments: row.attachments.map((attachment) => attachment.name),
+    attachments: row.attachments.map(attachment => attachment.name),
     toolsUsed: row.toolsUsed,
     createdAt: row.createdAt.toISOString(),
   };
@@ -204,5 +239,7 @@ function toStoredMessage(row: AiMessageRow): AiStoredMessage {
 function titleOf(message: NewMessage): string {
   const text = message.content.trim() || message.attachments?.[0]?.name || '…';
   const line = text.split('\n')[0];
-  return line.length > TITLE_LENGTH ? `${line.slice(0, TITLE_LENGTH).trimEnd()}…` : line;
+  return line.length > TITLE_LENGTH
+    ? `${line.slice(0, TITLE_LENGTH).trimEnd()}…`
+    : line;
 }

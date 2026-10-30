@@ -1,12 +1,17 @@
-import { CurrencyPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { FinanceApi } from '../finance.api';
-import { priceTrend } from './wish-view';
+import {CurrencyPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {FinanceApi} from '../finance.api';
+import {priceTrend} from './wish-view';
 
 const SHOWN = 5;
 
@@ -14,21 +19,36 @@ const SHOWN = 5;
 @Component({
   selector: 'pd-wishlist-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CurrencyPipe, RouterLink, MatCardModule, MatButtonModule, MatIconModule, TranslocoPipe],
+  imports: [
+    CurrencyPipe,
+    RouterLink,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    TranslocoPipe,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>🎁 {{ 'finance.wishlist.widgetTitle' | transloco }}</mat-card-title>
+        <mat-card-title
+          >🎁 {{ 'finance.wishlist.widgetTitle' | transloco }}</mat-card-title
+        >
       </mat-card-header>
       <mat-card-content>
         @for (wish of wanted(); track wish.id) {
           <div class="wish">
-            <a class="name" [href]="wish.url" target="_blank" rel="noopener noreferrer">{{
-              wish.name
-            }}</a>
+            <a
+              class="name"
+              [href]="wish.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              >{{ wish.name }}</a
+            >
             @if (trend(wish); as t) {
               <span class="change" [class.down]="t.down" [class.up]="!t.down">
-                <mat-icon inline>{{ t.down ? 'south_east' : 'north_east' }}</mat-icon>
+                <mat-icon inline>{{
+                  t.down ? 'south_east' : 'north_east'
+                }}</mat-icon>
                 {{ t.percent }}%
               </span>
             }
@@ -40,12 +60,14 @@ const SHOWN = 5;
           </div>
         } @empty {
           @if (!wishes.isLoading()) {
-            <p class="muted">{{ 'finance.wishlist.widgetEmpty' | transloco }}</p>
+            <p class="muted">
+              {{ 'finance.wishlist.widgetEmpty' | transloco }}
+            </p>
           }
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/finance" [queryParams]="{ tab: 'wishlist' }">{{
+        <a matButton routerLink="/finance" [queryParams]="{tab: 'wishlist'}">{{
           'finance.widget.open' | transloco
         }}</a>
       </mat-card-actions>
@@ -89,7 +111,7 @@ export class WishlistWidget {
   protected readonly wanted = computed(() =>
     this.wishes
       .value()
-      .filter((wish) => !wish.boughtAt)
+      .filter(wish => !wish.boughtAt)
       .slice(0, SHOWN),
   );
   protected readonly trend = priceTrend;

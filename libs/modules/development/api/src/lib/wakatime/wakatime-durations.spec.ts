@@ -1,10 +1,10 @@
-import { parseDurations } from './wakatime-durations';
+import {parseDurations} from './wakatime-durations';
 
 describe('parseDurations', () => {
   it('reads the stretches of a project to the second', () => {
     expect(
       parseDurations(
-        [{ project: 'personal-dashboard', time: 1760000000.4, duration: 600.6 }],
+        [{project: 'personal-dashboard', time: 1760000000.4, duration: 600.6}],
         'project',
       ),
     ).toEqual([
@@ -20,21 +20,21 @@ describe('parseDurations', () => {
     const names = new Map([['m1', 'work-laptop']]);
     const spans = parseDurations(
       [
-        { machine_name_id: 'm1', time: 100, duration: 60 },
-        { machine_name_id: 'm2', time: 200, duration: 60 },
+        {machine_name_id: 'm1', time: 100, duration: 60},
+        {machine_name_id: 'm2', time: 200, duration: 60},
       ],
       'machine',
       names,
     );
-    expect(spans.map((span) => span.name)).toEqual(['work-laptop', 'm2']);
+    expect(spans.map(span => span.name)).toEqual(['work-laptop', 'm2']);
   });
 
   it('leaves out a stretch without a name or a length', () => {
     expect(
       parseDurations(
         [
-          { project: null, time: 100, duration: 60 },
-          { project: 'a', time: 100, duration: 0 },
+          {project: null, time: 100, duration: 60},
+          {project: 'a', time: 100, duration: 0},
         ],
         'project',
       ),

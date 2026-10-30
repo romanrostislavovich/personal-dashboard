@@ -1,12 +1,26 @@
-import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnDestroy,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   CLOSING_STATUSES,
   DIAGNOSIS_STATUSES,
@@ -17,9 +31,9 @@ import {
   IcdEntry,
   IcdSystem,
 } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { HealthApi } from '../health.api';
-import { orNull, today } from '../health-labels';
+import {firstValueFrom} from 'rxjs';
+import {HealthApi} from '../health.api';
+import {orNull, today} from '../health-labels';
 
 export interface DiagnosisDialogData {
   record: HealthRecord;
@@ -31,7 +45,7 @@ export interface DiagnosisDialogData {
    * Taking a condition's diagnosis off: a new entry of the same code, recovered by default
    * (or ruled out, or in remission), on today.
    */
-  closing?: { system: IcdSystem; code: string | null; title: string };
+  closing?: {system: IcdSystem; code: string | null; title: string};
 }
 
 const SEARCH_DELAY_MS = 250;
@@ -68,13 +82,20 @@ const SEARCH_DELAY_MS = 250;
       <mat-dialog-content class="form">
         <mat-form-field>
           <mat-label>{{ 'health.diagnosis.search' | transloco }}</mat-label>
-          <input matInput [matAutocomplete]="icd" (input)="search($any($event.target).value)" />
+          <input
+            matInput
+            [matAutocomplete]="icd"
+            (input)="search($any($event.target).value)"
+          />
           <mat-autocomplete
             #icd="matAutocomplete"
             [displayWith]="display"
             (optionSelected)="pick($event.option.value)"
           >
-            @for (entry of found(); track entry.system + entry.code + entry.language) {
+            @for (
+              entry of found();
+              track entry.system + entry.code + entry.language
+            ) {
               <mat-option [value]="entry">
                 <b>{{ entry.code }}</b> {{ entry.title }}
               </mat-option>
@@ -116,7 +137,12 @@ const SEARCH_DELAY_MS = 250;
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'health.diagnosis.date' | transloco }}</mat-label>
-            <input matInput type="date" formControlName="diagnosedOn" required />
+            <input
+              matInput
+              type="date"
+              formControlName="diagnosedOn"
+              required
+            />
           </mat-form-field>
         </div>
         <mat-form-field>
@@ -130,17 +156,28 @@ const SEARCH_DELAY_MS = 250;
         </mat-form-field>
         <mat-form-field>
           <mat-label>{{ 'health.visit.notes' | transloco }}</mat-label>
-          <textarea matInput rows="2" maxlength="5000" formControlName="notes"></textarea>
+          <textarea
+            matInput
+            rows="2"
+            maxlength="5000"
+            formControlName="notes"
+          ></textarea>
         </mat-form-field>
         @if (error()) {
-          <p class="error" role="alert">{{ 'health.errors.save' | transloco }}</p>
+          <p class="error" role="alert">
+            {{ 'health.errors.save' | transloco }}
+          </p>
         }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}
         </button>
-        <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+        <button
+          matButton="filled"
+          type="submit"
+          [disabled]="form.invalid || busy()"
+        >
           {{ 'core.actions.save' | transloco }}
         </button>
       </mat-dialog-actions>
@@ -172,7 +209,9 @@ export class DiagnosisDialog implements OnDestroy {
   private readonly ref = inject(MatDialogRef<DiagnosisDialog, boolean>);
 
   protected readonly systems = ICD_SYSTEMS;
-  protected readonly statuses = this.data.closing ? CLOSING_STATUSES : DIAGNOSIS_STATUSES;
+  protected readonly statuses = this.data.closing
+    ? CLOSING_STATUSES
+    : DIAGNOSIS_STATUSES;
   protected readonly found = signal<IcdEntry[]>([]);
   protected readonly busy = signal(false);
   protected readonly error = signal(false);
@@ -191,7 +230,9 @@ export class DiagnosisDialog implements OnDestroy {
   });
 
   protected readonly display = (entry: IcdEntry | string | null) =>
-    entry && typeof entry === 'object' ? `${entry.code} ${entry.title}` : (entry ?? '');
+    entry && typeof entry === 'object'
+      ? `${entry.code} ${entry.title}`
+      : (entry ?? '');
 
   protected search(text: string): void {
     clearTimeout(this.timer);
@@ -210,7 +251,7 @@ export class DiagnosisDialog implements OnDestroy {
 
   /** The code from the dictionary; the title only if none is typed from the document yet. */
   protected pick(entry: IcdEntry): void {
-    this.form.patchValue({ system: entry.system, code: entry.code });
+    this.form.patchValue({system: entry.system, code: entry.code});
     if (!this.form.controls.title.value.trim()) {
       this.form.controls.title.setValue(entry.title);
     }

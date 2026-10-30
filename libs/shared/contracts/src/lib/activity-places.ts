@@ -1,10 +1,10 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 // The phone's location (the Android app, stage 2c of docs/proposals/mobile-app.md): where the
 // day went — the places it was spent at and the trips between them.
 
-const moment = z.iso.datetime({ offset: true });
+const moment = z.iso.datetime({offset: true});
 const LOCAL_DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const latitude = z.number().min(-90).max(90);
 const longitude = z.number().min(-180).max(180);
@@ -24,7 +24,7 @@ export const phoneLocationIngestSchema = z.object({
 });
 export type PhoneLocationIngest = z.infer<typeof phoneLocationIngestSchema>;
 
-export const placesQuerySchema = z.object({ day: LOCAL_DATE });
+export const placesQuerySchema = z.object({day: LOCAL_DATE});
 export type PlacesQuery = z.infer<typeof placesQuerySchema>;
 
 /** A place the user named ("Home", "Work"): the stays within its radius take its name. */
@@ -44,7 +44,9 @@ export const placeInputSchema = z.object({
 });
 export type PlaceInput = z.infer<typeof placeInputSchema>;
 
-export const placeUpdateSchema = z.object({ name: z.string().trim().min(1).max(60) });
+export const placeUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+});
 export type PlaceUpdate = z.infer<typeof placeUpdateSchema>;
 
 /** What a map service called a place: the café, the gym, else the address. */
@@ -123,14 +125,16 @@ export const googleKeysInputSchema = z.object({
 export type GoogleKeysInput = z.infer<typeof googleKeysInputSchema>;
 
 /** "Look up on Google" for one stay. */
-export const placeLookupSchema = z.object({ latitude, longitude });
+export const placeLookupSchema = z.object({latitude, longitude});
 export type PlaceLookup = z.infer<typeof placeLookupSchema>;
 
 /** A batch of an imported Google Maps timeline (parsed in the browser: see google-timeline.ts). */
 export const placesImportSchema = z.object({
   locations: z.array(phoneLocationSchema).max(500),
   names: z
-    .array(z.object({ latitude, longitude, name: z.string().trim().min(1).max(200) }))
+    .array(
+      z.object({latitude, longitude, name: z.string().trim().min(1).max(200)}),
+    )
     .max(200)
     .default([]),
 });

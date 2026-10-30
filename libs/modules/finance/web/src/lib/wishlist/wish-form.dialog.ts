@@ -1,12 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MatSelectModule } from '@angular/material/select';
-import { Wish, WishInput } from '@pd/contracts';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MatSelectModule} from '@angular/material/select';
+import {Wish, WishInput} from '@pd/contracts';
 
 export interface WishFormData {
   wish: Wish | null;
@@ -29,13 +37,22 @@ export interface WishFormData {
   ],
   template: `
     <h2 mat-dialog-title>
-      {{ (data.wish ? 'finance.wishlist.edit' : 'finance.wishlist.add') | transloco }}
+      {{
+        (data.wish ? 'finance.wishlist.edit' : 'finance.wishlist.add')
+          | transloco
+      }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
         <mat-form-field>
           <mat-label>{{ 'finance.wishlist.url' | transloco }}</mat-label>
-          <input matInput type="url" formControlName="url" placeholder="https://" cdkFocusInitial />
+          <input
+            matInput
+            type="url"
+            formControlName="url"
+            placeholder="https://"
+            cdkFocusInitial
+          />
           <mat-hint>{{ 'finance.wishlist.urlHint' | transloco }}</mat-hint>
         </mat-form-field>
 
@@ -48,7 +65,13 @@ export interface WishFormData {
         <div class="row">
           <mat-form-field>
             <mat-label>{{ 'finance.wishlist.price' | transloco }}</mat-label>
-            <input matInput type="number" min="0" step="0.01" formControlName="price" />
+            <input
+              matInput
+              type="number"
+              min="0"
+              step="0.01"
+              formControlName="price"
+            />
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'finance.currency' | transloco }}</mat-label>
@@ -60,12 +83,19 @@ export interface WishFormData {
         <mat-form-field>
           <mat-label>{{ 'finance.wishlist.recipient' | transloco }}</mat-label>
           <input matInput formControlName="recipient" maxlength="100" />
-          <mat-hint>{{ 'finance.wishlist.recipientHint' | transloco }}</mat-hint>
+          <mat-hint>{{
+            'finance.wishlist.recipientHint' | transloco
+          }}</mat-hint>
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>{{ 'finance.wishlist.note' | transloco }}</mat-label>
-          <textarea matInput formControlName="note" rows="2" maxlength="500"></textarea>
+          <textarea
+            matInput
+            formControlName="note"
+            rows="2"
+            maxlength="500"
+          ></textarea>
         </mat-form-field>
       </mat-dialog-content>
 
@@ -104,7 +134,10 @@ export class WishFormDialog {
 
   private readonly wish = this.data.wish;
   protected readonly form = inject(NonNullableFormBuilder).group({
-    url: [this.wish?.url ?? '', [Validators.required, Validators.pattern(/^https?:\/\/\S+$/i)]],
+    url: [
+      this.wish?.url ?? '',
+      [Validators.required, Validators.pattern(/^https?:\/\/\S+$/i)],
+    ],
     name: [this.wish?.name ?? ''],
     price: [this.wish?.price ?? (null as number | null), Validators.min(0.01)],
     currency: [

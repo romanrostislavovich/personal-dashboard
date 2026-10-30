@@ -1,13 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { passwordStrength, WrongVaultPasswordError } from '@pd/client-core';
-import { VaultSession } from './vault-session.service';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {passwordStrength, WrongVaultPasswordError} from '@pd/client-core';
+import {VaultSession} from './vault-session.service';
 
 /**
  * Unlocking: the master password — or, forgotten, the recovery key with a new master password
@@ -28,7 +34,9 @@ import { VaultSession } from './vault-session.service';
   template: `
     <mat-card appearance="outlined" class="card">
       <mat-card-header>
-        <mat-card-title>🔒 {{ 'vault.unlock.title' | transloco }}</mat-card-title>
+        <mat-card-title
+          >🔒 {{ 'vault.unlock.title' | transloco }}</mat-card-title
+        >
       </mat-card-header>
       <form class="content" (ngSubmit)="submit()">
         @if (!recovering()) {
@@ -65,11 +73,15 @@ import { VaultSession } from './vault-session.service';
               (ngModelChange)="master.set($event)"
             />
             @if (master()) {
-              <mat-hint>{{ 'vault.strength.' + strength() | transloco }}</mat-hint>
+              <mat-hint>{{
+                'vault.strength.' + strength() | transloco
+              }}</mat-hint>
             }
           </mat-form-field>
           <mat-form-field>
-            <mat-label>{{ 'vault.unlock.accountPassword' | transloco }}</mat-label>
+            <mat-label>{{
+              'vault.unlock.accountPassword' | transloco
+            }}</mat-label>
             <input
               matInput
               type="password"
@@ -89,10 +101,20 @@ import { VaultSession } from './vault-session.service';
         }
         <div class="actions">
           <button matButton type="button" (click)="toggle()">
-            {{ (recovering() ? 'vault.unlock.back' : 'vault.unlock.forgot') | transloco }}
+            {{
+              (recovering() ? 'vault.unlock.back' : 'vault.unlock.forgot')
+                | transloco
+            }}
           </button>
-          <button matButton="filled" type="submit" [disabled]="!ready() || busy()">
-            {{ (recovering() ? 'vault.unlock.recover' : 'vault.unlock.unlock') | transloco }}
+          <button
+            matButton="filled"
+            type="submit"
+            [disabled]="!ready() || busy()"
+          >
+            {{
+              (recovering() ? 'vault.unlock.recover' : 'vault.unlock.unlock')
+                | transloco
+            }}
           </button>
         </div>
       </form>
@@ -134,7 +156,9 @@ export class VaultUnlockComponent {
   protected readonly accountPassword = signal('');
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
-  protected readonly strength = computed(() => passwordStrength(this.master()).strength);
+  protected readonly strength = computed(
+    () => passwordStrength(this.master()).strength,
+  );
   protected readonly ready = computed(() =>
     this.recovering()
       ? this.recoveryKey().trim() !== '' &&
@@ -145,7 +169,7 @@ export class VaultUnlockComponent {
   );
 
   protected toggle(): void {
-    this.recovering.update((value) => !value);
+    this.recovering.update(value => !value);
     this.master.set('');
     this.error.set(null);
   }
@@ -158,7 +182,11 @@ export class VaultUnlockComponent {
     this.error.set(null);
     try {
       if (this.recovering()) {
-        await this.session.recover(this.recoveryKey(), this.master(), this.accountPassword());
+        await this.session.recover(
+          this.recoveryKey(),
+          this.master(),
+          this.accountPassword(),
+        );
       } else {
         await this.session.unlock(this.master());
       }

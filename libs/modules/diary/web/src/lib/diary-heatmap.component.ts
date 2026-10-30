@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,9 +8,9 @@ import {
   LOCALE_ID,
   output,
 } from '@angular/core';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { addDays, DiaryCalendarDay, LocalDate, toLocalDate } from '@pd/contracts';
-import { MOOD_COLOR, MOOD_EMOJI } from './mood';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {addDays, DiaryCalendarDay, LocalDate, toLocalDate} from '@pd/contracts';
+import {MOOD_COLOR, MOOD_EMOJI} from './mood';
 
 interface Cell {
   day: LocalDate;
@@ -31,7 +31,9 @@ interface Cell {
         class="grid"
         role="grid"
         [attr.aria-label]="year()"
-        [style.grid-template-columns]="'repeat(' + weeks().length + ', minmax(0, 1fr))'"
+        [style.grid-template-columns]="
+          'repeat(' + weeks().length + ', minmax(0, 1fr))'
+        "
       >
         @for (week of weeks(); track $index) {
           <div class="week" role="row">
@@ -149,17 +151,17 @@ export class DiaryHeatmapComponent {
   /** Weeks of the year; cells outside the year are `null` so the first column starts on Monday. */
   protected readonly weeks = computed(() => {
     const year = this.year();
-    const byDay = new Map(this.days().map((entry) => [entry.day, entry]));
+    const byDay = new Map(this.days().map(entry => [entry.day, entry]));
     const first = new Date(Date.UTC(year, 0, 1));
     const offset = (first.getUTCDay() + 6) % 7; // Monday = 0
-    const cells: (Cell | null)[] = Array.from({ length: offset }, () => null);
+    const cells: (Cell | null)[] = Array.from({length: offset}, () => null);
     for (let i = 0; ; i++) {
-      const parts = addDays({ year, month: 1, day: 1 }, i);
+      const parts = addDays({year, month: 1, day: 1}, i);
       if (parts.year !== year) {
         break;
       }
       const day = toLocalDate(parts);
-      cells.push({ day, entry: byDay.get(day) ?? null });
+      cells.push({day, entry: byDay.get(day) ?? null});
     }
     const weeks: (Cell | null)[][] = [];
     for (let i = 0; i < cells.length; i += 7) {
@@ -168,7 +170,7 @@ export class DiaryHeatmapComponent {
     return weeks;
   });
 
-  protected cellColor({ entry }: Cell): string | null {
+  protected cellColor({entry}: Cell): string | null {
     if (!entry) {
       return null;
     }
@@ -180,12 +182,14 @@ export class DiaryHeatmapComponent {
   private readonly datePipe = new DatePipe(inject(LOCALE_ID));
   private readonly transloco = inject(TranslocoService);
 
-  protected tooltip({ day, entry }: Cell): string {
+  protected tooltip({day, entry}: Cell): string {
     const date = this.datePipe.transform(day, 'd MMMM y') ?? day;
     if (!entry) {
       return `${date} — ${this.transloco.translate('diary.calendar.noEntry')}`;
     }
-    const words = this.transloco.translate('diary.calendar.words', { count: entry.words });
+    const words = this.transloco.translate('diary.calendar.words', {
+      count: entry.words,
+    });
     return `${date} ${entry.mood ? MOOD_EMOJI[entry.mood] : ''} · ${words}`;
   }
 }

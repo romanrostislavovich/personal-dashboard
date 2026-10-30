@@ -1,5 +1,5 @@
-import { users } from '@pd/api-core/schema';
-import { WowDetails } from '@pd/contracts';
+import {users} from '@pd/api-core/schema';
+import {WowDetails} from '@pd/contracts';
 import {
   boolean,
   date,
@@ -11,7 +11,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { gameAccounts } from '../games.schema';
+import {gameAccounts} from '../games.schema';
 
 /**
  * Everything about a WoW character beyond its summary line (gear, talents, Mythic+, raids, PvP,
@@ -20,11 +20,11 @@ import { gameAccounts } from '../games.schema';
 export const wowDetails = pgTable('games_wow_details', {
   accountId: uuid()
     .primaryKey()
-    .references(() => gameAccounts.id, { onDelete: 'cascade' }),
+    .references(() => gameAccounts.id, {onDelete: 'cascade'}),
   details: jsonb().$type<WowDetails>().notNull(),
   /** Tell about the character's news; on unless the user switches it off. */
   notify: boolean().notNull().default(true),
-  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
 });
 
 /** Daily history of a character: Blizzard gives only the current numbers. */
@@ -33,8 +33,8 @@ export const wowDays = pgTable(
   {
     accountId: uuid()
       .notNull()
-      .references(() => gameAccounts.id, { onDelete: 'cascade' }),
-    day: date({ mode: 'string' }).notNull(),
+      .references(() => gameAccounts.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
     itemLevel: integer(),
     mythicRating: integer(),
     achievementPoints: integer(),
@@ -42,7 +42,7 @@ export const wowDays = pgTable(
     pets: integer(),
     toys: integer(),
   },
-  (table) => [primaryKey({ columns: [table.accountId, table.day] })],
+  table => [primaryKey({columns: [table.accountId, table.day]})],
 );
 
 /** The price of the WoW Token per day, for the regions the user has characters in. */
@@ -51,12 +51,12 @@ export const wowTokenDays = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     region: text().notNull(),
-    day: date({ mode: 'string' }).notNull(),
+    day: date({mode: 'string'}).notNull(),
     /** Gold. */
     price: integer().notNull(),
-    updatedAt: timestamp({ withTimezone: true }).notNull(),
+    updatedAt: timestamp({withTimezone: true}).notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.region, table.day] })],
+  table => [primaryKey({columns: [table.userId, table.region, table.day]})],
 );

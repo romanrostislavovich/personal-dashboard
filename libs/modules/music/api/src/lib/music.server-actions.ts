@@ -1,8 +1,8 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ServerActions } from '@pd/api-core';
-import { lastfmSettingsInputSchema } from '@pd/contracts';
-import { LastfmHistoryImport } from './lastfm-history.import';
-import { LastfmService } from './lastfm.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {ServerActions} from '@pd/api-core';
+import {lastfmSettingsInputSchema} from '@pd/contracts';
+import {LastfmHistoryImport} from './lastfm-history.import';
+import {LastfmService} from './lastfm.service';
 
 /** Last.fm requests run on the server (see ServerActions). */
 export const MUSIC_ACTIONS = {
@@ -26,9 +26,11 @@ export class MusicServerActions implements OnModuleInit {
       this.history.start(userId);
     });
     // Starts in the background on the server; the plays arrive with the regular sync.
-    this.actions.register(MUSIC_ACTIONS.importHistory, async (userId) => {
+    this.actions.register(MUSIC_ACTIONS.importHistory, async userId => {
       this.history.start(userId);
     });
-    this.actions.register(MUSIC_ACTIONS.syncLastfm, (userId) => this.lastfm.sync(userId));
+    this.actions.register(MUSIC_ACTIONS.syncLastfm, userId =>
+      this.lastfm.sync(userId),
+    );
   }
 }

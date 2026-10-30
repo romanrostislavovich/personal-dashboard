@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { SearchHit } from '@pd/contracts';
-import { sql, SQL } from 'drizzle-orm';
-import { AnyColumn } from 'drizzle-orm';
+import {Injectable, Logger} from '@nestjs/common';
+import {SearchHit} from '@pd/contracts';
+import {sql, SQL} from 'drizzle-orm';
+import {AnyColumn} from 'drizzle-orm';
 
 /** How many hits a module gives at most: the palette shows a few of each, not a page. */
 export const SEARCH_LIMIT = 5;
@@ -33,10 +33,10 @@ export class SearchService {
   /** Hits of all modules, in the order the modules were registered. */
   async search(userId: string, query: string): Promise<SearchHit[]> {
     const found = await Promise.all(
-      this.providers.map((provider) =>
+      this.providers.map(provider =>
         provider.search(userId, query).then(
-          (hits) => hits.slice(0, SEARCH_LIMIT),
-          (error) => {
+          hits => hits.slice(0, SEARCH_LIMIT),
+          error => {
             // One module failing must not leave the palette empty.
             this.logger.warn(`Search in ${provider.module} failed: ${error}`);
             return [];
@@ -50,7 +50,7 @@ export class SearchService {
 
 /** `column ILIKE '%query%'`; `%` and `_` typed by the user are literal characters. */
 export function contains(column: AnyColumn | SQL, query: string): SQL {
-  const pattern = `%${query.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+  const pattern = `%${query.replace(/[\\%_]/g, c => `\\${c}`)}%`;
   return sql`${column} ILIKE ${pattern}`;
 }
 

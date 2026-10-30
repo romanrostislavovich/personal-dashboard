@@ -1,12 +1,15 @@
-import { EventEmitter } from 'node:events';
-import { PassThrough } from 'node:stream';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TelemetrySources } from './telemetry-sources';
+import {EventEmitter} from 'node:events';
+import {PassThrough} from 'node:stream';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {TelemetrySources} from './telemetry-sources';
 
-const mocks = vi.hoisted(() => ({ spawn: vi.fn(), write: vi.fn() }));
-vi.mock('electron', () => ({ app: { getPath: () => 'C:\\test-user-data' } }));
-vi.mock('node:child_process', () => ({ spawn: mocks.spawn }));
-vi.mock('node:fs', () => ({ readFileSync: () => '# bundled helper', writeFileSync: mocks.write }));
+const mocks = vi.hoisted(() => ({spawn: vi.fn(), write: vi.fn()}));
+vi.mock('electron', () => ({app: {getPath: () => 'C:\\test-user-data'}}));
+vi.mock('node:child_process', () => ({spawn: mocks.spawn}));
+vi.mock('node:fs', () => ({
+  readFileSync: () => '# bundled helper',
+  writeFileSync: mocks.write,
+}));
 
 function child() {
   return Object.assign(new EventEmitter(), {
@@ -36,7 +39,7 @@ describe('telemetry helper lifecycle', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(100_000);
-    Object.defineProperty(process, 'platform', { value: 'win32' });
+    Object.defineProperty(process, 'platform', {value: 'win32'});
     mocks.spawn.mockReset();
     mocks.write.mockClear();
   });
@@ -61,14 +64,23 @@ describe('telemetry helper lifecycle', () => {
     });
     expect(process.stdin.read().toString()).not.toContain('secret');
     expect(mocks.write).toHaveBeenCalledTimes(3);
-    process.stdout.write(JSON.stringify({ input }) + '\n');
-    process.stdout.write(
-      JSON.stringify({ terminal: { durationMs: 100, exitCode: 0, category: 'test' } }) + '\n',
-    );
-    process.stdout.write(JSON.stringify({ input: { ...input, text: 'secret' } }) + '\n');
+    process.stdout.write(JSON.stringify({input}) + '\n');
     process.stdout.write(
       JSON.stringify({
-        terminal: { durationMs: 100, exitCode: 0, category: 'test', command: 'secret' },
+        terminal: {durationMs: 100, exitCode: 0, category: 'test'},
+      }) + '\n',
+    );
+    process.stdout.write(
+      JSON.stringify({input: {...input, text: 'secret'}}) + '\n',
+    );
+    process.stdout.write(
+      JSON.stringify({
+        terminal: {
+          durationMs: 100,
+          exitCode: 0,
+          category: 'test',
+          command: 'secret',
+        },
       }) + '\n',
     );
     process.stdout.write('invalid\n');
@@ -77,7 +89,7 @@ describe('telemetry helper lifecycle', () => {
     sources.update(null);
     expect(process.kill).toHaveBeenCalledOnce();
     expect(process.stdin.destroyed).toBe(true);
-    process.stdout.write(JSON.stringify({ input }) + '\n');
+    process.stdout.write(JSON.stringify({input}) + '\n');
     expect(onInput).toHaveBeenCalledOnce();
     process.emit('exit');
   });
@@ -93,11 +105,11 @@ describe('telemetry helper lifecycle', () => {
     sources.update(gate);
     expect(mocks.spawn).toHaveBeenCalledOnce();
     vi.advanceTimersByTime(30_000);
-    sources.update({ ...gate, identity: 'new-account' });
+    sources.update({...gate, identity: 'new-account'});
     expect(mocks.spawn).toHaveBeenCalledTimes(2);
     first.emit('exit');
-    first.stdout.write(JSON.stringify({ input }) + '\n');
-    second.stdout.write(JSON.stringify({ input }) + '\n');
+    first.stdout.write(JSON.stringify({input}) + '\n');
+    second.stdout.write(JSON.stringify({input}) + '\n');
     expect(onInput).toHaveBeenCalledOnce();
     expect(second.kill).not.toHaveBeenCalled();
     sources.stop();

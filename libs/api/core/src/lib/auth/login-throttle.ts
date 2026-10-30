@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import {HttpException, HttpStatus} from '@nestjs/common';
 
 /** Failed attempts allowed per key within the window… */
 const MAX_FAILURES = 10;
@@ -27,9 +27,11 @@ export class LoginThrottle {
     for (const key of keys) {
       const entry = this.current(key);
       if (entry && entry.count >= MAX_FAILURES) {
-        const retryAfter = Math.ceil((entry.since + WINDOW_MS - this.now()) / 1000);
+        const retryAfter = Math.ceil(
+          (entry.since + WINDOW_MS - this.now()) / 1000,
+        );
         throw new HttpException(
-          { message: 'Too many attempts, try again later', retryAfter },
+          {message: 'Too many attempts, try again later', retryAfter},
           HttpStatus.TOO_MANY_REQUESTS,
         );
       }
@@ -38,7 +40,7 @@ export class LoginThrottle {
 
   fail(keys: string[]): void {
     for (const key of keys) {
-      const entry = this.current(key) ?? { count: 0, since: this.now() };
+      const entry = this.current(key) ?? {count: 0, since: this.now()};
       entry.count++;
       this.failures.set(key, entry);
     }
@@ -46,7 +48,7 @@ export class LoginThrottle {
   }
 
   succeed(keys: string[]): void {
-    keys.forEach((key) => this.failures.delete(key));
+    keys.forEach(key => this.failures.delete(key));
   }
 
   private current(key: string): Failures | undefined {

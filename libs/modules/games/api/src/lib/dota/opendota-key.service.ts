@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { SecretsService } from '@pd/api-core';
-import { openDota, OpenDotaKeyError } from './opendota.client';
+import {BadRequestException, Injectable} from '@nestjs/common';
+import {SecretsService} from '@pd/api-core';
+import {openDota, OpenDotaKeyError} from './opendota.client';
 
 /** The secret of one Dota account's key; the id is the game account's. */
 const keySecret = (accountId: string) => `games.opendota-key.${accountId}`;
@@ -19,9 +19,14 @@ export class OpenDotaKeyService {
   }
 
   /** Which of the accounts have a key. */
-  async accountsWithKey(userId: string, accountIds: string[]): Promise<string[]> {
+  async accountsWithKey(
+    userId: string,
+    accountIds: string[],
+  ): Promise<string[]> {
     const withKey = await Promise.all(
-      accountIds.map(async (id) => ((await this.secrets.has(userId, keySecret(id))) ? [id] : [])),
+      accountIds.map(async id =>
+        (await this.secrets.has(userId, keySecret(id))) ? [id] : [],
+      ),
     );
     return withKey.flat();
   }

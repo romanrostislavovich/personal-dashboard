@@ -1,4 +1,4 @@
-import { pickMessages } from '../i18n/locale';
+import {pickMessages} from '../i18n/locale';
 
 /** The words of a finding: what it is, what was seen, what to do. */
 export interface FindingText {
@@ -13,13 +13,16 @@ const list = (items: string[]) => items.join(', ');
 const messages = {
   en: {
     notifyTitle: (count: number) =>
-      count === 1 ? '🛡 Security: a new finding' : `🛡 Security: ${count} new findings`,
+      count === 1
+        ? '🛡 Security: a new finding'
+        : `🛡 Security: ${count} new findings`,
     notifyLine: (severity: string, title: string) => `• [${severity}] ${title}`,
     notifyMore: 'Details and what to do — in the Security section.',
 
     twoFactorOff: (): FindingText => ({
       title: 'Two-factor sign-in is off',
-      details: 'The account that runs this dashboard is protected by the password alone.',
+      details:
+        'The account that runs this dashboard is protected by the password alone.',
       fix: 'Turn it on in Settings → Account → Security and keep the recovery codes.',
     }),
     registrationOpen: (users: number): FindingText => ({
@@ -62,7 +65,8 @@ const messages = {
         days < 0
           ? 'The HTTPS certificate has expired'
           : `The HTTPS certificate expires in ${days} day(s)`,
-      details: 'Caddy renews certificates by itself a month ahead: it has not managed to.',
+      details:
+        'Caddy renews certificates by itself a month ahead: it has not managed to.',
       fix: 'Look at `docker compose logs caddy` on the server: usually the DNS record or port 80 is the cause.',
     }),
     headersMissing: (headers: string[]): FindingText => ({
@@ -72,7 +76,8 @@ const messages = {
     }),
     backupsOff: (): FindingText => ({
       title: 'Backups are not watched',
-      details: 'BACKUP_DIR is not set: the dashboard does not know whether the database is dumped.',
+      details:
+        'BACKUP_DIR is not set: the dashboard does not know whether the database is dumped.',
       fix: 'Run the backup job of deploy/compose.yml (docs/deploy.md, "Backups").',
     }),
     backupsBroken: (problems: string[]): FindingText => ({
@@ -93,7 +98,8 @@ const messages = {
     }),
     sshPassword: (): FindingText => ({
       title: 'SSH lets in by password',
-      details: 'PasswordAuthentication is on: the server’s password can be guessed from anywhere.',
+      details:
+        'PasswordAuthentication is on: the server’s password can be guessed from anywhere.',
       fix: 'Sign in with a key, then set `PasswordAuthentication no` in /etc/ssh/sshd_config and run `systemctl reload ssh`.',
     }),
     sshRoot: (): FindingText => ({
@@ -124,7 +130,8 @@ const messages = {
     }),
     rebootRequired: (): FindingText => ({
       title: 'The server waits for a reboot',
-      details: 'An installed update (usually the kernel) takes effect only after a restart.',
+      details:
+        'An installed update (usually the kernel) takes effect only after a restart.',
       fix: 'Restart the server at a quiet moment: `reboot`. The dashboard comes back by itself.',
     }),
     updatesManual: (): FindingText => ({
@@ -140,13 +147,16 @@ const messages = {
   },
   ru: {
     notifyTitle: (count: number) =>
-      count === 1 ? '🛡 Безопасность: новая находка' : `🛡 Безопасность: новых находок — ${count}`,
+      count === 1
+        ? '🛡 Безопасность: новая находка'
+        : `🛡 Безопасность: новых находок — ${count}`,
     notifyLine: (severity: string, title: string) => `• [${severity}] ${title}`,
     notifyMore: 'Подробности и что делать — в разделе «Безопасность».',
 
     twoFactorOff: (): FindingText => ({
       title: 'Двухфакторный вход выключен',
-      details: 'Аккаунт, который управляет этим дашбордом, защищён только паролем.',
+      details:
+        'Аккаунт, который управляет этим дашбордом, защищён только паролем.',
       fix: 'Включите его в Настройках → Аккаунт → Безопасность и сохраните коды восстановления.',
     }),
     registrationOpen: (users: number): FindingText => ({
@@ -185,8 +195,12 @@ const messages = {
       fix: 'Проверьте DNS-запись, прокси (Caddy) и порты 80/443 сервера.',
     }),
     certificateExpiring: (days: number): FindingText => ({
-      title: days < 0 ? 'HTTPS-сертификат истёк' : `HTTPS-сертификат истекает через ${days} дн.`,
-      details: 'Caddy продлевает сертификаты сам за месяц до срока: у него не получилось.',
+      title:
+        days < 0
+          ? 'HTTPS-сертификат истёк'
+          : `HTTPS-сертификат истекает через ${days} дн.`,
+      details:
+        'Caddy продлевает сертификаты сам за месяц до срока: у него не получилось.',
       fix: 'Посмотрите `docker compose logs caddy` на сервере: обычно дело в DNS-записи или порте 80.',
     }),
     headersMissing: (headers: string[]): FindingText => ({
@@ -217,7 +231,8 @@ const messages = {
     }),
     sshPassword: (): FindingText => ({
       title: 'SSH пускает по паролю',
-      details: 'PasswordAuthentication включён: пароль сервера можно подбирать откуда угодно.',
+      details:
+        'PasswordAuthentication включён: пароль сервера можно подбирать откуда угодно.',
       fix: 'Войдите по ключу, затем поставьте `PasswordAuthentication no` в /etc/ssh/sshd_config и выполните `systemctl reload ssh`.',
     }),
     sshRoot: (): FindingText => ({
@@ -248,7 +263,8 @@ const messages = {
     }),
     rebootRequired: (): FindingText => ({
       title: 'Сервер ждёт перезагрузки',
-      details: 'Установленное обновление (обычно ядро) начнёт работать только после перезапуска.',
+      details:
+        'Установленное обновление (обычно ядро) начнёт работать только после перезапуска.',
       fix: 'Перезагрузите сервер в спокойный момент: `reboot`. Дашборд поднимется сам.',
     }),
     updatesManual: (): FindingText => ({

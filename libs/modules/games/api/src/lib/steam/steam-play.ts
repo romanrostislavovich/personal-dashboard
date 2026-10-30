@@ -8,9 +8,9 @@ const MAX_MINUTES_A_DAY = 24 * 60;
  */
 export function playedSince(
   before: ReadonlyMap<number, number>,
-  games: { appId: number; playtimeMinutes: number }[],
-): { appId: number; minutes: number }[] {
-  const played: { appId: number; minutes: number }[] = [];
+  games: {appId: number; playtimeMinutes: number}[],
+): {appId: number; minutes: number}[] {
+  const played: {appId: number; minutes: number}[] = [];
   for (const game of games) {
     const known = before.get(game.appId);
     if (known !== undefined && game.playtimeMinutes > known) {

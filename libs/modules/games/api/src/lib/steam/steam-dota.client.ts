@@ -1,4 +1,4 @@
-import { SteamClient } from './steam.client';
+import {SteamClient} from './steam.client';
 
 /** The match history is closed: "Expose Public Match Data" is off in Dota 2. */
 export class SteamDotaPrivateError extends Error {}
@@ -51,43 +51,54 @@ export class SteamDotaClient extends SteamClient {
    */
   async getMatchHistory(
     accountId: number,
-    { beforeMatchId, heroId }: { beforeMatchId?: number; heroId?: number } = {},
+    {beforeMatchId, heroId}: {beforeMatchId?: number; heroId?: number} = {},
   ): Promise<SteamHistoryPage> {
-    const answer = await this.get<{ result: RawHistory }>(
+    const answer = await this.get<{result: RawHistory}>(
       '/IDOTA2Match_570/GetMatchHistory/v1/',
       {
         account_id: String(accountId),
         matches_requested: String(STEAM_HISTORY_PAGE),
-        ...(beforeMatchId ? { start_at_match_id: String(beforeMatchId - 1) } : {}),
-        ...(heroId ? { hero_id: String(heroId) } : {}),
+        ...(beforeMatchId
+          ? {start_at_match_id: String(beforeMatchId - 1)}
+          : {}),
+        ...(heroId ? {hero_id: String(heroId)} : {}),
       },
       // Steam answers a hero query with 400 and `{}` instead of an empty list.
-      { tolerate: heroId ? [400] : [] },
+      {tolerate: heroId ? [400] : []},
     );
     if (!answer?.result) {
       if (heroId) {
-        return { matches: [], hasMore: false, refused: true };
+        return {matches: [], hasMore: false, refused: true};
       }
       throw new Error('Steam match history: an empty answer');
     }
-    const { result } = answer;
+    const {result} = answer;
     if (result.status === 15) {
-      throw new SteamDotaPrivateError('The Dota 2 match history of the account is not public');
+      throw new SteamDotaPrivateError(
+        'The Dota 2 match history of the account is not public',
+      );
     }
     if (result.status !== 1) {
-      throw new Error(`Steam match history: status ${result.status} ${result.statusDetail ?? ''}`);
+      throw new Error(
+        `Steam match history: status ${result.status} ${result.statusDetail ?? ''}`,
+      );
     }
     return {
-      matches: (result.matches ?? []).flatMap((match) => listedMatch(match, accountId)),
+      matches: (result.matches ?? []).flatMap(match =>
+        listedMatch(match, accountId),
+      ),
       hasMore: (result.results_remaining ?? 0) > 0,
     };
   }
 
   /** The result and the numbers of a match; `null` — Steam has no details for it. */
-  async getMatchDetails(matchId: number, accountId: number): Promise<SteamMatchDetails | null> {
-    const { result } = await this.get<{ result?: RawDetails }>(
+  async getMatchDetails(
+    matchId: number,
+    accountId: number,
+  ): Promise<SteamMatchDetails | null> {
+    const {result} = await this.get<{result?: RawDetails}>(
       '/IDOTA2Match_570/GetMatchDetails/v1/',
-      { match_id: String(matchId) },
+      {match_id: String(matchId)},
     );
     // Steam is known to answer `{}` for a match it has no details for.
     return result ? matchDetails(result, accountId) : null;
@@ -95,8 +106,11 @@ export class SteamDotaClient extends SteamClient {
 }
 
 /** The account's row of a listed match; nothing if the player is not in it or picked no hero. */
-export function listedMatch(match: RawListedMatch, accountId: number): SteamListedMatch[] {
-  const player = match.players?.find((p) => p.account_id === accountId);
+export function listedMatch(
+  match: RawListedMatch,
+  accountId: number,
+): SteamListedMatch[] {
+  const player = match.players?.find(p => p.account_id === accountId);
   if (!player?.hero_id) {
     return [];
   }
@@ -111,8 +125,11 @@ export function listedMatch(match: RawListedMatch, accountId: number): SteamList
 }
 
 /** The account's side of the match details; `null` when Steam answered with an error. */
-export function matchDetails(result: RawDetails, accountId: number): SteamMatchDetails | null {
-  const player = result.players?.find((p) => p.account_id === accountId);
+export function matchDetails(
+  result: RawDetails,
+  accountId: number,
+): SteamMatchDetails | null {
+  const player = result.players?.find(p => p.account_id === accountId);
   if (result.error || !player || typeof result.radiant_win !== 'boolean') {
     return null;
   }
@@ -149,7 +166,7 @@ export interface RawListedMatch {
   match_id: number;
   start_time: number;
   lobby_type?: number;
-  players?: { account_id?: number; player_slot: number; hero_id?: number }[];
+  players?: {account_id?: number; player_slot: number; hero_id?: number}[];
 }
 
 export interface RawDetails {

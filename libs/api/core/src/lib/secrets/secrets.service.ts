@@ -1,10 +1,15 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { and, eq } from 'drizzle-orm';
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
-import { AppConfig } from '../config/env';
-import { DB, Database } from '../database/database.module';
-import { userSecrets } from './secrets.schema';
+import {Inject, Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {and, eq} from 'drizzle-orm';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+} from 'node:crypto';
+import {AppConfig} from '../config/env';
+import {DB, Database} from '../database/database.module';
+import {userSecrets} from './secrets.schema';
 
 const ALGORITHM = 'aes-256-gcm';
 
@@ -24,7 +29,7 @@ export class SecretsService {
   ) {
     // sha256 turns a key of any length into exactly 32 bytes for AES-256.
     this.key = createHash('sha256')
-      .update(config.get('ENCRYPTION_KEY', { infer: true }))
+      .update(config.get('ENCRYPTION_KEY', {infer: true}))
       .digest();
   }
 
@@ -48,10 +53,10 @@ export class SecretsService {
     const encryptedValue = this.encrypt(value);
     await this.db
       .insert(userSecrets)
-      .values({ userId, key, encryptedValue })
+      .values({userId, key, encryptedValue})
       .onConflictDoUpdate({
         target: [userSecrets.userId, userSecrets.key],
-        set: { encryptedValue, updatedAt: new Date() },
+        set: {encryptedValue, updatedAt: new Date()},
       });
   }
 
@@ -65,14 +70,24 @@ export class SecretsService {
   private encrypt(plain: string): string {
     const iv = randomBytes(12);
     const cipher = createCipheriv(ALGORITHM, this.key, iv);
-    const encrypted = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
-    return [iv, cipher.getAuthTag(), encrypted].map((part) => part.toString('base64')).join('.');
+    const encrypted = Buffer.concat([
+      cipher.update(plain, 'utf8'),
+      cipher.final(),
+    ]);
+    return [iv, cipher.getAuthTag(), encrypted]
+      .map(part => part.toString('base64'))
+      .join('.');
   }
 
   private decrypt(stored: string): string {
-    const [iv, authTag, encrypted] = stored.split('.').map((part) => Buffer.from(part, 'base64'));
+    const [iv, authTag, encrypted] = stored
+      .split('.')
+      .map(part => Buffer.from(part, 'base64'));
     const decipher = createDecipheriv(ALGORITHM, this.key, iv);
     decipher.setAuthTag(authTag);
-    return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
+    return Buffer.concat([
+      decipher.update(encrypted),
+      decipher.final(),
+    ]).toString('utf8');
   }
 }

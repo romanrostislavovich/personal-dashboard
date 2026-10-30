@@ -1,6 +1,6 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { PSYCHOLOGY_READS, psychologyApi } from '@pd/client-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {PSYCHOLOGY_READS, psychologyApi} from '@pd/client-core';
 import {
   AppointmentBrief,
   AppointmentBriefInput,
@@ -17,21 +17,23 @@ import {
   PsychologySettings,
   PsychologySettingsInput,
 } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The Psychology requests of the client core (`@pd/client-core`) for Angular. */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class PsychologyApi {
   private readonly psychology = psychologyApi(inject(DASHBOARD_CLIENT).api);
 
-  patterns(period: () => { from: string; to: string }) {
+  patterns(period: () => {from: string; to: string}) {
     return httpResource<PsychologyPatterns>(() =>
       PSYCHOLOGY_READS.patterns(period().from, period().to),
     );
   }
 
   events() {
-    return httpResource<PsychologyEvent[]>(() => PSYCHOLOGY_READS.events(), { defaultValue: [] });
+    return httpResource<PsychologyEvent[]>(() => PSYCHOLOGY_READS.events(), {
+      defaultValue: [],
+    });
   }
 
   saveEvent(input: PsychologyEventInput, id?: string) {
@@ -47,9 +49,12 @@ export class PsychologyApi {
   }
 
   assessments() {
-    return httpResource<PsychologyAssessment[]>(() => PSYCHOLOGY_READS.assessments(), {
-      defaultValue: [],
-    });
+    return httpResource<PsychologyAssessment[]>(
+      () => PSYCHOLOGY_READS.assessments(),
+      {
+        defaultValue: [],
+      },
+    );
   }
 
   addAssessment(input: PsychologyAssessmentInput) {
@@ -71,7 +76,9 @@ export class PsychologyApi {
   // --- A gentle day ---
 
   gentleSteps() {
-    return httpResource<GentleStep[]>(() => PSYCHOLOGY_READS.gentleSteps(), { defaultValue: [] });
+    return httpResource<GentleStep[]>(() => PSYCHOLOGY_READS.gentleSteps(), {
+      defaultValue: [],
+    });
   }
 
   saveGentleStep(input: GentleStepInput, id?: string) {
@@ -97,7 +104,9 @@ export class PsychologyApi {
   // --- Briefs for an appointment ---
 
   briefs() {
-    return httpResource<AppointmentBrief[]>(() => PSYCHOLOGY_READS.briefs(), { defaultValue: [] });
+    return httpResource<AppointmentBrief[]>(() => PSYCHOLOGY_READS.briefs(), {
+      defaultValue: [],
+    });
   }
 
   saveBrief(input: AppointmentBriefInput, id?: string) {

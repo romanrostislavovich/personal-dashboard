@@ -1,7 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { SchedulerService, UsersService } from '@pd/api-core';
-import { GithubTokenService } from '../github/github-token.service';
-import { GithubProfileService } from './github-profile.service';
+import {Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {SchedulerService, UsersService} from '@pd/api-core';
+import {GithubTokenService} from '../github/github-token.service';
+import {GithubProfileService} from './github-profile.service';
 
 /**
  * Refreshes the GitHub account of every user with a token once an hour: the streak on the home
@@ -35,7 +35,11 @@ export class GithubProfileJob implements OnModuleInit {
       // One user's bad token must not stop the others; the error is saved for the page.
       await this.profiles
         .sync(user.id)
-        .catch((error) => this.logger.warn(`GitHub profile sync for ${user.id} failed: ${error}`));
+        .catch(error =>
+          this.logger.warn(
+            `GitHub profile sync for ${user.id} failed: ${error}`,
+          ),
+        );
     }
   }
 }

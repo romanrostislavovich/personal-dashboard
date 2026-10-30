@@ -1,4 +1,4 @@
-import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import {DatePipe, NgTemplateOutlet} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,19 +7,29 @@ import {
   LOCALE_ID,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { ActivityPeriod } from '@pd/contracts';
-import { Bar, BarChartComponent, DurationPipe, Share, ShareListComponent } from '@pd/web-core';
-import { ACTIVITY_PERIODS, ActivityPeriodDays, lastDays } from '../activity-period';
-import { ActivityApi } from '../activity.api';
-import { DayTimelineComponent } from './day-timeline.component';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSelectModule} from '@angular/material/select';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {ActivityPeriod} from '@pd/contracts';
+import {
+  Bar,
+  BarChartComponent,
+  DurationPipe,
+  Share,
+  ShareListComponent,
+} from '@pd/web-core';
+import {
+  ACTIVITY_PERIODS,
+  ActivityPeriodDays,
+  lastDays,
+} from '../activity-period';
+import {ActivityApi} from '../activity.api';
+import {DayTimelineComponent} from './day-timeline.component';
 
 /** Bars of the chart: a day each up to a month, then months — a year of days is unreadable. */
 const DAILY_BARS_LIMIT = 31;
@@ -62,41 +72,50 @@ export class OverviewPage {
 
   private readonly period = computed<ActivityPeriod>(() => ({
     ...lastDays(this.days()),
-    ...(this.deviceId() ? { deviceId: this.deviceId() as string } : {}),
+    ...(this.deviceId() ? {deviceId: this.deviceId() as string} : {}),
   }));
   protected readonly stats = this.api.stats(this.period);
   /** The browser is one device for all the sites: they do not follow the device filter. */
   private readonly sites = this.api.sites(() => lastDays(this.days()));
 
   protected readonly activeDays = computed(
-    () => (this.stats.value()?.days ?? []).filter((day) => day.seconds > 0).length,
+    () =>
+      (this.stats.value()?.days ?? []).filter(day => day.seconds > 0).length,
   );
   protected readonly dailyAverage = computed(() =>
-    this.activeDays() ? (this.stats.value()?.totalSeconds ?? 0) / this.activeDays() : 0,
+    this.activeDays()
+      ? (this.stats.value()?.totalSeconds ?? 0) / this.activeDays()
+      : 0,
   );
   protected readonly bestDay = computed(() => {
-    const days = (this.stats.value()?.days ?? []).filter((day) => day.seconds > 0);
+    const days = (this.stats.value()?.days ?? []).filter(
+      day => day.seconds > 0,
+    );
     return days.length
       ? days.reduce((best, day) => (day.seconds > best.seconds ? day : best))
       : null;
   });
 
   /** The scale of the chart: seconds as a duration ("2 h 30 min"). */
-  protected readonly hours = (seconds: number) => this.duration.transform(seconds);
+  protected readonly hours = (seconds: number) =>
+    this.duration.transform(seconds);
 
   protected readonly bars = computed<Bar[]>(() => {
     const days = this.stats.value()?.days ?? [];
     if (days.length <= DAILY_BARS_LIMIT) {
       // A label under every bar fits only for a week.
       const labelEvery = days.length <= 7 ? 1 : 5;
-      return days.map(({ day, seconds }, index) => ({
-        label: index % labelEvery === 0 ? (this.datePipe.transform(day, 'd MMM') ?? '') : '',
+      return days.map(({day, seconds}, index) => ({
+        label:
+          index % labelEvery === 0
+            ? (this.datePipe.transform(day, 'd MMM') ?? '')
+            : '',
         value: seconds,
         title: `${this.datePipe.transform(day, 'EEEE, d MMMM')} — ${this.duration.transform(seconds)}`,
       }));
     }
     const months = new Map<string, number>();
-    for (const { day, seconds } of days) {
+    for (const {day, seconds} of days) {
       const month = day.slice(0, 7);
       months.set(month, (months.get(month) ?? 0) + seconds);
     }
@@ -109,7 +128,7 @@ export class OverviewPage {
 
   protected readonly categories = computed(() =>
     this.shares(
-      (this.stats.value()?.categories ?? []).map(({ category, seconds }) => ({
+      (this.stats.value()?.categories ?? []).map(({category, seconds}) => ({
         name: this.transloco.translate(`activity.categories.${category}`),
         seconds,
       })),
@@ -119,23 +138,28 @@ export class OverviewPage {
   protected readonly mostlyOther = computed(() => {
     const categories = this.stats.value()?.categories ?? [];
     const total = categories.reduce((sum, item) => sum + item.seconds, 0);
-    const other = categories.find((item) => item.category === 'other')?.seconds ?? 0;
+    const other =
+      categories.find(item => item.category === 'other')?.seconds ?? 0;
     return total > 0 && other / total > 0.5;
   });
   protected readonly apps = computed(() =>
     this.shares((this.stats.value()?.apps ?? []).slice(0, TOP_APPS)),
   );
-  protected readonly projects = computed(() => this.shares(this.stats.value()?.projects));
+  protected readonly projects = computed(() =>
+    this.shares(this.stats.value()?.projects),
+  );
   protected readonly siteShares = computed(() =>
     this.shares(
       this.sites
         .value()
         .slice(0, TOP_APPS)
-        .map(({ site, seconds }) => ({ name: site, seconds })),
+        .map(({site, seconds}) => ({name: site, seconds})),
     ),
   );
   /** Computers without the tracker whose time another service knows (a work laptop). */
-  protected readonly otherComputers = computed(() => this.stats.value()?.otherComputers ?? []);
+  protected readonly otherComputers = computed(
+    () => this.stats.value()?.otherComputers ?? [],
+  );
   protected readonly otherSeconds = computed(() =>
     this.otherComputers().reduce((total, item) => total + item.seconds, 0),
   );
@@ -143,11 +167,13 @@ export class OverviewPage {
   protected readonly byDevice = computed(() =>
     this.shares([
       ...(this.stats.value()?.devices ?? []),
-      ...this.otherComputers().map(({ computer, source, seconds }) => ({
+      ...this.otherComputers().map(({computer, source, seconds}) => ({
         // The browser extension is not one computer: its time is the browser wherever it ran.
         name:
           source === 'extension'
-            ? this.transloco.translate('activity.otherComputers.sources.extension')
+            ? this.transloco.translate(
+                'activity.otherComputers.sources.extension',
+              )
             : `${computer} · ${this.transloco.translate(`activity.otherComputers.sources.${source}`)}`,
         seconds,
       })),
@@ -155,17 +181,19 @@ export class OverviewPage {
   );
   protected readonly titles = computed(() =>
     this.shares(
-      (this.stats.value()?.titles ?? []).map(({ name, title, seconds }) => ({
+      (this.stats.value()?.titles ?? []).map(({name, title, seconds}) => ({
         name: title ? `${title} · ${name}` : name,
         seconds,
       })),
     ),
   );
 
-  private shares(items: { name: string; seconds: number }[] | undefined): Share[] {
+  private shares(
+    items: {name: string; seconds: number}[] | undefined,
+  ): Share[] {
     return (items ?? [])
-      .filter((item) => item.seconds > 0)
-      .map(({ name, seconds }) => ({
+      .filter(item => item.seconds > 0)
+      .map(({name, seconds}) => ({
         name,
         value: seconds,
         text: this.duration.transform(seconds),

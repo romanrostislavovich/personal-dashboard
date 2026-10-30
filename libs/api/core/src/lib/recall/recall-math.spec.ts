@@ -1,4 +1,4 @@
-import { cosine, documentText, hashOf, nearest, withTask } from './recall-math';
+import {cosine, documentText, hashOf, nearest, withTask} from './recall-math';
 
 describe('search by meaning — the arithmetic', () => {
   it('measures how alike two vectors are', () => {
@@ -10,11 +10,14 @@ describe('search by meaning — the arithmetic', () => {
 
   it('keeps the closest above the threshold, the closest first', () => {
     const items = [
-      { id: 'far', vector: [0, 1] },
-      { id: 'near', vector: [1, 0.1] },
-      { id: 'nearest', vector: [1, 0] },
+      {id: 'far', vector: [0, 1]},
+      {id: 'near', vector: [1, 0.1]},
+      {id: 'nearest', vector: [1, 0]},
     ];
-    expect(nearest([1, 0], items, 2, 0.5).map((item) => item.id)).toEqual(['nearest', 'near']);
+    expect(nearest([1, 0], items, 2, 0.5).map(item => item.id)).toEqual([
+      'nearest',
+      'near',
+    ]);
   });
 
   it('indexes the meaning only — not the label, not the date; the hash follows the text', () => {
@@ -26,13 +29,15 @@ describe('search by meaning — the arithmetic', () => {
       link: null,
     };
     expect(documentText(item)).toBe('x'.repeat(2000));
-    expect(documentText({ ...item, text: '' })).toBe('Diary, 2026-10-17');
+    expect(documentText({...item, text: ''})).toBe('Diary, 2026-10-17');
     expect(hashOf('a')).toBe(hashOf('a'));
     expect(hashOf('a')).not.toBe(hashOf('b'));
   });
 
   it('tells nomic-embed-text what a text is; other models get it as it is', () => {
-    expect(withTask('nomic-embed-text', 'query', 'knee')).toBe('search_query: knee');
+    expect(withTask('nomic-embed-text', 'query', 'knee')).toBe(
+      'search_query: knee',
+    );
     expect(withTask('text-embedding-3-small', 'document', 'knee')).toBe('knee');
   });
 });

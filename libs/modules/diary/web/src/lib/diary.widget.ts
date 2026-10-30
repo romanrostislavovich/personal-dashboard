@@ -1,11 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { SparklineComponent } from '@pd/web-core';
-import { DiaryApi } from './diary.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {SparklineComponent} from '@pd/web-core';
+import {DiaryApi} from './diary.api';
 
 /** Home widget: day streak, today's entry and the month's mood. */
 @Component({
@@ -27,13 +32,19 @@ import { DiaryApi } from './diary.api';
       <mat-card-content>
         @if (stats.value(); as s) {
           <p class="streak">
-            🔥 <b>{{ s.currentStreak }}</b> {{ 'diary.widget.daysInRow' | transloco }}
+            🔥 <b>{{ s.currentStreak }}</b>
+            {{ 'diary.widget.daysInRow' | transloco }}
           </p>
           <p class="today" [class.done]="s.hasEntryToday">
             <mat-icon inline>{{
               s.hasEntryToday ? 'check_circle' : 'radio_button_unchecked'
             }}</mat-icon>
-            {{ (s.hasEntryToday ? 'diary.widget.written' : 'diary.widget.notWritten') | transloco }}
+            {{
+              (s.hasEntryToday
+                ? 'diary.widget.written'
+                : 'diary.widget.notWritten'
+              ) | transloco
+            }}
           </p>
           @if (moodPoints().length > 1) {
             <span class="label">{{ 'diary.widget.mood' | transloco }}</span>
@@ -47,7 +58,9 @@ import { DiaryApi } from './diary.api';
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/diary">{{ 'diary.widget.open' | transloco }}</a>
+        <a matButton routerLink="/diary">{{
+          'diary.widget.open' | transloco
+        }}</a>
       </mat-card-actions>
     </mat-card>
   `,
@@ -74,6 +87,8 @@ import { DiaryApi } from './diary.api';
 export class DiaryWidget {
   protected readonly stats = inject(DiaryApi).stats();
   protected readonly moodPoints = computed(
-    () => this.stats.value()?.moodHistory.map((p) => ({ at: p.day, value: p.mood })) ?? [],
+    () =>
+      this.stats.value()?.moodHistory.map(p => ({at: p.day, value: p.mood})) ??
+      [],
   );
 }

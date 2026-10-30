@@ -1,9 +1,18 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database, UsersService } from '@pd/api-core';
-import { LocalDate, PhoneUsage, PhoneUsageDay, PhoneUsageQuery } from '@pd/contracts';
-import { and, eq, gte, inArray, lt, sql } from 'drizzle-orm';
-import { activityDevices, activitySpans, ActivityDeviceRow } from '../activity.schema';
-import { activityPhoneUnlocks } from './phone-unlocks.schema';
+import {Inject, Injectable} from '@nestjs/common';
+import {DB, Database, UsersService} from '@pd/api-core';
+import {
+  LocalDate,
+  PhoneUsage,
+  PhoneUsageDay,
+  PhoneUsageQuery,
+} from '@pd/contracts';
+import {and, eq, gte, inArray, lt, sql} from 'drizzle-orm';
+import {
+  activityDevices,
+  activitySpans,
+  ActivityDeviceRow,
+} from '../activity.schema';
+import {activityPhoneUnlocks} from './phone-unlocks.schema';
 
 const INSERT_CHUNK = 200;
 const PHONES = ['android', 'ios'] as const;
@@ -21,7 +30,7 @@ export class PhoneUsageService {
   ) {}
 
   async ingest(device: ActivityDeviceRow, unlocks: string[]): Promise<number> {
-    const rows = unlocks.map((at) => ({
+    const rows = unlocks.map(at => ({
       userId: device.userId,
       deviceId: device.id,
       at: new Date(at),
@@ -32,19 +41,22 @@ export class PhoneUsageService {
         .insert(activityPhoneUnlocks)
         .values(rows.slice(i, i + INSERT_CHUNK))
         .onConflictDoNothing()
-        .returning({ id: activityPhoneUnlocks.id });
+        .returning({id: activityPhoneUnlocks.id});
       saved += inserted.length;
     }
     return saved;
   }
 
-  async usage(userId: string, { from, to }: PhoneUsageQuery): Promise<PhoneUsage> {
+  async usage(
+    userId: string,
+    {from, to}: PhoneUsageQuery,
+  ): Promise<PhoneUsage> {
     const zone = this.users.timeZoneOf(await this.users.findById(userId));
     const days = new Map<LocalDate, PhoneUsageDay>();
     const dayOf = (day: LocalDate) => {
       let found = days.get(day);
       if (!found) {
-        found = { day, unlocks: 0, nightSeconds: 0 };
+        found = {day, unlocks: 0, nightSeconds: 0};
         days.set(day, found);
       }
       return found;
@@ -64,7 +76,7 @@ export class PhoneUsageService {
       .from(u)
       .where(and(eq(u.userId, userId), gte(u.at, start), lt(u.at, end)))
       .groupBy(sql`1`, sql`2`);
-    const unlocksByHour = Array.from({ length: 24 }, () => 0);
+    const unlocksByHour = Array.from({length: 24}, () => 0);
     for (const row of unlockRows) {
       dayOf(row.day).unlocks += row.count;
       unlocksByHour[row.hour] += row.count;

@@ -1,8 +1,8 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { LinksService } from '@pd/api-core';
-import { ProjectFact } from '@pd/contracts';
-import { TransactionsService } from './transactions/transactions.service';
-import { WishlistService } from './wishlist/wishlist.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {LinksService} from '@pd/api-core';
+import {ProjectFact} from '@pd/contracts';
+import {TransactionsService} from './transactions/transactions.service';
+import {WishlistService} from './wishlist/wishlist.service';
 
 /** The categories of spending that get a daily number of their own, and the days one needs. */
 const CATEGORIES = 8;
@@ -25,14 +25,18 @@ export class FinanceLinks implements OnModuleInit {
     this.links.registerProject({
       module: 'finance',
       facts: async (userId, project, period): Promise<ProjectFact[]> => {
-        const { inMain } = await this.transactions.summary(userId, {
+        const {inMain} = await this.transactions.summary(userId, {
           ...period,
           scope: project.id,
         });
         if (!inMain || (!inMain.income && !inMain.expense)) {
           return [];
         }
-        const money = { module: 'finance', unit: 'money', currency: inMain.mainCurrency } as const;
+        const money = {
+          module: 'finance',
+          unit: 'money',
+          currency: inMain.mainCurrency,
+        } as const;
         return [
           {
             ...money,
@@ -49,7 +53,7 @@ export class FinanceLinks implements OnModuleInit {
             link: '/finance',
             note: inMain.topExpenseCategories
               .slice(0, 3)
-              .map((item) => item.category)
+              .map(item => item.category)
               .join(', '),
           },
         ];
@@ -59,10 +63,8 @@ export class FinanceLinks implements OnModuleInit {
     this.links.registerDailyMetrics({
       module: 'finance',
       metrics: async (userId, period) => {
-        const { mainCurrency, byDay, byCategory } = await this.transactions.expensesByDayInMain(
-          userId,
-          period,
-        );
+        const {mainCurrency, byDay, byCategory} =
+          await this.transactions.expensesByDayInMain(userId, period);
         if (!byDay.size) {
           return [];
         }
@@ -78,7 +80,7 @@ export class FinanceLinks implements OnModuleInit {
             labelKey: 'finance.links.spent',
             unit: 'money',
             currency: mainCurrency,
-            days: [...byDay].map(([day, value]) => ({ day, value })),
+            days: [...byDay].map(([day, value]) => ({day, value})),
           },
           ...categories.map(([category, days]) => ({
             key: `finance.spent.${category.toLowerCase()}`,
@@ -89,7 +91,10 @@ export class FinanceLinks implements OnModuleInit {
             currency: mainCurrency,
             partOf: 'finance.spent',
             // From the first day of all the spending: a day without this category is a zero.
-            days: [...byDay.keys()].map((day) => ({ day, value: days.get(day) ?? 0 })),
+            days: [...byDay.keys()].map(day => ({
+              day,
+              value: days.get(day) ?? 0,
+            })),
           })),
         ];
       },
@@ -102,7 +107,7 @@ export class FinanceLinks implements OnModuleInit {
         return new Map(
           [...ideas].map(([name, wishes]) => [
             name,
-            wishes.map((wish) => ({
+            wishes.map(wish => ({
               kind: 'gift',
               title: wish.name,
               detail:
@@ -117,8 +122,16 @@ export class FinanceLinks implements OnModuleInit {
     });
 
     this.links.registerPages([
-      { module: 'finance', path: '/finance', description: 'money: overview, transactions' },
-      { module: 'finance', path: '/finance?tab=wishlist', description: 'wishlist with prices' },
+      {
+        module: 'finance',
+        path: '/finance',
+        description: 'money: overview, transactions',
+      },
+      {
+        module: 'finance',
+        path: '/finance?tab=wishlist',
+        description: 'wishlist with prices',
+      },
     ]);
   }
 }

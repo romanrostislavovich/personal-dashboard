@@ -10,7 +10,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
   Habit,
   HabitDayInput,
@@ -19,7 +19,7 @@ import {
   habitInputSchema,
   ValidHabitInput,
 } from '@pd/contracts';
-import { HabitsService } from './habits.service';
+import {HabitsService} from './habits.service';
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -52,7 +52,10 @@ export class HabitsController {
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.habits.remove(user.id, id);
   }
 

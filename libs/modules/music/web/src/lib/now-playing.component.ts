@@ -1,15 +1,25 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { NowPlaying } from '@pd/contracts';
-import { SongShareComponent } from './song-share.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {NowPlaying} from '@pd/contracts';
+import {SongShareComponent} from './song-share.component';
 
 /** Current track card: cover, title, artist and (for Spotify) progress. */
 @Component({
   selector: 'pd-now-playing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, MatProgressBarModule, TranslocoPipe, SongShareComponent],
+  imports: [
+    MatIconModule,
+    MatProgressBarModule,
+    TranslocoPipe,
+    SongShareComponent,
+  ],
   template: `
     @let t = track();
     <div class="now">
@@ -21,11 +31,15 @@ import { SongShareComponent } from './song-share.component';
       <div class="info">
         <span class="label">
           <mat-icon inline>{{ t.isPlaying ? 'equalizer' : 'pause' }}</mat-icon>
-          {{ (t.isPlaying ? 'music.now.playing' : 'music.now.paused') | transloco }}
+          {{
+            (t.isPlaying ? 'music.now.playing' : 'music.now.paused') | transloco
+          }}
           · {{ t.source === 'spotify' ? 'Spotify' : 'Last.fm' }}
         </span>
         @if (t.url) {
-          <a class="track" [href]="t.url" target="_blank" rel="noopener">{{ t.track }}</a>
+          <a class="track" [href]="t.url" target="_blank" rel="noopener">{{
+            t.track
+          }}</a>
         } @else {
           <span class="track">{{ t.track }}</span>
         }
@@ -100,7 +114,9 @@ export class NowPlayingComponent {
 
   /** Percentage played — only if the source knows the progress (Spotify). */
   protected readonly progress = computed(() => {
-    const { progressMs, durationMs } = this.track();
-    return progressMs !== null && durationMs ? (progressMs / durationMs) * 100 : null;
+    const {progressMs, durationMs} = this.track();
+    return progressMs !== null && durationMs
+      ? (progressMs / durationMs) * 100
+      : null;
   });
 }

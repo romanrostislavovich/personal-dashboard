@@ -1,13 +1,21 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   Game,
   GameAccountInput,
@@ -72,7 +80,9 @@ import {
               <mat-label>{{ 'games.wow.region' | transloco }}</mat-label>
               <mat-select formControlName="region">
                 @for (region of regions; track region) {
-                  <mat-option [value]="region">{{ region.toUpperCase() }}</mat-option>
+                  <mat-option [value]="region">{{
+                    region.toUpperCase()
+                  }}</mat-option>
                 }
               </mat-select>
             </mat-form-field>
@@ -117,9 +127,13 @@ import {
   `,
 })
 export class AddGameAccountDialog {
-  private readonly dialogRef = inject(MatDialogRef<AddGameAccountDialog, GameAccountInput>);
+  private readonly dialogRef = inject(
+    MatDialogRef<AddGameAccountDialog, GameAccountInput>,
+  );
   /** The game to open on; Dota 2 unless the page asks for another. */
-  private readonly initialGame = inject<Game | null>(MAT_DIALOG_DATA, { optional: true });
+  private readonly initialGame = inject<Game | null>(MAT_DIALOG_DATA, {
+    optional: true,
+  });
 
   protected readonly regions = WOW_REGIONS;
   protected readonly versions = WOW_VERSIONS;
@@ -154,10 +168,16 @@ export class AddGameAccountDialog {
   save(): void {
     const v = this.form.getRawValue();
     const input: Record<Game, GameAccountInput> = {
-      steam: { game: 'steam', steamId: v.steamProfile },
-      dota2: { game: 'dota2', steamId: v.steamId },
-      wow: { game: 'wow', region: v.region, version: v.version, realm: v.realm, name: v.name },
-      xbox: { game: 'xbox' },
+      steam: {game: 'steam', steamId: v.steamProfile},
+      dota2: {game: 'dota2', steamId: v.steamId},
+      wow: {
+        game: 'wow',
+        region: v.region,
+        version: v.version,
+        realm: v.realm,
+        name: v.name,
+      },
+      xbox: {game: 'xbox'},
     };
     this.dialogRef.close(input[v.game]);
   }

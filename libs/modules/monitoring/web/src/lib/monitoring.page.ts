@@ -1,20 +1,30 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Monitor } from '@pd/contracts';
-import { pickableProjects, ProjectsApi, errorStatus } from '@pd/web-core';
-import { firstValueFrom, interval } from 'rxjs';
-import { MonitorCardComponent } from './monitor-card.component';
-import { MonitoringApi } from './monitoring.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {Monitor} from '@pd/contracts';
+import {pickableProjects, ProjectsApi, errorStatus} from '@pd/web-core';
+import {firstValueFrom, interval} from 'rxjs';
+import {MonitorCardComponent} from './monitor-card.component';
+import {MonitoringApi} from './monitoring.api';
 
 /** Checks run every 5 minutes — refreshing the page once a minute is enough. */
 const REFRESH_MS = 60_000;
@@ -55,15 +65,26 @@ const REFRESH_MS = 60_000;
               <mat-label>{{ 'monitoring.project' | transloco }}</mat-label>
               <mat-select formControlName="projectId">
                 @for (project of pickable(); track project.id) {
-                  <mat-option [value]="project.id">{{ project.name }}</mat-option>
+                  <mat-option [value]="project.id">{{
+                    project.name
+                  }}</mat-option>
                 }
               </mat-select>
             </mat-form-field>
             <mat-form-field subscriptSizing="dynamic" class="url">
               <mat-label>{{ 'monitoring.url' | transloco }}</mat-label>
-              <input matInput type="url" formControlName="url" placeholder="https://" />
+              <input
+                matInput
+                type="url"
+                formControlName="url"
+                placeholder="https://"
+              />
             </mat-form-field>
-            <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+            <button
+              matButton="filled"
+              type="submit"
+              [disabled]="form.invalid || busy()"
+            >
               {{ 'core.actions.add' | transloco }}
             </button>
           </form>
@@ -117,11 +138,14 @@ export class MonitoringPage {
 
   protected readonly monitors = this.api.monitors();
   protected readonly projects = inject(ProjectsApi).list();
-  protected readonly pickable = computed(() => pickableProjects(this.projects.value()));
+  protected readonly pickable = computed(() =>
+    pickableProjects(this.projects.value()),
+  );
   protected readonly busy = signal(false);
 
   protected readonly projectNames = computed(
-    () => new Map(this.projects.value().map((project) => [project.id, project.name])),
+    () =>
+      new Map(this.projects.value().map(project => [project.id, project.name])),
   );
 
   protected readonly form = inject(NonNullableFormBuilder).group({
@@ -131,12 +155,14 @@ export class MonitoringPage {
 
   constructor() {
     // When a project is selected, fill in its address — that is usually what gets monitored.
-    this.form.controls.projectId.valueChanges.pipe(takeUntilDestroyed()).subscribe((id) => {
-      const project = this.projects.value().find((p) => p.id === id);
-      if (project?.url && !this.form.controls.url.dirty) {
-        this.form.controls.url.setValue(project.url);
-      }
-    });
+    this.form.controls.projectId.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(id => {
+        const project = this.projects.value().find(p => p.id === id);
+        if (project?.url && !this.form.controls.url.dirty) {
+          this.form.controls.url.setValue(project.url);
+        }
+      });
 
     interval(REFRESH_MS)
       .pipe(takeUntilDestroyed())
@@ -151,15 +177,23 @@ export class MonitoringPage {
       this.monitors.reload();
     } catch (error) {
       const key =
-        errorStatus(error) === 409 ? 'monitoring.errors.duplicate' : 'monitoring.errors.generic';
-      this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 5000 });
+        errorStatus(error) === 409
+          ? 'monitoring.errors.duplicate'
+          : 'monitoring.errors.generic';
+      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 5000});
     } finally {
       this.busy.set(false);
     }
   }
 
   async remove(monitor: Monitor): Promise<void> {
-    if (confirm(this.transloco.translate('monitoring.confirmDelete', { url: monitor.url }))) {
+    if (
+      confirm(
+        this.transloco.translate('monitoring.confirmDelete', {
+          url: monitor.url,
+        }),
+      )
+    ) {
       await firstValueFrom(this.api.remove(monitor.id));
       this.monitors.reload();
     }

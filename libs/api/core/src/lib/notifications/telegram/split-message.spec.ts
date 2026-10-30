@@ -1,4 +1,4 @@
-import { splitMessage } from './split-message';
+import {splitMessage} from './split-message';
 
 describe('splitMessage', () => {
   it('leaves a short text as it is', () => {
@@ -27,10 +27,10 @@ describe('splitMessage', () => {
   });
 
   it('keeps every part within the limit', () => {
-    const words = Array.from({ length: 2000 }, (_, i) => `word${i}`).join(' ');
+    const words = Array.from({length: 2000}, (_, i) => `word${i}`).join(' ');
     const parts = splitMessage(words, 4096);
     expect(parts.length).toBeGreaterThan(1);
-    expect(parts.every((part) => part.length <= 4096)).toBe(true);
+    expect(parts.every(part => part.length <= 4096)).toBe(true);
     expect(parts.join(' ')).toBe(words);
   });
 });

@@ -1,4 +1,4 @@
-import { LocalDate, PhoneSignalsDay } from '@pd/contracts';
+import {LocalDate, PhoneSignalsDay} from '@pd/contracts';
 
 /** A signal as read back: the moment in ms and what it told (decrypted). */
 export interface Signal {
@@ -34,10 +34,15 @@ const DAYLIGHT_LUX = 1000;
 /** An alarm for the morning rings before this hour (later is a nap or a reminder). */
 const ALARM_BY_H = 14;
 
-const round = (value: number, digits = 1) => Math.round(value * 10 ** digits) / 10 ** digits;
+const round = (value: number, digits = 1) =>
+  Math.round(value * 10 ** digits) / 10 ** digits;
 
 /** Hours of the intervals inside `[from, to)`, overlaps counted once. */
-function hoursWithin(intervals: [number, number][], from: number, to: number): number {
+function hoursWithin(
+  intervals: [number, number][],
+  from: number,
+  to: number,
+): number {
   const clipped = intervals
     .map(([a, b]) => [Math.max(a, from), Math.min(b, to)] as [number, number])
     .filter(([a, b]) => b > a)
@@ -105,54 +110,58 @@ export function signalsDays(
   now = Date.now(),
 ): PhoneSignalsDay[] {
   const sorted = [...signals].sort((a, b) => a.at - b.at);
-  const of = (kind: string) => sorted.filter((signal) => signal.kind === kind);
-  const kindsSeen = new Set(sorted.map((signal) => signal.kind));
-  const screen = sorted.filter((s) => s.kind === 'screenOn' || s.kind === 'screenOff');
+  const of = (kind: string) => sorted.filter(signal => signal.kind === kind);
+  const kindsSeen = new Set(sorted.map(signal => signal.kind));
+  const screen = sorted.filter(
+    s => s.kind === 'screenOn' || s.kind === 'screenOff',
+  );
   const bluetooth = of('bluetooth');
   // Bluetooth headphones by their name, the wired ones as one.
   const headphones = [
     ...stretches(
-      bluetooth.filter((s) => s.data?.['kind'] === 'headphones'),
-      (s) => s.data?.['connected'] === true,
-      (s) => String(s.data?.['name'] ?? ''),
+      bluetooth.filter(s => s.data?.['kind'] === 'headphones'),
+      s => s.data?.['connected'] === true,
+      s => String(s.data?.['name'] ?? ''),
       now,
     ),
     ...stretches(
       of('headphones'),
-      (s) => s.data?.['connected'] === true,
+      s => s.data?.['connected'] === true,
       () => 'wired',
       now,
     ),
   ];
-  const headphonesKinds = kindsSeen.has('bluetooth') ? 'bluetooth' : 'headphones';
+  const headphonesKinds = kindsSeen.has('bluetooth')
+    ? 'bluetooth'
+    : 'headphones';
   const car = stretches(
-    bluetooth.filter((s) => s.data?.['kind'] === 'car'),
-    (s) => s.data?.['connected'] === true,
-    (s) => String(s.data?.['name'] ?? ''),
+    bluetooth.filter(s => s.data?.['kind'] === 'car'),
+    s => s.data?.['connected'] === true,
+    s => String(s.data?.['name'] ?? ''),
     now,
   );
   const media = stretches(
     of('media'),
-    (s) => s.data?.['playing'] === true,
-    (s) => String(s.data?.['app'] ?? ''),
+    s => s.data?.['playing'] === true,
+    s => String(s.data?.['app'] ?? ''),
     now,
   );
   const dnd = stretches(
     of('dnd'),
-    (s) => s.data?.['on'] === true,
+    s => s.data?.['on'] === true,
     () => 'dnd',
     now,
   );
   // The screen off until it came on again: the rests.
   const rests: [number, number][] = [];
   screen.forEach((signal, i) => {
-    const next = screen.slice(i + 1).find((s) => s.kind === 'screenOn');
+    const next = screen.slice(i + 1).find(s => s.kind === 'screenOn');
     if (signal.kind === 'screenOff' && next) {
       rests.push([signal.at, next.at]);
     }
   });
 
-  return days.map(({ day, start, end }) => {
+  return days.map(({day, start, end}) => {
     const within = (s: Signal) => s.at >= start && s.at < end;
     const told = sorted.some(within);
     const count = (kind: string, pick: (list: Signal[]) => number) => {
@@ -163,12 +172,16 @@ export function signalsDays(
       return told && kindsSeen.has(kind) ? 0 : null;
     };
     const hours = (intervals: [number, number][], kind: string) =>
-      kindsSeen.has(kind) && told ? round(hoursWithin(intervals, start, end)) : null;
+      kindsSeen.has(kind) && told
+        ? round(hoursWithin(intervals, start, end))
+        : null;
 
     const morning = start + MORNING_H * HOUR;
-    const dayScreen = screen.filter((s) => s.at >= morning && s.at < end + MORNING_H * HOUR);
-    const firstOn = dayScreen.find((s) => s.kind === 'screenOn');
-    const lastOff = [...dayScreen].reverse().find((s) => s.kind === 'screenOff');
+    const dayScreen = screen.filter(
+      s => s.at >= morning && s.at < end + MORNING_H * HOUR,
+    );
+    const firstOn = dayScreen.find(s => s.kind === 'screenOn');
+    const lastOff = [...dayScreen].reverse().find(s => s.kind === 'screenOff');
     const nightFrom = start + NIGHT_FROM_H * HOUR;
     const nightTo = start + NIGHT_TO_H * HOUR;
     const longestRest = rests
@@ -178,18 +191,18 @@ export function signalsDays(
     const calls = of('call').filter(within);
     const noise = of('noise')
       .filter(within)
-      .map((s) => Number(s.data?.['db']))
+      .map(s => Number(s.data?.['db']))
       .filter(Number.isFinite);
     const light = of('light')
       .filter(within)
-      .map((s) => Number(s.data?.['lux']))
+      .map(s => Number(s.data?.['lux']))
       .filter(Number.isFinite);
     const reactions = of('notificationReaction').filter(within);
-    const opened = reactions.filter((s) => s.data?.['reaction'] === 'opened');
+    const opened = reactions.filter(s => s.data?.['reaction'] === 'opened');
     const battery = of('battery')
       .filter(within)
-      .map((s) => Number(s.data?.['temperature']))
-      .filter((c) => Number.isFinite(c) && c !== 0);
+      .map(s => Number(s.data?.['temperature']))
+      .filter(c => Number.isFinite(c) && c !== 0);
     const values = daily.get(day);
     return {
       day,
@@ -201,26 +214,37 @@ export function signalsDays(
       carHours: hours(car, 'bluetooth'),
       mediaHours: hours(media, 'media'),
       dndHours: hours(dnd, 'dnd'),
-      calls: count('call', (list) => list.length),
-      callMinutes: count('call', (list) =>
-        round(list.reduce((sum, s) => sum + Number(s.data?.['seconds'] ?? 0), 0) / 60),
+      calls: count('call', list => list.length),
+      callMinutes: count('call', list =>
+        round(
+          list.reduce((sum, s) => sum + Number(s.data?.['seconds'] ?? 0), 0) /
+            60,
+        ),
       ),
       people: count(
         'call',
-        () => new Set(calls.map((s) => String(s.data?.['who'] ?? '')).filter(Boolean)).size,
+        () =>
+          new Set(calls.map(s => String(s.data?.['who'] ?? '')).filter(Boolean))
+            .size,
       ),
-      photos: count('photo', (list) => list.length),
+      photos: count('photo', list => list.length),
       mobileMegabytes:
-        values?.mobileBytes === undefined ? null : round(values.mobileBytes / 1_000_000),
-      noiseDb: noise.length ? Math.round(noise.reduce((a, b) => a + b, 0) / noise.length) : null,
+        values?.mobileBytes === undefined
+          ? null
+          : round(values.mobileBytes / 1_000_000),
+      noiseDb: noise.length
+        ? Math.round(noise.reduce((a, b) => a + b, 0) / noise.length)
+        : null,
       daylightHours: light.length
-        ? round(light.filter((lux) => lux >= DAYLIGHT_LUX).length * SAMPLE_HOURS)
+        ? round(light.filter(lux => lux >= DAYLIGHT_LUX).length * SAMPLE_HOURS)
         : null,
       alarm: alarmOf(of('alarm'), start),
       notificationsOpened: reactions.length
         ? Math.round((opened.length / reactions.length) * 100)
         : null,
-      secondsToOpen: median(opened.map((s) => Number(s.data?.['seconds'])).filter(Number.isFinite)),
+      secondsToOpen: median(
+        opened.map(s => Number(s.data?.['seconds'])).filter(Number.isFinite),
+      ),
       batteryMaxC: battery.length ? Math.max(...battery) : null,
     };
   });
@@ -251,7 +275,11 @@ function median(values: number[]): number | null {
   }
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
-  return Math.round(sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2);
+  return Math.round(
+    sorted.length % 2
+      ? sorted[middle]
+      : (sorted[middle - 1] + sorted[middle]) / 2,
+  );
 }
 
 /** Hours since midnight as `HH:MM`; after midnight it goes on (25:30 — half past one). */

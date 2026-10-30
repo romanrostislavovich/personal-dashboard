@@ -1,6 +1,6 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, DemoService } from '@pd/api-core';
-import { gameAccounts, steamGames, steamPlayDays } from './games.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, DemoService} from '@pd/api-core';
+import {gameAccounts, steamGames, steamPlayDays} from './games.schema';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** App id, name, minutes in total, minutes in two weeks, days since played, achievements. */
@@ -25,7 +25,7 @@ export class GamesDemo implements OnModuleInit {
   onModuleInit(): void {
     this.demo.register({
       module: 'games',
-      seed: async ({ userId, daysAgo }) => {
+      seed: async ({userId, daysAgo}) => {
         const [account] = await this.db
           .insert(gameAccounts)
           .values({
@@ -45,17 +45,19 @@ export class GamesDemo implements OnModuleInit {
           })
           .returning();
         await this.db.insert(steamGames).values(
-          LIBRARY.map(([appId, name, minutes, recent, daysSince, unlocked, total]) => ({
-            accountId: account.id,
-            appId,
-            name,
-            playtimeMinutes: minutes,
-            playtime2WeeksMinutes: recent,
-            lastPlayedAt: new Date(Date.now() - daysSince * DAY_MS),
-            achievementsUnlocked: unlocked,
-            achievementsTotal: total,
-            achievementsPlaytime: minutes,
-          })),
+          LIBRARY.map(
+            ([appId, name, minutes, recent, daysSince, unlocked, total]) => ({
+              accountId: account.id,
+              appId,
+              name,
+              playtimeMinutes: minutes,
+              playtime2WeeksMinutes: recent,
+              lastPlayedAt: new Date(Date.now() - daysSince * DAY_MS),
+              achievementsUnlocked: unlocked,
+              achievementsTotal: total,
+              achievementsPlaytime: minutes,
+            }),
+          ),
         );
         // The evenings of the last weeks, day by day.
         await this.db.insert(steamPlayDays).values(

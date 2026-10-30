@@ -1,4 +1,4 @@
-import { WatchHints } from '@pd/contracts';
+import {WatchHints} from '@pd/contracts';
 
 /** What a page's hints say is playing. */
 export interface WatchTitle {
@@ -39,14 +39,16 @@ const TAIL = [
 ];
 
 /** "Фильм Дюна" → "Дюна". */
-const HEAD = /^(?:фильм|сериал|мультфильм|мультсериал|аниме|movie|tv series|series)\s+/i;
+const HEAD =
+  /^(?:фильм|сериал|мультфильм|мультсериал|аниме|movie|tv series|series)\s+/i;
 
-const EPISODE: { pattern: RegExp; season: number | null; episode: number }[] = [
+const EPISODE: {pattern: RegExp; season: number | null; episode: number}[] = [
   // S1:E3, s01e03, S1 E3
-  { pattern: /\bs(\d{1,2})\s*[:.]?\s*e(\d{1,3})\b/i, season: 1, episode: 2 },
+  {pattern: /\bs(\d{1,2})\s*[:.]?\s*e(\d{1,3})\b/i, season: 1, episode: 2},
   // 2 сезон 5 серия, 2 сезон, 5 серия
   {
-    pattern: /(\d{1,2})\s*-?\s*(?:й\s*)?сезон[\s,.:]*(\d{1,3})\s*-?\s*(?:я\s*)?серия/i,
+    pattern:
+      /(\d{1,2})\s*-?\s*(?:й\s*)?сезон[\s,.:]*(\d{1,3})\s*-?\s*(?:я\s*)?серия/i,
     season: 1,
     episode: 2,
   },
@@ -57,17 +59,24 @@ const EPISODE: { pattern: RegExp; season: number | null; episode: number }[] = [
     episode: 2,
   },
   // Season 2 Episode 5
-  { pattern: /season\s*(\d{1,2})[\s,.:]*(?:episode|ep\.?)\s*(\d{1,3})/i, season: 1, episode: 2 },
+  {
+    pattern: /season\s*(\d{1,2})[\s,.:]*(?:episode|ep\.?)\s*(\d{1,3})/i,
+    season: 1,
+    episode: 2,
+  },
   // 5 серия (season unknown)
-  { pattern: /(\d{1,3})\s*-?\s*(?:я\s*)?серия/i, season: null, episode: 1 },
-  { pattern: /серия\s*(\d{1,3})/i, season: null, episode: 1 },
-  { pattern: /episode\s*(\d{1,3})/i, season: null, episode: 1 },
+  {pattern: /(\d{1,3})\s*-?\s*(?:я\s*)?серия/i, season: null, episode: 1},
+  {pattern: /серия\s*(\d{1,3})/i, season: null, episode: 1},
+  {pattern: /episode\s*(\d{1,3})/i, season: null, episode: 1},
 ];
 
-const YEAR = /\(\s*((?:19|20)\d{2})(?:\s*[-–]\s*(?:(?:19|20)\d{2})?)?\s*\)|\b((?:19|20)\d{2})\s*$/;
+const YEAR =
+  /\(\s*((?:19|20)\d{2})(?:\s*[-–]\s*(?:(?:19|20)\d{2})?)?\s*\)|\b((?:19|20)\d{2})\s*$/;
 
 export function isVideoSite(site: string): boolean {
-  return VIDEO_SITES.some((video) => site === video || site.endsWith(`.${video}`));
+  return VIDEO_SITES.some(
+    video => site === video || site.endsWith(`.${video}`),
+  );
 }
 
 /**
@@ -86,21 +95,39 @@ export function watchTitle(site: string, hints: WatchHints): WatchTitle | null {
     .filter((text): text is string => !!text?.trim())
     .join('\n');
   if (isVideoSite(site)) {
-    const name = cleanVideo(hints.playerTitle ?? hints.ogTitle ?? hints.pageTitle ?? '');
-    return name ? { kind: 'video', name, year: null, season: null, episode: null } : null;
+    const name = cleanVideo(
+      hints.playerTitle ?? hints.ogTitle ?? hints.pageTitle ?? '',
+    );
+    return name
+      ? {kind: 'video', name, year: null, season: null, episode: null}
+      : null;
   }
-  const { season, episode } = episodeOf(all);
-  for (const raw of [hints.playerTitle, hints.ogTitle, hints.heading, hints.pageTitle]) {
+  const {season, episode} = episodeOf(all);
+  for (const raw of [
+    hints.playerTitle,
+    hints.ogTitle,
+    hints.heading,
+    hints.pageTitle,
+  ]) {
     const found = cleanTitle(raw ?? '', site);
     if (found.name) {
-      return { kind: 'title', name: found.name, year: found.year ?? yearOf(all), season, episode };
+      return {
+        kind: 'title',
+        name: found.name,
+        year: found.year ?? yearOf(all),
+        season,
+        episode,
+      };
     }
   }
   return null;
 }
 
-function episodeOf(text: string): { season: number | null; episode: number | null } {
-  for (const { pattern, season, episode } of EPISODE) {
+function episodeOf(text: string): {
+  season: number | null;
+  episode: number | null;
+} {
+  for (const {pattern, season, episode} of EPISODE) {
     const match = text.match(pattern);
     if (match) {
       return {
@@ -109,7 +136,7 @@ function episodeOf(text: string): { season: number | null; episode: number | nul
       };
     }
   }
-  return { season: null, episode: null };
+  return {season: null, episode: null};
 }
 
 function yearOf(text: string): number | null {
@@ -118,19 +145,24 @@ function yearOf(text: string): number | null {
 }
 
 /** One hint without the site's name, the advertising, the episode and the year. */
-export function cleanTitle(raw: string, site: string): { name: string; year: number | null } {
+export function cleanTitle(
+  raw: string,
+  site: string,
+): {name: string; year: number | null} {
   const siteName = site.split('.')[0].toLowerCase();
   let text =
     raw
       .replace(/\s+/g, ' ')
       .trim()
       .split(SEPARATOR)
-      .map((part) => part.trim())
-      .find((part) => part && part.toLowerCase().replace(/\s/g, '') !== siteName) ?? '';
+      .map(part => part.trim())
+      .find(
+        part => part && part.toLowerCase().replace(/\s/g, '') !== siteName,
+      ) ?? '';
   for (const tail of TAIL) {
     text = text.replace(tail, '');
   }
-  for (const { pattern } of EPISODE) {
+  for (const {pattern} of EPISODE) {
     text = text.replace(pattern, ' ');
   }
   text = text.replace(
@@ -151,9 +183,9 @@ export function cleanTitle(raw: string, site: string): { name: string; year: num
     .trim();
   // "Netflix", "Kinogo" alone are not a title.
   if (!text || text.toLowerCase() === siteName || text.length < 2) {
-    return { name: '', year };
+    return {name: '', year};
   }
-  return { name: text.slice(0, 200), year };
+  return {name: text.slice(0, 200), year};
 }
 
 function cleanVideo(raw: string): string {

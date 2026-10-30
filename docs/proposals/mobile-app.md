@@ -255,6 +255,9 @@ phone"). Not yet run on the phone or with the real band's data.
 
 ## Stage 4 — voice
 
+**On hold since 2026-10-30** (the owner's decision): switched off after too many false alarms;
+what it needs before it comes back is in docs/roadmap.md, "On hold".
+
 - A voice assistant called by its name, like a smart speaker: "Hey <name>, how long was I on
   the phone today?", "my favourite bands of the last two months?". The answer comes from the
   assistant that already has tools for every section; the wake word is recognised on the phone.

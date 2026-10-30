@@ -1,14 +1,23 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { initialLanguage } from '../i18n/language';
-import { AuthService } from './auth.service';
-import { errorStatus } from '../client/core-requests';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {Router, RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {initialLanguage} from '../i18n/language';
+import {AuthService} from './auth.service';
+import {errorStatus} from '../client/core-requests';
 
 /** Sign-up — available only if the server allows it (ALLOW_REGISTRATION=true). */
 @Component({
@@ -36,7 +45,12 @@ import { errorStatus } from '../client/core-requests';
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'core.login.email' | transloco }}</mat-label>
-            <input matInput type="email" formControlName="email" autocomplete="username" />
+            <input
+              matInput
+              type="email"
+              formControlName="email"
+              autocomplete="username"
+            />
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'core.login.password' | transloco }}</mat-label>
@@ -51,7 +65,11 @@ import { errorStatus } from '../client/core-requests';
           @if (errorKey(); as key) {
             <p class="error">{{ key | transloco }}</p>
           }
-          <button matButton="filled" type="submit" [disabled]="form.invalid || loading()">
+          <button
+            matButton="filled"
+            type="submit"
+            [disabled]="form.invalid || loading()"
+          >
             {{ 'core.register.submit' | transloco }}
           </button>
         </form>
@@ -107,7 +125,10 @@ export class RegisterPage {
     this.errorKey.set(null);
     try {
       // The new account's language is the one the UI is currently shown in.
-      await this.auth.register({ ...this.form.getRawValue(), locale: initialLanguage() });
+      await this.auth.register({
+        ...this.form.getRawValue(),
+        locale: initialLanguage(),
+      });
       await this.router.navigateByUrl('/');
     } catch (error) {
       const status = errorStatus(error);

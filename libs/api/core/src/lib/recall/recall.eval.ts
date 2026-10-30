@@ -1,5 +1,5 @@
-import { evalEmbed, evalEmbedModel } from '../ai/eval-model';
-import { nearest, withTask } from './recall-math';
+import {evalEmbed, evalEmbedModel} from '../ai/eval-model';
+import {nearest, withTask} from './recall-math';
 
 /*
  * An eval of the embedding model of search by meaning: a question finds the entry it is about
@@ -7,18 +7,23 @@ import { nearest, withTask } from './recall-math';
  */
 
 const history = [
-  { id: 'dentist', text: 'The dentist put a crown on the upper molar, it should settle in a week' },
-  { id: 'knee', text: 'Колено снова болит после пробежки, третий раз за месяц' },
-  { id: 'move', text: 'Signed the lease for the new flat, moving on the 1st' },
-  { id: 'garden', text: 'Planted tomatoes and basil on the balcony' },
-  { id: 'salary', text: 'Got the raise: the new contract starts in November' },
+  {
+    id: 'dentist',
+    text: 'The dentist put a crown on the upper molar, it should settle in a week',
+  },
+  {id: 'knee', text: 'Колено снова болит после пробежки, третий раз за месяц'},
+  {id: 'move', text: 'Signed the lease for the new flat, moving on the 1st'},
+  {id: 'garden', text: 'Planted tomatoes and basil on the balcony'},
+  {id: 'salary', text: 'Got the raise: the new contract starts in November'},
 ];
 
 async function closest(question: string): Promise<string> {
   const model = evalEmbedModel();
-  const vectors = await evalEmbed(history.map((item) => withTask(model, 'document', item.text)));
+  const vectors = await evalEmbed(
+    history.map(item => withTask(model, 'document', item.text)),
+  );
   const [query] = await evalEmbed([withTask(model, 'query', question)]);
-  const items = history.map((item, i) => ({ ...item, vector: vectors[i] }));
+  const items = history.map((item, i) => ({...item, vector: vectors[i]}));
   return nearest(query, items, 1, 0)[0].id;
 }
 

@@ -1,4 +1,4 @@
-import { distanceM, PLACE_RADIUS_M, Point, Stay } from './stays';
+import {distanceM, PLACE_RADIUS_M, Point, Stay} from './stays';
 
 export interface Named extends Point {
   id: string;
@@ -37,8 +37,8 @@ export function namedAt(point: Point, named: Named[]): Named | null {
 export function gatherPlaces(
   stays: Stay[],
   named: Named[],
-): { places: Frequent[]; placeOf: Map<Stay, Frequent> } {
-  const places: Frequent[] = named.map((place) => ({
+): {places: Frequent[]; placeOf: Map<Stay, Frequent>} {
+  const places: Frequent[] = named.map(place => ({
     placeId: place.id,
     name: place.name,
     latitude: place.latitude,
@@ -48,13 +48,19 @@ export function gatherPlaces(
     lastAt: 0,
   }));
   const placeOf = new Map<Stay, Frequent>();
-  const longestFirst = [...stays].sort((a, b) => b.end - b.start - (a.end - a.start));
+  const longestFirst = [...stays].sort(
+    (a, b) => b.end - b.start - (a.end - a.start),
+  );
   for (const stay of longestFirst) {
     const seconds = Math.round((stay.end - stay.start) / 1000);
     const known = namedAt(stay, named);
-    let place = known ? places.find((item) => item.placeId === known.id) : undefined;
+    let place = known
+      ? places.find(item => item.placeId === known.id)
+      : undefined;
     if (!place) {
-      place = places.find((item) => !item.placeId && distanceM(item, stay) <= PLACE_RADIUS_M);
+      place = places.find(
+        item => !item.placeId && distanceM(item, stay) <= PLACE_RADIUS_M,
+      );
     }
     if (!place) {
       place = {
@@ -71,8 +77,10 @@ export function gatherPlaces(
       // The middle moves towards where the time went.
       const total = place.seconds + seconds;
       if (total > 0) {
-        place.latitude = (place.latitude * place.seconds + stay.latitude * seconds) / total;
-        place.longitude = (place.longitude * place.seconds + stay.longitude * seconds) / total;
+        place.latitude =
+          (place.latitude * place.seconds + stay.latitude * seconds) / total;
+        place.longitude =
+          (place.longitude * place.seconds + stay.longitude * seconds) / total;
       }
     }
     place.seconds += seconds;
@@ -80,11 +88,15 @@ export function gatherPlaces(
     place.lastAt = Math.max(place.lastAt, stay.end);
     placeOf.set(stay, place);
   }
-  return { places: places.filter((place) => place.visits > 0), placeOf };
+  return {places: places.filter(place => place.visits > 0), placeOf};
 }
 
 /** The places the stays were at, the most time first. */
-export function frequentPlaces(stays: Stay[], named: Named[], limit: number): Frequent[] {
+export function frequentPlaces(
+  stays: Stay[],
+  named: Named[],
+  limit: number,
+): Frequent[] {
   return gatherPlaces(stays, named)
     .places.sort((a, b) => b.seconds - a.seconds)
     .slice(0, limit);

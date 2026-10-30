@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 /** A place found by name: the user picks one as their location. */
 export const weatherLocationSchema = z.object({
@@ -12,7 +12,9 @@ export const weatherLocationSchema = z.object({
 });
 export type WeatherLocationInput = z.input<typeof weatherLocationSchema>;
 
-export const weatherSearchQuerySchema = z.object({ q: z.string().trim().min(2).max(100) });
+export const weatherSearchQuerySchema = z.object({
+  q: z.string().trim().min(2).max(100),
+});
 export type WeatherSearchQuery = z.infer<typeof weatherSearchQuerySchema>;
 
 /** `GET /api/weather/places/at`: the place at the browser's location. */
@@ -20,7 +22,9 @@ export const weatherCoordinatesQuerySchema = z.object({
   latitude: z.coerce.number().min(-90).max(90),
   longitude: z.coerce.number().min(-180).max(180),
 });
-export type WeatherCoordinatesQuery = z.infer<typeof weatherCoordinatesQuerySchema>;
+export type WeatherCoordinatesQuery = z.infer<
+  typeof weatherCoordinatesQuerySchema
+>;
 
 /**
  * How the user takes the cold, from "I freeze" (−2) to "I am always warm" (+2). The clothing
@@ -37,7 +41,7 @@ export const weatherPreferencesSchema = z.object({
     .int()
     .min(-2)
     .max(2)
-    .transform((value) => value as ThermalFeel),
+    .transform(value => value as ThermalFeel),
 });
 export type WeatherPreferences = z.output<typeof weatherPreferencesSchema>;
 

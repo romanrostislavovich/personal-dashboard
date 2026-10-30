@@ -1,6 +1,6 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, DemoService } from '@pd/api-core';
-import { checkResults, monitors } from './monitoring.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, DemoService} from '@pd/api-core';
+import {checkResults, monitors} from './monitoring.schema';
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 24 * 60 * MINUTE_MS;
@@ -25,11 +25,21 @@ export class MonitoringDemo implements OnModuleInit {
   onModuleInit(): void {
     this.demo.register({
       module: 'monitoring',
-      seed: async ({ userId, projects }) => {
+      seed: async ({userId, projects}) => {
         const now = Date.now();
         const sites = [
-          { projectId: projects.shop, url: 'https://tea-shop.example.com', ms: 182, outage: true },
-          { projectId: projects.blog, url: 'https://blog.example.com', ms: 96, outage: false },
+          {
+            projectId: projects.shop,
+            url: 'https://tea-shop.example.com',
+            ms: 182,
+            outage: true,
+          },
+          {
+            projectId: projects.blog,
+            url: 'https://blog.example.com',
+            ms: 96,
+            outage: false,
+          },
         ];
         for (const site of sites) {
           const [monitor] = await this.db
@@ -45,8 +55,12 @@ export class MonitoringDemo implements OnModuleInit {
               sslExpiresAt: new Date(now + 61 * DAY_MS),
             })
             .returning();
-          const checks = Array.from({ length: CHECKS }, (_, index) => {
-            const isUp = !(site.outage && index >= DOWN_FROM && index < DOWN_FROM + DOWN_CHECKS);
+          const checks = Array.from({length: CHECKS}, (_, index) => {
+            const isUp = !(
+              site.outage &&
+              index >= DOWN_FROM &&
+              index < DOWN_FROM + DOWN_CHECKS
+            );
             return {
               monitorId: monitor.id,
               checkedAt: new Date(now - index * 5 * MINUTE_MS),
@@ -57,7 +71,9 @@ export class MonitoringDemo implements OnModuleInit {
             };
           });
           for (let i = 0; i < checks.length; i += INSERT_CHUNK) {
-            await this.db.insert(checkResults).values(checks.slice(i, i + INSERT_CHUNK));
+            await this.db
+              .insert(checkResults)
+              .values(checks.slice(i, i + INSERT_CHUNK));
           }
         }
       },

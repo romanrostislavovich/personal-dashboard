@@ -1,9 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { InboxItem } from '@pd/contracts';
-import { inboxTime } from './inbox.store';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  output,
+} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {InboxItem} from '@pd/contracts';
+import {inboxTime} from './inbox.store';
 
 /** Notifications as rows: a question waiting is marked, an answer is shown; a row opens its card. */
 @Component({
@@ -25,7 +31,9 @@ import { inboxTime } from './inbox.store';
           <span class="title">{{ item.title }}</span>
           <span class="body">{{ item.body }}</span>
           @if (item.waiting) {
-            <span class="state waiting">{{ 'core.inbox.waiting' | transloco }}</span>
+            <span class="state waiting">{{
+              'core.inbox.waiting' | transloco
+            }}</span>
           } @else if (item.answer) {
             <span class="state">{{ item.answer }}</span>
           }

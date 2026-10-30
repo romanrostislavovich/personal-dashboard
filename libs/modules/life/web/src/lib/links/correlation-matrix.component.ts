@@ -1,9 +1,16 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Correlation, CorrelationMetric } from '@pd/contracts';
-import { moduleColor, rhoColor, SelectedPair } from './links-format';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Correlation, CorrelationMetric} from '@pd/contracts';
+import {moduleColor, rhoColor, SelectedPair} from './links-format';
 
 /**
  * Every pair at a glance: a row and a column for each number, the cell coloured by how the two
@@ -21,11 +28,18 @@ import { moduleColor, rhoColor, SelectedPair } from './links-format';
       [attr.aria-label]="'life.links.matrix.lag' | transloco"
       (change)="lag.set($event.value)"
     >
-      <mat-button-toggle [value]="0">{{ 'life.links.sameDay' | transloco }}</mat-button-toggle>
-      <mat-button-toggle [value]="1">{{ 'life.links.nextDay' | transloco }}</mat-button-toggle>
+      <mat-button-toggle [value]="0">{{
+        'life.links.sameDay' | transloco
+      }}</mat-button-toggle>
+      <mat-button-toggle [value]="1">{{
+        'life.links.nextDay' | transloco
+      }}</mat-button-toggle>
     </mat-button-toggle-group>
     <p class="hint">
-      {{ (lag() ? 'life.links.matrix.hintNext' : 'life.links.matrix.hintSame') | transloco }}
+      {{
+        (lag() ? 'life.links.matrix.hintNext' : 'life.links.matrix.hintSame')
+          | transloco
+      }}
     </p>
     <div class="scroll">
       <table>
@@ -56,7 +70,7 @@ import { moduleColor, rhoColor, SelectedPair } from './links-format';
                       [style.background]="background(pair.rho)"
                       [attr.aria-label]="pair.rho | number: '1.2-2'"
                       [title]="pair.rho | number: '1.2-2'"
-                      (click)="pick.emit({ a: pair.a, b: pair.b, lag: pair.lag })"
+                      (click)="pick.emit({a: pair.a, b: pair.b, lag: pair.lag})"
                     >
                       @if (pair.strong) {
                         <span class="dot"></span>
@@ -188,17 +202,23 @@ export class CorrelationMatrixComponent {
 
   /** The numbers compared with anything at this lag, by section. */
   protected readonly shown = computed(() => {
-    const keys = new Set([...this.byPair().values()].flatMap((pair) => [pair.a, pair.b]));
+    const keys = new Set(
+      [...this.byPair().values()].flatMap(pair => [pair.a, pair.b]),
+    );
     return this.metrics()
-      .filter((metric) => keys.has(metric.key))
-      .sort((a, b) => a.module.localeCompare(b.module) || a.key.localeCompare(b.key));
+      .filter(metric => keys.has(metric.key))
+      .sort(
+        (a, b) =>
+          a.module.localeCompare(b.module) || a.key.localeCompare(b.key),
+      );
   });
 
   /** Of the same day the pair is kept once, in key order: found either way round. */
   protected cell(row: string, column: string): Correlation | undefined {
     const pairs = this.byPair();
     return (
-      pairs.get(`${row}|${column}`) ?? (this.lag() ? undefined : pairs.get(`${column}|${row}`))
+      pairs.get(`${row}|${column}`) ??
+      (this.lag() ? undefined : pairs.get(`${column}|${row}`))
     );
   }
 

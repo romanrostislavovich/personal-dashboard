@@ -1,5 +1,5 @@
-import { users } from '@pd/api-core/schema';
-import { WakatimeBreakdown } from '@pd/contracts';
+import {users} from '@pd/api-core/schema';
+import {WakatimeBreakdown} from '@pd/contracts';
 import {
   date,
   index,
@@ -10,16 +10,16 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import type { WakatimeSlice } from './wakatime-durations';
+import type {WakatimeSlice} from './wakatime-durations';
 
 /** The connected WakaTime account. The API key is in SecretsService. */
 export const wakatimeSettings = pgTable('wakatime_settings', {
   userId: uuid()
     .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   /** `null` — disconnected; the saved days stay. */
   username: text(),
-  lastSyncedAt: timestamp({ withTimezone: true }),
+  lastSyncedAt: timestamp({withTimezone: true}),
   syncError: text(),
 });
 
@@ -32,11 +32,11 @@ export const wakatimeDays = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    day: date({ mode: 'string' }).notNull(),
+      .references(() => users.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
     totalSeconds: integer().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.day] })],
+  table => [primaryKey({columns: [table.userId, table.day]})],
 );
 
 /** A day split by project, language, editor, OS, category and machine. */
@@ -45,13 +45,15 @@ export const wakatimeDayBreakdown = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    day: date({ mode: 'string' }).notNull(),
+      .references(() => users.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
     kind: text().$type<WakatimeBreakdown>().notNull(),
     name: text().notNull(),
     seconds: integer().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.day, table.kind, table.name] })],
+  table => [
+    primaryKey({columns: [table.userId, table.day, table.kind, table.name]}),
+  ],
 );
 
 /**
@@ -65,17 +67,19 @@ export const wakatimeSpans = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     kind: text().$type<WakatimeSlice>().notNull(),
     /** The project, or the computer. */
     name: text().notNull(),
-    startedAt: timestamp({ withTimezone: true }).notNull(),
-    endedAt: timestamp({ withTimezone: true }).notNull(),
+    startedAt: timestamp({withTimezone: true}).notNull(),
+    endedAt: timestamp({withTimezone: true}).notNull(),
     /** The day of WakaTime it was read for: a day read again replaces its stretches. */
-    day: date({ mode: 'string' }).notNull(),
+    day: date({mode: 'string'}).notNull(),
   },
-  (table) => [
-    primaryKey({ columns: [table.userId, table.kind, table.name, table.startedAt] }),
+  table => [
+    primaryKey({
+      columns: [table.userId, table.kind, table.name, table.startedAt],
+    }),
     index().on(table.userId, table.startedAt),
   ],
 );

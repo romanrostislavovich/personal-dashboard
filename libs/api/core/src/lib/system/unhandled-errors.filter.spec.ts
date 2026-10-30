@@ -1,4 +1,4 @@
-import { describeFetchFailure } from './unhandled-errors.filter';
+import {describeFetchFailure} from './unhandled-errors.filter';
 
 describe('describeFetchFailure', () => {
   it('tells why a request to an outside service failed', () => {
@@ -15,7 +15,9 @@ describe('describeFetchFailure', () => {
 
   it('falls back to the text of the cause, or to nothing', () => {
     expect(
-      describeFetchFailure(new TypeError('fetch failed', { cause: new Error('socket hang up') })),
+      describeFetchFailure(
+        new TypeError('fetch failed', {cause: new Error('socket hang up')}),
+      ),
     ).toBe('An outside service could not be reached (socket hang up)');
     expect(describeFetchFailure(new TypeError('fetch failed'))).toBe(
       'An outside service could not be reached',
@@ -23,12 +25,18 @@ describe('describeFetchFailure', () => {
   });
 
   it('knows a timeout', () => {
-    const timeout = Object.assign(new Error('The operation was aborted'), { name: 'TimeoutError' });
-    expect(describeFetchFailure(timeout)).toBe('An outside service did not answer in time');
+    const timeout = Object.assign(new Error('The operation was aborted'), {
+      name: 'TimeoutError',
+    });
+    expect(describeFetchFailure(timeout)).toBe(
+      'An outside service did not answer in time',
+    );
   });
 
   it('leaves other errors alone', () => {
-    expect(describeFetchFailure(new TypeError('x is not a function'))).toBeNull();
+    expect(
+      describeFetchFailure(new TypeError('x is not a function')),
+    ).toBeNull();
     expect(describeFetchFailure(new Error('fetch failed'))).toBeNull();
     expect(describeFetchFailure('fetch failed')).toBeNull();
   });

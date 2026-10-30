@@ -1,17 +1,23 @@
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { appsApi, CORE_READS } from '@pd/client-core';
-import { AppInfo, AppInstall, AppKind, AppsOverview } from '@pd/contracts';
-import { DesktopInstallService } from '../apps/desktop-install.service';
-import { apiBaseUrl, isMobileApp } from '../mobile/mobile-app';
-import { MobileAppService } from '../mobile/mobile-app.service';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { DesktopAppsInfo, desktopBridge } from '../realtime/desktop-bridge';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {appsApi, CORE_READS} from '@pd/client-core';
+import {AppInfo, AppInstall, AppKind, AppsOverview} from '@pd/contracts';
+import {DesktopInstallService} from '../apps/desktop-install.service';
+import {apiBaseUrl, isMobileApp} from '../mobile/mobile-app';
+import {MobileAppService} from '../mobile/mobile-app.service';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {DesktopAppsInfo, desktopBridge} from '../realtime/desktop-bridge';
 
 const ICONS: Record<AppKind, string> = {
   desktop: 'desktop_windows',
@@ -26,7 +32,13 @@ const ICONS: Record<AppKind, string> = {
 @Component({
   selector: 'pd-apps-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, MatButtonModule, MatCardModule, MatIconModule, TranslocoPipe],
+  imports: [
+    DatePipe,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    TranslocoPipe,
+  ],
   template: `
     <div class="grid">
       @for (app of apps(); track app.kind) {
@@ -41,7 +53,8 @@ const ICONS: Record<AppKind, string> = {
                 {{ 'core.settings.apps.soon' | transloco }}
               } @else if (app.version) {
                 {{
-                  'core.settings.apps.serverVersion' | transloco: { version: short(app.version) }
+                  'core.settings.apps.serverVersion'
+                    | transloco: {version: short(app.version)}
                 }}
               }
             </mat-card-subtitle>
@@ -58,33 +71,52 @@ const ICONS: Record<AppKind, string> = {
                     [attr.target]="download.external ? '_blank' : null"
                     rel="noopener"
                   >
-                    <mat-icon>{{ download.external ? 'open_in_new' : 'download' }}</mat-icon>
-                    {{ 'core.settings.apps.platforms.' + download.platform | transloco }}
+                    <mat-icon>{{
+                      download.external ? 'open_in_new' : 'download'
+                    }}</mat-icon>
+                    {{
+                      'core.settings.apps.platforms.' + download.platform
+                        | transloco
+                    }}
                     @if (download.size) {
                       <span class="size">{{ megabytes(download.size) }}</span>
                     }
                   </a>
                 }
               </div>
-              <p class="hint">{{ 'core.settings.apps.desktop.updates' | transloco }}</p>
+              <p class="hint">
+                {{ 'core.settings.apps.desktop.updates' | transloco }}
+              </p>
             }
 
             @if (app.kind === 'extension') {
               @if (desktop(); as info) {
                 <ol class="steps">
                   <li>
-                    {{ 'core.settings.apps.extension.withDesktop.folder' | transloco }}
+                    {{
+                      'core.settings.apps.extension.withDesktop.folder'
+                        | transloco
+                    }}
                     <code class="folder">{{ info.extension.folder }}</code>
                     <button matButton="tonal" (click)="openExtensionFolder()">
                       <mat-icon>folder_open</mat-icon>
-                      {{ 'core.settings.apps.extension.openFolder' | transloco }}
+                      {{
+                        'core.settings.apps.extension.openFolder' | transloco
+                      }}
                     </button>
                   </li>
-                  <li>{{ 'core.settings.apps.extension.chrome' | transloco }}</li>
-                  <li>{{ 'core.settings.apps.extension.loadFolder' | transloco }}</li>
+                  <li>
+                    {{ 'core.settings.apps.extension.chrome' | transloco }}
+                  </li>
+                  <li>
+                    {{ 'core.settings.apps.extension.loadFolder' | transloco }}
+                  </li>
                 </ol>
                 <p class="hint">
-                  {{ 'core.settings.apps.extension.withDesktop.updates' | transloco }}
+                  {{
+                    'core.settings.apps.extension.withDesktop.updates'
+                      | transloco
+                  }}
                 </p>
               } @else {
                 <div class="downloads">
@@ -97,15 +129,29 @@ const ICONS: Record<AppKind, string> = {
                       }
                     </a>
                   } @empty {
-                    <p class="hint">{{ 'core.settings.apps.extension.notOnServer' | transloco }}</p>
+                    <p class="hint">
+                      {{
+                        'core.settings.apps.extension.notOnServer' | transloco
+                      }}
+                    </p>
                   }
                 </div>
                 <ol class="steps">
-                  <li>{{ 'core.settings.apps.extension.unzip' | transloco }}</li>
-                  <li>{{ 'core.settings.apps.extension.chrome' | transloco }}</li>
-                  <li>{{ 'core.settings.apps.extension.loadFolder' | transloco }}</li>
+                  <li>
+                    {{ 'core.settings.apps.extension.unzip' | transloco }}
+                  </li>
+                  <li>
+                    {{ 'core.settings.apps.extension.chrome' | transloco }}
+                  </li>
+                  <li>
+                    {{ 'core.settings.apps.extension.loadFolder' | transloco }}
+                  </li>
                 </ol>
-                <p class="hint">{{ 'core.settings.apps.extension.withoutDesktop' | transloco }}</p>
+                <p class="hint">
+                  {{
+                    'core.settings.apps.extension.withoutDesktop' | transloco
+                  }}
+                </p>
               }
             }
 
@@ -113,7 +159,12 @@ const ICONS: Record<AppKind, string> = {
               <div class="downloads">
                 @for (download of app.downloads; track download.platform) {
                   <!-- A new tab: inside the app the phone's browser downloads and installs it -->
-                  <a matButton="tonal" [href]="href(download.url)" target="_blank" rel="noopener">
+                  <a
+                    matButton="tonal"
+                    [href]="href(download.url)"
+                    target="_blank"
+                    rel="noopener"
+                  >
                     <mat-icon>download</mat-icon>
                     {{ 'core.settings.apps.mobile.apk' | transloco }}
                     @if (download.size) {
@@ -121,15 +172,23 @@ const ICONS: Record<AppKind, string> = {
                     }
                   </a>
                 } @empty {
-                  <p class="hint">{{ 'core.settings.apps.mobile.notOnServer' | transloco }}</p>
+                  <p class="hint">
+                    {{ 'core.settings.apps.mobile.notOnServer' | transloco }}
+                  </p>
                 }
               </div>
               <ol class="steps">
-                <li>{{ 'core.settings.apps.mobile.openOnPhone' | transloco }}</li>
-                <li>{{ 'core.settings.apps.mobile.allowInstall' | transloco }}</li>
+                <li>
+                  {{ 'core.settings.apps.mobile.openOnPhone' | transloco }}
+                </li>
+                <li>
+                  {{ 'core.settings.apps.mobile.allowInstall' | transloco }}
+                </li>
                 <li>{{ 'core.settings.apps.mobile.connect' | transloco }}</li>
               </ol>
-              <p class="hint">{{ 'core.settings.apps.mobile.updates' | transloco }}</p>
+              <p class="hint">
+                {{ 'core.settings.apps.mobile.updates' | transloco }}
+              </p>
             }
           </mat-card-content>
         </mat-card>
@@ -138,7 +197,9 @@ const ICONS: Record<AppKind, string> = {
 
     <mat-card appearance="outlined" class="devices">
       <mat-card-header>
-        <mat-card-title>{{ 'core.settings.apps.devices.title' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'core.settings.apps.devices.title' | transloco
+        }}</mat-card-title>
         <mat-card-subtitle>{{
           'core.settings.apps.devices.subtitle' | transloco
         }}</mat-card-subtitle>
@@ -151,15 +212,20 @@ const ICONS: Record<AppKind, string> = {
               <div class="name">
                 {{ install.name }}
                 @if (install.id === thisDevice()) {
-                  <span class="this">{{ 'core.settings.apps.devices.this' | transloco }}</span>
+                  <span class="this">{{
+                    'core.settings.apps.devices.this' | transloco
+                  }}</span>
                 }
               </div>
               <div class="hint">
-                {{ 'core.settings.apps.' + install.kind + '.title' | transloco }} ·
-                {{ short(install.version) }} ·
+                {{
+                  'core.settings.apps.' + install.kind + '.title' | transloco
+                }}
+                · {{ short(install.version) }} ·
                 {{
                   'core.settings.apps.devices.seen'
-                    | transloco: { date: (install.lastSeenAt | date: 'd MMM, HH:mm') }
+                    | transloco
+                      : {date: (install.lastSeenAt | date: 'd MMM, HH:mm')}
                 }}
               </div>
             </div>
@@ -176,7 +242,9 @@ const ICONS: Record<AppKind, string> = {
             }
             <button
               matIconButton
-              [attr.aria-label]="'core.settings.apps.devices.forget' | transloco"
+              [attr.aria-label]="
+                'core.settings.apps.devices.forget' | transloco
+              "
               [title]="'core.settings.apps.devices.forget' | transloco"
               (click)="forget(install)"
             >
@@ -184,7 +252,9 @@ const ICONS: Record<AppKind, string> = {
             </button>
           </div>
         } @empty {
-          <p class="hint">{{ 'core.settings.apps.devices.none' | transloco }}</p>
+          <p class="hint">
+            {{ 'core.settings.apps.devices.none' | transloco }}
+          </p>
         }
       </mat-card-content>
     </mat-card>
@@ -284,16 +354,24 @@ export class AppsSettingsComponent {
   private readonly mobile = inject(MobileAppService);
 
   protected readonly icons = ICONS;
-  protected readonly overview = httpResource<AppsOverview>(() => CORE_READS.apps());
-  protected readonly apps = computed<AppInfo[]>(() => this.overview.value()?.apps ?? []);
-  protected readonly installs = computed<AppInstall[]>(() => this.overview.value()?.installs ?? []);
+  protected readonly overview = httpResource<AppsOverview>(() =>
+    CORE_READS.apps(),
+  );
+  protected readonly apps = computed<AppInfo[]>(
+    () => this.overview.value()?.apps ?? [],
+  );
+  protected readonly installs = computed<AppInstall[]>(
+    () => this.overview.value()?.installs ?? [],
+  );
   /** Opened inside the desktop app: the extension is installed from its folder. */
   protected readonly desktop = signal<DesktopAppsInfo | null>(null);
-  protected readonly thisDevice = computed(() => this.desktop()?.installId ?? null);
+  protected readonly thisDevice = computed(
+    () => this.desktop()?.installId ?? null,
+  );
 
   constructor() {
     if (this.bridge) {
-      void this.bridge.info().then((info) => this.desktop.set(info));
+      void this.bridge.info().then(info => this.desktop.set(info));
       // The list shows this computer as it is now.
       void this.desktopInstall.report().then(() => this.overview.reload());
     }
@@ -308,7 +386,7 @@ export class AppsSettingsComponent {
   }
 
   protected serverVersion(kind: AppKind): string | null {
-    return this.apps().find((app) => app.kind === kind)?.version ?? null;
+    return this.apps().find(app => app.kind === kind)?.version ?? null;
   }
 
   protected async openExtensionFolder(): Promise<void> {

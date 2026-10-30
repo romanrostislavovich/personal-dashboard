@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database, UsersService } from '@pd/api-core';
+import {Inject, Injectable} from '@nestjs/common';
+import {DB, Database, UsersService} from '@pd/api-core';
 import {
   addDays,
   LocalDate,
@@ -11,11 +11,11 @@ import {
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
-import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
-import { z } from 'zod';
-import { ActivityDeviceRow } from '../activity.schema';
-import { activityPhoneDaily, activityPhoneSignals } from './phone-signals.schema';
-import { DailyValues, DayBounds, Signal, signalsDays } from './signals-day';
+import {and, asc, eq, gte, lt, sql} from 'drizzle-orm';
+import {z} from 'zod';
+import {ActivityDeviceRow} from '../activity.schema';
+import {activityPhoneDaily, activityPhoneSignals} from './phone-signals.schema';
+import {DailyValues, DayBounds, Signal, signalsDays} from './signals-day';
 
 const INSERT_CHUNK = 200;
 /** Signals read around a period: a rest that began the evening before, a use past midnight. */
@@ -35,8 +35,8 @@ export class PhoneSignalsService {
   async ingest(
     device: ActivityDeviceRow,
     body: z.output<typeof phoneSignalIngestSchema> | PhoneSignalIngest,
-  ): Promise<{ saved: number }> {
-    const rows = body.signals.map((signal) => ({
+  ): Promise<{saved: number}> {
+    const rows = body.signals.map(signal => ({
       userId: device.userId,
       deviceId: device.id,
       kind: signal.kind,
@@ -49,7 +49,7 @@ export class PhoneSignalsService {
         .insert(activityPhoneSignals)
         .values(rows.slice(i, i + INSERT_CHUNK))
         .onConflictDoNothing()
-        .returning({ id: activityPhoneSignals.id });
+        .returning({id: activityPhoneSignals.id});
       saved += inserted.length;
     }
     for (const item of body.daily ?? []) {
@@ -71,21 +71,28 @@ export class PhoneSignalsService {
             activityPhoneDaily.kind,
             activityPhoneDaily.key,
           ],
-          set: { value: item.value, updatedAt: new Date() },
+          set: {value: item.value, updatedAt: new Date()},
         });
     }
-    return { saved };
+    return {saved};
   }
 
-  async days(userId: string, { from, to }: PhoneUsageQuery): Promise<PhoneSignalsDay[]> {
+  async days(
+    userId: string,
+    {from, to}: PhoneUsageQuery,
+  ): Promise<PhoneSignalsDay[]> {
     const zone = this.users.timeZoneOf(await this.users.findById(userId));
     const bounds: DayBounds[] = [];
-    for (let day = from; day <= to; day = toLocalDate(addDays(parseLocalDate(day), 1))) {
+    for (
+      let day = from;
+      day <= to;
+      day = toLocalDate(addDays(parseLocalDate(day), 1))
+    ) {
       const next = toLocalDate(addDays(parseLocalDate(day), 1));
       bounds.push({
         day,
-        start: zonedToUtc({ date: day, time: '00:00' }, zone).getTime(),
-        end: zonedToUtc({ date: next, time: '00:00' }, zone).getTime(),
+        start: zonedToUtc({date: day, time: '00:00'}, zone).getTime(),
+        end: zonedToUtc({date: next, time: '00:00'}, zone).getTime(),
       });
     }
     if (!bounds.length) {
@@ -94,7 +101,7 @@ export class PhoneSignalsService {
     const s = activityPhoneSignals;
     // Read through Drizzle's columns: the data is decrypted on the way.
     const rows = await this.db
-      .select({ kind: s.kind, at: s.at, data: s.data })
+      .select({kind: s.kind, at: s.at, data: s.data})
       .from(s)
       .where(
         and(
@@ -104,7 +111,7 @@ export class PhoneSignalsService {
         ),
       )
       .orderBy(asc(s.at));
-    const signals: Signal[] = rows.map((row) => ({
+    const signals: Signal[] = rows.map(row => ({
       kind: row.kind,
       at: row.at.getTime(),
       data: row.data ? (JSON.parse(row.data) as Record<string, unknown>) : null,

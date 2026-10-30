@@ -1,4 +1,4 @@
-import { DailyMetric, LocalDate } from '@pd/contracts';
+import {DailyMetric, LocalDate} from '@pd/contracts';
 
 const ARCHIVE_URL = 'https://archive-api.open-meteo.com/v1/archive';
 const TIMEOUT_MS = 15_000;
@@ -26,7 +26,9 @@ export function pastWeatherMetrics(raw: RawPastWeather): DailyMetric[] {
   const series = (values: (number | null)[] | undefined, scale = 1) =>
     daily.time.flatMap((day, index) => {
       const value = values?.[index];
-      return value == null ? [] : [{ day, value: Math.round((value / scale) * 10) / 10 }];
+      return value === null || value === undefined
+        ? []
+        : [{day, value: Math.round((value / scale) * 10) / 10}];
     });
   const metrics: DailyMetric[] = [
     {
@@ -51,12 +53,12 @@ export function pastWeatherMetrics(raw: RawPastWeather): DailyMetric[] {
       days: series(daily.sunshine_duration, HOUR),
     },
   ];
-  return metrics.filter((metric) => metric.days.length > 0);
+  return metrics.filter(metric => metric.days.length > 0);
 }
 
 /** The archive of a place for a period: free, without a key. */
 export async function fetchPastWeather(
-  place: { latitude: number; longitude: number },
+  place: {latitude: number; longitude: number},
   from: LocalDate,
   to: LocalDate,
 ): Promise<RawPastWeather> {

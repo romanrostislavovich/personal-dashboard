@@ -1,4 +1,4 @@
-import { users } from '@pd/api-core/schema';
+import {users} from '@pd/api-core/schema';
 import {
   date,
   doublePrecision,
@@ -21,8 +21,8 @@ export const healthWearableDays = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    day: date({ mode: 'string' }).notNull(),
+      .references(() => users.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
     steps: integer(),
     calories: integer(),
     distanceKm: doublePrecision(),
@@ -40,12 +40,12 @@ export const healthWearableDays = pgTable(
     /** HH:MM of the band's local time. */
     sleepStart: text(),
     sleepEnd: text(),
-    updatedAt: timestamp({ withTimezone: true })
+    updatedAt: timestamp({withTimezone: true})
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
   },
-  (table) => [unique().on(table.userId, table.day)],
+  table => [unique().on(table.userId, table.day)],
 );
 
 /** The state of a user's Google Health connection (the refresh token is in the secrets). */
@@ -54,8 +54,8 @@ export const healthWearableAccounts = pgTable('health_wearable_accounts', {
   userId: uuid()
     .notNull()
     .unique()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  lastSyncedAt: timestamp({ withTimezone: true }),
+    .references(() => users.id, {onDelete: 'cascade'}),
+  lastSyncedAt: timestamp({withTimezone: true}),
   lastError: text(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
 });

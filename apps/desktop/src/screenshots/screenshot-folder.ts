@@ -1,8 +1,15 @@
-import { shell } from 'electron';
-import { createHash } from 'node:crypto';
-import { existsSync, watch, type FSWatcher } from 'node:fs';
-import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import {shell} from 'electron';
+import {createHash} from 'node:crypto';
+import {existsSync, watch, type FSWatcher} from 'node:fs';
+import {
+  mkdir,
+  readdir,
+  readFile,
+  rename,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
+import {dirname, isAbsolute, join, relative, resolve, sep} from 'node:path';
 
 /** The pictures the folder holds (screenshotNameSchema in contracts). */
 const PICTURE = /\.(png|jpe?g|webp)$/i;
@@ -23,7 +30,10 @@ export interface FolderFile {
  */
 export class ScreenshotFolder {
   /** Hashes by path, kept while the file's size and time stay the same. */
-  private readonly hashes = new Map<string, { size: number; mtime: number; hash: string }>();
+  private readonly hashes = new Map<
+    string,
+    {size: number; mtime: number; hash: string}
+  >();
   private watcher: FSWatcher | null = null;
   private timer: NodeJS.Timeout | null = null;
 
@@ -42,7 +52,7 @@ export class ScreenshotFolder {
     for (const path of await walk(root)) {
       const name = relative(root, path).split(sep).join('/');
       if (PICTURE.test(name)) {
-        files.push({ name, hash: await this.hashOf(path) });
+        files.push({name, hash: await this.hashOf(path)});
       }
     }
     return files;
@@ -54,7 +64,7 @@ export class ScreenshotFolder {
 
   async write(name: string, data: Uint8Array): Promise<void> {
     const path = this.pathOf(name);
-    await mkdir(dirname(path), { recursive: true });
+    await mkdir(dirname(path), {recursive: true});
     await writeFile(path, data);
   }
 
@@ -67,7 +77,7 @@ export class ScreenshotFolder {
 
   async rename(from: string, to: string): Promise<void> {
     const target = this.pathOf(to);
-    await mkdir(dirname(target), { recursive: true });
+    await mkdir(dirname(target), {recursive: true});
     await rename(this.pathOf(from), target);
   }
 
@@ -90,7 +100,7 @@ export class ScreenshotFolder {
       return;
     }
     try {
-      this.watcher = watch(root, { recursive: true }, () => {
+      this.watcher = watch(root, {recursive: true}, () => {
         if (this.timer) {
           clearTimeout(this.timer);
         }
@@ -105,7 +115,7 @@ export class ScreenshotFolder {
   /** The default folder is made on the first start; one the user chose is never made up. */
   async ensure(isDefault: boolean): Promise<void> {
     if (isDefault) {
-      await mkdir(this.folder(), { recursive: true });
+      await mkdir(this.folder(), {recursive: true});
     }
   }
 
@@ -114,14 +124,19 @@ export class ScreenshotFolder {
     const root = resolve(this.folder());
     const path = resolve(root, ...name.split('/'));
     const inside = relative(root, path);
-    if (!inside || inside.startsWith('..') || isAbsolute(inside) || !PICTURE.test(path)) {
+    if (
+      !inside ||
+      inside.startsWith('..') ||
+      isAbsolute(inside) ||
+      !PICTURE.test(path)
+    ) {
       throw new Error(`Not a picture of the folder: ${name}`);
     }
     return path;
   }
 
   private async hashOf(path: string): Promise<string> {
-    const { size, mtimeMs } = await stat(path);
+    const {size, mtimeMs} = await stat(path);
     const known = this.hashes.get(path);
     if (known && known.size === size && known.mtime === mtimeMs) {
       return known.hash;
@@ -129,17 +144,19 @@ export class ScreenshotFolder {
     const hash = createHash('sha256')
       .update(await readFile(path))
       .digest('hex');
-    this.hashes.set(path, { size, mtime: mtimeMs, hash });
+    this.hashes.set(path, {size, mtime: mtimeMs, hash});
     return hash;
   }
 }
 
 async function walk(folder: string): Promise<string[]> {
-  const entries = await readdir(folder, { withFileTypes: true });
+  const entries = await readdir(folder, {withFileTypes: true});
   const nested = await Promise.all(
-    entries.map((entry) => {
+    entries.map(entry => {
       const path = join(folder, entry.name);
-      return entry.isDirectory() ? walk(path) : Promise.resolve(entry.isFile() ? [path] : []);
+      return entry.isDirectory()
+        ? walk(path)
+        : Promise.resolve(entry.isFile() ? [path] : []);
     }),
   );
   return nested.flat();

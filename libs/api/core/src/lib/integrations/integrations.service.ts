@@ -1,14 +1,19 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { IntegrationState, IntegrationStatus } from '@pd/contracts';
-import { and, eq, inArray } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { DemoService } from '../demo/demo.service';
-import { coreMessages } from '../i18n/core.messages';
-import { NotificationsService } from '../notifications/notifications.service';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { UsersService } from '../users/users.service';
-import { DEFAULT_STALE_HOURS, IntegrationReport, newTroubles, stateOf } from './integration-state';
-import { integrationAlerts } from './integrations.schema';
+import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {IntegrationState, IntegrationStatus} from '@pd/contracts';
+import {and, eq, inArray} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {DemoService} from '../demo/demo.service';
+import {coreMessages} from '../i18n/core.messages';
+import {NotificationsService} from '../notifications/notifications.service';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {UsersService} from '../users/users.service';
+import {
+  DEFAULT_STALE_HOURS,
+  IntegrationReport,
+  newTroubles,
+  stateOf,
+} from './integration-state';
+import {integrationAlerts} from './integrations.schema';
 
 /**
  * How a section's connections to outside services are doing (`<module>.integrations.ts`):
@@ -101,7 +106,9 @@ export class IntegrationsService implements OnModuleInit {
             settingsTab: source.settingsTab ?? null,
             state: stateOf(
               report,
-              neverStale ? Number.POSITIVE_INFINITY : (source.staleHours ?? DEFAULT_STALE_HOURS),
+              neverStale
+                ? Number.POSITIVE_INFINITY
+                : (source.staleHours ?? DEFAULT_STALE_HOURS),
               now,
             ),
             lastSyncedAt: report.lastSyncedAt?.toISOString() ?? null,
@@ -110,12 +117,17 @@ export class IntegrationsService implements OnModuleInit {
           });
         }
       } catch (error) {
-        this.logger.warn(`Status of ${source.id} was not read: ${String(error).slice(0, 200)}`);
+        this.logger.warn(
+          `Status of ${source.id} was not read: ${String(error).slice(0, 200)}`,
+        );
       }
     }
     // The troubled first, the ones not connected last.
-    const rank = (state: IntegrationState) => (state === 'off' ? 2 : state === 'ok' ? 1 : 0);
-    return statuses.sort((a, b) => rank(a.state) - rank(b.state) || a.name.localeCompare(b.name));
+    const rank = (state: IntegrationState) =>
+      state === 'off' ? 2 : state === 'ok' ? 1 : 0;
+    return statuses.sort(
+      (a, b) => rank(a.state) - rank(b.state) || a.name.localeCompare(b.name),
+    );
   }
 
   /** Daily: tells every user about the connections whose trouble is new. */
@@ -124,7 +136,9 @@ export class IntegrationsService implements OnModuleInit {
       try {
         await this.tell(user.id, user.locale);
       } catch (error) {
-        this.logger.warn(`Integrations of ${user.email} were not checked: ${String(error)}`);
+        this.logger.warn(
+          `Integrations of ${user.email} were not checked: ${String(error)}`,
+        );
       }
     }
   }
@@ -136,9 +150,9 @@ export class IntegrationsService implements OnModuleInit {
       .from(integrationAlerts)
       .where(eq(integrationAlerts.userId, userId));
     const told = new Map<string, IntegrationState>(
-      rows.map((row) => [row.integrationId, row.state]),
+      rows.map(row => [row.integrationId, row.state]),
     );
-    const { tell, forget } = newTroubles(statuses, told);
+    const {tell, forget} = newTroubles(statuses, told);
     if (forget.length) {
       await this.db
         .delete(integrationAlerts)
@@ -149,7 +163,7 @@ export class IntegrationsService implements OnModuleInit {
           ),
         );
     }
-    const troubled = statuses.filter((status) => tell.includes(status.id));
+    const troubled = statuses.filter(status => tell.includes(status.id));
     if (!troubled.length) {
       return;
     }
@@ -157,18 +171,18 @@ export class IntegrationsService implements OnModuleInit {
     await this.notifications.send(userId, {
       title: text.integrationsTitle,
       body: [
-        ...troubled.map((status) => text.integrationTrouble(status)),
+        ...troubled.map(status => text.integrationTrouble(status)),
         text.integrationsSee,
       ].join('\n'),
       source: 'integrations',
     });
-    for (const { id, state } of troubled) {
+    for (const {id, state} of troubled) {
       await this.db
         .insert(integrationAlerts)
-        .values({ userId, integrationId: id, state })
+        .values({userId, integrationId: id, state})
         .onConflictDoUpdate({
           target: [integrationAlerts.userId, integrationAlerts.integrationId],
-          set: { state, toldAt: new Date() },
+          set: {state, toldAt: new Date()},
         });
     }
   }

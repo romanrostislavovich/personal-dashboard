@@ -1,8 +1,10 @@
-import { configureFieldEncryption } from '../../crypto/encrypted-columns';
-import { isPushAnswerToken, pushAnswerToken } from './push.service';
+import {configureFieldEncryption} from '../../crypto/encrypted-columns';
+import {isPushAnswerToken, pushAnswerToken} from './push.service';
 
 describe('the key of an answer from the shade', () => {
-  beforeAll(() => configureFieldEncryption('test-key-test-key-test-key-test-key'));
+  beforeAll(() =>
+    configureFieldEncryption('test-key-test-key-test-key-test-key'),
+  );
 
   it('fits its own notification and no other', () => {
     const one = '6b1f6f53-4d1e-4c55-9a39-1f0a0c8a0001';

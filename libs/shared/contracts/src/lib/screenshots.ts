@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 // Screenshots: the pieces of the screen the desktop app takes (with arrows and boxes drawn on
 // them), kept in a folder of each computer and on the server, the same everywhere.
@@ -16,9 +16,13 @@ export const screenshotNameSchema = z
   .min(5)
   .max(300)
   .regex(/^[^\\:*?"<>|]+\.(png|jpe?g|webp)$/i, 'Expected a picture: name.png')
-  .refine((name) => [...name].every((char) => char.charCodeAt(0) >= 32), 'No control characters')
   .refine(
-    (name) => name.split('/').every((part) => part && part !== '.' && part !== '..'),
+    name => [...name].every(char => char.charCodeAt(0) >= 32),
+    'No control characters',
+  )
+  .refine(
+    name =>
+      name.split('/').every(part => part && part !== '.' && part !== '..'),
     'A path inside the folder only',
   );
 
@@ -45,7 +49,10 @@ export function screenshotName(at: Date, extension = 'png'): string {
 }
 
 /** Another name for a file whose name is taken: `name (2).png`, `name (3).png`… */
-export function nextFreeName(name: string, taken: (candidate: string) => boolean): string {
+export function nextFreeName(
+  name: string,
+  taken: (candidate: string) => boolean,
+): string {
   const dot = name.lastIndexOf('.');
   const base = name.slice(0, dot);
   const extension = name.slice(dot);

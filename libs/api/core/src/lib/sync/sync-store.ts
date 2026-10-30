@@ -1,9 +1,9 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { SyncChange, SyncPushResponse, TableFingerprint } from '@pd/contracts';
-import { sql, SQL } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { readSyncTables, SyncTable } from './sync-catalog';
-import { APPLYING_SETTING, installSyncTriggers, pkObject } from './sync-triggers';
+import {Inject, Injectable, Logger} from '@nestjs/common';
+import {SyncChange, SyncPushResponse, TableFingerprint} from '@pd/contracts';
+import {sql, SQL} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {readSyncTables, SyncTable} from './sync-catalog';
+import {APPLYING_SETTING, installSyncTriggers, pkObject} from './sync-triggers';
 
 /** Rows of the change log looked at per batch. */
 const SCAN_LIMIT = 1_000;
@@ -91,13 +91,16 @@ export class SyncStore {
    * Only committed transactions are read: a change still in flight would otherwise be skipped
    * by a cursor that has moved past it.
    */
-  changesSince(cursor: string | null, include: (origin: string | null) => boolean) {
+  changesSince(
+    cursor: string | null,
+    include: (origin: string | null) => boolean,
+  ) {
     const [tx, seq] = parseCursor(cursor);
     return this.db.transaction(
       async (db): Promise<ChangeBatch> => {
         // Ordered by the columns themselves: ordering by the text copies (`tx_text`) would put
         // "1000" before "19", and a batch cut in the middle would skip rows for good.
-        const { rows } = await db.execute<Version>(sql`
+        const {rows} = await db.execute<Version>(sql`
           SELECT v.table_name, v.pk::text AS pk, v.changed_at::text AS changed_at,
             v.tx::text AS tx_text, v.seq::text AS seq_text, v.origin
           FROM sync.row_versions v
@@ -109,11 +112,13 @@ export class SyncStore {
         const changes: SyncChange[] = [];
         let next = cursor;
         let bytes = 0;
-        for (const chunk of readChunks(rows, (version) => this.table(version.table_name))) {
+        for (const chunk of readChunks(rows, version =>
+          this.table(version.table_name),
+        )) {
           const data = await this.readRows(db, chunk, include);
           for (const version of chunk.versions) {
             if (bytes >= MAX_BATCH_BYTES) {
-              return { changes, cursor: next, hasMore: true };
+              return {changes, cursor: next, hasMore: true};
             }
             next = `${version.tx_text}:${version.seq_text}`;
             if (!chunk.table || !include(version.origin)) {
@@ -129,10 +134,10 @@ export class SyncStore {
             bytes += (row?.length ?? 0) + version.pk.length;
           }
         }
-        return { changes, cursor: next, hasMore: rows.length === SCAN_LIMIT };
+        return {changes, cursor: next, hasMore: rows.length === SCAN_LIMIT};
       },
       // One snapshot: rows are read as of the moment the change log was read.
-      { isolationLevel: 'repeatable read' },
+      {isolationLevel: 'repeatable read'},
     );
   }
 
@@ -141,17 +146,20 @@ export class SyncStore {
    * a few statements for the whole run; the ones that need care (a local version, a clash on a
    * unique key, an error) go one at a time with the full conflict rules.
    */
-  async apply(changes: SyncChange[], context: ApplyContext): Promise<SyncPushResponse> {
-    const result: SyncPushResponse = { applied: 0, skipped: 0, parked: 0 };
-    await this.db.transaction(async (tx) => {
+  async apply(
+    changes: SyncChange[],
+    context: ApplyContext,
+  ): Promise<SyncPushResponse> {
+    const result: SyncPushResponse = {applied: 0, skipped: 0, parked: 0};
+    await this.db.transaction(async tx => {
       // Our trigger ignores this transaction: applied changes are logged below with their origin.
       await tx.execute(sql`SELECT set_config(${APPLYING_SETTING}, 'on', true)`);
       for (const run of writeRuns(this.dependencyOrder(changes))) {
         const table = this.table(run[0].table);
-        const { applied, rest } =
+        const {applied, rest} =
           table && run.length >= BULK_MIN
             ? await this.applyInBulk(tx, table, run, context)
-            : { applied: 0, rest: run };
+            : {applied: 0, rest: run};
         result.applied += applied;
         for (const change of rest) {
           result[await this.applyOrPark(tx, change, context)]++;
@@ -171,23 +179,27 @@ export class SyncStore {
     table: SyncTable,
     run: SyncChange[],
     context: ApplyContext,
-  ): Promise<{ applied: number; rest: SyncChange[] }> {
+  ): Promise<{applied: number; rest: SyncChange[]}> {
     const careful = new Set([
       ...(await this.withLocalVersion(tx, table, run, context)),
-      ...(run[0].row !== null ? await this.withUniqueClash(tx, table, run) : []),
+      ...(run[0].row !== null
+        ? await this.withUniqueClash(tx, table, run)
+        : []),
     ]);
     const plain = run.filter((_, index) => !careful.has(index));
     const rest = run.filter((_, index) => careful.has(index));
     if (plain.length === 0) {
-      return { applied: 0, rest };
+      return {applied: 0, rest};
     }
     try {
       // A savepoint: if the bulk write fails (a missing parent row…), nothing of it stays and the
       // same changes go one at a time, where the failing ones are parked.
-      await tx.transaction((savepoint) => this.writeInBulk(savepoint, table, plain, context));
-      return { applied: plain.length, rest };
+      await tx.transaction(savepoint =>
+        this.writeInBulk(savepoint, table, plain, context),
+      );
+      return {applied: plain.length, rest};
     } catch {
-      return { applied: 0, rest: [...rest, ...plain] };
+      return {applied: 0, rest: [...rest, ...plain]};
     }
   }
 
@@ -199,10 +211,10 @@ export class SyncStore {
     tx: Transaction,
     table: SyncTable,
     run: SyncChange[],
-    { unsentAfter }: ApplyContext,
+    {unsentAfter}: ApplyContext,
   ): Promise<number[]> {
     const [unsentTx, unsentSeq] = parseCursor(unsentAfter ?? null);
-    const { rows } = await tx.execute<{ i: number }>(sql`
+    const {rows} = await tx.execute<{i: number}>(sql`
       SELECT (e.i - 1)::int AS i
       FROM jsonb_array_elements(${versionsJson(run)}::jsonb) WITH ORDINALITY AS e(value, i)
       JOIN sync.row_versions v ON v.table_name = ${table.name} AND v.pk = e.value -> 'pk'
@@ -210,7 +222,7 @@ export class SyncStore {
         OR (${unsentAfter !== undefined} AND v.origin IS NULL
           AND (v.tx, v.seq) > (${unsentTx}::xid8, ${unsentSeq}::bigint))
     `);
-    return rows.map((row) => row.i);
+    return rows.map(row => row.i);
   }
 
   /** Positions of the incoming rows whose unique values another local row already holds. */
@@ -222,15 +234,15 @@ export class SyncStore {
     const name = sql.identifier(table.name);
     const clashes: number[] = [];
     for (const unique of table.uniques) {
-      const { rows } = await tx.execute<{ i: number }>(sql`
+      const {rows} = await tx.execute<{i: number}>(sql`
         SELECT DISTINCT (e.i - 1)::int AS i
-        FROM jsonb_array_elements(${jsonArray(run.map((c) => c.row ?? '{}'))}::jsonb)
+        FROM jsonb_array_elements(${jsonArray(run.map(c => c.row ?? '{}'))}::jsonb)
           WITH ORDINALITY AS e(value, i)
         CROSS JOIN LATERAL jsonb_populate_record(NULL::${name}, e.value) k
         JOIN ${name} t ON (${columns('t', unique)}) = (${columns('k', unique)})
           AND (${columns('t', table.primaryKey)}) <> (${columns('k', table.primaryKey)})
       `);
-      clashes.push(...rows.map((row) => row.i));
+      clashes.push(...rows.map(row => row.i));
     }
     return clashes;
   }
@@ -240,14 +252,17 @@ export class SyncStore {
     tx: Transaction,
     table: SyncTable,
     run: SyncChange[],
-    { origin }: ApplyContext,
+    {origin}: ApplyContext,
   ): Promise<void> {
     const name = sql.identifier(table.name);
     if (run[0].row !== null) {
       const updates = table.columns
-        .filter((column) => !table.primaryKey.includes(column))
-        .map((column) => sql`${sql.identifier(column)} = EXCLUDED.${sql.identifier(column)}`);
-      const rows = jsonArray(run.map((change) => change.row ?? '{}'));
+        .filter(column => !table.primaryKey.includes(column))
+        .map(
+          column =>
+            sql`${sql.identifier(column)} = EXCLUDED.${sql.identifier(column)}`,
+        );
+      const rows = jsonArray(run.map(change => change.row ?? '{}'));
       await tx.execute(sql`
         INSERT INTO ${name} SELECT * FROM jsonb_populate_recordset(NULL::${name}, ${rows}::jsonb)
         ON CONFLICT (${columns(null, table.primaryKey)})
@@ -257,7 +272,7 @@ export class SyncStore {
       await tx.execute(sql`
         DELETE FROM ${name} t WHERE (${columns('t', table.primaryKey)}) IN (
           SELECT ${columns('k', table.primaryKey)}
-          FROM jsonb_populate_recordset(NULL::${name}, ${jsonArray(run.map((c) => c.pk))}::jsonb) k
+          FROM jsonb_populate_recordset(NULL::${name}, ${jsonArray(run.map(c => c.pk))}::jsonb) k
         )
       `);
     }
@@ -283,7 +298,7 @@ export class SyncStore {
   /** Local changes not sent yet (client). */
   async pendingCount(cursor: string | null): Promise<number> {
     const [tx, seq] = parseCursor(cursor);
-    const { rows } = await this.db.execute<{ count: number }>(sql`
+    const {rows} = await this.db.execute<{count: number}>(sql`
       SELECT count(*)::int AS count FROM sync.row_versions
       WHERE origin IS NULL AND (tx, seq) > (${tx}::xid8, ${seq}::bigint)
     `);
@@ -299,7 +314,7 @@ export class SyncStore {
     let found = 0;
     for (const table of this.tables) {
       const pk = pkObject(table, sql`to_jsonb(t)`);
-      const { rowCount } = await this.db.execute(sql`
+      const {rowCount} = await this.db.execute(sql`
         INSERT INTO sync.row_versions (table_name, pk, changed_at, tx, seq, origin)
         SELECT ${table.name}, ${pk}, 'epoch', pg_current_xact_id(), nextval('sync.change_seq'), NULL
         FROM ${sql.identifier(table.name)} t
@@ -308,7 +323,9 @@ export class SyncStore {
         ON CONFLICT DO NOTHING
       `);
       if (rowCount) {
-        this.logger.warn(`${rowCount} row(s) of ${table.name} were not in the change log`);
+        this.logger.warn(
+          `${rowCount} row(s) of ${table.name} were not in the change log`,
+        );
         found += rowCount;
       }
     }
@@ -321,29 +338,35 @@ export class SyncStore {
    */
   async fingerprints(): Promise<Record<string, TableFingerprint>> {
     return this.db.transaction(
-      async (tx) => {
+      async tx => {
         await tx.execute(sql`SET LOCAL TimeZone = 'UTC'`);
         const result: Record<string, TableFingerprint> = {};
         for (const table of this.tables) {
           // Rows hashed one by one and the hashes sorted: no need to agree on a row order.
-          const { rows } = await tx.execute<{ rows: number; hash: string | null }>(sql`
+          const {rows} = await tx.execute<{
+            rows: number;
+            hash: string | null;
+          }>(sql`
             SELECT count(*)::int AS rows, md5(string_agg(h, '' ORDER BY h)) AS hash
             FROM (SELECT md5(to_jsonb(t)::text) AS h FROM ${sql.identifier(table.name)} t) r
           `);
-          result[table.name] = { rows: rows[0].rows, hash: rows[0].hash ?? '' };
+          result[table.name] = {rows: rows[0].rows, hash: rows[0].hash ?? ''};
         }
         return result;
       },
-      { isolationLevel: 'repeatable read', accessMode: 'read only' },
+      {isolationLevel: 'repeatable read', accessMode: 'read only'},
     );
   }
 
-  async problemCounts(): Promise<{ parked: number; conflicts: number }> {
-    const { rows } = await this.db.execute<{ parked: number; conflicts: number }>(sql`
+  async problemCounts(): Promise<{parked: number; conflicts: number}> {
+    const {rows} = await this.db.execute<{
+      parked: number;
+      conflicts: number;
+    }>(sql`
       SELECT (SELECT count(*)::int FROM sync.parked) AS parked,
         (SELECT count(*)::int FROM sync.conflicts) AS conflicts
     `);
-    return rows[0] ?? { parked: 0, conflicts: 0 };
+    return rows[0] ?? {parked: 0, conflicts: 0};
   }
 
   private async applyOrPark(
@@ -353,7 +376,9 @@ export class SyncStore {
   ): Promise<Outcome> {
     try {
       // A savepoint: a failed change is rolled back alone, the rest of the batch goes on.
-      return await tx.transaction((savepoint) => this.applyChange(savepoint, change, context));
+      return await tx.transaction(savepoint =>
+        this.applyChange(savepoint, change, context),
+      );
     } catch (error) {
       const message = errorMessage(error);
       this.logger.warn(`Parked ${change.table} ${change.pk}: ${message}`);
@@ -373,17 +398,27 @@ export class SyncStore {
   private async applyChange(
     tx: Transaction,
     change: SyncChange,
-    { origin, unsentAfter }: ApplyContext,
+    {origin, unsentAfter}: ApplyContext,
   ): Promise<Outcome> {
     const table = this.table(change.table);
     if (!table) {
-      throw new Error(`Unknown table ${change.table} — are both instances on the same version?`);
+      throw new Error(
+        `Unknown table ${change.table} — are both instances on the same version?`,
+      );
     }
     const local = await this.localVersion(tx, table, change, unsentAfter);
     if (local?.localWins) {
       if (change.row !== null) {
-        const loser = { table, pk: change.pk, row: change.row, onlyIfDifferent: true };
-        await this.keepLoser(tx, { ...loser, reason: 'older than the local version' });
+        const loser = {
+          table,
+          pk: change.pk,
+          row: change.row,
+          onlyIfDifferent: true,
+        };
+        await this.keepLoser(tx, {
+          ...loser,
+          reason: 'older than the local version',
+        });
       }
       return 'skipped';
     }
@@ -412,11 +447,13 @@ export class SyncStore {
     table: SyncTable,
     change: SyncChange,
     unsentAfter: ApplyContext['unsentAfter'],
-  ): Promise<{ localWins: boolean; unsent: boolean; sameVersion: boolean } | undefined> {
+  ): Promise<
+    {localWins: boolean; unsent: boolean; sameVersion: boolean} | undefined
+  > {
     const [unsentTx, unsentSeq] = parseCursor(unsentAfter ?? null);
     const localRow = sql`(SELECT to_jsonb(t)::text FROM ${sql.identifier(table.name)} t
       WHERE ${pkMatch(table, change.pk)})`;
-    const { rows } = await tx.execute<{
+    const {rows} = await tx.execute<{
       local_wins: boolean;
       unsent: boolean;
       same_version: boolean;
@@ -445,12 +482,16 @@ export class SyncStore {
   ): Promise<void> {
     const local = await this.readRow(tx, table, change.pk);
     if (local !== null && local !== change.row) {
-      await this.keepLoser(tx, { table, pk: change.pk, row: local, reason });
+      await this.keepLoser(tx, {table, pk: change.pk, row: local, reason});
     }
   }
 
   /** Deletes or upserts the row; false if the upsert lost to a newer row (see `upsert`). */
-  private async writeRow(tx: Transaction, table: SyncTable, change: SyncChange): Promise<boolean> {
+  private async writeRow(
+    tx: Transaction,
+    table: SyncTable,
+    change: SyncChange,
+  ): Promise<boolean> {
     if (change.row !== null) {
       return this.upsert(tx, table, change);
     }
@@ -487,10 +528,18 @@ export class SyncStore {
    * id (a diary entry for the same day written on both sides): the newer one stays.
    * Returns false if the local row is newer and the incoming one was not applied.
    */
-  private async upsert(tx: Transaction, table: SyncTable, change: SyncChange): Promise<boolean> {
+  private async upsert(
+    tx: Transaction,
+    table: SyncTable,
+    change: SyncChange,
+  ): Promise<boolean> {
     const name = sql.identifier(table.name);
     for (const unique of table.uniques) {
-      const { rows } = await tx.execute<{ pk: string; row: string; local_wins: boolean | null }>(
+      const {rows} = await tx.execute<{
+        pk: string;
+        row: string;
+        local_wins: boolean | null;
+      }>(
         sql`
           SELECT ${pkObject(table, sql`to_jsonb(t)`)}::text AS pk, to_jsonb(t)::text AS row,
             ${winsOver(sql`v.changed_at`, sql`to_jsonb(t)::text`, change)} AS local_wins
@@ -511,17 +560,32 @@ export class SyncStore {
           );
         }
         if (local.local_wins) {
-          const loser = { table, pk: change.pk, row: change.row ?? '{}', reason: LOST_TO_NEWER };
+          const loser = {
+            table,
+            pk: change.pk,
+            row: change.row ?? '{}',
+            reason: LOST_TO_NEWER,
+          };
           await this.keepLoser(tx, loser);
           return false;
         }
-        await this.keepLoser(tx, { table, pk: local.pk, row: local.row, reason: LOST_TO_NEWER });
-        await tx.execute(sql`DELETE FROM ${name} t WHERE ${pkMatch(table, local.pk)}`);
+        await this.keepLoser(tx, {
+          table,
+          pk: local.pk,
+          row: local.row,
+          reason: LOST_TO_NEWER,
+        });
+        await tx.execute(
+          sql`DELETE FROM ${name} t WHERE ${pkMatch(table, local.pk)}`,
+        );
       }
     }
     const updates = table.columns
-      .filter((column) => !table.primaryKey.includes(column))
-      .map((column) => sql`${sql.identifier(column)} = EXCLUDED.${sql.identifier(column)}`);
+      .filter(column => !table.primaryKey.includes(column))
+      .map(
+        column =>
+          sql`${sql.identifier(column)} = EXCLUDED.${sql.identifier(column)}`,
+      );
     await tx.execute(sql`
       INSERT INTO ${name} SELECT * FROM jsonb_populate_record(NULL::${name}, ${change.row}::jsonb)
       ON CONFLICT (${columns(null, table.primaryKey)})
@@ -533,7 +597,7 @@ export class SyncStore {
   /** Saves the losing version of a row (unless it equals the current one). */
   private async keepLoser(
     tx: Transaction,
-    { table, pk, row, reason, onlyIfDifferent = false }: Loser,
+    {table, pk, row, reason, onlyIfDifferent = false}: Loser,
   ): Promise<void> {
     const differs = onlyIfDifferent
       ? sql`AND NOT EXISTS (SELECT 1 FROM ${sql.identifier(table.name)} t
@@ -545,9 +609,12 @@ export class SyncStore {
     `);
   }
 
-  private async retryParked(tx: Transaction, context: ApplyContext): Promise<void> {
+  private async retryParked(
+    tx: Transaction,
+    context: ApplyContext,
+  ): Promise<void> {
     for (let pass = 0; pass < PARKED_RETRY_PASSES; pass++) {
-      const { rows } = await tx.execute<{
+      const {rows} = await tx.execute<{
         table_name: string;
         pk: string;
         changed_at: string;
@@ -558,14 +625,22 @@ export class SyncStore {
         FROM sync.parked
       `);
       let progress = false;
-      const changes = rows.map((row) => ({
-        change: { table: row.table_name, pk: row.pk, changedAt: row.changed_at, row: row.row },
+      const changes = rows.map(row => ({
+        change: {
+          table: row.table_name,
+          pk: row.pk,
+          changedAt: row.changed_at,
+          row: row.row,
+        },
         origin: row.origin,
       }));
-      for (const { change, origin } of this.dependencyOrder(changes, (item) => item.change)) {
+      for (const {change, origin} of this.dependencyOrder(
+        changes,
+        item => item.change,
+      )) {
         try {
-          await tx.transaction((savepoint) =>
-            this.applyChange(savepoint, change, { ...context, origin }),
+          await tx.transaction(savepoint =>
+            this.applyChange(savepoint, change, {...context, origin}),
           );
           await tx.execute(sql`
             DELETE FROM sync.parked WHERE table_name = ${change.table} AND pk = ${change.pk}::jsonb
@@ -588,15 +663,17 @@ export class SyncStore {
   /** The rows of a chunk that are sent, by primary key; a deleted row is simply missing. */
   private async readRows(
     tx: Transaction,
-    { table, versions }: ReadChunk,
+    {table, versions}: ReadChunk,
     include: (origin: string | null) => boolean,
   ): Promise<Map<string, string>> {
-    const pks = versions.filter((version) => include(version.origin)).map((v) => v.pk);
+    const pks = versions
+      .filter(version => include(version.origin))
+      .map(v => v.pk);
     if (!table || pks.length === 0) {
       return new Map();
     }
     const name = sql.identifier(table.name);
-    const { rows } = await tx.execute<{ pk: string; row: string }>(sql`
+    const {rows} = await tx.execute<{pk: string; row: string}>(sql`
       SELECT ${pkObject(table, sql`to_jsonb(t)`)}::text AS pk, to_jsonb(t)::text AS row
       FROM ${name} t
       WHERE (${columns('t', table.primaryKey)}) IN (
@@ -604,11 +681,15 @@ export class SyncStore {
         FROM jsonb_populate_recordset(NULL::${name}, ${jsonArray(pks)}::jsonb) k
       )
     `);
-    return new Map(rows.map((row) => [row.pk, row.row]));
+    return new Map(rows.map(row => [row.pk, row.row]));
   }
 
-  private async readRow(tx: Transaction, table: SyncTable, pk: string): Promise<string | null> {
-    const { rows } = await tx.execute<{ row: string }>(sql`
+  private async readRow(
+    tx: Transaction,
+    table: SyncTable,
+    pk: string,
+  ): Promise<string | null> {
+    const {rows} = await tx.execute<{row: string}>(sql`
       SELECT to_jsonb(t)::text AS row FROM ${sql.identifier(table.name)} t
       WHERE ${pkMatch(table, pk)}
     `);
@@ -618,12 +699,14 @@ export class SyncStore {
   /** Inserts and updates parents first, then deletes children first — foreign keys stay valid. */
   private dependencyOrder<T>(
     items: T[],
-    changeOf: (item: T) => SyncChange = (item) => item as SyncChange,
+    changeOf: (item: T) => SyncChange = item => item as SyncChange,
   ): T[] {
-    const position = new Map(this.tables.map((table, index) => [table.name, index]));
+    const position = new Map(
+      this.tables.map((table, index) => [table.name, index]),
+    );
     const rank = (item: T) => position.get(changeOf(item).table) ?? 0;
-    const upserts = items.filter((item) => changeOf(item).row !== null);
-    const deletes = items.filter((item) => changeOf(item).row === null);
+    const upserts = items.filter(item => changeOf(item).row !== null);
+    const deletes = items.filter(item => changeOf(item).row === null);
     return [
       ...upserts.sort((a, b) => rank(a) - rank(b)),
       ...deletes.sort((a, b) => rank(b) - rank(a)),
@@ -631,7 +714,7 @@ export class SyncStore {
   }
 
   private table(name: string): SyncTable | undefined {
-    return this.tables.find((table) => table.name === name);
+    return this.tables.find(table => table.name === name);
   }
 }
 
@@ -648,11 +731,14 @@ function readChunks(
     const table = tableOf(version);
     const last = chunks.at(-1);
     const joins =
-      last && last.table === table && !table?.large && last.versions.length < READ_CHUNK;
+      last &&
+      last.table === table &&
+      !table?.large &&
+      last.versions.length < READ_CHUNK;
     if (joins) {
       last.versions.push(version);
     } else {
-      chunks.push({ table, versions: [version] });
+      chunks.push({table, versions: [version]});
     }
   }
   return chunks;
@@ -686,7 +772,9 @@ function writeRuns(changes: SyncChange[]): SyncChange[][] {
 
 /** `[{"pk": {…}, "at": "…"}, …]` — the primary keys and change times of a run. */
 function versionsJson(run: SyncChange[]): string {
-  return jsonArray(run.map((c) => `{"pk":${c.pk},"at":${JSON.stringify(c.changedAt)}}`));
+  return jsonArray(
+    run.map(c => `{"pk":${c.pk},"at":${JSON.stringify(c.changedAt)}}`),
+  );
 }
 
 /** A JSON array of values that are JSON already (rows, primary keys). */
@@ -716,8 +804,10 @@ function winsOver(localChangedAt: SQL, localRow: SQL, change: SyncChange): SQL {
 /** `t.a, t.b` (or `a, b` without an alias). */
 function columns(alias: string | null, names: string[]): SQL {
   return sql.join(
-    names.map((name) =>
-      alias ? sql`${sql.raw(alias)}.${sql.identifier(name)}` : sql.identifier(name),
+    names.map(name =>
+      alias
+        ? sql`${sql.raw(alias)}.${sql.identifier(name)}`
+        : sql.identifier(name),
     ),
     sql`, `,
   );

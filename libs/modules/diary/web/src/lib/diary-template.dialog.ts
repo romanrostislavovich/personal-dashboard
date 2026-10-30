@@ -1,8 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 /** Edits the entry template. Returns the new text (empty string — no template) or `undefined`. */
 @Component({
@@ -22,7 +31,9 @@ import { TranslocoPipe } from '@jsverse/transloco';
       ></textarea>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button matButton mat-dialog-close>{{ 'diary.template.cancel' | transloco }}</button>
+      <button matButton mat-dialog-close>
+        {{ 'diary.template.cancel' | transloco }}
+      </button>
       <button matButton="filled" (click)="dialog.close(text())">
         {{ 'diary.template.save' | transloco }}
       </button>
@@ -49,6 +60,9 @@ import { TranslocoPipe } from '@jsverse/transloco';
   `,
 })
 export class DiaryTemplateDialog {
-  protected readonly dialog = inject<MatDialogRef<DiaryTemplateDialog, string>>(MatDialogRef);
-  protected readonly text = signal(inject<string | null>(MAT_DIALOG_DATA) ?? '');
+  protected readonly dialog =
+    inject<MatDialogRef<DiaryTemplateDialog, string>>(MatDialogRef);
+  protected readonly text = signal(
+    inject<string | null>(MAT_DIALOG_DATA) ?? '',
+  );
 }

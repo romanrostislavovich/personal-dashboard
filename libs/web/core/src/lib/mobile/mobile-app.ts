@@ -15,7 +15,7 @@ interface CapacitorGlobal {
 
 /** Capacitor puts `window.Capacitor` on the page before any script of ours runs. */
 export function isMobileApp(): boolean {
-  const capacitor = (globalThis as { Capacitor?: CapacitorGlobal }).Capacitor;
+  const capacitor = (globalThis as {Capacitor?: CapacitorGlobal}).Capacitor;
   return capacitor?.isNativePlatform?.() === true;
 }
 
@@ -47,7 +47,9 @@ export function normalizeServer(input: string): string | null {
     return null;
   }
   try {
-    const url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `https://${text}`);
+    const url = new URL(
+      /^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `https://${text}`,
+    );
     if (url.protocol !== 'https:' && url.protocol !== 'http:') {
       return null;
     }
@@ -69,6 +71,8 @@ export function installId(): string {
 
 /** `…(Linux; Android 12; Redmi Note 9 Pro Build/…; wv)…` → `Redmi Note 9 Pro`. */
 export function phoneModel(userAgent: string): string {
-  const model = userAgent.match(/Android [^;)]*; ([^;)]+?)(?: Build\/[^;)]*)?[;)]/)?.[1]?.trim();
+  const model = userAgent
+    .match(/Android [^;)]*; ([^;)]+?)(?: Build\/[^;)]*)?[;)]/)?.[1]
+    ?.trim();
   return model && model !== 'K' ? model : 'Android';
 }

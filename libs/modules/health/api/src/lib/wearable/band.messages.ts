@@ -1,5 +1,5 @@
-import { pickMessages } from '@pd/api-core';
-import { ReactionFeeling } from '@pd/contracts';
+import {pickMessages} from '@pd/api-core';
+import {ReactionFeeling} from '@pd/contracts';
 
 /** Server texts of the band: the notification of a reaction of the body and its buttons. */
 const messages = {

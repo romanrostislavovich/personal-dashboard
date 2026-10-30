@@ -1,4 +1,9 @@
-export const ACHIEVEMENT_RARITIES = ['common', 'rare', 'epic', 'legendary'] as const;
+export const ACHIEVEMENT_RARITIES = [
+  'common',
+  'rare',
+  'epic',
+  'legendary',
+] as const;
 export type AchievementRarity = (typeof ACHIEVEMENT_RARITIES)[number];
 
 /** Experience for an unlocked achievement: the rarer, the more. */
@@ -45,5 +50,5 @@ export function levelFromXp(xp: number): LevelProgress {
     rest -= 100 * level;
     level++;
   }
-  return { level, xpInLevel: rest, xpForNext: 100 * level };
+  return {level, xpInLevel: rest, xpForNext: 100 * level};
 }

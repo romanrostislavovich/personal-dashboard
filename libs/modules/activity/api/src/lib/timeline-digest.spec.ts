@@ -1,5 +1,5 @@
-import { ActivityTimelineEntry } from '@pd/contracts';
-import { digestTimeline } from './timeline-digest';
+import {ActivityTimelineEntry} from '@pd/contracts';
+import {digestTimeline} from './timeline-digest';
 
 /** Minutes of 2026-10-05 in UTC; Warsaw is two hours ahead in October. */
 const span = (
@@ -18,7 +18,7 @@ const span = (
 });
 
 const digest = (entries: ActivityTimelineEntry[], options = {}) =>
-  digestTimeline(entries, 'Europe/Warsaw', { limit: 100, ...options });
+  digestTimeline(entries, 'Europe/Warsaw', {limit: 100, ...options});
 
 describe('digestTimeline', () => {
   it('joins the spans of one window and puts them on the user’s clock, oldest first', () => {
@@ -57,7 +57,7 @@ describe('digestTimeline', () => {
       span(440, 445, 'WebStorm', 'dashboard'),
       span(445, 450, 'WebStorm', 'another project'),
     ]);
-    expect(result.stretches.map((s) => `${s.from} ${s.title}`)).toEqual([
+    expect(result.stretches.map(s => `${s.from} ${s.title}`)).toEqual([
       '09:00 dashboard',
       '09:20 dashboard',
       '09:25 another project',
@@ -70,11 +70,11 @@ describe('digestTimeline', () => {
       span(600, 660, 'Dota', 'afternoon'),
       span(900, 960, 'Chrome', 'evening'),
     ];
-    const afternoon = digest(entries, { fromTime: '11:30', toTime: '14:00' });
-    expect(afternoon.stretches.map((s) => s.title)).toEqual(['afternoon']);
-    expect(digest(entries, { fromTime: '16:00' }).stretches.map((s) => s.title)).toEqual([
-      'evening',
-    ]);
+    const afternoon = digest(entries, {fromTime: '11:30', toTime: '14:00'});
+    expect(afternoon.stretches.map(s => s.title)).toEqual(['afternoon']);
+    expect(
+      digest(entries, {fromTime: '16:00'}).stretches.map(s => s.title),
+    ).toEqual(['evening']);
   });
 
   it('cuts a long day to the longest stretches and says so', () => {
@@ -84,9 +84,9 @@ describe('digestTimeline', () => {
       span(510, 512, 'C', 'short too'),
       span(520, 560, 'D', 'medium'),
     ];
-    const result = digest(entries, { limit: 2 });
+    const result = digest(entries, {limit: 2});
     expect(result.total).toBe(4);
-    expect(result.stretches.map((s) => s.title)).toEqual(['long', 'medium']);
+    expect(result.stretches.map(s => s.title)).toEqual(['long', 'medium']);
     expect(result.note).toContain('2 longest of 4');
   });
 });

@@ -1,23 +1,29 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatTabsModule } from '@angular/material/tabs';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {MatTabsModule} from '@angular/material/tabs';
+import {RouterLink, RouterLinkActive, RouterOutlet} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 /** Subsections of Development: each is a child route, so a tab has its own address. */
 const TABS = [
-  { path: 'repositories', labelKey: 'development.tabs.repositories' },
-  { path: 'summary', labelKey: 'development.tabs.summary' },
-  { path: 'github', labelKey: 'development.tabs.github' },
-  { path: 'gitlab', labelKey: 'development.tabs.gitlab' },
-  { path: 'bitbucket', labelKey: 'development.tabs.bitbucket' },
-  { path: 'wakatime', labelKey: 'development.tabs.wakatime' },
+  {path: 'repositories', labelKey: 'development.tabs.repositories'},
+  {path: 'summary', labelKey: 'development.tabs.summary'},
+  {path: 'github', labelKey: 'development.tabs.github'},
+  {path: 'gitlab', labelKey: 'development.tabs.gitlab'},
+  {path: 'bitbucket', labelKey: 'development.tabs.bitbucket'},
+  {path: 'wakatime', labelKey: 'development.tabs.wakatime'},
 ] as const;
 
 /** The Development section: a title, the tabs and the subsection under them. */
 @Component({
   selector: 'pd-development-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatTabsModule, RouterLink, RouterLinkActive, RouterOutlet, TranslocoPipe],
+  imports: [
+    MatTabsModule,
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    TranslocoPipe,
+  ],
   template: `
     <header class="page-header">
       <h1 class="page-title">{{ 'development.title' | transloco }}</h1>

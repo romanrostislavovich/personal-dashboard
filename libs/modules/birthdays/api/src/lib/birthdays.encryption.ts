@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { EncryptExistingService } from '@pd/api-core';
-import { birthdays } from './birthdays.schema';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {EncryptExistingService} from '@pd/api-core';
+import {birthdays} from './birthdays.schema';
 
 /** The notes about people written before they were encrypted. */
 @Injectable()
@@ -11,7 +11,7 @@ export class BirthdaysEncryption implements OnModuleInit {
     this.encryptExisting.register({
       table: birthdays,
       id: birthdays.id,
-      columns: { note: birthdays.note },
+      columns: {note: birthdays.note},
     });
   }
 }

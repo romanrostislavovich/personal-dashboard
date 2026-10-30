@@ -1,5 +1,5 @@
-import { registerLocaleData } from '@angular/common';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import {registerLocaleData} from '@angular/common';
+import {provideHttpClient, withInterceptors} from '@angular/common/http';
 import localeRu from '@angular/common/locales/ru';
 import {
   Injector,
@@ -11,25 +11,25 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { MatIconRegistry } from '@angular/material/icon';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
-import { provideServiceWorker } from '@angular/service-worker';
-import { buildAppRoutes } from './app-routes';
-import { authInterceptor } from './auth/auth.interceptor';
-import { isMobileApp } from './mobile/mobile-app';
-import { MobileAppService } from './mobile/mobile-app.service';
-import { offlineReadInterceptor } from './mobile/offline-read.interceptor';
-import { serverUrlInterceptor } from './mobile/server-url.interceptor';
-import { AuthService } from './auth/auth.service';
-import { DeviceBackupService } from './backup/device-backup.service';
-import { DesktopDeviceService } from './realtime/desktop-device.service';
-import { DesktopInstallService } from './apps/desktop-install.service';
-import { OfflineService } from './offline/offline.service';
-import { ThemeService } from './theme/theme.service';
-import { provideDashboardModules, WebDashboardModule } from './dashboard-module';
-import { provideScrollableTabs, startScrollableTabs } from './ui/scrollable-tabs';
-import { provideI18n } from './i18n/i18n';
-import { initialLanguage } from './i18n/language';
+import {MatIconRegistry} from '@angular/material/icon';
+import {provideRouter, withComponentInputBinding} from '@angular/router';
+import {provideServiceWorker} from '@angular/service-worker';
+import {buildAppRoutes} from './app-routes';
+import {authInterceptor} from './auth/auth.interceptor';
+import {isMobileApp} from './mobile/mobile-app';
+import {MobileAppService} from './mobile/mobile-app.service';
+import {offlineReadInterceptor} from './mobile/offline-read.interceptor';
+import {serverUrlInterceptor} from './mobile/server-url.interceptor';
+import {AuthService} from './auth/auth.service';
+import {DeviceBackupService} from './backup/device-backup.service';
+import {DesktopDeviceService} from './realtime/desktop-device.service';
+import {DesktopInstallService} from './apps/desktop-install.service';
+import {OfflineService} from './offline/offline.service';
+import {ThemeService} from './theme/theme.service';
+import {provideDashboardModules, WebDashboardModule} from './dashboard-module';
+import {provideScrollableTabs, startScrollableTabs} from './ui/scrollable-tabs';
+import {provideI18n} from './i18n/i18n';
+import {initialLanguage} from './i18n/language';
 
 registerLocaleData(localeRu);
 
@@ -37,17 +37,23 @@ registerLocaleData(localeRu);
  * Everything the dashboard app needs, in one call:
  * `bootstrapApplication(App, { providers: [provideDashboard(enabledModules)] })`.
  */
-export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProviders {
+export function provideDashboard(
+  modules: WebDashboardModule[],
+): EnvironmentProviders {
   return makeEnvironmentProviders([
     provideBrowserGlobalErrorListeners(),
     provideRouter(buildAppRoutes(modules), withComponentInputBinding()),
     provideHttpClient(
-      withInterceptors([serverUrlInterceptor, offlineReadInterceptor, authInterceptor]),
+      withInterceptors([
+        serverUrlInterceptor,
+        offlineReadInterceptor,
+        authInterceptor,
+      ]),
     ),
     provideDashboardModules(modules),
     provideI18n(),
     // Date, number and currency formats follow the UI language (changes with a reload).
-    { provide: LOCALE_ID, useFactory: initialLanguage },
+    {provide: LOCALE_ID, useFactory: initialLanguage},
     // The theme of this device is on the page before anything is drawn (and before sign-in).
     provideAppInitializer(() => {
       inject(ThemeService);
@@ -76,7 +82,7 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
       for (const module of modules) {
         void module
           .loadStart?.()
-          .then((start) => start(injector))
+          .then(start => start(injector))
           .catch((error: unknown) => console.error(`${module.id}: ${error}`));
       }
     }),
@@ -85,7 +91,9 @@ export function provideDashboard(modules: WebDashboardModule[]): EnvironmentProv
     provideAppInitializer(startScrollableTabs),
     // <mat-icon> uses rounded Material Symbols (loaded in index.html).
     provideAppInitializer(() => {
-      inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-rounded');
+      inject(MatIconRegistry).setDefaultFontSetClass(
+        'material-symbols-rounded',
+      );
     }),
   ]);
 }

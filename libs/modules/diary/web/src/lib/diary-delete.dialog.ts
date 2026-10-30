@@ -1,9 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialogModule} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 
 /**
  * Deleting the whole diary cannot be undone, so the word from the dialog must be typed first.
@@ -12,12 +18,18 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 @Component({
   selector: 'pd-diary-delete-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, TranslocoPipe],
+  imports: [
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    TranslocoPipe,
+  ],
   template: `
     <h2 mat-dialog-title>{{ 'diary.deleteAll.title' | transloco }}</h2>
     <mat-dialog-content class="content">
       <p>{{ 'diary.deleteAll.warning' | transloco }}</p>
-      <p>{{ 'diary.deleteAll.typeWord' | transloco: { word: word } }}</p>
+      <p>{{ 'diary.deleteAll.typeWord' | transloco: {word: word} }}</p>
       <mat-form-field subscriptSizing="dynamic">
         <input
           matInput
@@ -29,8 +41,15 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button matButton mat-dialog-close>{{ 'core.actions.cancel' | transloco }}</button>
-      <button matButton="filled" class="danger" [disabled]="!confirmed()" [mat-dialog-close]="true">
+      <button matButton mat-dialog-close>
+        {{ 'core.actions.cancel' | transloco }}
+      </button>
+      <button
+        matButton="filled"
+        class="danger"
+        [disabled]="!confirmed()"
+        [mat-dialog-close]="true"
+      >
         {{ 'diary.deleteAll.confirm' | transloco }}
       </button>
     </mat-dialog-actions>
@@ -46,7 +65,9 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
   `,
 })
 export class DiaryDeleteDialog {
-  protected readonly word = inject(TranslocoService).translate('diary.deleteAll.word');
+  protected readonly word = inject(TranslocoService).translate(
+    'diary.deleteAll.word',
+  );
   protected readonly typed = signal('');
   protected readonly confirmed = computed(
     () => this.typed().trim().toLowerCase() === this.word.toLowerCase(),

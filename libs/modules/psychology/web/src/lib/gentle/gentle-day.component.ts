@@ -7,19 +7,31 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { GENTLE_DAY_MAX_STEPS, GentleDay, GentleDayStep, GentleStepState } from '@pd/contracts';
-import { GentleWidgetText, showOnGentleWidget } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { PsychologyApi, today } from '../psychology.api';
+import {MatButtonModule} from '@angular/material/button';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {
+  GENTLE_DAY_MAX_STEPS,
+  GentleDay,
+  GentleDayStep,
+  GentleStepState,
+} from '@pd/contracts';
+import {GentleWidgetText, showOnGentleWidget} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {PsychologyApi, today} from '../psychology.api';
 
 /** Ready steps to start from when one's own library is empty: keys of `psychology.gentle.ideas`. */
-const IDEAS = ['water', 'eat', 'outside', 'shower', 'message', 'window'] as const;
+const IDEAS = [
+  'water',
+  'eat',
+  'outside',
+  'shower',
+  'message',
+  'window',
+] as const;
 
 /** A step's state as a mark before it on the home-screen widget. */
 const WIDGET_MARKS: Record<GentleStepState, string> = {
@@ -93,8 +105,10 @@ interface Choice {
         </ul>
         <p class="hint">
           {{
-            (allSettled() ? 'psychology.gentle.enough' : 'psychology.gentle.nothingIsFine')
-              | transloco
+            (allSettled()
+              ? 'psychology.gentle.enough'
+              : 'psychology.gentle.nothingIsFine'
+            ) | transloco
           }}
         </p>
         <div class="row">
@@ -103,13 +117,17 @@ interface Choice {
               {{ 'psychology.gentle.change' | transloco }}
             </button>
           }
-          <button matButton (click)="leave()">{{ 'psychology.gentle.leave' | transloco }}</button>
+          <button matButton (click)="leave()">
+            {{ 'psychology.gentle.leave' | transloco }}
+          </button>
         </div>
       } @else if (picking()) {
-        <p class="hint">{{ 'psychology.gentle.pick' | transloco: { max: max } }}</p>
+        <p class="hint">
+          {{ 'psychology.gentle.pick' | transloco: {max: max} }}
+        </p>
         <mat-chip-listbox
           multiple
-          [attr.aria-label]="'psychology.gentle.pick' | transloco: { max: max }"
+          [attr.aria-label]="'psychology.gentle.pick' | transloco: {max: max}"
         >
           @for (choice of choices(); track choice.text) {
             <mat-chip-option
@@ -144,7 +162,10 @@ interface Choice {
             {{ 'core.actions.cancel' | transloco }}
           </button>
           <button matButton="filled" [disabled]="busy()" (click)="start()">
-            {{ (plan.on ? 'core.actions.save' : 'psychology.gentle.begin') | transloco }}
+            {{
+              (plan.on ? 'core.actions.save' : 'psychology.gentle.begin')
+                | transloco
+            }}
           </button>
         </div>
       } @else {
@@ -231,18 +252,20 @@ export class GentleDayComponent {
 
   /** One's own steps first; the ideas only while the library is empty, so it never nags. */
   protected readonly choices = computed<Choice[]>(() => {
-    const own = this.library.value().map((step) => ({ text: step.text, smaller: step.smaller }));
+    const own = this.library
+      .value()
+      .map(step => ({text: step.text, smaller: step.smaller}));
     const ideas = own.length
       ? []
-      : IDEAS.map((key) => ({
+      : IDEAS.map(key => ({
           text: this.transloco.translate(`psychology.gentle.ideas.${key}`),
           smaller: null,
         }));
     // A step typed for the day only stays among the choices while picking.
     const extra = this.picked().filter(
-      (choice) =>
-        !own.some((item) => item.text === choice.text) &&
-        !ideas.some((item) => item.text === choice.text),
+      choice =>
+        !own.some(item => item.text === choice.text) &&
+        !ideas.some(item => item.text === choice.text),
     );
     return [...own, ...ideas, ...extra];
   });
@@ -259,33 +282,36 @@ export class GentleDayComponent {
 
   protected readonly allSettled = computed(() => {
     const steps = this.day.value()?.steps ?? [];
-    return steps.length > 0 && steps.every((step) => step.state !== 'open');
+    return steps.length > 0 && steps.every(step => step.state !== 'open');
   });
 
   protected isPicked(choice: Choice): boolean {
-    return this.picked().some((item) => item.text === choice.text);
+    return this.picked().some(item => item.text === choice.text);
   }
 
   protected startPicking(steps: GentleDayStep[]): void {
     this.library.reload();
-    this.picked.set(steps.map((step) => ({ text: step.text, smaller: step.smaller })));
+    this.picked.set(
+      steps.map(step => ({text: step.text, smaller: step.smaller})),
+    );
     this.picking.set(true);
   }
 
   protected toggle(choice: Choice, selected: boolean): void {
-    this.picked.update((list) =>
+    this.picked.update(list =>
       selected
-        ? list.length < this.max && !list.some((item) => item.text === choice.text)
+        ? list.length < this.max &&
+          !list.some(item => item.text === choice.text)
           ? [...list, choice]
           : list
-        : list.filter((item) => item.text !== choice.text),
+        : list.filter(item => item.text !== choice.text),
     );
   }
 
   protected addOwn(field: HTMLInputElement): void {
     const text = field.value.trim();
     if (text) {
-      this.toggle({ text, smaller: null }, true);
+      this.toggle({text, smaller: null}, true);
       field.value = '';
     }
   }
@@ -294,9 +320,9 @@ export class GentleDayComponent {
   protected async start(): Promise<void> {
     const before = this.day.value()?.steps ?? [];
     await this.save(
-      this.picked().map((choice) => ({
+      this.picked().map(choice => ({
         ...choice,
-        state: before.find((step) => step.text === choice.text)?.state ?? 'open',
+        state: before.find(step => step.text === choice.text)?.state ?? 'open',
       })),
     );
     this.picking.set(false);
@@ -305,7 +331,9 @@ export class GentleDayComponent {
   /** A second click on the same state takes it back. */
   protected async mark(index: number, state: GentleStepState): Promise<void> {
     const steps = (this.day.value()?.steps ?? []).map((step, i) =>
-      i === index ? { ...step, state: step.state === state ? ('open' as const) : state } : step,
+      i === index
+        ? {...step, state: step.state === state ? ('open' as const) : state}
+        : step,
     );
     await this.save(steps);
   }
@@ -317,24 +345,30 @@ export class GentleDayComponent {
 
   /** The day for the widget: a mark before each step, as the card shows its state. */
   private widgetText(day: GentleDay): GentleWidgetText {
-    const t = (key: string) => this.transloco.translate(`psychology.gentle.${key}`);
+    const t = (key: string) =>
+      this.transloco.translate(`psychology.gentle.${key}`);
     const lines = day.on
       ? day.steps
-          .map((step) => {
-            const text = step.state === 'smaller' && step.smaller ? step.smaller : step.text;
+          .map(step => {
+            const text =
+              step.state === 'smaller' && step.smaller
+                ? step.smaller
+                : step.text;
             return `${WIDGET_MARKS[step.state]} ${text}`;
           })
           .join('\n')
       : t('widgetOff');
-    return { date: day.date, title: t('title'), lines, stale: t('widgetStale') };
+    return {date: day.date, title: t('title'), lines, stale: t('widgetStale')};
   }
 
   private async save(steps: GentleDayStep[]): Promise<void> {
     this.busy.set(true);
     try {
-      const plan = await firstValueFrom(this.api.saveGentleDay({ date: this.date(), steps }));
+      const plan = await firstValueFrom(
+        this.api.saveGentleDay({date: this.date(), steps}),
+      );
       // `undefined`: no connection — the plan waits to be sent; meanwhile it shows as marked.
-      this.day.set(plan ?? { date: this.date(), on: steps.length > 0, steps });
+      this.day.set(plan ?? {date: this.date(), on: steps.length > 0, steps});
     } finally {
       this.busy.set(false);
     }

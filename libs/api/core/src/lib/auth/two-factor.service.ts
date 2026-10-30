@@ -1,9 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { RecoveryCodes, TwoFactorSetup, TwoFactorStatus } from '@pd/contracts';
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import {BadRequestException, Injectable} from '@nestjs/common';
+import {RecoveryCodes, TwoFactorSetup, TwoFactorStatus} from '@pd/contracts';
+import {createHash, randomBytes, timingSafeEqual} from 'node:crypto';
 import QRCode from 'qrcode';
-import { SecretsService } from '../secrets/secrets.service';
-import { newTotpSecret, totpUrl, verifyTotp } from './totp';
+import {SecretsService} from '../secrets/secrets.service';
+import {newTotpSecret, totpUrl, verifyTotp} from './totp';
 
 /** In SecretsService — encrypted, and synced, so a local copy asks for the same codes. */
 const SECRET_KEY = 'auth.totp';
@@ -39,7 +39,7 @@ export class TwoFactorService {
     const secret = newTotpSecret();
     await this.secrets.set(userId, PENDING_KEY, secret);
     const otpauthUrl = totpUrl(secret, email, ISSUER);
-    const svg = await QRCode.toString(otpauthUrl, { type: 'svg', margin: 1 });
+    const svg = await QRCode.toString(otpauthUrl, {type: 'svg', margin: 1});
     return {
       secret,
       otpauthUrl,
@@ -55,9 +55,13 @@ export class TwoFactorService {
     }
     await this.secrets.set(userId, SECRET_KEY, secret);
     await this.secrets.delete(userId, PENDING_KEY);
-    const recoveryCodes = Array.from({ length: RECOVERY_COUNT }, newRecoveryCode);
-    await this.secrets.set(userId, RECOVERY_KEY, JSON.stringify(recoveryCodes.map(hashCode)));
-    return { recoveryCodes };
+    const recoveryCodes = Array.from({length: RECOVERY_COUNT}, newRecoveryCode);
+    await this.secrets.set(
+      userId,
+      RECOVERY_KEY,
+      JSON.stringify(recoveryCodes.map(hashCode)),
+    );
+    return {recoveryCodes};
   }
 
   async disable(userId: string): Promise<void> {
@@ -76,7 +80,7 @@ export class TwoFactorService {
     }
     const hashes = await this.recoveryHashes(userId);
     const given = hashCode(code);
-    const index = hashes.findIndex((known) =>
+    const index = hashes.findIndex(known =>
       timingSafeEqual(Buffer.from(known), Buffer.from(given)),
     );
     if (index === -1) {

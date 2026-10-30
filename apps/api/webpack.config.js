@@ -1,5 +1,5 @@
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-const { join } = require('path');
+const {NxAppWebpackPlugin} = require('@nx/webpack/app-plugin');
+const {join} = require('path');
 
 module.exports = {
   output: {
@@ -18,7 +18,7 @@ module.exports = {
       assets: [
         './src/assets',
         // Drizzle SQL migrations are applied when the API starts (see DatabaseModule).
-        { input: './migrations', glob: '**/*', output: 'migrations' },
+        {input: './migrations', glob: '**/*', output: 'migrations'},
       ],
       optimization: false,
       outputHashing: 'none',

@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {ChangeDetectionStrategy, Component, input} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 /**
  * "Today" / "Tomorrow" / "in 5 days" — highlighted when it is soon. A day of memory (`quiet`)
@@ -24,7 +24,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
       }
       @default {
         <span class="chip" [class.soon]="daysUntil() <= 7">
-          {{ 'birthdays.inDays' | transloco: { days: daysUntil() } }}
+          {{ 'birthdays.inDays' | transloco: {days: daysUntil()} }}
         </span>
       }
     }

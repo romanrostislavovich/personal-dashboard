@@ -9,9 +9,9 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
-import { birthdayInputSchema } from '@pd/contracts';
-import { BirthdaysService, ValidBirthdayInput } from './birthdays.service';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
+import {birthdayInputSchema} from '@pd/contracts';
+import {BirthdaysService, ValidBirthdayInput} from './birthdays.service';
 
 @Controller('birthdays')
 export class BirthdaysController {
@@ -41,7 +41,10 @@ export class BirthdaysController {
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.birthdays.remove(user.id, id);
   }
 }

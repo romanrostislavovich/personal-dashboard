@@ -1,8 +1,10 @@
-import { bitbucketBetween, commitTitle, fromGitlab } from './project-commits';
+import {bitbucketBetween, commitTitle, fromGitlab} from './project-commits';
 
 describe('commits of a project', () => {
   it('takes the first line of a message as the title', () => {
-    expect(commitTitle('Fix the cart\n\nThe total was rounded twice.')).toBe('Fix the cart');
+    expect(commitTitle('Fix the cart\n\nThe total was rounded twice.')).toBe(
+      'Fix the cart',
+    );
   });
 
   it('reads a GitLab commit', () => {
@@ -23,7 +25,9 @@ describe('commits of a project', () => {
     const commit = (date: string, message: string) => ({
       date,
       message,
-      links: { html: { href: `https://bitbucket.org/roma/shop/commits/${message}` } },
+      links: {
+        html: {href: `https://bitbucket.org/roma/shop/commits/${message}`},
+      },
     });
     const rows = [
       commit('2026-10-07T09:00:00+00:00', 'after'),

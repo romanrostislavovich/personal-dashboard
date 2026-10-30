@@ -1,6 +1,6 @@
-import { IntegrationState } from '@pd/contracts';
-import { pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from '../users/users.schema';
+import {IntegrationState} from '@pd/contracts';
+import {pgTable, primaryKey, text, timestamp, uuid} from 'drizzle-orm/pg-core';
+import {users} from '../users/users.schema';
 
 /**
  * The trouble of a connection the user was told about: a trouble is told once, and again only
@@ -11,11 +11,11 @@ export const integrationAlerts = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     /** `development.github` (see IntegrationStatus.id). */
     integrationId: text().notNull(),
     state: text().$type<IntegrationState>().notNull(),
-    toldAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    toldAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.integrationId] })],
+  table => [primaryKey({columns: [table.userId, table.integrationId]})],
 );

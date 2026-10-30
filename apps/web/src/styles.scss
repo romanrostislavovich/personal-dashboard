@@ -26,10 +26,22 @@ html {
   --pd-font-heading: Manrope, Inter, sans-serif;
   --pd-radius: 20px;
   --pd-radius-small: 12px;
-  --pd-border: color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
-  --pd-card: color-mix(in srgb, var(--mat-sys-surface-container-low) 88%, transparent);
+  --pd-border: color-mix(
+    in srgb,
+    var(--mat-sys-outline-variant) 70%,
+    transparent
+  );
+  --pd-card: color-mix(
+    in srgb,
+    var(--mat-sys-surface-container-low) 88%,
+    transparent
+  );
   --pd-card-hover: var(--mat-sys-surface-container);
-  --pd-gradient: linear-gradient(135deg, var(--mat-sys-primary), var(--mat-sys-tertiary));
+  --pd-gradient: linear-gradient(
+    135deg,
+    var(--mat-sys-primary),
+    var(--mat-sys-tertiary)
+  );
   --pd-glow: color-mix(in srgb, var(--mat-sys-primary) 22%, transparent);
   --pd-success: light-dark(#1b8a4b, #6fdc9a);
   --pd-danger: var(--mat-sys-error);
@@ -38,9 +50,21 @@ html {
   --pd-chart-primary: var(--mat-sys-primary);
   --pd-chart-income: light-dark(#1baf7a, #199e70);
   --pd-chart-expense: light-dark(#eb6834, #d95926);
-  --pd-chart-empty: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
-  --pd-chart-grid: color-mix(in srgb, var(--mat-sys-outline-variant) 60%, transparent);
-  --pd-chart-hover: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+  --pd-chart-empty: color-mix(
+    in srgb,
+    var(--mat-sys-on-surface) 12%,
+    transparent
+  );
+  --pd-chart-grid: color-mix(
+    in srgb,
+    var(--mat-sys-outline-variant) 60%,
+    transparent
+  );
+  --pd-chart-hover: color-mix(
+    in srgb,
+    var(--mat-sys-on-surface) 4%,
+    transparent
+  );
   --pd-chart-bar-radius: 4px 4px 0 0;
 
   // Achievement rarities: the same colors in both themes, tuned for contrast on cards.
@@ -120,7 +144,11 @@ h3 {
 }
 
 .mat-mdc-card-outlined:hover {
-  border-color: color-mix(in srgb, var(--mat-sys-primary) 35%, var(--pd-border));
+  border-color: color-mix(
+    in srgb,
+    var(--mat-sys-primary) 35%,
+    var(--pd-border)
+  );
   box-shadow: 0 10px 30px -18px var(--pd-glow);
 }
 

@@ -1,15 +1,20 @@
-import { promises as fs, statfsSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { join, parse, relative, sep } from 'node:path';
+import {promises as fs, statfsSync} from 'node:fs';
+import {homedir} from 'node:os';
+import {join, parse, relative, sep} from 'node:path';
 
 /** What the scan found (DiskReport in contracts), with the real paths the app acts on. */
 export interface DiskReport {
   mount: string;
   total: number;
   free: number;
-  folders: { path: string; bytes: number; files: number; modifiedAt: string | null }[];
-  files: { path: string; bytes: number; modifiedAt: string | null }[];
-  known: { place: string; path: string; bytes: number }[];
+  folders: {
+    path: string;
+    bytes: number;
+    files: number;
+    modifiedAt: string | null;
+  }[];
+  files: {path: string; bytes: number; modifiedAt: string | null}[];
+  known: {place: string; path: string; bytes: number}[];
 }
 
 export interface ScanProgress {
@@ -42,23 +47,27 @@ export async function scanDisk(
 ): Promise<DiskReport> {
   const root = mount.endsWith(sep) ? mount : mount + sep;
   const folders = new Map<string, FolderStats>();
-  const bigFiles: { path: string; bytes: number; modified: number }[] = [];
-  const progress: ScanProgress = { files: 0, bytes: 0 };
+  const bigFiles: {path: string; bytes: number; modified: number}[] = [];
+  const progress: ScanProgress = {files: 0, bytes: 0};
   let reported = Date.now();
 
   const add = (file: string, bytes: number, modified: number) => {
     const parts = relative(root, file).split(sep);
     // Every folder above the file, up to MAX_DEPTH levels from the root.
-    for (let depth = 1; depth <= Math.min(parts.length - 1, MAX_DEPTH); depth++) {
+    for (
+      let depth = 1;
+      depth <= Math.min(parts.length - 1, MAX_DEPTH);
+      depth++
+    ) {
       const folder = join(root, ...parts.slice(0, depth));
-      const stats = folders.get(folder) ?? { bytes: 0, files: 0, modified: 0 };
+      const stats = folders.get(folder) ?? {bytes: 0, files: 0, modified: 0};
       stats.bytes += bytes;
       stats.files++;
       stats.modified = Math.max(stats.modified, modified);
       folders.set(folder, stats);
     }
     if (bytes >= 100 * MB) {
-      bigFiles.push({ path: file, bytes, modified });
+      bigFiles.push({path: file, bytes, modified});
     }
   };
 
@@ -68,12 +77,12 @@ export async function scanDisk(
       const dir = queue.pop() as string;
       let entries;
       try {
-        entries = await fs.readdir(dir, { withFileTypes: true });
+        entries = await fs.readdir(dir, {withFileTypes: true});
       } catch {
         continue; // No access: system folders of other users.
       }
       await Promise.all(
-        entries.map(async (entry) => {
+        entries.map(async entry => {
           const path = join(dir, entry.name);
           if (entry.isSymbolicLink()) {
             return;
@@ -94,15 +103,15 @@ export async function scanDisk(
       );
       if (Date.now() - reported > 500) {
         reported = Date.now();
-        onProgress({ ...progress });
+        onProgress({...progress});
       }
     }
   };
   await worker();
   while (queue.length) {
-    await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+    await Promise.all(Array.from({length: CONCURRENCY}, worker));
   }
-  onProgress({ ...progress });
+  onProgress({...progress});
 
   const space = statfsSync(root);
   const iso = (ms: number) => (ms ? new Date(ms).toISOString() : null);
@@ -111,7 +120,10 @@ export async function scanDisk(
     total: space.blocks * space.bsize,
     free: space.bavail * space.bsize,
     folders: [...folders]
-      .filter(([path, stats]) => stats.bytes >= (depthOf(root, path) <= 3 ? GB : 500 * MB))
+      .filter(
+        ([path, stats]) =>
+          stats.bytes >= (depthOf(root, path) <= 3 ? GB : 500 * MB),
+      )
       .sort((a, b) => b[1].bytes - a[1].bytes)
       .slice(0, MAX_FOLDERS)
       .map(([path, stats]) => ({
@@ -123,7 +135,11 @@ export async function scanDisk(
     files: bigFiles
       .sort((a, b) => b.bytes - a.bytes)
       .slice(0, MAX_FILES)
-      .map((file) => ({ path: file.path, bytes: file.bytes, modifiedAt: iso(file.modified) })),
+      .map(file => ({
+        path: file.path,
+        bytes: file.bytes,
+        modifiedAt: iso(file.modified),
+      })),
     known: await measureKnown(root, folders),
   };
 }
@@ -142,10 +158,22 @@ async function measureKnown(
   const temp = process.env['TEMP'] ?? join(local, 'Temp');
   const places: [string, string][] = [
     ['temp', temp],
-    ['browser-cache', join(local, 'Google', 'Chrome', 'User Data', 'Default', 'Cache')],
-    ['browser-cache', join(local, 'Google', 'Chrome', 'User Data', 'Default', 'Code Cache')],
-    ['browser-cache', join(local, 'Microsoft', 'Edge', 'User Data', 'Default', 'Cache')],
-    ['browser-cache', join(local, 'Yandex', 'YandexBrowser', 'User Data', 'Default', 'Cache')],
+    [
+      'browser-cache',
+      join(local, 'Google', 'Chrome', 'User Data', 'Default', 'Cache'),
+    ],
+    [
+      'browser-cache',
+      join(local, 'Google', 'Chrome', 'User Data', 'Default', 'Code Cache'),
+    ],
+    [
+      'browser-cache',
+      join(local, 'Microsoft', 'Edge', 'User Data', 'Default', 'Cache'),
+    ],
+    [
+      'browser-cache',
+      join(local, 'Yandex', 'YandexBrowser', 'User Data', 'Default', 'Cache'),
+    ],
     ['spotify-cache', join(local, 'Spotify', 'Data')],
     ['npm-cache', join(local, 'npm-cache')],
     ['yarn-cache', join(local, 'Yarn', 'Cache')],
@@ -159,15 +187,21 @@ async function measureKnown(
     // WSL keeps the disks of newer distributions here.
     ['wsl-disk', join(local, 'wsl')],
     ['windows-old', join(root, 'Windows.old')],
-    ['windows-update-cache', join(root, 'Windows', 'SoftwareDistribution', 'Download')],
+    [
+      'windows-update-cache',
+      join(root, 'Windows', 'SoftwareDistribution', 'Download'),
+    ],
     ['recycle-bin', join(root, '$Recycle.Bin')],
     ['downloads', join(home, 'Downloads')],
   ];
   // WSL distributions keep their whole disk in one file under Packages.
   const packages = join(local, 'Packages');
   try {
-    for (const entry of await fs.readdir(packages, { withFileTypes: true })) {
-      if (entry.isDirectory() && /Canonical|Debian|SUSE|Kali|Ubuntu/i.test(entry.name)) {
+    for (const entry of await fs.readdir(packages, {withFileTypes: true})) {
+      if (
+        entry.isDirectory() &&
+        /Canonical|Debian|SUSE|Kali|Ubuntu/i.test(entry.name)
+      ) {
         places.push(['wsl-disk', join(packages, entry.name, 'LocalState')]);
       }
     }
@@ -183,7 +217,7 @@ async function measureKnown(
     }
     const bytes = folders.get(path)?.bytes ?? (await folderSize(path));
     if (bytes > 50 * MB) {
-      found.push({ place, path, bytes });
+      found.push({place, path, bytes});
     }
   }
   return found;
@@ -197,7 +231,7 @@ async function folderSize(path: string): Promise<number> {
     const dir = queue.pop() as string;
     let entries;
     try {
-      entries = await fs.readdir(dir, { withFileTypes: true });
+      entries = await fs.readdir(dir, {withFileTypes: true});
     } catch {
       continue;
     }

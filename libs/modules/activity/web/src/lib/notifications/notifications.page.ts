@@ -1,10 +1,15 @@
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { ACTIVITY_READS } from '@pd/client-core';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {ACTIVITY_READS} from '@pd/client-core';
 import {
   addDays,
   parseLocalDate,
@@ -12,9 +17,14 @@ import {
   PhoneUsage,
   toLocalDate,
 } from '@pd/contracts';
-import { Bar, BarChartComponent, DurationPipe, todayLocalDate } from '@pd/web-core';
+import {
+  Bar,
+  BarChartComponent,
+  DurationPipe,
+  todayLocalDate,
+} from '@pd/web-core';
 
-import { PhoneSignalsComponent } from './phone-signals.component';
+import {PhoneSignalsComponent} from './phone-signals.component';
 /** The periods offered, in days. */
 const PERIODS = [7, 30] as const;
 
@@ -43,7 +53,7 @@ const PERIODS = [7, 30] as const;
     >
       @for (period of periods; track period) {
         <mat-button-toggle [value]="period">
-          {{ 'activity.notifications.days' | transloco: { count: period } }}
+          {{ 'activity.notifications.days' | transloco: {count: period} }}
         </mat-button-toggle>
       }
     </mat-button-toggle-group>
@@ -53,15 +63,19 @@ const PERIODS = [7, 30] as const;
         <mat-card appearance="outlined">
           <mat-card-header>
             <mat-card-title>
-              {{ 'activity.phone.unlocks' | transloco: { count: u.unlocks } }}
+              {{ 'activity.phone.unlocks' | transloco: {count: u.unlocks} }}
             </mat-card-title>
             <mat-card-subtitle>
-              {{ 'activity.phone.perDay' | transloco: { count: perDay() } }} ·
-              {{ 'activity.phone.night' | transloco }} {{ u.nightSeconds | pdDuration }}
+              {{ 'activity.phone.perDay' | transloco: {count: perDay()} }} ·
+              {{ 'activity.phone.night' | transloco }}
+              {{ u.nightSeconds | pdDuration }}
             </mat-card-subtitle>
           </mat-card-header>
           <mat-card-content class="padded">
-            <pd-bar-chart [bars]="unlockDays()" [label]="'activity.phone.byDay' | transloco" />
+            <pd-bar-chart
+              [bars]="unlockDays()"
+              [label]="'activity.phone.byDay' | transloco"
+            />
             <p class="hint">{{ 'activity.phone.nightHint' | transloco }}</p>
           </mat-card-content>
         </mat-card>
@@ -81,18 +95,25 @@ const PERIODS = [7, 30] as const;
         <mat-card appearance="outlined">
           <mat-card-header>
             <mat-card-title>
-              {{ 'activity.notifications.total' | transloco: { count: s.total } }}
+              {{ 'activity.notifications.total' | transloco: {count: s.total} }}
             </mat-card-title>
-            <mat-card-subtitle>{{ 'activity.notifications.byHour' | transloco }}</mat-card-subtitle>
+            <mat-card-subtitle>{{
+              'activity.notifications.byHour' | transloco
+            }}</mat-card-subtitle>
           </mat-card-header>
           <mat-card-content class="padded">
-            <pd-bar-chart [bars]="hours()" [label]="'activity.notifications.byHour' | transloco" />
+            <pd-bar-chart
+              [bars]="hours()"
+              [label]="'activity.notifications.byHour' | transloco"
+            />
           </mat-card-content>
         </mat-card>
 
         <mat-card appearance="outlined">
           <mat-card-header>
-            <mat-card-title>{{ 'activity.notifications.apps' | transloco }}</mat-card-title>
+            <mat-card-title>{{
+              'activity.notifications.apps' | transloco
+            }}</mat-card-title>
           </mat-card-header>
           <mat-card-content class="padded">
             @for (app of s.byApp; track app.app) {
@@ -106,13 +127,16 @@ const PERIODS = [7, 30] as const;
 
         <mat-card appearance="outlined">
           <mat-card-header>
-            <mat-card-title>{{ 'activity.notifications.latest' | transloco }}</mat-card-title>
+            <mat-card-title>{{
+              'activity.notifications.latest' | transloco
+            }}</mat-card-title>
           </mat-card-header>
           <mat-card-content class="padded">
             @for (item of s.latest; track $index) {
               <div class="item">
                 <div class="meta">
-                  {{ item.appName }} · {{ item.postedAt | date: 'd MMM, HH:mm' }}
+                  {{ item.appName }} ·
+                  {{ item.postedAt | date: 'd MMM, HH:mm' }}
                 </div>
                 <div class="title">{{ item.title }}</div>
                 <div class="text">{{ item.text }}</div>
@@ -164,7 +188,10 @@ export class NotificationsPage {
 
   protected readonly period = computed(() => {
     const to = todayLocalDate();
-    return { from: toLocalDate(addDays(parseLocalDate(to), 1 - this.days())), to };
+    return {
+      from: toLocalDate(addDays(parseLocalDate(to), 1 - this.days())),
+      to,
+    };
   });
 
   protected readonly summary = httpResource<PhoneNotificationsSummary>(() =>
@@ -177,12 +204,14 @@ export class NotificationsPage {
 
   /** Over the days the phone told something: a day before it was set up is no zero. */
   protected readonly perDay = computed(() => {
-    const days = this.usage.value()?.days.filter((day) => day.unlocks > 0) ?? [];
-    return days.length ? Math.round(days.reduce((sum, d) => sum + d.unlocks, 0) / days.length) : 0;
+    const days = this.usage.value()?.days.filter(day => day.unlocks > 0) ?? [];
+    return days.length
+      ? Math.round(days.reduce((sum, d) => sum + d.unlocks, 0) / days.length)
+      : 0;
   });
 
   protected readonly unlockDays = computed<Bar[]>(() =>
-    (this.usage.value()?.days ?? []).map((day) => ({
+    (this.usage.value()?.days ?? []).map(day => ({
       label: day.day.slice(8),
       value: day.unlocks,
       title: `${day.day} — ${day.unlocks}`,

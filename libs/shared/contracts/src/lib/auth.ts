@@ -1,8 +1,8 @@
-import { z } from 'zod';
-import { calmSchema, CalmSettings } from './calm';
-import { AccountLayout, layoutSchema } from './layout';
-import { AccountTheme, themeSchema } from './theme';
-import { isValidTimeZone } from './time-zone';
+import {z} from 'zod';
+import {calmSchema, CalmSettings} from './calm';
+import {AccountLayout, layoutSchema} from './layout';
+import {AccountTheme, themeSchema} from './theme';
+import {isValidTimeZone} from './time-zone';
 
 /**
  * Where the refresh token goes: `web` — an httpOnly cookie a script cannot read; `app` (a mobile
@@ -38,7 +38,9 @@ export interface TwoFactorChallenge {
 
 export type LoginResult = LoginResponse | TwoFactorChallenge;
 
-export function isTwoFactorChallenge(result: LoginResult): result is TwoFactorChallenge {
+export function isTwoFactorChallenge(
+  result: LoginResult,
+): result is TwoFactorChallenge {
   return 'twoFactorRequired' in result;
 }
 
@@ -50,7 +52,9 @@ export const twoFactorLoginSchema = z.object({
 export type TwoFactorLogin = z.infer<typeof twoFactorLoginSchema>;
 
 /** `POST /api/auth/refresh` and `/logout`: an app sends its token, the web relies on the cookie. */
-export const refreshSchema = z.object({ refreshToken: z.string().min(1).optional() });
+export const refreshSchema = z.object({
+  refreshToken: z.string().min(1).optional(),
+});
 export type RefreshRequest = z.infer<typeof refreshSchema>;
 
 /** A device or browser signed in to the account. */
@@ -77,7 +81,9 @@ export interface TwoFactorSetup {
   qrCode: string;
 }
 
-export const twoFactorCodeSchema = z.object({ code: z.string().trim().min(6).max(20) });
+export const twoFactorCodeSchema = z.object({
+  code: z.string().trim().min(6).max(20),
+});
 export type TwoFactorCode = z.infer<typeof twoFactorCodeSchema>;
 
 export const twoFactorDisableSchema = z.object({
@@ -124,13 +130,19 @@ export const registerSchema = z.object({
 export type RegisterRequest = z.input<typeof registerSchema>;
 
 /** `POST /api/auth/demo`: coming into a demo instance. */
-export const demoLoginSchema = z.object({ client: z.enum(AUTH_CLIENTS).default('web') });
+export const demoLoginSchema = z.object({
+  client: z.enum(AUTH_CLIENTS).default('web'),
+});
 
 export const profileUpdateSchema = z.object({
   displayName: z.string().trim().min(1).max(50).optional(),
   locale: z.enum(SUPPORTED_LOCALES).optional(),
   /** Sent by the client itself when the device's zone differs from the saved one. */
-  timeZone: z.string().max(64).refine(isValidTimeZone, 'Unknown time zone').optional(),
+  timeZone: z
+    .string()
+    .max(64)
+    .refine(isValidTimeZone, 'Unknown time zone')
+    .optional(),
   /** "Apply everywhere": becomes the theme of the account and overrides the devices' own. */
   theme: themeSchema.optional(),
   /** The same for the layout: hidden sections and the widgets of the home page. */

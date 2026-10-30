@@ -1,4 +1,10 @@
-import { base32Decode, base32Encode, totpCode, totpUrl, verifyTotp } from './totp';
+import {
+  base32Decode,
+  base32Encode,
+  totpCode,
+  totpUrl,
+  verifyTotp,
+} from './totp';
 
 // RFC 6238, appendix B: the SHA-1 secret "12345678901234567890"; the RFC shows 8 digits,
 // authenticator apps use the last 6.

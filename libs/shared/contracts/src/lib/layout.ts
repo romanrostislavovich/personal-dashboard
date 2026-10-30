@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /** How many columns of the home grid a widget takes. */
 export const WIDGET_SIZES = ['small', 'medium', 'large'] as const;
@@ -25,7 +25,7 @@ export const layoutSchema = z.object({
 });
 export type Layout = z.infer<typeof layoutSchema>;
 
-export const DEFAULT_LAYOUT: Layout = { hiddenSections: [], widgets: [] };
+export const DEFAULT_LAYOUT: Layout = {hiddenSections: [], widgets: []};
 
 /** The layout of the account: what every device shows unless it has a newer one of its own. */
 export interface AccountLayout {
@@ -42,7 +42,10 @@ export interface DeviceLayout {
 }
 
 /** The same rule as for themes (`resolveTheme`): the device's own while it is the newer one. */
-export function resolveLayout(device: DeviceLayout | null, account: AccountLayout | null): Layout {
+export function resolveLayout(
+  device: DeviceLayout | null,
+  account: AccountLayout | null,
+): Layout {
   if (device && (!account || device.savedAt > account.everywhereAt)) {
     return device.layout;
   }
@@ -69,21 +72,28 @@ function widgetSection(id: string): string {
  * then the ones it does not know (a new module, a new widget) as declared. A widget of a hidden
  * section is hidden too. Ids the layout remembers but the app no longer has are dropped.
  */
-export function arrangeWidgets(declared: DeclaredWidget[], layout: Layout): ArrangedWidget[] {
-  const byId = new Map(declared.map((widget) => [widget.id, widget]));
+export function arrangeWidgets(
+  declared: DeclaredWidget[],
+  layout: Layout,
+): ArrangedWidget[] {
+  const byId = new Map(declared.map(widget => [widget.id, widget]));
   const hiddenSections = new Set(layout.hiddenSections);
   const arranged: ArrangedWidget[] = [];
   for (const saved of layout.widgets) {
     const widget = byId.get(saved.id);
     if (widget) {
       byId.delete(saved.id);
-      arranged.push({ id: widget.id, size: saved.size ?? widget.size, hidden: saved.hidden });
+      arranged.push({
+        id: widget.id,
+        size: saved.size ?? widget.size,
+        hidden: saved.hidden,
+      });
     }
   }
   for (const widget of byId.values()) {
-    arranged.push({ ...widget, hidden: false });
+    arranged.push({...widget, hidden: false});
   }
-  return arranged.map((widget) => ({
+  return arranged.map(widget => ({
     ...widget,
     hidden: widget.hidden || hiddenSections.has(widgetSection(widget.id)),
   }));

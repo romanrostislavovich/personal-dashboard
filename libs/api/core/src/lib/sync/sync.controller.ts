@@ -15,7 +15,7 @@ import {
   ForbiddenException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {ConfigService} from '@nestjs/config';
 import {
   syncActionRequestSchema,
   SyncBackupInfo,
@@ -28,13 +28,13 @@ import {
   syncPullRequestSchema,
   syncPushRequestSchema,
 } from '@pd/contracts';
-import { IncomingMessage } from 'node:http';
-import { z } from 'zod';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { Public } from '../auth/public.decorator';
-import { BackupService } from '../backup/backup.service';
-import { AppConfig } from '../config/env';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
+import {IncomingMessage} from 'node:http';
+import {z} from 'zod';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {Public} from '../auth/public.decorator';
+import {BackupService} from '../backup/backup.service';
+import {AppConfig} from '../config/env';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
 import {
   decodeSyncBody,
   encodeSyncBody,
@@ -42,12 +42,12 @@ import {
   readRequestBody,
   SYNC_CONTENT_TYPE,
 } from './sync-protocol';
-import { UsersService } from '../users/users.service';
-import { ServerActions } from './server-actions';
-import { SyncClient } from './sync-client.service';
-import { SyncConflictsService } from './sync-conflicts.service';
-import { SyncStore } from './sync-store';
-import { SyncService } from './sync.service';
+import {UsersService} from '../users/users.service';
+import {ServerActions} from './server-actions';
+import {SyncClient} from './sync-client.service';
+import {SyncConflictsService} from './sync-conflicts.service';
+import {SyncStore} from './sync-store';
+import {SyncService} from './sync.service';
 
 /**
  * `push`, `pull`, `action`, `fingerprints` and `backup` are called by the client instance
@@ -70,7 +70,10 @@ export class SyncController {
   @Public()
   @Post('push')
   @HttpCode(200)
-  async push(@Req() request: IncomingMessage, @Headers('authorization') auth?: string) {
+  async push(
+    @Req() request: IncomingMessage,
+    @Headers('authorization') auth?: string,
+  ) {
     const body = await this.readBody(request, auth, syncPushRequestSchema);
     return syncBody(await this.sync.receive(body));
   }
@@ -78,7 +81,10 @@ export class SyncController {
   @Public()
   @Post('pull')
   @HttpCode(200)
-  async pull(@Req() request: IncomingMessage, @Headers('authorization') auth?: string) {
+  async pull(
+    @Req() request: IncomingMessage,
+    @Headers('authorization') auth?: string,
+  ) {
     const body = await this.readBody(request, auth, syncPullRequestSchema);
     return syncBody(await this.sync.send(body));
   }
@@ -87,22 +93,34 @@ export class SyncController {
   @Public()
   @Post('action')
   @HttpCode(200)
-  async action(@Req() request: IncomingMessage, @Headers('authorization') auth?: string) {
+  async action(
+    @Req() request: IncomingMessage,
+    @Headers('authorization') auth?: string,
+  ) {
     const body = await this.readBody(request, auth, syncActionRequestSchema);
     await this.sync.acceptAction(body);
-    const result = await this.actions.execute(body.userId, body.action, body.args);
-    return syncBody({ result: result ?? null });
+    const result = await this.actions.execute(
+      body.userId,
+      body.action,
+      body.args,
+    );
+    return syncBody({result: result ?? null});
   }
 
   /** Row counts and hashes of every table, for the client to compare with its own. */
   @Public()
   @Post('fingerprints')
   @HttpCode(200)
-  async fingerprints(@Req() request: IncomingMessage, @Headers('authorization') auth?: string) {
-    await this.sync.acceptAction(await this.readBody(request, auth, syncFingerprintsRequestSchema));
+  async fingerprints(
+    @Req() request: IncomingMessage,
+    @Headers('authorization') auth?: string,
+  ) {
+    await this.sync.acceptAction(
+      await this.readBody(request, auth, syncFingerprintsRequestSchema),
+    );
     // Rows missing from the change log are logged now and reach the client with the next pull.
     await this.store.trackUntracked();
-    return syncBody({ tables: await this.store.fingerprints() });
+    return syncBody({tables: await this.store.fingerprints()});
   }
 
   /** The newest dump, for the client's copy (see BackupService). No handshake: a backup is
@@ -116,9 +134,12 @@ export class SyncController {
 
   @Public()
   @Get('backup/:name')
-  async backupFile(@Param('name') name: string, @Headers('authorization') auth?: string) {
+  async backupFile(
+    @Param('name') name: string,
+    @Headers('authorization') auth?: string,
+  ) {
     this.checkToken(auth);
-    const { stream, size } = await this.backups.open(name);
+    const {stream, size} = await this.backups.open(name);
     return new StreamableFile(stream, {
       type: 'application/octet-stream',
       length: size,
@@ -132,7 +153,9 @@ export class SyncController {
    */
   private async requireOwner(user: AuthUser): Promise<void> {
     if ((await this.users.owner())?.id !== user.id) {
-      throw new ForbiddenException('Only the owner of the instance runs the sync');
+      throw new ForbiddenException(
+        'Only the owner of the instance runs the sync',
+      );
     }
   }
 
@@ -206,7 +229,7 @@ export class SyncController {
   }
 
   private async fullStatus(): Promise<SyncStatus> {
-    return { ...(await this.sync.status()), backup: await this.backups.status() };
+    return {...(await this.sync.status()), backup: await this.backups.status()};
   }
 
   private requireClient(): SyncClient {
@@ -218,7 +241,7 @@ export class SyncController {
 
   /** Server only, with the right SYNC_TOKEN. */
   private checkToken(auth: string | undefined): void {
-    const token = this.config.get('SYNC_TOKEN', { infer: true });
+    const token = this.config.get('SYNC_TOKEN', {infer: true});
     if (this.sync.mode !== 'server' || !token) {
       throw new NotFoundException();
     }
@@ -252,5 +275,7 @@ export class SyncController {
 
 /** The sync type only for successful answers: errors stay plain JSON. */
 async function syncBody(body: unknown): Promise<StreamableFile> {
-  return new StreamableFile(await encodeSyncBody(body), { type: SYNC_CONTENT_TYPE });
+  return new StreamableFile(await encodeSyncBody(body), {
+    type: SYNC_CONTENT_TYPE,
+  });
 }

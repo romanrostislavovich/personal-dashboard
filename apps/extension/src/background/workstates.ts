@@ -1,11 +1,15 @@
-import { workstatesApi } from '@pd/client-core';
-import { workstateIdSchema, workstateInputSchema } from '@pd/contracts';
-import { ExtensionError, type WorkstatePreview, type WorkstateRequest } from '../shared/messages';
-import { allowedTelemetryUrl } from '../shared/telemetry-gates';
-import { serverUrl, signedInClient } from './account';
-import { exclusions } from './telemetry';
-import { telemetryExclusive } from './telemetry-state';
-import { clearWorkstatePreview, workstateState } from './workstate-state';
+import {workstatesApi} from '@pd/client-core';
+import {workstateIdSchema, workstateInputSchema} from '@pd/contracts';
+import {
+  ExtensionError,
+  type WorkstatePreview,
+  type WorkstateRequest,
+} from '../shared/messages';
+import {allowedTelemetryUrl} from '../shared/telemetry-gates';
+import {serverUrl, signedInClient} from './account';
+import {exclusions} from './telemetry';
+import {telemetryExclusive} from './telemetry-state';
+import {clearWorkstatePreview, workstateState} from './workstate-state';
 
 const PREVIEW_MS = 120_000;
 
@@ -21,12 +25,15 @@ export function fromWorkstatePanel(
   const revision = workstateState.revision;
   // Share the authentication lock: even an API refresh/retry cannot switch accounts mid-send.
   return telemetryExclusive(async () => {
-    if (revision !== workstateState.revision) throw new ExtensionError('not-allowed');
-    if (message.type === 'workstate-preview') return preview(message.windowId, document);
-    if (message.type === 'workstate-confirm') return confirm(message.id, document);
+    if (revision !== workstateState.revision)
+      throw new ExtensionError('not-allowed');
+    if (message.type === 'workstate-preview')
+      return preview(message.windowId, document);
+    if (message.type === 'workstate-confirm')
+      return confirm(message.id, document);
     if (message.type === 'workstate-open') {
-      const { server } = await identity();
-      await chrome.tabs.create({ url: `${server}/activity/workstates` });
+      const {server} = await identity();
+      await chrome.tabs.create({url: `${server}/activity/workstates`});
       return;
     }
     throw new ExtensionError('not-allowed');
@@ -53,13 +60,14 @@ async function identity() {
   const user = await client.offlineUser();
   const server = await serverUrl();
   if (!user?.id || !server) throw new ExtensionError('signed-out');
-  return { client, server, owner: JSON.stringify([server, user.id]) };
+  return {client, server, owner: JSON.stringify([server, user.id])};
 }
 
 async function foreground(windowId: number) {
-  if (!Number.isInteger(windowId) || windowId < 0) throw new ExtensionError('not-allowed');
+  if (!Number.isInteger(windowId) || windowId < 0)
+    throw new ExtensionError('not-allowed');
   const window = await chrome.windows.get(windowId);
-  const [tab] = await chrome.tabs.query({ windowId, active: true });
+  const [tab] = await chrome.tabs.query({windowId, active: true});
   if (
     !window.focused ||
     window.incognito ||
@@ -78,10 +86,13 @@ async function foreground(windowId: number) {
   const rules = await exclusions();
   const url = allowedTelemetryUrl(tab.url, rules.excluded, rules.privateWords);
   if (!url) throw new ExtensionError('not-allowed');
-  return { tab: tab.id, url };
+  return {tab: tab.id, url};
 }
 
-async function preview(windowId: number, document: string): Promise<WorkstatePreview> {
+async function preview(
+  windowId: number,
+  document: string,
+): Promise<WorkstatePreview> {
   clearWorkstatePreview();
   const revision = workstateState.revision;
   const account = await identity();
@@ -89,9 +100,10 @@ async function preview(windowId: number, document: string): Promise<WorkstatePre
   const input = workstateInputSchema.parse({
     id: crypto.randomUUID(),
     capturedAt: new Date().toISOString(),
-    capture: { browserUrls: [page.url] },
+    capture: {browserUrls: [page.url]},
   });
-  if (revision !== workstateState.revision) throw new ExtensionError('not-allowed');
+  if (revision !== workstateState.revision)
+    throw new ExtensionError('not-allowed');
   const expires = Date.now() + PREVIEW_MS;
   workstateState.draft = {
     input,
@@ -104,12 +116,16 @@ async function preview(windowId: number, document: string): Promise<WorkstatePre
   setTimeout(() => {
     if (workstateState.draft?.input.id === input.id) clearWorkstatePreview();
   }, PREVIEW_MS);
-  return { input, server: account.server, expires };
+  return {input, server: account.server, expires};
 }
 
 async function confirm(id: string, document: string): Promise<void> {
   const draft = workstateState.draft;
-  if (!draft || draft.document !== document || !workstateIdSchema.safeParse(id).success) {
+  if (
+    !draft ||
+    draft.document !== document ||
+    !workstateIdSchema.safeParse(id).success
+  ) {
     throw new ExtensionError('not-allowed');
   }
   clearWorkstatePreview();
@@ -128,5 +144,7 @@ async function confirm(id: string, document: string): Promise<void> {
   ) {
     throw new ExtensionError('not-allowed');
   }
-  await workstatesApi(account.client.api).capture(workstateInputSchema.parse(draft.input));
+  await workstatesApi(account.client.api).capture(
+    workstateInputSchema.parse(draft.input),
+  );
 }

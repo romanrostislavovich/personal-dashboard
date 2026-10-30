@@ -51,7 +51,10 @@ export const CRISIS_LINES: CrisisCountry[] = [
         url: 'https://116sos.pl',
       },
     ],
-    sources: ['https://pacjent.gov.pl', 'https://findahelpline.com/countries/pl'],
+    sources: [
+      'https://pacjent.gov.pl',
+      'https://findahelpline.com/countries/pl',
+    ],
   },
   {
     code: 'UA',
@@ -83,7 +86,12 @@ export const CRISIS_LINES: CrisisCountry[] = [
     code: 'GB',
     emergency: '999',
     lines: [
-      { name: 'Samaritans', phone: '116 123', allDay: true, url: 'https://www.samaritans.org' },
+      {
+        name: 'Samaritans',
+        phone: '116 123',
+        allDay: true,
+        url: 'https://www.samaritans.org',
+      },
     ],
     sources: ['https://www.samaritans.org'],
   },
@@ -119,6 +127,8 @@ const ZONES: Record<string, string> = {
 };
 
 /** The country of a time zone, among those with lines here; `null` — none of them. */
-export function crisisCountryOf(timeZone: string | null | undefined): string | null {
+export function crisisCountryOf(
+  timeZone: string | null | undefined,
+): string | null {
   return timeZone ? (ZONES[timeZone] ?? null) : null;
 }

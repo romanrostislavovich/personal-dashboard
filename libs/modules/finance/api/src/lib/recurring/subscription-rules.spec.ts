@@ -1,4 +1,9 @@
-import { ExpenseRow, priceRises, suggestSubscriptions, trialsEnding } from './subscription-rules';
+import {
+  ExpenseRow,
+  priceRises,
+  suggestSubscriptions,
+  trialsEnding,
+} from './subscription-rules';
 
 const row = (note: string, amount: number, occurredOn: string): ExpenseRow => ({
   note,
@@ -38,10 +43,15 @@ describe('suggestSubscriptions', () => {
   });
 
   it('leaves out different prices, scattered days and old charges', () => {
-    const prices = [row('Doctor', 320, '2026-08-10'), row('Doctor', 465, '2026-09-10')];
+    const prices = [
+      row('Doctor', 320, '2026-08-10'),
+      row('Doctor', 465, '2026-09-10'),
+    ];
     const days = [row('Bar', 36, '2026-08-02'), row('Bar', 36, '2026-09-25')];
     const old = [row('Gym', 99, '2026-05-10'), row('Gym', 99, '2026-06-10')];
-    expect(suggestSubscriptions([...prices, ...days, ...old], today, [], new Set())).toEqual([]);
+    expect(
+      suggestSubscriptions([...prices, ...days, ...old], today, [], new Set()),
+    ).toEqual([]);
   });
 
   it('leaves out known and dismissed ones', () => {
@@ -51,7 +61,9 @@ describe('suggestSubscriptions', () => {
       row('Vape', 35, '2026-08-20'),
       row('Vape', 35, '2026-09-20'),
     ];
-    expect(suggestSubscriptions(rows, today, ['Netflix'], new Set(['vape']))).toEqual([]);
+    expect(
+      suggestSubscriptions(rows, today, ['Netflix'], new Set(['vape'])),
+    ).toEqual([]);
   });
 });
 
@@ -67,30 +79,38 @@ describe('priceRises', () => {
 
   it('reports a higher charge once', () => {
     const rows = [row('NETFLIX.COM', 49, '2026-09-20')];
-    expect(priceRises([payment], rows)).toEqual([{ payment, amount: 49 }]);
-    expect(priceRises([{ ...payment, noticedAmount: 49 }], rows)).toEqual([]);
+    expect(priceRises([payment], rows)).toEqual([{payment, amount: 49}]);
+    expect(priceRises([{...payment, noticedAmount: 49}], rows)).toEqual([]);
   });
 
   it('ignores the same price and other currencies', () => {
     const rows = [
       row('Netflix', 43, '2026-09-20'),
-      { ...row('Netflix', 60, '2026-09-21'), currency: 'EUR' },
+      {...row('Netflix', 60, '2026-09-21'), currency: 'EUR'},
     ];
     expect(priceRises([payment], rows)).toEqual([]);
   });
 });
 
 describe('trialsEnding', () => {
-  const trial = { isActive: true, trialEndsOn: '2026-10-06', trialNotifiedFor: null };
+  const trial = {
+    isActive: true,
+    trialEndsOn: '2026-10-06',
+    trialNotifiedFor: null,
+  };
 
   it('reminds 3 days ahead, once per end date', () => {
     expect(trialsEnding([trial], '2026-10-02')).toEqual([]);
     expect(trialsEnding([trial], '2026-10-03')).toEqual([trial]);
-    expect(trialsEnding([{ ...trial, trialNotifiedFor: '2026-10-06' }], '2026-10-04')).toEqual([]);
+    expect(
+      trialsEnding([{...trial, trialNotifiedFor: '2026-10-06'}], '2026-10-04'),
+    ).toEqual([]);
   });
 
   it('skips paused payments and trials already over', () => {
-    expect(trialsEnding([{ ...trial, isActive: false }], '2026-10-04')).toEqual([]);
+    expect(trialsEnding([{...trial, isActive: false}], '2026-10-04')).toEqual(
+      [],
+    );
     expect(trialsEnding([trial], '2026-10-07')).toEqual([]);
   });
 });

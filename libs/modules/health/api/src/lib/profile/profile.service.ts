@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
+import {Inject, Injectable} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
 import {
   EmergencyContact,
   emergencyContactSchema,
@@ -12,8 +12,8 @@ import {
   HealthVaccination,
   healthVaccinationInputSchema,
 } from '@pd/contracts';
-import { and, desc, eq } from 'drizzle-orm';
-import { z } from 'zod';
+import {and, desc, eq} from 'drizzle-orm';
+import {z} from 'zod';
 import {
   HealthAllergyRow,
   healthAllergies,
@@ -23,25 +23,32 @@ import {
   HealthVaccinationRow,
   healthVaccinations,
 } from '../health.schema';
-import { found, removeOwned } from '../owned';
+import {found, removeOwned} from '../owned';
 
 export type ValidProfileInput = z.output<typeof healthProfileInputSchema>;
 export type ValidAllergyInput = z.output<typeof healthAllergyInputSchema>;
-export type ValidVaccinationInput = z.output<typeof healthVaccinationInputSchema>;
+export type ValidVaccinationInput = z.output<
+  typeof healthVaccinationInputSchema
+>;
 export type ValidOperationInput = z.output<typeof healthOperationInputSchema>;
 
 /** The profile of a user as one piece: the blood type, the notes and the three lists. */
 /** The contacts as stored; a broken value is none, not an error on the page. */
 function readContacts(stored: string | null): EmergencyContact[] {
   try {
-    const parsed = z.array(emergencyContactSchema).safeParse(JSON.parse(stored ?? '[]'));
+    const parsed = z
+      .array(emergencyContactSchema)
+      .safeParse(JSON.parse(stored ?? '[]'));
     return parsed.success ? parsed.data : [];
   } catch {
     return [];
   }
 }
 
-export async function readProfile(db: Database, userId: string): Promise<HealthProfile> {
+export async function readProfile(
+  db: Database,
+  userId: string,
+): Promise<HealthProfile> {
   const [[profile], allergies, vaccinations, operations] = await Promise.all([
     db.select().from(healthProfiles).where(eq(healthProfiles.userId, userId)),
     db.select().from(healthAllergies).where(eq(healthAllergies.userId, userId)),
@@ -79,22 +86,29 @@ export class ProfileService {
     return readProfile(this.db, userId);
   }
 
-  async saveProfile(userId: string, input: ValidProfileInput): Promise<HealthProfile> {
+  async saveProfile(
+    userId: string,
+    input: ValidProfileInput,
+  ): Promise<HealthProfile> {
     const values = {
       bloodType: input.bloodType ?? null,
       notes: input.notes || null,
       ...(input.emergencyContacts
-        ? { emergencyContacts: JSON.stringify(input.emergencyContacts) }
+        ? {emergencyContacts: JSON.stringify(input.emergencyContacts)}
         : {}),
     };
     await this.db
       .insert(healthProfiles)
-      .values({ userId, ...values })
-      .onConflictDoUpdate({ target: healthProfiles.userId, set: values });
+      .values({userId, ...values})
+      .onConflictDoUpdate({target: healthProfiles.userId, set: values});
     return this.profile(userId);
   }
 
-  async saveAllergy(userId: string, input: ValidAllergyInput, id?: string): Promise<HealthAllergy> {
+  async saveAllergy(
+    userId: string,
+    input: ValidAllergyInput,
+    id?: string,
+  ): Promise<HealthAllergy> {
     const values = {
       substance: input.substance,
       reaction: input.reaction || null,
@@ -105,11 +119,13 @@ export class ProfileService {
       ? await this.db
           .update(healthAllergies)
           .set(values)
-          .where(and(eq(healthAllergies.id, id), eq(healthAllergies.userId, userId)))
+          .where(
+            and(eq(healthAllergies.id, id), eq(healthAllergies.userId, userId)),
+          )
           .returning()
       : await this.db
           .insert(healthAllergies)
-          .values({ userId, ...values })
+          .values({userId, ...values})
           .returning();
     return toAllergy(found(row, 'Allergy'));
   }
@@ -135,11 +151,16 @@ export class ProfileService {
       ? await this.db
           .update(healthVaccinations)
           .set(values)
-          .where(and(eq(healthVaccinations.id, id), eq(healthVaccinations.userId, userId)))
+          .where(
+            and(
+              eq(healthVaccinations.id, id),
+              eq(healthVaccinations.userId, userId),
+            ),
+          )
           .returning()
       : await this.db
           .insert(healthVaccinations)
-          .values({ userId, ...values })
+          .values({userId, ...values})
           .returning();
     return toVaccination(found(row, 'Vaccination'));
   }
@@ -163,11 +184,16 @@ export class ProfileService {
       ? await this.db
           .update(healthOperations)
           .set(values)
-          .where(and(eq(healthOperations.id, id), eq(healthOperations.userId, userId)))
+          .where(
+            and(
+              eq(healthOperations.id, id),
+              eq(healthOperations.userId, userId),
+            ),
+          )
           .returning()
       : await this.db
           .insert(healthOperations)
-          .values({ userId, ...values })
+          .values({userId, ...values})
           .returning();
     return toOperation(found(row, 'Operation'));
   }
@@ -177,10 +203,11 @@ export class ProfileService {
   }
 }
 
-const SEVERITY = { severe: 0, moderate: 1, mild: 2 } as const;
+const SEVERITY = {severe: 0, moderate: 1, mild: 2} as const;
 
 function bySeverity(a: HealthAllergy, b: HealthAllergy): number {
-  const rank = (allergy: HealthAllergy) => (allergy.severity ? SEVERITY[allergy.severity] : 3);
+  const rank = (allergy: HealthAllergy) =>
+    allergy.severity ? SEVERITY[allergy.severity] : 3;
   return rank(a) - rank(b) || a.substance.localeCompare(b.substance);
 }
 

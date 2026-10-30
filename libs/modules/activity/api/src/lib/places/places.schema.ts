@@ -1,6 +1,19 @@
-import { encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
-import { index, integer, pgTable, real, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
-import { activityDevices } from '../activity.schema';
+import {
+  encryptedText,
+  registerEncryptedTables,
+  users,
+} from '@pd/api-core/schema';
+import {
+  index,
+  integer,
+  pgTable,
+  real,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import {activityDevices} from '../activity.schema';
 
 /**
  * Where the phone was (the Android app takes a low-power fix every 15 minutes once the location
@@ -13,16 +26,16 @@ export const activityPhoneLocations = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     deviceId: uuid()
       .notNull()
-      .references(() => activityDevices.id, { onDelete: 'cascade' }),
-    at: timestamp({ withTimezone: true }).notNull(),
+      .references(() => activityDevices.id, {onDelete: 'cascade'}),
+    at: timestamp({withTimezone: true}).notNull(),
     point: encryptedText().notNull(),
     /** Meters, as Android estimated it. */
     accuracy: real().notNull(),
   },
-  (table) => [
+  table => [
     // A batch sent twice (the answer was lost) is written once.
     unique().on(table.deviceId, table.at),
     index().on(table.userId, table.at),
@@ -34,12 +47,12 @@ export const activityPlaces = pgTable('activity_places', {
   id: uuid().primaryKey().defaultRandom(),
   userId: uuid()
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   name: text().notNull(),
   /** Encrypted like the fixes: `"52.2297,21.0122"`. */
   point: encryptedText().notNull(),
   radiusM: integer().notNull(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
 });
 
 /**
@@ -53,16 +66,16 @@ export const activityPlaceNames = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     point: encryptedText().notNull(),
     name: encryptedText().notNull(),
     /** `cafe`, `supermarket`, `gym`…; `null` — an address. */
     kind: text(),
     /** `osm` or `google`. */
     source: text().notNull(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 /**
@@ -74,10 +87,14 @@ export const activityPlacePresence = pgTable('activity_place_presence', {
   userId: uuid()
     .notNull()
     .unique()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   /** `null` — at none of the named places. */
-  placeId: uuid().references(() => activityPlaces.id, { onDelete: 'set null' }),
-  changedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  placeId: uuid().references(() => activityPlaces.id, {onDelete: 'set null'}),
+  changedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
 });
 
-registerEncryptedTables(activityPhoneLocations, activityPlaces, activityPlaceNames);
+registerEncryptedTables(
+  activityPhoneLocations,
+  activityPlaces,
+  activityPlaceNames,
+);

@@ -1,9 +1,15 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService, OtherComputersService, UsersService } from '@pd/api-core';
-import { DailyMetric, LocalDate } from '@pd/contracts';
-import { and, eq, sql } from 'drizzle-orm';
-import { dotaMatches, gameAccounts } from './games.schema';
-import { SteamPlayService } from './steam/steam-play.service';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  DB,
+  Database,
+  LinksService,
+  OtherComputersService,
+  UsersService,
+} from '@pd/api-core';
+import {DailyMetric, LocalDate} from '@pd/contracts';
+import {and, eq, sql} from 'drizzle-orm';
+import {dotaMatches, gameAccounts} from './games.schema';
+import {SteamPlayService} from './steam/steam-play.service';
 
 /** A name shorter than this would be found inside any other word. */
 const MIN_NAME = 4;
@@ -38,7 +44,7 @@ export class GamesLinks implements OnModuleInit {
       module: 'games',
       days: async (userId, from, to) => {
         const perDay = new Map<string, number>();
-        for (const { day, minutes } of await this.play.days(userId, from, to)) {
+        for (const {day, minutes} of await this.play.days(userId, from, to)) {
           perDay.set(day, (perDay.get(day) ?? 0) + minutes);
         }
         return [...perDay].map(([day, minutes]) => ({
@@ -55,9 +61,13 @@ export class GamesLinks implements OnModuleInit {
       usage: async (userId, name, period) => {
         const days = await this.play.days(userId, period.from, period.to);
         const all = name.includes('steam');
-        const played = days.filter((day) => {
+        const played = days.filter(day => {
           const game = day.name.toLowerCase();
-          return all || (game.length >= MIN_NAME && (name.includes(game) || game.includes(name)));
+          return (
+            all ||
+            (game.length >= MIN_NAME &&
+              (name.includes(game) || game.includes(name)))
+          );
         });
         // Not played is an answer only for Steam itself: any other name may be no game at all.
         if (!played.length && !all) {
@@ -72,17 +82,25 @@ export class GamesLinks implements OnModuleInit {
     });
 
     this.links.registerPages([
-      { module: 'games', path: '/games', description: 'Steam, Dota 2 and WoW accounts' },
+      {
+        module: 'games',
+        path: '/games',
+        description: 'Steam, Dota 2 and WoW accounts',
+      },
     ]);
   }
 
   /** The hours of Steam of every day, on any computer or console. */
   private async steamDays(
     userId: string,
-    period: { from: LocalDate; to: LocalDate },
+    period: {from: LocalDate; to: LocalDate},
   ): Promise<DailyMetric[]> {
     const perDay = new Map<LocalDate, number>();
-    for (const { day, minutes } of await this.play.days(userId, period.from, period.to)) {
+    for (const {day, minutes} of await this.play.days(
+      userId,
+      period.from,
+      period.to,
+    )) {
       perDay.set(day, (perDay.get(day) ?? 0) + minutes);
     }
     return perDay.size
@@ -92,7 +110,10 @@ export class GamesLinks implements OnModuleInit {
             module: 'games',
             labelKey: 'games.links.steam',
             unit: 'hours',
-            days: [...perDay].map(([day, minutes]) => ({ day, value: minutes / 60 })),
+            days: [...perDay].map(([day, minutes]) => ({
+              day,
+              value: minutes / 60,
+            })),
           },
         ]
       : [];
@@ -104,7 +125,7 @@ export class GamesLinks implements OnModuleInit {
    */
   private async dotaDays(
     userId: string,
-    period: { from: LocalDate; to: LocalDate },
+    period: {from: LocalDate; to: LocalDate},
   ): Promise<DailyMetric[]> {
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const m = dotaMatches;
@@ -142,27 +163,30 @@ export class GamesLinks implements OnModuleInit {
       module: 'games',
       labelKey: `games.links.${key}`,
       unit,
-      ...(partOf ? { partOf } : {}),
+      ...(partOf ? {partOf} : {}),
       days,
     });
     return [
       metric(
         'dotaMatches',
         'count',
-        rows.map((row) => ({ day: row.day, value: row.matches })),
+        rows.map(row => ({day: row.day, value: row.matches})),
       ),
       metric(
         'dotaLateMatches',
         'count',
-        rows.map((row) => ({ day: row.day, value: row.late })),
+        rows.map(row => ({day: row.day, value: row.late})),
         'games.dotaMatches',
       ),
       metric(
         'dotaWins',
         'percent',
         rows
-          .filter((row) => row.known > 0)
-          .map((row) => ({ day: row.day, value: Math.round((row.won / row.known) * 100) })),
+          .filter(row => row.known > 0)
+          .map(row => ({
+            day: row.day,
+            value: Math.round((row.won / row.known) * 100),
+          })),
       ),
     ];
   }

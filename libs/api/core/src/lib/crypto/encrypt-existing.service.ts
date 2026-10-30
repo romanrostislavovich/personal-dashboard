@@ -1,9 +1,14 @@
-import { Inject, Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { eq, isNotNull, or, sql, SQL } from 'drizzle-orm';
-import { getTableConfig, PgColumn, PgTable } from 'drizzle-orm/pg-core';
-import { AppConfig } from '../config/env';
-import { DB, Database } from '../database/database.module';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {eq, isNotNull, or, sql, SQL} from 'drizzle-orm';
+import {getTableConfig, PgColumn, PgTable} from 'drizzle-orm/pg-core';
+import {AppConfig} from '../config/env';
+import {DB, Database} from '../database/database.module';
 
 /** Rows encrypted in one go: a large diary is done in pieces, without a long lock. */
 const BATCH = 200;
@@ -45,29 +50,33 @@ export class EncryptExistingService implements OnApplicationBootstrap {
   }
 
   onApplicationBootstrap(): void {
-    if (this.config.get('SYNC_MODE', { infer: true }) === 'client') {
+    if (this.config.get('SYNC_MODE', {infer: true}) === 'client') {
       return;
     }
     // Not awaited: the app takes requests meanwhile, and a failure is only logged.
-    void this.run().catch((error) => this.logger.error(`Encrypting stored rows failed: ${error}`));
+    void this.run().catch(error =>
+      this.logger.error(`Encrypting stored rows failed: ${error}`),
+    );
   }
 
   async run(): Promise<void> {
     for (const entry of this.tables) {
       const done = await this.encrypt(entry);
       if (done) {
-        this.logger.log(`Encrypted ${done} stored row(s) of ${getTableConfig(entry.table).name}`);
+        this.logger.log(
+          `Encrypted ${done} stored row(s) of ${getTableConfig(entry.table).name}`,
+        );
       }
     }
   }
 
   /** How many rows it encrypted. */
-  async encrypt({ table, id, columns, extra }: EncryptedLater): Promise<number> {
+  async encrypt({table, id, columns, extra}: EncryptedLater): Promise<number> {
     const plain = or(...Object.values(columns).map(isStoredPlain)) as SQL;
     let done = 0;
     for (;;) {
       const rows = (await this.db
-        .select({ id, ...columns })
+        .select({id, ...columns})
         .from(table)
         .where(plain)
         .limit(BATCH)) as Record<string, unknown>[];
@@ -79,7 +88,7 @@ export class EncryptExistingService implements OnApplicationBootstrap {
         // Written back through Drizzle: the column type encrypts it on the way.
         await this.db
           .update(table)
-          .set({ ...values, ...extra?.(row) } as never)
+          .set({...values, ...extra?.(row)} as never)
           .where(eq(id, row['id']));
       }
       done += rows.length;

@@ -1,8 +1,9 @@
-import type { TelemetryMetrics } from '@pd/contracts';
+import type {TelemetryMetrics} from '@pd/contracts';
 
 /** Only a trusted, field-aware observer may report these categories, never key codes or text. */
 export type SafeInputKind = 'input' | 'backspace';
-export type InputFieldContext = 'public-editable' | 'password' | 'private' | 'unknown';
+export type InputFieldContext =
+  'public-editable' | 'password' | 'private' | 'unknown';
 
 /** Running moments from the native helper, never individual key events. */
 export interface NativeInputAggregate {
@@ -14,7 +15,9 @@ export interface NativeInputAggregate {
   pauseM2: number;
 }
 
-export function parseInputAggregate(value: unknown): NativeInputAggregate | null {
+export function parseInputAggregate(
+  value: unknown,
+): NativeInputAggregate | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const aggregate = value as NativeInputAggregate;
   if (
@@ -22,11 +25,15 @@ export function parseInputAggregate(value: unknown): NativeInputAggregate | null
     'backspaceBursts,backspaceCount,inputCount,pauseM2,pauseMeanMs,pauses'
   )
     return null;
-  if (Object.values(aggregate).some((n) => typeof n !== 'number' || !Number.isFinite(n) || n < 0))
+  if (
+    Object.values(aggregate).some(
+      n => typeof n !== 'number' || !Number.isFinite(n) || n < 0,
+    )
+  )
     return null;
   if (
     ['inputCount', 'backspaceCount', 'backspaceBursts', 'pauses'].some(
-      (key) =>
+      key =>
         !Number.isSafeInteger(aggregate[key as keyof NativeInputAggregate]) ||
         aggregate[key as keyof NativeInputAggregate] > 1000,
     )
@@ -37,7 +44,8 @@ export function parseInputAggregate(value: unknown): NativeInputAggregate | null
     aggregate.pauses > aggregate.inputCount + aggregate.backspaceCount ||
     aggregate.pauseMeanMs > 60_000 ||
     aggregate.pauseM2 > 3.6e12 ||
-    (!aggregate.pauses && (aggregate.pauseMeanMs !== 0 || aggregate.pauseM2 !== 0))
+    (!aggregate.pauses &&
+      (aggregate.pauseMeanMs !== 0 || aggregate.pauseM2 !== 0))
   )
     return null;
   return aggregate;
@@ -63,7 +71,9 @@ export class InputDynamics {
     if (aggregate.pauses) {
       const total = this.pauses + aggregate.pauses;
       const delta = aggregate.pauseMeanMs - this.mean;
-      this.m2 += aggregate.pauseM2 + (delta * delta * this.pauses * aggregate.pauses) / total;
+      this.m2 +=
+        aggregate.pauseM2 +
+        (delta * delta * this.pauses * aggregate.pauses) / total;
       this.mean += (delta * aggregate.pauses) / total;
       this.pauses = total;
     }
@@ -91,7 +101,8 @@ export class InputDynamics {
     }
     if (kind === 'backspace') {
       this.backspaceCount++;
-      this.backspaceRun = gap !== null && gap <= 1000 ? this.backspaceRun + 1 : 1;
+      this.backspaceRun =
+        gap !== null && gap <= 1000 ? this.backspaceRun + 1 : 1;
       if (this.backspaceRun === 2) this.backspaceBursts++;
     } else {
       this.inputCount++;
@@ -108,7 +119,10 @@ export class InputDynamics {
       backspaceCount: this.backspaceCount,
       backspaceBursts: this.backspaceBursts,
       ...(this.pauses
-        ? { pauseMeanMs: this.mean, pauseVarianceMs2: Math.max(0, this.m2 / this.pauses) }
+        ? {
+            pauseMeanMs: this.mean,
+            pauseVarianceMs2: Math.max(0, this.m2 / this.pauses),
+          }
         : {}),
     };
   }

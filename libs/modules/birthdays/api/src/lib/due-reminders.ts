@@ -1,4 +1,4 @@
-import { UpcomingBirthday } from '@pd/contracts';
+import {UpcomingBirthday} from '@pd/contracts';
 
 /**
  * What a reminder is about:
@@ -21,14 +21,17 @@ export function dueReminders(people: UpcomingBirthday[]): DueReminder[] {
     if (person.daysUntil !== null) {
       if (person.memorial) {
         if (person.daysUntil === 0) {
-          due.push({ kind: 'birthday-in-memory', person });
+          due.push({kind: 'birthday-in-memory', person});
         }
       } else if (person.remindDaysBefore.includes(person.daysUntil)) {
-        due.push({ kind: 'birthday', person });
+        due.push({kind: 'birthday', person});
       }
     }
-    if (person.memorial && person.memorialRemindDaysBefore.includes(person.memorial.daysUntil)) {
-      due.push({ kind: 'memorial', person });
+    if (
+      person.memorial &&
+      person.memorialRemindDaysBefore.includes(person.memorial.daysUntil)
+    ) {
+      due.push({kind: 'memorial', person});
     }
   }
   return due;

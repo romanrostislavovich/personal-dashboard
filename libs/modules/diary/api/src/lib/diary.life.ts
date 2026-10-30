@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { LifeService } from '@pd/api-core';
-import { LifeCard, LifeEvent } from '@pd/contracts';
-import { DiaryService } from './diary.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {LifeService} from '@pd/api-core';
+import {LifeCard, LifeEvent} from '@pd/contracts';
+import {DiaryService} from './diary.service';
 
 /** An excerpt of the day's entry is enough for the timeline. */
 const EXCERPT = 160;
@@ -27,7 +27,7 @@ export class DiaryLife implements OnModuleInit {
             module: 'diary',
             icon: 'menu_book',
             key: entry.mood ? 'diary.life.entryMood' : 'diary.life.entry',
-            params: { excerpt: excerpt(entry.content), mood: entry.mood ?? 0 },
+            params: {excerpt: excerpt(entry.content), mood: entry.mood ?? 0},
             at: null,
             link: `/diary?day=${day}`,
           },
@@ -42,7 +42,9 @@ export class DiaryLife implements OnModuleInit {
           (sum, e) => sum + e.content.split(/\s+/).filter(Boolean).length,
           0,
         );
-        const moods = entries.map((e) => e.mood).filter((mood): mood is number => mood !== null);
+        const moods = entries
+          .map(e => e.mood)
+          .filter((mood): mood is number => mood !== null);
         return [
           {
             module: 'diary',
@@ -51,7 +53,7 @@ export class DiaryLife implements OnModuleInit {
             value: entries.length,
             format: 'number',
             detailKey: 'diary.life.words',
-            detailParams: { words },
+            detailParams: {words},
           },
           ...(moods.length
             ? [
@@ -59,11 +61,14 @@ export class DiaryLife implements OnModuleInit {
                   module: 'diary',
                   icon: 'mood',
                   key: 'diary.life.mood',
-                  value: Math.round((moods.reduce((a, b) => a + b, 0) / moods.length) * 10) / 10,
+                  value:
+                    Math.round(
+                      (moods.reduce((a, b) => a + b, 0) / moods.length) * 10,
+                    ) / 10,
                   format: 'number' as const,
                   aggregate: 'average' as const,
                   detailKey: 'diary.life.moodDays',
-                  detailParams: { days: moods.length },
+                  detailParams: {days: moods.length},
                 },
               ]
             : []),
@@ -79,7 +84,7 @@ export class DiaryLife implements OnModuleInit {
 const BEST_MONTH_DAYS = 5;
 
 /** The month with the best average mood, when the period spans several months. */
-function bestMonth(entries: { day: string; mood: number | null }[]): LifeCard[] {
+function bestMonth(entries: {day: string; mood: number | null}[]): LifeCard[] {
   const months = new Map<string, number[]>();
   for (const entry of entries) {
     if (entry.mood !== null) {
@@ -89,7 +94,10 @@ function bestMonth(entries: { day: string; mood: number | null }[]): LifeCard[] 
   }
   const ranked = [...months]
     .filter(([, moods]) => moods.length >= BEST_MONTH_DAYS)
-    .map(([month, moods]) => ({ month, mood: moods.reduce((a, b) => a + b, 0) / moods.length }))
+    .map(([month, moods]) => ({
+      month,
+      mood: moods.reduce((a, b) => a + b, 0) / moods.length,
+    }))
     .sort((a, b) => b.mood - a.mood);
   if (ranked.length < 2) {
     return [];
@@ -104,7 +112,7 @@ function bestMonth(entries: { day: string; mood: number | null }[]): LifeCard[] 
       format: 'number',
       aggregate: 'average',
       detailKey: `diary.life.months.${Number(number)}`,
-      detailParams: { year },
+      detailParams: {year},
     },
   ];
 }
@@ -112,7 +120,7 @@ function bestMonth(entries: { day: string; mood: number | null }[]): LifeCard[] 
 function excerpt(markdown: string): string {
   const text = markdown
     .split('\n')
-    .map((line) => line.replace(/[#*_>`~=[\]()!-]+/g, ' ').trim())
+    .map(line => line.replace(/[#*_>`~=[\]()!-]+/g, ' ').trim())
     .filter(Boolean)
     .join(' · ')
     .replace(/\s+/g, ' ');

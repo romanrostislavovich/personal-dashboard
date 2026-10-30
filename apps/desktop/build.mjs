@@ -9,10 +9,17 @@
 //
 // The bundle is what an installed app downloads from the server to update itself
 // (src/update/updater.ts), so the same sources must give the same files on any system.
-import { build } from 'esbuild';
-import { createHash } from 'node:crypto';
-import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import {build} from 'esbuild';
+import {createHash} from 'node:crypto';
+import {
+  cpSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import {join} from 'node:path';
 
 const SOURCE = 'apps/desktop/src';
 const OUT = 'dist/apps/desktop';
@@ -20,8 +27,8 @@ const BUNDLE = join(OUT, 'bundle');
 /** Text files are written with Unix line ends: git on Windows may have checked them out otherwise. */
 const TEXT = /\.(html|ps1|cs|json|css|js)$/;
 
-rmSync(OUT, { recursive: true, force: true });
-mkdirSync(join(BUNDLE, 'assets'), { recursive: true });
+rmSync(OUT, {recursive: true, force: true});
+mkdirSync(join(BUNDLE, 'assets'), {recursive: true});
 
 const shared = {
   bundle: true,
@@ -32,8 +39,16 @@ const shared = {
   legalComments: 'none',
   logLevel: 'warning',
 };
-await build({ ...shared, entryPoints: [join(SOURCE, 'loader.ts')], outfile: join(OUT, 'main.js') });
-await build({ ...shared, entryPoints: [join(SOURCE, 'main.ts')], outfile: join(BUNDLE, 'app.js') });
+await build({
+  ...shared,
+  entryPoints: [join(SOURCE, 'loader.ts')],
+  outfile: join(OUT, 'main.js'),
+});
+await build({
+  ...shared,
+  entryPoints: [join(SOURCE, 'main.ts')],
+  outfile: join(BUNDLE, 'app.js'),
+});
 await build({
   ...shared,
   entryPoints: [join(SOURCE, 'preload.ts')],
@@ -51,10 +66,10 @@ for (const name of readdirSync(join(SOURCE, 'assets'))) {
 const names = [
   'app.js',
   'preload.js',
-  ...readdirSync(join(BUNDLE, 'assets')).map((name) => `assets/${name}`),
+  ...readdirSync(join(BUNDLE, 'assets')).map(name => `assets/${name}`),
 ].sort();
 const files = Object.fromEntries(
-  names.map((name) => [
+  names.map(name => [
     name,
     createHash('sha512')
       .update(readFileSync(join(BUNDLE, name)))
@@ -63,7 +78,9 @@ const files = Object.fromEntries(
 );
 // The base the code is written for — the one constant shared with the sources.
 const shell = Number(
-  /SHELL_VERSION = (\d+)/.exec(readFileSync(join(SOURCE, 'update/bundle-store.ts'), 'utf8'))?.[1],
+  /SHELL_VERSION = (\d+)/.exec(
+    readFileSync(join(SOURCE, 'update/bundle-store.ts'), 'utf8'),
+  )?.[1],
 );
 if (!Number.isInteger(shell)) {
   throw new Error('SHELL_VERSION is not found in update/bundle-store.ts');
@@ -74,7 +91,7 @@ const version = createHash('sha256')
   .slice(0, 16);
 writeFileSync(
   join(BUNDLE, 'bundle.json'),
-  JSON.stringify({ version, shell, files }, null, 2) + '\n',
+  JSON.stringify({version, shell, files}, null, 2) + '\n',
 );
 
 cpSync('apps/desktop/package.json', join(OUT, 'package.json'));

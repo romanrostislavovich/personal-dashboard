@@ -1,4 +1,4 @@
-import { clothingAdvice, DaytimeWeather } from './clothing-advice';
+import {clothingAdvice, DaytimeWeather} from './clothing-advice';
 
 const mild: DaytimeWeather = {
   apparentMin: 18,
@@ -13,9 +13,13 @@ const mild: DaytimeWeather = {
 describe('clothingAdvice', () => {
   it('picks the outfit by the coldest "feels like" temperature', () => {
     expect(clothingAdvice(mild).outfit).toBe('long-sleeve');
-    expect(clothingAdvice({ ...mild, apparentMin: -20 }).outfit).toBe('heavy-winter');
-    expect(clothingAdvice({ ...mild, apparentMin: 8 }).outfit).toBe('jacket');
-    expect(clothingAdvice({ ...mild, apparentMin: 30, apparentMax: 32 }).outfit).toBe('hot');
+    expect(clothingAdvice({...mild, apparentMin: -20}).outfit).toBe(
+      'heavy-winter',
+    );
+    expect(clothingAdvice({...mild, apparentMin: 8}).outfit).toBe('jacket');
+    expect(
+      clothingAdvice({...mild, apparentMin: 30, apparentMax: 32}).outfit,
+    ).toBe('hot');
   });
 
   it('adds nothing on a calm mild day', () => {
@@ -23,13 +27,21 @@ describe('clothingAdvice', () => {
   });
 
   it('suggests layers when the day warms up a lot', () => {
-    expect(clothingAdvice({ ...mild, apparentMin: 8, apparentMax: 19 }).extras).toContain('layers');
+    expect(
+      clothingAdvice({...mild, apparentMin: 8, apparentMax: 19}).extras,
+    ).toContain('layers');
   });
 
   it('takes an umbrella for likely rain, a raincoat when it is windy', () => {
-    const rainy = { ...mild, precipitationProbability: 70, conditions: ['rain' as const] };
+    const rainy = {
+      ...mild,
+      precipitationProbability: 70,
+      conditions: ['rain' as const],
+    };
     expect(clothingAdvice(rainy).extras).toContain('umbrella');
-    expect(clothingAdvice({ ...rainy, windSpeedMax: 45 }).extras).toEqual(['raincoat']);
+    expect(clothingAdvice({...rainy, windSpeedMax: 45}).extras).toEqual([
+      'raincoat',
+    ]);
   });
 
   it('dresses for snow and frost', () => {
@@ -55,13 +67,15 @@ describe('clothingAdvice', () => {
 });
 
 describe("clothingAdvice with the user's own scale", () => {
-  const cool = { ...mild, apparentMin: 8, apparentMax: 12 };
+  const cool = {...mild, apparentMin: 8, apparentMax: 12};
 
   it('dresses someone who is always warm two outfits lighter', () => {
     expect(clothingAdvice(cool).outfit).toBe('jacket');
     // 8° feels like 14° to them: a light jacket instead of a jacket over a sweater.
     expect(clothingAdvice(cool, 2).outfit).toBe('light-jacket');
-    expect(clothingAdvice({ ...cool, apparentMin: 11 }, 2).outfit).toBe('long-sleeve');
+    expect(clothingAdvice({...cool, apparentMin: 11}, 2).outfit).toBe(
+      'long-sleeve',
+    );
   });
 
   it('dresses someone who freezes warmer and adds the hat earlier', () => {
@@ -78,8 +92,10 @@ describe("clothingAdvice with the user's own scale", () => {
       conditions: ['rain' as const],
     };
     for (const feel of [-2, 0, 2] as const) {
-      const { extras } = clothingAdvice(wetAndSunny, feel);
-      expect(extras).toEqual(expect.arrayContaining(['umbrella', 'sunglasses', 'sunscreen']));
+      const {extras} = clothingAdvice(wetAndSunny, feel);
+      expect(extras).toEqual(
+        expect.arrayContaining(['umbrella', 'sunglasses', 'sunscreen']),
+      );
     }
   });
 });

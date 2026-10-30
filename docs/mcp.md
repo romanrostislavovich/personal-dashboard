@@ -47,14 +47,8 @@ dashboard:
   "mcpServers": {
     "personal-dashboard": {
       "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://dash.example.com/api/mcp",
-        "--header",
-        "Authorization:${AUTH}"
-      ],
-      "env": { "AUTH": "Bearer pd_…" }
+      "args": ["-y", "mcp-remote", "https://dash.example.com/api/mcp", "--header", "Authorization:${AUTH}"],
+      "env": {"AUTH": "Bearer pd_…"}
     }
   }
 }
@@ -69,7 +63,7 @@ Restart Claude Desktop; the tools are under the 🔨 in the chat.
   "mcpServers": {
     "personal-dashboard": {
       "url": "https://dash.example.com/api/mcp",
-      "headers": { "Authorization": "Bearer pd_…" }
+      "headers": {"Authorization": "Bearer pd_…"}
     }
   }
 }

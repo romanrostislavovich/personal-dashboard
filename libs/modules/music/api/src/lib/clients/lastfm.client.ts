@@ -1,5 +1,5 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { MusicTopItem, MusicTopPeriod } from '@pd/contracts';
+import {fetchWithTimeout} from '@pd/api-core';
+import {MusicTopItem, MusicTopPeriod} from '@pd/contracts';
 
 const API = 'https://ws.audioscrobbler.com/2.0/';
 
@@ -17,15 +17,26 @@ export class LastfmUnavailableError extends Error {}
 
 /** Whether a Last.fm answer is a failure on its side that is worth trying again. */
 export function isTemporary(status: number, code: number | undefined): boolean {
-  return status >= 500 || status === 429 || (code !== undefined && TEMPORARY.includes(code));
+  return (
+    status >= 500 ||
+    status === 429 ||
+    (code !== undefined && TEMPORARY.includes(code))
+  );
 }
 
 type TopKind = 'artists' | 'tracks' | 'albums';
 
-const TOP_METHODS: Record<TopKind, { method: string; listKey: string; itemKey: string }> = {
-  artists: { method: 'user.getTopArtists', listKey: 'topartists', itemKey: 'artist' },
-  tracks: { method: 'user.getTopTracks', listKey: 'toptracks', itemKey: 'track' },
-  albums: { method: 'user.getTopAlbums', listKey: 'topalbums', itemKey: 'album' },
+const TOP_METHODS: Record<
+  TopKind,
+  {method: string; listKey: string; itemKey: string}
+> = {
+  artists: {
+    method: 'user.getTopArtists',
+    listKey: 'topartists',
+    itemKey: 'artist',
+  },
+  tracks: {method: 'user.getTopTracks', listKey: 'toptracks', itemKey: 'track'},
+  albums: {method: 'user.getTopAlbums', listKey: 'topalbums', itemKey: 'album'},
 };
 
 export interface LastfmTrack {
@@ -51,7 +62,7 @@ export class LastfmClient {
   ) {}
 
   async getTotalScrobbles(): Promise<number> {
-    const data = await this.call<{ user: { playcount: string } }>('user.getInfo');
+    const data = await this.call<{user: {playcount: string}}>('user.getInfo');
     return Number(data.user.playcount);
   }
 
@@ -60,14 +71,14 @@ export class LastfmClient {
    * at most 200 per page.
    */
   async getRecentTracks(
-    options: { from?: Date; to?: number; page?: number; limit?: number } = {},
+    options: {from?: Date; to?: number; page?: number; limit?: number} = {},
   ): Promise<LastfmRecentPage> {
-    const { from, to, page = 1, limit = 200 } = options;
+    const {from, to, page = 1, limit = 200} = options;
     const data = await this.call<RawRecentTracks>('user.getRecentTracks', {
       limit: String(limit),
       page: String(page),
-      ...(from ? { from: String(Math.floor(from.getTime() / 1000) + 1) } : {}),
-      ...(to !== undefined ? { to: String(to) } : {}),
+      ...(from ? {from: String(Math.floor(from.getTime() / 1000) + 1)} : {}),
+      ...(to !== undefined ? {to: String(to)} : {}),
     });
     return {
       tracks: asArray(data.recenttracks.track).map(toTrack),
@@ -75,15 +86,18 @@ export class LastfmClient {
     };
   }
 
-  async getTop(kind: TopKind, period: MusicTopPeriod, limit = 10): Promise<MusicTopItem[]> {
-    const { method, listKey, itemKey } = TOP_METHODS[kind];
-    const data = await this.call<Record<string, Record<string, RawTopItem[] | RawTopItem>>>(
-      method,
-      {
-        period,
-        limit: String(limit),
-      },
-    );
+  async getTop(
+    kind: TopKind,
+    period: MusicTopPeriod,
+    limit = 10,
+  ): Promise<MusicTopItem[]> {
+    const {method, listKey, itemKey} = TOP_METHODS[kind];
+    const data = await this.call<
+      Record<string, Record<string, RawTopItem[] | RawTopItem>>
+    >(method, {
+      period,
+      limit: String(limit),
+    });
     // A response like { topartists: { artist: [...] } }.
     return asArray(data[listKey]?.[itemKey]).map((item): MusicTopItem => ({
       name: item.name,
@@ -100,19 +114,25 @@ export class LastfmClient {
   }
 
   /** One method of the API; a failure on Last.fm's side is tried once more before giving up. */
-  private async call<T>(method: string, params: Record<string, string> = {}): Promise<T> {
+  private async call<T>(
+    method: string,
+    params: Record<string, string> = {},
+  ): Promise<T> {
     try {
       return await this.request<T>(method, params);
     } catch (error) {
       if (!(error instanceof LastfmUnavailableError)) {
         throw error;
       }
-      await new Promise((resolve) => setTimeout(resolve, RETRY_AFTER_MS));
+      await new Promise(resolve => setTimeout(resolve, RETRY_AFTER_MS));
       return this.request<T>(method, params);
     }
   }
 
-  private async request<T>(method: string, params: Record<string, string>): Promise<T> {
+  private async request<T>(
+    method: string,
+    params: Record<string, string>,
+  ): Promise<T> {
     const query = new URLSearchParams({
       method,
       user: this.username,
@@ -120,12 +140,12 @@ export class LastfmClient {
       format: 'json',
       ...params,
     });
-    type Answer = T & { error?: number; message?: string };
+    type Answer = T & {error?: number; message?: string};
     let response: Response;
     let data: Answer;
     try {
       response = await fetchWithTimeout(`${API}?${query}`, {
-        headers: { 'User-Agent': 'personal-dashboard' },
+        headers: {'User-Agent': 'personal-dashboard'},
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
       data = (await response.json()) as Answer;
@@ -134,10 +154,14 @@ export class LastfmClient {
       throw new LastfmUnavailableError(`Last.fm ${method}: no answer`);
     }
     if (data.error === INVALID_API_KEY || data.error === USER_NOT_FOUND) {
-      throw new LastfmAuthError(data.message ?? 'Last.fm authentication failed');
+      throw new LastfmAuthError(
+        data.message ?? 'Last.fm authentication failed',
+      );
     }
     if (isTemporary(response.status, data.error)) {
-      throw new LastfmUnavailableError(`Last.fm ${method}: ${data.message ?? response.status}`);
+      throw new LastfmUnavailableError(
+        `Last.fm ${method}: ${data.message ?? response.status}`,
+      );
     }
     if (!response.ok || data.error) {
       throw new Error(`Last.fm ${method}: ${data.message ?? response.status}`);
@@ -156,17 +180,17 @@ interface RawImage {
 interface RawRecentTrack {
   name: string;
   url: string;
-  artist: { '#text': string };
-  album: { '#text': string };
+  artist: {'#text': string};
+  album: {'#text': string};
   image: RawImage[];
-  date?: { uts: string };
-  '@attr'?: { nowplaying?: string };
+  date?: {uts: string};
+  '@attr'?: {nowplaying?: string};
 }
 
 interface RawRecentTracks {
   recenttracks: {
     track: RawRecentTrack[] | RawRecentTrack;
-    '@attr'?: { totalPages: string };
+    '@attr'?: {totalPages: string};
   };
 }
 
@@ -174,7 +198,7 @@ interface RawTopItem {
   name: string;
   playcount: string;
   url: string;
-  artist?: { name: string } | string;
+  artist?: {name: string} | string;
   image?: RawImage[];
 }
 
@@ -201,6 +225,6 @@ function asArray<T>(value: T[] | T | undefined): T[] {
 }
 
 function pickImage(images: RawImage[] | undefined): string | null {
-  const image = images?.find((i) => i.size === 'extralarge') ?? images?.at(-1);
+  const image = images?.find(i => i.size === 'extralarge') ?? images?.at(-1);
   return image?.['#text'] || null;
 }

@@ -1,12 +1,26 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   HEALTH_DOCUMENT_KINDS,
   HEALTH_DOCUMENT_MAX_BYTES,
@@ -17,8 +31,8 @@ import {
   HealthRecord,
   isHealthPageType,
 } from '@pd/contracts';
-import { HealthApi } from '../health.api';
-import { fileSize, orNull } from '../health-labels';
+import {HealthApi} from '../health.api';
+import {fileSize, orNull} from '../health-labels';
 
 export interface DocumentDialogData {
   record: HealthRecord;
@@ -44,14 +58,18 @@ export interface DocumentDialogData {
   ],
   template: `
     <h2 mat-dialog-title>
-      {{ (data.document ? 'health.document.edit' : 'health.document.add') | transloco }}
+      {{
+        (data.document ? 'health.document.edit' : 'health.document.add')
+          | transloco
+      }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
         @if (!data.document) {
           <div class="file">
             <button matButton="tonal" type="button" (click)="input.click()">
-              <mat-icon>upload_file</mat-icon> {{ 'health.document.choose' | transloco }}
+              <mat-icon>upload_file</mat-icon>
+              {{ 'health.document.choose' | transloco }}
             </button>
             <input
               #input
@@ -64,16 +82,21 @@ export interface DocumentDialogData {
             @if (files().length === 1) {
               <span>{{ files()[0].name }} · {{ size(files()[0].size) }}</span>
             } @else if (files().length > 1) {
-              <span>{{ 'health.document.pages' | transloco: { count: files().length } }}</span>
+              <span>{{
+                'health.document.pages' | transloco: {count: files().length}
+              }}</span>
             } @else {
-              <span class="hint">{{ 'health.document.types' | transloco }}</span>
+              <span class="hint">{{
+                'health.document.types' | transloco
+              }}</span>
             }
           </div>
           <p class="hint">{{ 'health.document.pagesHint' | transloco }}</p>
         } @else if (takesPages) {
           <div class="file">
             <button matButton="tonal" type="button" (click)="pages.click()">
-              <mat-icon>add_photo_alternate</mat-icon> {{ 'health.document.addPages' | transloco }}
+              <mat-icon>add_photo_alternate</mat-icon>
+              {{ 'health.document.addPages' | transloco }}
             </button>
             <input
               #pages
@@ -84,10 +107,15 @@ export interface DocumentDialogData {
               (change)="choose($any($event.target).files)"
             />
             @if (files().length) {
-              <span>{{ 'health.document.newPages' | transloco: { count: files().length } }}</span>
+              <span>{{
+                'health.document.newPages' | transloco: {count: files().length}
+              }}</span>
             } @else {
               <span class="hint">
-                {{ 'health.document.pages' | transloco: { count: data.document.pages } }}
+                {{
+                  'health.document.pages'
+                    | transloco: {count: data.document.pages}
+                }}
               </span>
             }
           </div>
@@ -125,7 +153,9 @@ export interface DocumentDialogData {
           </mat-select>
         </mat-form-field>
         @if (error()) {
-          <p class="error" role="alert">{{ 'health.errors.save' | transloco }}</p>
+          <p class="error" role="alert">
+            {{ 'health.errors.save' | transloco }}
+          </p>
         }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
@@ -135,7 +165,12 @@ export interface DocumentDialogData {
         <button
           matButton="filled"
           type="submit"
-          [disabled]="form.invalid || busy() || problem() || (!data.document && !files().length)"
+          [disabled]="
+            form.invalid ||
+            busy() ||
+            problem() ||
+            (!data.document && !files().length)
+          "
         >
           {{ 'core.actions.save' | transloco }}
         </button>
@@ -181,12 +216,15 @@ export class DocumentDialog {
 
   protected readonly kinds = HEALTH_DOCUMENT_KINDS;
   protected readonly types = HEALTH_DOCUMENT_TYPES.join(',');
-  protected readonly imageTypes = HEALTH_DOCUMENT_TYPES.filter(isHealthPageType).join(',');
+  protected readonly imageTypes =
+    HEALTH_DOCUMENT_TYPES.filter(isHealthPageType).join(',');
   protected readonly size = fileSize;
   /** One file, or the photos of the pages in order; for a document kept — pages to add. */
   protected readonly files = signal<File[]>([]);
   /** What is wrong with the files chosen (a translation key); `null` — nothing. */
-  protected readonly problem = computed(() => filesProblem(this.files(), this.data.document));
+  protected readonly problem = computed(() =>
+    filesProblem(this.files(), this.data.document),
+  );
   protected readonly busy = signal(false);
   protected readonly error = signal(false);
 
@@ -207,7 +245,9 @@ export class DocumentDialog {
     const files = Array.from(list ?? []);
     this.files.set(files);
     if (files.length && !this.form.controls.name.value.trim()) {
-      this.form.controls.name.setValue(files[0].name.replace(/\.[^.]+$/, '').slice(0, 200));
+      this.form.controls.name.setValue(
+        files[0].name.replace(/\.[^.]+$/, '').slice(0, 200),
+      );
     }
   }
 
@@ -243,11 +283,14 @@ export class DocumentDialog {
  * Why the files cannot go as they are: a PDF goes alone (it has pages of its own), pages are
  * photos, and there are not more than a document holds. `existing` — pages are added to it.
  */
-function filesProblem(files: File[], existing: HealthDocument | undefined): string | null {
-  if (files.some((file) => file.size > HEALTH_DOCUMENT_MAX_BYTES)) {
+function filesProblem(
+  files: File[],
+  existing: HealthDocument | undefined,
+): string | null {
+  if (files.some(file => file.size > HEALTH_DOCUMENT_MAX_BYTES)) {
     return 'health.document.tooBig';
   }
-  const photos = files.every((file) => isHealthPageType(file.type));
+  const photos = files.every(file => isHealthPageType(file.type));
   if (!photos && (files.length > 1 || existing)) {
     return 'health.document.onePdf';
   }

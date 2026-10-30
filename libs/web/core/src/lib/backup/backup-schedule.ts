@@ -2,8 +2,13 @@
 const DAY_MS = 24 * 3_600_000;
 
 /** A copy is due when there is none, or the newest is a day old. */
-export function copyDue(newest: { savedAt: string } | undefined, now: Date): boolean {
-  return !newest || now.getTime() - new Date(newest.savedAt).getTime() >= DAY_MS;
+export function copyDue(
+  newest: {savedAt: string} | undefined,
+  now: Date,
+): boolean {
+  return (
+    !newest || now.getTime() - new Date(newest.savedAt).getTime() >= DAY_MS
+  );
 }
 
 /** `personal-dashboard-2026-10-14.zip`, the day on the device's own clock: one copy a day. */

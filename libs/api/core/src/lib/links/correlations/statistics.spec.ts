@@ -19,13 +19,13 @@ describe('statistics', () => {
     expect(
       spearman(
         x,
-        x.map((v) => v ** 3),
+        x.map(v => v ** 3),
       ),
     ).toBeCloseTo(1);
     expect(
       spearman(
         x,
-        x.map((v) => -Math.exp(v)),
+        x.map(v => -Math.exp(v)),
       ),
     ).toBeCloseTo(-1);
   });

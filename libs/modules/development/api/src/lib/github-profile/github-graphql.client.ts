@@ -1,5 +1,9 @@
-import { GithubContributionDay, GithubLanguageShare, GithubTopRepo } from '@pd/contracts';
-import { githubGraphql } from '../github/github-graphql';
+import {
+  GithubContributionDay,
+  GithubLanguageShare,
+  GithubTopRepo,
+} from '@pd/contracts';
+import {githubGraphql} from '../github/github-graphql';
 
 /** GitHub returns at most 100 repositories a page; the most starred ones are enough here. */
 const MAX_REPOS = 100;
@@ -88,7 +92,7 @@ export class GithubGraphqlClient {
   constructor(private readonly token: string) {}
 
   async getViewer(): Promise<GithubViewer> {
-    const { viewer } = await this.query<{ viewer: RawViewer }>(VIEWER_QUERY);
+    const {viewer} = await this.query<{viewer: RawViewer}>(VIEWER_QUERY);
     const repos = viewer.repositories.nodes;
     return {
       login: viewer.login,
@@ -101,7 +105,7 @@ export class GithubGraphqlClient {
       repos: viewer.repositories.totalCount,
       totalStars: repos.reduce((sum, repo) => sum + repo.stargazerCount, 0),
       languages: languageShares(repos),
-      topRepos: repos.map((repo) => ({
+      topRepos: repos.map(repo => ({
         fullName: repo.nameWithOwner,
         htmlUrl: repo.url,
         stars: repo.stargazerCount,
@@ -114,10 +118,12 @@ export class GithubGraphqlClient {
 
   /** The calendar and the totals of one year (GitHub answers for at most a year at a time). */
   async getYear(year: number): Promise<GithubYearContributions> {
-    const { viewer } = await this.query<{ viewer: { contributionsCollection: RawYear } }>(
-      YEAR_QUERY,
-      { from: `${year}-01-01T00:00:00Z`, to: `${year}-12-31T23:59:59Z` },
-    );
+    const {viewer} = await this.query<{
+      viewer: {contributionsCollection: RawYear};
+    }>(YEAR_QUERY, {
+      from: `${year}-01-01T00:00:00Z`,
+      to: `${year}-12-31T23:59:59Z`,
+    });
     const collection = viewer.contributionsCollection;
     return {
       contributions: collection.contributionCalendar.totalContributions,
@@ -127,23 +133,32 @@ export class GithubGraphqlClient {
       issues: collection.totalIssueContributions,
       restricted: collection.restrictedContributionsCount,
       days: collection.contributionCalendar.weeks
-        .flatMap((week) => week.contributionDays)
+        .flatMap(week => week.contributionDays)
         // A week on the edge of the range may reach into the next year.
-        .filter((day) => day.date.startsWith(`${year}-`))
-        .map((day) => ({ day: day.date, count: day.contributionCount })),
+        .filter(day => day.date.startsWith(`${year}-`))
+        .map(day => ({day: day.date, count: day.contributionCount})),
     };
   }
 
-  private query<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
+  private query<T>(
+    query: string,
+    variables: Record<string, unknown> = {},
+  ): Promise<T> {
     return githubGraphql<T>(this.token, query, variables);
   }
 }
 
 /** Bytes of code per language across the repositories, largest first. */
-export function languageShares(repos: Pick<RawRepo, 'languages'>[]): GithubLanguageShare[] {
+export function languageShares(
+  repos: Pick<RawRepo, 'languages'>[],
+): GithubLanguageShare[] {
   const shares = new Map<string, GithubLanguageShare>();
-  for (const { size, node } of repos.flatMap((repo) => repo.languages.edges)) {
-    const share = shares.get(node.name) ?? { name: node.name, color: node.color, bytes: 0 };
+  for (const {size, node} of repos.flatMap(repo => repo.languages.edges)) {
+    const share = shares.get(node.name) ?? {
+      name: node.name,
+      color: node.color,
+      bytes: 0,
+    };
     share.bytes += size;
     shares.set(node.name, share);
   }
@@ -158,9 +173,9 @@ interface RawViewer {
   avatarUrl: string;
   url: string;
   createdAt: string;
-  followers: { totalCount: number };
-  following: { totalCount: number };
-  repositories: { totalCount: number; nodes: RawRepo[] };
+  followers: {totalCount: number};
+  following: {totalCount: number};
+  repositories: {totalCount: number; nodes: RawRepo[]};
 }
 
 interface RawRepo {
@@ -169,8 +184,10 @@ interface RawRepo {
   stargazerCount: number;
   forkCount: number;
   isPrivate: boolean;
-  primaryLanguage: { name: string } | null;
-  languages: { edges: { size: number; node: { name: string; color: string | null } }[] };
+  primaryLanguage: {name: string} | null;
+  languages: {
+    edges: {size: number; node: {name: string; color: string | null}}[];
+  };
 }
 
 interface RawYear {
@@ -181,6 +198,6 @@ interface RawYear {
   restrictedContributionsCount: number;
   contributionCalendar: {
     totalContributions: number;
-    weeks: { contributionDays: { date: string; contributionCount: number }[] }[];
+    weeks: {contributionDays: {date: string; contributionCount: number}[]}[];
   };
 }

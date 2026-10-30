@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ServerActions } from '@pd/api-core';
-import { wakatimeKeyInputSchema } from '@pd/contracts';
-import { WakatimeService } from './wakatime.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {ServerActions} from '@pd/api-core';
+import {wakatimeKeyInputSchema} from '@pd/contracts';
+import {WakatimeService} from './wakatime.service';
 
 /** WakaTime requests run on the server (see ServerActions). */
 export const WAKATIME_ACTIONS = {
@@ -20,6 +20,8 @@ export class WakatimeServerActions implements OnModuleInit {
     this.actions.register(WAKATIME_ACTIONS.connect, (userId, args) =>
       this.wakatime.connect(userId, wakatimeKeyInputSchema.parse(args).apiKey),
     );
-    this.actions.register(WAKATIME_ACTIONS.sync, (userId) => this.wakatime.sync(userId));
+    this.actions.register(WAKATIME_ACTIONS.sync, userId =>
+      this.wakatime.sync(userId),
+    );
   }
 }

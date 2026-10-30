@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import {createHash} from 'node:crypto';
 
 /*
  * The arithmetic of search by meaning, without a vector database: a person's history is a few
@@ -35,7 +35,11 @@ export function hashOf(text: string): string {
  * Some embedding models were trained with a prefix that says what a text is (nomic-embed-text:
  * "search_document: " / "search_query: "); without it they find noticeably worse.
  */
-export function withTask(model: string, kind: 'document' | 'query', text: string): string {
+export function withTask(
+  model: string,
+  kind: 'document' | 'query',
+  text: string,
+): string {
   return model.includes('nomic') ? `search_${kind}: ${text}` : text;
 }
 
@@ -52,15 +56,15 @@ export function cosine(a: ArrayLike<number>, b: ArrayLike<number>): number {
 }
 
 /** The `count` closest, above `min`, the closest first. */
-export function nearest<T extends { vector: ArrayLike<number> }>(
+export function nearest<T extends {vector: ArrayLike<number>}>(
   query: ArrayLike<number>,
   items: T[],
   count: number,
   min: number,
-): (T & { score: number })[] {
+): (T & {score: number})[] {
   return items
-    .map((item) => ({ ...item, score: cosine(query, item.vector) }))
-    .filter((item) => item.score >= min)
+    .map(item => ({...item, score: cosine(query, item.vector)}))
+    .filter(item => item.score >= min)
     .sort((a, b) => b.score - a.score)
     .slice(0, count);
 }

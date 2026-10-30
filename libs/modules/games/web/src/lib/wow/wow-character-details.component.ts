@@ -1,10 +1,15 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { WowHistoryPoint, WowStats, WowSummary } from '@pd/contracts';
-import { SparklineComponent, SparklinePoint } from '@pd/web-core';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTabsModule} from '@angular/material/tabs';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {WowHistoryPoint, WowStats, WowSummary} from '@pd/contracts';
+import {SparklineComponent, SparklinePoint} from '@pd/web-core';
 
 /** Item quality as the game colours it; anything else keeps the text colour. */
 const QUALITY_COLORS: Record<string, string> = {
@@ -31,7 +36,12 @@ const STAT_KEYS: (keyof WowStats)[] = [
   'mastery',
   'versatility',
 ];
-const PERCENT_STATS = new Set<keyof WowStats>(['crit', 'haste', 'mastery', 'versatility']);
+const PERCENT_STATS = new Set<keyof WowStats>([
+  'crit',
+  'haste',
+  'mastery',
+  'versatility',
+]);
 
 /**
  * Everything about one character: the sheet, the gear, talents, Mythic+, raids, PvP,
@@ -41,7 +51,14 @@ const PERCENT_STATS = new Set<keyof WowStats>(['crit', 'haste', 'mastery', 'vers
 @Component({
   selector: 'pd-wow-character-details',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, MatIconModule, MatTabsModule, TranslocoPipe, SparklineComponent],
+  imports: [
+    DatePipe,
+    DecimalPipe,
+    MatIconModule,
+    MatTabsModule,
+    TranslocoPipe,
+    SparklineComponent,
+  ],
   templateUrl: './wow-character-details.component.html',
   styleUrl: './wow-character-details.component.scss',
 })
@@ -55,23 +72,34 @@ export class WowCharacterDetailsComponent {
     if (!stats) {
       return [];
     }
-    return STAT_KEYS.flatMap((key) => {
+    return STAT_KEYS.flatMap(key => {
       const value = stats[key];
       return typeof value === 'number'
-        ? [{ key, value, percent: PERCENT_STATS.has(key), power: stats.powerType }]
+        ? [
+            {
+              key,
+              value,
+              percent: PERCENT_STATS.has(key),
+              power: stats.powerType,
+            },
+          ]
         : [];
     });
   });
 
-  protected readonly itemLevelHistory = computed(() => this.series('itemLevel'));
-  protected readonly ratingHistory = computed(() => this.series('mythicRating'));
+  protected readonly itemLevelHistory = computed(() =>
+    this.series('itemLevel'),
+  );
+  protected readonly ratingHistory = computed(() =>
+    this.series('mythicRating'),
+  );
 
   /** Collections with a number: the game version may not have some of them. */
   protected readonly collections = computed(() => {
     const collections = this.details()?.collections;
     return collections
-      ? (Object.entries(collections) as [string, number | null][]).flatMap(([key, value]) =>
-          value === null ? [] : [{ key, value }],
+      ? (Object.entries(collections) as [string, number | null][]).flatMap(
+          ([key, value]) => (value === null ? [] : [{key, value}]),
         )
       : [];
   });
@@ -87,9 +115,9 @@ export class WowCharacterDetailsComponent {
   }
 
   private series(field: keyof Omit<WowHistoryPoint, 'day'>): SparklinePoint[] {
-    return this.character().history.flatMap((point) => {
+    return this.character().history.flatMap(point => {
       const value = point[field];
-      return value === null ? [] : [{ at: point.day, value }];
+      return value === null ? [] : [{at: point.day, value}];
     });
   }
 }

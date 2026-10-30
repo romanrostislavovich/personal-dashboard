@@ -6,7 +6,18 @@
  */
 
 /** Default palette in the editor; any emoji works. */
-export const DIARY_MARK_EMOJIS = ['❤️', '💡', '🔥', '😂', '😢', '🎯', '⭐', '🙏', '❓', '⚠️'];
+export const DIARY_MARK_EMOJIS = [
+  '❤️',
+  '💡',
+  '🔥',
+  '😂',
+  '😢',
+  '🎯',
+  '⭐',
+  '🙏',
+  '❓',
+  '⚠️',
+];
 
 export interface DiaryMark {
   emoji: string;
@@ -17,21 +28,29 @@ export interface DiaryMark {
 const EMOJI = String.raw`\p{Extended_Pictographic}️?(?:‍\p{Extended_Pictographic}️?)*`;
 
 /** `==` + emoji + text without blank lines + `==`. */
-const MARK = new RegExp(String.raw`==(${EMOJI})\s*((?:(?!\n\s*\n)[^=]|=(?!=))+?)==`, 'gu');
+const MARK = new RegExp(
+  String.raw`==(${EMOJI})\s*((?:(?!\n\s*\n)[^=]|=(?!=))+?)==`,
+  'gu',
+);
 
 const LEADING_EMOJI = new RegExp(String.raw`^(${EMOJI})\s*`, 'u');
 
 export function parseDiaryMarks(content: string): DiaryMark[] {
-  return [...content.matchAll(MARK)].map((match) => ({
+  return [...content.matchAll(MARK)].map(match => ({
     emoji: match[1],
     text: match[2].trim(),
   }));
 }
 
 /** Splits highlighted text into its emoji and the rest (`null` emoji for a plain `==text==`). */
-export function splitMarkEmoji(text: string): { emoji: string | null; text: string } {
+export function splitMarkEmoji(text: string): {
+  emoji: string | null;
+  text: string;
+} {
   const match = LEADING_EMOJI.exec(text);
-  return match ? { emoji: match[1], text: text.slice(match[0].length) } : { emoji: null, text };
+  return match
+    ? {emoji: match[1], text: text.slice(match[0].length)}
+    : {emoji: null, text};
 }
 
 export interface TextEdit {
@@ -67,7 +86,11 @@ export function markSelection(
     })
     .join('');
   const result = content.slice(0, from) + marked + content.slice(to);
-  return { content: result, selectionStart: from, selectionEnd: from + marked.length };
+  return {
+    content: result,
+    selectionStart: from,
+    selectionEnd: from + marked.length,
+  };
 }
 
 /** Removes the mark around `position`, keeping its text. `null` if the cursor is not in a mark. */

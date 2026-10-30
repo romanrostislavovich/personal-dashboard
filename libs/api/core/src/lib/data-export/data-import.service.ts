@@ -12,12 +12,21 @@ import {
   DataImportReport,
   DataImportTable,
 } from '@pd/contracts';
-import { sql, SQL } from 'drizzle-orm';
-import { randomUUID } from 'node:crypto';
-import { rm } from 'node:fs/promises';
-import { encryptBytes, encryptedColumnsOf, encryptedRow } from '../crypto/encrypted-columns';
-import { DB, Database } from '../database/database.module';
-import { isFileReference, MANIFEST_PATH, readArchive, tableOfPath } from './data-archive';
+import {sql, SQL} from 'drizzle-orm';
+import {randomUUID} from 'node:crypto';
+import {rm} from 'node:fs/promises';
+import {
+  encryptBytes,
+  encryptedColumnsOf,
+  encryptedRow,
+} from '../crypto/encrypted-columns';
+import {DB, Database} from '../database/database.module';
+import {
+  isFileReference,
+  MANIFEST_PATH,
+  readArchive,
+  tableOfPath,
+} from './data-archive';
 import {
   exportable,
   ExportTable,
@@ -71,10 +80,10 @@ export class DataImportService implements OnApplicationShutdown {
     const id = randomUUID();
     try {
       const report = await this.run(userId, id, path, false);
-      this.uploads.set(id, { userId, path, expiresAt: Date.now() + KEPT_MS });
+      this.uploads.set(id, {userId, path, expiresAt: Date.now() + KEPT_MS});
       return report;
     } catch (error) {
-      await rm(path, { force: true });
+      await rm(path, {force: true});
       throw error;
     }
   }
@@ -93,18 +102,22 @@ export class DataImportService implements OnApplicationShutdown {
     const upload = this.uploads.get(id);
     if (upload?.userId === userId) {
       this.uploads.delete(id);
-      await rm(upload.path, { force: true });
+      await rm(upload.path, {force: true});
     }
   }
 
   async onApplicationShutdown(): Promise<void> {
-    await Promise.all([...this.uploads.values()].map(({ path }) => rm(path, { force: true })));
+    await Promise.all(
+      [...this.uploads.values()].map(({path}) => rm(path, {force: true})),
+    );
   }
 
   private take(userId: string, id: string): Upload {
     const upload = this.uploads.get(id);
     if (!upload || upload.userId !== userId || upload.expiresAt < Date.now()) {
-      throw new NotFoundException('The uploaded archive is gone: upload it again');
+      throw new NotFoundException(
+        'The uploaded archive is gone: upload it again',
+      );
     }
     return upload;
   }
@@ -126,8 +139,8 @@ export class DataImportService implements OnApplicationShutdown {
   ): Promise<DataImportReport> {
     let report: DataImportReport | null = null;
     try {
-      await this.db.transaction(async (tx) => {
-        report = { id, ...(await this.read(tx, userId, path)) };
+      await this.db.transaction(async tx => {
+        report = {id, ...(await this.read(tx, userId, path))};
         if (!commit) {
           throw new Preview();
         }
@@ -146,19 +159,31 @@ export class DataImportService implements OnApplicationShutdown {
     path: string,
   ): Promise<Omit<DataImportReport, 'id'>> {
     const targets = new Map(
-      exportable(await readExportTables(tx)).map((target) => [target.table.name, target]),
+      exportable(await readExportTables(tx)).map(target => [
+        target.table.name,
+        target,
+      ]),
     );
     let manifest: DataArchiveManifest | null = null;
     const counts = new Map<string, DataImportTable>();
     const unknown = new Set<string>();
     /** Rows of the table being read that wait to be written. */
-    let batch: { target: Target; rows: Row[] } | null = null;
+    let batch: {target: Target; rows: Row[]} | null = null;
     /** Rows that wait for their binary files, by the path of each file. */
-    const waiting = new Map<string, { target: Target; row: Row; column: string }>();
+    const waiting = new Map<
+      string,
+      {target: Target; row: Row; column: string}
+    >();
 
     const flush = async () => {
       if (batch?.rows.length) {
-        const added = await this.insert(tx, userId, batch.target, targets, batch.rows);
+        const added = await this.insert(
+          tx,
+          userId,
+          batch.target,
+          targets,
+          batch.rows,
+        );
         (counts.get(batch.target.table.name) as DataImportTable).added += added;
         batch.rows = [];
       }
@@ -166,10 +191,12 @@ export class DataImportService implements OnApplicationShutdown {
     const add = async (target: Target, row: Row) => {
       if (batch?.target !== target) {
         await flush();
-        batch = { target, rows: [] };
+        batch = {target, rows: []};
       }
       batch.rows.push(row);
-      const limit = target.table.binary.length ? BINARY_ROWS_AT_A_TIME : ROWS_AT_A_TIME;
+      const limit = target.table.binary.length
+        ? BINARY_ROWS_AT_A_TIME
+        : ROWS_AT_A_TIME;
       if (batch.rows.length >= limit) {
         await flush();
       }
@@ -181,14 +208,18 @@ export class DataImportService implements OnApplicationShutdown {
         continue;
       }
       if (!manifest) {
-        throw new BadRequestException('Not an archive of a dashboard: it has no manifest');
+        throw new BadRequestException(
+          'Not an archive of a dashboard: it has no manifest',
+        );
       }
       if (event.kind === 'file') {
         const pending = waiting.get(event.path);
         if (pending) {
           waiting.delete(event.path);
           // An encrypted column gets this instance's key (the archive holds it decrypted).
-          const content = encryptedColumnsOf(pending.target.table.name)?.bytes.has(pending.column)
+          const content = encryptedColumnsOf(
+            pending.target.table.name,
+          )?.bytes.has(pending.column)
             ? encryptBytes(event.content)
             : event.content;
           // PostgreSQL reads `\x…` as the bytes of a bytea column.
@@ -206,19 +237,27 @@ export class DataImportService implements OnApplicationShutdown {
         continue;
       }
       const row = encryptedRow(name, parseRow(event.line));
-      const count = counts.get(name) ?? { table: name, inArchive: 0, added: 0 };
-      counts.set(name, { ...count, inArchive: count.inArchive + 1 });
-      const files = Object.entries(row).filter(([, value]) => isFileReference(value));
+      const count = counts.get(name) ?? {table: name, inArchive: 0, added: 0};
+      counts.set(name, {...count, inArchive: count.inArchive + 1});
+      const files = Object.entries(row).filter(([, value]) =>
+        isFileReference(value),
+      );
       if (!files.length) {
         await add(target, row);
       }
       for (const [column, reference] of files) {
-        waiting.set((reference as { $file: string }).$file, { target, row, column });
+        waiting.set((reference as {$file: string}).$file, {
+          target,
+          row,
+          column,
+        });
       }
     }
     await flush();
     if (!manifest) {
-      throw new BadRequestException('Not an archive of a dashboard: it has no manifest');
+      throw new BadRequestException(
+        'Not an archive of a dashboard: it has no manifest',
+      );
     }
     return {
       exportedAt: (manifest as DataArchiveManifest).exportedAt,
@@ -231,7 +270,7 @@ export class DataImportService implements OnApplicationShutdown {
   private async insert(
     tx: Transaction,
     userId: string,
-    { table, owned }: Target,
+    {table, owned}: Target,
     targets: ReadonlyMap<string, Target>,
     rows: Row[],
   ): Promise<number> {
@@ -248,10 +287,12 @@ export class DataImportService implements OnApplicationShutdown {
     // instance): adding "what is missing" would tie this user's rows to someone else's.
     if (direct && !table.primaryKey.includes(USER_COLUMN)) {
       const sameKey = sql.join(
-        table.primaryKey.map((key) => sql`t.${sql.identifier(key)} = k.${sql.identifier(key)}`),
+        table.primaryKey.map(
+          key => sql`t.${sql.identifier(key)} = k.${sql.identifier(key)}`,
+        ),
         sql` AND `,
       );
-      const { rows: taken } = await tx.execute(sql`
+      const {rows: taken} = await tx.execute(sql`
         SELECT 1 FROM ${incoming} JOIN ${name} t ON ${sameKey}
         WHERE t.${sql.identifier(USER_COLUMN)} <> ${userId} LIMIT 1`);
       if (taken.length) {
@@ -262,14 +303,19 @@ export class DataImportService implements OnApplicationShutdown {
     }
 
     // Columns the archive does not know (added since the export) take their defaults.
-    const known = new Set([...Object.keys(rows[0]), ...(direct ? [USER_COLUMN] : [])]);
+    const known = new Set([
+      ...Object.keys(rows[0]),
+      ...(direct ? [USER_COLUMN] : []),
+    ]);
     const columns = sql.join(
-      table.columns.filter((column) => known.has(column)).map((column) => sql.identifier(column)),
+      table.columns
+        .filter(column => known.has(column))
+        .map(column => sql.identifier(column)),
       sql`, `,
     );
     // A row is taken only with what it references being this user's too (or not there at all:
     // then the row is left out instead of breaking the import).
-    const references: SQL[] = table.references.flatMap((reference) => {
+    const references: SQL[] = table.references.flatMap(reference => {
       const parent = targets.get(reference.table);
       if (!parent) {
         return [];
@@ -295,10 +341,17 @@ function parseManifest(content: Buffer): DataArchiveManifest {
   try {
     manifest = JSON.parse(content.toString('utf8')) as DataArchiveManifest;
   } catch {
-    throw new BadRequestException('Not an archive of a dashboard: the manifest is not readable');
+    throw new BadRequestException(
+      'Not an archive of a dashboard: the manifest is not readable',
+    );
   }
-  if (typeof manifest.format !== 'number' || manifest.format > DATA_ARCHIVE_FORMAT) {
-    throw new BadRequestException('The archive is made by a newer version of the dashboard');
+  if (
+    typeof manifest.format !== 'number' ||
+    manifest.format > DATA_ARCHIVE_FORMAT
+  ) {
+    throw new BadRequestException(
+      'The archive is made by a newer version of the dashboard',
+    );
   }
   return manifest;
 }
@@ -312,5 +365,7 @@ function parseRow(line: string): Row {
   } catch {
     // Reported below.
   }
-  throw new BadRequestException('The archive is damaged: a line of a table is not a record');
+  throw new BadRequestException(
+    'The archive is damaged: a line of a table is not a record',
+  );
 }

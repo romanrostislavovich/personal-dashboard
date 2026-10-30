@@ -1,4 +1,4 @@
-import { WeatherCondition } from '@pd/contracts';
+import {WeatherCondition} from '@pd/contracts';
 
 /**
  * WMO weather interpretation codes (what Open-Meteo returns as `weather_code`)

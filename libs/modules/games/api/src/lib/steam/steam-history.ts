@@ -1,4 +1,8 @@
-import { STEAM_HISTORY_LIMIT, SteamHistoryPage, SteamListedMatch } from './steam-dota.client';
+import {
+  STEAM_HISTORY_LIMIT,
+  SteamHistoryPage,
+  SteamListedMatch,
+} from './steam-dota.client';
 
 /** One page of a query: all matches, or the matches on one hero, older than `beforeMatchId`. */
 export type HistoryPageReader = (query: {
@@ -43,8 +47,11 @@ export async function wholeHistory(
 
   // Way 1: the windows below the first one.
   let windows = 1;
-  while (window.matches.length >= STEAM_HISTORY_LIMIT && windows < MAX_WINDOWS) {
-    window = await walk(readPage, { beforeMatchId: oldest(window.matches) });
+  while (
+    window.matches.length >= STEAM_HISTORY_LIMIT &&
+    windows < MAX_WINDOWS
+  ) {
+    window = await walk(readPage, {beforeMatchId: oldest(window.matches)});
     await keep(window.matches);
     windows++;
   }
@@ -54,7 +61,7 @@ export async function wholeHistory(
 
   // Way 2: Steam gave nothing below the first window.
   for (const heroId of await heroIds()) {
-    const onHero = await walk(readPage, { heroId });
+    const onHero = await walk(readPage, {heroId});
     if (onHero.refused) {
       break;
     }
@@ -66,19 +73,23 @@ export async function wholeHistory(
 /** One query: its pages, the newest matches first, until Steam says there are no more. */
 async function walk(
   readPage: HistoryPageReader,
-  { beforeMatchId, heroId }: { beforeMatchId?: number; heroId?: number },
-): Promise<{ matches: SteamListedMatch[]; refused: boolean }> {
+  {beforeMatchId, heroId}: {beforeMatchId?: number; heroId?: number},
+): Promise<{matches: SteamListedMatch[]; refused: boolean}> {
   const matches: SteamListedMatch[] = [];
   for (;;) {
-    const page = await readPage({ beforeMatchId, heroId });
+    const page = await readPage({beforeMatchId, heroId});
     matches.push(...page.matches);
-    if (!page.hasMore || page.matches.length === 0 || matches.length >= STEAM_HISTORY_LIMIT) {
-      return { matches, refused: Boolean(page.refused) };
+    if (
+      !page.hasMore ||
+      page.matches.length === 0 ||
+      matches.length >= STEAM_HISTORY_LIMIT
+    ) {
+      return {matches, refused: Boolean(page.refused)};
     }
     beforeMatchId = oldest(page.matches);
   }
 }
 
 function oldest(matches: SteamListedMatch[]): number {
-  return Math.min(...matches.map((match) => match.matchId));
+  return Math.min(...matches.map(match => match.matchId));
 }

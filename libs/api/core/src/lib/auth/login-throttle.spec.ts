@@ -1,5 +1,5 @@
-import { HttpException } from '@nestjs/common';
-import { LoginThrottle, throttleKeys } from './login-throttle';
+import {HttpException} from '@nestjs/common';
+import {LoginThrottle, throttleKeys} from './login-throttle';
 
 describe('LoginThrottle', () => {
   it('locks after 10 failures for 15 minutes; a success clears it', () => {
@@ -13,7 +13,9 @@ describe('LoginThrottle', () => {
     }
     expect(() => throttle.check(keys)).toThrow(HttpException);
     // Another address is still locked out of this account.
-    expect(() => throttle.check(throttleKeys('5.6.7.8', 'me@example.com'))).toThrow();
+    expect(() =>
+      throttle.check(throttleKeys('5.6.7.8', 'me@example.com')),
+    ).toThrow();
 
     now += 15 * 60 * 1000;
     expect(() => throttle.check(keys)).not.toThrow();

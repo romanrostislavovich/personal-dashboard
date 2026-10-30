@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, contains, DB, Database } from '@pd/api-core';
-import { and, count, desc, eq, max, min, SQL, sql } from 'drizzle-orm';
-import { z } from 'zod';
-import { scrobbles } from './music.schema';
+import {Inject, Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, contains, DB, Database} from '@pd/api-core';
+import {and, count, desc, eq, max, min, SQL, sql} from 'drizzle-orm';
+import {z} from 'zod';
+import {scrobbles} from './music.schema';
 
 /** What the plays are counted by. */
 export const HISTORY_GROUPS = ['track', 'artist', 'album'] as const;
@@ -54,11 +54,16 @@ export class MusicHistoryQueryService {
     // A name as the user (or the model) writes it: exact first, a part of the name otherwise
     // ("beatles" finds "The Beatles") — but an exact match is never widened.
     const exact = await this.count(userId, query, false);
-    const loose = exact.plays === 0 && Boolean(query.artist ?? query.track ?? query.album);
+    const loose =
+      exact.plays === 0 && Boolean(query.artist ?? query.track ?? query.album);
     return loose ? this.count(userId, query, true) : exact;
   }
 
-  private async count(userId: string, query: HistoryTopQuery, loose: boolean): Promise<HistoryTop> {
+  private async count(
+    userId: string,
+    query: HistoryTopQuery,
+    loose: boolean,
+  ): Promise<HistoryTop> {
     const s = scrobbles;
     const where = and(eq(s.userId, userId), ...this.filters(query, loose));
     const columns = {
@@ -67,14 +72,18 @@ export class MusicHistoryQueryService {
       album: [s.artist, s.album],
     }[query.by];
     // A play without an album belongs to no album.
-    const grouped = query.by === 'album' ? and(where, sql`${s.album} <> ''`) : where;
+    const grouped =
+      query.by === 'album' ? and(where, sql`${s.album} <> ''`) : where;
 
-    const [total] = await this.db.select({ plays: count() }).from(s).where(grouped);
+    const [total] = await this.db
+      .select({plays: count()})
+      .from(s)
+      .where(grouped);
     const rows = await this.db
       .select({
         artist: s.artist,
-        ...(query.by === 'track' ? { track: s.track } : {}),
-        ...(query.by === 'album' ? { album: s.album } : {}),
+        ...(query.by === 'track' ? {track: s.track} : {}),
+        ...(query.by === 'album' ? {album: s.album} : {}),
         plays: count(),
         firstPlayedAt: min(s.playedAt),
         lastPlayedAt: max(s.playedAt),
@@ -86,7 +95,7 @@ export class MusicHistoryQueryService {
       .limit(query.limit);
     return {
       plays: total.plays,
-      rows: rows.map((row) => ({
+      rows: rows.map(row => ({
         ...row,
         firstPlayedAt: (row.firstPlayedAt as Date).toISOString(),
         lastPlayedAt: (row.lastPlayedAt as Date).toISOString(),
@@ -96,10 +105,13 @@ export class MusicHistoryQueryService {
 
   private filters(query: HistoryTopQuery, loose: boolean): SQL[] {
     const s = scrobbles;
-    const named = (column: typeof s.artist | typeof s.track | typeof s.album, name: string) =>
+    const named = (
+      column: typeof s.artist | typeof s.track | typeof s.album,
+      name: string,
+    ) =>
       loose ? contains(column, name) : sql`lower(${column}) = lower(${name})`;
     // A day is the user's own: a play at 01:00 belongs to the day it was played in their zone.
-    const day = sql`(${s.playedAt} AT TIME ZONE ${this.config.get('APP_TIMEZONE', { infer: true })})::date`;
+    const day = sql`(${s.playedAt} AT TIME ZONE ${this.config.get('APP_TIMEZONE', {infer: true})})::date`;
     return [
       ...(query.artist ? [named(s.artist, query.artist)] : []),
       ...(query.track ? [named(s.track, query.track)] : []),

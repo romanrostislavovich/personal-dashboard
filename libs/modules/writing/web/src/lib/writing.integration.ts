@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { ServerKeyComponent, ServerKeyField } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { WritingApi } from './writing.api';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {ServerKeyComponent, ServerKeyField} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {WritingApi} from './writing.api';
 
 /**
  * LanguageTool, in Settings → Integrations (see `integrations` in writing.module.ts): whether
@@ -20,7 +20,9 @@ import { WritingApi } from './writing.api';
         <mat-card-header>
           <mat-icon mat-card-avatar>spellcheck</mat-icon>
           <mat-card-title>LanguageTool</mat-card-title>
-          <mat-card-subtitle>{{ 'writing.integration.description' | transloco }}</mat-card-subtitle>
+          <mat-card-subtitle>{{
+            'writing.integration.description' | transloco
+          }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           @if (c.canCheck) {
@@ -36,7 +38,7 @@ import { WritingApi } from './writing.api';
               [fields]="fields"
               [set]="c.canCheck"
               [summary]="languageTool.url"
-              [initial]="{ url: languageTool.url }"
+              [initial]="{url: languageTool.url}"
               [save]="save"
               [remove]="remove"
               (changed)="config.reload()"
@@ -63,9 +65,14 @@ export class WritingIntegration {
   private readonly api = inject(WritingApi);
   protected readonly config = this.api.settings();
   protected readonly fields: ServerKeyField[] = [
-    { name: 'url', label: 'writing.integration.url', placeholder: 'http://languagetool:8010' },
+    {
+      name: 'url',
+      label: 'writing.integration.url',
+      placeholder: 'http://languagetool:8010',
+    },
   ];
   protected readonly save = (values: Record<string, string>) =>
     firstValueFrom(this.api.setLanguageTool(values['url']));
-  protected readonly remove = () => firstValueFrom(this.api.removeLanguageTool());
+  protected readonly remove = () =>
+    firstValueFrom(this.api.removeLanguageTool());
 }

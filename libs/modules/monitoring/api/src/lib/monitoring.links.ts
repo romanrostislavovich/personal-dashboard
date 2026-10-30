@@ -1,5 +1,11 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService, ProjectOverviewService, UsersService } from '@pd/api-core';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  DB,
+  Database,
+  LinksService,
+  ProjectOverviewService,
+  UsersService,
+} from '@pd/api-core';
 import {
   addDays,
   DailyMetric,
@@ -12,9 +18,9 @@ import {
   zonedDateTime,
   zonedToUtc,
 } from '@pd/contracts';
-import { and, asc, eq, gte, inArray, lt } from 'drizzle-orm';
-import { checkResults, monitors } from './monitoring.schema';
-import { Incident, incidentsOf } from './state/incidents';
+import {and, asc, eq, gte, inArray, lt} from 'drizzle-orm';
+import {checkResults, monitors} from './monitoring.schema';
+import {Incident, incidentsOf} from './state/incidents';
 
 const HOUR_MS = 60 * 60 * 1000;
 /** A change this long before a site went down may be what broke it. */
@@ -64,19 +70,21 @@ export class MonitoringLinks implements OnModuleInit {
     this.links.registerProject({
       module: 'monitoring',
       facts: async (userId, project, period) => {
-        const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
+        const timeZone = this.users.timeZoneOf(
+          await this.users.findById(userId),
+        );
         const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
         const history = await this.history(
           userId,
-          zonedToUtc({ date: period.from, time: '00:00' }, timeZone),
-          zonedToUtc({ date: after, time: '00:00' }, timeZone),
+          zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+          zonedToUtc({date: after, time: '00:00'}, timeZone),
           project.id,
         );
-        const checks = history.flatMap((site) => site.checks);
+        const checks = history.flatMap(site => site.checks);
         if (!checks.length) {
           return [];
         }
-        const up = checks.filter((check) => check.isUp).length;
+        const up = checks.filter(check => check.isUp).length;
         return [
           ...(await this.sslFact(userId, project.id)),
           {
@@ -85,12 +93,15 @@ export class MonitoringLinks implements OnModuleInit {
             value: Math.round((up / checks.length) * 10000) / 100,
             unit: 'percent',
             link: '/monitoring',
-            note: history.map((site) => site.url).join(', '),
+            note: history.map(site => site.url).join(', '),
           },
           {
             module: 'monitoring',
             labelKey: 'monitoring.links.incidents',
-            value: history.reduce((sum, site) => sum + incidentsOf(site.checks).length, 0),
+            value: history.reduce(
+              (sum, site) => sum + incidentsOf(site.checks).length,
+              0,
+            ),
             unit: 'count',
             link: '/monitoring',
           },
@@ -103,7 +114,11 @@ export class MonitoringLinks implements OnModuleInit {
     });
 
     this.links.registerPages([
-      { module: 'monitoring', path: '/monitoring', description: 'sites: uptime, response, SSL' },
+      {
+        module: 'monitoring',
+        path: '/monitoring',
+        description: 'sites: uptime, response, SSL',
+      },
     ]);
   }
 
@@ -113,47 +128,66 @@ export class MonitoringLinks implements OnModuleInit {
    */
   async incidents(userId: string, days: number): Promise<IncidentReport[]> {
     const now = new Date();
-    const history = await this.history(userId, new Date(now.getTime() - days * 24 * HOUR_MS), now);
+    const history = await this.history(
+      userId,
+      new Date(now.getTime() - days * 24 * HOUR_MS),
+      now,
+    );
     const found = history
-      .flatMap((site) => incidentsOf(site.checks).map((incident) => ({ site, incident })))
+      .flatMap(site =>
+        incidentsOf(site.checks).map(incident => ({site, incident})),
+      )
       .sort((a, b) => b.incident.from.getTime() - a.incident.from.getTime())
       .slice(0, MAX_INCIDENTS);
     const reports: IncidentReport[] = [];
-    for (const { site, incident } of found) {
+    for (const {site, incident} of found) {
       reports.push({
         projectId: site.projectId,
         url: site.url,
         from: incident.from.toISOString(),
         to: incident.to?.toISOString() ?? null,
         downMinutes: minutesOf(incident),
-        changesBefore: await this.changesBefore(userId, site.projectId, incident.from),
+        changesBefore: await this.changesBefore(
+          userId,
+          site.projectId,
+          incident.from,
+        ),
         outages: (
           await this.links.momentsBetween(
             userId,
             new Date(incident.from.getTime() - OUTAGE_SLACK_MS),
             new Date((incident.to ?? now).getTime() + OUTAGE_SLACK_MS),
           )
-        ).filter((moment) => moment.kind === 'outage'),
+        ).filter(moment => moment.kind === 'outage'),
       });
     }
     return reports;
   }
 
   /** The days left of the certificate that expires first among the project's sites. */
-  private async sslFact(userId: string, projectId: string): Promise<ProjectFact[]> {
+  private async sslFact(
+    userId: string,
+    projectId: string,
+  ): Promise<ProjectFact[]> {
     const sites = await this.db
-      .select({ url: monitors.url, expiresAt: monitors.sslExpiresAt })
+      .select({url: monitors.url, expiresAt: monitors.sslExpiresAt})
       .from(monitors)
-      .where(and(eq(monitors.userId, userId), eq(monitors.projectId, projectId)));
+      .where(
+        and(eq(monitors.userId, userId), eq(monitors.projectId, projectId)),
+      );
     const [first] = sites
-      .flatMap((site) => (site.expiresAt ? [{ url: site.url, expiresAt: site.expiresAt }] : []))
+      .flatMap(site =>
+        site.expiresAt ? [{url: site.url, expiresAt: site.expiresAt}] : [],
+      )
       .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime());
     return first
       ? [
           {
             module: 'monitoring',
             labelKey: 'monitoring.links.sslDays',
-            value: Math.floor((first.expiresAt.getTime() - Date.now()) / DAY_MS),
+            value: Math.floor(
+              (first.expiresAt.getTime() - Date.now()) / DAY_MS,
+            ),
             unit: 'count',
             link: '/monitoring',
             note: first.url,
@@ -163,25 +197,31 @@ export class MonitoringLinks implements OnModuleInit {
   }
 
   /** What changed in the project's code in the day before a moment, the nearest first. */
-  async changesBefore(userId: string, projectId: string, moment: Date): Promise<ProjectChange[]> {
+  async changesBefore(
+    userId: string,
+    projectId: string,
+    moment: Date,
+  ): Promise<ProjectChange[]> {
     const project = await this.overviews.ref(userId, projectId);
     const since = new Date(moment.getTime() - SUSPECT_HOURS * HOUR_MS);
-    return (await this.links.projectChanges(userId, project, since, moment)).slice(0, MAX_CHANGES);
+    return (
+      await this.links.projectChanges(userId, project, since, moment)
+    ).slice(0, MAX_CHANGES);
   }
 
   /** The minutes all the sites were down, on the day each incident began. */
   private async downDays(
     userId: string,
-    period: { from: LocalDate; to: LocalDate },
+    period: {from: LocalDate; to: LocalDate},
   ): Promise<DailyMetric[]> {
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
     const sites = await this.history(
       userId,
-      zonedToUtc({ date: period.from, time: '00:00' }, timeZone),
-      zonedToUtc({ date: after, time: '00:00' }, timeZone),
+      zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+      zonedToUtc({date: after, time: '00:00'}, timeZone),
     );
-    const checked = sites.flatMap((site) => site.checks);
+    const checked = sites.flatMap(site => site.checks);
     if (!checked.length) {
       return [];
     }
@@ -195,7 +235,8 @@ export class MonitoringLinks implements OnModuleInit {
         const day = zonedDateTime(incident.from, timeZone).date;
         // Still down: until now.
         const minutes =
-          minutesOf(incident) ?? Math.round((Date.now() - incident.from.getTime()) / 60_000);
+          minutesOf(incident) ??
+          Math.round((Date.now() - incident.from.getTime()) / 60_000);
         days.set(day, (days.get(day) ?? 0) + minutes);
       }
     }
@@ -205,18 +246,30 @@ export class MonitoringLinks implements OnModuleInit {
         module: 'monitoring',
         labelKey: 'monitoring.links.downMinutes',
         unit: 'count',
-        days: [...days].map(([day, value]) => ({ day, value })),
+        days: [...days].map(([day, value]) => ({day, value})),
       },
     ];
   }
 
   /** The checks of the user's sites between two moments, oldest first, per site. */
-  private async history(userId: string, from: Date, to: Date, projectId?: string) {
+  private async history(
+    userId: string,
+    from: Date,
+    to: Date,
+    projectId?: string,
+  ) {
     const sites = await this.db
-      .select({ id: monitors.id, url: monitors.url, projectId: monitors.projectId })
+      .select({
+        id: monitors.id,
+        url: monitors.url,
+        projectId: monitors.projectId,
+      })
       .from(monitors)
       .where(
-        and(eq(monitors.userId, userId), projectId ? eq(monitors.projectId, projectId) : undefined),
+        and(
+          eq(monitors.userId, userId),
+          projectId ? eq(monitors.projectId, projectId) : undefined,
+        ),
       );
     if (!sites.length) {
       return [];
@@ -232,22 +285,25 @@ export class MonitoringLinks implements OnModuleInit {
         and(
           inArray(
             checkResults.monitorId,
-            sites.map((site) => site.id),
+            sites.map(site => site.id),
           ),
           gte(checkResults.checkedAt, from),
           lt(checkResults.checkedAt, to),
         ),
       )
       .orderBy(asc(checkResults.checkedAt));
-    return sites.map((site) => ({
+    return sites.map(site => ({
       ...site,
-      checks: checks.filter((check) => check.monitorId === site.id),
+      checks: checks.filter(check => check.monitorId === site.id),
     }));
   }
 }
 
 function minutesOf(incident: Incident): number | null {
   return incident.to
-    ? Math.max(1, Math.round((incident.to.getTime() - incident.from.getTime()) / 60_000))
+    ? Math.max(
+        1,
+        Math.round((incident.to.getTime() - incident.from.getTime()) / 60_000),
+      )
     : null;
 }

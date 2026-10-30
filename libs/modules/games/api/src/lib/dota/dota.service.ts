@@ -1,17 +1,26 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
-import { DOTA_RECORDS, DotaHero, DotaRecord, dotaMatchMode, DotaSummary } from '@pd/contracts';
-import { and, desc, eq, gt, isNotNull, sql } from 'drizzle-orm';
-import { dotaMatches, gameAccounts, GameAccountRow } from '../games.schema';
-import { DotaHeroesService } from './dota-heroes.service';
-import { SteamDotaClient, SteamDotaPrivateError } from '../steam/steam-dota.client';
-import { toSteamId64 } from '../steam/steam-id';
-import { SteamKeyService } from '../steam/steam-key.service';
-import { DotaSteamSource } from './dota-steam.source';
-import { OpenDotaKeyService } from './opendota-key.service';
-import { sumByMode } from './mode-stats';
-import { DotaProfile, openDota, OpenDotaMatch } from './opendota.client';
-import { medalChange } from './steam-id';
+import {Inject, Injectable, Logger} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
+import {
+  DOTA_RECORDS,
+  DotaHero,
+  DotaRecord,
+  dotaMatchMode,
+  DotaSummary,
+} from '@pd/contracts';
+import {and, desc, eq, gt, isNotNull, sql} from 'drizzle-orm';
+import {dotaMatches, gameAccounts, GameAccountRow} from '../games.schema';
+import {DotaHeroesService} from './dota-heroes.service';
+import {
+  SteamDotaClient,
+  SteamDotaPrivateError,
+} from '../steam/steam-dota.client';
+import {toSteamId64} from '../steam/steam-id';
+import {SteamKeyService} from '../steam/steam-key.service';
+import {DotaSteamSource} from './dota-steam.source';
+import {OpenDotaKeyService} from './opendota-key.service';
+import {sumByMode} from './mode-stats';
+import {DotaProfile, openDota, OpenDotaMatch} from './opendota.client';
+import {medalChange} from './steam-id';
 
 /** Between full downloads only the latest matches are fetched. */
 const SYNC_MATCHES = 50;
@@ -24,7 +33,7 @@ const TOP_HEROES = 5;
 export interface DotaSyncResult {
   profile: DotaProfile;
   /** The medal changed (only if it was known before). */
-  rankChange: { from: number; to: number } | null;
+  rankChange: {from: number; to: number} | null;
 }
 
 /** The first sync, or the last full download was more than a day ago. */
@@ -43,7 +52,8 @@ function rankChangeSinceLastSync(
   if (account.lastSyncedAt === null) {
     return null;
   }
-  const previousTier = (account.profile as DotaProfile | null)?.rankTier ?? null;
+  const previousTier =
+    (account.profile as DotaProfile | null)?.rankTier ?? null;
   return medalChange(previousTier, profile.rankTier);
 }
 
@@ -69,7 +79,7 @@ export class DotaService {
    */
   async sync(
     account: GameAccountRow,
-    { fullHistory = false, awaitDetails = false } = {},
+    {fullHistory = false, awaitDetails = false} = {},
   ): Promise<DotaSyncResult> {
     const steam = await this.steamKeys.clientFor(account.userId);
     const apiKey = await this.keys.get(account.userId, account.id);
@@ -77,7 +87,7 @@ export class DotaService {
     let historyHidden = false;
     if (steam) {
       try {
-        await this.steamSource.syncList(account, steam, { full: fullHistory });
+        await this.steamSource.syncList(account, steam, {full: fullHistory});
       } catch (error) {
         if (!(error instanceof SteamDotaPrivateError)) {
           throw error;
@@ -87,11 +97,17 @@ export class DotaService {
     }
 
     // Without Steam OpenDota is all there is, and its failure is the failure of the sync.
-    const fromOpenDota = await this.syncOpenDota(account, fullHistory, apiKey).catch((error) => {
+    const fromOpenDota = await this.syncOpenDota(
+      account,
+      fullHistory,
+      apiKey,
+    ).catch(error => {
       if (!steam) {
         throw error;
       }
-      this.logger.warn(`OpenDota did not add to ${account.displayName}: ${error}`);
+      this.logger.warn(
+        `OpenDota did not add to ${account.displayName}: ${error}`,
+      );
       return null;
     });
 
@@ -99,7 +115,9 @@ export class DotaService {
       // A request per match: the hourly job waits for it, a click on the page does not.
       const filling = this.steamSource
         .fillDetails(account, steam)
-        .catch((error) => this.logger.warn(`Dota match details failed: ${error}`));
+        .catch(error =>
+          this.logger.warn(`Dota match details failed: ${error}`),
+        );
       if (awaitDetails) {
         await filling;
       }
@@ -111,7 +129,7 @@ export class DotaService {
           historyHidden,
         }
       : (fromOpenDota as DotaProfile);
-    return { profile, rankChange: rankChangeSinceLastSync(account, profile) };
+    return {profile, rankChange: rankChangeSinceLastSync(account, profile)};
   }
 
   /** The profile and the matches OpenDota has; nulls never replace what is already saved. */
@@ -164,14 +182,15 @@ export class DotaService {
     }
     const hero = await this.heroes.resolver();
 
-    const [totals, last30Days, recentMatches, topHeroes, modes, records] = await Promise.all([
-      this.totals(account.id),
-      this.last30Days(account.id),
-      this.recentMatches(account.id, hero),
-      this.topHeroes(account.id, hero),
-      this.modes(account.id),
-      this.records(account.id, hero),
-    ]);
+    const [totals, last30Days, recentMatches, topHeroes, modes, records] =
+      await Promise.all([
+        this.totals(account.id),
+        this.last30Days(account.id),
+        this.recentMatches(account.id, hero),
+        this.topHeroes(account.id, hero),
+        this.modes(account.id),
+        this.records(account.id, hero),
+      ]);
     return {
       game: 'dota2',
       ...profile,
@@ -186,10 +205,13 @@ export class DotaService {
   }
 
   /** A failed request changes nothing: the next sync simply brings what OpenDota already has. */
-  private async requestRefresh(account: GameAccountRow, apiKey: string | null): Promise<void> {
+  private async requestRefresh(
+    account: GameAccountRow,
+    apiKey: string | null,
+  ): Promise<void> {
     await openDota
       .requestRefresh(Number(account.externalId), apiKey)
-      .catch((error) => this.logger.warn(`OpenDota refresh failed: ${error}`));
+      .catch(error => this.logger.warn(`OpenDota refresh failed: ${error}`));
   }
 
   private async markHistorySynced(
@@ -200,7 +222,7 @@ export class DotaService {
   ): Promise<void> {
     await this.db
       .update(gameAccounts)
-      .set({ historySyncedAt: new Date() })
+      .set({historySyncedAt: new Date()})
       .where(eq(gameAccounts.id, account.id));
     if (matchCount === 0 || profile.historyHidden) {
       // The history may appear after the player enables public match data — ask OpenDota to look.
@@ -212,7 +234,7 @@ export class DotaService {
   // fallbacks for a missing row — only for NULL columns, which `coalesce` handles in SQL.
 
   private async totals(accountId: string): Promise<DotaSummary['totals']> {
-    const [{ firstMatchAt, ...totals }] = await this.db
+    const [{firstMatchAt, ...totals}] = await this.db
       .select({
         matches: sql<number>`count(*)::int`,
         decided: sql<number>`count(${dotaMatches.won})::int`,
@@ -223,10 +245,15 @@ export class DotaService {
       })
       .from(dotaMatches)
       .where(eq(dotaMatches.accountId, accountId));
-    return { ...totals, firstMatchAt: firstMatchAt ? new Date(firstMatchAt).toISOString() : null };
+    return {
+      ...totals,
+      firstMatchAt: firstMatchAt ? new Date(firstMatchAt).toISOString() : null,
+    };
   }
 
-  private async last30Days(accountId: string): Promise<DotaSummary['last30Days']> {
+  private async last30Days(
+    accountId: string,
+  ): Promise<DotaSummary['last30Days']> {
     const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const [row] = await this.db
       .select({
@@ -234,7 +261,12 @@ export class DotaService {
         losses: sql<number>`count(*) FILTER (WHERE NOT ${dotaMatches.won})::int`,
       })
       .from(dotaMatches)
-      .where(and(eq(dotaMatches.accountId, accountId), gt(dotaMatches.startedAt, monthAgo)));
+      .where(
+        and(
+          eq(dotaMatches.accountId, accountId),
+          gt(dotaMatches.startedAt, monthAgo),
+        ),
+      );
     return row;
   }
 
@@ -248,7 +280,7 @@ export class DotaService {
       .where(eq(dotaMatches.accountId, accountId))
       .orderBy(desc(dotaMatches.startedAt))
       .limit(RECENT_MATCHES);
-    return rows.map((m) => ({
+    return rows.map(m => ({
       matchId: m.matchId,
       hero: hero(m.heroId),
       mode: dotaMatchMode(m.gameMode, m.lobbyType),
@@ -276,7 +308,11 @@ export class DotaService {
       .groupBy(dotaMatches.heroId)
       .orderBy(desc(sql`count(*)`))
       .limit(TOP_HEROES);
-    return rows.map((h) => ({ hero: hero(h.heroId), games: h.games, wins: h.wins }));
+    return rows.map(h => ({
+      hero: hero(h.heroId),
+      games: h.games,
+      wins: h.wins,
+    }));
   }
 
   /**
@@ -284,21 +320,34 @@ export class DotaService {
    * replaces the saved one, but its `null` does not: the match may have come from Steam with
    * that field known.
    */
-  private async saveMatches(accountId: string, matches: OpenDotaMatch[]): Promise<void> {
+  private async saveMatches(
+    accountId: string,
+    matches: OpenDotaMatch[],
+  ): Promise<void> {
     // `excluded.<column>` is the row that failed to insert; columns are snake_case in the database.
     const set = Object.fromEntries(
       Object.keys(matches[0] ?? {})
-        .filter((key) => key !== 'matchId')
-        .map((key) => {
-          const column = key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
-          return [key, sql.raw(`coalesce(excluded.${column}, "games_dota_matches".${column})`)];
+        .filter(key => key !== 'matchId')
+        .map(key => {
+          const column = key.replace(/[A-Z]/g, c => `_${c.toLowerCase()}`);
+          return [
+            key,
+            sql.raw(
+              `coalesce(excluded.${column}, "games_dota_matches".${column})`,
+            ),
+          ];
         }),
     );
     for (let i = 0; i < matches.length; i += INSERT_CHUNK) {
       await this.db
         .insert(dotaMatches)
-        .values(matches.slice(i, i + INSERT_CHUNK).map((m) => ({ accountId, ...m })))
-        .onConflictDoUpdate({ target: [dotaMatches.accountId, dotaMatches.matchId], set });
+        .values(
+          matches.slice(i, i + INSERT_CHUNK).map(m => ({accountId, ...m})),
+        )
+        .onConflictDoUpdate({
+          target: [dotaMatches.accountId, dotaMatches.matchId],
+          set,
+        });
     }
   }
 
@@ -320,7 +369,10 @@ export class DotaService {
   }
 
   /** The best match for each record kind; the queries are independent, so they run together. */
-  private async records(accountId: string, hero: (id: number) => DotaHero): Promise<DotaRecord[]> {
+  private async records(
+    accountId: string,
+    hero: (id: number) => DotaHero,
+  ): Promise<DotaRecord[]> {
     const records = await Promise.all(
       DOTA_RECORDS.map(async (kind): Promise<DotaRecord | null> => {
         const column = dotaMatches[kind];
@@ -346,6 +398,6 @@ export class DotaService {
           : null;
       }),
     );
-    return records.filter((record) => record !== null);
+    return records.filter(record => record !== null);
   }
 }

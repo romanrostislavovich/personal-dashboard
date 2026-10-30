@@ -1,5 +1,17 @@
-import { encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
-import { index, integer, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  encryptedText,
+  registerEncryptedTables,
+  users,
+} from '@pd/api-core/schema';
+import {
+  index,
+  integer,
+  pgTable,
+  smallint,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 /**
  * People and the dates to remember: the birthday and, for someone who has died, the day of
@@ -11,7 +23,7 @@ export const birthdays = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     name: text().notNull(),
     /** `null` — the birthday is not known. */
     month: smallint(),
@@ -25,9 +37,9 @@ export const birthdays = pgTable(
     deathDay: smallint(),
     deathYear: smallint(),
     memorialRemindDaysBefore: integer().array().notNull().default([0, 1]),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 registerEncryptedTables(birthdays);

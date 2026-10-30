@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {
   AbstractControl,
   NonNullableFormBuilder,
@@ -6,12 +6,16 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   Birthday,
   BirthdayInput,
@@ -19,16 +23,20 @@ import {
   REMINDER_DAY_OPTIONS,
 } from '@pd/contracts';
 
-const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
+const MONTHS = Array.from({length: 12}, (_, i) => i + 1);
 
 /** A date is a day and a month together, and a person needs at least one of the two dates. */
 function wholeDates(form: AbstractControl): ValidationErrors | null {
-  const { day, month, deathDay, deathMonth } = form.value as Record<string, number | null>;
-  const half = (d: number | null, m: number | null) => Boolean(d) !== Boolean(m);
+  const {day, month, deathDay, deathMonth} = form.value as Record<
+    string,
+    number | null
+  >;
+  const half = (d: number | null, m: number | null) =>
+    Boolean(d) !== Boolean(m);
   if (half(day, month) || half(deathDay, deathMonth)) {
-    return { halfDate: true };
+    return {halfDate: true};
   }
-  return day || deathDay ? null : { noDate: true };
+  return day || deathDay ? null : {noDate: true};
 }
 
 /**
@@ -48,7 +56,9 @@ function wholeDates(form: AbstractControl): ValidationErrors | null {
     TranslocoPipe,
   ],
   template: `
-    <h2 mat-dialog-title>{{ (birthday ? 'birthdays.edit' : 'birthdays.add') | transloco }}</h2>
+    <h2 mat-dialog-title>
+      {{ (birthday ? 'birthdays.edit' : 'birthdays.add') | transloco }}
+    </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
         <mat-form-field>
@@ -60,7 +70,13 @@ function wholeDates(form: AbstractControl): ValidationErrors | null {
         <div class="row">
           <mat-form-field>
             <mat-label>{{ 'birthdays.day' | transloco }}</mat-label>
-            <input matInput type="number" min="1" max="31" formControlName="day" />
+            <input
+              matInput
+              type="number"
+              min="1"
+              max="31"
+              formControlName="day"
+            />
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'birthdays.month' | transloco }}</mat-label>
@@ -97,7 +113,13 @@ function wholeDates(form: AbstractControl): ValidationErrors | null {
         <div class="row">
           <mat-form-field>
             <mat-label>{{ 'birthdays.day' | transloco }}</mat-label>
-            <input matInput type="number" min="1" max="31" formControlName="deathDay" />
+            <input
+              matInput
+              type="number"
+              min="1"
+              max="31"
+              formControlName="deathDay"
+            />
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'birthdays.month' | transloco }}</mat-label>
@@ -180,7 +202,9 @@ function wholeDates(form: AbstractControl): ValidationErrors | null {
 })
 export class BirthdayFormDialog {
   protected readonly birthday = inject<Birthday | null>(MAT_DIALOG_DATA);
-  private readonly dialogRef = inject(MatDialogRef<BirthdayFormDialog, BirthdayInput>);
+  private readonly dialogRef = inject(
+    MatDialogRef<BirthdayFormDialog, BirthdayInput>,
+  );
   protected readonly months = MONTHS;
   protected readonly reminderOptions = REMINDER_DAY_OPTIONS;
 
@@ -189,11 +213,17 @@ export class BirthdayFormDialog {
     {
       name: [this.birthday?.name ?? '', Validators.required],
       // A new person starts with a birthday to fill in; an existing one shows what is known.
-      day: [this.birthday ? this.birthday.day : (1 as number | null), this.dayOfMonth],
+      day: [
+        this.birthday ? this.birthday.day : (1 as number | null),
+        this.dayOfMonth,
+      ],
       month: [this.birthday ? this.birthday.month : (1 as number | null)],
       year: [this.birthday?.year ?? (null as number | null)],
       remindDaysBefore: [this.birthday?.remindDaysBefore ?? [0, 1, 7]],
-      deathDay: [this.birthday?.deathDay ?? (null as number | null), this.dayOfMonth],
+      deathDay: [
+        this.birthday?.deathDay ?? (null as number | null),
+        this.dayOfMonth,
+      ],
       deathMonth: [this.birthday?.deathMonth ?? (null as number | null)],
       deathYear: [this.birthday?.deathYear ?? (null as number | null)],
       memorialRemindDaysBefore: [
@@ -201,7 +231,7 @@ export class BirthdayFormDialog {
       ],
       note: [this.birthday?.note ?? ''],
     },
-    { validators: wholeDates },
+    {validators: wholeDates},
   );
 
   save(): void {
