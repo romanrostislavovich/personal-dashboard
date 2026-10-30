@@ -163,7 +163,7 @@ export class LinksAchievements implements OnModuleInit {
         [
           5,
           '🕸️',
-          {en: 'It runs itself', ru: 'Работает само'},
+          {en: 'A web of rules', ru: 'Паутина правил'},
           {en: 'Five automation rules', ru: 'Пять правил автоматизации'},
         ],
       ),

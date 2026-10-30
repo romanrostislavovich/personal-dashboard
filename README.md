@@ -64,7 +64,7 @@ Russian.
 - 🛡️ **Security agent** — watches sign-ins, the server (SSH, firewall, open ports), your computers,
   your phone (its patch, lock, device admins, certificates, apps that install apps) and
   repositories every hour; an AI investigates every morning and tells what to fix
-- 🏆 **400+ achievements** across all sections, with XP and a player level
+- 🏆 **500+ achievements** across all sections, with XP and a player level
 - 🎨 **Comfortable** — Ctrl+K opens any page and searches all your data, themes and accents, a
   home page you arrange yourself, an installable app that opens offline
 - 🔒 **Yours** — your server, tokens encrypted, two-factor sign-in, a 30-day trash, an offline
@@ -95,7 +95,7 @@ Russian.
 | ✍️ **Writing**      | spelling and grammar by LanguageTool on your own server and rewrites by the AI — on its page, in the browser extension and the desktop app                                                                    |
 | 🛡️ **Security**     | what the security agent found on the dashboard, the server, your computers, the phone and the repositories — the worst first, with what to do                                                                 |
 | 🖼️ **Screenshots**  | the desktop app's screenshots, the same folder on every computer and on the server                                                                                                                            |
-| 🏆 **Achievements** | 400+ across every section, XP and a player level                                                                                                                                                              |
+| 🏆 **Achievements** | 500+ across every section, XP and a player level                                                                                                                                                              |
 
 Every section is a module: hide what you do not use, or [write your own](docs/architecture.md).
 
