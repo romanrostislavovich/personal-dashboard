@@ -1,13 +1,14 @@
 # Proposal: the mobile app
 
-Status: stage 1a in progress. Android first; iOS later, if ever (it needs a Mac and a paid Apple
-account).
+Status (2026-10-30): stages 1–3 built and running on the owner's phone; stage 4 (voice) on hold;
+what is left is in [Not done yet](#not-done-yet). Android only; iOS not planned (it needs a Mac
+and a paid Apple account).
 
-## Decisions so far (2026-10-24)
+## Decisions so far (2026-10-24, updated 2026-10-30)
 
-- **The phone:** a Redmi 9 (MIUI): the setup screen must walk through autostart and battery
-  saving, or MIUI kills the collection in the background. Health Connect needs Android 11+ for
-  the Google Health app — check the phone's version.
+- **The phone:** a REDMI 17 (HyperOS 3, Android 16) since 2026-10-29, in place of the Redmi 9
+  (MIUI, Android 10, which could not run the Google Health app). The setup card walks through
+  autostart and battery saving, or the system kills the collection in the background.
 - **For whom:** the owner only for now, maybe everyone later. The APK is served by the server
   like the browser extension.
 - **No fingerprint lock** for now.
@@ -20,13 +21,12 @@ account).
 - **Gentle features:** yes — the widget, quiet hours, the help button with crisis lines of every
   country (a list with sources) and a close person's contact to call or write.
 - **The microphone:** allowed; first use — a voice assistant called by name.
-- **The band:** Xiaomi Smart Band 9 Pro is out — Mi Fitness writes neither stress nor HRV to
-  Health Connect (checked on the phone). Health Connect has **no stress type at all**, so stress
-  is our own index from HRV and resting heart rate. Candidates: **Fitbit Charge 6** or **Fitbit
-  Air** (screenless, 5 g, ~$99) — both reach us through the **Google Health API**, which replaces
-  the Fitbit Web API (switched off on 2026-11-02): daily and interval HRV, sleep, heart rate,
-  SpO2. Caveat to check when building it: a Google Cloud project in "testing" mode may need a new
-  consent every 7 days. Fallback: **Polar Loop** with Polar's open AccessLink API.
+- **The band:** the **Fitbit Air** (worn since 2026-10-27). Xiaomi Smart Band 9 Pro was out —
+  Mi Fitness writes neither stress nor HRV to Health Connect. Health Connect has **no stress type
+  at all**, so stress is our own index from HRV and resting heart rate. What Health Connect lacks
+  (resting pulse, SpO2, zone minutes) comes from the **Google Health API**, which replaces the
+  Fitbit Web API (switched off on 2026-11-02); a Google Cloud project in "testing" mode may need
+  a new consent every 7 days.
 
 ## The idea
 
@@ -58,8 +58,8 @@ Electron.
 
 - **1a (built, 2026-10-24):** the shell for Android — the connect page (which server), sign-in,
   the phone in Settings → Apps, the system Back button, the interface updating itself from the
-  server, the APK built and offered by the server, the icons. Moved to stage 2: the MIUI setup
-  screen (nothing runs in the background before stage 2).
+  server, the APK built and offered by the server, the icons. The autostart and battery setup
+  went to stage 2's card (nothing ran in the background before it).
 - **1b, offline (built, 2026-10-24):**
   - every answer of the API is kept on the phone (`ReadCache` in client-core, IndexedDB in the
     app, `offline-read.interceptor.ts` for `httpResource`) — what the browser's service worker
@@ -99,8 +99,6 @@ Electron.
   - **The home-screen widget** (`GentleWidget` in apps/mobile, Java): the page hands it the
     day's text (`showOnGentleWidget`), a tap opens the app on the gentle day
     (`personaldashboard://psychology/gentle`); a day that has passed asks to open the app.
-- MIUI and similar systems kill apps in the background: a setup screen walks through autostart
-  and battery settings.
 
 - **"Share" into the dashboard (built 2026-10-27):** a link, a text or a picture shared from any
   app (Android's share sheet) opens the capture page of the desktop app's shortcuts
@@ -148,11 +146,9 @@ battery barely notices. Fixes wait in `SensorsStore` without a network and go to
 `/api/activity/device/locations` (`activity_phone_locations`, the point encrypted). The server
 tells a day as stays (two fixes in a row within 200 m) and trips between them (`places/stays.ts`),
 gathers the stays of 30 days into places, and the user names them ("Home") —
-`activity_places`, the stays within 150 m take the name. Activity → Places shows a day; a link
-opens a point on OpenStreetMap (no map is loaded by itself: tiles would tell the area). Links
+`activity_places`, the stays within 150 m take the name. Activity → Places shows a day; Links
 gets "km on the move" and "places visited" for the days with enough fixes; the life timeline a
-line. Not yet: a map on the page, names of places from an address lookup (it would send the
-points out).
+line. The map and the names of places came with stage 2d.
 
 To Activity (a "phone" device) and Life, and from there to Links:
 
@@ -190,10 +186,18 @@ between them on a map.
   a place met again is not looked up again; the user's own name wins. A button "look up on
   Google" for a stay OpenStreetMap named wrong — needs a Google Places key (server key, kept on
   the server). Only the stays' points leave the server, never the routes.
-- **The map** in Activity → Places: OpenStreetMap through Leaflet by default (no key; the tiles
-  tell OSM which area is looked at); Google Maps as a switch once a browser key (restricted to
-  the dashboard's addresses) is set. The day's route as a line, the stays as marks with their
-  names and times, and every place of a period.
+- **The map** in Activity → Places: OpenStreetMap through Leaflet by default; Google Maps as a
+  switch once a browser key (restricted to the dashboard's addresses) is set. The day's route as
+  a line, the stays as marks with their names and times, the places of the last 30 days faint.
+  **Since 2026-10-30** (the owner's choices): OSM's tiles come through the dashboard
+  (`/api/map/tiles`, `map/map-tiles.ts` in api-core, kept in memory and in the browser for a
+  week), so OpenStreetMap sees the server, never which streets the user looks at; the named
+  places are drawn as circles of their radius; a period switch — day / week / month / year —
+  turns the map into a heat map of where the time went (`places/heat.ts`: one fix in five
+  minutes, ~150 m cells with their minutes).
+- **"Where were you?"** (2026-10-30): after a stay of 15 minutes or more the owner is asked with
+  buttons — the nearest places Google knows (with a Places key), else OpenStreetMap's name — and
+  the answer names the place (`place-question.service.ts`).
 - **How one moved:** walking, cycling or riding, by the speed of a trip; time on foot and outdoors.
 - **To Links and Life:** new places a week, hours at home, time on the way, places ↔ mood/sleep.
 - **Automations by places:** came to / left a place (the gym → mark the habit; left work → a
@@ -205,8 +209,9 @@ activity module (`stays.ts`, `frequent.ts`, `day-numbers.ts`, `place-names.servi
 `place-lookup.clients.ts`, `places.automations.ts`), `google-timeline.ts` in contracts (the
 Takeout parser, run in the browser), and Activity → Places with `places-map.component.ts`.
 Home is the place of most nights (3 am) in the 60 days before. Checked on a throwaway server with
-public points of central Warsaw; the GPS mode on a real walk, Google's keys and a real Takeout
-file are not checked yet.
+public points of central Warsaw, then on the owner's phone: the GPS mode on real walks (a walk
+that comes back near a place stays a trip since 2026-10-30) and the Google Places key. A real
+Takeout file is not tried yet.
 
 ## Stage 3 — health and stress
 
@@ -220,7 +225,10 @@ file are not checked yet.
   do; a band's own API (Polar, Fitbit) only if ours is not enough. The band to buy is the one that
   writes HRV to Health Connect — to be checked on its permission screen before buying.
 
-**Built (2026-10-26), before the band arrived:** the band is read from the server through the Google Health API (Health → Band, Settings → Integrations → Google Health; `libs/modules/health/api/src/lib/wearable`), not through Health Connect on the phone: the Fitbit Air needs the Google Health app, which needs Android 11+, and the owner's phone is a Redmi 9 (`galahad`) on Android 10 with no update (the official Redmi 9 ROM refuses it). The band can be paired with any Android 11+ phone or an iPhone — the dashboard does not care which. Written from the documented API shapes; nothing ran against the real API yet. The stress index from HRV and resting heart rate is still to come.
+**Built (2026-10-26), before the band arrived:** the band read from the server through the
+Google Health API (Settings → Integrations → Google Health; `health/api/.../wearable`), for the
+old phone that could not run the Google Health app. Written from the documented API shapes; it
+has not been connected to the real API yet (see [Not done yet](#not-done-yet)).
 
 **Decisions (2026-10-29, the owner's)** — the owner's new phone (REDMI 17, Android 16) runs the
 Google Health app, and it writes to Health Connect (steps, heart rate, HRV, sleep, calories,
@@ -239,8 +247,7 @@ distance, floors, exercise, skin temperature; not the resting pulse, SpO2 or zon
   at rest (no steps) — the band writes HRV at night only, so the daytime index is the pulse's.
 - **Health → Band:** the day by hours (pulse, stress, steps, exercises), the night (stage
   timeline, HRV and resting pulse against the baseline, skin temperature, **a sleep quality
-  score**), trends, and a home widget. The owner also wants something like Google Health's
-  mental-health section — to be specified.
+  score**), trends, and a home widget.
 - **High stress is notified always, even in the quiet hours** (at most once in a few hours).
 - **Mind** (2026-10-29, after the owner showed the band app's "mental health" — mindfulness,
   body reactions, resilience — all empty then): the dashboard counts its own. Mindfulness from
@@ -251,7 +258,27 @@ distance, floors, exercise, skin temperature; not the resting pulse, SpO2 or zon
 **Built (2026-10-29):** all of the above — the phone's `sensors/HealthConnectSync.java`, the
 server's `health/api/.../wearable/band*.ts` (migration 0118), Health → Band with the views Day /
 Trends / Mind, a home widget; the counting is in docs/telemetry.md ("The band through the
-phone"). Not yet run on the phone or with the real band's data.
+phone"). Running on the owner's phone with the real band since 2026-10-29 (the first night with
+a sleep score came on 2026-10-30, after the fix below); the thresholds are to be calibrated on
+two weeks of data.
+
+## Keeping it running (2026-10-30)
+
+On 2026-10-30 the phone sent nothing but the places for a day: the app's update at 00:24 left
+Android without the collection's job (`SensorsWorker`), and nobody noticed — the places service
+kept the device "seen". Since then:
+
+- **The app renews its schedule** once a process, when the places service or the main screen
+  starts (`SensorsWorker.ensureScheduled`, WorkManager's `UPDATE`).
+- **The server's watchdog** (`phone/phone-watchdog.service.ts` in activity, every 30 minutes;
+  the owner's choice: mend it without asking): the phone tells after each run of its collection
+  (`POST /api/activity/device/collected`: whether Health Connect and the location are allowed,
+  and the end of the newest Health Connect record). A quiet stream — the collection over 2 h,
+  the band over 6 h, the places over 12 h — wakes the phone with a **silent push** (`kind:
+revive`, not shown), at most hourly: it renews the schedule, runs the collection, starts the
+  places service and sends Health Connect's last three days again (`SensorsWorker.revive`).
+- **Only a silence the waking did not end in a day is told to the owner, once**
+  (`activity_phone_collection.told`).
 
 ## Stage 4 — voice
 
@@ -276,8 +303,17 @@ web chat and Telegram, every section's tools, writes too — "…, put in the di
 prompt for a short spoken answer; the answer is read by Android's TextToSpeech and kept in a
 notification. A question to confirm is listened for again at once. The noise level of the day
 is taken from the open microphone while it listens. Code: `apps/mobile/.../voice/`,
-`VoiceAssistantService` in api-core, `PhoneVoiceController` in activity. Not tried on the phone
-yet at the time of writing.
+`VoiceAssistantService` in api-core, `PhoneVoiceController` in activity. Tried on the phone: it
+woke up on ordinary speech and TV too often, so it is switched off (see the top of this stage).
+
+## Not done yet
+
+- **The Google Health API, connected for real** — resting pulse, SpO2 and zone minutes, which
+  Health Connect lacks; with the band's calibration (the owner's task for 2026-11-09: check the
+  pulse, sleep and HRV against the band's app, tune the stress thresholds in `band-math.ts`).
+- **Voice** — on hold (stage 4).
+- **A Google Maps Takeout file** — the import is built, never tried with a real file.
+- **The seizure alert** — later, below.
 
 ## Later
 

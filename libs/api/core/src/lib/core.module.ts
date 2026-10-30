@@ -71,6 +71,7 @@ import {TelegramBotService} from './notifications/telegram/telegram-bot.service'
 import {PushChannel} from './notifications/push/push.channel';
 import {PushController} from './notifications/push/push.controller';
 import {PushService} from './notifications/push/push.service';
+import {MapTilesController, MapTilesService} from './map/map-tiles';
 import {TelegramChannel} from './notifications/telegram/telegram.channel';
 import {ProjectsController} from './projects/projects.controller';
 import {ProjectsService} from './projects/projects.service';
@@ -133,6 +134,7 @@ import {UserActivityService} from './realtime/user-activity.service';
     }),
   ],
   controllers: [
+    MapTilesController,
     HealthController,
     AuthController,
     TrashController,
@@ -213,6 +215,7 @@ import {UserActivityService} from './realtime/user-activity.service';
     TelegramBotService,
     TelegramChannel,
     PushService,
+    MapTilesService,
     PushChannel,
     RealtimeService,
     UserActivityService,
@@ -259,6 +262,8 @@ import {UserActivityService} from './realtime/user-activity.service';
     // For the keys of the server at outside services (the Spotify app, LanguageTool).
     ServerKeysService,
     NotificationsService,
+    // For a silent message that wakes the app on the phone (Activity's watchdog).
+    PushService,
     // For bot commands: modules register them via registerCommand().
     TelegramBotService,
     // For achievements: modules register their metrics via register().

@@ -75,12 +75,32 @@ public class SensorsWorker extends Worker {
             return;
         }
         ensured = true;
+        reschedule(context);
+        runNow(context);
+    }
+
+    /**
+     * The server's silent push (PhoneWatchdogService): something went quiet. Everything is
+     * started again — the schedule, a run now, the places service (a push lets it start from the
+     * background) — and Health Connect's last days are sent again.
+     */
+    public static void revive(Context context) {
+        SensorsStore store = new SensorsStore(context);
+        if (!store.configured()) {
+            return;
+        }
+        HealthConnectSync.resendRecentDays(store);
+        reschedule(context);
+        runNow(context);
+        PlacesService.start(context);
+    }
+
+    private static void reschedule(Context context) {
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             PERIODIC,
             ExistingPeriodicWorkPolicy.UPDATE,
             new PeriodicWorkRequest.Builder(SensorsWorker.class, 15, TimeUnit.MINUTES).build()
         );
-        runNow(context);
     }
 
     public static void runNow(Context context) {
@@ -114,6 +134,7 @@ public class SensorsWorker extends Worker {
             sendSignals(store);
             HealthConnectSync.run(getApplicationContext(), store);
             sendSecurity(store);
+            sendCollected(store);
             return Result.success();
         } catch (IOException | JSONException e) {
             return Result.retry();
@@ -289,6 +310,16 @@ public class SensorsWorker extends Worker {
     }
 
     /** Throws on no answer or an error of the server, so the run is tried again. */
+    /** The run went through: the server's watchdog hears of it, and of the band's freshest data. */
+    private void sendCollected(SensorsStore store) throws IOException, JSONException {
+        Context context = getApplicationContext();
+        long newest = HealthConnectSync.newest(store);
+        post(store, "/api/activity/device/collected", new JSONObject()
+            .put("healthAllowed", HealthConnectSync.allowed(context))
+            .put("healthNewestAt", newest > 0 ? iso(newest) : JSONObject.NULL)
+            .put("locationAllowed", PhoneLocation.allowed(context)));
+    }
+
     static void post(SensorsStore store, String path, JSONObject body) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(store.server() + path).openConnection();
         try {

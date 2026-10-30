@@ -31,6 +31,7 @@ import {
   PhoneUsageQuery,
   PlaceInput,
   PlacesQuery,
+  PlacesHeatQuery,
 } from '@pd/contracts';
 import {ApiClient, apiRequest} from '../api-client';
 
@@ -58,6 +59,9 @@ export const ACTIVITY_READS = {
   places: (query: PlacesQuery) => apiRequest(`${BASE}/places`, query),
   /** Whether Google is connected for the places, and the map's key. */
   placesSettings: () => apiRequest(`${BASE}/places/settings`),
+  /** Where a period was spent: cells of ~150 m with their minutes, for the heat map. */
+  placesHeat: (query: PlacesHeatQuery) =>
+    apiRequest(`${BASE}/places/heat`, query),
   settings: () => apiRequest(`${BASE}/settings`),
   /** Every program seen, with its category and whether it is recorded. */
   apps: () => apiRequest(`${BASE}/apps`),

@@ -53,11 +53,12 @@ Russian.
 - 📱 **The phone as a sensor** (Android) — time in apps, unlocks and late nights, the
   notifications that interrupt you, and a timeline of places like Google Maps': the routes on a
   map, the places with their names (OpenStreetMap, or Google with your key) — a stay with no name
-  is asked about ("Where were you?", the places nearby as buttons), on foot or riding;
+  is asked about ("Where were you?", the places nearby as buttons), on foot or riding, and a
+  heat map of where a week, a month or a year went (the map's tiles come through your server);
   the alarm you set, how you meet notifications, the trips abroad; push notifications, offline
   reading (the diary's photos too), "Share" from any app into a task, the diary or the films to
-  watch, a home-screen widget; a voice assistant called by a name you choose — the name is heard on
-  the phone itself, the answer comes from the same AI, read aloud
+  watch, a home-screen widget; a phone gone quiet is woken by your server with a silent push;
+  a voice assistant called by a name you choose (on hold)
 - 🎬 **What you watched, by itself** — the browser extension notices a film or a show playing on
   any site (Netflix, a site with its own player), finds it in TMDB, and keeps the hours, the
   episodes and the late nights for Links; ratings, notes and a list to watch

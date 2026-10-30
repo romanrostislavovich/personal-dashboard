@@ -170,3 +170,18 @@ export const phoneSecuritySchema = z.object({
   vpn: z.boolean(),
 });
 export type PhoneSecurity = z.infer<typeof phoneSecuritySchema>;
+
+/**
+ * The phone's word after each run of its background collection (`POST
+ * /api/activity/device/collected`): the server's watchdog wakes the phone with a silent push
+ * when it goes quiet (see PhoneWatchdogService).
+ */
+export const phoneCollectedSchema = z.object({
+  /** Health Connect may be read (the band's data comes through it). */
+  healthAllowed: z.boolean(),
+  /** The end of the newest Health Connect record the phone has seen; `null` — none yet. */
+  healthNewestAt: moment.nullable(),
+  /** The location may be taken in the background (the places service runs). */
+  locationAllowed: z.boolean(),
+});
+export type PhoneCollected = z.infer<typeof phoneCollectedSchema>;

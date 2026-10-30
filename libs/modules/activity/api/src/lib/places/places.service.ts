@@ -2,6 +2,7 @@ import {Inject, Injectable, NotFoundException} from '@nestjs/common';
 import {DB, Database, UsersService} from '@pd/api-core';
 import {
   ActivityPeriod,
+  HeatCell,
   addDays,
   FoundPlaceName,
   LocalDate,
@@ -18,6 +19,7 @@ import {and, asc, eq, gte, lt, sql} from 'drizzle-orm';
 import {activityDevices, ActivityDeviceRow} from '../activity.schema';
 import {DevicesService} from '../devices.service';
 import {frequentPlaces, Named, namedAt} from './frequent';
+import {heatCells} from './heat';
 import {activityPhoneLocations, activityPlaces} from './places.schema';
 import {PlaceDayNumbers, placeDayNumbers} from './day-numbers';
 import {PlaceNamesService} from './place-names.service';
@@ -325,6 +327,22 @@ export class PlacesService {
       startedAt,
       endedAt,
     };
+  }
+
+  /**
+   * The heat map of a period, in the user's own days: one fix in five minutes is enough for
+   * where the time went (a year of every fix would be half a million to decrypt).
+   */
+  async heat(userId: string, period: ActivityPeriod): Promise<HeatCell[]> {
+    const zone = await this.zone(userId);
+    const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
+    const fixes = await this.fixes(
+      userId,
+      zonedToUtc({date: period.from, time: '00:00'}, zone).getTime(),
+      zonedToUtc({date: after, time: '00:00'}, zone).getTime(),
+      period.from === period.to ? 0 : THIN_SECONDS,
+    );
+    return heatCells(fixes);
   }
 
   /** Every fix between two moments (ms), oldest first. */

@@ -38,6 +38,15 @@ const CATEGORY_RU: Record<string, string> = {
 /** Texts of the notifications of the Activity section; the language follows `user.locale`. */
 const messages = {
   en: {
+    phoneQuietTitle: '📱 The phone has gone quiet',
+    phoneQuiet: {
+      collection: (since: string) =>
+        `Nothing from the phone's background collection since ${since}, and waking it did not help. Open the dashboard's app on the phone.`,
+      band: (since: string) =>
+        `No new band data in Health Connect since ${since}. Check that the band is on and charged, and open its app.`,
+      places: (since: string) =>
+        `No places since ${since}. Check that the location is on and the "Recording the places" notification is there.`,
+    },
     limitTitle: '⏳ Daily limit reached',
     limitGames: (used: number, limit: number) =>
       `${hours(used, 'h', 'min')} in games today — the limit is ${hours(limit, 'h', 'min')}.`,
@@ -99,6 +108,15 @@ const messages = {
           : (app ?? ''),
   },
   ru: {
+    phoneQuietTitle: '📱 Телефон замолчал',
+    phoneQuiet: {
+      collection: (since: string) =>
+        `Фоновый сбор телефона молчит с ${since}, разбудить его не вышло. Открой приложение дашборда на телефоне.`,
+      band: (since: string) =>
+        `Новых данных браслета в Health Connect нет с ${since}. Проверь, что браслет надет и заряжен, и открой его приложение.`,
+      places: (since: string) =>
+        `Точек мест нет с ${since}. Проверь, что геолокация включена и уведомление «Записываю места дня» на месте.`,
+    },
     limitTitle: '⏳ Дневной лимит',
     limitGames: (used: number, limit: number) =>
       `Сегодня уже ${hours(used, 'ч', 'мин')} в играх — лимит ${hours(limit, 'ч', 'мин')}.`,

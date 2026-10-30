@@ -32,6 +32,15 @@ import {PlacesMapComponent} from './places-map.component';
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 /** The map the user picked last on this device. */
 const MAP_KEY = 'pd.places.map';
+const PERIODS = ['day', 'week', 'month', 'year'] as const;
+type MapPeriod = (typeof PERIODS)[number];
+/** How many days the heat map covers, ending with the day picked; the day — its route. */
+const PERIOD_DAYS: Record<MapPeriod, number | null> = {
+  day: null,
+  week: 7,
+  month: 30,
+  year: 365,
+};
 const MODE_ICONS: Record<TripMode, string> = {
   walk: 'directions_walk',
   bike: 'directions_bike',
@@ -109,13 +118,47 @@ function savedMap(): 'osm' | 'google' {
       }
     </div>
 
+    <mat-button-toggle-group
+      class="period"
+      [value]="period()"
+      (change)="period.set($event.value)"
+      [attr.aria-label]="'activity.places.period.label' | transloco"
+    >
+      @for (option of periods; track option) {
+        <mat-button-toggle [value]="option">{{
+          'activity.places.period.' + option | transloco
+        }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+
     @if (overview.value(); as o) {
-      <pd-places-map
-        [entries]="o.entries"
-        [frequent]="o.frequent"
-        [labelOf]="label"
-        [googleKey]="map() === 'google' ? googleMapsKey() : null"
-      />
+      @if (period() === 'day') {
+        <pd-places-map
+          [entries]="o.entries"
+          [frequent]="o.frequent"
+          [named]="o.named"
+          [labelOf]="label"
+          [googleKey]="map() === 'google' ? googleMapsKey() : null"
+        />
+      } @else {
+        <pd-places-map
+          [entries]="[]"
+          [named]="o.named"
+          [heat]="heat.value() ?? []"
+          [labelOf]="label"
+          [googleKey]="map() === 'google' ? googleMapsKey() : null"
+        />
+        <p class="hint">
+          {{
+            'activity.places.period.hint'
+              | transloco
+                : {
+                    from: (heatRange()?.from | date: 'd MMM'),
+                    to: (day() | date: 'd MMM'),
+                  }
+          }}
+        </p>
+      }
 
       <mat-card appearance="outlined">
         <mat-card-header>
@@ -279,6 +322,11 @@ function savedMap(): 'osm' | 'google' {
       flex-wrap: wrap;
       gap: 4px;
     }
+    .period {
+      align-self: flex-start;
+      max-width: 100%;
+      overflow-x: auto;
+    }
     .day {
       min-width: 12em;
       text-align: center;
@@ -334,6 +382,19 @@ export class PlacesPage {
     () => this.settings.value()?.googleMapsKey ?? null,
   );
   protected readonly map = signal(savedMap());
+  protected readonly periods = PERIODS;
+  /** The map's period: the day itself, or the days before it for the heat map. */
+  protected readonly period = signal<MapPeriod>('day');
+  protected readonly heatRange = computed(() => {
+    const days = PERIOD_DAYS[this.period()];
+    return days
+      ? {
+          from: toLocalDate(addDays(parseLocalDate(this.day()), 1 - days)),
+          to: this.day(),
+        }
+      : null;
+  });
+  protected readonly heat = this.api.placesHeat(() => this.heatRange());
   protected readonly busy = signal(false);
   protected readonly stays = computed(() =>
     (this.overview.value()?.entries ?? []).filter(

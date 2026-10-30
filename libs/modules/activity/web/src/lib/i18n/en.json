@@ -573,7 +573,15 @@
     "map": "On the map",
     "frequent": "Places of the last 30 days",
     "frequentHint": "Name a place, and its stays take the name",
-    "visits": "visits: {{count}}"
+    "visits": "visits: {{count}}",
+    "period": {
+      "label": "Period of the map",
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year",
+      "hint": "Where the time went from {{from}} to {{to}}: the darker, the more hours. Circles are your named places."
+    }
   },
   "phone": {
     "unlocks": "Phone unlocks: {{count}}",

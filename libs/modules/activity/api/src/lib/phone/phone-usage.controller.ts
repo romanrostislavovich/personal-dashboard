@@ -1,6 +1,16 @@
-import {Body, Controller, Get, Headers, Post, Query} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  Post,
+  Query,
+} from '@nestjs/common';
 import {AuthUser, CurrentUser, Public, ZodValidationPipe} from '@pd/api-core';
 import {
+  PhoneCollected,
+  phoneCollectedSchema,
   PhoneUnlockIngest,
   phoneUnlockIngestSchema,
   PhoneUsage,
@@ -13,6 +23,7 @@ import {DevicesService} from '../devices.service';
 import {z} from 'zod';
 import {PhoneSignalsService} from './phone-signals.service';
 import {PhoneUsageService} from './phone-usage.service';
+import {PhoneWatchdogService} from './phone-watchdog.service';
 
 /**
  * How the phone is used: the Android app sends its unlocks with its device token; Activity →
@@ -24,6 +35,7 @@ export class PhoneUsageController {
     private readonly devices: DevicesService,
     private readonly phone: PhoneUsageService,
     private readonly signals: PhoneSignalsService,
+    private readonly watchdog: PhoneWatchdogService,
   ) {}
 
   @Public()
@@ -47,6 +59,20 @@ export class PhoneUsageController {
   ): Promise<{saved: number}> {
     const device = await this.devices.authenticate(authorization);
     return this.signals.ingest(device, body);
+  }
+
+  /** The phone's word after each run of its background collection (PhoneWatchdogService). */
+  @Public()
+  @Post('device/collected')
+  @HttpCode(204)
+  async collected(
+    @Headers('authorization') authorization: string | undefined,
+    @Body(new ZodValidationPipe(phoneCollectedSchema)) body: PhoneCollected,
+  ): Promise<void> {
+    await this.watchdog.collected(
+      await this.devices.authenticate(authorization),
+      body,
+    );
   }
 
   /** The numbers of each day from the phone's signals (Activity → Phone). */
