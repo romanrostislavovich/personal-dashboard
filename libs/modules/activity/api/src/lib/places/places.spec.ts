@@ -49,6 +49,29 @@ describe('the places of a day', () => {
     expect(trip.kind === 'trip' && trip.meters).toBeGreaterThan(2200);
   });
 
+  it('a walk that comes back near the place is a trip, not part of the stay', () => {
+    // A café, a walk of 40 minutes up to ~650 m away, then a bench 120 m from the café.
+    const bench = {latitude: 52.2308, longitude: 21.0122};
+    const walk: Fix[] = [];
+    for (let minute = 32; minute <= 70; minute += 2) {
+      const out = 1 - Math.abs(minute - 51) / 19; // 0 → 1 → 0
+      walk.push(
+        at(minute, {
+          latitude: HOME.latitude + 0.006 * out,
+          longitude: HOME.longitude + 0.002 * out,
+        }),
+      );
+    }
+    const entries = entriesOf([
+      ...every15(0, 30, HOME),
+      ...walk,
+      ...every15(72, 102, bench),
+    ]);
+    expect(entries.map(entry => entry.kind)).toEqual(['stay', 'trip', 'stay']);
+    expect(entries[1]).toMatchObject({kind: 'trip', mode: 'walk'});
+    expect((entries[1] as {meters: number}).meters).toBeGreaterThan(1000);
+  });
+
   it('passing by is no stay, and a fix gone astray is no trip', () => {
     const astray = {latitude: 52.236, longitude: 21.0122};
     const entries = entriesOf([

@@ -103,6 +103,13 @@ export {withoutTrash} from './lib/trash/trash-triggers';
 export {RateLimit} from './lib/system/rate-limit';
 export {compressImage, type StoredFile} from './lib/files/compress-image';
 export {
+  type ExportTable,
+  toDocx,
+  toXlsx,
+  xmlText,
+  zip,
+} from './lib/files/office-export';
+export {
   EncryptExistingService,
   type EncryptedLater,
 } from './lib/crypto/encrypt-existing.service';

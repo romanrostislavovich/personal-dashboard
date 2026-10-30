@@ -403,7 +403,7 @@ describe.skipIf(!ADMIN_URL)(
       ).toEqual([]);
     });
 
-    it('a run that fails in bulk goes row by row: the bad row is parked', async () => {
+    it('a row whose parent is missing is parked, the rest of its run applied', async () => {
       const ids = Array.from({length: 4}, () => randomUUID());
       const orphan = randomUUID();
       const change = (id: string, user: string) => ({
@@ -421,7 +421,7 @@ describe.skipIf(!ADMIN_URL)(
           created_at: new Date().toISOString(),
         }),
       });
-      // The last row's user does not exist here: the bulk insert fails as a whole.
+      // The last row's user does not exist here.
       const result = await client.store.apply(
         [...ids.map(id => change(id, userId)), change(orphan, randomUUID())],
         {origin: 'server'},
@@ -439,6 +439,53 @@ describe.skipIf(!ADMIN_URL)(
       );
       expect(parked.error).toContain('violates foreign key constraint');
     });
+
+    it('thousands of rows wait for a parent and all arrive with it', async () => {
+      // More than the cluster's lock table holds by default (64 per connection × 100): every
+      // retried row once kept a lock till the end of the sync ("out of shared memory").
+      const count = 7_000;
+      const parentId = randomUUID();
+      await addUser(server, parentId);
+      const parent = (await serverChanges()).filter(
+        change => change.table === 'users',
+      );
+      const ids = Array.from({length: count}, () => randomUUID());
+      const parkedBefore = (await client.store.problemCounts()).parked;
+      const now = new Date().toISOString();
+      const children = ids.map(id => ({
+        table: 'birthdays',
+        pk: JSON.stringify({id}),
+        changedAt: now,
+        row: JSON.stringify({
+          id,
+          user_id: parentId,
+          name: 'Waiting',
+          month: 5,
+          day: 6,
+          remind_days_before: [0],
+          memorial_remind_days_before: [0, 1],
+          created_at: now,
+        }),
+      }));
+      // In batches, the way a pull brings them.
+      for (let start = 0; start < count; start += 1_000) {
+        await client.store.apply(children.slice(start, start + 1_000), {
+          origin: 'server',
+        });
+      }
+      expect((await client.store.problemCounts()).parked).toBe(
+        parkedBefore + count,
+      );
+
+      await client.store.apply(parent, {origin: 'server'});
+
+      expect((await client.store.problemCounts()).parked).toBe(parkedBefore);
+      const [{n}] = await rows<{n: number}>(
+        client,
+        sql`SELECT count(*)::int AS n FROM birthdays WHERE user_id = ${parentId}`,
+      );
+      expect(n).toBe(count);
+    }, 300_000);
 
     it('parks a change for a table this side does not know', async () => {
       const change = {

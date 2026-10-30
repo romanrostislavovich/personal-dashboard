@@ -12,6 +12,8 @@ const TIMEOUT_MS = 20_000;
 const RETRY_AFTER_MS = 1500;
 
 export class LastfmAuthError extends Error {}
+/** Last.fm does not know the artist asked about. */
+export class LastfmNotFoundError extends Error {}
 /** Last.fm is having trouble of its own; the same request works a little later. */
 export class LastfmUnavailableError extends Error {}
 
@@ -52,6 +54,12 @@ export interface LastfmTrack {
 export interface LastfmRecentPage {
   tracks: LastfmTrack[];
   totalPages: number;
+}
+
+/** A tag of an artist as Last.fm users gave it; `count` — its weight, 100 for the top one. */
+export interface LastfmTag {
+  name: string;
+  count: number;
 }
 
 /** Minimal Last.fm API client — only the methods the module needs. */
@@ -113,6 +121,19 @@ export class LastfmClient {
     }));
   }
 
+  /** The tags listeners gave an artist, the most given first: genres, mostly. */
+  async getArtistTopTags(artist: string): Promise<LastfmTag[]> {
+    const data = await this.call<{
+      toptags?: {
+        tag?: {name: string; count: number}[] | {name: string; count: number};
+      };
+    }>('artist.getTopTags', {artist, autocorrect: '1'});
+    return asArray(data.toptags?.tag).map(tag => ({
+      name: tag.name,
+      count: Number(tag.count),
+    }));
+  }
+
   /** One method of the API; a failure on Last.fm's side is tried once more before giving up. */
   private async call<T>(
     method: string,
@@ -152,6 +173,10 @@ export class LastfmClient {
     } catch {
       // No connection, a timeout, or an error page instead of JSON.
       throw new LastfmUnavailableError(`Last.fm ${method}: no answer`);
+    }
+    // The same code is "no such artist" for the methods of an artist.
+    if (data.error === USER_NOT_FOUND && method.startsWith('artist.')) {
+      throw new LastfmNotFoundError(`Last.fm ${method}: not found`);
     }
     if (data.error === INVALID_API_KEY || data.error === USER_NOT_FOUND) {
       throw new LastfmAuthError(

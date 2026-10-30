@@ -405,7 +405,10 @@ export class DiaryService {
     return values;
   }
 
-  /** Users due a reminder: reminder enabled and no entry for today. */
+  /**
+   * Users due a reminder: reminder enabled and today not started — no entry and no photo (a photo
+   * sent to the bot makes no entry unless it has a caption).
+   */
   async usersToRemind(): Promise<string[]> {
     const today = this.todayDate();
     const rows = await this.db
@@ -422,6 +425,8 @@ export class DiaryService {
         and(
           eq(diarySettings.eveningReminder, true),
           sql`${diaryEntries.id} IS NULL`,
+          sql`NOT EXISTS (SELECT 1 FROM ${diaryPhotos}
+            WHERE ${diaryPhotos.userId} = ${diarySettings.userId} AND ${diaryPhotos.day} = ${today})`,
         ),
       );
     return rows.map(row => row.userId);

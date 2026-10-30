@@ -43,4 +43,22 @@ export const musicSettings = pgTable('music_settings', {
   historyImportedAt: timestamp({withTimezone: true}),
 });
 
+/**
+ * The genres of an artist the user listens to: the top tags Last.fm listeners gave it (see
+ * music-genres.ts), read once. `genres` empty — Last.fm knows none (or not the artist).
+ */
+export const musicArtistGenres = pgTable(
+  'music_artist_genres',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, {onDelete: 'cascade'}),
+    artist: text().notNull(),
+    genres: text().array().notNull(),
+    readAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+  },
+  table => [unique().on(table.userId, table.artist)],
+);
+
 export type MusicSettingsRow = typeof musicSettings.$inferSelect;

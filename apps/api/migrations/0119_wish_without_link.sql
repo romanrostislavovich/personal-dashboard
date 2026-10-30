@@ -1,0 +1,1 @@
+ALTER TABLE "finance_wishes" ALTER COLUMN "url" DROP NOT NULL;

@@ -87,8 +87,17 @@ function withArrows(row: HTMLElement): void {
   new ResizeObserver(update).observe(row);
   update();
   // Material's paging brought the chosen tab into view; the native scroll has to do it itself,
-  // or a page opened on a far tab (/health/band on a phone) shows a row without it.
-  const reveal = () => revealActive(row);
+  // or a page opened on a far tab (/health/band on a phone) shows a row without it. Only when
+  // another tab becomes active: a touch changes classes too (the ripple), and rolling back to the
+  // current tab under the finger lost the tap on a row swiped away from it.
+  let shown: Element | null = null;
+  const reveal = () => {
+    const active = row.querySelector('.mdc-tab--active');
+    if (active !== shown) {
+      shown = active;
+      revealActive(row);
+    }
+  };
   new MutationObserver(reveal).observe(row, {
     subtree: true,
     attributes: true,

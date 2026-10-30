@@ -7,6 +7,7 @@ import {randomUUID} from 'node:crypto';
 import {join} from 'node:path';
 import {Pool} from 'pg';
 import {DevicesService} from '../devices.service';
+import {PLACE_ACTION, PlaceQuestionService} from './place-question.service';
 import {PlacesAutomations} from './places.automations';
 import {PlacesService} from './places.service';
 
@@ -211,6 +212,79 @@ describe.skipIf(!ADMIN_URL)("the phone's places", {timeout: 60_000}, () => {
       'activity.place.leave Gym',
     ]);
     await places.removePlace(userId, gym.id);
+  });
+
+  it('asks once where a stay with no name was, and the answer names the place', async () => {
+    const other = randomUUID();
+    await db.execute(sql`INSERT INTO users (id, email, password_hash, display_name, locale, time_zone)
+      VALUES (${other}, 'asked@test', 'hash', 'Test', 'en', 'Europe/Warsaw')`);
+    const phone = await devices.register(other, {
+      name: 'Phone',
+      platform: 'android',
+    });
+    const device = await devices.authenticate(`Device ${phone.token}`);
+    const now = Date.now();
+    const fix = (minutesAgo: number, point: typeof HOME) => ({
+      at: new Date(now - minutesAgo * 60_000).toISOString(),
+      ...point,
+      accuracy: 20,
+    });
+    // Half an hour at a café, then home (still there: that stay is not over).
+    await places.ingest(device, [
+      ...[80, 75, 70, 65, 60, 55, 50].map(minutes => fix(minutes, WORK)),
+      ...[40, 30, 20, 10].map(minutes => fix(minutes, HOME)),
+    ]);
+    const sent: {title: string; actions?: {label: string; action: string}[]}[] =
+      [];
+    const answered: string[] = [];
+    const names = {
+      looksUp: true,
+      known: async () => [],
+      nameAt: () => null,
+      choices: async () => [
+        {name: 'Green Caffè Nero', kind: 'cafe'},
+        {name: 'Żabka', kind: 'convenience_store'},
+      ],
+      answer: async (_user: string, _point: unknown, place: {name: string}) =>
+        void answered.push(place.name),
+    };
+    const questions = new PlaceQuestionService(
+      db as never,
+      places,
+      names as never,
+      {
+        send: async (_user: string, message: never) => void sent.push(message),
+      } as never,
+      {
+        findById: async () => ({locale: 'en', timeZone: 'Europe/Warsaw'}),
+        timeZoneOf: () => 'Europe/Warsaw',
+      } as never,
+      {registerAction: () => undefined} as never,
+    );
+
+    await questions.askAfterFixes(other, now);
+    await questions.askAfterFixes(other, now);
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0].title).toBe('📍 Where were you?');
+    expect(sent[0].actions?.map(action => action.label)).toEqual([
+      'Green Caffè Nero',
+      'Żabka',
+      'Another place…',
+    ]);
+    const user = {id: other, locale: 'en'} as never;
+    const pick = sent[0].actions?.[0].action.replace(`${PLACE_ACTION}:`, '');
+    expect(await questions.answer(user, pick ?? '')).toContain(
+      'Green Caffè Nero',
+    );
+    const another = sent[0].actions?.[2].action.replace(`${PLACE_ACTION}:`, '');
+    const reply = await questions.answer(user, another ?? '');
+    expect(
+      typeof reply === 'object' &&
+        (await reply.expectText(user, ' My office ')),
+    ).toContain('My office');
+    expect(answered).toEqual(['Green Caffè Nero', 'My office']);
+    expect(await questions.unanswered(other)).toEqual([]);
   });
 
   it('imports a Google timeline under a device of its own, once', async () => {

@@ -68,6 +68,8 @@ const MIN_STAY_MS = 10 * 60_000;
  * accuracy, and each such fix starting a group of its own left no group ten minutes long.
  */
 const LEFT_MS = 5 * 60_000;
+/** Fixes far from a place between two stays at it that make a trip of what was between. */
+const AWAY_FIXES = 3;
 
 const EARTH_M = 6_371_000;
 
@@ -146,7 +148,12 @@ export function entriesOf(input: Fix[]): Entry[] {
       continue;
     }
     const previous = stays[stays.length - 1];
-    if (previous && distanceM(previous, group.middle) <= PLACE_RADIUS_M) {
+    const between = onTheWay[onTheWay.length - 1];
+    if (
+      previous &&
+      distanceM(previous, group.middle) <= PLACE_RADIUS_M &&
+      !wentAway(previous, between)
+    ) {
       // Back at the same place: whatever was between was noise, not a trip.
       previous.fixes.push(...group.fixes);
       Object.assign(previous, middle(previous.fixes), {end});
@@ -193,6 +200,18 @@ export function entriesOf(input: Fix[]): Entry[] {
     });
   });
   return entries;
+}
+
+/**
+ * Whether the fixes between two stays near one place were a way out and back (a walk after a
+ * café that ends on a bench nearby), not noise: several of them far from the place. One fix gone
+ * astray is noise; joining such a walk to the stay swallowed it whole.
+ */
+function wentAway(place: Point, between: Fix[]): boolean {
+  return (
+    between.filter(fix => distanceM(place, fix) > PLACE_RADIUS_M).length >=
+    AWAY_FIXES
+  );
 }
 
 /** The entries inside `[from, to)`: a stay over midnight counts on each day by its part. */

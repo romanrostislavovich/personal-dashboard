@@ -235,7 +235,7 @@ export const financeReports = pgTable(
   table => [unique().on(table.userId, table.month)],
 );
 
-/** Something to buy one day: the price of its page in a shop is read every day. */
+/** Something to buy one day: the price of its page in a shop (if it has one) is read every day. */
 export const wishes = pgTable(
   'finance_wishes',
   {
@@ -243,7 +243,7 @@ export const wishes = pgTable(
     userId: uuid()
       .notNull()
       .references(() => users.id, {onDelete: 'cascade'}),
-    url: text().notNull(),
+    url: text(),
     name: text().notNull(),
     note: text(),
     imageUrl: text(),

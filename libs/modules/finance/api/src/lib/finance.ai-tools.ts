@@ -176,13 +176,17 @@ export class FinanceAiTools implements OnModuleInit {
       writes: true,
       undoTables: [wishes],
       description:
-        'Adds a product to the wishlist by the link to its page in a shop; its price is then ' +
-        'read from the page every day and a change is reported. The name is taken from the page ' +
-        'unless given. Pass `price` and `currency` only when the user names the price.',
+        'Adds something to the wishlist. With the link to its page in a shop its price is read ' +
+        'from the page every day and a change is reported, and the name is taken from the page ' +
+        'unless given; without a link `name` is required. Pass `price` and `currency` only ' +
+        'when the user names the price.',
       parameters: {
         type: 'object',
         properties: {
-          url: {type: 'string', description: 'The link to the product page'},
+          url: {
+            type: 'string',
+            description: 'The link to the product page, if there is one',
+          },
           name: {type: 'string'},
           note: {type: 'string'},
           price: {type: 'number'},
@@ -193,7 +197,6 @@ export class FinanceAiTools implements OnModuleInit {
               'Whom it is a gift for: the name as in birthdays_upcoming',
           },
         },
-        required: ['url'],
       },
       handler: (userId, args) =>
         this.actions.run(

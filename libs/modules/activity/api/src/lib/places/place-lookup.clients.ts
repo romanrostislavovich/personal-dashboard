@@ -180,8 +180,9 @@ export class OsmPlaceClient {
 }
 
 /**
- * Google Places (Nearby Search), with the user's key: the nearest place, as Google Maps knows it.
- * Asked only when the user presses "look up on Google" for a stay.
+ * Google Places (Nearby Search), with the user's key: the places nearest a point, as Google Maps
+ * knows them. Asked when the user presses "look up on Google" for a stay, and for the choices of
+ * "Where were you?".
  */
 export class GooglePlaceClient {
   constructor(private readonly apiKey: string) {}
@@ -191,6 +192,15 @@ export class GooglePlaceClient {
     longitude: number,
     language: string,
   ): Promise<FoundPlace | null> {
+    return (await this.nearest(latitude, longitude, language))[0] ?? null;
+  }
+
+  /** Up to five places, the nearest first. */
+  async nearest(
+    latitude: number,
+    longitude: number,
+    language: string,
+  ): Promise<FoundPlace[]> {
     const response = await fetch(
       'https://places.googleapis.com/v1/places:searchNearby',
       {
@@ -220,10 +230,11 @@ export class GooglePlaceClient {
     const {places = []} = (await response.json()) as {
       places?: {displayName?: {text?: string}; primaryType?: string}[];
     };
-    const first = places.find(place => place.displayName?.text);
-    return first?.displayName?.text
-      ? {name: first.displayName.text, kind: first.primaryType ?? null}
-      : null;
+    return places.flatMap(place =>
+      place.displayName?.text
+        ? [{name: place.displayName.text, kind: place.primaryType ?? null}]
+        : [],
+    );
   }
 
   /** A key that works: one cheap question about any point. */

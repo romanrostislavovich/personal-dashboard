@@ -178,11 +178,11 @@
   "wishlist": {
     "add": "New wish",
     "edit": "Edit the wish",
-    "hint": "Paste a link to a product in a shop: its price is read from the page every morning, and you get a message when it changes.",
+    "hint": "Paste a link to a product in a shop: its price is read from the page every morning, and you get a message when it changes. Or just a name — without a link nothing is watched.",
     "url": "Link to the product",
-    "urlHint": "The page of the product itself, not a search or a category",
+    "urlHint": "Optional. The page of the product itself, not a search or a category",
     "name": "Name",
-    "nameHint": "Empty — the name from the page",
+    "nameHint": "Empty — the name from the page (needed without a link)",
     "price": "Price",
     "priceHint": "Only when the page does not tell it: the shop’s own price replaces it",
     "note": "Note",
@@ -208,7 +208,12 @@
     "budgetLeft": "{{left}} left in this month's budget — {{after}} after buying",
     "budgetOver": "{{left}} left in this month's budget — buying goes {{after}} over it",
     "giftFor": "A gift for {{name}}",
-    "recordPurchase": "Record “{{name}}” as an expense of today, {{price}}?\n\nOK — mark as bought and add the expense. Cancel — only mark as bought."
+    "recordPurchase": "Record “{{name}}” as an expense of today, {{price}}?\n\nOK — mark as bought and add the expense. Cancel — only mark as bought.",
+    "nameOrLink": "A link or a name",
+    "noLink": "No link",
+    "noteHint": "Links in it can be clicked",
+    "export": "To Excel",
+    "exportHint": "What is not bought yet — the name, the price, the link and the notes — to send to those who ask what to give"
   },
   "report": {
     "title": "The month by the AI",

@@ -436,28 +436,41 @@ export type FinanceReportQuery = z.infer<typeof financeReportQuerySchema>;
 
 // --- Wishlist ---
 
-export const wishInputSchema = z.object({
-  /** The product's page in a shop: its price is read from there every day. */
-  url: z.url({protocol: /^https?$/}).max(2000),
-  /** Empty — the name the page gives. */
-  name: z.string().trim().max(200).nullish(),
-  note: z.string().trim().max(500).nullish(),
-  /** The price typed in by hand: used while the page does not tell one. */
-  price: z.number().positive().max(1_000_000_000).nullish(),
-  currency: z.string().trim().length(3).toUpperCase().nullish(),
-  /** The product's picture, when the browser extension read it from the page. */
-  imageUrl: z
-    .url({protocol: /^https?$/})
-    .max(2000)
-    .nullish(),
-  /** Whom it is a gift for: a name as in Birthdays, where it shows as a gift idea. */
-  recipient: z.string().trim().max(100).nullish(),
-});
+export const wishInputSchema = z
+  .object({
+    /**
+     * The product's page in a shop: its price is read from there every day. Optional — a wish
+     * without one is a name, a note and a price typed in, nothing is watched.
+     */
+    url: z
+      .url({protocol: /^https?$/})
+      .max(2000)
+      .nullish(),
+    /** Empty — the name the page gives (a wish without a page needs one). */
+    name: z.string().trim().max(200).nullish(),
+    /** Links in it show as links: where to buy, a review, a size chart. */
+    note: z.string().trim().max(2000).nullish(),
+    /** The price typed in by hand: used while the page does not tell one. */
+    price: z.number().positive().max(1_000_000_000).nullish(),
+    currency: z.string().trim().length(3).toUpperCase().nullish(),
+    /** The product's picture, when the browser extension read it from the page. */
+    imageUrl: z
+      .url({protocol: /^https?$/})
+      .max(2000)
+      .nullish(),
+    /** Whom it is a gift for: a name as in Birthdays, where it shows as a gift idea. */
+    recipient: z.string().trim().max(100).nullish(),
+  })
+  .refine(wish => Boolean(wish.url || wish.name), {
+    path: ['name'],
+    message: 'A wish without a link needs a name',
+  });
 export type WishInput = z.input<typeof wishInputSchema>;
 
 export interface Wish {
   id: string;
-  url: string;
+  /** `null` — a wish without a shop's page: its price is not watched. */
+  url: string | null;
   name: string;
   note: string | null;
   imageUrl: string | null;

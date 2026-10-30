@@ -1,12 +1,15 @@
 import {DatePipe} from '@angular/common';
 import {
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   inject,
   input,
   LOCALE_ID,
   output,
+  viewChild,
 } from '@angular/core';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {addDays, DiaryCalendarDay, LocalDate, toLocalDate} from '@pd/contracts';
@@ -26,7 +29,7 @@ interface Cell {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslocoPipe],
   template: `
-    <div class="scroll">
+    <div class="scroll" #scroll>
       <div
         class="grid"
         role="grid"
@@ -145,6 +148,35 @@ export class DiaryHeatmapComponent {
   readonly daySelect = output<LocalDate>();
 
   protected readonly moods = [1, 2, 3, 4, 5];
+
+  private readonly scroll = viewChild<ElementRef<HTMLElement>>('scroll');
+  /** The year the row was last rolled for: a click on a day must not roll it again. */
+  private rolledFor: number | null = null;
+
+  constructor() {
+    // On a phone the year is wider than the screen and opened on January: the autumn's entries
+    // were out of sight. Roll to the chosen day (or today, or the latest entry) once per year.
+    afterRenderEffect(() => {
+      const element = this.scroll()?.nativeElement;
+      const year = this.year();
+      this.weeks();
+      if (!element || this.rolledFor === year || !this.days().length) {
+        return;
+      }
+      this.rolledFor = year;
+      const target =
+        element.querySelector<HTMLElement>('.cell.selected') ??
+        element.querySelector<HTMLElement>('.cell.today') ??
+        [...element.querySelectorAll<HTMLElement>('.cell.has-entry')].pop();
+      if (target && element.scrollWidth > element.clientWidth) {
+        const offset =
+          target.getBoundingClientRect().left -
+          element.getBoundingClientRect().left +
+          element.scrollLeft;
+        element.scrollLeft = offset - element.clientWidth / 2;
+      }
+    });
+  }
   protected readonly moodColor = MOOD_COLOR;
   protected readonly moodEmoji = MOOD_EMOJI;
 

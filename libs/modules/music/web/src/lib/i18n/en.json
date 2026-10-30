@@ -24,7 +24,9 @@
     "artists": "Artists",
     "tracks": "Tracks",
     "albums": "Albums",
-    "empty": "No data for this period"
+    "empty": "No data for this period",
+    "genres": "Genres",
+    "genreHint": "The share of the period's plays; a play counts for every genre of its artist (Last.fm tags)"
   },
   "connect": {
     "lastfmDescription": "Listening history, stats and tops",
@@ -126,7 +128,8 @@
     "topArtists": "top: {{artists}}"
   },
   "links": {
-    "plays": "Music plays"
+    "plays": "Music plays",
+    "genre": "Plays of a genre"
   },
   "usage": {
     "plays": "plays"

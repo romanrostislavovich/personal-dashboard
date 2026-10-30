@@ -1,5 +1,5 @@
 import {strFromU8, unzipSync} from 'fflate';
-import {toDocx, toXlsx, xmlText} from './events-export';
+import {toDocx, toXlsx, xmlText} from './office-export';
 
 const table = {
   title: 'Events',

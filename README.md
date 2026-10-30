@@ -52,7 +52,8 @@ Russian.
   ([apps/desktop/TELEMETRY.md](apps/desktop/TELEMETRY.md))
 - 📱 **The phone as a sensor** (Android) — time in apps, unlocks and late nights, the
   notifications that interrupt you, and a timeline of places like Google Maps': the routes on a
-  map, the places with their names (OpenStreetMap, or Google with your key), on foot or riding;
+  map, the places with their names (OpenStreetMap, or Google with your key) — a stay with no name
+  is asked about ("Where were you?", the places nearby as buttons), on foot or riding;
   the alarm you set, how you meet notifications, the trips abroad; push notifications, offline
   reading (the diary's photos too), "Share" from any app into a task, the diary or the films to
   watch, a home-screen widget; a voice assistant called by a name you choose — the name is heard on
@@ -71,24 +72,30 @@ Russian.
 
 ## Sections
 
-|                    |                                                                                                                                                                                                               |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 💰 **Finance**     | wallets, main currency, budgets, subscriptions, net worth, your bank directly, wishlist price watch                                                                                                           |
-| 📔 **Diary**       | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                                                                                                             |
-| 🧠 **Psychology**  | mood patterns, check-ups, life events, a gentle day for hard days, a brief for an appointment                                                                                                                 |
-| 🌱 **Habits**      | quitting alcohol, smoking or your own, building the gym or your own: runs, an evening question in Telegram                                                                                                    |
-| 🔑 **Passwords**   | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext                                                                                             |
-| 🩺 **Health**      | one medical history across countries: visits, ICD diagnoses, medications, documents; a band through Health Connect and Google Health: the pulse by minutes, sleep stages, HRV, a stress index, body reactions |
-| 🎬 **Movies**      | films and shows watched (noticed by the browser extension), ratings and notes (Telegram asks "how was it?" an hour after a film), a list to watch with TMDB search                                            |
-| ✅ **Tasks**       | TODO list with short / normal / long-running tasks, repeating tasks, reminders at your local time                                                                                                             |
-| 👨‍💻 **Development** | repositories, stars, releases, npm downloads, contribution streaks, coding time                                                                                                                               |
-| 🎧 **Music**       | listening history and tops, now playing, your own tracks' stats                                                                                                                                               |
-| 🎮 **Games**       | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP), Xbox gamerscore and achievements                                                                                                   |
-| ⏱️ **Activity**    | time at the computer per program, project and day, Pomodoro, work contexts                                                                                                                                    |
-| 📡 **Monitoring**  | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                                                                                                                           |
-| 🌤️ **Weather**     | today and the week ahead, what to wear — tuned to how you take the cold                                                                                                                                       |
-| 🎂 **Birthdays**   | countdowns and reminders                                                                                                                                                                                      |
-| 🚀 **Projects**    | your sites and services — finance, monitoring and AI refer to them                                                                                                                                            |
+|                     |                                                                                                                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 💰 **Finance**      | wallets, main currency, budgets, subscriptions, net worth, your bank directly, a wishlist (prices watched, an Excel list for gifts)                                                                           |
+| 📔 **Diary**        | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                                                                                                             |
+| 🧠 **Psychology**   | mood patterns, check-ups, life events, a gentle day for hard days, a brief for an appointment                                                                                                                 |
+| 🌱 **Habits**       | quitting alcohol, smoking or your own, building the gym or your own: runs, an evening question in Telegram                                                                                                    |
+| 🔑 **Passwords**    | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext                                                                                             |
+| 🩺 **Health**       | one medical history across countries: visits, ICD diagnoses, medications, documents; a band through Health Connect and Google Health: the pulse by minutes, sleep stages, HRV, a stress index, body reactions |
+| 🎬 **Movies**       | films and shows watched (noticed by the browser extension), ratings and notes (Telegram asks "how was it?" an hour after a film), a list to watch with TMDB search                                            |
+| ✅ **Tasks**        | TODO list with short / normal / long-running tasks, repeating tasks, reminders at your local time                                                                                                             |
+| 👨‍💻 **Development**  | repositories, stars, releases, npm downloads, contribution streaks, coding time                                                                                                                               |
+| 🎧 **Music**        | listening history and tops with genres (Last.fm tags), now playing, your own tracks' stats                                                                                                                    |
+| 🎮 **Games**        | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP), Xbox gamerscore and achievements                                                                                                   |
+| ⏱️ **Activity**     | time at the computer per program, project and day, Pomodoro, work contexts                                                                                                                                    |
+| 📡 **Monitoring**   | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                                                                                                                           |
+| 🌤️ **Weather**      | today and the week ahead, what to wear — tuned to how you take the cold                                                                                                                                       |
+| 🎂 **Birthdays**    | countdowns and reminders                                                                                                                                                                                      |
+| 🚀 **Projects**     | your sites and services — finance, monitoring and AI refer to them                                                                                                                                            |
+| 📖 **Life**         | one feed of any day across every section, a daily chronicle, a "Wrapped" of the month or the year, Links between every daily number                                                                           |
+| 🤖 **AI**           | a chat over all your data that can act — add, change, remind — with DeepSeek, OpenAI, Ollama or any OpenAI-compatible model                                                                                   |
+| ✍️ **Writing**      | spelling and grammar by LanguageTool on your own server and rewrites by the AI — on its page, in the browser extension and the desktop app                                                                    |
+| 🛡️ **Security**     | what the security agent found on the dashboard, the server, your computers, the phone and the repositories — the worst first, with what to do                                                                 |
+| 🖼️ **Screenshots**  | the desktop app's screenshots, the same folder on every computer and on the server                                                                                                                            |
+| 🏆 **Achievements** | 400+ across every section, XP and a player level                                                                                                                                                              |
 
 Every section is a module: hide what you do not use, or [write your own](docs/architecture.md).
 
@@ -129,6 +136,7 @@ Every section is a module: hide what you do not use, or [write your own](docs/ar
   ![Google Places](https://img.shields.io/badge/Google%20Places-4285F4?logo=googlemaps&logoColor=white)
 - **Health and films:**
   ![Google Health](<https://img.shields.io/badge/Google%20Health%20(Fitbit)-4285F4?logo=fitbit&logoColor=white>)
+  ![Health Connect](https://img.shields.io/badge/Health%20Connect-34A853?logo=android&logoColor=white)
   ![TMDB](https://img.shields.io/badge/TMDB-01B4E4?logo=themoviedatabase&logoColor=white)
 - **Other:**
   ![Open-Meteo weather](https://img.shields.io/badge/Open--Meteo%20weather-FF8C00)

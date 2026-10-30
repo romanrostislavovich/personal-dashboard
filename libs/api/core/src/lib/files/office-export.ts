@@ -10,6 +10,8 @@ export interface ExportTable {
   subtitle: string;
   headers: string[];
   rows: string[][];
+  /** Column widths of the workbook, in characters; by default the dates first, a long text last. */
+  widths?: number[];
 }
 
 const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
@@ -59,11 +61,12 @@ export function toXlsx(table: ExportTable): Buffer {
     row(table.headers, 4, 1),
     ...table.rows.map((values, index) => row(values, index + 5)),
   ];
-  // The first column is dates, the last — a long text.
+  // By default the first columns are dates, the last — a long text.
   const widths = table.headers
     .map((_, index) => {
       const width =
-        index === table.headers.length - 1 ? 60 : index < 2 ? 14 : 28;
+        table.widths?.[index] ??
+        (index === table.headers.length - 1 ? 60 : index < 2 ? 14 : 28);
       return `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`;
     })
     .join('');

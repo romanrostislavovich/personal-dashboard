@@ -93,8 +93,31 @@ export const activityPlacePresence = pgTable('activity_place_presence', {
   changedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
 });
 
+/**
+ * "Where were you?" asked about a stay with no name (places-question.service.ts), once a stay:
+ * the place's middle and the names offered (JSON), both encrypted like the fixes.
+ */
+export const activityPlaceQuestions = pgTable(
+  'activity_place_questions',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, {onDelete: 'cascade'}),
+    point: encryptedText().notNull(),
+    stayStart: timestamp({withTimezone: true}).notNull(),
+    stayEnd: timestamp({withTimezone: true}).notNull(),
+    /** `FoundPlace[]` as JSON: the buttons, in their order. */
+    offered: encryptedText().notNull(),
+    answeredAt: timestamp({withTimezone: true}),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+  },
+  table => [index().on(table.userId, table.stayStart)],
+);
+
 registerEncryptedTables(
   activityPhoneLocations,
   activityPlaces,
   activityPlaceNames,
+  activityPlaceQuestions,
 );

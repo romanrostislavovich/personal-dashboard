@@ -2,6 +2,7 @@ import {Module} from '@nestjs/common';
 import {DocumentReaderService} from './documents/document-reader.service';
 import {HealthTelegram} from './documents/health-telegram';
 import {HealthAchievements} from './health.achievements';
+import {BandAchievements} from './wearable/band.achievements';
 import {HealthAiTools} from './health.ai-tools';
 import {HealthController} from './health.controller';
 import {HealthDemo} from './health.demo';
@@ -62,6 +63,7 @@ import {WearableService} from './wearable/wearable.service';
     IntakesService,
     IntakesJobs,
     HealthAchievements,
+    BandAchievements,
     WearableService,
     WearableJob,
     WearableLinks,

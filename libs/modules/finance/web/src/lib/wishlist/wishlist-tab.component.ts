@@ -15,7 +15,11 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {Wish, WishInput} from '@pd/contracts';
-import {SparklineComponent, SparklinePoint} from '@pd/web-core';
+import {
+  LinkedTextComponent,
+  SparklineComponent,
+  SparklinePoint,
+} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {FinanceApi} from '../finance.api';
 import {WishFormData, WishFormDialog} from './wish-form.dialog';
@@ -38,17 +42,29 @@ import {priceTrend, shopName} from './wish-view';
     MatTooltipModule,
     TranslocoPipe,
     SparklineComponent,
+    LinkedTextComponent,
   ],
   template: `
     <div class="actions">
       <p class="hint">{{ 'finance.wishlist.hint' | transloco }}</p>
-      <button
-        matButton="filled"
-        [disabled]="busy() !== null"
-        (click)="openForm()"
-      >
-        <mat-icon>add</mat-icon> {{ 'finance.wishlist.add' | transloco }}
-      </button>
+      <span class="buttons">
+        <button
+          matButton
+          [disabled]="exporting() || !wishes.value().length"
+          [matTooltip]="'finance.wishlist.exportHint' | transloco"
+          (click)="export()"
+        >
+          <mat-icon>download</mat-icon>
+          {{ 'finance.wishlist.export' | transloco }}
+        </button>
+        <button
+          matButton="filled"
+          [disabled]="busy() !== null"
+          (click)="openForm()"
+        >
+          <mat-icon>add</mat-icon> {{ 'finance.wishlist.add' | transloco }}
+        </button>
+      </span>
     </div>
     @if (busy() === adding) {
       <p class="hint">{{ 'finance.wishlist.adding' | transloco }}</p>
@@ -71,13 +87,20 @@ import {priceTrend, shopName} from './wish-view';
             }
             <mat-card-title>{{ wish.name }}</mat-card-title>
             <mat-card-subtitle>
-              <a [href]="wish.url" target="_blank" rel="noopener noreferrer">{{
-                shop(wish)
-              }}</a>
+              @if (wish.url) {
+                <a
+                  [href]="wish.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ shop(wish) }}</a
+                >
+              } @else {
+                {{ 'finance.wishlist.noLink' | transloco }}
+              }
               @if (wish.boughtAt) {
                 · {{ 'finance.wishlist.bought' | transloco }}
                 {{ wish.boughtAt | date: 'd MMM y' }}
-              } @else if (wish.checkedAt) {
+              } @else if (wish.url && wish.checkedAt) {
                 ·
                 {{
                   'finance.wishlist.checked'
@@ -178,7 +201,7 @@ import {priceTrend, shopName} from './wish-view';
               </p>
             }
             @if (wish.note) {
-              <p class="note">{{ wish.note }}</p>
+              <p class="note"><pd-linked-text [text]="wish.note" /></p>
             }
 
             @if (open() === wish.id) {
@@ -211,7 +234,7 @@ import {priceTrend, shopName} from './wish-view';
                 ) | transloco
               }}
             </button>
-            @if (!wish.boughtAt) {
+            @if (!wish.boughtAt && wish.url) {
               <button
                 matIconButton
                 [disabled]="busy() !== null"
@@ -266,6 +289,11 @@ import {priceTrend, shopName} from './wish-view';
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .wishes {
       display: grid;
@@ -359,6 +387,7 @@ export class WishlistTabComponent {
   protected readonly busy = signal<string | null>(null);
   protected readonly adding = 'new';
 
+  protected readonly exporting = signal(false);
   protected readonly trend = priceTrend;
   protected readonly shop = shopName;
 
@@ -379,6 +408,22 @@ export class WishlistTabComponent {
       await this.reading(wish?.id ?? this.adding, () =>
         this.api.saveWish(input, wish?.id),
       );
+    }
+  }
+
+  /** What is not bought yet as an Excel workbook, to send to those who ask what to give. */
+  protected async export(): Promise<void> {
+    this.exporting.set(true);
+    try {
+      const blob = await firstValueFrom(this.api.exportWishlist());
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'wishlist.xlsx';
+      link.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      this.exporting.set(false);
     }
   }
 

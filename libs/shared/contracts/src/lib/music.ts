@@ -87,6 +87,15 @@ export interface MusicTopItem {
   playcount: number;
   url: string;
   imageUrl: string | null;
+  /** The genres of its artist (Last.fm tags); empty — not known yet. */
+  genres?: string[];
+}
+
+/** A genre of a period: its plays and their share of all the plays (0–100). */
+export interface MusicGenreShare {
+  name: string;
+  plays: number;
+  percent: number;
 }
 
 export interface MusicTops {
@@ -94,6 +103,8 @@ export interface MusicTops {
   artists: MusicTopItem[];
   tracks: MusicTopItem[];
   albums: MusicTopItem[];
+  /** The genres played most in the period. */
+  genres?: MusicGenreShare[];
 }
 
 export interface RecentTrack {
