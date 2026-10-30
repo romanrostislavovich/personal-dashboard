@@ -1,7 +1,9 @@
 import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {
+  AbstractControl,
   NonNullableFormBuilder,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators,
 } from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
@@ -22,7 +24,10 @@ export interface WishFormData {
   currency: string;
 }
 
-/** A new wish or changes to one. Only the link is needed: the rest comes from the page. */
+/**
+ * A new wish or changes to one: a link to a shop's page (the rest comes from it, and its price is
+ * watched), or just a name.
+ */
 @Component({
   selector: 'pd-wish-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -60,6 +65,11 @@ export interface WishFormData {
           <mat-label>{{ 'finance.wishlist.name' | transloco }}</mat-label>
           <input matInput formControlName="name" maxlength="200" />
           <mat-hint>{{ 'finance.wishlist.nameHint' | transloco }}</mat-hint>
+          @if (form.hasError('nameOrLink')) {
+            <mat-error>{{
+              'finance.wishlist.nameOrLink' | transloco
+            }}</mat-error>
+          }
         </mat-form-field>
 
         <div class="row">
@@ -93,9 +103,10 @@ export interface WishFormData {
           <textarea
             matInput
             formControlName="note"
-            rows="2"
-            maxlength="500"
+            rows="3"
+            maxlength="2000"
           ></textarea>
+          <mat-hint>{{ 'finance.wishlist.noteHint' | transloco }}</mat-hint>
         </mat-form-field>
       </mat-dialog-content>
 
@@ -133,27 +144,30 @@ export class WishFormDialog {
   private readonly dialogRef = inject(MatDialogRef<WishFormDialog, WishInput>);
 
   private readonly wish = this.data.wish;
-  protected readonly form = inject(NonNullableFormBuilder).group({
-    url: [
-      this.wish?.url ?? '',
-      [Validators.required, Validators.pattern(/^https?:\/\/\S+$/i)],
-    ],
-    name: [this.wish?.name ?? ''],
-    price: [this.wish?.price ?? (null as number | null), Validators.min(0.01)],
-    currency: [
-      this.wish?.currency ?? this.data.currency,
-      [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)],
-    ],
-    note: [this.wish?.note ?? ''],
-    recipient: [this.wish?.recipient ?? ''],
-  });
+  protected readonly form = inject(NonNullableFormBuilder).group(
+    {
+      url: [this.wish?.url ?? '', Validators.pattern(/^https?:\/\/\S+$/i)],
+      name: [this.wish?.name ?? ''],
+      price: [
+        this.wish?.price ?? (null as number | null),
+        Validators.min(0.01),
+      ],
+      currency: [
+        this.wish?.currency ?? this.data.currency,
+        [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)],
+      ],
+      note: [this.wish?.note ?? ''],
+      recipient: [this.wish?.recipient ?? ''],
+    },
+    {validators: nameOrLink},
+  );
 
   save(): void {
     const value = this.form.getRawValue();
     // An empty number field gives null (or '' in some browsers): no price typed in.
     const price = value.price ? Number(value.price) : null;
     this.dialogRef.close({
-      url: value.url.trim(),
+      url: value.url.trim() || null,
       name: value.name || null,
       note: value.note || null,
       price,
@@ -161,4 +175,10 @@ export class WishFormDialog {
       recipient: value.recipient.trim() || null,
     });
   }
+}
+
+/** A wish without a link has nothing to take a name from. */
+function nameOrLink(form: AbstractControl): ValidationErrors | null {
+  const {url, name} = form.value as {url?: string; name?: string};
+  return url?.trim() || name?.trim() ? null : {nameOrLink: true};
 }

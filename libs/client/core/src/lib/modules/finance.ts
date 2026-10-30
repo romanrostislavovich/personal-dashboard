@@ -169,6 +169,8 @@ export function financeApi(api: ApiClient) {
         ? api.put<Wish>(`${BASE}/wishlist/${id}`, input)
         : api.post<Wish>(`${BASE}/wishlist`, input),
     removeWish: (id: string) => api.delete(`${BASE}/wishlist/${id}`),
+    /** What is not bought yet, as an Excel workbook. */
+    exportWishlist: () => api.blob(`${BASE}/wishlist/export`),
     /** Reads the price again without waiting for the morning. */
     checkWish: (id: string) =>
       api.post<Wish>(`${BASE}/wishlist/${id}/check`, {}),

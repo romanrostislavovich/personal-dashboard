@@ -9,7 +9,7 @@ import {TranslocoPipe} from '@jsverse/transloco';
 import {MusicTopItem} from '@pd/contracts';
 import {SongShareComponent} from './song-share.component';
 
-/** Top 10: position, title, play count and a bar relative to the leader. */
+/** Top 10: position, title, play count, the genres and a bar relative to the leader. */
 @Component({
   selector: 'pd-top-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +38,9 @@ import {SongShareComponent} from './song-share.component';
             </div>
             @if (item.artist) {
               <span class="artist">{{ item.artist }}</span>
+            }
+            @if (item.genres?.length) {
+              <span class="genres">{{ item.genres.join(' · ') }}</span>
             }
             <span class="bar" [style.width.%]="item.share"></span>
           </div>
@@ -101,6 +104,13 @@ import {SongShareComponent} from './song-share.component';
     .count {
       font: var(--mat-sys-label-medium);
       color: var(--mat-sys-on-surface-variant);
+    }
+    .genres {
+      font: var(--mat-sys-label-small);
+      color: var(--mat-sys-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .artist {
       font: var(--mat-sys-body-small);

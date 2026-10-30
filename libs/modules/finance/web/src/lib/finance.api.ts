@@ -223,6 +223,10 @@ export class FinanceApi {
     return fromCore(() => this.finance.removeWish(id));
   }
 
+  exportWishlist() {
+    return fromCore(() => this.finance.exportWishlist());
+  }
+
   checkWish(id: string) {
     return fromCore(() => this.finance.checkWish(id));
   }

@@ -37,6 +37,7 @@ import {DevicesService} from '../devices.service';
 import {z} from 'zod';
 import {PlaceNamesService} from './place-names.service';
 import {PlacesAutomations} from './places.automations';
+import {PlaceQuestionService} from './place-question.service';
 import {PlacesService} from './places.service';
 
 /**
@@ -50,6 +51,7 @@ export class PlacesController {
     private readonly places: PlacesService,
     private readonly names: PlaceNamesService,
     private readonly automations: PlacesAutomations,
+    private readonly questions: PlaceQuestionService,
   ) {}
 
   @Public()
@@ -61,8 +63,9 @@ export class PlacesController {
   ): Promise<{saved: number}> {
     const device = await this.devices.authenticate(authorization);
     const saved = await this.places.ingest(device, body.locations);
-    // Came to a place, left it: in the background, the phone need not wait for the rules.
+    // Came to a place, left it, where was that: in the background, the phone need not wait.
     void this.automations.check(device.userId);
+    void this.questions.askAfterFixes(device.userId);
     return {saved};
   }
 

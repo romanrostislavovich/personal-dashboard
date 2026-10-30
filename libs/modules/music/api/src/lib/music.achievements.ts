@@ -8,6 +8,10 @@ import {
   MusicHistoryStats,
   MusicHistoryStatsService,
 } from './music-history.stats';
+import {MusicGenresService} from './music-genres.service';
+
+/** A genre counts as heard after this many plays. */
+const GENRE_PLAYS = 10;
 
 /**
  * Music achievements, all measured over the stored play history (`music_scrobbles`).
@@ -21,6 +25,7 @@ export class MusicAchievements implements OnModuleInit {
   constructor(
     private readonly achievements: AchievementsService,
     private readonly history: MusicHistoryStatsService,
+    private readonly genres: MusicGenresService,
   ) {}
 
   onModuleInit(): void {
@@ -140,6 +145,41 @@ export class MusicAchievements implements OnModuleInit {
 
   /** Different artists, tracks and albums. */
   private registerVariety(): void {
+    this.achievements.register({
+      id: 'music.genres',
+      module: 'music',
+      measure: userId => this.genres.heard(userId, GENRE_PLAYS),
+      tiers: achievementTiers(
+        [
+          5,
+          '🎼',
+          {en: 'Many-sided', ru: 'Разносторонний'},
+          {
+            en: `5 genres, ${GENRE_PLAYS}+ plays each`,
+            ru: `5 жанров, в каждом ${GENRE_PLAYS}+ прослушиваний`,
+          },
+        ],
+        [
+          15,
+          '🎨',
+          {en: 'Without borders', ru: 'Без границ'},
+          {
+            en: `15 genres, ${GENRE_PLAYS}+ plays each`,
+            ru: `15 жанров, в каждом ${GENRE_PLAYS}+ прослушиваний`,
+          },
+        ],
+        [
+          40,
+          '🌐',
+          {en: 'Every sound of the world', ru: 'Все звуки мира'},
+          {
+            en: `40 genres, ${GENRE_PLAYS}+ plays each`,
+            ru: `40 жанров, в каждом ${GENRE_PLAYS}+ прослушиваний`,
+          },
+        ],
+      ),
+    });
+
     this.metric('music.artists', 'artists', [
       [
         100,

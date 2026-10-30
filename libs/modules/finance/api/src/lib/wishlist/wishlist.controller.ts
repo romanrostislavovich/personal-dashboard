@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  StreamableFile,
 } from '@nestjs/common';
 import {
   AuthUser,
@@ -38,6 +39,17 @@ export class WishlistController {
   @Get()
   list(@CurrentUser() user: AuthUser) {
     return this.wishlist.list(user.id);
+  }
+
+  /** What is not bought yet, as an Excel workbook to send to others. */
+  @Get('export')
+  async export(@CurrentUser() user: AuthUser): Promise<StreamableFile> {
+    const file = await this.wishlist.exportXlsx(user.id);
+    return new StreamableFile(file, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      length: file.length,
+      disposition: 'attachment; filename="wishlist.xlsx"',
+    });
   }
 
   /** Reads the page for the name, the picture and the first price. */

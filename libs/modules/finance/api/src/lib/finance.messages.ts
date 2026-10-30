@@ -68,6 +68,9 @@ const messages = {
       })[kind],
     reportNote: (summary: string) => `💰 Money: ${summary}`,
     wishCheaperTitle: (name: string) => `📉 Cheaper: ${name}`,
+    wishlistTitle: 'Wishlist',
+    wishlistSubtitle: (date: string) => `Not bought yet, as of ${date}`,
+    wishlistHeaders: ['Name', 'Price', 'Link', 'Notes'],
     wishPricierTitle: (name: string) => `📈 More expensive: ${name}`,
     wishPriceBody: (
       was: number,
@@ -134,6 +137,9 @@ const messages = {
       })[kind],
     reportNote: (summary: string) => `💰 Деньги: ${summary}`,
     wishCheaperTitle: (name: string) => `📉 Подешевело: ${name}`,
+    wishlistTitle: 'Список желаний',
+    wishlistSubtitle: (date: string) => `Ещё не куплено, на ${date}`,
+    wishlistHeaders: ['Название', 'Цена', 'Ссылка', 'Заметки'],
     wishPricierTitle: (name: string) => `📈 Подорожало: ${name}`,
     wishPriceBody: (
       was: number,

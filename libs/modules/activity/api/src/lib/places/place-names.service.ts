@@ -10,6 +10,7 @@ import {
 import {FoundPlaceName} from '@pd/contracts';
 import {and, eq} from 'drizzle-orm';
 import {
+  FoundPlace,
   GooglePlaceClient,
   GooglePlacesError,
   OsmPlaceClient,
@@ -23,6 +24,12 @@ const SAME_PLACE_M = 100;
 const OSM_GAP_MS = 1_100;
 const GOOGLE_PLACES_SECRET = 'activity.google-places-key';
 const GOOGLE_MAPS_SECRET = 'activity.google-maps-key';
+/** Whose name wins at a place: the user's answer, then Google's, then OpenStreetMap's. */
+const RANK: Record<FoundPlaceName['source'], number> = {
+  user: 3,
+  google: 2,
+  osm: 1,
+};
 
 export interface KnownName extends Point {
   id: string;
@@ -79,16 +86,20 @@ export class PlaceNamesService {
     });
   }
 
-  /** The name found nearest the point, Google's before OpenStreetMap's. */
+  /** Whether this instance asks outside services (a sync client leaves it to the server). */
+  get looksUp(): boolean {
+    return !this.isSyncClient;
+  }
+
+  /** The name found nearest the point: the user's own first, then Google's, then OpenStreetMap's. */
   nameAt(point: Point, known: KnownName[]): FoundPlaceName | null {
     let best: {name: KnownName; meters: number} | null = null;
     for (const name of known) {
       const meters = distanceM(point, name);
+      const rank = RANK[name.found.source] ?? 0;
+      const bestRank = best ? (RANK[best.name.found.source] ?? 0) : 0;
       const better =
-        !best ||
-        (name.found.source === 'google' &&
-          best.name.found.source !== 'google') ||
-        (name.found.source === best.name.found.source && meters < best.meters);
+        !best || rank > bestRank || (rank === bestRank && meters < best.meters);
       if (meters <= SAME_PLACE_M && better) {
         best = {name, meters};
       }
@@ -145,6 +156,37 @@ export class PlaceNamesService {
     }
     await this.save(userId, point, {...found, source: 'google'});
     return {...found, source: 'google'};
+  }
+
+  /**
+   * What the place at a point may be, for "Where were you?": Google's nearest places with the
+   * user's key (a failure — none), else the name OpenStreetMap gave it.
+   */
+  async choices(
+    userId: string,
+    point: Point,
+    known: KnownName[],
+  ): Promise<FoundPlace[]> {
+    const key = await this.secrets.get(userId, GOOGLE_PLACES_SECRET);
+    if (key) {
+      const language = (await this.users.findById(userId))?.locale ?? 'en';
+      try {
+        return await new GooglePlaceClient(key).nearest(
+          point.latitude,
+          point.longitude,
+          language,
+        );
+      } catch (error) {
+        this.logger.warn(`Google Places gave no choices: ${String(error)}`);
+      }
+    }
+    const found = this.nameAt(point, known);
+    return found ? [{name: found.name, kind: found.kind}] : [];
+  }
+
+  /** The user's answer to "Where were you?": the place's name from now on. */
+  async answer(userId: string, point: Point, place: FoundPlace): Promise<void> {
+    await this.save(userId, point, {...place, source: 'user'});
   }
 
   /** The names an imported Google timeline knew; one already kept there is not kept twice. */
@@ -245,11 +287,12 @@ export class PlaceNamesService {
     point: Point,
     found: FoundPlaceName,
   ): Promise<void> {
-    if (found.source === 'google') {
-      // Google's name for a place takes the place of the one OpenStreetMap gave it.
+    if (found.source !== 'osm') {
+      // Google's name for a place takes the place of OpenStreetMap's; the user's, of both.
       const near = (await this.known(userId)).filter(
         name =>
-          name.found.source === 'osm' && distanceM(point, name) <= SAME_PLACE_M,
+          RANK[name.found.source] < RANK[found.source] &&
+          distanceM(point, name) <= SAME_PLACE_M,
       );
       for (const name of near) {
         await this.db

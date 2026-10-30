@@ -33,6 +33,7 @@ import {
 import {z} from 'zod';
 import {LastfmHistoryImport} from './lastfm-history.import';
 import {LastfmService} from './lastfm.service';
+import {MusicGenresService} from './music-genres.service';
 import {SoundcloudService} from './soundcloud/soundcloud.service';
 import {SongLinksService} from './song-links.service';
 import {SpotifyService} from './spotify.service';
@@ -43,6 +44,7 @@ export class MusicController {
   constructor(
     private readonly actions: ServerActions,
     private readonly lastfm: LastfmService,
+    private readonly genres: MusicGenresService,
     private readonly history: LastfmHistoryImport,
     private readonly spotify: SpotifyService,
     private readonly soundcloud: SoundcloudService,
@@ -88,7 +90,7 @@ export class MusicController {
   }
 
   @Get('tops')
-  tops(
+  async tops(
     @CurrentUser() user: AuthUser,
     @Query(
       'period',
@@ -96,7 +98,8 @@ export class MusicController {
     )
     period: MusicTopPeriod,
   ) {
-    return this.lastfm.tops(user.id, period);
+    const tops = await this.lastfm.tops(user.id, period);
+    return tops && this.genres.withGenres(user.id, tops);
   }
 
   /** Spotify first (more precise, with progress); if it is not connected — Last.fm. */

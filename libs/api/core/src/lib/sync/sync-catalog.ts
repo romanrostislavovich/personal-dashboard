@@ -10,8 +10,17 @@ export interface SyncTable {
   uniques: string[][];
   /** Tables this one references by foreign keys. */
   references: string[];
+  /** Its foreign keys, to tell a parked row whose parents have arrived. */
+  foreignKeys: ForeignKey[];
   /** Has binary columns (diary photos): its rows are read one at a time, not in bulk. */
   large: boolean;
+}
+
+/** `columns` of a row refer to `refColumns` of a row of `table`. */
+export interface ForeignKey {
+  columns: string[];
+  table: string;
+  refColumns: string[];
 }
 
 /**
@@ -25,6 +34,7 @@ export async function readSyncTables(db: Database): Promise<SyncTable[]> {
     primary_key: string[] | null;
     uniques: string[][] | null;
     references: string[] | null;
+    foreign_keys: ForeignKey[] | null;
     large: boolean;
   }>(sql`
     SELECT c.relname AS name,
@@ -42,6 +52,16 @@ export async function readSyncTables(db: Database): Promise<SyncTable[]> {
       (SELECT array_agg(DISTINCT r.relname::text) FROM pg_constraint f
         JOIN pg_class r ON r.oid = f.confrelid
         WHERE f.conrelid = c.oid AND f.contype = 'f' AND f.confrelid <> c.oid) AS references,
+      (SELECT json_agg(json_build_object(
+          'columns', (SELECT array_agg(a.attname::text ORDER BY k.ord)
+            FROM unnest(f.conkey) WITH ORDINALITY AS k(attnum, ord)
+            JOIN pg_attribute a ON a.attrelid = f.conrelid AND a.attnum = k.attnum),
+          'table', r.relname,
+          'refColumns', (SELECT array_agg(a.attname::text ORDER BY k.ord)
+            FROM unnest(f.confkey) WITH ORDINALITY AS k(attnum, ord)
+            JOIN pg_attribute a ON a.attrelid = f.confrelid AND a.attnum = k.attnum)))
+        FROM pg_constraint f JOIN pg_class r ON r.oid = f.confrelid
+        WHERE f.conrelid = c.oid AND f.contype = 'f') AS foreign_keys,
       EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = c.oid AND a.attnum > 0
         AND NOT a.attisdropped AND a.atttypid = 'bytea'::regtype) AS large
     FROM pg_class c
@@ -56,6 +76,7 @@ export async function readSyncTables(db: Database): Promise<SyncTable[]> {
       columns: row.columns,
       uniques: row.uniques ?? [],
       references: row.references ?? [],
+      foreignKeys: row.foreign_keys ?? [],
       large: row.large,
     }));
   return dependencyOrder(tables);

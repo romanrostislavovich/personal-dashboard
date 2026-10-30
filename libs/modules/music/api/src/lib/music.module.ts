@@ -11,6 +11,7 @@ import {MusicAchievements} from './music.achievements';
 import {LastfmHistoryImport} from './lastfm-history.import';
 import {LastfmSyncJob} from './lastfm-sync.job';
 import {LastfmService} from './lastfm.service';
+import {MusicGenresService} from './music-genres.service';
 import {MusicController} from './music.controller';
 import {MusicServerActions} from './music.server-actions';
 import {MusicHistoryQueryService} from './music-history.query';
@@ -39,6 +40,7 @@ import {SpotifyService} from './spotify.service';
     MusicLinks,
     MusicSearch,
     LastfmService,
+    MusicGenresService,
     LastfmHistoryImport,
     SpotifyService,
     LastfmSyncJob,

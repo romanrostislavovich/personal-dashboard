@@ -15,6 +15,11 @@ const READ_CHUNK = 500;
 const MAX_BATCH_BYTES = 8 * 1024 * 1024;
 /** Parked changes may wait for each other (a transaction for a parked project). */
 const PARKED_RETRY_PASSES = 5;
+/**
+ * Parked changes retried in one transaction: every applied one holds a lock till its end, and the
+ * cluster's lock table has room for a few thousand.
+ */
+const PARKED_RETRY_CHUNK = 500;
 
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 type Outcome = keyof SyncPushResponse;
@@ -42,6 +47,9 @@ interface Loser {
 }
 
 const LOST_TO_NEWER = 'lost to a newer row';
+/** Why a row waits in `sync.parked` when it was parked before even trying. */
+const MISSING_PARENT =
+  'waits for a row it refers to (violates foreign key constraint)';
 
 /** An entry of the change log as read for a batch. */
 type Version = {
@@ -150,36 +158,64 @@ export class SyncStore {
     changes: SyncChange[],
     context: ApplyContext,
   ): Promise<SyncPushResponse> {
-    const result: SyncPushResponse = {applied: 0, skipped: 0, parked: 0};
+    let result: SyncPushResponse = {applied: 0, skipped: 0, parked: 0};
     await this.db.transaction(async tx => {
       // Our trigger ignores this transaction: applied changes are logged below with their origin.
       await tx.execute(sql`SELECT set_config(${APPLYING_SETTING}, 'on', true)`);
-      for (const run of writeRuns(this.dependencyOrder(changes))) {
-        const table = this.table(run[0].table);
-        const {applied, rest} =
-          table && run.length >= BULK_MIN
-            ? await this.applyInBulk(tx, table, run, context)
-            : {applied: 0, rest: run};
-        result.applied += applied;
-        for (const change of rest) {
-          result[await this.applyOrPark(tx, change, context)]++;
-        }
-      }
-      await this.retryParked(tx, context);
+      result = await this.applyRuns(tx, changes, context);
     });
+    await this.retryParked(context);
+    return result;
+  }
+
+  /** Changes in runs of one table, parents first: in bulk where it can, one at a time where not. */
+  private async applyRuns(
+    tx: Transaction,
+    changes: SyncChange[],
+    context: ApplyContext,
+  ): Promise<SyncPushResponse> {
+    const result: SyncPushResponse = {applied: 0, skipped: 0, parked: 0};
+    for (const run of writeRuns(this.dependencyOrder(changes))) {
+      const table = this.table(run[0].table);
+      const {applied, parked, rest} =
+        table && run.length >= BULK_MIN
+          ? await this.applyInBulk(tx, table, run, context)
+          : {applied: 0, parked: 0, rest: run};
+      result.applied += applied;
+      result.parked += parked;
+      for (const change of rest) {
+        result[await this.applyOrPark(tx, change, context)]++;
+      }
+    }
     return result;
   }
 
   /**
-   * One run of upserts or deletes of one table. Returns how many were applied and the changes
-   * left for the one-at-a-time path.
+   * One run of upserts or deletes of one table. Returns how many were applied and parked, and the
+   * changes left for the one-at-a-time path. Rows whose parents have not arrived are parked at
+   * once: one of them would fail the whole run, and the run would go a row at a time.
    */
   private async applyInBulk(
     tx: Transaction,
     table: SyncTable,
-    run: SyncChange[],
+    all: SyncChange[],
     context: ApplyContext,
-  ): Promise<{applied: number; rest: SyncChange[]}> {
+  ): Promise<{applied: number; parked: number; rest: SyncChange[]}> {
+    const orphans = new Set(
+      all[0].row !== null ? await this.withMissingParent(tx, table, all) : [],
+    );
+    const parked = orphans.size
+      ? await this.parkInBulk(
+          tx,
+          table,
+          all.filter((_, index) => orphans.has(index)),
+          context,
+        )
+      : 0;
+    const run = parked ? all.filter((_, index) => !orphans.has(index)) : all;
+    if (run.length === 0) {
+      return {applied: 0, parked, rest: []};
+    }
     const careful = new Set([
       ...(await this.withLocalVersion(tx, table, run, context)),
       ...(run[0].row !== null
@@ -189,18 +225,88 @@ export class SyncStore {
     const plain = run.filter((_, index) => !careful.has(index));
     const rest = run.filter((_, index) => careful.has(index));
     if (plain.length === 0) {
-      return {applied: 0, rest};
+      return {applied: 0, parked, rest};
     }
     try {
-      // A savepoint: if the bulk write fails (a missing parent row…), nothing of it stays and the
-      // same changes go one at a time, where the failing ones are parked.
-      await tx.transaction(savepoint =>
-        this.writeInBulk(savepoint, table, plain, context),
-      );
-      return {applied: plain.length, rest};
+      // A savepoint: if the bulk write fails, nothing of it stays and the same changes go one at
+      // a time, where the failing ones are parked.
+      await inSavepoint(tx, () => this.writeInBulk(tx, table, plain, context));
+      return {applied: plain.length, parked, rest};
     } catch {
-      return {applied: 0, rest: [...rest, ...plain]};
+      return {applied: 0, parked, rest: [...rest, ...plain]};
     }
+  }
+
+  /** Positions of the incoming rows that refer to a row not here. */
+  private async withMissingParent(
+    tx: Transaction,
+    table: SyncTable,
+    run: SyncChange[],
+  ): Promise<number[]> {
+    const parents = this.parentsHere(table);
+    if (!parents) {
+      return [];
+    }
+    const {rows} = await tx.execute<{i: number}>(sql`
+      SELECT (e.i - 1)::int AS i
+      FROM jsonb_array_elements(${jsonArray(run.map(c => c.row ?? '{}'))}::jsonb)
+        WITH ORDINALITY AS e(value, i)
+      CROSS JOIN LATERAL jsonb_populate_record(NULL::${sql.identifier(table.name)}, e.value) k
+      WHERE NOT (${parents})
+    `);
+    return rows.map(row => row.i);
+  }
+
+  /**
+   * Parks changes in one statement; how many. If that fails (the same row twice…), none is parked
+   * and they take the usual path.
+   */
+  private async parkInBulk(
+    tx: Transaction,
+    table: SyncTable,
+    changes: SyncChange[],
+    {origin}: ApplyContext,
+  ): Promise<number> {
+    const items = jsonArray(
+      changes.map(
+        change =>
+          `{"pk":${change.pk},"at":${JSON.stringify(change.changedAt)},"row":${change.row ?? 'null'}}`,
+      ),
+    );
+    try {
+      await inSavepoint(tx, () =>
+        tx.execute(sql`
+          INSERT INTO sync.parked (table_name, pk, changed_at, row, origin, error)
+          SELECT ${table.name}, e.value -> 'pk', (e.value ->> 'at')::timestamptz, e.value -> 'row',
+            ${origin}, ${MISSING_PARENT}
+          FROM jsonb_array_elements(${items}::jsonb) AS e(value)
+          ON CONFLICT (table_name, pk) DO UPDATE
+            SET changed_at = EXCLUDED.changed_at, row = EXCLUDED.row, origin = EXCLUDED.origin,
+              error = EXCLUDED.error, parked_at = now()
+            WHERE sync.parked.changed_at <= EXCLUDED.changed_at
+        `),
+      );
+      return changes.length;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * True for a row `k` (of `table`) whose every reference is empty or points to a row here;
+   * `null` — the table refers to nothing synced.
+   */
+  private parentsHere(table: SyncTable): SQL | null {
+    const checks = table.foreignKeys
+      .filter(key => this.table(key.table))
+      .map(
+        key => sql`(${sql.join(
+          key.columns.map(column => sql`k.${sql.identifier(column)} IS NULL`),
+          sql` OR `,
+        )} OR EXISTS (SELECT 1 FROM ${sql.identifier(key.table)} r
+          WHERE (${columns('r', key.refColumns)}) = (${columns('k', key.columns)})))`,
+      );
+    return checks.length ? sql.join(checks, sql` AND `) : null;
   }
 
   /**
@@ -376,9 +482,7 @@ export class SyncStore {
   ): Promise<Outcome> {
     try {
       // A savepoint: a failed change is rolled back alone, the rest of the batch goes on.
-      return await tx.transaction(savepoint =>
-        this.applyChange(savepoint, change, context),
-      );
+      return await inSavepoint(tx, () => this.applyChange(tx, change, context));
     } catch (error) {
       const message = errorMessage(error);
       this.logger.warn(`Parked ${change.table} ${change.pk}: ${message}`);
@@ -609,55 +713,93 @@ export class SyncStore {
     `);
   }
 
-  private async retryParked(
-    tx: Transaction,
-    context: ApplyContext,
-  ): Promise<void> {
+  /**
+   * Parked changes whose parents are here now, applied again — the others are not even tried:
+   * thousands of them waiting for one missing row would cost a statement each on every sync.
+   */
+  private async retryParked(context: ApplyContext): Promise<void> {
     for (let pass = 0; pass < PARKED_RETRY_PASSES; pass++) {
-      const {rows} = await tx.execute<{
-        table_name: string;
-        pk: string;
-        changed_at: string;
-        row: string | null;
-        origin: string;
-      }>(sql`
-        SELECT table_name, pk::text AS pk, changed_at::text AS changed_at, row::text AS row, origin
-        FROM sync.parked
-      `);
-      let progress = false;
-      const changes = rows.map(row => ({
-        change: {
-          table: row.table_name,
-          pk: row.pk,
-          changedAt: row.changed_at,
-          row: row.row,
-        },
-        origin: row.origin,
-      }));
-      for (const {change, origin} of this.dependencyOrder(
-        changes,
+      const ready = this.dependencyOrder(
+        await this.parkedReady(),
         item => item.change,
-      )) {
-        try {
-          await tx.transaction(savepoint =>
-            this.applyChange(savepoint, change, {...context, origin}),
+      );
+      let progress = false;
+      for (let start = 0; start < ready.length; start += PARKED_RETRY_CHUNK) {
+        const chunk = ready.slice(start, start + PARKED_RETRY_CHUNK);
+        // Out of the parked list and through the usual path: what fails again is parked again.
+        await this.db.transaction(async tx => {
+          await tx.execute(
+            sql`SELECT set_config(${APPLYING_SETTING}, 'on', true)`,
+          );
+          const keys = jsonArray(
+            chunk.map(
+              ({change}) =>
+                `{"table":${JSON.stringify(change.table)},"pk":${change.pk}}`,
+            ),
           );
           await tx.execute(sql`
-            DELETE FROM sync.parked WHERE table_name = ${change.table} AND pk = ${change.pk}::jsonb
+            DELETE FROM sync.parked p USING jsonb_array_elements(${keys}::jsonb) AS e(value)
+            WHERE p.table_name = e.value ->> 'table' AND p.pk = e.value -> 'pk'
           `);
-          progress = true;
-        } catch (error) {
-          const message = errorMessage(error);
-          await tx.execute(sql`
-            UPDATE sync.parked SET error = ${message}
-            WHERE table_name = ${change.table} AND pk = ${change.pk}::jsonb
-          `);
-        }
+          for (const origin of new Set(chunk.map(item => item.origin))) {
+            const changes = chunk
+              .filter(item => item.origin === origin)
+              .map(item => item.change);
+            const {applied, skipped} = await this.applyRuns(tx, changes, {
+              ...context,
+              origin,
+            });
+            progress = progress || applied + skipped > 0;
+          }
+        });
       }
       if (!progress) {
         return;
       }
     }
+  }
+
+  /**
+   * Parked changes worth another try: of tables known here, with every row they refer to present
+   * (or the reference empty). Deletes always — what holds them back is a row referring to them.
+   */
+  private async parkedReady(): Promise<{change: SyncChange; origin: string}[]> {
+    const {rows: tables} = await this.db.execute<{table_name: string}>(
+      sql`SELECT DISTINCT table_name FROM sync.parked`,
+    );
+    const ready: {change: SyncChange; origin: string}[] = [];
+    for (const {table_name} of tables) {
+      const table = this.table(table_name);
+      if (!table) {
+        continue;
+      }
+      const name = sql.identifier(table.name);
+      const parents = this.parentsHere(table);
+      const {rows} = await this.db.execute<{
+        pk: string;
+        changed_at: string;
+        row: string | null;
+        origin: string;
+      }>(sql`
+        SELECT p.pk::text AS pk, p.changed_at::text AS changed_at, p.row::text AS row, p.origin
+        FROM sync.parked p
+        LEFT JOIN LATERAL jsonb_populate_record(NULL::${name}, p.row) k ON p.row IS NOT NULL
+        WHERE p.table_name = ${table.name}
+          AND (p.row IS NULL OR ${parents ?? sql`true`})
+      `);
+      ready.push(
+        ...rows.map(row => ({
+          change: {
+            table: table.name,
+            pk: row.pk,
+            changedAt: row.changed_at,
+            row: row.row,
+          },
+          origin: row.origin,
+        })),
+      );
+    }
+    return ready;
   }
 
   /** The rows of a chunk that are sent, by primary key; a deleted row is simply missing. */
@@ -775,6 +917,28 @@ function versionsJson(run: SyncChange[]): string {
   return jsonArray(
     run.map(c => `{"pk":${c.pk},"at":${JSON.stringify(c.changedAt)}}`),
   );
+}
+
+/**
+ * Runs `work` in a savepoint that is released either way. Drizzle's nested transaction leaves
+ * the savepoint open after a rollback: every failed change nested the next one a level deeper and
+ * its writes held a lock till the end — thousands of parked rows ran the cluster's lock table out
+ * ("out of shared memory", pg-boss included).
+ */
+async function inSavepoint<T>(
+  tx: Transaction,
+  work: () => Promise<T>,
+): Promise<T> {
+  await tx.execute(sql`SAVEPOINT sync_change`);
+  try {
+    const result = await work();
+    await tx.execute(sql`RELEASE SAVEPOINT sync_change`);
+    return result;
+  } catch (error) {
+    await tx.execute(sql`ROLLBACK TO SAVEPOINT sync_change`);
+    await tx.execute(sql`RELEASE SAVEPOINT sync_change`);
+    throw error;
+  }
 }
 
 /** A JSON array of values that are JSON already (rows, primary keys). */

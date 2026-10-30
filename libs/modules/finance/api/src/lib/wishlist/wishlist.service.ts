@@ -5,6 +5,7 @@ import {
   DB,
   Database,
   NotificationsService,
+  toXlsx,
   UsersService,
 } from '@pd/api-core';
 import {
@@ -16,6 +17,7 @@ import {
   Wish,
   wishInputSchema,
   WishPricePoint,
+  zonedDateTime,
 } from '@pd/contracts';
 import {and, asc, desc, eq, isNotNull, isNull, max, min} from 'drizzle-orm';
 import {z} from 'zod';
@@ -43,6 +45,15 @@ const AI_INSTRUCTION =
   'the page: not an accessory, not a crossed-out old price, not a monthly instalment. ' +
   'If the text has no such price, answer {"price": null, "currency": null}.';
 
+/** No page, nothing read. */
+const NOT_READ: Reading = {
+  name: null,
+  image: null,
+  price: null,
+  currency: null,
+  error: null,
+};
+
 /** What a check of a wish's page gave. */
 interface Reading {
   name: string | null;
@@ -53,9 +64,10 @@ interface Reading {
 }
 
 /**
- * Things to buy one day. A wish is a link to a product in a shop: its price is read from the page
- * when the wish is added, every morning (WishlistJob) and on request, kept day by day, and every
- * change is reported. A page that tells no price leaves the one typed in by hand.
+ * Things to buy one day. A wish with a link to a product in a shop has its price read from the
+ * page when it is added, every morning (WishlistJob) and on request, kept day by day, and every
+ * change is reported; a page that tells no price leaves the one typed in by hand. A wish without
+ * a link is just a name, a note and a price typed in.
  */
 @Injectable()
 export class WishlistService {
@@ -164,17 +176,21 @@ export class WishlistService {
   }
 
   async create(userId: string, input: ValidWishInput): Promise<Wish> {
-    const reading = await this.read(userId, input.url);
+    const reading = input.url ? await this.read(userId, input.url) : NOT_READ;
     const [row] = await this.db
       .insert(wishes)
       .values({
         userId,
-        url: input.url,
-        name: input.name || reading.name || new URL(input.url).hostname,
+        url: input.url || null,
+        // The schema lets no wish go without both a name and a link.
+        name:
+          input.name ||
+          reading.name ||
+          (input.url ? new URL(input.url).hostname : ''),
         note: input.note || null,
         recipient: input.recipient || null,
         imageUrl: reading.image ?? input.imageUrl ?? null,
-        checkedAt: new Date(),
+        checkedAt: input.url ? new Date() : null,
         checkError: reading.error,
       })
       .returning();
@@ -200,7 +216,8 @@ export class WishlistService {
     await this.db
       .update(wishes)
       .set({
-        url: input.url,
+        // Left out — as it was (the extension sends only a price seen); empty — no page.
+        url: input.url === undefined ? row.url : input.url || null,
         name: input.name || row.name,
         // Left out — as it was (the extension sends only a price seen); `null` — cleared.
         note: input.note === undefined ? row.note : input.note || null,
@@ -263,6 +280,32 @@ export class WishlistService {
     return this.get(userId, id);
   }
 
+  /**
+   * What is still wanted as an Excel workbook, for others (what to give): the name, the price,
+   * the link and the notes — nothing about watching prices or budgets.
+   */
+  async exportXlsx(userId: string): Promise<Buffer> {
+    const user = await this.users.findById(userId);
+    const text = financeMessages(user?.locale ?? 'en');
+    const wanted = (await this.list(userId)).filter(wish => !wish.boughtAt);
+    return toXlsx({
+      title: text.wishlistTitle,
+      subtitle: text.wishlistSubtitle(
+        zonedDateTime(new Date(), this.users.timeZoneOf(user)).date,
+      ),
+      headers: text.wishlistHeaders,
+      rows: wanted.map(wish => [
+        wish.name,
+        wish.price === null
+          ? ''
+          : `${wish.price.toFixed(2)} ${wish.currency ?? ''}`.trim(),
+        wish.url ?? '',
+        wish.note ?? '',
+      ]),
+      widths: [40, 14, 50, 60],
+    });
+  }
+
   /** The gift ideas for the people of these names (lower case): the wishes not bought yet. */
   async giftIdeas(
     userId: string,
@@ -289,7 +332,7 @@ export class WishlistService {
     const rows = await this.db
       .select()
       .from(wishes)
-      .where(isNull(wishes.boughtAt));
+      .where(and(isNull(wishes.boughtAt), isNotNull(wishes.url)));
     for (const row of rows) {
       try {
         await this.checkRow(row);
@@ -300,6 +343,9 @@ export class WishlistService {
   }
 
   private async checkRow(row: WishRow): Promise<void> {
+    if (!row.url) {
+      return;
+    }
     const reading = await this.read(row.userId, row.url);
     await this.db
       .update(wishes)
@@ -432,7 +478,7 @@ export class WishlistService {
         now < was
           ? text.wishCheaperTitle(row.name)
           : text.wishPricierTitle(row.name),
-      body: text.wishPriceBody(was, now, currency, isLowest, row.url),
+      body: text.wishPriceBody(was, now, currency, isLowest, row.url ?? ''),
       source: 'finance',
       // A price that jumps back and forth is told once in a while, not at every check.
       dedupe: {key: `finance.wish-price:${row.id}`, minutes: 12 * 60},
@@ -443,7 +489,7 @@ export class WishlistService {
       price: now.toFixed(2),
       was: was.toFixed(2),
       currency,
-      url: row.url,
+      url: row.url ?? '',
     });
   }
 

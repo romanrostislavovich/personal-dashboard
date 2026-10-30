@@ -2,8 +2,11 @@ import {Inject, Injectable, NotFoundException} from '@nestjs/common';
 import {
   DB,
   Database,
+  ExportTable,
   LinksService,
   MOOD_METRIC,
+  toDocx,
+  toXlsx,
   UsersService,
 } from '@pd/api-core';
 import {
@@ -25,7 +28,6 @@ import {
 } from '@pd/contracts';
 import {and, desc, eq} from 'drizzle-orm';
 import {z} from 'zod';
-import {ExportTable, toDocx, toXlsx} from './events-export';
 import {moodDuring, moodPatterns} from './patterns';
 import {feelingText, psychologyMessages} from './psychology.messages';
 import {

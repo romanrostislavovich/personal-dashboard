@@ -1,4 +1,4 @@
-import {xmlText, zip} from './events-export';
+import {xmlText, zip} from '@pd/api-core';
 
 /**
  * A document of blocks — headings, paragraphs, lists and tables — as a Word file (`.docx`),

@@ -54,7 +54,8 @@ export interface FoundPlaceName {
   name: string;
   /** `cafe`, `supermarket`, `gym`…; `null` — an address. */
   kind: string | null;
-  source: 'osm' | 'google';
+  /** `user` — the user's own answer to "Where were you?": it wins over a map's name. */
+  source: 'osm' | 'google' | 'user';
 }
 
 /** How a trip went, by its speed. */

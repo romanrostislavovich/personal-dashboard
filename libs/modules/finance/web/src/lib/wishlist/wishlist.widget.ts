@@ -37,13 +37,17 @@ const SHOWN = 5;
       <mat-card-content>
         @for (wish of wanted(); track wish.id) {
           <div class="wish">
-            <a
-              class="name"
-              [href]="wish.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              >{{ wish.name }}</a
-            >
+            @if (wish.url) {
+              <a
+                class="name"
+                [href]="wish.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                >{{ wish.name }}</a
+              >
+            } @else {
+              <span class="name">{{ wish.name }}</span>
+            }
             @if (trend(wish); as t) {
               <span class="change" [class.down]="t.down" [class.up]="!t.down">
                 <mat-icon inline>{{

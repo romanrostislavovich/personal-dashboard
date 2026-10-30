@@ -20,7 +20,10 @@ export function priceTrend(
 }
 
 /** The shop of a wish: the host of its link without `www.`. */
-export function shopName(wish: Wish): string {
+export function shopName(wish: Wish): string | null {
+  if (!wish.url) {
+    return null;
+  }
   try {
     return new URL(wish.url).hostname.replace(/^www\./, '');
   } catch {

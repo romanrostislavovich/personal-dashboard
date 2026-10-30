@@ -16,6 +16,8 @@ import {
 } from '@pd/contracts';
 import {and, asc, eq, gte, lt, sql} from 'drizzle-orm';
 import {moodArtists, MoodArtists} from './mood-artists';
+import {genreKey} from './music-genres';
+import {MusicGenresService} from './music-genres.service';
 import {scrobbles} from './music.schema';
 
 /** A payment named with one of these is for listening to music (the plays come from Last.fm). */
@@ -27,13 +29,15 @@ const STREAMING = [
   'tidal',
   'last.fm',
 ];
+/** Genres of a period that get a number of their own in Links. */
+const LINKED_GENRES = 5;
 /** Plays told about a stretch of time: a focus session has a few dozen at most. */
 const MAX_MOMENTS = 300;
 
 /**
  * What music tells the other sections (see LinksService): what played at a moment (during a
  * focus session), whether a streaming service that is paid for is listened to, and the plays
- * of every day.
+ * of every day — all of them and of the period's main genres.
  */
 @Injectable()
 export class MusicLinks implements OnModuleInit {
@@ -41,6 +45,7 @@ export class MusicLinks implements OnModuleInit {
     @Inject(DB) private readonly db: Database,
     private readonly links: LinksService,
     private readonly users: UsersService,
+    private readonly genres: MusicGenresService,
   ) {}
 
   onModuleInit(): void {
@@ -101,20 +106,38 @@ export class MusicLinks implements OnModuleInit {
           .where(await this.within(userId, period))
           // By position: the time zone is a parameter (see ActivityService.stats).
           .groupBy(sql`1`);
-        return days.length
-          ? [
-              {
-                key: 'music.plays',
-                module: 'music',
-                labelKey: 'music.links.plays',
-                unit: 'count',
-                days: days.map(({day: date, plays}) => ({
-                  day: date,
-                  value: plays,
-                })),
-              },
-            ]
-          : [];
+        if (!days.length) {
+          return [];
+        }
+        const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
+        const genres = await this.genres.daily(
+          userId,
+          zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+          zonedToUtc({date: after, time: '00:00'}, timeZone),
+          timeZone,
+          LINKED_GENRES,
+        );
+        return [
+          {
+            key: 'music.plays',
+            module: 'music',
+            labelKey: 'music.links.plays',
+            unit: 'count' as const,
+            days: days.map(({day: date, plays}) => ({
+              day: date,
+              value: plays,
+            })),
+          },
+          ...genres.map(genre => ({
+            key: genreKey(genre.genre),
+            module: 'music',
+            labelKey: 'music.links.genre',
+            label: genre.genre,
+            unit: 'count' as const,
+            partOf: 'music.plays',
+            days: genre.days,
+          })),
+        ];
       },
     });
 

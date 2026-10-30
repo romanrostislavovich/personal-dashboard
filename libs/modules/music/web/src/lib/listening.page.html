@@ -72,6 +72,9 @@
             [songs]="true"
           />
           <pd-top-list titleKey="music.tops.albums" [items]="t.albums" />
+          @if (t.genres?.length) {
+            <pd-genre-list [genres]="t.genres" />
+          }
         }
       </mat-card-content>
     </mat-card>

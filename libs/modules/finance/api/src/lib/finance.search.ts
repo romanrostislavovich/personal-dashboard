@@ -79,7 +79,9 @@ export class FinanceSearch implements OnModuleInit {
         title: row.name,
         subtitle:
           row.price === null
-            ? new URL(row.url).hostname
+            ? row.url
+              ? new URL(row.url).hostname
+              : null
             : `${row.price.toFixed(2)} ${row.currency}`,
         url: '/finance?tab=wishlist',
       })),

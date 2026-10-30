@@ -18,6 +18,7 @@ import {interval} from 'rxjs';
 import {MusicApi} from './music.api';
 import {NowPlayingComponent} from './now-playing.component';
 import {TopListComponent} from './top-list.component';
+import {GenreListComponent} from './genre-list.component';
 import {SongShareComponent} from './song-share.component';
 
 /** "Now playing" changes often — refresh every 30 seconds while the page is open. */
@@ -38,6 +39,7 @@ const NOW_PLAYING_REFRESH_MS = 30_000;
     SparklineComponent,
     NowPlayingComponent,
     TopListComponent,
+    GenreListComponent,
     SongShareComponent,
   ],
   templateUrl: './listening.page.html',
