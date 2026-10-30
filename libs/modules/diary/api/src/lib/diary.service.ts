@@ -432,6 +432,16 @@ export class DiaryService {
     return rows.map(row => row.userId);
   }
 
+  /** Whether the day was started — an entry or a photo, as `usersToRemind` counts it. */
+  async dayStarted(userId: string, day: LocalDate): Promise<boolean> {
+    const {rows} = await this.db.execute<{started: boolean}>(sql`
+      SELECT EXISTS (SELECT 1 FROM ${diaryEntries}
+          WHERE ${diaryEntries.userId} = ${userId} AND ${diaryEntries.day} = ${day})
+        OR EXISTS (SELECT 1 FROM ${diaryPhotos}
+          WHERE ${diaryPhotos.userId} = ${userId} AND ${diaryPhotos.day} = ${day}) AS started`);
+    return rows[0]?.started ?? false;
+  }
+
   async usersWithWeeklySummary(): Promise<string[]> {
     const rows = await this.db
       .select({userId: diarySettings.userId})

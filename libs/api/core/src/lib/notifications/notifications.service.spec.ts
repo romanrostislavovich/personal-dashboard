@@ -16,6 +16,7 @@ describe('NotificationsService', () => {
     timeZoneOf: () => 'Europe/Warsaw',
   };
   const scheduler = {register: () => undefined};
+  const actions = {settled: async () => false};
 
   /** The outbox as calls: what was written down and what became of it. */
   function fakeOutbox() {
@@ -68,6 +69,7 @@ describe('NotificationsService', () => {
       outbox as never,
       scheduler as never,
       [telegram] as never,
+      actions as never,
     );
     for (const source of ['games', 'steam', 'finance', 'core']) {
       await service.send('u1', {title: 't', body: 'b', source});
@@ -99,6 +101,7 @@ describe('NotificationsService', () => {
       fakeOutbox() as never,
       scheduler as never,
       [inApp] as never,
+      actions as never,
     );
     await service.send('u1', {title: 't', body: 'b', source: 'lastfm'});
     await service.send('u1', {title: 't', body: 'b', source: 'finance'});
@@ -117,6 +120,7 @@ describe('NotificationsService', () => {
       fakeOutbox() as never,
       scheduler as never,
       [telegram, push] as never,
+      actions as never,
     );
     for (const source of ['music', 'lastfm', 'finance']) {
       await service.send('u1', {title: 't', body: 'b', source});
@@ -136,6 +140,7 @@ describe('NotificationsService', () => {
       outbox as never,
       scheduler as never,
       [busy, toast] as never,
+      actions as never,
     ).send('u1', {title: 't', body: 'b', source: 'finance'});
     expect(toast.sent).toEqual(['finance']);
     expect(outbox.calls).toEqual([
@@ -152,6 +157,7 @@ describe('NotificationsService', () => {
       blocked as never,
       scheduler as never,
       [gone] as never,
+      actions as never,
     ).send('u1', {title: 't', body: 'b', source: 'finance'});
     expect(blocked.calls[1]).toBe(
       'failed [] {"retryAfterMs":0,"permanent":true}',
@@ -166,6 +172,7 @@ describe('NotificationsService', () => {
       outbox as never,
       scheduler as never,
       [telegram] as never,
+      actions as never,
     ).send('u1', {title: 't', body: 'b', source: 'finance'});
     expect(telegram.sent).toEqual([]);
   });
@@ -185,6 +192,11 @@ describe('quiet hours', () => {
     timeZoneOf: () => 'Europe/Warsaw',
   };
   const scheduler = {register: () => undefined};
+  /** The questions a section says were closed meanwhile (by their first button). */
+  const settled = new Set<string>();
+  const actions = {
+    settled: async (_u: unknown, action: string) => settled.has(action),
+  };
 
   function setup() {
     const added: {status: string; heldUntil: Date | null}[] = [];
@@ -252,6 +264,7 @@ describe('quiet hours', () => {
       outbox as never,
       scheduler as never,
       channels as never,
+      actions as never,
     );
     return {service, added, delivered, sent, toasts, held};
   }
@@ -324,5 +337,32 @@ describe('quiet hours', () => {
       'Вчера, 26.10 — 🌙 День без алкоголя?',
     ]);
     expect(sent[1].actions).toEqual(buttons);
+  });
+
+  it('does not ask in the morning what was answered in the bell or closed meanwhile', async () => {
+    const {service, sent, held, delivered} = setup();
+    const question = (id: string, action: string, answeredAt: Date | null) => ({
+      id,
+      userId: 'u1',
+      title: `📔 ${id}`,
+      body: 'Как прошёл день?',
+      channels: ['telegram'],
+      attempts: 0,
+      actions: [{label: '🙂', action}],
+      answeredAt,
+      createdAt: new Date('2026-10-29T20:00:00Z'),
+    });
+    held.splice(0, held.length);
+    held.push(
+      question('bell', 'dmood:2026-10-28:4', new Date('2026-10-29T20:05:00Z')),
+      question('written', 'dmood:2026-10-29:4', null),
+      question('open', 'hb:c:x:2026-10-29', null),
+    );
+    settled.add('dmood:2026-10-29:4');
+
+    await service.releaseHeld(new Date('2026-10-30T08:00:00Z'));
+
+    expect(sent.map(n => n.title)).toEqual(['Вчера, 29.10 — 📔 open']);
+    expect(delivered.sort()).toEqual(['bell', 'open', 'written']);
   });
 });

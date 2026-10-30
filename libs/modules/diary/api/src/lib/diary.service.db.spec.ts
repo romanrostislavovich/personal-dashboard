@@ -72,6 +72,17 @@ describe.skipIf(!ADMIN_URL)('DiaryService', () => {
     expect(due).not.toContain(rated);
     expect(due).not.toContain(photographed);
   });
+
+  it('tells a day started by a note or a photo, for the reminder held till morning', async () => {
+    const [wrote, photographed] = await Promise.all([addUser(), addUser()]);
+    await service.appendNote(wrote, '2026-10-29', 'Late evening');
+    await db.execute(sql`INSERT INTO diary_photos (user_id, day, mime_type, size, data)
+      VALUES (${photographed}, '2026-10-29', 'image/jpeg', 3, '\\x010203')`);
+
+    expect(await service.dayStarted(wrote, '2026-10-29')).toBe(true);
+    expect(await service.dayStarted(photographed, '2026-10-29')).toBe(true);
+    expect(await service.dayStarted(wrote, '2026-10-28')).toBe(false);
+  });
 });
 
 /** Waits for the closed connections to leave, then drops the scratch database. */

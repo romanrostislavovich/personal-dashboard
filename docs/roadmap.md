@@ -287,7 +287,8 @@ None written down now (the voice assistant's two went to [On hold](#on-hold)).
   assistant reading and answering the inbox ("what did I miss?")
 - **Quiet hours** — nothing at night, one summary in the morning (a question with buttons — the
   habit's, the film's — never in it: it follows on its own, with its day: «Вчера, 26.10 — …»;
-  built 2026-10-27); minor ones gathered into one message an hour
+  built 2026-10-27; one answered in the bell at night, or closed meanwhile — the day written in the
+  diary, the habit marked — is not sent, 2026-10-30); minor ones gathered into one message an hour
 - **A calendar feed (ICS)** — a private link with the birthdays, days of memory, reminders, due
   dates of tasks, subscription charges and the end of free trials, subscribed to in the calendar
   of a phone

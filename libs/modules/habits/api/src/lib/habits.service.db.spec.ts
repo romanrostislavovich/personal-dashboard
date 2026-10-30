@@ -184,6 +184,28 @@ describe.skipIf(!ADMIN_URL)('HabitsService', () => {
     await service.answerButton(user as never, notToday);
     expect((await service.get(userId, habit.id)).recent).toEqual([]);
   });
+
+  it('the evening question is settled once its day is marked on the page', async () => {
+    const userId = await addUser();
+    const habit = await service.create(userId, {
+      kind: 'custom',
+      name: 'Alcohol',
+      goal: 'quit',
+      maxDaysPerWeek: null,
+      timesPerWeek: null,
+      unit: null,
+      startedOn: '2026-10-10',
+      askAt: '21:00',
+    });
+    const user = {id: userId} as never;
+    const button = `c:${habit.id}:2026-10-29`;
+
+    expect(await service.buttonSettled(user, button)).toBe(false);
+    await service.mark(userId, habit.id, '2026-10-29', {status: 'clean'});
+    expect(await service.buttonSettled(user, button)).toBe(true);
+    await service.remove(userId, habit.id);
+    expect(await service.buttonSettled(user, button)).toBe(true);
+  });
 });
 
 /** Waits for the closed connections to leave, then drops the scratch database. */

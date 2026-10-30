@@ -11,6 +11,7 @@ import {
   NotificationChannel,
 } from './notification-channel';
 import {heldTitle} from './held-title';
+import {NotificationActions} from './notification-actions';
 import {sectionOfSource} from './notification-link';
 import {NotificationOutbox} from './notification-outbox';
 import {NotificationOutboxRow} from './notifications.schema';
@@ -37,6 +38,7 @@ export class NotificationsService implements OnModuleInit {
     private readonly scheduler: SchedulerService,
     @Inject(NOTIFICATION_CHANNELS)
     private readonly channels: NotificationChannel[],
+    private readonly actions: NotificationActions,
   ) {}
 
   onModuleInit(): void {
@@ -190,6 +192,12 @@ export class NotificationsService implements OnModuleInit {
       const text = coreMessages(user.locale);
       const words = {yesterday: text.heldYesterday, earlier: text.heldEarlier};
       for (const row of questions) {
+        // Answered in the bell at night, or closed some other way (the diary reminder of 21:00
+        // came again at 09:00 on 2026-10-30 after the day was written): nothing to ask.
+        if (row.answeredAt || (await this.settled(user, row))) {
+          await this.outbox.delivered(row.id);
+          continue;
+        }
         const title = heldTitle(
           row.title,
           row.createdAt,
@@ -199,6 +207,19 @@ export class NotificationsService implements OnModuleInit {
         );
         await this.deliver(user, {...row, title});
       }
+    }
+  }
+
+  /** Whether the section says its question was closed meanwhile; a failed check asks anyway. */
+  private async settled(
+    user: UserRow,
+    row: NotificationOutboxRow,
+  ): Promise<boolean> {
+    try {
+      return await this.actions.settled(user, row.actions[0].action);
+    } catch (error) {
+      this.logger.warn(`A held question was not checked: ${error}`);
+      return false;
     }
   }
 
