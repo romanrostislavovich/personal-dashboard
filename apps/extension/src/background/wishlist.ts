@@ -55,7 +55,9 @@ export async function wishPopupState(): Promise<WishPopupState | null> {
   }
   const api = financeApi((await signedInClient()).api);
   const wish =
-    (await api.wishlist()).find(one => samePage(one.url, tab.url)) ?? null;
+    (await api.wishlist()).find(
+      one => one.url !== null && samePage(one.url, tab.url),
+    ) ?? null;
   if (wish && product.price !== null) {
     await notePrice(api, wish, product);
   }
