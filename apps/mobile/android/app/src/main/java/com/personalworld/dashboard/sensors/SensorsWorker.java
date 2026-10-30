@@ -1,5 +1,6 @@
 package com.personalworld.dashboard.sensors;
 
+import android.app.job.JobScheduler;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
@@ -60,6 +61,29 @@ public class SensorsWorker extends Worker {
             ExistingPeriodicWorkPolicy.KEEP,
             new PeriodicWorkRequest.Builder(SensorsWorker.class, 15, TimeUnit.MINUTES).build()
         );
+    }
+
+    /**
+     * Called whenever the app starts (the places service, the main screen): the collection is on
+     * but Android holds no job of the app — so it was after the update of 2026-10-30 00:24, and
+     * the band, the time in apps and the unlocks stopped coming. WorkManager still thought the
+     * work enqueued, so it is enqueued anew rather than kept.
+     */
+    public static void ensureScheduled(Context context) {
+        if (!new SensorsStore(context).configured()) {
+            return;
+        }
+        JobScheduler jobs = context.getSystemService(JobScheduler.class);
+        if (jobs != null && !jobs.getAllPendingJobs().isEmpty()) {
+            return;
+        }
+        Log.w("SensorsWorker", "No job of the app is scheduled: the collection is scheduled again");
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            PERIODIC,
+            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+            new PeriodicWorkRequest.Builder(SensorsWorker.class, 15, TimeUnit.MINUTES).build()
+        );
+        runNow(context);
     }
 
     public static void runNow(Context context) {

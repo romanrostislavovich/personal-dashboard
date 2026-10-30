@@ -100,6 +100,7 @@ public class PlacesService extends Service {
             live.start();
         }
         startSending();
+        SensorsWorker.ensureScheduled(this);
         // Killed for memory: Android starts it again.
         return START_STICKY;
     }
