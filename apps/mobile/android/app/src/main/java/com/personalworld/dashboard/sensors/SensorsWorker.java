@@ -42,6 +42,8 @@ public class SensorsWorker extends Worker {
 
     private static final String PERIODIC = "phone-sensors";
     private static final String NOW = "phone-sensors-now";
+    /** The schedule was renewed in this process (see ensureScheduled). */
+    private static boolean ensured;
     /** The first run reads this far back. */
     private static final long FIRST_READ_MS = TimeUnit.DAYS.toMillis(1);
     /** The security report (PhoneSecurity) goes once a day. */
@@ -60,6 +62,25 @@ public class SensorsWorker extends Worker {
             ExistingPeriodicWorkPolicy.KEEP,
             new PeriodicWorkRequest.Builder(SensorsWorker.class, 15, TimeUnit.MINUTES).build()
         );
+    }
+
+    /**
+     * Once a process, when the app starts (the places service, the main screen): the periodic
+     * work is enqueued again over the old one (UPDATE schedules it anew). After the update of
+     * 2026-10-30 00:24 the phone ran it no more — the band, the time in apps and the unlocks
+     * stopped coming, only the places service kept sending.
+     */
+    public static synchronized void ensureScheduled(Context context) {
+        if (ensured || !new SensorsStore(context).configured()) {
+            return;
+        }
+        ensured = true;
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            PERIODIC,
+            ExistingPeriodicWorkPolicy.UPDATE,
+            new PeriodicWorkRequest.Builder(SensorsWorker.class, 15, TimeUnit.MINUTES).build()
+        );
+        runNow(context);
     }
 
     public static void runNow(Context context) {

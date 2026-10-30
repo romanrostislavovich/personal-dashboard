@@ -7,12 +7,19 @@ import {
 } from '@pd/api-core';
 import {healthConditions, HealthDiagnosis} from '@pd/contracts';
 import {and, count, eq, sql} from 'drizzle-orm';
-import {healthDiagnoses, healthIntakes} from './health.schema';
+import {
+  healthDiagnoses,
+  healthIntakes,
+  healthProfiles,
+  healthShares,
+  healthVaccinations,
+} from './health.schema';
 
 /**
  * Health achievements reward taking care, never an illness: taking the medications on time,
- * day after day, and a diagnosis taken off. Nothing counts diagnoses, visits or results — a
- * longer history of illness is not an achievement.
+ * day after day, a diagnosis taken off, the emergency card filled in, the vaccinations, a summary
+ * given to a doctor. Nothing counts diagnoses, visits or results — a longer history of illness is
+ * not an achievement.
  */
 @Injectable()
 export class HealthAchievements implements OnModuleInit {
@@ -24,6 +31,79 @@ export class HealthAchievements implements OnModuleInit {
   onModuleInit(): void {
     this.registerIntakes();
     this.registerRecovery();
+    this.registerCare();
+  }
+
+  /** What is done ahead of time: the emergency card, the vaccinations, a doctor told. */
+  private registerCare(): void {
+    this.achievements.register({
+      id: 'health.emergency-card',
+      module: 'health',
+      measure: userId =>
+        this.count(
+          healthProfiles,
+          userId,
+          sql`blood_type IS NOT NULL OR emergency_contacts IS NOT NULL`,
+        ),
+      tiers: achievementTiers([
+        1,
+        '🆘',
+        {en: 'Just in case', ru: 'На всякий случай'},
+        {
+          en: 'The emergency card: the blood type or whom to call',
+          ru: 'Карточка на экстренный случай: группа крови или кому звонить',
+        },
+      ]),
+    });
+
+    this.achievements.register({
+      id: 'health.vaccinations',
+      module: 'health',
+      measure: userId => this.count(healthVaccinations, userId),
+      tiers: achievementTiers(
+        [
+          1,
+          '💉',
+          {en: 'Vaccinated', ru: 'Привит'},
+          {en: 'A vaccination written down', ru: 'Записана прививка'},
+        ],
+        [
+          5,
+          '🛡️',
+          {en: 'Protected', ru: 'Под защитой'},
+          {en: '5 vaccinations written down', ru: 'Записано 5 прививок'},
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'health.summary-shared',
+      module: 'health',
+      measure: userId => this.count(healthShares, userId),
+      tiers: achievementTiers([
+        1,
+        '🩺',
+        {en: 'The doctor knows', ru: 'Врач в курсе'},
+        {
+          en: 'A health summary given to a doctor by a link',
+          ru: 'Сводка о здоровье отправлена врачу ссылкой',
+        },
+      ]),
+    });
+  }
+
+  /** The user's rows of a table, those matching `where` if given. */
+  private async count(
+    table:
+      typeof healthProfiles | typeof healthVaccinations | typeof healthShares,
+    userId: string,
+    where = sql`true`,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({value: count()})
+      .from(table)
+      .where(and(eq(table.userId, userId), where));
+    return row?.value ?? 0;
   }
 
   /** Medication reminders answered "taken" (intakes/intakes.service.ts). */

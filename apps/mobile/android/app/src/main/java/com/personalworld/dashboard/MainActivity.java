@@ -6,6 +6,7 @@ import com.getcapacitor.BridgeActivity;
 import com.personalworld.dashboard.inbox.NotificationShadePlugin;
 import com.personalworld.dashboard.sensors.PhoneSensorsPlugin;
 import com.personalworld.dashboard.sensors.PlacesService;
+import com.personalworld.dashboard.sensors.SensorsWorker;
 import com.personalworld.dashboard.voice.VoiceService;
 
 public class MainActivity extends BridgeActivity {
@@ -19,6 +20,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(NotificationShadePlugin.class);
         super.onCreate(savedInstanceState);
         ShareTargetPlugin.receive(this, getIntent());
+        SensorsWorker.ensureScheduled(this);
     }
 
     /** A share while the app runs (singleTask: the same activity gets it). */
